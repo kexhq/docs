@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Regex | Prelude 0.4.0-alpha | kex docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+<link rel="icon" type="image/png" href="../../icon.png">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<header class="top">
+<div class="wrap top-inner">
+<a class="brand" href="../../index.html">kex</a>
+<span class="brand-sub">docs</span>
+<span class="spacer"></span>
+<button class="search-trigger" id="search" aria-label="Search documentation"
+data-root="../../" data-package="prelude" data-version="0.4.0-alpha"
+data-page="regex.html">
+<span>Search</span><kbd>/</kbd>
+</button>
+<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="regex.html">Prelude 0.4.0-alpha</span>
+<a class="back" href="https://kex.run/docs">kex.run ↗</a>
+</div>
+</header>
+<div class="wrap layout">
+<aside class="side"><nav aria-label="Modules"><p class="side-heading">Prelude</p><ul class="side-list">
+<li><a href="algebra.html">Algebra</a></li>
+<li><a href="bits.html">Bits</a></li>
+<li><a href="blankable.html">Blankable</a></li>
+<li><a href="console.html">Console</a></li>
+<li><a href="digest.html">Digest</a></li>
+<li><a href="enumerable.html">Enumerable</a></li>
+<li><a href="env.html">ENV</a></li>
+<li><a href="errorable.html">Errorable</a></li>
+<li><a href="evaluator.html">Evaluator</a></li>
+<li><a href="filehandle.html">FileHandle</a></li>
+<li><a href="fs.html">FS</a></li>
+<li><a href="http.html">Http</a></li>
+<li><a href="io.html">IO</a></li>
+<li><a href="json.html">JSON</a></li>
+<li><a href="kex.html">Kex</a></li>
+<li><a href="list.html">List</a></li>
+<li><a href="map.html">Map</a></li>
+<li><a href="math.html">Math</a></li>
+<li><a href="mock.html">Mock</a></li>
+<li><a href="number.html">Number</a></li>
+<li><a href="optional.html">Optional</a></li>
+<li><a href="optionparser.html">OptionParser</a></li>
+<li><a href="parsing.html">Parsing</a></li>
+<li><a href="prelude.html">Prelude</a></li>
+<li><a href="process.html">Process</a></li>
+<li><a href="range.html">Range</a></li>
+<li><a class="active" href="regex.html">Regex</a><ul class="side-sub">
+<li><a href="#module-regex">Regex</a></li>
+</ul></li>
+<li><a href="set.html">Set</a></li>
+<li><a href="stream.html">Stream</a></li>
+<li><a href="string.html">String</a></li>
+<li><a href="system.html">System</a></li>
+<li><a href="taggedvalidation.html">TaggedValidation</a></li>
+<li><a href="test.html">Assert</a></li>
+<li><a href="time.html">Time</a></li>
+<li><a href="truthyable.html">Truthyable</a></li>
+<li><a href="type.html">Type</a></li>
+<li><a href="units.html">Units</a></li>
+<li><a href="webserver.html">Web</a></li>
+<li><a href="kex/ast.html">Kex.AST</a></li>
+<li><a href="units/data.html">Units.Data</a></li>
+<li><a href="units/si.html">Units.SI</a></li>
+</ul></nav></aside>
+<main class="content">
+<nav class="crumbs"><a href="index.html">Prelude</a> <span class="sep">/</span> <span>Regex</span></nav>
+<article class="prose">
+<h1>Regex</h1>
+<section class="entity" id="module-regex">
+<h2><span class="kind kind-module">module</span> <code>Regex</code></h2>
+<section class="entity" id="record-regex">
+<h2><span class="kind kind-record">record</span> <code>Regex</code></h2>
+<p>Regular expressions, backed by PCRE2 in the interpreter and Erlang's <code>re</code> on BEAM — the same PCRE pattern language on both.</p>
+<p>Opt-in, not prelude: nothing here is in scope until <code>using Regex</code>.</p>
+<p>  match regex(&quot;\\d`&quot;) do     Ok(re)   -&gt; IO.printLine(&quot;compiled&quot;)     Error(e) -&gt; IO.printLine(&quot;bad pattern at ${e.position}: ${e.message}&quot;)   end</p>
+<p>`Regex+ carries only its pattern source. The compiled engine object lives in a runtime cache keyed by that source, deliberately: a compiled pattern bakes in the host's PCRE version and must never be embedded in a distributed artifact, so the source string is the value's identity.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>source</code></dt><dd><code>String</code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-regexerror">
+<h2><span class="kind kind-record">record</span> <code>RegexError</code></h2>
+<p><code>RegexError</code> describes a pattern that failed to compile. Mirrors <code>ParseError</code> — the <code>position</code> is a *character* offset into the pattern, not a byte offset, so it agrees across backends on patterns containing non-ASCII.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>source</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>position</code></dt><dd><code>Integer</code></dd></div>
+<div class="field"><dt><code>message</code></dt><dd><code>String</code></dd></div>
+</dl>
+</section>
+<section class="entity" id="function-regex">
+<h2><span class="kind kind-function">function</span> <code>regex</code></h2>
+<p>NOTE: deliberately does NOT <code>implement: Errorable</code>, even though the trait exists for exactly this shape. Declaring a <code>message</code> method alongside the <code>message</code> field makes <code>e.message</code> dispatch to the method instead of reading the field, which fails with <code>undef</code> on the BEAM backend. <code>ParseError</code> — the prelude's equivalent error record — carries a bare <code>message</code> field for the same reason; nothing in the tree implements Errorable today.</p>
+<p>Compiles a pattern. Returns <code>Result</code> because an arbitrary string may not be a valid pattern; the tag form <code>regex</code>...<code></code> returns a bare <code>Regex</code> instead, since a literal is validated at compile time and cannot fail.</p>
+<pre class="code"><code><span class="tok-fn">regex</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Regex</span><span class="tok-punct">,</span> <span class="tok-type">RegexError</span><span class="tok-op">&gt;</span>
+<span class="tok-fn">regex</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">Any</span><span class="tok-punct">]</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Regex</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>source</code> <code>String</code></dt><dd></dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;Regex, <a class="xref" href="#record-regexerror">RegexError</a>&gt;</code> — </p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-fn">regex</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">\\d+</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; Ok(Regex)</span>
+  <span class="tok-fn">regex</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">(</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>           <span class="tok-comment"># =&gt; Error(RegexError)</span></code></pre>
+
+</section>
+<section class="entity" id="function-validateregex">
+<h2><span class="kind kind-function">function</span> <code>validateRegex</code></h2>
+<p>Companion validator for the <code>regex</code> tag, found by the compiler through the standard <code>validate&lt;Tag&gt;</code> naming convention (nothing about regex is special- cased). A raw <code></code> regex<code>(</code> <code></code> is a compile error, with the caret pointing at the byte offset PCRE2 reported inside the literal.</p>
+<p>Must stay pure: the compiler evaluates it on the tree-walk interpreter at compile time, so marking it <code>foul</code> would break builds, not just calls.</p>
+<pre class="code"><code><span class="tok-fn">validateRegex</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>source</code> <code>String</code></dt><dd></dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>[<a class="xref" href="taggedvalidation.html#type-issue">TaggedValidation.Issue</a>]</code> — </p>
+
+</section>
+<section class="entity" id="function-re">
+<h2><span class="kind kind-function">function</span> <code>re</code></h2>
+<p><code>re</code> is a short alias for <code>regex</code> — a second name bound to the same two functions, not a lexer synonym, so every property of <code>regex</code> (escaping, backend mapping, error shape) applies to it unchanged.</p>
+<pre class="code"><code><span class="tok-fn">re</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span></code></pre>
+<h5>Examples</h5>
+<pre class="code"><code>  re`https?<span class="tok-op">:</span><span class="tok-op">/</span><span class="tok-op">/</span>\<span class="tok-type">S</span>``     <span class="tok-comment"># tag form</span>
+  <span class="tok-fn">re</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">\\d`</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>             <span class="tok-comment"># call form -&gt; Result</span></code></pre>
+
+</section>
+<section class="entity" id="function-validatere">
+<h2><span class="kind kind-function">function</span> <code>validateRe</code></h2>
+<p>Companion validator for the <code>re</code> tag, delegating to validateRegex. The compiler finds it by the same <code>validate&lt;Tag&gt;</code> convention.</p>
+<pre class="code"><code><span class="tok-fn">validateRe</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-quote">
+<h2><span class="kind kind-function">function</span> <code>quote</code></h2>
+<p>Escapes every regex metacharacter in <code>s</code>, so the result matches <code>s</code> literally. Escapes per character rather than wrapping in <code>\Q...\E</code>, which a value containing <code>\E</code> would break out of.</p>
+<pre class="code"><code><span class="tok-fn">quote</span><span class="tok-punct">(</span>s<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>s</code> <code>String</code></dt><dd></dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — </p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">Regex</span><span class="tok-op">.</span><span class="tok-method">quote</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a.b</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;a\\.b&quot;</span></code></pre>
+
+</section>
+<section class="entity" id="record-match">
+<h2><span class="kind kind-record">record</span> <code>Match</code></h2>
+<p><code>Match</code> is the result of a successful match. It behaves like a map keyed by both group number (<code>0</code> is the whole match) and group name (<code>:year</code>), but is a named type so it can grow spans and surrounding context later without breaking existing <code>get</code> call sites.</p>
+<p>A group that did not participate is an absent key, so <code>get</code> returns <code>None</code> — distinct from a group that matched the empty string, which returns <code>Just(&quot;&quot;)</code>.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>captures</code></dt><dd><code>Map&lt;Any, String&gt;</code></dd></div>
+</dl>
+</section>
+<section class="entity" id="make-match">
+<h2><span class="kind kind-make">make</span> <code>Match</code></h2>
+<p>NOTE: the accessor is <code>get</code>, not <code>get</code>. A <code>make</code> block on a user type that defines a method name the prelude also uses breaks that name's dispatch for every OTHER type on the BEAM backend — with <code>get</code> here, merely saying <code>using Regex</code> made a plain <code>someMap.get(k)</code> fail with function_clause. <code>get</code> also matches Python's <code>m.get(1)</code> and Java's <code>matcher.get(1)</code>. A plain Map's <code>get</code> is unaffected: resolution picks a local method by receiver type, name and arity.</p>
+
+<div class="functions">
+<div class="fn" id="fn-get">
+<h4><code>get</code></h4>
+<p>Returns the captured text for a group, by number or by name.</p>
+<pre class="code"><code><span class="tok-fn">get</span><span class="tok-punct">(</span>key<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Atom</span> <span class="tok-op">|</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span>
+<span class="tok-fn">get</span><span class="tok-punct">(</span>key<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Atom</span> <span class="tok-op">|</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>key</code> <code>Atom | Int</code></dt><dd></dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String?</code> — </p>
+<h5>Examples</h5>
+<pre class="code"><code>  m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span>      <span class="tok-comment"># whole match</span>
+  m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span>      <span class="tok-comment"># first positional group</span>
+  m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-op">:</span>year<span class="tok-punct">)</span>  <span class="tok-comment"># named group</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="function-matches">
+<h2><span class="kind kind-function">function</span> <code>matches</code></h2>
+<p>Finds the first occurrence of <code>re</code> anywhere in <code>s</code>. Unanchored — anchor with <code>^...$</code> in the pattern if a whole-string match is wanted.</p>
+<pre class="code"><code><span class="tok-fn">matches</span><span class="tok-punct">(</span>s<span class="tok-punct">,</span> re<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Regex</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Match?</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>s</code> <code>String</code></dt><dd></dd></div>
+<div class="param"><dt><code>re</code> <code>Regex</code></dt><dd></dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Match?</code> — </p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-string">&quot;</span><span class="tok-string">order #4271</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">matches</span><span class="tok-punct">(</span>re<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(Match)</span></code></pre>
+
+</section>
+<section class="entity" id="function-matches?">
+<h2><span class="kind kind-function">function</span> <code>matches?</code></h2>
+<p>Reports whether <code>re</code> occurs anywhere in <code>s</code>. The boolean form of <code>matches</code>, and unanchored for the same reason.</p>
+<pre class="code"><code><span class="tok-fn">matches?</span><span class="tok-punct">(</span>s<span class="tok-punct">,</span> re<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Regex</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>s</code> <code>String</code></dt><dd></dd></div>
+<div class="param"><dt><code>re</code> <code>Regex</code></dt><dd></dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — </p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">matches?</span><span class="tok-punct">(</span>re<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</section>
+<section class="entity" id="function-scan">
+<h2><span class="kind kind-function">function</span> <code>scan</code></h2>
+<p>Every match of <code>re</code> in <code>s</code>, left to right.</p>
+<p>Always returns <code>[Match]</code>, whether or not the pattern has capture groups — adding a group to a pattern must not change the type flowing out of <code>scan</code>.</p>
+<pre class="code"><code><span class="tok-fn">scan</span><span class="tok-punct">(</span>s<span class="tok-punct">,</span> re<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Regex</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">Match</span><span class="tok-punct">]</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>s</code> <code>String</code></dt><dd></dd></div>
+<div class="param"><dt><code>re</code> <code>Regex</code></dt><dd></dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>[Match]</code> — </p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-string">&quot;</span><span class="tok-string">cat=1, dog=2</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">scan</span><span class="tok-punct">(</span>re<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">end</span></code></pre>
+
+</section>
+<section class="entity" id="function-replace">
+<h2><span class="kind kind-function">function</span> <code>replace</code></h2>
+<p>Replaces **every** match of <code>re</code> in <code>s</code> — this is <code>gsub</code>, not <code>sub</code>.</p>
+<p>The replacement is either a literal String, inserted verbatim with no <code>$1</code>/<code>\1</code> backreference syntax, or a block receiving the <code>Match</code>.</p>
+<pre class="code"><code>replace <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Regex</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">|</span> <span class="tok-punct">(</span><span class="tok-type">Match</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>s</code> <code>String</code></dt><dd></dd></div>
+<div class="param"><dt><code>replacement</code> <code>String</code></dt><dd></dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — </p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-string">&quot;</span><span class="tok-string">a-b-c</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">replace</span><span class="tok-punct">(</span>re<span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">`</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>                       <span class="tok-comment"># =&gt; &quot;a`b+c&quot;</span>
+  <span class="tok-string">&quot;</span><span class="tok-string">2026-7-4</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">replace</span><span class="tok-punct">(</span>re<span class="tok-punct">)</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">end</span></code></pre>
+
+</section>
+<section class="entity" id="function-splitlimit">
+<h2><span class="kind kind-function">function</span> <code>splitLimit</code></h2>
+<p>Splits <code>s</code> on <code>re</code>, following Ruby's semantics: trailing empty fields are dropped (leading ones are kept), and any capture groups in the pattern are interleaved into the result.</p>
+<p>Plain <code>s.split(re)</code> needs no function here at all: it resolves to <code>String.split</code>, which dispatches to this engine when handed a Regex (in both backends). Only the limit form needs a name, and it deliberately is NOT <code>split</code> — this module must not export that name. On BEAM, a module in scope via <code>using</code> captures a method name for EVERY receiver, so exporting <code>split</code> here would route <code>&quot;a,b&quot;.split(&quot;,&quot;)</code> and even the no-argument <code>&quot;hi&quot;.split</code> through this module and break them.</p>
+<pre class="code"><code>splitLimit <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Regex</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>s</code> <code>String</code></dt><dd></dd></div>
+<div class="param"><dt><code>re</code> <code>Regex</code></dt><dd></dd></div>
+<div class="param"><dt><code>s</code> <code>String</code></dt><dd></dd></div>
+<div class="param"><dt><code>re</code> <code>Regex</code></dt><dd></dd></div>
+<div class="param"><dt><code>limit</code> <code>Integer</code></dt><dd></dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>[String]</code> — </p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-string">&quot;</span><span class="tok-string">a, b ,c</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">split</span><span class="tok-punct">(</span><span class="tok-fn">regex</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">\\s*,\\s*</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]</span>
+<span class="tok-type">Splits</span> <span class="tok-keyword">with</span> a field limit — the qualified<span class="tok-op">-</span>only companion to `s<span class="tok-op">.</span><span class="tok-method">split</span><span class="tok-punct">(</span>re<span class="tok-punct">)</span>`<span class="tok-op">.</span> <span class="tok-type">A</span> positive `limit` caps the number of fields<span class="tok-punct">,</span>
+leaving the remainder unsplit <span class="tok-keyword">in</span> the last one<span class="tok-punct">;</span> a negative `limit` keeps
+trailing empty fields instead of dropping them<span class="tok-op">.</span></code></pre>
+<pre class="code"><code>  <span class="tok-type">Regex</span><span class="tok-op">.</span><span class="tok-method">splitLimit</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a,b,c</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> re<span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; [&quot;a&quot;, &quot;b,c&quot;]</span>
+  <span class="tok-type">Regex</span><span class="tok-op">.</span><span class="tok-method">splitLimit</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a,b,,</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> re<span class="tok-punct">,</span> <span class="tok-op">-</span><span class="tok-number">1</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;, &quot;&quot;, &quot;&quot;]</span></code></pre>
+
+</section>
+</section>
+</article>
+</main>
+</div>
+<footer class="foot">
+<div class="wrap">Generated by kex docgen at 2026-08-26T00:44:18.358309375+02:00 · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+</footer>
+</body>
+</html>

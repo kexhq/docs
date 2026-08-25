@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assert | Prelude 0.3.0 | kex docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+<link rel="icon" type="image/png" href="../../icon.png">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<header class="top">
+<div class="wrap top-inner">
+<a class="brand" href="../../index.html">kex</a>
+<span class="brand-sub">docs</span>
+<span class="spacer"></span>
+<button class="search-trigger" id="search" aria-label="Search documentation"
+data-root="../../" data-package="prelude" data-version="0.3.0"
+data-page="test.html">
+<span>Search</span><kbd>/</kbd>
+</button>
+<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.3.0" data-page="test.html">Prelude 0.3.0</span>
+<a class="back" href="https://kex.run/docs">kex.run ↗</a>
+</div>
+</header>
+<div class="wrap layout">
+<aside class="side"><nav aria-label="Modules"><p class="side-heading">Prelude</p><ul class="side-list">
+<li><a href="algebra.html">Algebra</a></li>
+<li><a href="bits.html">Bits</a></li>
+<li><a href="blankable.html">Blankable</a></li>
+<li><a href="console.html">Console</a></li>
+<li><a href="digest.html">Digest</a></li>
+<li><a href="errorable.html">Errorable</a></li>
+<li><a href="evaluator.html">Evaluator</a></li>
+<li><a href="filehandle.html">FileHandle</a></li>
+<li><a href="list.html">List</a></li>
+<li><a href="map.html">Map</a></li>
+<li><a href="math.html">Math</a></li>
+<li><a href="number.html">Number</a></li>
+<li><a href="optional.html">Optional</a></li>
+<li><a href="parser.html">Parser</a></li>
+<li><a href="prelude.html">Prelude</a></li>
+<li><a href="range.html">Range</a></li>
+<li><a href="stream.html">Stream</a></li>
+<li><a href="taggedvalidation.html">TaggedValidation</a></li>
+<li><a class="active" href="test.html">Assert</a><ul class="side-sub">
+<li><a href="#function-describe">describe</a></li>
+<li><a href="#function-it">it</a></li>
+<li><a href="#function-before">before</a></li>
+<li><a href="#function-after">after</a></li>
+<li><a href="#function-assert">assert</a></li>
+<li><a href="#module-assert">Assert</a></li>
+</ul></li>
+<li><a href="truthyable.html">Truthyable</a></li>
+<li><a href="webserver.html">Web</a></li>
+</ul></nav></aside>
+<main class="content">
+<nav class="crumbs"><a href="index.html">Prelude</a> <span class="sep">/</span> <span>Assert</span></nav>
+<article class="prose">
+<h1>Assert</h1>
+<section class="entity" id="function-describe">
+<h2><span class="kind kind-function">function</span> <code>describe</code></h2>
+<p>Kex ships a minimal RSpec-style testing DSL: <code>describe</code>, <code>it</code>, <code>before</code>, <code>after</code>, and assertion helpers. These are always in scope — no import needed.</p>
+<p>A test file typically looks like:</p>
+<p>    it &quot;multiplies numbers&quot; do       assert(3 * 4 == 12, &quot;expected 12&quot;)     end   end</p>
+<p>Run with:   kex my_test.kex</p>
+<p>Output uses ✓ / ✗ markers and nests by describe depth.</p>
+<p>Groups related test cases under a label. Calls the block immediately. `describe+ blocks may be nested. This is a foul function — it prints output.</p>
+<pre class="code"><code>describe <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>label</code> <code>String</code></dt><dd></dd></div>
+<div class="param"><dt><code>block</code> <code>Block</code></dt><dd></dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
+<h5>Examples</h5>
+<pre class="code"><code>  describe <span class="tok-string">&quot;</span><span class="tok-string">arithmetic</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+    it <span class="tok-string">&quot;</span><span class="tok-string">adds numbers</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+      <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-number">1</span> ` <span class="tok-number">1</span> <span class="tok-op">==</span> <span class="tok-number">2</span><span class="tok-punct">)</span>
+    <span class="tok-keyword">end</span></code></pre>
+<pre class="code"><code>  describe <span class="tok-string">&quot;</span><span class="tok-string">String</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+    describe <span class="tok-string">&quot;</span><span class="tok-string">count</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+      it <span class="tok-string">&quot;</span><span class="tok-string">returns character count</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+        <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">count</span> <span class="tok-op">==</span> <span class="tok-number">5</span><span class="tok-punct">)</span>
+      <span class="tok-keyword">end</span>
+    <span class="tok-keyword">end</span>
+  <span class="tok-keyword">end</span></code></pre>
+
+</section>
+<section class="entity" id="function-it">
+<h2><span class="kind kind-function">function</span> <code>it</code></h2>
+<p>Defines a single test case. The block is run and any exception thrown inside it (typically a failed <code>assert</code>) marks the test failed without aborting the rest of the suite. This is a foul function — it prints output.</p>
+<pre class="code"><code>it <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>label</code> <code>String</code></dt><dd></dd></div>
+<div class="param"><dt><code>block</code> <code>Block</code></dt><dd></dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
+<h5>Examples</h5>
+<pre class="code"><code>  it <span class="tok-string">&quot;</span><span class="tok-string">returns true for even numbers</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+    <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">even?</span><span class="tok-punct">)</span>
+    <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-op">!</span><span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-method">even?</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span></code></pre>
+
+</section>
+<section class="entity" id="function-before">
+<h2><span class="kind kind-function">function</span> <code>before</code></h2>
+<p>Registers setup for the current group. <code>before { ... }</code> and <code>before(:each) { ... }</code> run before every test; <code>before(:all) { ... }</code> runs once before the group's tests, following RSpec's scope convention.</p>
+<pre class="code"><code>before <span class="tok-op">:</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+
+</section>
+<section class="entity" id="function-after">
+<h2><span class="kind kind-function">function</span> <code>after</code></h2>
+<p>Registers cleanup for the current group. <code>after { ... }</code> defaults to <code>:each</code>; <code>after(:all) { ... }</code> runs once when the group finishes. Cleanup is unconditional, and inner per-test hooks run before outer hooks.</p>
+<pre class="code"><code>after <span class="tok-op">:</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+
+</section>
+<section class="entity" id="function-assert">
+<h2><span class="kind kind-function">function</span> <code>assert</code></h2>
+<p>Throws a runtime error if <code>value</code> is falsy, failing the enclosing <code>it</code>. The optional <code>message</code> is included in the failure output.</p>
+<pre class="code"><code>assert <span class="tok-op">:</span> <span class="tok-type">Bool</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span>
+assert <span class="tok-op">:</span> <span class="tok-type">Bool</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code> <code>Bool</code></dt><dd></dd></div>
+<div class="param"><dt><code>message</code> <code>String</code></dt><dd>(optional)</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — </p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-number">42</span> <span class="tok-op">==</span> <span class="tok-number">42</span><span class="tok-punct">)</span>
+  <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">count</span> <span class="tok-op">==</span> <span class="tok-number">5</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">count should be 5</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="module-assert">
+<h2><span class="kind kind-module">module</span> <code>Assert</code></h2>
+<p>Focused assertions are ordinary Kex stdlib functions layered on the primitive <code>assert</code>, so adding another helper does not require compiler or runtime work.</p>
+<section class="entity" id="function-equal">
+<h2><span class="kind kind-function">function</span> <code>equal</code></h2>
+<pre class="code"><code><span class="tok-fn">equal</span><span class="tok-punct">(</span>actual<span class="tok-punct">,</span> expected<span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-notequal">
+<h2><span class="kind kind-function">function</span> <code>notEqual</code></h2>
+<pre class="code"><code><span class="tok-fn">notEqual</span><span class="tok-punct">(</span>actual<span class="tok-punct">,</span> expected<span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-truthy">
+<h2><span class="kind kind-function">function</span> <code>truthy</code></h2>
+<pre class="code"><code><span class="tok-fn">truthy</span><span class="tok-punct">(</span>value<span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-falsy">
+<h2><span class="kind kind-function">function</span> <code>falsy</code></h2>
+<pre class="code"><code><span class="tok-fn">falsy</span><span class="tok-punct">(</span>value<span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-some">
+<h2><span class="kind kind-function">function</span> <code>some</code></h2>
+<pre class="code"><code><span class="tok-fn">some</span><span class="tok-punct">(</span>value<span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-none">
+<h2><span class="kind kind-function">function</span> <code>none</code></h2>
+<pre class="code"><code><span class="tok-fn">none</span><span class="tok-punct">(</span>value<span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-ok">
+<h2><span class="kind kind-function">function</span> <code>ok</code></h2>
+<pre class="code"><code><span class="tok-fn">ok</span><span class="tok-punct">(</span>value<span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-error">
+<h2><span class="kind kind-function">function</span> <code>error</code></h2>
+<pre class="code"><code><span class="tok-fn">error</span><span class="tok-punct">(</span>value<span class="tok-punct">)</span></code></pre>
+
+</section>
+</section>
+</article>
+</main>
+</div>
+<footer class="foot">
+<div class="wrap">Generated by kex docgen at 2026-08-26T00:43:59.439200833+02:00 · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+</footer>
+</body>
+</html>

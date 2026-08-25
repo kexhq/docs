@@ -1,0 +1,34 @@
+---
+package: prelude
+version: "0.3.1"
+source: errorable.kex
+title: Errorable
+entities:
+  - { kind: trait, name: "Errorable" }
+  - { kind: record, name: "ParseError" }
+---
+
+# Errorable
+
+## trait `Errorable`
+
+Errorable — the trait for values that describe a failure. Implemented by error types that carry a human-readable message, so generic handlers can display or log any error uniformly (independent of the concrete error type's structured fields).
+
+
+#### `message`
+
+```kex
+message : String
+```
+
+## record `ParseError`
+
+ParseError — a typed parse failure. Carries the original `input`, the byte `position` where parsing stopped (and from which it can be continued), the successfully parsed `value` (if any prefix was consumed — typed `Any` so it works across Integer / Float / Number), a diagnostic `message`, and the remaining unconsumed suffix `rest` so the caller can resume parsing.
+
+**Fields**
+
+  - `input` : String
+  - `position` : Integer
+  - `value` : Any
+  - `message` : String
+  - `rest` : String

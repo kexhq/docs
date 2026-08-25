@@ -1,0 +1,3647 @@
+---
+package: tey
+version: "0.2.0-dev"
+source: main.kex
+title: Main
+entities:
+
+---
+
+# Main
+
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/cache.kex
+title: Tey.Cache
+entities:
+  - { kind: module, name: "Tey.Cache" }
+---
+
+# Tey.Cache
+
+## module `Tey.Cache`
+
+## constant `root`
+
+
+
+## function `packagePath`
+
+Include the source URL in the cache identity: two packages with the same display name must never share a checkout.
+
+
+```kex
+packagePath(dep)
+```
+
+
+## function `fetch`
+
+
+```kex
+fetch(dep)
+```
+
+
+## function `verify`
+
+
+```kex
+verify(dep)
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/cli.kex
+title: Tey.Cli
+entities:
+  - { kind: module, name: "Tey.Cli" }
+---
+
+# Tey.Cli
+
+## module `Tey.Cli`
+
+## constant `parser`
+
+Options AND commands in one declaration: OptionParser matches the command words, strips them, and hands the handler what is left. Tey keeps no dispatcher of its own, so the help text and what actually runs cannot drift apart — they are read off the same list.
+
+`foul` because the handlers do things.
+
+
+
+## constant `cli`
+
+The parser Tey actually runs: the declared commands, plus one for every `command(...)` this package's manifest declares. Registering them here rather than in a fallback is what gets them into `tey help`, into the unknown-command message, and into argument stripping, for free.
+
+A package command can never shadow a built-in: the manifest reader refuses those names outright (Tey.Manifest.reservedCommands). They are listed under their own help heading regardless — "unknown command" should send a reader to package.kex or to Tey, and the two lists are written by different people.
+
+
+
+## function `dispatch`
+
+The line is parsed once here to answer the two questions `run` cannot — is this `--version`, and does it name a command Tey already answers — and then handed to `run`, which parses it again and dispatches. A parse ERROR is left to `run` as well: reporting it with the help text is the one policy every tool built on OptionParser shares.
+
+
+```kex
+dispatch(args)
+```
+
+
+## constant `announceToolchain`
+
+Tells the rest of the process which compiler Tey selected.
+
+`Kex.AST` — which is how a `package.kex` is read at all — shells out to the compiler named by `$KEX`, falling back to whatever `kex` PATH happens to hold. Tey is started by `erl`, not by `kex`, so nothing had set that: a manifest was parsed by an unrelated compiler if one was on PATH, and by none at all otherwise — which is why a package's commands silently vanished from `tey help` on a machine where `kex` was installed only inside the Tey home.
+
+An explicit `$KEX` is left alone: someone who set it means it, and that is the documented override the compiler itself honours.
+
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/commands.kex
+title: Tey.Commands
+entities:
+  - { kind: module, name: "Tey.Commands" }
+---
+
+# Tey.Commands
+
+## module `Tey.Commands`
+
+## constant `manifest`
+
+
+
+## constant `lock`
+
+
+
+## function `add`
+
+
+```kex
+add(name, options)
+```
+
+
+## function `install`
+
+`--without dev` leaves a group's dependencies out of this install. The LOCKFILE still lists them — what is omitted is the fetching, so switching the flag off later needs no re-resolve.
+
+
+```kex
+install(without)
+```
+
+
+## constant `installTargets`
+
+Puts this package's `target(...)` executables where they can be run by name.
+
+`${TEY_HOME}/bin` is a directory Tey already owns and already asks people to put on PATH — it is how the `kex` shim gets there — so a package's programs land beside it rather than needing a second directory and a second instruction.
+
+Only packages that DECLARE a target are affected. A library has none, so `tey install` in one still means exactly what it meant before: fetch the dependencies.
+
+
+
+## constant `dependencyRoots`
+
+`--source-root` for every fetched dependency. Without these a dependency is just bytes in the cache: `using Greet` cannot find it, and the package that declared it does not compile. A dependency the lockfile names but the cache does not have is reported rather than quietly dropped — the answer is `tey install`, and silence would look like a broken `using`.
+
+
+
+## constant `sourceRoots`
+
+Every `--source-root` a compile of THIS package needs: its own `src/` first, then each dependency's. Own-first is deliberate — a package that shadows a dependency's module name means its own, the same way `--source-root` order already decides that for dependencies among themselves.
+
+
+
+## constant `librarySources`
+
+A library's compilable units: every `.kex` directly under `src/`. Not a recursive walk — a nested module is reached by the file that declares it, and compiling it twice by name is how you get a duplicate-module error out of a perfectly good package.
+
+
+
+## function `backendFlags`
+
+What `tey build` produces is what ships, so what `tey run` and `tey test` exercise has to be the same thing. `-R` compiles and runs on the BEAM; without it the toolchain tree-walks the source, and processes, `Erlang.*` interop and the String/Char representation differ enough between the two that a green interpreter run says nothing about the built package.
+
+`--interpret` is the way back, for a backend gap or a debugging session.
+
+
+```kex
+backendFlags(interpret?)
+```
+
+
+## function `runPackage`
+
+
+```kex
+runPackage(extra, interpret?)
+```
+
+
+## function `runCommand`
+
+`tey <name>` for a `command(...)` the manifest declares.
+
+A `.kex` script is run through the SELECTED toolchain with this package's source roots already in place — the same environment `tey run` gives, so a release script can `using` the package it is releasing. Anything else is a shell line: `sh -c` is what makes `command("fmt", run: "kex --format src")` behave the way the same line behaves in a terminal, pipes and `&&` included. Trailing arguments are passed as "$@" rather than pasted into the string, so `tey fmt --check` cannot be re-split by the shell.
+
+The `--` before the arguments plays the same role as in runPackage.
+
+
+```kex
+runCommand(command, extra, interpret?)
+```
+
+
+## constant `list`
+
+
+
+## constant `build`
+
+
+
+## function `testReportingFlags`
+
+How `tey test` should REPORT, as compiler flags (kexhq/kex#199).
+
+`--json` and `--list` are for a tool reading the run rather than a person watching it: one JSON record per case, carrying the file and line of the `it` and of the failure, and — with `--list` — the cases discovered without any of them being run. `--only <name>` narrows the run to one case or one group.
+
+Tey does not interpret any of it: the flags are the compiler's, the records are the compiler's, and this is the mapping from what a person typed to what the compiler is asked. Which is the point — an editor drives `tey test` because Tey knows the package's source roots, not because it wants Tey to reformat the answer (docs/testing.md).
+
+
+```kex
+testReportingFlags(json?, list?, only)
+```
+
+
+## function `testSpecs`
+
+The spec files to run: the ones named on the line, or every `spec/*.spec.kex` when none were. Naming one is what an editor's per-file ▶ needs — and what anyone debugging a single suite in a package with thirty of them wants.
+
+
+```kex
+testSpecs(requested)
+```
+
+
+## function `test`
+
+
+```kex
+test(requested, interpret?, json?, list?, only)
+```
+
+
+## function `clean`
+
+
+```kex
+clean(all?)
+```
+
+
+## function `setupMergeDriver`
+
+
+```kex
+setupMergeDriver(remove?)
+```
+
+
+## function `new`
+
+`tey new <name>` — a package in a directory of its own, which the command creates. The pair with `init` below follows what `git init` and `cargo new` already taught everyone: `new` makes the directory, `init` adopts the one you are standing in.
+
+
+```kex
+new(directory, library)
+```
+
+
+## function `init`
+
+`tey init` — a package in the CURRENT directory, named after it. This is the half that was missing: a repository someone had already made and cloned had no way to become a package except `tey new` in a temp directory and moving the files over by hand.
+
+The name is overridable because a directory name is not always the package name — `kexhq/greet` checked out as `greet-main` is still `greet`.
+
+
+```kex
+init(name, library)
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/git.kex
+title: Tey.Git
+entities:
+  - { kind: module, name: "Tey.Git" }
+---
+
+# Tey.Git
+
+## module `Tey.Git`
+
+## function `execute`
+
+
+```kex
+execute(args)
+```
+
+
+## function `pinRef`
+
+
+```kex
+pinRef(url, selector, requested)
+```
+
+
+## function `tags`
+
+Every version-shaped tag a repository publishes, newest first. Used to answer a range requirement, and to list installable Kex toolchains.
+
+
+```kex
+tags(url)
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/lockfile.kex
+title: Tey.Lockfile
+entities:
+  - { kind: module, name: "Tey.Lockfile" }
+---
+
+# Tey.Lockfile
+
+## module `Tey.Lockfile`
+
+Pure, and declared so. Reading and writing `tey.lock` is somebody else's job — this module only turns the text into a LockState and back, which is what makes the whole format testable without a disk (tey/spec/lockfile.spec.kex).
+
+## record `Dependency`
+
+**Fields**
+
+  - `name` : String
+  - `git` : String
+  - `resolved` : String
+  - `commit` : String
+  - `sha256` : String
+  - `groups` : [String] (optional)
+
+## record `LockState`
+
+**Fields**
+
+  - `kexRequirement` : String
+  - `kexVersion` : String
+  - `otpRequirement` : String (optional)
+  - `otpRelease` : Integer (optional)
+  - `lockedDependencies` : [Dependency]
+
+## function `encode`
+
+
+```kex
+encode(lock)
+```
+
+
+## function `dependencyName`
+
+
+```kex
+dependencyName(dep)
+```
+
+
+## function `dependencyGit`
+
+
+```kex
+dependencyGit(dep)
+```
+
+
+## function `dependencyCommit`
+
+
+```kex
+dependencyCommit(dep)
+```
+
+
+## function `dependencySha256`
+
+
+```kex
+dependencySha256(dep)
+```
+
+
+## function `dependencyGroups`
+
+
+```kex
+dependencyGroups(dep)
+```
+
+
+## function `dependencyListLine`
+
+
+```kex
+dependencyListLine(dep)
+```
+
+
+## function `decode`
+
+
+```kex
+decode(text)
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/manifest.kex
+title: Tey.Manifest
+entities:
+  - { kind: module, name: "Tey.Manifest" }
+---
+
+# Tey.Manifest
+
+## module `Tey.Manifest`
+
+## record `Dependency`
+
+**Fields**
+
+  - `manifestName` : String
+  - `manifestGit` : String
+  - `manifestSelector` : String
+  - `manifestRequested` : String
+  - `manifestGroups` : [String] (optional)
+
+## record `Target`
+
+**Fields**
+
+  - `name` : String
+  - `entrypoint` : String
+
+## record `Command`
+
+A project-specific command, run as `tey <name>`. Without these every package grows a Makefile or a bin/ script beside package.kex for "the way you run the linter", which the manifest — the one file a newcomer reads — says nothing about.
+
+A name is one word, grouped with a colon: `db:migrate`, `assets:build`.
+
+**Fields**
+
+  - `commandName` : String
+  - `commandRun` : String
+  - `commandDescription` : String (optional)
+
+## record `Toolchain`
+
+A toolchain package: the compiler executable plus the runtime and standard library it was built with, installed together so the three can never drift apart. Kex's own `package.kex` is the one that declares it — and a reader that did not know the declaration could not run any tey command from the compiler's own checkout, which is where it is most used.
+
+Fields are prefixed like Command's: a bare `compiler` would be read as a method on an unpinned receiver before it is read as a field here.
+
+**Fields**
+
+  - `toolchainName` : String
+  - `toolchainCompiler` : String (optional)
+  - `toolchainRuntime` : String (optional)
+  - `toolchainStdlib` : String (optional)
+
+## record `ManifestPackage`
+
+**Fields**
+
+  - `name` : String
+  - `version` : String (optional)
+  - `description` : String (optional)
+  - `license` : String (optional)
+  - `packageKexRequirement` : String (optional)
+  - `packageOtpRequirement` : String (optional)
+  - `entrypoint` : String (optional)
+  - `manifestDependencies` : [Dependency] (optional)
+  - `targets` : [[Target](#record-target)] (optional)
+  - `commands` : [[Command](#record-command)] (optional)
+  - `manifestToolchain` : Toolchain? (optional)
+
+## constant `reservedCommands`
+
+The command names Tey answers itself. A `command(...)` may not take one of them: `tey test` must mean the same thing in every checkout, so a manifest that tries to redefine it is an error at read time rather than a silent shadow. Kept here because the READER is what enforces it, and Tey.Cli cannot be asked: it is built on this module, so reading the list off its declared commands would be a cycle. The two have to be kept in step by hand — one `.command(...)` in Tey.Cli, one name here (the first word is enough: `kex` covers every `kex ...` subcommand).
+
+
+
+## function `read`
+
+Reads a `package.kex`.
+
+The compiler parses the manifest. Tey only interprets the resulting Kex AST, so comments, multiline calls, strings, and future grammar fixes cannot drift from the language that actually compiles package.kex.
+
+
+```kex
+read(text)
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/resolver.kex
+title: Tey.Resolver
+entities:
+  - { kind: module, name: "Tey.Resolver" }
+---
+
+# Tey.Resolver
+
+## module `Tey.Resolver`
+
+## function `resolvePackage`
+
+
+```kex
+resolvePackage(manifest)
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/semver.kex
+title: Tey.Semver
+entities:
+  - { kind: module, name: "Tey.Semver" }
+---
+
+# Tey.Semver
+
+## module `Tey.Semver`
+
+## record `SemanticVersion`
+
+**Fields**
+
+  - `major` : Integer
+  - `minor` : Integer
+  - `patch` : Integer
+  - `preRelease` : String (optional)
+
+## make `SemanticVersion` implements Comparable
+
+SemanticVersion is Comparable, so `a.compare(b)` answers Less/Equal/Greater like every other ordered type in the stdlib, and ordering reads as an ordering rather than as sign arithmetic on -1/0/1.
+
+
+#### `compare`
+
+```kex
+compare(other)
+```
+
+## function `parseVersion`
+
+
+```kex
+parseVersion(text)
+```
+
+
+## function `release`
+
+The release a version belongs to: `0.4.0-rc.1` → `0.4.0`. Used where a pre-release should count as its eventual release.
+
+
+```kex
+release(text)
+```
+
+
+## function `stable?`
+
+Whether a version is a full release rather than a pre-release. This is the question a download page asks: "what is the current stable Kex?".
+
+
+```kex
+stable?(text)
+```
+
+
+## function `satisfies`
+
+
+```kex
+satisfies(versionText, requirement)
+```
+
+
+## function `intersect`
+
+The requirement satisfied only by versions satisfying BOTH, for when two packages in one graph each ask for the same dependency.
+
+Concatenation, because `satisfies` already reads a requirement as a list of space-separated clauses that must ALL hold: `~> 0.1` and `>= 0.1.5` intersect to `~> 0.1 >= 0.1.5`, which is exactly the question "satisfies both". No interval arithmetic, no second implementation of the operators to keep in step with the first.
+
+An empty intersection is not detected here, and deliberately: `~> 0.1 ~> 0.2` is perfectly well formed and simply matches nothing. Emptiness is a fact about the versions a repository actually publishes, so it is discovered where the tags are (`highest`), where the error can also say what WAS available.
+
+
+```kex
+intersect(a, b)
+```
+
+
+## function `intersectAll`
+
+Every constraint at once. `[]` and `[""]` both mean "no opinion", which is what a package with no version requirement expresses.
+
+
+```kex
+intersectAll(requirements)
+```
+
+
+## function `versionOf`
+
+The version inside a resolved ref: `refs/tags/v0.1.1` and `v0.1.1` both give `0.1.1`. A ref that carries no version (a branch name, a bare commit) gives "", which satisfies nothing and so never claims to meet a range.
+
+
+```kex
+versionOf(ref)
+```
+
+
+## function `channelRank`
+
+Channel precedence, lowest first: prealpha < alpha < beta < rc < release. Plain semver would order these alphabetically — putting `beta` BEFORE `prealpha` — which is not what the words mean, so the ranking is explicit.
+
+
+```kex
+channelRank(channel)
+```
+
+
+## function `range?`
+
+Whether a requested tag is a RANGE rather than one exact tag. `v1.2.0` is a name to look up; `~> 1.2` is a question to answer against everything the repository has.
+
+
+```kex
+range?(requested)
+```
+
+
+## function `newer?`
+
+Descending semantic order, for picking the newest of anything. A tag that is not a version sorts after every tag that is, so a stray `nightly` can never displace a release.
+
+
+```kex
+newer?(a, b)
+```
+
+
+## function `newestFirst`
+
+
+```kex
+newestFirst(versions)
+```
+
+
+## function `highest`
+
+The highest tag that satisfies the requirement — the whole point of writing a range instead of a version. None when nothing does.
+
+
+```kex
+highest(tags, requirement)
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/toolchain.kex
+title: Tey.Toolchain
+entities:
+  - { kind: module, name: "Tey.Toolchain" }
+---
+
+# Tey.Toolchain
+
+## module `Tey.Toolchain`
+
+## constant `home`
+
+
+
+## constant `repository`
+
+Where `tey kex list` looks for releases. Overridable so a fork or a mirror can be used without patching Tey.
+
+
+
+## constant `binDirectory`
+
+The directory holding the `kex` shim. It is what a user puts on PATH once; selecting a version repoints the shim rather than asking them to edit PATH again.
+
+
+
+## constant `shimPath`
+
+
+
+## constant `selected`
+
+The version `tey kex use` last selected, if any.
+
+
+
+## constant `installedVersions`
+
+Versions installed under this Tey home, newest first. Staging leftovers are not installations, and neither is a directory whose `bin/kex` is gone — a half-removed toolchain must not be offered as one somebody can run.
+
+
+
+## function `binaryOf`
+
+The `bin/kex` naming an installed version — the toolchain layout every consumer (the shim, `resolved`, the listings) agrees on, in one place.
+
+
+```kex
+binaryOf(version)
+```
+
+
+## function `installed?`
+
+
+```kex
+installed?(version)
+```
+
+
+## constant `availableVersions`
+
+Released versions, newest first, read from the repository's tags. Tags that are not versions are skipped rather than reported as junk.
+
+
+
+## function `newestFirst`
+
+
+```kex
+newestFirst(versions)
+```
+
+
+## constant `latestStable`
+
+The newest RELEASED version — what `tey kex install` picks when asked for no version in particular, and what a download page means by "the current Kex". Pre-releases are opt-in by name.
+
+
+
+## constant `latestIncludingPreReleases`
+
+The newest version of ANY channel — what `tey kex install --pre` picks. This is how you get onto a beta or an rc without knowing its number: during a pre-stability run there may be nothing else published at all.
+
+
+
+## constant `installedKex`
+
+
+
+## constant `bundled`
+
+The Kex bundled beside Tey — what a package manager lays down so the first `tey` command has a compiler without a ten-minute build. It is a SEED, not an installation: `kex` below adopts it into the Tey home on first use, and from then on Tey manages that copy like any other version. Nothing outside the Tey home is ever put on PATH, which is the whole point — two `kex` binaries under two managers drift apart.
+
+
+
+## constant `bundledVersion`
+
+Which version the bundled Kex is. Answering means RUNNING it, so this is not something to ask inside a loop — but it is the only way to know: the seed is a plain install tree with no version recorded beside it.
+
+
+
+## record `Toolchain`
+
+One selectable Kex: the version `tey kex use` names it by, the binary that runs it, and whether it is the bundled seed lying beside Tey rather than an installation in the Tey home.
+
+**Fields**
+
+  - `version` : String
+  - `binary` : String
+  - `bundled?` : Bool (optional)
+
+## constant `selectableToolchains`
+
+Every version `tey kex use` can select, newest first: the ones in the Tey home, plus the bundled one — each carrying the binary that runs it, which is what a listing meant for tools (`kex list --installed --json`) needs.
+
+The seed belongs here even though it is not installed. It is a real compiler already on the disk, and on a fresh keg it is the one a bare `kex` runs — so leaving it out made `tey kex use <that version>` refuse a version the user had just watched run, with no way back to it short of downloading a second copy of what was already there.
+
+
+
+## constant `selectableVersions`
+
+Every version `tey kex use` can select, newest first.
+
+
+
+## function `resolveSelector`
+
+Turns what someone typed after `tey kex use` into a version number.
+
+`latest` means the newest Kex this machine can select — NOT the newest released one. `use` selects among what is already here; reaching for something unreleased-and-undownloaded is what `tey kex install` is for, and quietly downloading from a command that reads like "switch to" would be a surprise.
+
+
+```kex
+resolveSelector(selector)
+```
+
+
+## constant `kex`
+
+The compiler every Tey command shells out to.
+
+In order: an explicit TEY_KEX, the selected toolchain, the bundled seed (adopted on the spot), and only then a bare `kex` from PATH. That last one is a fallback for a source checkout, not a supported installation — a `kex` somebody else installed is a `kex` Tey cannot update, and it silently becomes a different version from the one `tey kex list` reports.
+
+
+
+## constant `runtimeOtpFloor`
+
+The OTP release that compiled the selected toolchain's runtime beams — the oldest Erlang that can load them, since a `.beam` cannot be read by a runtime older than the `erlc` that produced it.
+
+Read from `kex --info` rather than guessed: the number is a build-time constant inside the binary (KEX_RUNTIME_OTP_FLOOR) and Tey has no other way to see it. `--version` is prose and may be reworded; `--info` is the contract (tests/info_cli_test.cxx pins it).
+
+`None` when the toolchain is too old to have `--info`, when the field is absent, or when it is `null` because the compiler was built without erlc. All three mean the same thing to a caller — "this toolchain does not say" — and none of them is an error worth stopping a build for.
+
+
+
+## constant `runningOtpRelease`
+
+The OTP actually about to run, asked of `erl` itself.
+
+
+
+## constant `erl`
+
+The `erl` Tey and Kex will spawn. KEX_ERL mirrors what the compiler itself honours, so overriding it moves both rather than half of the pair.
+
+
+
+## constant `resolved`
+
+The compiler Tey would run, or None when there is none to run.
+
+The bundled Kex is used WHERE IT LIES rather than copied into the Tey home first. Copying is an install, and an install is not something to do behind someone's back on their first command — it is also impossible where it would be most useful, since Homebrew's post-install sandbox cannot write to the user's home at all. So a fresh Homebrew keg is runnable immediately, nothing is written until `tey kex install` is typed, and a selected version always wins over the bundled one.
+
+Without the last-resort fallback to a bare `kex` from PATH that `kex` above keeps: `kex` on PATH is Tey's own dispatcher, and answering it with its own name would send it round in a circle.
+
+
+
+## constant `installBundled`
+
+Takes the bundled Kex into the Tey home so Tey manages it like any other version: `tey kex list` shows it, `tey kex use` can come back to it, and uninstalling whatever replaces it leaves something behind. Only ever done when asked — see `resolved`.
+
+
+
+## constant `selectionHealthy?`
+
+Whether the selected toolchain is actually there. A `current` naming a version somebody deleted leaves every command failing on a path that does not exist, which reads like a broken Tey rather than a missing Kex.
+
+
+
+## function `installRelease`
+
+Installs a released version by name. The published archive for this machine is the fast path — unpacking one takes seconds where building takes minutes, and it needs no compiler, which is the point: whatever installs Tey should not also have to be able to build Kex.
+
+Falling back to a source build rather than failing keeps the platforms without a published archive working, and covers a release whose upload is incomplete.
+
+
+```kex
+installRelease(version)
+```
+
+
+## type `ArchiveFailure`
+
+Why a published archive could not be installed. The distinction is the point: one of these is routine and one of them is not.
+
+
+
+**Variants**
+
+  - `Unavailable(String)`
+  - `Corrupt(String)`
+
+## constant `releaseBase`
+
+Where the release archives live. Derived from the repository so a fork only has to set TEY_KEX_REPO, and overridable on its own for a mirror.
+
+
+
+## constant `releaseTarget`
+
+The archive naming this machine, matching what the release workflow builds: `kex-0.4.0-macos-arm64.tar.gz`.
+
+
+
+## function `installSource`
+
+Installs compiler, runtime BEAM modules and stdlib sources together. The source tree's CMake install layout is the toolchain ABI Tey manages.
+
+
+```kex
+installSource(source, version)
+```
+
+
+## function `uninstall`
+
+Removes an installed toolchain. Refuses to leave the shim pointing at nothing: removing the SELECTED version also clears the selection, and the caller is told to pick another.
+
+
+```kex
+uninstall(version)
+```
+
+
+## function `use`
+
+
+```kex
+use(version)
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/version.kex
+title: Tey.Version
+entities:
+  - { kind: module, name: "Tey.Version" }
+---
+
+# Tey.Version
+
+## module `Tey.Version`
+
+GENERATED by tey/Makefile from tey/package.kex — do not edit.
+
+## constant `number`
+
+Tey's own version, as declared by package.kex's version(...) line.
+
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/docgen/assets.kex
+title: Tey.Docgen.Assets
+entities:
+  - { kind: module, name: "Tey.Docgen.Assets" }
+---
+
+# Tey.Docgen.Assets
+
+## module `Tey.Docgen.Assets`
+
+Browser-side assets for the docs site: the version switcher and search. Both are progressive enhancements over static HTML — without JavaScript the badge stays a badge and search is absent. Each page carries its package and version in data- attributes, so the script fetches the right index without being regenerated per version.
+
+## function `siteJs`
+
+
+```kex
+siteJs()
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/docgen/cli.kex
+title: Tey.Docgen.Cli
+entities:
+  - { kind: module, name: "Tey.Docgen.Cli" }
+---
+
+# Tey.Docgen.Cli
+
+## module `Tey.Docgen.Cli`
+
+Command-line interface for docgen: option declarations, dispatch, usage.
+
+Inside a package (a directory with a package.kex), most of the line is already implied — `tey docs build --out <site>` is the whole command:
+
+  cd tey && tey docs build --out ../kdocs
+
+  tey docs build --source src/stdlib --out <dir> \     --package prelude --label "Prelude" --base-url https://docs.kex.run
+
+  tey docs serve --out <dir> --port 4322
+
+A built-in Tey command. Everything after the command word is docgen's own vocabulary — OptionParser passes a command's options through — so no `--` is needed, though `tey docs -- build ...` works too (the `--` is stripped).
+
+## function `options`
+
+A function rather than a module-level constant: on BEAM, calling a make-method (`.parse`, `.help`) on a module-level constant fails with "Undefined function" — the dispatcher doesn't resolve the constant.
+
+
+```kex
+options()
+```
+
+
+## function `dispatch`
+
+
+```kex
+dispatch(args)
+```
+
+
+## function `runCommand`
+
+
+```kex
+runCommand(parsed)
+```
+
+
+## function `printUsage`
+
+
+```kex
+printUsage()
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/docgen/css.kex
+title: Tey.Docgen.Css
+entities:
+  - { kind: module, name: "Tey.Docgen.Css" }
+---
+
+# Tey.Docgen.Css
+
+## module `Tey.Docgen.Css`
+
+The docs site stylesheet, ported by hand from kex-run-site's design tokens (src/styles/global.css): the warm honey/cream palette from the kex logo, Plus Jakarta Sans / Fraunces / JetBrains Mono, dark warm code surface with tok-* syntax classes. Plain CSS with custom properties — no Tailwind build, so the output stays host-anywhere static files.
+
+Embedded as a raw backtick literal so the build stays self-contained: Tey.Docgen.Index writes this to <out>/assets/style.css.
+
+## function `siteCss`
+
+
+```kex
+siteCss()
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/docgen/extract.kex
+title: Tey.Docgen.Extract
+entities:
+  - { kind: module, name: "Tey.Docgen.Extract" }
+---
+
+# Tey.Docgen.Extract
+
+## module `Tey.Docgen.Extract`
+
+Kex.AST nodes → the typed entity model (Tey.Docgen.Model).
+
+Declaration bodies interleave TypeAnnotations (`name : type`) with FunctionDefs (`let name(args) ...`); overloads repeat both. Functions are collected per name as PendingFunction records (annotations + parameter lists kept apart), then finalised once the body is fully walked, because pairing an annotation's curried type with a clause's parameter names needs both sides.
+
+## function `fileEntities`
+
+── Entry point ──────────────────────────────────────────────────────────
+
+
+```kex
+fileEntities(items)
+```
+
+
+## function `pageFor`
+
+
+```kex
+pageFor(source, items)
+```
+
+
+## function `pageTitle`
+
+A page's title is the declaration it is really about — "OptionParser", not the file name's "Optionparser", and "FileHandle", not "Filehandle". Preference order: a single top-level module, then a single top-level type/record/trait, then the file name title-cased.
+
+
+```kex
+pageTitle(source, entities)
+```
+
+
+## function `entitiesIn`
+
+── Body walking ─────────────────────────────────────────────────────────
+
+
+```kex
+entitiesIn(body, prefix)
+```
+
+
+## type `Pending`
+
+Accumulator entries: finished entities or functions still collecting.
+
+
+
+**Variants**
+
+  - `Done(Entity)`
+  - `PendingFn(PendingFunction)`
+
+## record `PendingFunction`
+
+**Fields**
+
+  - `name` : String
+  - `qualifiedName` : String
+  - `annotations` : [Kex.AST.AnnotationInfo]
+  - `paramLists` : [[String]]
+  - `clauseCount` : Integer
+  - `doc` : [Doc](../../tey/docgen/model.md#record-doc)
+  - `line` : Integer
+
+## function `bodyEntities`
+
+
+```kex
+bodyEntities(body, prefix, accum)
+```
+
+
+## function `finalize`
+
+
+```kex
+finalize(accum)
+```
+
+
+## function `finalizeOne`
+
+
+```kex
+finalizeOne(p)
+```
+
+
+## function `typeEntity`
+
+── Per-kind entities ────────────────────────────────────────────────────
+
+
+```kex
+typeEntity(info, prefix)
+```
+
+
+## function `variantEntry`
+
+A named helper (rather than an inline lambda) so the element type of `v.fields` comes from VariantInfo, not from VariantEntry's [String].
+
+
+```kex
+variantEntry(v)
+```
+
+
+## function `recordEntity`
+
+
+```kex
+recordEntity(info, prefix)
+```
+
+
+## function `traitEntity`
+
+
+```kex
+traitEntity(info, prefix)
+```
+
+
+## function `makeEntity`
+
+
+```kex
+makeEntity(info)
+```
+
+
+## function `moduleEntity`
+
+
+```kex
+moduleEntity(info, prefix)
+```
+
+
+## function `constantEntity`
+
+
+```kex
+constantEntity(info, prefix)
+```
+
+
+## function `functionEntries`
+
+── Function collection ──────────────────────────────────────────────────
+
+
+```kex
+functionEntries(body, prefix)
+```
+
+
+## function `noteAnnotation`
+
+
+```kex
+noteAnnotation(accum, info, prefix)
+```
+
+
+## function `addAnnotation`
+
+
+```kex
+addAnnotation(p, info)
+```
+
+
+## function `noteFunction`
+
+
+```kex
+noteFunction(accum, info, prefix)
+```
+
+
+## function `isConstantBinding`
+
+
+```kex
+isConstantBinding(info)
+```
+
+
+## function `noteConstant`
+
+
+```kex
+noteConstant(accum, info, prefix)
+```
+
+
+## function `constantFromPending`
+
+The annotation arrived first and created a PendingFunction; the binding now replaces it with the constant entry, keeping name/doc/line.
+
+
+```kex
+constantFromPending(p, info, prefix)
+```
+
+
+## function `returnTypeText`
+
+
+```kex
+returnTypeText(info)
+```
+
+
+## function `addClause`
+
+
+```kex
+addClause(p, info, paramNames)
+```
+
+
+## function `findPending`
+
+
+```kex
+findPending(accum, name)
+```
+
+
+## function `indexedFind`
+
+
+```kex
+indexedFind(accum, name, index)
+```
+
+
+## function `finalizeFunction`
+
+
+```kex
+finalizeFunction(fn)
+```
+
+
+## function `functionTypes`
+
+The type names a function is about — every parameter type plus the result type of each annotation, deduplicated. This is what lets search answer "what touches Integer" rather than just "what is called Integer".
+
+
+```kex
+functionTypes(annotations, paramLists)
+```
+
+
+## function `annotationTypes`
+
+
+```kex
+annotationTypes(info, paramLists)
+```
+
+
+## function `signatureTexts`
+
+── Signature rendering ──────────────────────────────────────────────────
+
+A function's signature is its EXACT Kex type — `Integer -> Integer -> Integer`, written the way Kex reads it (curried, right-associative) — rather than the flattened clause form. The parameter NAMES ride along before the colon (`and(a, b) : Integer -> Integer -> Integer`) so the names stay visible without flattening the type; an abstract method has no clause, so it shows only `name : Type`. Without an annotation there is no type to show, and the names stand alone.
+
+
+```kex
+signatureTexts(fn)
+```
+
+
+## function `renderSignature`
+
+
+```kex
+renderSignature(info, paramLists)
+```
+
+
+## function `signatureTypeText`
+
+Source-style type text: function arrows chain to the right without the redundant parentheses typeRefText adds, and a function-typed parameter is parenthesized so `(X -> Y) -> Z` stays distinct from `X -> Y -> Z`.
+
+
+```kex
+signatureTypeText(ref)
+```
+
+
+## function `signatureParamText`
+
+
+```kex
+signatureParamText(p)
+```
+
+
+## function `annotationRef`
+
+
+```kex
+annotationRef(info)
+```
+
+
+## function `matchingParamList`
+
+
+```kex
+matchingParamList(ref, paramLists)
+```
+
+
+## function `paramsMatch`
+
+
+```kex
+paramsMatch(ref, names)
+```
+
+
+## function `flattenToArity`
+
+Absorbs single-parameter curried layers while more than one argument remains. `(FilePath) -> (Read) -> R` with arity 2 becomes `(FilePath, Read) -> R`.
+
+
+```kex
+flattenToArity(ref, arity)
+```
+
+
+## function `clauseParamNames`
+
+── AST accessors and helpers ────────────────────────────────────────────
+
+`type` is a keyword after `.`, so typed-record access goes through pattern matching instead.
+
+
+```kex
+clauseParamNames(clause)
+```
+
+
+## function `paramName`
+
+
+```kex
+paramName(p)
+```
+
+
+## function `annotationTypeOf`
+
+
+```kex
+annotationTypeOf(info)
+```
+
+
+## function `fieldTypeName`
+
+
+```kex
+fieldTypeName(f)
+```
+
+
+## function `typeText`
+
+
+```kex
+typeText(ref)
+```
+
+
+## function `typeTextOpt`
+
+
+```kex
+typeTextOpt(ref)
+```
+
+
+## function `qualify`
+
+Modules may be written fully qualified (`module FS.File do` inside `module FS do`), so a dotted name already carries its prefix — never prepend twice. A short name gets the parent's prefix as usual.
+
+
+```kex
+qualify(prefix, name)
+```
+
+
+## function `stripExt`
+
+
+```kex
+stripExt(name)
+```
+
+
+## function `titleCase`
+
+
+```kex
+titleCase(s)
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/docgen/highlight.kex
+title: Tey.Docgen.Highlight
+entities:
+  - { kind: module, name: "Tey.Docgen.Highlight" }
+---
+
+# Tey.Docgen.Highlight
+
+## module `Tey.Docgen.Highlight`
+
+A small syntax highlighter for Kex source, ported from kex-run-site's src/lib/highlight.ts: a "good enough" tokenizer rather than a full grammar. Emits <span class="tok-*"> HTML at docgen build time, so the docs carry no client-side JavaScript. Runs over [Char] lists; pure recursion, no state.
+
+Fidelity note: backtick raw strings are not tracked inside interpolation braces, and `and`/`or` are colored as keywords even where the compiler treats them as identifiers — same trade-offs as the site version.
+
+## record `Tok`
+
+**Fields**
+
+  - `cls` : String
+  - `text` : String
+
+## function `highlight`
+
+
+```kex
+highlight(source)
+```
+
+
+## function `lexAll`
+
+── Entry loop ───────────────────────────────────────────────────────────
+
+out accumulates newest-first; the final reverse restores source order.
+
+
+```kex
+lexAll(cs, out)
+```
+
+
+## function `nextToken`
+
+
+```kex
+nextToken(cs, out)
+```
+
+
+## function `lexString`
+
+── Strings (with ${...} interpolation) ─────────────────────────────────
+
+cs starts after the opening quote; acc is newest-first tokens so far.
+
+
+```kex
+lexString(cs, acc)
+```
+
+
+## function `takeStringText`
+
+Collect literal string text up to (not including) the closing quote, an interpolation opener, or the end of input. Backslash escapes are opaque.
+
+
+```kex
+takeStringText(cs, acc)
+```
+
+
+## function `balancedBraces`
+
+From just after "${", collect the interpolation body up to its matching "}" (which is consumed but not collected). Embedded "..." strings are skipped whole so braces inside them do not count.
+
+
+```kex
+balancedBraces(cs, depth, acc)
+```
+
+
+## function `skipString`
+
+Consume a whole "..." literal starting at the opening quote; returns the consumed characters (both quotes included) and the remainder.
+
+
+```kex
+skipString(cs)
+```
+
+
+## function `skipStringBody`
+
+
+```kex
+skipStringBody(cs, acc)
+```
+
+
+## function `lexNumber`
+
+── Numbers ──────────────────────────────────────────────────────────────
+
+
+```kex
+lexNumber(cs)
+```
+
+
+## function `exponentLength`
+
+
+```kex
+exponentLength(cs)
+```
+
+
+## function `hexDigit?`
+
+
+```kex
+hexDigit?(c)
+```
+
+
+## function `lexIdentifier`
+
+── Identifiers and keywords ─────────────────────────────────────────────
+
+
+```kex
+lexIdentifier(cs, out)
+```
+
+
+## function `classifyWord`
+
+
+```kex
+classifyWord(word, prevDot, nextCh)
+```
+
+
+## function `previousIsDot`
+
+The most recent token that is not whitespace: out is newest-first, so a plain find walks backwards in time.
+
+
+```kex
+previousIsDot(out)
+```
+
+
+## function `identChar?`
+
+
+```kex
+identChar?(c)
+```
+
+
+## function `lexOperator`
+
+── Operators and punctuation ────────────────────────────────────────────
+
+
+```kex
+lexOperator(cs)
+```
+
+
+## function `twoCharOp`
+
+
+```kex
+twoCharOp(cs)
+```
+
+
+## function `keywords`
+
+── Word tables ────────────────────────────────────────────────────────── Functions rather than module constants: on BEAM, method calls on a module-level constant fail to dispatch.
+
+
+```kex
+keywords()
+```
+
+
+## function `constants`
+
+
+```kex
+constants()
+```
+
+
+## function `typeNames`
+
+
+```kex
+typeNames()
+```
+
+
+## function `renderTokens`
+
+── Rendering ────────────────────────────────────────────────────────────
+
+
+```kex
+renderTokens(toks)
+```
+
+
+## function `renderTok`
+
+
+```kex
+renderTok(t)
+```
+
+
+## function `esc`
+
+Local copy of Tey.Docgen.Html.esc — duplicating four replaces keeps the modules acyclic (Html calls Highlight for code blocks).
+
+
+```kex
+esc(s)
+```
+
+
+## function `textOf`
+
+── Small helpers ────────────────────────────────────────────────────────
+
+
+```kex
+textOf(cs)
+```
+
+
+## function `startsWithChars`
+
+
+```kex
+startsWithChars(cs, s)
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/docgen/html.kex
+title: Tey.Docgen.Html
+entities:
+  - { kind: module, name: "Tey.Docgen.Html" }
+---
+
+# Tey.Docgen.Html
+
+## module `Tey.Docgen.Html`
+
+Model records → static HTML pages, styled after kex.run's docs section (warm honey/cream palette, Fraunces/Plus Jakarta Sans/JetBrains Mono, dark code surface with tok-* syntax classes). The stylesheet lives in Tey.Docgen.Css and is written to assets/style.css by the build driver.
+
+HTML is a sibling renderer of the Markdown one: both walk the typed PackageModel, so nothing here parses Markdown or JSON.
+
+## function `pageHtml`
+
+── Public API ───────────────────────────────────────────────────────────
+
+
+```kex
+pageHtml(page, model)
+```
+
+
+## function `versionIndexHtml`
+
+Landing page for <pkg>/<version>/index.html: every module as a card.
+
+
+```kex
+versionIndexHtml(model)
+```
+
+
+## function `packageVersionsHtml`
+
+<pkg>/index.html: the versions of one package, newest first — the page a reader lands on when they want a different release of what they are reading. What the ids MEAN is the package's own story: a library's own releases, the stdlib's Kex releases. The page does not need to know.
+
+
+```kex
+packageVersionsHtml(packageName, versions)
+```
+
+
+## function `versionCard`
+
+
+```kex
+versionCard(v)
+```
+
+
+## function `searchPageHtml`
+
+<pkg>/<version>/search.html: the shareable full-page search. The modal on every page links here with ?q=<term>, so a results page is a URL rather than a state — the page reads the term back from the query string.
+
+
+```kex
+searchPageHtml(model)
+```
+
+
+## function `rootIndexHtml`
+
+Site root index.html: one card per PACKAGE (its newest build), not per build — a reader arrives at "the docs" for a thing, and the thing is a package; its versions are one click down. Built from the accumulated versions.json entries, not just this build's model.
+
+
+```kex
+rootIndexHtml(versions)
+```
+
+
+## function `packageNames`
+
+Package names in first-seen order of their newest entry: versions arrive newest-first from accumulateVersions, so the first entry of each package is that package's newest build.
+
+
+```kex
+packageNames(versions)
+```
+
+
+## function `packageCard`
+
+
+```kex
+packageCard(name, versions)
+```
+
+
+## function `layout`
+
+── Layout ───────────────────────────────────────────────────────────────
+
+
+```kex
+layout(title, current, bodyContent, model)
+```
+
+
+## function `sidebar`
+
+The sidebar lists one entry per source FILE, in scan order. The active file expands to its top-level declarations so a reader can jump straight to one. The label is the page's title (the module it declares), not the raw file name.
+
+
+```kex
+sidebar(model, current)
+```
+
+
+## function `sidebarEntry`
+
+
+```kex
+sidebarEntry(page, current, vpre)
+```
+
+
+## function `firstModulesOfPages`
+
+The modules that OPEN a page — their section sits at the very top, so a card for one links to the page itself rather than to an anchor that lands where the page already starts. A page whose first declaration is a type or record has no such module.
+
+
+```kex
+firstModulesOfPages(pages)
+```
+
+
+## function `moduleCard`
+
+
+```kex
+moduleCard(m, top)
+```
+
+
+## function `entitySection`
+
+── Entity sections ──────────────────────────────────────────────────────
+
+
+```kex
+entitySection(e, page, model)
+```
+
+
+## function `linker`
+
+A reference resolver scoped to one page: links resolve against the whole package index, but the href is relative to the page doing the referring.
+
+
+```kex
+linker(page, model)
+```
+
+
+## function `typeSection`
+
+
+```kex
+typeSection(e, page, model)
+```
+
+
+## function `variantsHtml`
+
+
+```kex
+variantsHtml(variants)
+```
+
+
+## function `variantItem`
+
+
+```kex
+variantItem(v)
+```
+
+
+## function `recordSection`
+
+
+```kex
+recordSection(e, page, model)
+```
+
+
+## function `fieldRow`
+
+
+```kex
+fieldRow(f, link)
+```
+
+
+## function `linkTypeText`
+
+A type text is code with links inside it: split into identifier and punctuation segments, link the identifiers that resolve, escape the rest.
+
+
+```kex
+linkTypeText(link, text)
+```
+
+
+## function `linkType`
+
+The whole-package resolution one segment goes through: an exact name hit links (display text escaped); anything else is plain escaped code.
+
+
+```kex
+linkType(links, fromPath, name)
+```
+
+
+## function `traitSection`
+
+
+```kex
+traitSection(e, page, model)
+```
+
+
+## function `makeSection`
+
+
+```kex
+makeSection(e, page, model)
+```
+
+
+## function `moduleSection`
+
+
+```kex
+moduleSection(e, page, model)
+```
+
+
+## function `functionSection`
+
+
+```kex
+functionSection(e, page, model)
+```
+
+
+## function `constantSection`
+
+
+```kex
+constantSection(e)
+```
+
+
+## function `functionsHtml`
+
+── Functions inside traits, makes, modules ──────────────────────────────
+
+
+```kex
+functionsHtml(functions, link)
+```
+
+
+## function `functionDetail`
+
+
+```kex
+functionDetail(f, link)
+```
+
+
+## function `signaturesHtml`
+
+
+```kex
+signaturesHtml(f)
+```
+
+
+## function `docHtml`
+
+── Doc fragments ────────────────────────────────────────────────────────
+
+
+```kex
+docHtml(doc)
+```
+
+
+## function `inlineCode`
+
+Minimal inline Markdown for doc prose: `code` spans. Splitting on the backtick alternates plain/code segments; an unmatched trailing backtick degrades to literal text rather than swallowing the rest of the page.
+
+
+```kex
+inlineCode(text)
+```
+
+
+## function `paramsHtml`
+
+
+```kex
+paramsHtml(doc, link)
+```
+
+
+## function `returnsHtml`
+
+
+```kex
+returnsHtml(doc, link)
+```
+
+
+## function `examplesHtml`
+
+
+```kex
+examplesHtml(doc)
+```
+
+
+## function `deprecatedHtml`
+
+
+```kex
+deprecatedHtml(doc)
+```
+
+
+## function `esc`
+
+── Shared helpers ───────────────────────────────────────────────────────
+
+Escape text for HTML (content and double-quoted attributes).
+
+
+```kex
+esc(s)
+```
+
+
+## function `labelOf`
+
+
+```kex
+labelOf(model)
+```
+
+
+## function `pageTarget`
+
+The page the version switcher tries first in the target version.
+
+
+```kex
+pageTarget(current)
+```
+
+
+## function `slug`
+
+
+```kex
+slug(name)
+```
+
+
+## function `typeParamSuffix`
+
+
+```kex
+typeParamSuffix(typeParams)
+```
+
+
+## function `versionPrefix`
+
+Relative path from a page's urlPath back to the version directory: "string" → "" (sibling), "kex/ast" → "../".
+
+
+```kex
+versionPrefix(urlPath)
+```
+
+
+## function `rootPrefix`
+
+From the page to the site root: version dir is <pkg>/<version>/.
+
+
+```kex
+rootPrefix(urlPath)
+```
+
+
+## function `ups`
+
+
+```kex
+ups(n)
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/docgen/index.kex
+title: Tey.Docgen.Index
+entities:
+  - { kind: module, name: "Tey.Docgen.Index" }
+---
+
+# Tey.Docgen.Index
+
+## module `Tey.Docgen.Index`
+
+The build driver: scan → extract → PackageModel, then emit everything derived from it — model.json, search.json, Markdown pages, manifest, versions, llms.txt/llms-full.txt, robots.txt and sitemap.xml.
+
+## function `buildCommand`
+
+
+```kex
+buildCommand(parsed)
+```
+
+
+## function `optString`
+
+
+```kex
+optString(value)
+```
+
+
+## function `defaultSource`
+
+`src/` when it is standing there, else the flag as given (an empty one is reported by the scan: "no .kex files found in").
+
+
+```kex
+defaultSource(given)
+```
+
+
+## function `defaultPackage`
+
+The manifest's name when the CWD is a package — the identity docgen should not have to be told. Outside one, "prelude": the compiler's own stdlib documenting without a manifest of its own is the original use.
+
+
+```kex
+defaultPackage(given)
+```
+
+
+## function `defaultVersion`
+
+The version of the thing being documented: a package's own release when standing in one, the compiler's release otherwise. What a package's versions ARE differs from the stdlib — its own releases against Kex releases — and the default follows that distinction automatically because the compiler's own package.kex carries the compiler version.
+
+
+```kex
+defaultVersion(given)
+```
+
+
+## function `manifestVersion`
+
+(name, version) of the package.kex in the CWD, if there is a readable one. Both defaults read it; one read, one parse.
+
+
+```kex
+manifestVersion()
+```
+
+
+## function `buildPages`
+
+── Page construction ────────────────────────────────────────────────────
+
+
+```kex
+buildPages(files, sourceDir)
+```
+
+
+## function `buildPagesLoop`
+
+
+```kex
+buildPagesLoop(files, sourceDir, pages)
+```
+
+
+## function `writePages`
+
+── Output files ─────────────────────────────────────────────────────────
+
+
+```kex
+writePages(pages, versionDir, model)
+```
+
+
+## function `writeHtml`
+
+HTML mirrors the Markdown layout: one page per source file, plus the version landing page, the site-root redirect and the shared stylesheet.
+
+
+```kex
+writeHtml(pages, versionDir, out, model)
+```
+
+
+## function `dirNameOf`
+
+"kex/ast" → "kex"; "fs" → "" (already inside versionDir).
+
+
+```kex
+dirNameOf(urlPath)
+```
+
+
+## function `ensureDirectory`
+
+
+```kex
+ensureDirectory(path)
+```
+
+
+## function `writeIndexFiles`
+
+
+```kex
+writeIndexFiles(pages, model, out)
+```
+
+
+## function `manifestJson`
+
+
+```kex
+manifestJson(pages)
+```
+
+
+## function `accumulateVersions`
+
+── versions.json (accumulates across builds) ────────────────────────────
+
+The output directory is the published site, so a build must not clobber the versions other builds published: read what is there, upsert this (package, version), write the union back, newest first.
+
+
+```kex
+accumulateVersions(out, model)
+```
+
+
+## function `upsertVersion`
+
+This build's entry first, the other packages' and versions' kept: the pure half of accumulate, so the upsert rule itself can be spec'd.
+
+
+```kex
+upsertVersion(current, existing)
+```
+
+
+## function `readVersionEntries`
+
+
+```kex
+readVersionEntries(out)
+```
+
+
+## function `parseVersionEntry`
+
+
+```kex
+parseVersionEntry(v)
+```
+
+
+## function `jsonText`
+
+
+```kex
+jsonText(value)
+```
+
+
+## function `labelOrPackage`
+
+
+```kex
+labelOrPackage(model)
+```
+
+
+## function `versionsJson`
+
+
+```kex
+versionsJson(entries)
+```
+
+
+## function `versionEntryValue`
+
+
+```kex
+versionEntryValue(e)
+```
+
+
+## function `llmsTxt`
+
+
+```kex
+llmsTxt(pages, model)
+```
+
+
+## function `llmsFullTxt`
+
+
+```kex
+llmsFullTxt(pages, model)
+```
+
+
+## function `robotsTxt`
+
+
+```kex
+robotsTxt(baseUrl)
+```
+
+
+## function `sitemapXml`
+
+
+```kex
+sitemapXml(pages, model)
+```
+
+
+## function `normalizeBaseUrl`
+
+
+```kex
+normalizeBaseUrl(url)
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/docgen/json.kex
+title: Tey.Docgen.Json
+entities:
+  - { kind: module, name: "Tey.Docgen.Json" }
+---
+
+# Tey.Docgen.Json
+
+## module `Tey.Docgen.Json`
+
+Model records → JSON artifacts. This is the single boundary where typed records become plain maps (atom keys, JSON-ready values) so JSON.stringify can serialise them: model.json (the full model) and search.json (a flat index for dynamic name/kind/type search on the docs site).
+
+## function `modelJson`
+
+── model.json ───────────────────────────────────────────────────────────
+
+
+```kex
+modelJson(model)
+```
+
+
+## function `moduleIndexValue`
+
+
+```kex
+moduleIndexValue(m)
+```
+
+
+## function `linkValue`
+
+
+```kex
+linkValue(l)
+```
+
+
+## function `labelOrPackage`
+
+
+```kex
+labelOrPackage(model)
+```
+
+
+## function `pageValue`
+
+
+```kex
+pageValue(page)
+```
+
+
+## function `entityValue`
+
+
+```kex
+entityValue(e)
+```
+
+
+## function `variantsValue`
+
+
+```kex
+variantsValue(variants)
+```
+
+
+## function `fieldValue`
+
+
+```kex
+fieldValue(f)
+```
+
+
+## function `fieldValues`
+
+A named helper so the lambda's element type comes from the [FieldEntry] parameter, not from the surrounding map literal's value type.
+
+
+```kex
+fieldValues(fields)
+```
+
+
+## function `functionValue`
+
+
+```kex
+functionValue(f)
+```
+
+
+## function `docValue`
+
+
+```kex
+docValue(doc)
+```
+
+
+## function `returnsValue`
+
+
+```kex
+returnsValue(doc)
+```
+
+
+## function `searchJson`
+
+── search.json ──────────────────────────────────────────────────────────
+
+
+```kex
+searchJson(model)
+```
+
+
+## function `searchEntries`
+
+
+```kex
+searchEntries(model)
+```
+
+
+## function `pageSearchEntries`
+
+
+```kex
+pageSearchEntries(page)
+```
+
+
+## function `entitySearchEntries`
+
+
+```kex
+entitySearchEntries(e, page)
+```
+
+
+## function `entityTypes`
+
+The type names an entity is "about" — the search-by-type dimension. For a function that is its signature's types; for a record its field types; for a type its parents and variant fields; for a trait/make the types its methods mention; for a module the union of its children.
+
+
+```kex
+entityTypes(e)
+```
+
+
+## function `variantFieldTypes`
+
+
+```kex
+variantFieldTypes(variants)
+```
+
+
+## function `childSearchEntries`
+
+
+```kex
+childSearchEntries(e, page)
+```
+
+
+## function `functionSearchEntry`
+
+
+```kex
+functionSearchEntry(f, page)
+```
+
+
+## function `searchValue`
+
+
+```kex
+searchValue(entry)
+```
+
+
+## function `entitySignatures`
+
+
+```kex
+entitySignatures(e)
+```
+
+
+## function `entitySummary`
+
+
+```kex
+entitySummary(e)
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/docgen/markdown.kex
+title: Tey.Docgen.Markdown
+entities:
+  - { kind: module, name: "Tey.Docgen.Markdown" }
+---
+
+# Tey.Docgen.Markdown
+
+## module `Tey.Docgen.Markdown`
+
+Model records → Markdown pages (LLM-friendly: stable headings, fenced kex signatures, frontmatter with the entity index).
+
+## function `pageMarkdown`
+
+
+```kex
+pageMarkdown(page, model)
+```
+
+
+## function `pageFrontmatter`
+
+
+```kex
+pageFrontmatter(page, model)
+```
+
+
+## function `entityFrontmatterLine`
+
+
+```kex
+entityFrontmatterLine(e)
+```
+
+
+## function `pageBody`
+
+
+```kex
+pageBody(page, model)
+```
+
+
+## function `entitySection`
+
+── Entity sections ──────────────────────────────────────────────────────
+
+
+```kex
+entitySection(e, page, model)
+```
+
+
+## function `linkMd`
+
+Cross-links in Markdown resolve against the same package index the HTML renderer uses — one resolution rule, two renderings. Targets are the .md siblings of this page.
+
+
+```kex
+linkMd(model, fromPath, name)
+```
+
+
+## function `linkTypeMd`
+
+
+```kex
+linkTypeMd(model, fromPath, text)
+```
+
+
+## function `typeSection`
+
+
+```kex
+typeSection(e, page, model)
+```
+
+
+## function `variantBullet`
+
+
+```kex
+variantBullet(name, fields)
+```
+
+
+## function `recordSection`
+
+
+```kex
+recordSection(e, page, model)
+```
+
+
+## function `traitSection`
+
+
+```kex
+traitSection(e)
+```
+
+
+## function `makeSection`
+
+
+```kex
+makeSection(e, page, model)
+```
+
+
+## function `moduleSection`
+
+
+```kex
+moduleSection(e, page, model)
+```
+
+
+## function `functionSection`
+
+
+```kex
+functionSection(e)
+```
+
+
+## function `signatureBlock`
+
+
+```kex
+signatureBlock(f)
+```
+
+
+## function `constantSection`
+
+
+```kex
+constantSection(e)
+```
+
+
+## function `renderFunctions`
+
+── Function details (inside traits, makes, modules) ────────────────────
+
+
+```kex
+renderFunctions(functions)
+```
+
+
+## function `functionBlock`
+
+
+```kex
+functionBlock(f)
+```
+
+
+## function `signatureParts`
+
+
+```kex
+signatureParts(parts, f)
+```
+
+
+## function `returnParts`
+
+
+```kex
+returnParts(parts, doc)
+```
+
+
+## function `returnLine`
+
+
+```kex
+returnLine(r)
+```
+
+
+## function `exampleParts`
+
+
+```kex
+exampleParts(parts, doc)
+```
+
+
+## function `exampleBlocks`
+
+
+```kex
+exampleBlocks(examples)
+```
+
+
+## function `exampleBlock`
+
+
+```kex
+exampleBlock(ex)
+```
+
+
+## function `docBlock`
+
+── Shared fragments ─────────────────────────────────────────────────────
+
+
+```kex
+docBlock(doc)
+```
+
+
+## function `typeParamSuffix`
+
+
+```kex
+typeParamSuffix(typeParams)
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/docgen/model.kex
+title: Tey.Docgen.Model
+entities:
+  - { kind: module, name: "Tey.Docgen.Model" }
+---
+
+# Tey.Docgen.Model
+
+## module `Tey.Docgen.Model`
+
+The canonical documentation model.
+
+Extraction produces these records; Markdown, JSON and the search index are all derived from them. Field names avoid `type` (a keyword after `.`), so every field is dot-accessible; JSON keys are chosen at the emission boundary in Tey.Docgen.Json.
+
+## record `Param`
+
+── Documentation (parsed RDoc) ──────────────────────────────────────────
+
+**Fields**
+
+  - `name` : String
+  - `typeName` : String
+  - `description` : String
+
+## record `Return`
+
+**Fields**
+
+  - `typeName` : String
+  - `description` : String
+
+## record `Example`
+
+**Fields**
+
+  - `caption` : String
+  - `code` : String
+
+## record `Doc`
+
+**Fields**
+
+  - `summary` : String
+  - `params` : [[Param](#record-param)]
+  - `returns` : [Return](#record-return)?
+  - `examples` : [[Example](#record-example)]
+  - `deprecated` : String?
+
+## function `emptyDoc`
+
+
+```kex
+emptyDoc()
+```
+
+
+## record `VariantEntry`
+
+── Entities ─────────────────────────────────────────────────────────────
+
+**Fields**
+
+  - `name` : String
+  - `fields` : [String]
+
+## record `FieldEntry`
+
+**Fields**
+
+  - `name` : String
+  - `typeName` : String
+  - `hasDefault` : Bool
+
+## record `TypeEntry`
+
+**Fields**
+
+  - `name` : String
+  - `qualifiedName` : String
+  - `typeParams` : [String]
+  - `parents` : [String]
+  - `variants` : [[VariantEntry](#record-variantentry)]?
+  - `doc` : [Doc](#record-doc)
+  - `line` : Integer
+
+## record `RecordEntry`
+
+**Fields**
+
+  - `name` : String
+  - `qualifiedName` : String
+  - `typeParams` : [String]
+  - `fields` : [[FieldEntry](#record-fieldentry)]
+  - `doc` : [Doc](#record-doc)
+  - `line` : Integer
+
+## record `TraitEntry`
+
+**Fields**
+
+  - `name` : String
+  - `qualifiedName` : String
+  - `typeParams` : [String]
+  - `functions` : [[FunctionEntry](#record-functionentry)]
+  - `doc` : [Doc](#record-doc)
+  - `line` : Integer
+
+## record `MakeEntry`
+
+**Fields**
+
+  - `target` : String
+  - `isFinal` : Bool
+  - `implements` : [String]
+  - `functions` : [[FunctionEntry](#record-functionentry)]
+  - `doc` : [Doc](#record-doc)
+  - `line` : Integer
+
+## record `ModuleEntry`
+
+**Fields**
+
+  - `name` : String
+  - `qualifiedName` : String
+  - `children` : [[Entity](#type-entity)]
+  - `doc` : [Doc](#record-doc)
+  - `line` : Integer
+
+## record `FunctionEntry`
+
+**Fields**
+
+  - `name` : String
+  - `qualifiedName` : String
+  - `signatures` : [String]
+  - `clauseCount` : Integer
+  - `doc` : [Doc](#record-doc)
+  - `line` : Integer
+  - `types` : [String] (optional)
+
+## record `ConstantEntry`
+
+**Fields**
+
+  - `name` : String
+  - `qualifiedName` : String
+  - `typeName` : String
+  - `doc` : [Doc](#record-doc)
+  - `line` : Integer
+
+## type `Entity`
+
+
+
+**Variants**
+
+  - `TypeDecl(TypeEntry)`
+  - `RecordDecl(RecordEntry)`
+  - `TraitDecl(TraitEntry)`
+  - `MakeDecl(MakeEntry)`
+  - `ModuleDecl(ModuleEntry)`
+  - `FuncDecl(FunctionEntry)`
+  - `ConstDecl(ConstantEntry)`
+
+## record `SourcePage`
+
+── Pages and packages ───────────────────────────────────────────────────
+
+**Fields**
+
+  - `source` : String
+  - `urlPath` : String
+  - `title` : String
+  - `entities` : [[Entity](#type-entity)]
+
+## record `ModuleIndexEntry`
+
+The navigation unit: one per module in the package, pointing at the page its entities live on. The sidebar and the module index of model.json are built from these — a FILE is where source lives, a MODULE is what a reader navigates by, and the two only coincide by accident.
+
+**Fields**
+
+  - `qualifiedName` : String
+  - `summary` : String
+  - `urlPath` : String
+  - `members` : [[MemberEntry](#record-memberentry)]
+
+## record `MemberEntry`
+
+One documented member of a module, with the anchor its section renders at — the sidebar's expanded list and the JSON index both use these.
+
+**Fields**
+
+  - `name` : String
+  - `anchor` : String
+
+## record `LinkEntry`
+
+One row of the cross-link index: a name a type reference elsewhere in the package may mention ("String", "FS.Path") and where it lands. The index is what makes interlinked docs possible without per-renderer guesswork: every renderer resolves names against the same list.
+
+**Fields**
+
+  - `name` : String
+  - `urlPath` : String
+  - `anchor` : String
+  - `kind` : String
+
+## record `PackageModel`
+
+**Fields**
+
+  - `package` : String
+  - `version` : String
+  - `label` : String
+  - `baseUrl` : String
+  - `generatedAt` : String
+  - `pages` : [[SourcePage](#record-sourcepage)]
+  - `modules` : [[ModuleIndexEntry](#record-moduleindexentry)] (optional)
+  - `links` : [[LinkEntry](#record-linkentry)] (optional)
+
+## record `SearchEntry`
+
+A flattened search row: one per entity (and per function inside traits, makes and modules), joining name/kind/signature to the page URL. The `types` are the type names the entity is about — the types its signature mentions — so search can answer by name AND by type; `anchor` is the section id a result deep-links to.
+
+**Fields**
+
+  - `name` : String
+  - `qualifiedName` : String
+  - `kind` : String
+  - `signatures` : [String]
+  - `types` : [String] (optional)
+  - `summary` : String
+  - `urlPath` : String
+  - `anchor` : String (optional)
+  - `line` : Integer
+
+## record `VersionEntry`
+
+One row of versions.json. The file accumulates across builds — the output directory IS the site, so each build upserts its (package, id) entry into whatever is already published there.
+
+**Fields**
+
+  - `id` : String
+  - `label` : String
+  - `generatedAt` : String
+  - `package` : String
+
+## function `kindOf`
+
+The kind label used in indexes and JSON for each entity variant.
+
+
+```kex
+kindOf(entity)
+```
+
+
+## function `nameOf`
+
+The primary display name of an entity (a make's is its target type).
+
+
+```kex
+nameOf(entity)
+```
+
+
+## function `qualifiedNameOf`
+
+
+```kex
+qualifiedNameOf(entity)
+```
+
+
+## function `lineOf`
+
+
+```kex
+lineOf(entity)
+```
+
+
+## function `anchorOf`
+
+The anchor id an entity's HTML section renders at. Lives here — not in the HTML renderer — because the cross-link index and the sidebar compute the same ids, and the HTML must match whatever they resolved to.
+
+
+```kex
+anchorOf(entity)
+```
+
+
+## function `anchorNameOf`
+
+A make's anchor is keyed by its full target spelling (type params included), a module's by its qualified name — the section ids are derived from the same texts.
+
+
+```kex
+anchorNameOf(entity)
+```
+
+
+## function `slugOf`
+
+
+```kex
+slugOf(name)
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/docgen/nav.kex
+title: Tey.Docgen.Nav
+entities:
+  - { kind: module, name: "Tey.Docgen.Nav" }
+---
+
+# Tey.Docgen.Nav
+
+## module `Tey.Docgen.Nav`
+
+Navigation and cross-linking: the two indexes every renderer resolves against, derived once from the extracted pages.
+
+  modules — one ModuleIndexEntry per module (the sidebar's structure)   links   — one LinkEntry per linkable name (the interlink universe)
+
+Both are computed here rather than in each renderer so HTML, Markdown and model.json cannot disagree about where a name lands — the same reasoning that keeps the typed model the single source: resolve once, render often.
+
+## function `buildModules`
+
+── Module index ──────────────────────────────────────────────────────────
+
+Every module in the package, in declaration order, pointing at the page it lives on. Nested modules are entries of their own (the sidebar nests them by name).
+
+
+```kex
+buildModules(pages)
+```
+
+
+## function `modulesOnPage`
+
+
+```kex
+modulesOnPage(entities, urlPath)
+```
+
+
+## function `moduleEntry`
+
+
+```kex
+moduleEntry(entry, urlPath)
+```
+
+
+## function `firstLine`
+
+
+```kex
+firstLine(summary)
+```
+
+
+## function `buildLinks`
+
+── Link index ────────────────────────────────────────────────────────────
+
+Linkable names, unique-target-wins: a name links while exactly one (page, anchor) answers it. A qualified name ("FS.Path") is its own name; a simple one ("Path") survives only while nothing else claims it — once two different entities answer "Request", the simple spelling stops linking and only the spelled-out names do.
+
+
+```kex
+buildLinks(pages)
+```
+
+
+## function `linkEntriesOnPage`
+
+
+```kex
+linkEntriesOnPage(entities, urlPath)
+```
+
+
+## function `linkableNames`
+
+A type/reference name links under its qualified name; entities whose qualified name is the bare name (top-level declarations) offer that spelling too. A make's target with type parameters ("[X]", "Map<K, V>") links under the base name before the "<" — the anchor is still the full-target one, matching the section id.
+
+
+```kex
+linkableNames(e)
+```
+
+
+## function `uniqueTarget?`
+
+Whether `candidate`'s name answers to exactly one target: every other entry under the same name must land on the same (page, anchor).
+
+
+```kex
+uniqueTarget?(entries, candidate)
+```
+
+
+## function `differentTarget?`
+
+
+```kex
+differentTarget?(a, b)
+```
+
+
+## function `resolve`
+
+── Resolution ────────────────────────────────────────────────────────────
+
+
+```kex
+resolve(links, name)
+```
+
+
+## function `segmentsOf`
+
+Splits a type reference into identifier segments and separator runs, so a renderer can link the identifiers and leave the punctuation alone: "Map<String, FS.Path>" → ["Map", "<", "String", ", ", "FS.Path", ">"].
+
+
+```kex
+segmentsOf(typeText)
+```
+
+
+## function `splitLoop`
+
+`ident` is the identifier being read, `sep` the separator run since it; only one is non-empty at a time, and whichever it is goes out in order.
+
+
+```kex
+splitLoop(rest, ident, sep, out)
+```
+
+
+## function `flushIdent`
+
+
+```kex
+flushIdent(ident, out)
+```
+
+
+## function `flushSep`
+
+
+```kex
+flushSep(sep, out)
+```
+
+
+## function `isIdentChar?`
+
+
+```kex
+isIdentChar?(ch)
+```
+
+
+## function `hrefFrom`
+
+The href from one page of this package to another, with anchor: same page → "#anchor"; else up to the version directory and back down.
+
+
+```kex
+hrefFrom(fromPath, toPath, anchor)
+```
+
+
+## function `upsToVersionDir`
+
+
+```kex
+upsToVersionDir(urlPath)
+```
+
+
+## function `ups`
+
+
+```kex
+ups(n)
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/docgen/rdoc.kex
+title: Tey.Docgen.Rdoc
+entities:
+  - { kind: module, name: "Tey.Docgen.Rdoc" }
+---
+
+# Tey.Docgen.Rdoc
+
+## module `Tey.Docgen.Rdoc`
+
+RDoc-style doc-comment text → structured documentation (typed).
+
+A doc comment is free prose followed by directive paragraphs:
+
+  # Sums all elements. Returns `0` for an empty list.   #   # @param f [X -> Number] maps each element   # @return [Number]   # @example   #   [1, 2].sum   # => 3
+
+Inline ``code`` pairs are rewritten to `` `code` ``. The result is a Tey.Docgen.Model.Doc record.
+
+## record `Bracketed`
+
+**Fields**
+
+  - `content` : String
+  - `rest` : String
+
+## function `parseDoc`
+
+
+```kex
+parseDoc(text)
+```
+
+
+## function `parseOrEmpty`
+
+
+```kex
+parseOrEmpty(text)
+```
+
+
+## function `rewritePlusPairs`
+
+
+```kex
+rewritePlusPairs(s, accum)
+```
+
+
+## function `splitParagraphs`
+
+Splits lines into paragraphs (blocks). Prose groups until a blank line; directives are LINE-based, so each `@param`/`@return`/`@example` line begins its own paragraph — consecutive `@param a` / `@param b` lines must not merge into one block, or only the first would be parsed. An `@example`'s indented code lines follow it and stay in its block (they do not open with `@`).
+
+
+```kex
+splitParagraphs(lines, current, accum)
+```
+
+
+## function `classifyBlocks`
+
+
+```kex
+classifyBlocks(blocks, summary, params, returns, examples, deprecated)
+```
+
+
+## function `parseParam`
+
+
+```kex
+parseParam(lines)
+```
+
+
+## function `parseReturn`
+
+
+```kex
+parseReturn(lines)
+```
+
+
+## function `parseExample`
+
+
+```kex
+parseExample(lines)
+```
+
+
+## function `parseBracketed`
+
+"[...]" prefix → Bracketed. None when the text does not open with a bracketed group.
+
+
+```kex
+parseBracketed(s)
+```
+
+
+## function `findClosingBracket`
+
+
+```kex
+findClosingBracket(s, index, depth)
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/docgen/scan.kex
+title: Tey.Docgen.Scan
+entities:
+  - { kind: module, name: "Tey.Docgen.Scan" }
+---
+
+# Tey.Docgen.Scan
+
+## module `Tey.Docgen.Scan`
+
+Source discovery: walk a package tree, collect .kex files recursively.
+
+`spec/` directories are skipped: specs document the same declarations as their base file, so a second page for them would duplicate every entry.
+
+## function `sourceFiles`
+
+
+```kex
+sourceFiles(sourceDir)
+```
+
+
+## function `subdirectories`
+
+
+```kex
+subdirectories(sourceDir)
+```
+
+
+## function `nested`
+
+
+```kex
+nested(dirs, sourceDir)
+```
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
+source: tey/docgen/serve.kex
+title: Tey.Docgen.Serve
+entities:
+  - { kind: module, name: "Tey.Docgen.Serve" }
+---
+
+# Tey.Docgen.Serve
+
+## module `Tey.Docgen.Serve`
+
+Serves a generated output directory over HTTP. Tey runs on the BEAM, so Web.Server is available wherever `tey docs -- serve` runs.
+
+## record `ServedFile`
+
+**Fields**
+
+  - `route` : String
+  - `path` : String
+
+## function `serveCommand`
+
+
+```kex
+serveCommand(parsed)
+```
+
+
+## function `routesFor`
+
+The URL paths a browser would type for this file: an index.html is reached by its directory ("/", "/prelude/0.4.0-alpha/") as much as by its name, and the router matches exactly — so it answers the bare, the slash-terminated, and the named spelling. Every other file answers its own path only.
+
+
+```kex
+routesFor(prefix, name)
+```
+
+
+## function `collectServeFiles`
+
+
+```kex
+collectServeFiles(dir, prefix)
+```
+
+
+## function `serveFile`
+
+
+```kex
+serveFile(req, filePath)
+```
+
+
+## function `contentTypeFor`
+
+
+```kex
+contentTypeFor(path)
+```
+
+
+## function `fileHandler`
+
+
+```kex
+fileHandler(filePath)
+```
+
+

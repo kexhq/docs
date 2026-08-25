@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock | Prelude 0.4.0-alpha | kex docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+<link rel="icon" type="image/png" href="../../icon.png">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<header class="top">
+<div class="wrap top-inner">
+<a class="brand" href="../../index.html">kex</a>
+<span class="brand-sub">docs</span>
+<span class="spacer"></span>
+<button class="search-trigger" id="search" aria-label="Search documentation"
+data-root="../../" data-package="prelude" data-version="0.4.0-alpha"
+data-page="mock.html">
+<span>Search</span><kbd>/</kbd>
+</button>
+<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="mock.html">Prelude 0.4.0-alpha</span>
+<a class="back" href="https://kex.run/docs">kex.run ↗</a>
+</div>
+</header>
+<div class="wrap layout">
+<aside class="side"><nav aria-label="Modules"><p class="side-heading">Prelude</p><ul class="side-list">
+<li><a href="algebra.html">Algebra</a></li>
+<li><a href="bits.html">Bits</a></li>
+<li><a href="blankable.html">Blankable</a></li>
+<li><a href="console.html">Console</a></li>
+<li><a href="digest.html">Digest</a></li>
+<li><a href="enumerable.html">Enumerable</a></li>
+<li><a href="env.html">ENV</a></li>
+<li><a href="errorable.html">Errorable</a></li>
+<li><a href="evaluator.html">Evaluator</a></li>
+<li><a href="filehandle.html">FileHandle</a></li>
+<li><a href="fs.html">FS</a></li>
+<li><a href="http.html">Http</a></li>
+<li><a href="io.html">IO</a></li>
+<li><a href="json.html">JSON</a></li>
+<li><a href="kex.html">Kex</a></li>
+<li><a href="list.html">List</a></li>
+<li><a href="map.html">Map</a></li>
+<li><a href="math.html">Math</a></li>
+<li><a class="active" href="mock.html">Mock</a><ul class="side-sub">
+<li><a href="#type-reader">Reader</a></li>
+<li><a href="#type-lookup">Lookup</a></li>
+<li><a href="#type-writer">Writer</a></li>
+<li><a href="#module-mock">Mock</a></li>
+</ul></li>
+<li><a href="number.html">Number</a></li>
+<li><a href="optional.html">Optional</a></li>
+<li><a href="optionparser.html">OptionParser</a></li>
+<li><a href="parsing.html">Parsing</a></li>
+<li><a href="prelude.html">Prelude</a></li>
+<li><a href="process.html">Process</a></li>
+<li><a href="range.html">Range</a></li>
+<li><a href="regex.html">Regex</a></li>
+<li><a href="set.html">Set</a></li>
+<li><a href="stream.html">Stream</a></li>
+<li><a href="string.html">String</a></li>
+<li><a href="system.html">System</a></li>
+<li><a href="taggedvalidation.html">TaggedValidation</a></li>
+<li><a href="test.html">Assert</a></li>
+<li><a href="time.html">Time</a></li>
+<li><a href="truthyable.html">Truthyable</a></li>
+<li><a href="type.html">Type</a></li>
+<li><a href="units.html">Units</a></li>
+<li><a href="webserver.html">Web</a></li>
+<li><a href="kex/ast.html">Kex.AST</a></li>
+<li><a href="units/data.html">Units.Data</a></li>
+<li><a href="units/si.html">Units.SI</a></li>
+</ul></nav></aside>
+<main class="content">
+<nav class="crumbs"><a href="index.html">Prelude</a> <span class="sep">/</span> <span>Mock</span></nav>
+<article class="prose">
+<h1>Mock</h1>
+<section class="entity" id="type-reader">
+<h2><span class="kind kind-type">type</span> <code>Reader</code></h2>
+<p>Mock — deterministic stand-ins for the world outside the program: the filesystem, the network, the environment, the console.</p>
+<p>These are STATEFUL: <code>Mock.FS.File(path, content)</code> writes into a store the real <code>FS.File</code> then reads back, so a test can write and read again, and <code>clear()</code> undoes it. That state is global and lives until cleared, which is what makes hook ordering and write/read round trips testable — and also what makes two tests able to interfere.</p>
+<p>When a test only needs canned ANSWERS, replacing the capability is the better tool: <code>with FS.File = MyFake { ... } do ... end</code> swaps the implementation for one lexical region, holds no global state, needs no clearing, and cannot leak into another test. See spec/capability_stdlib_fs.kex for the shape of a stand-in (kexhq/kex#143).</p>
+<p>Opt-in on purpose (issue #144): this module used to ride along inside http.kex, so <code>using HTTP</code> in the prelude made every Mock.* reachable from every program without anyone asking for it. Reachable is still not callable — the runtime denies the mock intrinsics outside spec files, the REPL, and --allow-mocks — but it should also not be in scope by accident. A qualified <code>Mock.FS.File(...)</code> auto-loads this file like any other opt-in module.</p>
+<p>All Mock.* sub-modules live in a single <code>module Mock</code> block so merged compilation units never see duplicate top-level <code>Mock</code> modules. A stand-in's read hook: a path in, its content or <code>None</code> out.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li class="abstract"><em>abstract</em></li>
+</ul>
+</section>
+<section class="entity" id="type-lookup">
+<h2><span class="kind kind-type">type</span> <code>Lookup</code></h2>
+<p>An environment stand-in's lookup hook: a name in, its value or <code>None</code> out.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li class="abstract"><em>abstract</em></li>
+</ul>
+</section>
+<section class="entity" id="type-writer">
+<h2><span class="kind kind-type">type</span> <code>Writer</code></h2>
+<p>An environment stand-in's WRITE hook: the name and the value a program set. A <code>Mock.Env</code> is an immutable record, so a write cannot land in its <code>vars</code> — and it must not reach the real environment, or a test would leak a variable into the next one and into anything the suite starts. The hook is how a test observes the write instead: record it, assert on it, or ignore it, which is what <code>None</code> does.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li class="abstract"><em>abstract</em></li>
+</ul>
+</section>
+<section class="entity" id="module-mock">
+<h2><span class="kind kind-module">module</span> <code>Mock</code></h2>
+<section class="entity" id="record-files">
+<h2><span class="kind kind-record">record</span> <code>Files</code></h2>
+<p>A stand-in for the <code>FS.File</code> capability, for <code>with FS.File = ...</code>. Unlike the <code>Mock.*</code> functions below it holds no global state, needs no <code>clear()</code>, and cannot leak past its block. What it cannot do is change: <code>write</code> then <code>read</code> back is not something a value does, so a test needing that round trip still wants <code>Mock.FS</code> (kexhq/kex#143).</p>
+<p>  with FS.File = Mock.Files { files: {&quot;kex.toml&quot;: &quot;name = \&quot;demo\&quot;&quot;} } do     assert(loadConfig() == &quot;demo&quot;)   end</p>
+<p><code>onRead</code> takes over when a test needs an ANSWER rather than a fixture — content derived from the path, a failure on the third call, a record of what was asked for. It is consulted first and its <code>None</code> means &quot;no such file&quot;, so a callback can model absence too.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>files</code></dt><dd><code>Map&lt;<a class="xref" href="fs.html#type-filepath">FS.FilePath</a>, String&gt;</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>onRead</code></dt><dd><code><a class="xref" href="#type-reader">Reader</a>?</code> <span class="opt">optional</span></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-env">
+<h2><span class="kind kind-record">record</span> <code>Env</code></h2>
+<p>A stand-in for the <code>ENV</code> capability. A name simply left out of <code>vars</code> reads as unset, which is the whole reason <code>Mock.ENV.unset</code> exists — absence is an answer programs act on. <code>onGet</code> answers instead of the map when a test wants a rule rather than a fixture.</p>
+<p>  with ENV = Mock.Env { vars: {&quot;HOME&quot;: &quot;/fake&quot;} } do     assert(configHome() == &quot;/fake/.config&quot;)   end</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>vars</code></dt><dd><code>Map&lt;String, String&gt;</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>onGet</code></dt><dd><code><a class="xref" href="#type-lookup">Lookup</a>?</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>onSet</code></dt><dd><code><a class="xref" href="#type-writer">Writer</a>?</code> <span class="opt">optional</span></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-response">
+<h2><span class="kind kind-record">record</span> <code>Response</code></h2>
+<p>A stand-in for the <code>Http</code> capability: one canned response for every request, whatever the verb, URL or body. That is what a client test needs, being about what the program does WITH a response.</p>
+<p>NOT named <code>Http</code>: a record of that name is indistinguishable from the capability itself at a call site, and the <code>make</code> block binds to the capability rather than the record — every request then reaches the real network while the test looks like it is faking one.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>status</code></dt><dd><code>Integer</code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>headers</code></dt><dd><code>Map&lt;String, String&gt;</code> <span class="opt">optional</span></dd></div>
+</dl>
+</section>
+<section class="entity" id="module-mock-fs">
+<h2><span class="kind kind-module">module</span> <code>Mock.FS</code></h2>
+<section class="entity" id="function-file">
+<h2><span class="kind kind-function">function</span> <code>File</code></h2>
+<pre class="code"><code><span class="tok-type">File</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> content<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+
+</section>
+<section class="entity" id="function-directory">
+<h2><span class="kind kind-function">function</span> <code>Directory</code></h2>
+<pre class="code"><code><span class="tok-type">Directory</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+
+</section>
+<section class="entity" id="function-clear">
+<h2><span class="kind kind-function">function</span> <code>clear</code></h2>
+<pre class="code"><code><span class="tok-fn">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+
+</section>
+<section class="entity" id="function-files">
+<h2><span class="kind kind-function">function</span> <code>files</code></h2>
+<p>The whole fixture in one call, the same shape <code>Mock.Files { files: ... }</code> takes — one line instead of one per file (kexhq/kex#143).</p>
+<pre class="code"><code><span class="tok-fn">files</span><span class="tok-punct">(</span>entries<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Map</span><span class="tok-op">&lt;</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">FilePath</span><span class="tok-punct">,</span> <span class="tok-type">String</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+
+</section>
+<section class="entity" id="function-onread">
+<h2><span class="kind kind-function">function</span> <code>onRead</code></h2>
+<p>Answer reads by RULE rather than from a fixture: content derived from the path, a failure on the third call, a record of what was asked for. Consulted before the map, and returning <code>None</code> means &quot;no such file&quot;, so absence is expressible too.</p>
+<pre class="code"><code><span class="tok-fn">onRead</span><span class="tok-punct">(</span>reader<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Reader</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+
+</section>
+</section>
+<section class="entity" id="module-mock-http">
+<h2><span class="kind kind-module">module</span> <code>Mock.Http</code></h2>
+<section class="entity" id="function-start">
+<h2><span class="kind kind-function">function</span> <code>start</code></h2>
+<pre class="code"><code><span class="tok-fn">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+
+</section>
+<section class="entity" id="function-respond">
+<h2><span class="kind kind-function">function</span> <code>respond</code></h2>
+<pre class="code"><code><span class="tok-fn">respond</span><span class="tok-punct">(</span>status<span class="tok-punct">,</span> body<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span>
+<span class="tok-fn">respond</span><span class="tok-punct">(</span>status<span class="tok-punct">,</span> body<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Map</span><span class="tok-op">&lt;</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">String</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+
+</section>
+<section class="entity" id="function-stop">
+<h2><span class="kind kind-function">function</span> <code>stop</code></h2>
+<pre class="code"><code><span class="tok-fn">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+
+</section>
+</section>
+<section class="entity" id="module-mock-env">
+<h2><span class="kind kind-module">module</span> <code>Mock.ENV</code></h2>
+<p>Overlays the process environment, so a test can say what <code>ENV</code> holds instead of depending on how it was launched. <code>unset</code> is separate because a variable being ABSENT is an answer programs act on.</p>
+<section class="entity" id="function-set">
+<h2><span class="kind kind-function">function</span> <code>set</code></h2>
+<pre class="code"><code><span class="tok-fn">set</span><span class="tok-punct">(</span>name<span class="tok-punct">,</span> value<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+
+</section>
+<section class="entity" id="function-unset">
+<h2><span class="kind kind-function">function</span> <code>unset</code></h2>
+<pre class="code"><code><span class="tok-fn">unset</span><span class="tok-punct">(</span>name<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+
+</section>
+<section class="entity" id="function-clear">
+<h2><span class="kind kind-function">function</span> <code>clear</code></h2>
+<pre class="code"><code><span class="tok-fn">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+
+</section>
+<section class="entity" id="function-vars">
+<h2><span class="kind kind-function">function</span> <code>vars</code></h2>
+<p>The whole overlay in one call, the same shape <code>Mock.Env { vars: ... }</code> takes (kexhq/kex#143). There is no <code>onGet</code> here: global <code>ENV</code> is a materialised Map, so there is nothing for a callback to intercept — use <code>with ENV = Mock.Env { onGet: ... }</code> when a rule is what you want.</p>
+<pre class="code"><code><span class="tok-fn">vars</span><span class="tok-punct">(</span>entries<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Map</span><span class="tok-op">&lt;</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">String</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+
+</section>
+</section>
+<section class="entity" id="module-mock-io">
+<h2><span class="kind kind-module">module</span> <code>Mock.IO</code></h2>
+<section class="entity" id="function-start">
+<h2><span class="kind kind-function">function</span> <code>start</code></h2>
+<pre class="code"><code><span class="tok-fn">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-stop">
+<h2><span class="kind kind-function">function</span> <code>stop</code></h2>
+<pre class="code"><code><span class="tok-fn">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-output">
+<h2><span class="kind kind-function">function</span> <code>output</code></h2>
+<pre class="code"><code><span class="tok-fn">output</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-clear">
+<h2><span class="kind kind-function">function</span> <code>clear</code></h2>
+<pre class="code"><code><span class="tok-fn">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-input">
+<h2><span class="kind kind-function">function</span> <code>input</code></h2>
+<pre class="code"><code><span class="tok-fn">input</span><span class="tok-punct">(</span>lines<span class="tok-punct">)</span></code></pre>
+
+</section>
+</section>
+<section class="entity" id="make-files">
+<h2><span class="kind kind-make">make</span> <code>Files</code> implements <a class="xref" href="fs.html#module-fs-file">FS.File</a></h2>
+
+<div class="functions">
+<div class="fn" id="fn-cannedread">
+<h4><code>cannedRead</code></h4>
+<p>Named apart from <code>read</code>: <code>this.read(path)</code> would bind to the capability's own <code>read : FilePath -&gt; String?</code>, not to this method.</p>
+<pre class="code"><code><span class="tok-fn">cannedRead</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-read">
+<h4><code>read</code></h4>
+<pre class="code"><code><span class="tok-fn">read</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-readlines">
+<h4><code>readLines</code></h4>
+<pre class="code"><code><span class="tok-fn">readLines</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-feed">
+<h4><code>feed</code></h4>
+<pre class="code"><code><span class="tok-fn">feed</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-size">
+<h4><code>size</code></h4>
+<pre class="code"><code><span class="tok-fn">size</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-exists?">
+<h4><code>exists?</code></h4>
+<pre class="code"><code><span class="tok-fn">exists?</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-file?">
+<h4><code>file?</code></h4>
+<pre class="code"><code><span class="tok-fn">file?</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-directory?">
+<h4><code>directory?</code></h4>
+<pre class="code"><code><span class="tok-fn">directory?</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-absolute">
+<h4><code>absolute</code></h4>
+<pre class="code"><code><span class="tok-fn">absolute</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-open">
+<h4><code>open</code></h4>
+<p>A fake is a value, so there is nowhere for a write to go. Refusing is the honest answer and the useful one: a test that did not expect a write sees it fail rather than silently succeed.</p>
+<pre class="code"><code><span class="tok-fn">open</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> mode<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-write">
+<h4><code>write</code></h4>
+<pre class="code"><code><span class="tok-fn">write</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> content<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-append">
+<h4><code>append</code></h4>
+<pre class="code"><code><span class="tok-fn">append</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> content<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-delete">
+<h4><code>delete</code></h4>
+<pre class="code"><code><span class="tok-fn">delete</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-copy">
+<h4><code>copy</code></h4>
+<pre class="code"><code><span class="tok-fn">copy</span><span class="tok-punct">(</span>src<span class="tok-punct">,</span> dst<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-rename">
+<h4><code>rename</code></h4>
+<pre class="code"><code><span class="tok-fn">rename</span><span class="tok-punct">(</span>src<span class="tok-punct">,</span> dst<span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="make-env">
+<h2><span class="kind kind-make">make</span> <code>Env</code> implements <a class="xref" href="env.html#module-env">ENV</a></h2>
+
+<div class="functions">
+<div class="fn" id="fn-lookup">
+<h4><code>lookup</code></h4>
+<p>Named apart from <code>get</code>: <code>this.get(key)</code> would bind to the capability's own <code>get</code>, not to this method.</p>
+<pre class="code"><code><span class="tok-fn">lookup</span><span class="tok-punct">(</span>key<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-get">
+<h4><code>get</code></h4>
+<pre class="code"><code><span class="tok-fn">get</span><span class="tok-punct">(</span>key<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-has?">
+<h4><code>has?</code></h4>
+<pre class="code"><code><span class="tok-fn">has?</span><span class="tok-punct">(</span>key<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-each">
+<h4><code>each</code></h4>
+<pre class="code"><code><span class="tok-fn">each</span><span class="tok-punct">(</span>f<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-set">
+<h4><code>set</code></h4>
+<p>A write goes to <code>onSet</code> or nowhere. It must NOT reach the real environment: a substituted ENV is the whole point of the mock, and a test that set a variable would otherwise leak it into the next one and into every process the suite starts. <code>vars</code> cannot take it either — a record is immutable — so a test that cares about writes supplies the hook, and one that does not gets a write that goes quietly nowhere.</p>
+<pre class="code"><code><span class="tok-fn">set</span><span class="tok-punct">(</span>name<span class="tok-punct">,</span> value<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-unset">
+<h4><code>unset</code></h4>
+<pre class="code"><code><span class="tok-fn">unset</span><span class="tok-punct">(</span>name<span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="make-response">
+<h2><span class="kind kind-make">make</span> <code>Response</code> implements <a class="xref" href="http.html#module-http">Http</a></h2>
+
+<div class="functions">
+<div class="fn" id="fn-get">
+<h4><code>get</code></h4>
+<pre class="code"><code><span class="tok-fn">get</span><span class="tok-punct">(</span>url<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-post">
+<h4><code>post</code></h4>
+<pre class="code"><code><span class="tok-fn">post</span><span class="tok-punct">(</span>url<span class="tok-punct">,</span> body<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-put">
+<h4><code>put</code></h4>
+<pre class="code"><code><span class="tok-fn">put</span><span class="tok-punct">(</span>url<span class="tok-punct">,</span> body<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-patch">
+<h4><code>patch</code></h4>
+<pre class="code"><code><span class="tok-fn">patch</span><span class="tok-punct">(</span>url<span class="tok-punct">,</span> body<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-delete">
+<h4><code>delete</code></h4>
+<pre class="code"><code><span class="tok-fn">delete</span><span class="tok-punct">(</span>url<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-head">
+<h4><code>head</code></h4>
+<pre class="code"><code><span class="tok-fn">head</span><span class="tok-punct">(</span>url<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-options">
+<h4><code>options</code></h4>
+<pre class="code"><code><span class="tok-fn">options</span><span class="tok-punct">(</span>url<span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+</section>
+</article>
+</main>
+</div>
+<footer class="foot">
+<div class="wrap">Generated by kex docgen at 2026-08-26T00:44:18.358309375+02:00 · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+</footer>
+</body>
+</html>

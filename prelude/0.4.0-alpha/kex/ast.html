@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kex.AST | Prelude 0.4.0-alpha | kex docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../assets/style.css">
+<link rel="icon" type="image/png" href="../../../icon.png">
+<script src="../../../assets/site.js" defer></script>
+</head>
+<body>
+<header class="top">
+<div class="wrap top-inner">
+<a class="brand" href="../../../index.html">kex</a>
+<span class="brand-sub">docs</span>
+<span class="spacer"></span>
+<button class="search-trigger" id="search" aria-label="Search documentation"
+data-root="../../../" data-package="prelude" data-version="0.4.0-alpha"
+data-page="kex/ast.html">
+<span>Search</span><kbd>/</kbd>
+</button>
+<span class="pkg-badge" id="version-badge" data-root="../../../" data-package="prelude" data-version="0.4.0-alpha" data-page="kex/ast.html">Prelude 0.4.0-alpha</span>
+<a class="back" href="https://kex.run/docs">kex.run ↗</a>
+</div>
+</header>
+<div class="wrap layout">
+<aside class="side"><nav aria-label="Modules"><p class="side-heading">Prelude</p><ul class="side-list">
+<li><a href="../algebra.html">Algebra</a></li>
+<li><a href="../bits.html">Bits</a></li>
+<li><a href="../blankable.html">Blankable</a></li>
+<li><a href="../console.html">Console</a></li>
+<li><a href="../digest.html">Digest</a></li>
+<li><a href="../enumerable.html">Enumerable</a></li>
+<li><a href="../env.html">ENV</a></li>
+<li><a href="../errorable.html">Errorable</a></li>
+<li><a href="../evaluator.html">Evaluator</a></li>
+<li><a href="../filehandle.html">FileHandle</a></li>
+<li><a href="../fs.html">FS</a></li>
+<li><a href="../http.html">Http</a></li>
+<li><a href="../io.html">IO</a></li>
+<li><a href="../json.html">JSON</a></li>
+<li><a href="../kex.html">Kex</a></li>
+<li><a href="../list.html">List</a></li>
+<li><a href="../map.html">Map</a></li>
+<li><a href="../math.html">Math</a></li>
+<li><a href="../mock.html">Mock</a></li>
+<li><a href="../number.html">Number</a></li>
+<li><a href="../optional.html">Optional</a></li>
+<li><a href="../optionparser.html">OptionParser</a></li>
+<li><a href="../parsing.html">Parsing</a></li>
+<li><a href="../prelude.html">Prelude</a></li>
+<li><a href="../process.html">Process</a></li>
+<li><a href="../range.html">Range</a></li>
+<li><a href="../regex.html">Regex</a></li>
+<li><a href="../set.html">Set</a></li>
+<li><a href="../stream.html">Stream</a></li>
+<li><a href="../string.html">String</a></li>
+<li><a href="../system.html">System</a></li>
+<li><a href="../taggedvalidation.html">TaggedValidation</a></li>
+<li><a href="../test.html">Assert</a></li>
+<li><a href="../time.html">Time</a></li>
+<li><a href="../truthyable.html">Truthyable</a></li>
+<li><a href="../type.html">Type</a></li>
+<li><a href="../units.html">Units</a></li>
+<li><a href="../webserver.html">Web</a></li>
+<li><a class="active" href="../kex/ast.html">Kex.AST</a><ul class="side-sub">
+<li><a href="#module-kex-ast">Kex.AST</a></li>
+</ul></li>
+<li><a href="../units/data.html">Units.Data</a></li>
+<li><a href="../units/si.html">Units.SI</a></li>
+</ul></nav></aside>
+<main class="content">
+<nav class="crumbs"><a href="../index.html">Prelude</a> <span class="sep">/</span> <span>Kex.AST</span></nav>
+<article class="prose">
+<h1>Kex.AST</h1>
+<section class="entity" id="module-kex-ast">
+<h2><span class="kind kind-module">module</span> <code>Kex.AST</code></h2>
+<p>Parses Kex source code into a structured AST at runtime.</p>
+<p>Returns <code>Result&lt;Program, ParseError&gt;</code> — the AST includes module definitions, function signatures, type/record definitions, traits, make blocks, and doc-comments extracted from <code>#</code> lines.</p>
+<section class="entity" id="record-location">
+<h2><span class="kind kind-record">record</span> <code>Location</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>file</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>line</code></dt><dd><code>Integer</code></dd></div>
+<div class="field"><dt><code>column</code></dt><dd><code>Integer</code></dd></div>
+<div class="field"><dt><code>startOffset</code></dt><dd><code>Integer</code></dd></div>
+<div class="field"><dt><code>endOffset</code></dt><dd><code>Integer</code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-program">
+<h2><span class="kind kind-record">record</span> <code>Program</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>schemaVersion</code></dt><dd><code>Integer</code></dd></div>
+<div class="field"><dt><code>items</code></dt><dd><code>[<a class="xref" href="#type-node">Node</a>]</code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-parseerror">
+<h2><span class="kind kind-record">record</span> <code>ParseError</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>message</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-location">Location</a>?</code></dd></div>
+</dl>
+</section>
+<section class="entity" id="function-parse">
+<h2><span class="kind kind-function">function</span> <code>parse</code></h2>
+<p>Parses a Kex source string into a structured AST.</p>
+<pre class="code"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Program</span><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span>
+<span class="tok-fn">parse</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Program</span><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span></code></pre>
+
+</section>
+<section class="entity" id="function-parsefile">
+<h2><span class="kind kind-function">function</span> <code>parseFile</code></h2>
+<p>Reads a file and parses it.</p>
+<pre class="code"><code><span class="tok-fn">parseFile</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Program</span><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span></code></pre>
+
+</section>
+<section class="entity" id="function-parsetype">
+<h2><span class="kind kind-function">function</span> <code>parseType</code></h2>
+<p>Parses a type expression string into a TypeRef.</p>
+<pre class="code"><code><span class="tok-fn">parseType</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">TypeRef</span><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span></code></pre>
+
+</section>
+<section class="entity" id="function-parseexpression">
+<h2><span class="kind kind-function">function</span> <code>parseExpression</code></h2>
+<p>Parses a single expression string into an Expression AST node.</p>
+<pre class="code"><code><span class="tok-fn">parseExpression</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Expression</span><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span></code></pre>
+
+</section>
+<section class="entity" id="type-typeref">
+<h2><span class="kind kind-type">type</span> <code>TypeRef</code></h2>
+<p>Structured representation of type expressions.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>NamedType(String, [TypeRef])</code></li>
+<li><code>FunctionType([TypeRef], TypeRef)</code></li>
+<li><code>TupleType([TypeRef])</code></li>
+<li><code>ListType(TypeRef)</code></li>
+<li><code>MapType(TypeRef, TypeRef)</code></li>
+<li><code>UnionType([TypeRef])</code></li>
+<li><code>IntersectionType([TypeRef])</code></li>
+<li><code>RecordType([(String, TypeRef)])</code></li>
+<li><code>NullableType(TypeRef)</code></li>
+<li><code>BlockType(TypeRef)</code></li>
+<li><code>AtomType(String)</code></li>
+<li><code>TypeQuery(String, Expression)</code></li>
+<li><code>TypeVar(String)</code></li>
+<li><code>AnyType</code></li>
+<li><code>NoneType</code></li>
+</ul>
+</section>
+<section class="entity" id="function-typereftext">
+<h2><span class="kind kind-function">function</span> <code>typeRefText</code></h2>
+<pre class="code"><code><span class="tok-fn">typeRefText</span><span class="tok-punct">(</span><span class="tok-type">NamedType</span><span class="tok-punct">(</span>name<span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="type-patternref">
+<h2><span class="kind kind-type">type</span> <code>PatternRef</code></h2>
+<p>Structured representation of patterns.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>BindPattern(String)</code></li>
+<li><code>LiteralPattern(String)</code></li>
+<li><code>ConstructorPattern(String, [PatternRef])</code></li>
+<li><code>TuplePattern([PatternRef])</code></li>
+<li><code>ListPattern([PatternRef], PatternRef?)</code></li>
+<li><code>RecordPattern(String?, [PatternField])</code></li>
+<li><code>RangePattern(PatternRef, PatternRef)</code></li>
+<li><code>ThisPattern(PatternRef)</code></li>
+<li><code>WildcardPattern</code></li>
+</ul>
+</section>
+<section class="entity" id="record-patternfield">
+<h2><span class="kind kind-record">record</span> <code>PatternField</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>pattern</code></dt><dd><code><a class="xref" href="#type-patternref">PatternRef</a>?</code></dd></div>
+<div class="field"><dt><code>stringKey</code></dt><dd><code>Bool</code></dd></div>
+</dl>
+</section>
+<section class="entity" id="function-patternreftext">
+<h2><span class="kind kind-function">function</span> <code>patternRefText</code></h2>
+<pre class="code"><code><span class="tok-fn">patternRefText</span><span class="tok-punct">(</span><span class="tok-type">BindPattern</span><span class="tok-punct">(</span>name<span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-patternfieldtext">
+<h2><span class="kind kind-function">function</span> <code>patternFieldText</code></h2>
+<pre class="code"><code><span class="tok-fn">patternFieldText</span><span class="tok-punct">(</span><span class="tok-type">PatternField</span> <span class="tok-punct">{</span> name<span class="tok-punct">,</span> pattern<span class="tok-punct">,</span> stringKey <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-referencetext">
+<h2><span class="kind kind-function">function</span> <code>referenceText</code></h2>
+<pre class="code"><code><span class="tok-fn">referenceText</span><span class="tok-punct">(</span><span class="tok-type">NamedType</span><span class="tok-punct">(</span>name<span class="tok-punct">,</span> args<span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="type-expression">
+<h2><span class="kind kind-type">type</span> <code>Expression</code></h2>
+<p>Structured representation of expression AST nodes.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>LitInt(Int)</code></li>
+<li><code>LitFloat(Float)</code></li>
+<li><code>LitChar(Int)</code></li>
+<li><code>LitString(String)</code></li>
+<li><code>InterpolatedString([String], [Expression])</code></li>
+<li><code>LitBool(Bool)</code></li>
+<li><code>LitAtom(String)</code></li>
+<li><code>LitNone</code></li>
+<li><code>Identifier(String)</code></li>
+<li><code>This</code></li>
+<li><code>BinaryOp(Expression, String, Expression)</code></li>
+<li><code>UnaryOp(String, Expression)</code></li>
+<li><code>Call(Expression, [Expression], [NamedArgument], Expression?)</code></li>
+<li><code>TaggedLiteral(String, [String], [Expression])</code></li>
+<li><code>MethodCall(Expression, String, [Expression], [NamedArgument], Expression?, Bool, Bool, TypeRef?)</code></li>
+<li><code>If(Expression, PatternRef?, [Expression], [ElseIf], [Expression]?)</code></li>
+<li><code>Match(Expression, String?, [MatchArm])</code></li>
+<li><code>Receive(String?, [MatchArm], Expression?, Expression?)</code></li>
+<li><code>ListLit([Expression], Expression?)</code></li>
+<li><code>MapLit([MapItem])</code></li>
+<li><code>RecordLit(String, [RecordField])</code></li>
+<li><code>TupleLit([Expression])</code></li>
+<li><code>Block([Expression])</code></li>
+<li><code>Lambda([LambdaParam], [Expression], TypeRef?, RescueInfo?)</code></li>
+<li><code>Let(PatternRef, TypeRef?, Expression)</code></li>
+<li><code>Var(String, TypeRef?, Expression)</code></li>
+<li><code>Assign(String, Expression)</code></li>
+<li><code>Return(Expression)</code></li>
+<li><code>Break</code></li>
+<li><code>Next</code></li>
+<li><code>Spawn([Expression])</code></li>
+<li><code>Try(Expression)</code></li>
+<li><code>Spread(Expression)</code></li>
+<li><code>TrailingIf(Expression, Expression)</code></li>
+<li><code>ThenElse(Expression, Expression, Expression)</code></li>
+<li><code>ShorthandLambda(String, [Expression], Bool)</code></li>
+<li><code>CurryPlaceholder</code></li>
+<li><code>Curry(String, String?, Bool, [[Expression]])</code></li>
+<li><code>Using(String, String?, [String], [String], [Expression])</code></li>
+<li><code>With(String, Expression, [Expression])</code></li>
+<li><code>GeneratedDeclaration(Expression, GeneratedTemplate)</code></li>
+<li><code>ErrorExpression(String)</code></li>
+<li><code>Trying([Expression], RescueInfo)</code></li>
+<li><code>While(Expression, [Expression])</code></li>
+<li><code>Loop([String], [Expression])</code></li>
+<li><code>RangeLit(Expression, Expression)</code></li>
+</ul>
+</section>
+<section class="entity" id="record-namedargument">
+<h2><span class="kind kind-record">record</span> <code>NamedArgument</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>value</code></dt><dd><code><a class="xref" href="#type-expression">Expression</a></code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-matcharm">
+<h2><span class="kind kind-record">record</span> <code>MatchArm</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>patterns</code></dt><dd><code>[<a class="xref" href="#type-patternref">PatternRef</a>]</code></dd></div>
+<div class="field"><dt><code>guard</code></dt><dd><code><a class="xref" href="#type-expression">Expression</a>?</code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code><a class="xref" href="#type-expression">Expression</a></code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-lambdaparam">
+<h2><span class="kind kind-record">record</span> <code>LambdaParam</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>type</code></dt><dd><code><a class="xref" href="#type-typeref">TypeRef</a>?</code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-rescueinfo">
+<h2><span class="kind kind-record">record</span> <code>RescueInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>arms</code></dt><dd><code>[<a class="xref" href="#record-matcharm">MatchArm</a>]</code></dd></div>
+<div class="field"><dt><code>catchAllName</code></dt><dd><code>String?</code></dd></div>
+<div class="field"><dt><code>catchAllBody</code></dt><dd><code>[<a class="xref" href="#type-expression">Expression</a>]</code></dd></div>
+<div class="field"><dt><code>inlineReturn</code></dt><dd><code><a class="xref" href="#type-expression">Expression</a>?</code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-elseif">
+<h2><span class="kind kind-record">record</span> <code>ElseIf</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>condition</code></dt><dd><code><a class="xref" href="#type-expression">Expression</a></code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code>[<a class="xref" href="#type-expression">Expression</a>]</code></dd></div>
+</dl>
+</section>
+<section class="entity" id="type-mapitem">
+<h2><span class="kind kind-type">type</span> <code>MapItem</code></h2>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>MapEntry(Expression, Expression)</code></li>
+<li><code>MapSpread(Expression)</code></li>
+</ul>
+</section>
+<section class="entity" id="record-recordfield">
+<h2><span class="kind kind-record">record</span> <code>RecordField</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>value</code></dt><dd><code><a class="xref" href="#type-expression">Expression</a></code></dd></div>
+</dl>
+</section>
+<section class="entity" id="type-generatedtemplate">
+<h2><span class="kind kind-type">type</span> <code>GeneratedTemplate</code></h2>
+<p>A declaration template whose name (and, for a make block, target) is computed by a <code>compiled do</code> expression.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>GeneratedNode(Node)</code></li>
+<li><code>GeneratedMake(GeneratedMakeInfo)</code></li>
+</ul>
+</section>
+<section class="entity" id="record-generatedmakeinfo">
+<h2><span class="kind kind-record">record</span> <code>GeneratedMakeInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>isFinal</code></dt><dd><code>Bool</code></dd></div>
+<div class="field"><dt><code>implements</code></dt><dd><code>[<a class="xref" href="#type-typeref">TypeRef</a>]</code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code>[<a class="xref" href="#type-compileditem">CompiledItem</a>]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-location">Location</a></code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-maininfo">
+<h2><span class="kind kind-record">record</span> <code>MainInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>doc</code></dt><dd><code>String?</code></dd></div>
+<div class="field"><dt><code>params</code></dt><dd><code>[<a class="xref" href="#record-paraminfo">ParamInfo</a>]</code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code>[<a class="xref" href="#type-expression">Expression</a>]</code></dd></div>
+<div class="field"><dt><code>rescueInfo</code></dt><dd><code><a class="xref" href="#record-rescueinfo">RescueInfo</a>?</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-location">Location</a></code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-paraminfo">
+<h2><span class="kind kind-record">record</span> <code>ParamInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code>String?</code></dd></div>
+<div class="field"><dt><code>pattern</code></dt><dd><code><a class="xref" href="#type-patternref">PatternRef</a>?</code></dd></div>
+<div class="field"><dt><code>type</code></dt><dd><code><a class="xref" href="#type-typeref">TypeRef</a>?</code></dd></div>
+<div class="field"><dt><code>hasDefault</code></dt><dd><code>Bool</code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-clauseinfo">
+<h2><span class="kind kind-record">record</span> <code>ClauseInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>params</code></dt><dd><code>[<a class="xref" href="#record-paraminfo">ParamInfo</a>]</code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code>[<a class="xref" href="#type-expression">Expression</a>]</code></dd></div>
+<div class="field"><dt><code>returnType</code></dt><dd><code><a class="xref" href="#type-typeref">TypeRef</a>?</code></dd></div>
+<div class="field"><dt><code>rescueInfo</code></dt><dd><code><a class="xref" href="#record-rescueinfo">RescueInfo</a>?</code></dd></div>
+<div class="field"><dt><code>hasParamList</code></dt><dd><code>Bool</code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-functioninfo">
+<h2><span class="kind kind-record">record</span> <code>FunctionInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>doc</code></dt><dd><code>String?</code></dd></div>
+<div class="field"><dt><code>isFoul</code></dt><dd><code>Bool</code></dd></div>
+<div class="field"><dt><code>predicate</code></dt><dd><code>Bool</code></dd></div>
+<div class="field"><dt><code>clauses</code></dt><dd><code>[<a class="xref" href="#record-clauseinfo">ClauseInfo</a>]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-location">Location</a></code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-annotationinfo">
+<h2><span class="kind kind-record">record</span> <code>AnnotationInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>type</code></dt><dd><code><a class="xref" href="#type-typeref">TypeRef</a></code></dd></div>
+<div class="field"><dt><code>doc</code></dt><dd><code>String?</code></dd></div>
+<div class="field"><dt><code>implicitThis</code></dt><dd><code>Bool</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-location">Location</a></code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-variantinfo">
+<h2><span class="kind kind-record">record</span> <code>VariantInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>fields</code></dt><dd><code>[<a class="xref" href="#type-typeref">TypeRef</a>]</code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-typeinfo">
+<h2><span class="kind kind-record">record</span> <code>TypeInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>doc</code></dt><dd><code>String?</code></dd></div>
+<div class="field"><dt><code>typeParams</code></dt><dd><code>[String]</code></dd></div>
+<div class="field"><dt><code>parents</code></dt><dd><code>[<a class="xref" href="#type-typeref">TypeRef</a>]</code></dd></div>
+<div class="field"><dt><code>variants</code></dt><dd><code>[<a class="xref" href="#record-variantinfo">VariantInfo</a>]?</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-location">Location</a></code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-fieldinfo">
+<h2><span class="kind kind-record">record</span> <code>FieldInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>type</code></dt><dd><code><a class="xref" href="#type-typeref">TypeRef</a></code></dd></div>
+<div class="field"><dt><code>hasDefault</code></dt><dd><code>Bool</code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-recordinfo">
+<h2><span class="kind kind-record">record</span> <code>RecordInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>doc</code></dt><dd><code>String?</code></dd></div>
+<div class="field"><dt><code>typeParams</code></dt><dd><code>[String]</code></dd></div>
+<div class="field"><dt><code>fields</code></dt><dd><code>[<a class="xref" href="#record-fieldinfo">FieldInfo</a>]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-location">Location</a></code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-traitinfo">
+<h2><span class="kind kind-record">record</span> <code>TraitInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>doc</code></dt><dd><code>String?</code></dd></div>
+<div class="field"><dt><code>typeParams</code></dt><dd><code>[String]</code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code>[<a class="xref" href="#type-node">Node</a>]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-location">Location</a></code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-makeinfo">
+<h2><span class="kind kind-record">record</span> <code>MakeInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>target</code></dt><dd><code><a class="xref" href="#type-typeref">TypeRef</a></code></dd></div>
+<div class="field"><dt><code>doc</code></dt><dd><code>String?</code></dd></div>
+<div class="field"><dt><code>isFinal</code></dt><dd><code>Bool</code></dd></div>
+<div class="field"><dt><code>implements</code></dt><dd><code>[<a class="xref" href="#type-typeref">TypeRef</a>]</code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code>[<a class="xref" href="#type-node">Node</a>]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-location">Location</a></code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-pragmainfo">
+<h2><span class="kind kind-record">record</span> <code>PragmaInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>value</code></dt><dd><code>String?</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-location">Location</a></code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-moduleinfo">
+<h2><span class="kind kind-record">record</span> <code>ModuleInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>doc</code></dt><dd><code>String?</code></dd></div>
+<div class="field"><dt><code>items</code></dt><dd><code>[<a class="xref" href="#type-node">Node</a>]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-location">Location</a></code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-constantinfo">
+<h2><span class="kind kind-record">record</span> <code>ConstantInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>doc</code></dt><dd><code>String?</code></dd></div>
+<div class="field"><dt><code>type</code></dt><dd><code><a class="xref" href="#type-typeref">TypeRef</a>?</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-location">Location</a></code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-visibilityinfo">
+<h2><span class="kind kind-record">record</span> <code>VisibilityInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>isPublic</code></dt><dd><code>Bool</code></dd></div>
+<div class="field"><dt><code>items</code></dt><dd><code>[<a class="xref" href="#type-node">Node</a>]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-location">Location</a></code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-usinginfo">
+<h2><span class="kind kind-record">record</span> <code>UsingInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>moduleName</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>alias</code></dt><dd><code>String?</code></dd></div>
+<div class="field"><dt><code>onlyNames</code></dt><dd><code>[String]</code></dd></div>
+<div class="field"><dt><code>exceptNames</code></dt><dd><code>[String]</code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code>[<a class="xref" href="#type-expression">Expression</a>]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-location">Location</a></code></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-exportinfo">
+<h2><span class="kind kind-record">record</span> <code>ExportInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>moduleName</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>alias</code></dt><dd><code>String?</code></dd></div>
+<div class="field"><dt><code>onlyNames</code></dt><dd><code>[String]</code></dd></div>
+<div class="field"><dt><code>exceptNames</code></dt><dd><code>[String]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-location">Location</a></code></dd></div>
+</dl>
+</section>
+<section class="entity" id="type-compileditem">
+<h2><span class="kind kind-type">type</span> <code>CompiledItem</code></h2>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>CompiledNode(Node)</code></li>
+<li><code>CompiledExpression(Expression)</code></li>
+</ul>
+</section>
+<section class="entity" id="record-compiledinfo">
+<h2><span class="kind kind-record">record</span> <code>CompiledInfo</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>items</code></dt><dd><code>[<a class="xref" href="#type-compileditem">CompiledItem</a>]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-location">Location</a></code></dd></div>
+</dl>
+</section>
+<section class="entity" id="type-node">
+<h2><span class="kind kind-type">type</span> <code>Node</code></h2>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>ModuleDef(ModuleInfo)</code></li>
+<li><code>FunctionDef(FunctionInfo)</code></li>
+<li><code>TypeAnnotation(AnnotationInfo)</code></li>
+<li><code>TypeDef(TypeInfo)</code></li>
+<li><code>RecordDef(RecordInfo)</code></li>
+<li><code>TraitDef(TraitInfo)</code></li>
+<li><code>MakeDef(MakeInfo)</code></li>
+<li><code>PragmaDef(PragmaInfo)</code></li>
+<li><code>ConstantDef(ConstantInfo)</code></li>
+<li><code>MainDef(MainInfo)</code></li>
+<li><code>Visibility(VisibilityInfo)</code></li>
+<li><code>UsingDef(UsingInfo)</code></li>
+<li><code>ExportDef(ExportInfo)</code></li>
+<li><code>Compiled(CompiledInfo)</code></li>
+</ul>
+</section>
+<section class="entity" id="make-typeref-|-patternref">
+<h2><span class="kind kind-make">make</span> <code>TypeRef | PatternRef</code></h2>
+<p>Source-like conversion through the standard <code>.to(String)</code> spelling.</p>
+
+<div class="functions">
+<div class="fn" id="fn-to">
+<h4><code>to</code></h4>
+<pre class="code"><code><span class="tok-fn">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+</section>
+</article>
+</main>
+</div>
+<footer class="foot">
+<div class="wrap">Generated by kex docgen at 2026-08-26T00:44:18.358309375+02:00 · <a href="../../../llms.txt">llms.txt</a> · <a href="../../../search.json">search.json</a></div>
+</footer>
+</body>
+</html>
