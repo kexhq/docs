@@ -1,0 +1,240 @@
+---
+package: prelude
+version: "0.4.0-alpha"
+source: filehandle.kex
+title: Filehandle
+entities:
+  - { kind: trait, name: "Readable" }
+  - { kind: trait, name: "Writable" }
+  - { kind: type, name: "FileHandle" }
+  - { kind: make, name: "FileHandle<CanRead, W>" }
+  - { kind: make, name: "FileHandle<R, CanWrite>" }
+  - { kind: make, name: "FileHandle<R, W>" }
+---
+
+# Filehandle
+
+## trait `Readable`
+
+`Readable` — a source that yields text.
+
+Named so that anything can be one, not just a file: the vocabulary `FileHandle<CanRead, W>` already carried was an abstraction without a name, so nothing else could implement it and `IO` did not go through it (kexhq/kex#139). `IO.in` is a `Readable`; so is any handle opened for reading.
+
+  foul firstLine(source: Readable) -> String do     source.getLine.or("(empty)")   end
+
+  firstLine(IO.in)   firstLine(FS.File.open("notes.txt", Read).try)
+
+
+#### `getLine`
+
+Reads the next line, without its newline.
+
+```kex
+getLine : String?
+```
+
+**Returns**: `String?` — the next line, or `None` at end of input
+
+#### `get`
+
+Reads a single character, as a one-character `String`.
+
+```kex
+get : String?
+```
+
+**Returns**: `String?` — the next character, or `None` at end of input
+
+#### `readLine`
+
+Reads the next line, without its newline. The same as `getLine`.
+
+```kex
+readLine : String?
+```
+
+**Returns**: `String?` — the next line, or `None` at end of input
+
+#### `read`
+
+Reads everything remaining, as one `String`.
+
+```kex
+read : String?
+```
+
+**Returns**: `String?` — the remaining contents, or `None`
+
+#### `eof?`
+
+Returns `true` when the source has reached its end.
+
+```kex
+eof? : Bool
+```
+
+**Returns**: `Bool` — `true` at end of input
+
+#### `atEnd?`
+
+Returns `true` when the source has reached its end. The same as `eof?`.
+
+```kex
+atEnd? : Bool
+```
+
+**Returns**: `Bool` — `true` at end of input
+
+## trait `Writable`
+
+`Writable` — a sink that accepts text.
+
+The payoff of naming it is that a sink becomes a VALUE a library can accept, rather than a global switch it can only sit underneath: output from one library can go to a buffer while another's goes to the terminal (kexhq/kex#139).
+
+  foul report(out: Writable, lines: [String]) -> Void do     lines.each { |line| out.printLine(line) }   end
+
+  report(IO.out, results)   report(IO.error, warnings)   report(FS.File.open("report.txt", Write).try, results)
+
+Two deliberate choices, both settled in kexhq/kex#139:
+
+- The argument is `Showable`, not `String`. `IO.printLine` always took a   `Showable` while the handle methods took a `String`; the wider one is   right, and it is what makes `IO.printLine(x)` and `IO.out.printLine(x)`   the same call. - The result is `Void`, not `Bool`. A boolean nobody checks is not an error   channel, and `Result<Void, IOError>` on every print is miserable to use.   Erlang's answer is the one taken here: the call says `ok`, and failure   belongs to the device rather than to the call site.
+
+
+#### `printLine`
+
+Writes `content` followed by a newline.
+
+```kex
+printLine : Showable -> Void
+```
+
+**Returns**: `Void`
+
+#### `print`
+
+Writes `content` with no trailing newline.
+
+```kex
+print : Showable -> Void
+```
+
+**Returns**: `Void`
+
+#### `writeLine`
+
+Writes `content` followed by a newline. The same as `printLine`.
+
+```kex
+writeLine : Showable -> Void
+```
+
+**Returns**: `Void`
+
+#### `write`
+
+Writes `content` with no trailing newline. The same as `print`.
+
+```kex
+write : Showable -> Void
+```
+
+**Returns**: `Void`
+
+## type `FileHandle<R, W>`
+
+An open file, obtained from `FS.File.open`.
+
+The two type parameters record what the handle is allowed to do: `R` is `CanRead` or `CannotRead`, `W` is `CanWrite` or `CannotWrite`. `FS.File.open` picks them from the mode you pass, so calling `write` on a handle opened `Read` is a compile error rather than a run-time failure.
+
+  using FS
+
+  main do     match FS.File.open("notes.txt", Read) do       Ok(handle) => do         IO.printLine(handle.read.or(""))         handle.close       end       Error(e) => IO.printError("cannot open: ${e}")     end   end
+
+Reach for a handle when you want to walk a large file a line at a time, or make many small writes. When a file fits comfortably in memory, `FS.File.read` and `FS.File.write` are shorter and need no closing. To be rid of the closing entirely, pass `FS.File.open` a block.
+
+The handle methods are `foul`: obtaining a handle is not an effect, but reading or writing through one is, so a function that does so is `foul` no matter where the handle came from. Injection makes a thing substitutable, not pure.
+
+
+
+## make `FileHandle<CanRead, W>` implements [Readable](#trait-readable)
+
+
+
+## make `FileHandle<R, CanWrite>` implements [Writable](#trait-writable)
+
+
+#### `printLine`
+
+Writes `content` followed by a newline.
+
+```kex
+printLine(content) : Showable -> Void
+```
+
+**Returns**: `Void`
+
+**Examples**
+
+_Writing a report line by line_
+
+```kex
+  rows.each { |row| handle.printLine(row) }
+```
+
+#### `print`
+
+Writes `content` with no trailing newline.
+
+```kex
+print(content) : Showable -> Void
+```
+
+**Returns**: `Void`
+
+**Examples**
+
+_Building a line from pieces_
+
+```kex
+  handle.print("name,")
+  handle.print("age")
+  handle.printLine("")
+```
+
+#### `writeLine`
+
+Writes `content` followed by a newline. The same as `printLine`, named for writing to a file rather than to a console.
+
+```kex
+writeLine(content) : Showable -> Void
+```
+
+**Returns**: `Void`
+
+**Examples**
+
+```kex
+  handle.writeLine("done")
+```
+
+#### `write`
+
+Writes `content` with no trailing newline. The same as `print`.
+
+```kex
+write(content) : Showable -> Void
+```
+
+**Returns**: `Void`
+
+**Examples**
+
+_Writing a whole document in one call_
+
+```kex
+  handle.write(rendered)
+```
+
+## make `FileHandle<R, W>`
+
+

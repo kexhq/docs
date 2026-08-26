@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evaluator | Prelude 0.4.0-alpha | kex docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+<link rel="icon" type="image/png" href="../../icon.png">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<header class="top">
+<div class="wrap top-inner">
+<a class="brand" href="../../index.html">kex</a>
+<span class="brand-sub">docs</span>
+<span class="spacer"></span>
+<button class="search-trigger" id="search" aria-label="Search documentation"
+data-root="../../" data-package="prelude" data-version="0.4.0-alpha"
+data-page="evaluator.html">
+<span>Search</span><kbd>/</kbd>
+</button>
+<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="evaluator.html">Prelude 0.4.0-alpha</span>
+<a class="back" href="https://kex.run/docs">kex.run ↗</a>
+</div>
+</header>
+<div class="wrap layout">
+<aside class="side"><nav aria-label="Modules"><p class="side-heading">Prelude</p><ul class="side-list">
+<li><a href="algebra.html">Algebra</a></li>
+<li><a href="bits.html">Bits</a></li>
+<li><a href="blankable.html">Blankable</a></li>
+<li><a href="console.html">Console</a></li>
+<li><a href="digest.html">Digest</a></li>
+<li><a href="enumerable.html">Enumerable</a></li>
+<li><a href="env.html">ENV</a></li>
+<li><a href="errorable.html">Errorable</a></li>
+<li><a class="active" href="evaluator.html">Evaluator</a><ul class="side-sub">
+<li><a href="#module-evaluator">Evaluator</a></li>
+</ul></li>
+<li><a href="filehandle.html">Filehandle</a></li>
+<li><a href="fs.html">FS</a></li>
+<li><a href="http.html">Http</a></li>
+<li><a href="io.html">IO</a></li>
+<li><a href="json.html">JSON</a></li>
+<li><a href="kex.html">Kex</a></li>
+<li><a href="list.html">List</a></li>
+<li><a href="map.html">Map</a></li>
+<li><a href="math.html">Math</a></li>
+<li><a href="mock.html">Mock</a></li>
+<li><a href="number.html">Number</a></li>
+<li><a href="optional.html">Optional</a></li>
+<li><a href="optionparser.html">OptionParser</a></li>
+<li><a href="parsing.html">Parsing</a></li>
+<li><a href="prelude.html">Prelude</a></li>
+<li><a href="process.html">Process</a></li>
+<li><a href="range.html">Range</a></li>
+<li><a href="regex.html">Regex</a></li>
+<li><a href="set.html">Set</a></li>
+<li><a href="stream.html">Stream</a></li>
+<li><a href="string.html">String</a></li>
+<li><a href="system.html">System</a></li>
+<li><a href="taggedvalidation.html">TaggedValidation</a></li>
+<li><a href="test.html">Assert</a></li>
+<li><a href="time.html">Time</a></li>
+<li><a href="truthyable.html">Truthyable</a></li>
+<li><a href="type.html">Type</a></li>
+<li><a href="units.html">Units</a></li>
+<li><a href="webserver.html">Web</a></li>
+<li><a href="kex/ast.html">Kex.AST</a></li>
+<li><a href="units/data.html">Units.Data</a></li>
+<li><a href="units/si.html">Units.SI</a></li>
+</ul></nav></aside>
+<main class="content">
+<nav class="crumbs"><a href="index.html">Prelude</a> <span class="sep">/</span> <span>Evaluator</span></nav>
+<article class="prose">
+<h1>Evaluator</h1>
+<section class="entity" id="module-evaluator">
+<h2><span class="kind kind-module">module</span> <code>Evaluator</code></h2>
+<p>Running Kex source code at run time, in a sandbox.</p>
+<p>Each call builds a fresh, isolated evaluator: the caller's environment is never shared, and the evaluated code sees only what <code>EvaluatorOptions</code> allows. Step and depth limits make a runaway program stop rather than hang.</p>
+<p>  Evaluator.runExpression(&quot;1 ` 2&quot;)           # =&gt; Ok(3)   Evaluator.runExpression(&quot;[3,1,2].sort&quot;)    # =&gt; Ok([1, 2, 3])</p>
+<p>This is for evaluating expressions your program was given — a formula in a config file, a filter typed by a user. Every result is a `Result+, so a syntax error or a rejected call is a value you handle.</p>
+<section class="entity" id="function-run">
+<h2><span class="kind kind-function">function</span> <code>run</code></h2>
+<p>Evaluates a whole Kex program and returns its result.</p>
+<p>The source may declare functions, records and a <code>main</code>, exactly as a file would. Anything that goes wrong — a parse error, a call the sandbox does not allow, running past the step limit — comes back as <code>Error</code> with a message.</p>
+<pre class="code"><code><span class="tok-fn">run</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Any</span><span class="tok-punct">,</span> <span class="tok-type">String</span><span class="tok-op">&gt;</span>
+<span class="tok-fn">run</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">EvaluatorOptions</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Any</span><span class="tok-punct">,</span> <span class="tok-type">String</span><span class="tok-op">&gt;</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>source</code> <code>String</code></dt><dd>the Kex program to run</dd></div>
+<div class="param"><dt><code>opts</code> <code><a class="xref" href="#record-evaluatoroptions">EvaluatorOptions</a></code></dt><dd>what the sandbox allows; omitted for the defaults</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;Any, String&gt;</code> — the program's result, or why it failed</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">Evaluator</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">main do 1 + 1 end</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(2)</span></code></pre>
+<p class="caption"><em>Running a user-supplied script with a tighter budget</em></p>
+<pre class="code"><code>  <span class="tok-type">Evaluator</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span>script<span class="tok-punct">,</span> <span class="tok-type">EvaluatorOptions</span> <span class="tok-punct">{</span>
+    allow<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-op">:</span><span class="tok-type">Math</span><span class="tok-punct">,</span> <span class="tok-op">:</span><span class="tok-type">List</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+    maxSteps<span class="tok-op">:</span> <span class="tok-number">10_000</span>
+  <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-runexpression">
+<h2><span class="kind kind-function">function</span> <code>runExpression</code></h2>
+<p>Evaluates a single Kex expression and returns its value.</p>
+<p>The form to reach for when the input is a formula rather than a program — there is no <code>main</code> to write and no declarations to skip past.</p>
+<pre class="code"><code><span class="tok-fn">runExpression</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Any</span><span class="tok-punct">,</span> <span class="tok-type">String</span><span class="tok-op">&gt;</span>
+<span class="tok-fn">runExpression</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">EvaluatorOptions</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Any</span><span class="tok-punct">,</span> <span class="tok-type">String</span><span class="tok-op">&gt;</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>source</code> <code>String</code></dt><dd>the Kex expression to evaluate</dd></div>
+<div class="param"><dt><code>opts</code> <code><a class="xref" href="#record-evaluatoroptions">EvaluatorOptions</a></code></dt><dd>what the sandbox allows; omitted for the defaults</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;Any, String&gt;</code> — the value, or why it failed</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">Evaluator</span><span class="tok-op">.</span><span class="tok-method">runExpression</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">1 + 2</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>          <span class="tok-comment"># =&gt; Ok(3)</span>
+  <span class="tok-type">Evaluator</span><span class="tok-op">.</span><span class="tok-method">runExpression</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">[3,1,2].sort</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok([1, 2, 3])</span>
+  <span class="tok-type">Evaluator</span><span class="tok-op">.</span><span class="tok-method">runExpression</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">nope()</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-comment"># =&gt; Error(&quot;Runtime error: ... Undefined function: nope&quot;)</span></code></pre>
+<p class="caption"><em>Evaluating a formula from a config file</em></p>
+<pre class="code"><code>  <span class="tok-type">Evaluator</span><span class="tok-op">.</span><span class="tok-method">runExpression</span><span class="tok-punct">(</span>formula<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="record-evaluatoroptions">
+<h2><span class="kind kind-record">record</span> <code>EvaluatorOptions</code></h2>
+<p>What an evaluated program is allowed to reach, and how long it may run.</p>
+<p>The defaults are already conservative — pure computation over the common data types, no filesystem, no network, no processes. Narrow <code>allow</code> further, or lower the limits, when the source is less trusted still.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>allow</code></dt><dd><code>[Atom]</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>modules</code></dt><dd><code>{String: {String: (Any) -&gt; Any}}</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>maxSteps</code></dt><dd><code>Int</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>maxDepth</code></dt><dd><code>Int</code> <span class="opt">optional</span></dd></div>
+</dl>
+</section>
+</section>
+</article>
+</main>
+</div>
+<footer class="foot">
+<div class="wrap">Generated by kex docgen at 2026-08-26T19:15:23.466486048Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+</footer>
+</body>
+</html>

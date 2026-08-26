@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OptionParser | Prelude 0.4.0-alpha | kex docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+<link rel="icon" type="image/png" href="../../icon.png">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<header class="top">
+<div class="wrap top-inner">
+<a class="brand" href="../../index.html">kex</a>
+<span class="brand-sub">docs</span>
+<span class="spacer"></span>
+<button class="search-trigger" id="search" aria-label="Search documentation"
+data-root="../../" data-package="prelude" data-version="0.4.0-alpha"
+data-page="optionparser.html">
+<span>Search</span><kbd>/</kbd>
+</button>
+<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="optionparser.html">Prelude 0.4.0-alpha</span>
+<a class="back" href="https://kex.run/docs">kex.run ↗</a>
+</div>
+</header>
+<div class="wrap layout">
+<aside class="side"><nav aria-label="Modules"><p class="side-heading">Prelude</p><ul class="side-list">
+<li><a href="algebra.html">Algebra</a></li>
+<li><a href="bits.html">Bits</a></li>
+<li><a href="blankable.html">Blankable</a></li>
+<li><a href="console.html">Console</a></li>
+<li><a href="digest.html">Digest</a></li>
+<li><a href="enumerable.html">Enumerable</a></li>
+<li><a href="env.html">ENV</a></li>
+<li><a href="errorable.html">Errorable</a></li>
+<li><a href="evaluator.html">Evaluator</a></li>
+<li><a href="filehandle.html">Filehandle</a></li>
+<li><a href="fs.html">FS</a></li>
+<li><a href="http.html">Http</a></li>
+<li><a href="io.html">IO</a></li>
+<li><a href="json.html">JSON</a></li>
+<li><a href="kex.html">Kex</a></li>
+<li><a href="list.html">List</a></li>
+<li><a href="map.html">Map</a></li>
+<li><a href="math.html">Math</a></li>
+<li><a href="mock.html">Mock</a></li>
+<li><a href="number.html">Number</a></li>
+<li><a href="optional.html">Optional</a></li>
+<li><a class="active" href="optionparser.html">OptionParser</a><ul class="side-sub">
+<li><a href="#type-optionkind">OptionKind</a></li>
+<li><a href="#record-optionspec">OptionSpec</a></li>
+<li><a href="#type-commandhandler">CommandHandler</a></li>
+<li><a href="#record-commandspec">CommandSpec</a></li>
+<li><a href="#record-optionconfig">OptionConfig</a></li>
+<li><a href="#record-parsedoptions">ParsedOptions</a></li>
+<li><a href="#type-optionparseerror">OptionParseError</a></li>
+<li><a href="#make-parsedoptions">ParsedOptions</a></li>
+<li><a href="#make-optionconfig">OptionConfig</a></li>
+<li><a href="#module-optionparser">OptionParser</a></li>
+</ul></li>
+<li><a href="parsing.html">Parsing</a></li>
+<li><a href="prelude.html">Prelude</a></li>
+<li><a href="process.html">Process</a></li>
+<li><a href="range.html">Range</a></li>
+<li><a href="regex.html">Regex</a></li>
+<li><a href="set.html">Set</a></li>
+<li><a href="stream.html">Stream</a></li>
+<li><a href="string.html">String</a></li>
+<li><a href="system.html">System</a></li>
+<li><a href="taggedvalidation.html">TaggedValidation</a></li>
+<li><a href="test.html">Assert</a></li>
+<li><a href="time.html">Time</a></li>
+<li><a href="truthyable.html">Truthyable</a></li>
+<li><a href="type.html">Type</a></li>
+<li><a href="units.html">Units</a></li>
+<li><a href="webserver.html">Web</a></li>
+<li><a href="kex/ast.html">Kex.AST</a></li>
+<li><a href="units/data.html">Units.Data</a></li>
+<li><a href="units/si.html">Units.SI</a></li>
+</ul></nav></aside>
+<main class="content">
+<nav class="crumbs"><a href="index.html">Prelude</a> <span class="sep">/</span> <span>OptionParser</span></nav>
+<article class="prose">
+<h1>OptionParser</h1>
+<section class="entity" id="type-optionkind">
+<h2><span class="kind kind-type">type</span> <code>OptionKind</code></h2>
+<p>Declarative command-line parsing, shared by Kex tools and applications.</p>
+<p>You describe the options and commands a tool accepts, and the parser turns an argument list into typed values, dispatches to the right command, and renders the help text.</p>
+<p>  foul greet(options: ParsedOptions) -&gt; Integer do     IO.printLine(&quot;hello, ${options.value(&quot;name&quot;, &quot;world&quot;)}&quot;)     return 0   end</p>
+<p>  main(args) do     let cli = OptionParser.define(&quot;demo&quot;, &quot;a small demo tool&quot;)       .string(&quot;name&quot;, Just('n'), &quot;who to greet&quot;, Just(&quot;world&quot;), false)       .flag(&quot;help&quot;, Just('h'), &quot;show this help&quot;)       .command(&quot;greet&quot;, &quot;&quot;, &quot;print a greeting&quot;, ~greet)     System.exit(cli.run(args))   end</p>
+<p>  $ demo greet --name Ada   hello, Ada</p>
+<p>Note that <code>--help</code> is not automatic: <code>run</code> shows the help when a flag named <code>help</code> is set, so declare that flag if you want it.</p>
+<p>Start at <code>OptionParser.define</code>, chain the <code>string</code> / <code>integer</code> / <code>flag</code> / <code>command</code> builders, and finish with <code>run</code> (dispatch and exit code) or <code>parse</code> (the parsed values, and nothing else).</p>
+<p>What kind of value an option carries: <code>StringValue</code> takes any text, <code>IntegerValue</code> must parse as a number, and <code>FlagValue</code> takes none at all and reads as <code>&quot;true&quot;</code> when present.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>StringValue</code></li>
+<li><code>IntegerValue</code></li>
+<li><code>FlagValue</code></li>
+</ul>
+</section>
+<section class="entity" id="record-optionspec">
+<h2><span class="kind kind-record">record</span> <code>OptionSpec</code></h2>
+<p>One declared option. Built for you by the <code>OptionConfig</code> builders — you rarely construct one by hand.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>long</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>short</code></dt><dd><code><a class="xref" href="string.html#make-char">Char</a>?</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>kind</code></dt><dd><code><a class="xref" href="#type-optionkind">OptionKind</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>description</code></dt><dd><code>String</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>default</code></dt><dd><code>String?</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>required?</code></dt><dd><code>Bool</code> <span class="opt">optional</span></dd></div>
+</dl>
+</section>
+<section class="entity" id="type-commandhandler">
+<h2><span class="kind kind-type">type</span> <code>CommandHandler</code></h2>
+<p>What a command does once the line has been parsed. It receives the parsed options with the command's own words already removed, so <code>tey add greet</code> hands its handler <code>[&quot;greet&quot;]</code>, and returns the process exit code.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li class="abstract"><em>abstract</em></li>
+</ul>
+</section>
+<section class="entity" id="record-commandspec">
+<h2><span class="kind kind-record">record</span> <code>CommandSpec</code></h2>
+<p>One declared command. Built for you by the <code>OptionConfig.command</code> builders.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>description</code></dt><dd><code>String</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>usage</code></dt><dd><code>String</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>handler</code></dt><dd><code><a class="xref" href="#type-commandhandler">CommandHandler</a></code></dd></div>
+<div class="field"><dt><code>section</code></dt><dd><code>String</code> <span class="opt">optional</span></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-optionconfig">
+<h2><span class="kind kind-record">record</span> <code>OptionConfig</code></h2>
+<p>A tool's whole command-line interface: its name, its options, and its commands.</p>
+<p>Build one with <code>OptionParser.define</code> and add to it with the chainable <code>string</code>, <code>integer</code>, <code>flag</code> and <code>command</code> methods. Each returns a new <code>OptionConfig</code>, so the chain reads as one declaration.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code>String</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>description</code></dt><dd><code>String</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>options</code></dt><dd><code>[<a class="xref" href="#record-optionspec">OptionSpec</a>]</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>commands</code></dt><dd><code>[<a class="xref" href="#record-commandspec">CommandSpec</a>]</code> <span class="opt">optional</span></dd></div>
+</dl>
+</section>
+<section class="entity" id="record-parsedoptions">
+<h2><span class="kind kind-record">record</span> <code>ParsedOptions</code></h2>
+<p>The result of a successful parse: the option values, and the words that were not options.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>values</code></dt><dd><code>{String: String}</code></dd></div>
+<div class="field"><dt><code>arguments</code></dt><dd><code>[String]</code></dd></div>
+</dl>
+</section>
+<section class="entity" id="type-optionparseerror">
+<h2><span class="kind kind-type">type</span> <code>OptionParseError</code></h2>
+<p>Why a command line could not be parsed.</p>
+<p><code>OptionParser.errorMessage</code> turns one into a sentence for the user; <code>OptionConfig.run</code> does that for you.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>UnknownOption(String)</code></li>
+<li><code>MissingValue(String)</code></li>
+<li><code>UnexpectedValue(String)</code></li>
+<li><code>MissingRequired(String)</code></li>
+<li><code>InvalidInteger(String, String)</code></li>
+</ul>
+</section>
+<section class="entity" id="make-parsedoptions">
+<h2><span class="kind kind-make">make</span> <code>ParsedOptions</code></h2>
+
+<div class="functions">
+<div class="fn" id="fn-value">
+<h4><code>value</code></h4>
+<p>Returns the value given for the option named <code>name</code>, or <code>None</code> when it was neither supplied nor defaulted.</p>
+<pre class="code"><code><span class="tok-fn">value</span><span class="tok-punct">(</span>name<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code> <code>String</code></dt><dd>the option's long name, without dashes</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String?</code> — the value, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code>  options<span class="tok-op">.</span><span class="tok-method">value</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">name</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; Just(&quot;Ada&quot;)</span>
+  options<span class="tok-op">.</span><span class="tok-method">value</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">missing</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; None</span></code></pre>
+
+</div>
+<div class="fn" id="fn-flagenabled?">
+<h4><code>flagEnabled?</code></h4>
+<p>Returns <code>true</code> when the flag named <code>name</code> was given.</p>
+<pre class="code"><code><span class="tok-fn">flagEnabled?</span><span class="tok-punct">(</span>name<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code> <code>String</code></dt><dd>the flag's long name, without dashes</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when the flag is set</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-keyword">if</span> options<span class="tok-op">.</span><span class="tok-method">flagEnabled?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">verbose</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">verbose mode</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="fn-integervalue">
+<h4><code>integerValue</code></h4>
+<p>Returns the value of an integer option as an <code>Integer</code>, or <code>None</code> when it is absent or does not parse.</p>
+<p>An option declared with <code>integer</code> has already been checked at parse time, so <code>None</code> here means absent rather than malformed.</p>
+<pre class="code"><code><span class="tok-fn">integerValue</span><span class="tok-punct">(</span>name<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code> <code>String</code></dt><dd>the option's long name, without dashes</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Integer?</code> — the number, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-keyword">let</span> times <span class="tok-op">=</span> options<span class="tok-op">.</span><span class="tok-method">integerValue</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">times</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="make-optionconfig">
+<h2><span class="kind kind-make">make</span> <code>OptionConfig</code></h2>
+
+<div class="functions">
+<div class="fn" id="fn-string">
+<h4><code>string</code></h4>
+<p>Declares an option that takes a text value.</p>
+<pre class="code"><code><span class="tok-fn">string</span><span class="tok-punct">(</span>long<span class="tok-punct">,</span> short<span class="tok-punct">,</span> description<span class="tok-punct">,</span> default<span class="tok-punct">,</span> required?<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>long</code> <code>String</code></dt><dd>the long spelling, without dashes</dd></div>
+<div class="param"><dt><code>short</code> <code><a class="xref" href="string.html#make-char">Char</a>?</code></dt><dd>an optional one-character spelling</dd></div>
+<div class="param"><dt><code>description</code> <code>String</code></dt><dd>the help-text description</dd></div>
+<div class="param"><dt><code>default</code> <code>String?</code></dt><dd>the value used when the option is absent</dd></div>
+<div class="param"><dt><code>required?</code> <code>Bool</code></dt><dd>whether the option must be given</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>OptionConfig</code> — the config, with the option added</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">OptionParser</span><span class="tok-op">.</span><span class="tok-method">define</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">demo</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">a small demo tool</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-op">.</span><span class="tok-method">string</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">name</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span>'n'<span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">who to greet</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">world</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-bool">false</span><span class="tok-punct">)</span></code></pre>
+<p class="caption"><em>An option the tool cannot run without</em></p>
+<pre class="code"><code>  config<span class="tok-op">.</span><span class="tok-method">string</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">output</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span>'o'<span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">where to write</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">None</span><span class="tok-punct">,</span> <span class="tok-bool">true</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-integer">
+<h4><code>integer</code></h4>
+<p>Declares an option that takes a whole number.</p>
+<p>A value that does not parse is rejected at parse time with <code>InvalidInteger</code>, so a handler never sees a malformed number. Read it back with <code>ParsedOptions.integerValue</code>.</p>
+<pre class="code"><code><span class="tok-fn">integer</span><span class="tok-punct">(</span>long<span class="tok-punct">,</span> short<span class="tok-punct">,</span> description<span class="tok-punct">,</span> default<span class="tok-punct">,</span> required?<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>long</code> <code>String</code></dt><dd>the long spelling, without dashes</dd></div>
+<div class="param"><dt><code>short</code> <code><a class="xref" href="string.html#make-char">Char</a>?</code></dt><dd>an optional one-character spelling</dd></div>
+<div class="param"><dt><code>description</code> <code>String</code></dt><dd>the help-text description</dd></div>
+<div class="param"><dt><code>default</code> <code>String?</code></dt><dd>the value used when the option is absent</dd></div>
+<div class="param"><dt><code>required?</code> <code>Bool</code></dt><dd>whether the option must be given</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>OptionConfig</code> — the config, with the option added</p>
+<h5>Examples</h5>
+<pre class="code"><code>  config<span class="tok-op">.</span><span class="tok-method">integer</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">port</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span>'p'<span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">port to listen on</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">8080</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-bool">false</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-flag">
+<h4><code>flag</code></h4>
+<p>Declares an option that takes no value and is either present or not.</p>
+<p>It defaults to <code>&quot;false&quot;</code> and reads as <code>&quot;true&quot;</code> when given. Read it back with <code>ParsedOptions.flagEnabled?</code>. Giving it a value is an error (<code>UnexpectedValue</code>).</p>
+<p>Declare a flag named <code>help</code> if you want <code>--help</code> to print the help text — <code>run</code> looks for exactly that name, and adds nothing on its own.</p>
+<pre class="code"><code><span class="tok-fn">flag</span><span class="tok-punct">(</span>long<span class="tok-punct">,</span> short<span class="tok-punct">,</span> description<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>long</code> <code>String</code></dt><dd>the long spelling, without dashes</dd></div>
+<div class="param"><dt><code>short</code> <code><a class="xref" href="string.html#make-char">Char</a>?</code></dt><dd>an optional one-character spelling</dd></div>
+<div class="param"><dt><code>description</code> <code>String</code></dt><dd>the help-text description</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>OptionConfig</code> — the config, with the flag added</p>
+<h5>Examples</h5>
+<pre class="code"><code>  config
+    <span class="tok-op">.</span><span class="tok-method">flag</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">verbose</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span>'v'<span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">print more detail</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-op">.</span><span class="tok-method">flag</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">help</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span>'h'<span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">show this help</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-command">
+<h4><code>command</code></h4>
+<p>Declares a command and the function that runs it.</p>
+<p>A command name may be several words — <code>&quot;docs build&quot;</code> — and the longest match wins, so a group and its subcommands can both be declared. The handler receives the parsed options with the command's own words already removed, and returns the process exit code.</p>
+<p>  config.command(&quot;greet&quot;, &quot;print a greeting&quot;, ~greet) Declares a command. <code>usage</code> is what the help line shows after the name (<code>&lt;name&gt;</code>, <code>[args...]</code>); leave it empty for a command that takes none.</p>
+<pre class="code"><code><span class="tok-fn">command</span><span class="tok-punct">(</span>name<span class="tok-punct">,</span> description<span class="tok-punct">,</span> handler<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code> <code>String</code></dt><dd>the command's name, one or more words</dd></div>
+<div class="param"><dt><code>description</code> <code>String</code></dt><dd>the help-text description</dd></div>
+<div class="param"><dt><code>handler</code> <code><a class="xref" href="#type-commandhandler">CommandHandler</a></code></dt><dd>what to run</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>OptionConfig</code> — the config, with the command added</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-keyword">foul</span> <span class="tok-fn">greet</span><span class="tok-punct">(</span>options<span class="tok-op">:</span> <span class="tok-type">ParsedOptions</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer</span> <span class="tok-keyword">do</span>
+    <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello, </span><span class="tok-string">${</span>options<span class="tok-op">.</span><span class="tok-method">value</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">name</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">world</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-keyword">return</span> <span class="tok-number">0</span>
+  <span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="fn-parse">
+<h4><code>parse</code></h4>
+<p>Parses <code>args</code> into option values and leftover words, without dispatching to a command.</p>
+<p>Use it when the tool has no commands, or when you want to inspect the parse before deciding what to do. <code>run</code> is the one-call alternative.</p>
+<pre class="code"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>args<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>args</code> <code>[String]</code></dt><dd>the command-line arguments</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;ParsedOptions, <a class="xref" href="#type-optionparseerror">OptionParseError</a>&gt;</code> — the parse, or why it failed</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-keyword">match</span> config<span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span>args<span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+    <span class="tok-bool">Ok</span><span class="tok-punct">(</span>options<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>options<span class="tok-op">.</span><span class="tok-method">value</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">name</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">world</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span>    <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-type">OptionParser</span><span class="tok-op">.</span><span class="tok-method">errorMessage</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="fn-run">
+<h4><code>run</code></h4>
+<p>Parses <code>args</code>, runs the command they name, and returns its exit code.</p>
+<p>This is the whole of a tool's <code>main</code>: hand it the argument list and pass the result to <code>System.exit</code>.</p>
+<p>A parse failure, an unknown command, or a line with no command at all reports the problem along with the help text and returns 1 — the one place that policy has to live for every tool to behave the same way. A set <code>help</code> flag prints the help and returns 0.</p>
+<pre class="code"><code><span class="tok-fn">run</span><span class="tok-punct">(</span>args<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>args</code> <code>[String]</code></dt><dd>the command-line arguments</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Integer</code> — the exit code to give the shell</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-keyword">main</span><span class="tok-punct">(</span>args<span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+    <span class="tok-keyword">let</span> cli <span class="tok-op">=</span> <span class="tok-type">OptionParser</span><span class="tok-op">.</span><span class="tok-method">define</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">demo</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">a small demo tool</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+      <span class="tok-op">.</span><span class="tok-method">flag</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">help</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span>'h'<span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">show this help</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+      <span class="tok-op">.</span><span class="tok-method">command</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">greet</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">print a greeting</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-op">~</span>greet<span class="tok-punct">)</span>
+    <span class="tok-type">System</span><span class="tok-op">.</span><span class="tok-method">exit</span><span class="tok-punct">(</span>cli<span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span>args<span class="tok-punct">)</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="module-optionparser">
+<h2><span class="kind kind-module">module</span> <code>OptionParser</code></h2>
+<section class="entity" id="function-define">
+<h2><span class="kind kind-function">function</span> <code>define</code></h2>
+<pre class="code"><code><span class="tok-fn">define</span><span class="tok-punct">(</span>name<span class="tok-punct">,</span> description<span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-commandlabel">
+<h2><span class="kind kind-function">function</span> <code>commandLabel</code></h2>
+<p>Returns the label a command is listed under in the help text — its name, followed by its usage when it has one.</p>
+<pre class="code"><code><span class="tok-fn">commandLabel</span><span class="tok-punct">(</span>command<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>command</code> <code><a class="xref" href="#record-commandspec">CommandSpec</a></code></dt><dd>the command to label</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the help-text label</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">OptionParser</span><span class="tok-op">.</span><span class="tok-method">commandLabel</span><span class="tok-punct">(</span>spec<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;build &lt;file&gt;&quot;</span></code></pre>
+
+</section>
+<section class="entity" id="function-commandfor">
+<h2><span class="kind kind-function">function</span> <code>commandFor</code></h2>
+<p>Finds the declared command whose words open <code>arguments</code>, and returns it with whatever is left after them.</p>
+<p>Longest match first, so <code>&quot;kex install&quot;</code> is preferred over a <code>&quot;kex&quot;</code> that also exists. Answers <code>None</code> when no command matches.</p>
+<pre class="code"><code><span class="tok-fn">commandFor</span><span class="tok-punct">(</span>commands<span class="tok-punct">,</span> arguments<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>commands</code> <code>[<a class="xref" href="#record-commandspec">CommandSpec</a>]</code></dt><dd>the declared commands</dd></div>
+<div class="param"><dt><code>arguments</code> <code>[String]</code></dt><dd>the positional words from the command line</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>(<a class="xref" href="#record-commandspec">CommandSpec</a>, [String])?</code> — the command and the remaining words</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">OptionParser</span><span class="tok-op">.</span><span class="tok-method">commandFor</span><span class="tok-punct">(</span>commands<span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">docs</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">build</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+  <span class="tok-comment"># =&gt; Just((docsBuildSpec, [&quot;src&quot;]))</span></code></pre>
+
+</section>
+<section class="entity" id="function-openswith?">
+<h2><span class="kind kind-function">function</span> <code>opensWith?</code></h2>
+<p>Returns <code>true</code> when <code>arguments</code> begins with the words of <code>name</code>.</p>
+<p>The word-wise prefix test <code>commandFor</code> matches with — <code>&quot;docs build&quot;</code> opens <code>[&quot;docs&quot;, &quot;build&quot;, &quot;src&quot;]</code> but not <code>[&quot;docs&quot;]</code>.</p>
+<pre class="code"><code><span class="tok-fn">opensWith?</span><span class="tok-punct">(</span>arguments<span class="tok-punct">,</span> name<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>arguments</code> <code>[String]</code></dt><dd>the positional words from the command line</dd></div>
+<div class="param"><dt><code>name</code> <code>String</code></dt><dd>the command name, one or more words</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when the words match at the front</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">OptionParser</span><span class="tok-op">.</span><span class="tok-method">opensWith?</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">docs</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">build</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">docs</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span>
+  <span class="tok-type">OptionParser</span><span class="tok-op">.</span><span class="tok-method">opensWith?</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">docs</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">docs build</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</section>
+<section class="entity" id="function-errormessage">
+<h2><span class="kind kind-function">function</span> <code>errorMessage</code></h2>
+<p>Renders a parse error as a sentence for the user.</p>
+<p><code>OptionConfig.run</code> does this for you; call it directly when handling a <code>parse</code> result yourself.</p>
+<pre class="code"><code><span class="tok-fn">errorMessage</span><span class="tok-punct">(</span>error<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>error</code> <code><a class="xref" href="#type-optionparseerror">OptionParseError</a></code></dt><dd>the failure to describe</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the message to show</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">OptionParser</span><span class="tok-op">.</span><span class="tok-method">errorMessage</span><span class="tok-punct">(</span><span class="tok-type">UnknownOption</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">--nope</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+  <span class="tok-comment"># =&gt; &quot;unknown option '--nope'&quot;</span>
+  <span class="tok-type">OptionParser</span><span class="tok-op">.</span><span class="tok-method">errorMessage</span><span class="tok-punct">(</span><span class="tok-type">MissingValue</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">output</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+  <span class="tok-comment"># =&gt; &quot;--output requires a value&quot;</span></code></pre>
+
+</section>
+<section class="entity" id="function-parse">
+<h2><span class="kind kind-function">function</span> <code>parse</code></h2>
+<p>Parses <code>args</code> against a list of option and command specs.</p>
+<p>The engine behind <code>OptionConfig.parse</code>, which is the form to call from ordinary code.</p>
+<pre class="code"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>options<span class="tok-punct">,</span> commands<span class="tok-punct">,</span> args<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>options</code> <code>[<a class="xref" href="#record-optionspec">OptionSpec</a>]</code></dt><dd>the declared options</dd></div>
+<div class="param"><dt><code>commands</code> <code>[<a class="xref" href="#record-commandspec">CommandSpec</a>]</code></dt><dd>the declared commands</dd></div>
+<div class="param"><dt><code>args</code> <code>[String]</code></dt><dd>the command-line arguments</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;ParsedOptions, <a class="xref" href="#type-optionparseerror">OptionParseError</a>&gt;</code> — the parse, or why it failed</p>
+
+</section>
+</section>
+</article>
+</main>
+</div>
+<footer class="foot">
+<div class="wrap">Generated by kex docgen at 2026-08-26T19:15:23.466486048Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+</footer>
+</body>
+</html>

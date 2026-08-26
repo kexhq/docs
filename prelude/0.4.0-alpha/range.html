@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Range | Prelude 0.4.0-alpha | kex docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+<link rel="icon" type="image/png" href="../../icon.png">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<header class="top">
+<div class="wrap top-inner">
+<a class="brand" href="../../index.html">kex</a>
+<span class="brand-sub">docs</span>
+<span class="spacer"></span>
+<button class="search-trigger" id="search" aria-label="Search documentation"
+data-root="../../" data-package="prelude" data-version="0.4.0-alpha"
+data-page="range.html">
+<span>Search</span><kbd>/</kbd>
+</button>
+<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="range.html">Prelude 0.4.0-alpha</span>
+<a class="back" href="https://kex.run/docs">kex.run ↗</a>
+</div>
+</header>
+<div class="wrap layout">
+<aside class="side"><nav aria-label="Modules"><p class="side-heading">Prelude</p><ul class="side-list">
+<li><a href="algebra.html">Algebra</a></li>
+<li><a href="bits.html">Bits</a></li>
+<li><a href="blankable.html">Blankable</a></li>
+<li><a href="console.html">Console</a></li>
+<li><a href="digest.html">Digest</a></li>
+<li><a href="enumerable.html">Enumerable</a></li>
+<li><a href="env.html">ENV</a></li>
+<li><a href="errorable.html">Errorable</a></li>
+<li><a href="evaluator.html">Evaluator</a></li>
+<li><a href="filehandle.html">Filehandle</a></li>
+<li><a href="fs.html">FS</a></li>
+<li><a href="http.html">Http</a></li>
+<li><a href="io.html">IO</a></li>
+<li><a href="json.html">JSON</a></li>
+<li><a href="kex.html">Kex</a></li>
+<li><a href="list.html">List</a></li>
+<li><a href="map.html">Map</a></li>
+<li><a href="math.html">Math</a></li>
+<li><a href="mock.html">Mock</a></li>
+<li><a href="number.html">Number</a></li>
+<li><a href="optional.html">Optional</a></li>
+<li><a href="optionparser.html">OptionParser</a></li>
+<li><a href="parsing.html">Parsing</a></li>
+<li><a href="prelude.html">Prelude</a></li>
+<li><a href="process.html">Process</a></li>
+<li><a class="active" href="range.html">Range</a><ul class="side-sub">
+<li><a href="#type-range">Range</a></li>
+<li><a href="#make-range">Range</a></li>
+</ul></li>
+<li><a href="regex.html">Regex</a></li>
+<li><a href="set.html">Set</a></li>
+<li><a href="stream.html">Stream</a></li>
+<li><a href="string.html">String</a></li>
+<li><a href="system.html">System</a></li>
+<li><a href="taggedvalidation.html">TaggedValidation</a></li>
+<li><a href="test.html">Assert</a></li>
+<li><a href="time.html">Time</a></li>
+<li><a href="truthyable.html">Truthyable</a></li>
+<li><a href="type.html">Type</a></li>
+<li><a href="units.html">Units</a></li>
+<li><a href="webserver.html">Web</a></li>
+<li><a href="kex/ast.html">Kex.AST</a></li>
+<li><a href="units/data.html">Units.Data</a></li>
+<li><a href="units/si.html">Units.SI</a></li>
+</ul></nav></aside>
+<main class="content">
+<nav class="crumbs"><a href="index.html">Prelude</a> <span class="sep">/</span> <span>Range</span></nav>
+<article class="prose">
+<h1>Range</h1>
+<section class="entity" id="type-range">
+<h2><span class="kind kind-type">type</span> <code>Range</code></h2>
+<p>A span between two bounds, written <code>(1..10)</code> or <code>('a'..'z')</code>.</p>
+<p>A range stores only its two endpoints and computes everything else from them, so <code>(1..1000000)</code> costs nothing to make. Both ends are included.</p>
+<p>  (1..5).items          # =&gt; [1, 2, 3, 4, 5]   (1..5).sum            # =&gt; 15   5.in?(1..10)          # =&gt; true   ('a'..'e').items      # =&gt; ['a', 'b', 'c', 'd', 'e']</p>
+<p>It is <code>Enumerable</code> and <code>Foldable</code>, so the traversal methods work directly, and the list operations below answer in list terms. Use <code>items</code> when you want a real list to hand to something else.</p>
+<p>  (1..10).items.filter(~even?)   # =&gt; [2, 4, 6, 8, 10]   (1..3).items.each { |n| IO.printLine(n) }</p>
+
+</section>
+<section class="entity" id="make-range">
+<h2><span class="kind kind-make">make</span> <code>Range</code> implements <a class="xref" href="enumerable.html#trait-enumerable">Enumerable</a>, <a class="xref" href="enumerable.html#trait-foldable">Foldable</a></h2>
+
+<div class="functions">
+<div class="fn" id="fn-reduce">
+<h4><code>reduce</code></h4>
+<p>Folds over the range's elements in ascending order.</p>
+<p>This is <code>Range</code>'s <code>Enumerable</code> primitive; the traversal methods are built on it. A range stays structurally minimal, so the fold runs over its materialized items.</p>
+<pre class="code"><code><span class="tok-fn">reduce</span><span class="tok-punct">(</span>acc<span class="tok-punct">,</span> f<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>acc</code> <code>A</code></dt><dd>the initial accumulator</dd></div>
+<div class="param"><dt><code>f</code> <code>A -&gt; B -&gt; A</code></dt><dd>combines the accumulator with each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>A</code> — the final accumulator</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reduce</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>sum<span class="tok-punct">,</span> n<span class="tok-op">|</span> sum <span class="tok-op">+</span> n <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; 10</span></code></pre>
+
+</div>
+<div class="fn" id="fn-contains?">
+<h4><code>contains?</code></h4>
+<p>Returns <code>true</code> when <code>value</code> falls inside the range, endpoints included.</p>
+<p><code>5.in?(1..10)</code> says the same thing from the value's side, and often reads better.</p>
+<pre class="code"><code><span class="tok-fn">contains?</span><span class="tok-punct">(</span>value<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code> <code>A</code></dt><dd>the value to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when the value is in range</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; true</span>
+  <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-number">11</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="fn-sort">
+<h4><code>sort</code></h4>
+<p>Returns the elements as a list, ordered by <code>comparator</code>.</p>
+<pre class="code"><code><span class="tok-fn">sort</span><span class="tok-punct">(</span>comparator<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>comparator</code> <code>A -&gt; A -&gt; Bool</code></dt><dd><code>true</code> when the first should come first</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>[A]</code> — the sorted elements</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">sort</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>a<span class="tok-punct">,</span> b<span class="tok-op">|</span> a <span class="tok-op">&gt;</span> b <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; [4, 3, 2, 1]</span></code></pre>
+
+</div>
+<div class="fn" id="fn-join">
+<h4><code>join</code></h4>
+<p>Renders the elements as text, with <code>separator</code> between them.</p>
+<pre class="code"><code><span class="tok-fn">join</span><span class="tok-punct">(</span>separator<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>separator</code> <code>String</code></dt><dd>placed between elements</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the joined text</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">, </span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;1, 2, 3, 4&quot;</span></code></pre>
+<p class="caption"><em>A comma-separated header</em></p>
+<pre class="code"><code>  <span class="tok-string">&quot;</span><span class="tok-string">columns: </span><span class="tok-string">${</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">,</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-string">}</span><span class="tok-string">&quot;</span>   <span class="tok-comment"># =&gt; &quot;columns: 1,2,3&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="fn-at">
+<h4><code>at</code></h4>
+<p>Returns the element at index <code>index</code>, counting from 0, or <code>None</code> when out of range.</p>
+<p>Note that the index counts positions, not values: <code>(10..20).at(0)</code> is <code>Just(10)</code>.</p>
+<pre class="code"><code><span class="tok-fn">at</span><span class="tok-punct">(</span>index<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>index</code> <code>Integer</code></dt><dd>the 0-based position</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>A?</code> — the element, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">20</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">at</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(10)</span>
+  <span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">20</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">at</span><span class="tok-punct">(</span><span class="tok-number">99</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; None</span></code></pre>
+
+</div>
+<div class="fn" id="fn-take">
+<h4><code>take</code></h4>
+<p>Returns the first <code>n</code> elements as a list.</p>
+<pre class="code"><code><span class="tok-fn">take</span><span class="tok-punct">(</span>n<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>n</code> <code>Integer</code></dt><dd>how many elements to keep</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>[A]</code> — the leading elements</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [1, 2, 3]</span></code></pre>
+
+</div>
+<div class="fn" id="fn-drop">
+<h4><code>drop</code></h4>
+<p>Returns everything after the first <code>n</code> elements, as a list.</p>
+<pre class="code"><code><span class="tok-fn">drop</span><span class="tok-punct">(</span>n<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>n</code> <code>Integer</code></dt><dd>how many elements to skip</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>[A]</code> — the remaining elements</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">drop</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [4, 5]</span></code></pre>
+
+</div>
+<div class="fn" id="fn-indexof">
+<h4><code>indexOf</code></h4>
+<p>Returns the position of <code>value</code> in the range, or <code>None</code> when it is not in it.</p>
+<p>Note: on a numeric range the argument is currently inferred as a <code>Char</code>, so <code>(10..20).indexOf(12)</code> does not compile. Use <code>(10..20).items.indexOf(12)</code> for numbers.</p>
+<pre class="code"><code><span class="tok-fn">indexOf</span><span class="tok-punct">(</span>value<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code> <code>A</code></dt><dd>the element to look for</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Integer?</code> — the 0-based position, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-punct">(</span>'a'<span class="tok-op">.</span><span class="tok-op">.</span>'e'<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">indexOf</span><span class="tok-punct">(</span>'c'<span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; Just(2)</span>
+  <span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">20</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">indexOf</span><span class="tok-punct">(</span><span class="tok-number">12</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(2)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-zip">
+<h4><code>zip</code></h4>
+<p>Pairs each element with the element at the same position in <code>other</code>, stopping at the shorter of the two.</p>
+<pre class="code"><code><span class="tok-fn">zip</span><span class="tok-punct">(</span>other<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code> <code>[B]</code></dt><dd>the list to pair with</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>[(A, B)]</code> — the pairs, in order</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">zip</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">c</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [(1, &quot;a&quot;), (2, &quot;b&quot;), (3, &quot;c&quot;)]</span></code></pre>
+<p class="caption"><em>Numbering a list</em></p>
+<pre class="code"><code>  <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-method">names</span><span class="tok-op">.</span><span class="tok-method">count</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">zip</span><span class="tok-punct">(</span>names<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-partition">
+<h4><code>partition</code></h4>
+<p>Splits the elements into those satisfying <code>pred</code> and those that do not.</p>
+<pre class="code"><code><span class="tok-fn">partition</span><span class="tok-punct">(</span>pred<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>pred</code> <code>A -&gt; Bool</code></dt><dd>the test applied to each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>([A], [A])</code> — the matching and non-matching elements</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">partition</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n<span class="tok-op">.</span><span class="tok-method">even?</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; ([2, 4], [1, 3])</span></code></pre>
+
+</div>
+<div class="fn" id="fn-push">
+<h4><code>push</code></h4>
+<p>Returns the elements as a list with <code>value</code> added at the end.</p>
+<pre class="code"><code><span class="tok-fn">push</span><span class="tok-punct">(</span>value<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code> <code>A</code></dt><dd>the element to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>[A]</code> — the elements plus <code>value</code></p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">push</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [1, 2, 3, 4]</span></code></pre>
+
+</div>
+<div class="fn" id="fn-reject">
+<h4><code>reject</code></h4>
+<p>Returns the elements that do NOT satisfy <code>pred</code>, as a list.</p>
+<pre class="code"><code><span class="tok-fn">reject</span><span class="tok-punct">(</span>pred<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>pred</code> <code>A -&gt; Bool</code></dt><dd>the test applied to each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>[A]</code> — the elements that failed the predicate</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reject</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n<span class="tok-op">.</span><span class="tok-method">even?</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; [1, 3, 5]</span></code></pre>
+
+</div>
+</div>
+</section>
+</article>
+</main>
+</div>
+<footer class="foot">
+<div class="wrap">Generated by kex docgen at 2026-08-26T19:15:23.466486048Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+</footer>
+</body>
+</html>

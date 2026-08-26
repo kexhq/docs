@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FS | Prelude 0.4.0-alpha | kex docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+<link rel="icon" type="image/png" href="../../icon.png">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<header class="top">
+<div class="wrap top-inner">
+<a class="brand" href="../../index.html">kex</a>
+<span class="brand-sub">docs</span>
+<span class="spacer"></span>
+<button class="search-trigger" id="search" aria-label="Search documentation"
+data-root="../../" data-package="prelude" data-version="0.4.0-alpha"
+data-page="fs.html">
+<span>Search</span><kbd>/</kbd>
+</button>
+<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="fs.html">Prelude 0.4.0-alpha</span>
+<a class="back" href="https://kex.run/docs">kex.run ↗</a>
+</div>
+</header>
+<div class="wrap layout">
+<aside class="side"><nav aria-label="Modules"><p class="side-heading">Prelude</p><ul class="side-list">
+<li><a href="algebra.html">Algebra</a></li>
+<li><a href="bits.html">Bits</a></li>
+<li><a href="blankable.html">Blankable</a></li>
+<li><a href="console.html">Console</a></li>
+<li><a href="digest.html">Digest</a></li>
+<li><a href="enumerable.html">Enumerable</a></li>
+<li><a href="env.html">ENV</a></li>
+<li><a href="errorable.html">Errorable</a></li>
+<li><a href="evaluator.html">Evaluator</a></li>
+<li><a href="filehandle.html">Filehandle</a></li>
+<li><a class="active" href="fs.html">FS</a><ul class="side-sub">
+<li><a href="#module-fs">FS</a></li>
+</ul></li>
+<li><a href="http.html">Http</a></li>
+<li><a href="io.html">IO</a></li>
+<li><a href="json.html">JSON</a></li>
+<li><a href="kex.html">Kex</a></li>
+<li><a href="list.html">List</a></li>
+<li><a href="map.html">Map</a></li>
+<li><a href="math.html">Math</a></li>
+<li><a href="mock.html">Mock</a></li>
+<li><a href="number.html">Number</a></li>
+<li><a href="optional.html">Optional</a></li>
+<li><a href="optionparser.html">OptionParser</a></li>
+<li><a href="parsing.html">Parsing</a></li>
+<li><a href="prelude.html">Prelude</a></li>
+<li><a href="process.html">Process</a></li>
+<li><a href="range.html">Range</a></li>
+<li><a href="regex.html">Regex</a></li>
+<li><a href="set.html">Set</a></li>
+<li><a href="stream.html">Stream</a></li>
+<li><a href="string.html">String</a></li>
+<li><a href="system.html">System</a></li>
+<li><a href="taggedvalidation.html">TaggedValidation</a></li>
+<li><a href="test.html">Assert</a></li>
+<li><a href="time.html">Time</a></li>
+<li><a href="truthyable.html">Truthyable</a></li>
+<li><a href="type.html">Type</a></li>
+<li><a href="units.html">Units</a></li>
+<li><a href="webserver.html">Web</a></li>
+<li><a href="kex/ast.html">Kex.AST</a></li>
+<li><a href="units/data.html">Units.Data</a></li>
+<li><a href="units/si.html">Units.SI</a></li>
+</ul></nav></aside>
+<main class="content">
+<nav class="crumbs"><a href="index.html">Prelude</a> <span class="sep">/</span> <span>FS</span></nav>
+<article class="prose">
+<h1>FS</h1>
+<section class="entity" id="module-fs">
+<h2><span class="kind kind-module">module</span> <code>FS</code></h2>
+<p>The filesystem: reading and writing files, walking directories, and manipulating paths.</p>
+<p><code>FS</code> is not in the prelude — start with <code>using FS</code>.</p>
+<p>  using FS</p>
+<p>  main do     match FS.File.read(&quot;config.txt&quot;) do       Just(text) =&gt; IO.printLine(text.lines.count)       None       =&gt; IO.printError(&quot;config.txt is missing&quot;)     end   end</p>
+<p>It is organised in three parts:</p>
+<p>  FS.File        reading, writing, copying and deleting files   FS.Directory   creating, listing and removing directories   FS.Path        pure path arithmetic, with no filesystem access at all</p>
+<p>The first two are capabilities: everything in them touches the real filesystem, so they can only be called from <code>foul</code> code, and a test can replace the whole of <code>FS.File</code> for a lexical region rather than mutating global state. <code>FS.Path</code> is ordinary pure code.</p>
+<p>Most read operations answer with an <code>Optional</code> and most write operations with a <code>Bool</code>, so a missing file or a failed write is an ordinary value you handle rather than an exception you catch.</p>
+<section class="entity" id="type-filepath">
+<h2><span class="kind kind-type">type</span> <code>FilePath</code></h2>
+<p>A filesystem path. An alias for <code>String</code>, so every <code>String</code> method applies to one; <code>FS.Path</code> adds the path-aware operations.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>String</code></li>
+</ul>
+</section>
+<section class="entity" id="type-filemodes">
+<h2><span class="kind kind-type">type</span> <code>FileModes</code></h2>
+<p>How a file should be opened: <code>Read</code> to read it, <code>Write</code> to replace it, <code>Append</code> to add to its end, <code>ReadWrite</code> for both. The mode chosen decides what type the resulting <code>FileHandle</code> has, and therefore which operations the compiler will let you call on it.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>Read</code></li>
+<li><code>Write</code></li>
+<li><code>Append</code></li>
+<li><code>ReadWrite</code></li>
+</ul>
+</section>
+<section class="entity" id="type-readpermission">
+<h2><span class="kind kind-type">type</span> <code>ReadPermission</code></h2>
+<p>Whether a <code>FileHandle</code> may be read from. Part of the handle's type rather than a runtime flag, so reading from a write-only handle is a compile error.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>CanRead</code></li>
+<li><code>CannotRead</code></li>
+</ul>
+</section>
+<section class="entity" id="type-writepermission">
+<h2><span class="kind kind-type">type</span> <code>WritePermission</code></h2>
+<p>Whether a <code>FileHandle</code> may be written to. Part of the handle's type, so writing to a read-only handle is a compile error.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>CanWrite</code></li>
+<li><code>CannotWrite</code></li>
+</ul>
+</section>
+<section class="entity" id="type-fileerror">
+<h2><span class="kind kind-type">type</span> <code>FileError</code></h2>
+<p>A file that could not be opened, carrying the path that failed.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>OpenFailed(FilePath)</code></li>
+</ul>
+</section>
+<section class="entity" id="module-fs-file">
+<h2><span class="kind kind-module">module</span> <code>FS.File</code></h2>
+<p>Reading and writing files.</p>
+<p>A capability: every member reaches the real filesystem, so a test can replace the whole thing for a lexical region with <code>with FS.File = ...</code> instead of mutating global mock state (kexhq/kex#143). The boundary is here rather than on <code>FS</code>, because <code>FS.Path</code> below is pure string work with no implementation to substitute.</p>
+<section class="entity" id="function-open">
+<h2><span class="kind kind-function">function</span> <code>open</code></h2>
+<p>Opens <code>path</code> and returns a <code>FileHandle</code> for it.</p>
+<p>The mode decides the handle's type, and the type decides what you may do with it: a handle opened <code>Read</code> has no <code>write</code>, a handle opened <code>Write</code> has no <code>read</code>. That is checked at compile time, not at run time.</p>
+<p>Use the whole-file <code>read</code> and <code>write</code> below when a file fits in memory and you have no reason to hold it open; reach for a handle when you want to stream through a large file or make many small writes.</p>
+<p>Close the handle when you are done with it.</p>
+<pre class="code"><code><span class="tok-fn">open</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> mode<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Read</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">FileHandle</span><span class="tok-op">&lt;</span><span class="tok-type">CanRead</span><span class="tok-punct">,</span> <span class="tok-type">CannotWrite</span><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <span class="tok-type">FileError</span><span class="tok-op">&gt;</span>
+<span class="tok-fn">open</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> mode<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Write</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">FileHandle</span><span class="tok-op">&lt;</span><span class="tok-type">CannotRead</span><span class="tok-punct">,</span> <span class="tok-type">CanWrite</span><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <span class="tok-type">FileError</span><span class="tok-op">&gt;</span>
+<span class="tok-fn">open</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> mode<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Append</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">FileHandle</span><span class="tok-op">&lt;</span><span class="tok-type">CannotRead</span><span class="tok-punct">,</span> <span class="tok-type">CanWrite</span><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <span class="tok-type">FileError</span><span class="tok-op">&gt;</span>
+<span class="tok-fn">open</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> mode<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">ReadWrite</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">FileHandle</span><span class="tok-op">&lt;</span><span class="tok-type">CanRead</span><span class="tok-punct">,</span> <span class="tok-type">CanWrite</span><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <span class="tok-type">FileError</span><span class="tok-op">&gt;</span>
+<span class="tok-fn">open</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> mode<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Read</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-type">FileHandle</span><span class="tok-op">&lt;</span><span class="tok-type">CanRead</span><span class="tok-punct">,</span> <span class="tok-type">CannotWrite</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-punct">,</span> <span class="tok-type">FileError</span><span class="tok-op">&gt;</span>
+<span class="tok-fn">open</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> mode<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Write</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-type">FileHandle</span><span class="tok-op">&lt;</span><span class="tok-type">CannotRead</span><span class="tok-punct">,</span> <span class="tok-type">CanWrite</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-punct">,</span> <span class="tok-type">FileError</span><span class="tok-op">&gt;</span>
+<span class="tok-fn">open</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> mode<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Append</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-type">FileHandle</span><span class="tok-op">&lt;</span><span class="tok-type">CannotRead</span><span class="tok-punct">,</span> <span class="tok-type">CanWrite</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-punct">,</span> <span class="tok-type">FileError</span><span class="tok-op">&gt;</span>
+<span class="tok-fn">open</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> mode<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">ReadWrite</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-type">FileHandle</span><span class="tok-op">&lt;</span><span class="tok-type">CanRead</span><span class="tok-punct">,</span> <span class="tok-type">CanWrite</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-punct">,</span> <span class="tok-type">FileError</span><span class="tok-op">&gt;</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the file to open</dd></div>
+<div class="param"><dt><code>mode</code> <code><a class="xref" href="#type-filemodes">FileModes</a></code></dt><dd><code>Read</code>, <code>Write</code>, <code>Append</code> or <code>ReadWrite</code></dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;FileHandle, <a class="xref" href="#type-fileerror">FileError</a>&gt;</code> — the handle, or <code>OpenFailed</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Reading a file line by line</em></p>
+<pre class="code"><code>  <span class="tok-keyword">match</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">log.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Read</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+    <span class="tok-bool">Ok</span><span class="tok-punct">(</span>handle<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">do</span>
+      <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>handle<span class="tok-op">.</span><span class="tok-method">readLine</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+      handle<span class="tok-op">.</span><span class="tok-method">close</span>
+    <span class="tok-keyword">end</span>
+    <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cannot open: </span><span class="tok-string">${</span>e<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span></code></pre>
+<p class="caption"><em>Writing a report</em></p>
+<pre class="code"><code>  <span class="tok-keyword">match</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">report.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Write</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+    <span class="tok-bool">Ok</span><span class="tok-punct">(</span>handle<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">do</span>
+      rows<span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>row<span class="tok-op">|</span> handle<span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>row<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+      handle<span class="tok-op">.</span><span class="tok-method">close</span>
+    <span class="tok-keyword">end</span>
+    <span class="tok-bool">Error</span><span class="tok-punct">(</span>_<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cannot write report</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span></code></pre>
+<p class="caption"><em>A failure names the path</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">missing/x.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Read</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Error(OpenFailed(&quot;missing/x.txt&quot;))</span></code></pre>
+
+</section>
+<section class="entity" id="function-read">
+<h2><span class="kind kind-function">function</span> <code>read</code></h2>
+<p>Reads the whole file and returns its contents as a <code>String</code>.</p>
+<p>Answers <code>None</code> when the file does not exist or cannot be read, so a missing file is something you handle rather than something that stops the program.</p>
+<pre class="code"><code><span class="tok-fn">read</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the file to read</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String?</code> — the contents, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; Just(&quot;hello\n&quot;)</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">nowhere.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; None</span></code></pre>
+<p class="caption"><em>Reading with a default</em></p>
+<pre class="code"><code>  <span class="tok-keyword">let</span> config <span class="tok-op">=</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.conf</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<p class="caption"><em>Counting words in a file</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">essay.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">split</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string"> </span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reject</span><span class="tok-punct">(</span><span class="tok-op">~</span>empty?<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span></code></pre>
+
+</section>
+<section class="entity" id="function-write">
+<h2><span class="kind kind-function">function</span> <code>write</code></h2>
+<p>Writes <code>content</code> to <code>path</code>, replacing whatever was there.</p>
+<p>Creates the file if it does not exist. The containing directory must already exist — see <code>FS.Directory.create</code>. Answers <code>false</code> when the write fails.</p>
+<pre class="code"><code><span class="tok-fn">write</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> content<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the file to write</dd></div>
+<div class="param"><dt><code>content</code> <code>String</code></dt><dd>the text to write</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when the write succeeded</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">out.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">hello\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>Reporting a failed write</em></p>
+<pre class="code"><code>  <span class="tok-keyword">if</span> <span class="tok-op">!</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span>target<span class="tok-punct">,</span> rendered<span class="tok-punct">)</span>
+    <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">could not write </span><span class="tok-string">${</span>target<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span></code></pre>
+<p class="caption"><em>Writing a list of lines</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">names.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> names<span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-op">+</span> <span class="tok-string">&quot;</span><span class="tok-string">\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-append">
+<h2><span class="kind kind-function">function</span> <code>append</code></h2>
+<p>Adds <code>content</code> to the end of <code>path</code>, keeping what is already there.</p>
+<p>Creates the file if it does not exist, so it is safe to append to a log that has not been started yet.</p>
+<pre class="code"><code><span class="tok-fn">append</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> content<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the file to append to</dd></div>
+<div class="param"><dt><code>content</code> <code>String</code></dt><dd>the text to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when the write succeeded</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">append</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.log</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">started\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>A simple logger</em></p>
+<pre class="code"><code>  <span class="tok-keyword">foul</span> <span class="tok-fn">log</span><span class="tok-punct">(</span>message<span class="tok-op">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span> <span class="tok-keyword">do</span>
+    <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">append</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.log</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">${</span><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">now</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-string">}</span><span class="tok-string"> </span><span class="tok-string">${</span>message<span class="tok-string">}</span><span class="tok-string">\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span></code></pre>
+
+</section>
+<section class="entity" id="function-exists?">
+<h2><span class="kind kind-function">function</span> <code>exists?</code></h2>
+<p>Returns <code>true</code> when something exists at <code>path</code> — a file, a directory, or anything else. Use <code>file?</code> or <code>directory?</code> when the kind matters.</p>
+<pre class="code"><code><span class="tok-fn">exists?</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the path to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when the path exists</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">exists?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">README.md</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">exists?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">nowhere</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; false</span></code></pre>
+<p class="caption"><em>Not overwriting an existing file</em></p>
+<pre class="code"><code>  <span class="tok-keyword">if</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">exists?</span><span class="tok-punct">(</span>target<span class="tok-punct">)</span>
+    <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>target<span class="tok-string">}</span><span class="tok-string"> already exists</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">else</span>
+    <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span>target<span class="tok-punct">,</span> content<span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span></code></pre>
+
+</section>
+<section class="entity" id="function-file?">
+<h2><span class="kind kind-function">function</span> <code>file?</code></h2>
+<p>Returns <code>true</code> when <code>path</code> exists and is a regular file — not a directory.</p>
+<pre class="code"><code><span class="tok-fn">file?</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the path to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> for a regular file</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">file?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">README.md</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">file?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>         <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</section>
+<section class="entity" id="function-directory?">
+<h2><span class="kind kind-function">function</span> <code>directory?</code></h2>
+<p>Returns <code>true</code> when <code>path</code> exists and is a directory.</p>
+<pre class="code"><code><span class="tok-fn">directory?</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the path to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> for a directory</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">directory?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; true</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">directory?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">README.md</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; false</span></code></pre>
+<p class="caption"><em>Separating files from directories in a listing</em></p>
+<pre class="code"><code>  entries<span class="tok-op">.</span><span class="tok-method">partition</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>e<span class="tok-op">|</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">directory?</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</section>
+<section class="entity" id="function-delete">
+<h2><span class="kind kind-function">function</span> <code>delete</code></h2>
+<p>Deletes the file at <code>path</code>.</p>
+<p>Answers <code>false</code> when the file does not exist or cannot be removed. Use <code>FS.Directory.delete</code> for a directory.</p>
+<pre class="code"><code><span class="tok-fn">delete</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the file to delete</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when the file was deleted</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">tmp.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>Cleaning up after a temporary file</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span>tmp<span class="tok-punct">,</span> data<span class="tok-punct">)</span>
+  <span class="tok-fn">process</span><span class="tok-punct">(</span>tmp<span class="tok-punct">)</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span>tmp<span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-copy">
+<h2><span class="kind kind-function">function</span> <code>copy</code></h2>
+<p>Copies the file at <code>src</code> to <code>dst</code>, replacing <code>dst</code> if it exists.</p>
+<pre class="code"><code><span class="tok-fn">copy</span><span class="tok-punct">(</span>src<span class="tok-punct">,</span> dst<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>src</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the file to copy</dd></div>
+<div class="param"><dt><code>dst</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>where to copy it</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when the copy succeeded</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">copy</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.conf</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">app.conf.bak</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>Backing a file up before rewriting it</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">copy</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">${</span>path<span class="tok-string">}</span><span class="tok-string">.bak</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> updated<span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-rename">
+<h2><span class="kind kind-function">function</span> <code>rename</code></h2>
+<p>Renames — or moves — the file at <code>src</code> to <code>dst</code>.</p>
+<pre class="code"><code><span class="tok-fn">rename</span><span class="tok-punct">(</span>src<span class="tok-punct">,</span> dst<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>src</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the current path</dd></div>
+<div class="param"><dt><code>dst</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the new path</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when the rename succeeded</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">rename</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">draft.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">final.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>Writing to a temporary file, then swapping it in</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>path<span class="tok-string">}</span><span class="tok-string">.tmp</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> content<span class="tok-punct">)</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">rename</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>path<span class="tok-string">}</span><span class="tok-string">.tmp</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> path<span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-readlines">
+<h2><span class="kind kind-function">function</span> <code>readLines</code></h2>
+<p>Reads the file and returns its lines, without their newlines.</p>
+<p>Answers <code>None</code> when the file cannot be read. A trailing newline does not produce a final empty line, so the count is the number of lines you would see in an editor.</p>
+<pre class="code"><code><span class="tok-fn">readLines</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span><span class="tok-op">?</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the file to read</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>[String]?</code> — the lines, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">readLines</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">names.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just([&quot;ada&quot;, &quot;grace&quot;])</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">readLines</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">nowhere</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; None</span></code></pre>
+<p class="caption"><em>Ignoring blank lines and comments</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">readLines</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hosts</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+    <span class="tok-op">.</span><span class="tok-method">map</span><span class="tok-punct">(</span><span class="tok-op">~</span>trim<span class="tok-punct">)</span>
+    <span class="tok-op">.</span><span class="tok-method">reject</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> line<span class="tok-op">.</span><span class="tok-method">empty?</span> <span class="tok-op">||</span> line<span class="tok-op">.</span><span class="tok-method">startsWith?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">#</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-type">NOT</span> `lines`<span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-keyword">is</span> an alias <span class="tok-keyword">for</span> <span class="tok-type">String</span><span class="tok-punct">,</span> so a receiver function
+named `lines` here <span class="tok-keyword">is</span> indistinguishable <span class="tok-keyword">from</span> <span class="tok-type">String</span>'s own `lines` at
+every call site<span class="tok-punct">,</span> <span class="tok-keyword">and</span> merely saying `<span class="tok-keyword">using</span> <span class="tok-type">FS</span>` made `text<span class="tok-op">.</span><span class="tok-method">lines</span>`
+ambiguous<span class="tok-op">.</span> `readLines` also says what it does — it reads the file<span class="tok-op">.</span></code></pre>
+
+</section>
+<section class="entity" id="function-feed">
+<h2><span class="kind kind-function">function</span> <code>feed</code></h2>
+<p>Returns a lazy <code>Stream</code> of the file's lines, or <code>None</code> when it cannot be read.</p>
+<p>Unlike <code>readLines</code>, the file is consumed on demand, so this is the way to look at the first few lines of a very large file — or to process one without holding it all in memory.</p>
+<p>The stream does not end at the last line: asking for more lines than the file has yields <code>None</code> past the end. Take only what you need, or drop the tail with <code>reject { |line| line == None }</code>.</p>
+<pre class="code"><code><span class="tok-fn">feed</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Stream</span><span class="tok-op">&lt;</span><span class="tok-type">String</span><span class="tok-op">&gt;</span><span class="tok-op">?</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the file to stream</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Stream&lt;String&gt;?</code> — the lines as a stream, or <code>None</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Peeking at the head of a large file</em></p>
+<pre class="code"><code>  <span class="tok-keyword">match</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">huge.log</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+    <span class="tok-bool">Just</span><span class="tok-punct">(</span>lines<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> lines<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>line<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-bool">None</span>        <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cannot read huge.log</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span></code></pre>
+<p class="caption"><em>The first error in a long log</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.log</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>lines<span class="tok-op">|</span> lines<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">1000</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+    <span class="tok-op">.</span><span class="tok-method">find</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> line<span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">ERROR</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</section>
+<section class="entity" id="function-size">
+<h2><span class="kind kind-function">function</span> <code>size</code></h2>
+<p>Returns the file's size in bytes, or <code>None</code> when it cannot be read.</p>
+<p>Bytes, not characters — a file of non-ASCII text has more bytes than it has characters.</p>
+<pre class="code"><code><span class="tok-fn">size</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer?</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the file to measure</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Integer?</code> — the size in bytes, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">size</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(6)</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">size</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">nowhere</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; None</span></code></pre>
+<p class="caption"><em>Skipping files that are too large</em></p>
+<pre class="code"><code>  paths<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">size</span><span class="tok-punct">(</span>p<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-op">&lt;</span> <span class="tok-number">1048576</span> <span class="tok-punct">}</span></code></pre>
+
+</section>
+<section class="entity" id="function-absolute">
+<h2><span class="kind kind-function">function</span> <code>absolute</code></h2>
+<p>Resolves <code>path</code> against the process's current directory and returns the absolute form, or <code>None</code> when it cannot be resolved.</p>
+<p>This is the one path operation that is not in <code>FS.Path</code>, because it is not lexical: it asks the process where it is.</p>
+<pre class="code"><code><span class="tok-fn">absolute</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the path to resolve</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String?</code> — the absolute path, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">absolute</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(&quot;/home/ada/proj/src/main.kex&quot;)</span></code></pre>
+<p class="caption"><em>Reporting a file unambiguously</em></p>
+<pre class="code"><code>  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">failed: </span><span class="tok-string">${</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">absolute</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">Path</span> manipulation lives <span class="tok-keyword">in</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span> — `basename`<span class="tok-punct">,</span> `dirname`<span class="tok-punct">,</span>
+`extension` <span class="tok-keyword">and</span> `join` used to be here too<span class="tok-punct">,</span> but a name cannot sit <span class="tok-keyword">in</span>
+both modules<span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-type">IS</span> <span class="tok-type">String</span><span class="tok-punct">,</span> so two same<span class="tok-op">-</span>named receiver functions
+on it are indistinguishable at every call site<span class="tok-op">.</span> `absolute` stays
+because it <span class="tok-keyword">is</span> <span class="tok-keyword">not</span> lexical — it asks the process <span class="tok-keyword">where</span> it <span class="tok-keyword">is</span><span class="tok-op">.</span></code></pre>
+
+</section>
+</section>
+<section class="entity" id="module-fs-path">
+<h2><span class="kind kind-module">module</span> <code>FS.Path</code></h2>
+<p>Path arithmetic: joining, splitting, normalising and comparing paths.</p>
+<p>Everything here is pure string manipulation with no filesystem access, so the answer is the same whether or not the path exists — which also means these functions can be called from ordinary pure code, unlike <code>FS.File</code>. POSIX separators only for now.</p>
+<p>  FS.Path.join(&quot;src&quot;, &quot;main.kex&quot;)            # =&gt; &quot;src/main.kex&quot;   FS.Path.extension(&quot;src/main.kex&quot;)          # =&gt; &quot;.kex&quot;   FS.Path.withExtension(&quot;src/main.kex&quot;, &quot;beam&quot;)   # =&gt; &quot;src/main.beam&quot;</p>
+<section class="entity" id="constant-separator">
+<h2><span class="kind kind-constant">constant</span> <code>separator</code> <code>String</code></h2>
+<p>The path separator, <code>&quot;/&quot;</code>.</p>
+
+</section>
+<section class="entity" id="function-join">
+<h2><span class="kind kind-function">function</span> <code>join</code></h2>
+<p>Joins two path parts with a single separator and normalises the result.</p>
+<p>Repeated separators collapse, so <code>join(&quot;a/&quot;, &quot;/b&quot;)</code> is <code>&quot;a/b&quot;</code> and not <code>&quot;a//b&quot;</code>. An absolute second part does NOT restart the path, the way Ruby's <code>Pathname#join</code> would — use that part on its own if that is what you mean.</p>
+<pre class="code"><code><span class="tok-fn">join</span><span class="tok-punct">(</span>a<span class="tok-punct">,</span> b<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span>
+<span class="tok-fn">join</span><span class="tok-punct">(</span>a<span class="tok-punct">,</span> b<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>a</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the first part</dd></div>
+<div class="param"><dt><code>b</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the second part</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the joined, normalised path</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;src/main.kex&quot;</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a/</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">/b</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>          <span class="tok-comment"># =&gt; &quot;a/b&quot;</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a/b</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">../c</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>       <span class="tok-comment"># =&gt; &quot;a/c&quot;</span></code></pre>
+<p class="caption"><em>Building a path under a base directory</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span>outputDir<span class="tok-punct">,</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">basename</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-joinall">
+<h2><span class="kind kind-function">function</span> <code>joinAll</code></h2>
+<p>Joins any number of path parts, skipping empty ones, and normalises the result. An empty list gives <code>&quot;.&quot;</code>.</p>
+<pre class="code"><code><span class="tok-fn">joinAll</span><span class="tok-punct">(</span>parts<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">FilePath</span><span class="tok-punct">]</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>parts</code> <code>[<a class="xref" href="#type-filepath">FilePath</a>]</code></dt><dd>the parts to join</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the joined, normalised path</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">joinAll</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">c.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;a/b/c.txt&quot;</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">joinAll</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; &quot;a/b&quot;</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">joinAll</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>                    <span class="tok-comment"># =&gt; &quot;.&quot;</span></code></pre>
+<p class="caption"><em>Rebuilding a path from its segments</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">joinAll</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">segments</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">drop</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-type">The</span> list form <span class="tok-keyword">is</span> `joinAll`<span class="tok-punct">,</span> <span class="tok-keyword">not</span> another `join` overload<span class="tok-op">:</span> a list
+receiver already has `<span class="tok-type">List</span><span class="tok-op">.</span><span class="tok-method">join</span>`<span class="tok-punct">,</span> <span class="tok-keyword">and</span> a second one<span class="tok-op">-</span>argument `join` on
+the same receiver would be indistinguishable <span class="tok-keyword">from</span> it<span class="tok-op">.</span></code></pre>
+
+</section>
+<section class="entity" id="function-normalize">
+<h2><span class="kind kind-function">function</span> <code>normalize</code></h2>
+<p>Resolves <code>.</code> and <code>..</code> in a path, lexically.</p>
+<p>Because it is lexical it never follows a symlink and never touches the disk. A leading <code>..</code> in a RELATIVE path is kept — there is no way to know what it escapes to — while one in an absolute path is dropped, since <code>/</code> has no parent.</p>
+<pre class="code"><code><span class="tok-fn">normalize</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the path to normalise</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the normalised path</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">normalize</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a/./b/../c</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;a/c&quot;</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">normalize</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">../a</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>         <span class="tok-comment"># =&gt; &quot;../a&quot;</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">normalize</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/a/../../b</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;/b&quot;</span></code></pre>
+<p class="caption"><em>Comparing two paths for equality</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">normalize</span><span class="tok-punct">(</span>a<span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">normalize</span><span class="tok-punct">(</span>b<span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-segments">
+<h2><span class="kind kind-function">function</span> <code>segments</code></h2>
+<p>Returns the non-empty parts of the normalised path. The root <code>/</code> and the current directory <code>.</code> have none.</p>
+<pre class="code"><code><span class="tok-fn">segments</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the path to split</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>[String]</code> — the segments, outermost first</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">segments</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/a/b/c</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">segments</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a/./b</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;]</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">segments</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; []</span></code></pre>
+<p class="caption"><em>How deep a path is</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">segments</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span></code></pre>
+
+</section>
+<section class="entity" id="function-absolute?">
+<h2><span class="kind kind-function">function</span> <code>absolute?</code></h2>
+<p>Returns <code>true</code> when the path starts at the root.</p>
+<pre class="code"><code><span class="tok-fn">absolute?</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the path to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> for an absolute path</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">absolute?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/etc/hosts</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">absolute?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</section>
+<section class="entity" id="function-relative?">
+<h2><span class="kind kind-function">function</span> <code>relative?</code></h2>
+<p>Returns <code>true</code> when the path does not start at the root. The opposite of <code>absolute?</code>.</p>
+<pre class="code"><code><span class="tok-fn">relative?</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the path to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> for a relative path</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">relative?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; true</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">relative?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/etc/hosts</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</section>
+<section class="entity" id="function-dirname">
+<h2><span class="kind kind-function">function</span> <code>dirname</code></h2>
+<p>Returns the path's parent directory.</p>
+<p>A child of the root has <code>&quot;/&quot;</code> as its parent; a bare name has <code>&quot;.&quot;</code>, the current directory.</p>
+<pre class="code"><code><span class="tok-fn">dirname</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the path to take the parent of</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the parent directory</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">dirname</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/a/b/c.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;/a/b&quot;</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">dirname</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/c.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>       <span class="tok-comment"># =&gt; &quot;/&quot;</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">dirname</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">c.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; &quot;.&quot;</span></code></pre>
+<p class="caption"><em>Making sure a file's directory exists before writing</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">create</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">dirname</span><span class="tok-punct">(</span>target<span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-basename">
+<h2><span class="kind kind-function">function</span> <code>basename</code></h2>
+<p>Returns the last segment of the path — the file or directory name.</p>
+<p>The root itself answers <code>&quot;/&quot;</code>, and an empty path answers <code>&quot;.&quot;</code>.</p>
+<pre class="code"><code><span class="tok-fn">basename</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the path to take the name of</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the last segment</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">basename</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/a/b/c.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;c.txt&quot;</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">basename</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/a/b</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>         <span class="tok-comment"># =&gt; &quot;b&quot;</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">basename</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>            <span class="tok-comment"># =&gt; &quot;/&quot;</span></code></pre>
+<p class="caption"><em>Listing names rather than paths</em></p>
+<pre class="code"><code>  paths<span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">basename</span><span class="tok-punct">(</span>p<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</section>
+<section class="entity" id="function-extension">
+<h2><span class="kind kind-function">function</span> <code>extension</code></h2>
+<p>Returns the file extension, including its leading dot, or <code>&quot;&quot;</code> when there is none.</p>
+<p>Only the last extension counts, so <code>&quot;a.tar.gz&quot;</code> has <code>&quot;.gz&quot;</code>. A leading dot is part of the NAME rather than an extension, so <code>&quot;.gitignore&quot;</code> has none.</p>
+<pre class="code"><code><span class="tok-fn">extension</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the path to inspect</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the extension, or <code>&quot;&quot;</code></p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">extension</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;.kex&quot;</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">extension</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a/b.tar.gz</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; &quot;.gz&quot;</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">extension</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">README</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>         <span class="tok-comment"># =&gt; &quot;&quot;</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">extension</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">.gitignore</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; &quot;&quot;</span></code></pre>
+<p class="caption"><em>Selecting sources by extension</em></p>
+<pre class="code"><code>  files<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>f<span class="tok-op">|</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">extension</span><span class="tok-punct">(</span>f<span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">.kex</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span></code></pre>
+
+</section>
+<section class="entity" id="function-stem">
+<h2><span class="kind kind-function">function</span> <code>stem</code></h2>
+<p>Returns the basename with its extension removed.</p>
+<p>A name that IS its extension — <code>&quot;.gitignore&quot;</code> — keeps it, because it has none to drop.</p>
+<pre class="code"><code><span class="tok-fn">stem</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the path to inspect</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the name without its extension</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">stem</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;main&quot;</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">stem</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a/b.tar.gz</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; &quot;b.tar&quot;</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">stem</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">.gitignore</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; &quot;.gitignore&quot;</span></code></pre>
+<p class="caption"><em>Deriving a module name from a filename</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">stem</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">capitalize</span></code></pre>
+
+</section>
+<section class="entity" id="function-withextension">
+<h2><span class="kind kind-function">function</span> <code>withExtension</code></h2>
+<p>Returns the path with its extension replaced by <code>wanted</code>.</p>
+<p>The new extension may be written with or without its leading dot; an empty one removes the extension entirely.</p>
+<pre class="code"><code><span class="tok-fn">withExtension</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> wanted<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the path to rewrite</dd></div>
+<div class="param"><dt><code>wanted</code> <code>String</code></dt><dd>the new extension, with or without its dot</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the rewritten path</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">withExtension</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">beam</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; &quot;src/main.beam&quot;</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">withExtension</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">.beam</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;src/main.beam&quot;</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">withExtension</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; &quot;src/main&quot;</span></code></pre>
+<p class="caption"><em>Deriving an output path from a source path</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">withExtension</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span>outDir<span class="tok-punct">,</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">basename</span><span class="tok-punct">(</span>src<span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">o</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-relativeto">
+<h2><span class="kind kind-function">function</span> <code>relativeTo</code></h2>
+<p>Expresses <code>path</code> relative to <code>base</code>, walking up with <code>..</code> as needed.</p>
+<p>Purely lexical, so it answers only when both sides are anchored the same way; a relative path against an absolute base, or the reverse, comes back unchanged. A path that IS the base answers <code>&quot;.&quot;</code>.</p>
+<pre class="code"><code><span class="tok-fn">relativeTo</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> base<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the path to re-express</dd></div>
+<div class="param"><dt><code>base</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the directory to express it against</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the relative path</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">relativeTo</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/a/b/c.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">/a/d</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;../b/c.txt&quot;</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">relativeTo</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/a/b/c.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">/a</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; &quot;b/c.txt&quot;</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">relativeTo</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/a/b</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">/a/b</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>         <span class="tok-comment"># =&gt; &quot;.&quot;</span></code></pre>
+<p class="caption"><em>Printing project-relative paths in a report</em></p>
+<pre class="code"><code>  matches<span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">relativeTo</span><span class="tok-punct">(</span>p<span class="tok-punct">,</span> projectRoot<span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</section>
+</section>
+<section class="entity" id="module-fs-directory">
+<h2><span class="kind kind-module">module</span> <code>FS.Directory</code></h2>
+<p>Creating, listing and removing directories.</p>
+<p>Like <code>FS.File</code>, everything here reaches the real filesystem and so is <code>foul</code>. Listings answer with an <code>Optional</code>, so a directory that cannot be read is a value you handle rather than an exception.</p>
+<section class="entity" id="function-exists?">
+<h2><span class="kind kind-function">function</span> <code>exists?</code></h2>
+<p>Returns <code>true</code> when something exists at <code>path</code>.</p>
+<pre class="code"><code><span class="tok-fn">exists?</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the path to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when the path exists</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">exists?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</section>
+<section class="entity" id="function-directory?">
+<h2><span class="kind kind-function">function</span> <code>directory?</code></h2>
+<p>Returns <code>true</code> when <code>path</code> exists and is a directory.</p>
+<pre class="code"><code><span class="tok-fn">directory?</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the path to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> for a directory</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">directory?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; true</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">directory?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">README.md</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</section>
+<section class="entity" id="function-file?">
+<h2><span class="kind kind-function">function</span> <code>file?</code></h2>
+<p>Returns <code>true</code> when <code>path</code> exists and is a regular file.</p>
+<pre class="code"><code><span class="tok-fn">file?</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the path to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> for a regular file</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">file?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">README.md</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</section>
+<section class="entity" id="function-create">
+<h2><span class="kind kind-function">function</span> <code>create</code></h2>
+<p>Creates the directory at <code>path</code>.</p>
+<pre class="code"><code><span class="tok-fn">create</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the directory to create</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when the directory was created</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">create</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>Making sure an output directory is there</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">create</span><span class="tok-punct">(</span>outDir<span class="tok-punct">)</span> <span class="tok-keyword">if</span> <span class="tok-op">!</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">exists?</span><span class="tok-punct">(</span>outDir<span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-delete">
+<h2><span class="kind kind-function">function</span> <code>delete</code></h2>
+<p>Removes the directory at <code>path</code>, which must be empty.</p>
+<p>Use <code>deleteAll</code> to remove a directory together with its contents.</p>
+<pre class="code"><code><span class="tok-fn">delete</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the directory to remove</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when the directory was removed</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">empty</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</section>
+<section class="entity" id="function-deleteall">
+<h2><span class="kind kind-function">function</span> <code>deleteAll</code></h2>
+<p>Removes the directory at <code>path</code> and everything inside it, recursively.</p>
+<p>This deletes data and cannot be undone — check the path before calling it, particularly when it was computed or came from user input.</p>
+<pre class="code"><code><span class="tok-fn">deleteAll</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the directory tree to remove</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when the tree was removed</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">deleteAll</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>Rebuilding a scratch directory from clean</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">deleteAll</span><span class="tok-punct">(</span>tmpDir<span class="tok-punct">)</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">create</span><span class="tok-punct">(</span>tmpDir<span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-list">
+<h2><span class="kind kind-function">function</span> <code>list</code></h2>
+<p>Lists the names in <code>path</code> — both files and directories, one level deep.</p>
+<p>The results are bare names, not paths; join them with <code>path</code> to get something you can open. Answers <code>None</code> when the directory cannot be read.</p>
+<pre class="code"><code><span class="tok-fn">list</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span><span class="tok-op">?</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the directory to list</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>[String]?</code> — the entry names, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">list</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just([&quot;main.kex&quot;, &quot;lexer&quot;])</span></code></pre>
+<p class="caption"><em>Turning names into usable paths</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">list</span><span class="tok-punct">(</span>dir<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>name<span class="tok-op">|</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span>dir<span class="tok-punct">,</span> name<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</section>
+<section class="entity" id="function-files">
+<h2><span class="kind kind-function">function</span> <code>files</code></h2>
+<p>Lists only the regular files in <code>path</code>, one level deep.</p>
+<pre class="code"><code><span class="tok-fn">files</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span><span class="tok-op">?</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the directory to list</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>[String]?</code> — the file names, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">files</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just([&quot;main.kex&quot;])</span></code></pre>
+<p class="caption"><em>Every Kex source in a directory</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">files</span><span class="tok-punct">(</span>dir<span class="tok-punct">)</span>
+    <span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+    <span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>f<span class="tok-op">|</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">extension</span><span class="tok-punct">(</span>f<span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">.kex</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span></code></pre>
+
+</section>
+<section class="entity" id="function-directories">
+<h2><span class="kind kind-function">function</span> <code>directories</code></h2>
+<p>Lists only the subdirectories of <code>path</code>, one level deep.</p>
+<pre class="code"><code><span class="tok-fn">directories</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span><span class="tok-op">?</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the directory to list</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>[String]?</code> — the directory names, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">directories</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just([&quot;lexer&quot;, &quot;parser&quot;])</span></code></pre>
+<p class="caption"><em>Walking one level down</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">directories</span><span class="tok-punct">(</span>root<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>name<span class="tok-op">|</span>
+    <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span>root<span class="tok-punct">,</span> name<span class="tok-punct">)</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span></code></pre>
+
+</section>
+<section class="entity" id="constant-current">
+<h2><span class="kind kind-constant">constant</span> <code>current</code> <code>String</code></h2>
+<p>Returns the process's current working directory, as an absolute path.</p>
+
+</section>
+<section class="entity" id="constant-home">
+<h2><span class="kind kind-constant">constant</span> <code>home</code> <code>String?</code></h2>
+<p>Returns the current user's home directory, or <code>None</code> when it cannot be determined.</p>
+
+</section>
+</section>
+</section>
+</article>
+</main>
+</div>
+<footer class="foot">
+<div class="wrap">Generated by kex docgen at 2026-08-26T19:15:23.466486048Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+</footer>
+</body>
+</html>

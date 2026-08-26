@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JSON | Prelude 0.4.0-alpha | kex docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+<link rel="icon" type="image/png" href="../../icon.png">
+<script src="../../assets/site.js" defer></script>
+</head>
+<body>
+<header class="top">
+<div class="wrap top-inner">
+<a class="brand" href="../../index.html">kex</a>
+<span class="brand-sub">docs</span>
+<span class="spacer"></span>
+<button class="search-trigger" id="search" aria-label="Search documentation"
+data-root="../../" data-package="prelude" data-version="0.4.0-alpha"
+data-page="json.html">
+<span>Search</span><kbd>/</kbd>
+</button>
+<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="json.html">Prelude 0.4.0-alpha</span>
+<a class="back" href="https://kex.run/docs">kex.run ↗</a>
+</div>
+</header>
+<div class="wrap layout">
+<aside class="side"><nav aria-label="Modules"><p class="side-heading">Prelude</p><ul class="side-list">
+<li><a href="algebra.html">Algebra</a></li>
+<li><a href="bits.html">Bits</a></li>
+<li><a href="blankable.html">Blankable</a></li>
+<li><a href="console.html">Console</a></li>
+<li><a href="digest.html">Digest</a></li>
+<li><a href="enumerable.html">Enumerable</a></li>
+<li><a href="env.html">ENV</a></li>
+<li><a href="errorable.html">Errorable</a></li>
+<li><a href="evaluator.html">Evaluator</a></li>
+<li><a href="filehandle.html">Filehandle</a></li>
+<li><a href="fs.html">FS</a></li>
+<li><a href="http.html">Http</a></li>
+<li><a href="io.html">IO</a></li>
+<li><a class="active" href="json.html">JSON</a><ul class="side-sub">
+<li><a href="#module-json">JSON</a></li>
+</ul></li>
+<li><a href="kex.html">Kex</a></li>
+<li><a href="list.html">List</a></li>
+<li><a href="map.html">Map</a></li>
+<li><a href="math.html">Math</a></li>
+<li><a href="mock.html">Mock</a></li>
+<li><a href="number.html">Number</a></li>
+<li><a href="optional.html">Optional</a></li>
+<li><a href="optionparser.html">OptionParser</a></li>
+<li><a href="parsing.html">Parsing</a></li>
+<li><a href="prelude.html">Prelude</a></li>
+<li><a href="process.html">Process</a></li>
+<li><a href="range.html">Range</a></li>
+<li><a href="regex.html">Regex</a></li>
+<li><a href="set.html">Set</a></li>
+<li><a href="stream.html">Stream</a></li>
+<li><a href="string.html">String</a></li>
+<li><a href="system.html">System</a></li>
+<li><a href="taggedvalidation.html">TaggedValidation</a></li>
+<li><a href="test.html">Assert</a></li>
+<li><a href="time.html">Time</a></li>
+<li><a href="truthyable.html">Truthyable</a></li>
+<li><a href="type.html">Type</a></li>
+<li><a href="units.html">Units</a></li>
+<li><a href="webserver.html">Web</a></li>
+<li><a href="kex/ast.html">Kex.AST</a></li>
+<li><a href="units/data.html">Units.Data</a></li>
+<li><a href="units/si.html">Units.SI</a></li>
+</ul></nav></aside>
+<main class="content">
+<nav class="crumbs"><a href="index.html">Prelude</a> <span class="sep">/</span> <span>JSON</span></nav>
+<article class="prose">
+<h1>JSON</h1>
+<section class="entity" id="module-json">
+<h2><span class="kind kind-module">module</span> <code>JSON</code></h2>
+<section class="entity" id="type-error">
+<h2><span class="kind kind-type">type</span> <code>Error</code></h2>
+<p>Why a document could not be parsed. Every variant carries the position in the input where the parser stopped, so a caller can point at the problem.</p>
+<p>  JSON.parse(&quot;[1, 2&quot;)    # =&gt; Error(UnexpectedEnd(5))   JSON.parse(&quot;// c\n1&quot;)  # =&gt; Error(UnexpectedCharacter(&quot;/&quot;, 0))</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>UnexpectedCharacter(String, Integer)</code></li>
+<li><code>UnexpectedEnd(Integer)</code></li>
+<li><code>InvalidLiteral(String, Integer)</code></li>
+<li><code>InvalidNumber(String, Integer)</code></li>
+<li><code>InvalidEscape(String, Integer)</code></li>
+<li><code>InvalidUnicodeEscape(String, Integer)</code></li>
+<li><code>UnterminatedComment(Integer)</code></li>
+<li><code>TrailingInput(Integer)</code></li>
+<li><code>UnknownOption(Atom)</code></li>
+</ul>
+</section>
+<section class="entity" id="function-parse">
+<h2><span class="kind kind-function">function</span> <code>parse</code></h2>
+<p>Parses a JSON document, strictly.</p>
+<p>The whole text must be one JSON value with nothing after it — trailing input is <code>TrailingInput</code>, not a silently ignored tail. Objects come back as maps with atom keys, arrays as lists, <code>null</code> as <code>None</code>.</p>
+<pre class="code"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Any</span><span class="tok-punct">,</span> <span class="tok-bool">Error</span><span class="tok-op">&gt;</span>
+<span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">{</span><span class="tok-type">Atom</span><span class="tok-op">:</span> <span class="tok-type">Bool</span><span class="tok-punct">}</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Any</span><span class="tok-punct">,</span> <span class="tok-bool">Error</span><span class="tok-op">&gt;</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code> <code>String</code></dt><dd>the JSON document</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;Any, <a class="xref" href="#type-error">Error</a>&gt;</code> — the parsed value, or why it failed</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">{\&quot;a\&quot;: 1, \&quot;b\&quot;: [true, null, 2.5]}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-comment"># =&gt; Ok({ a: 1, b: [true, None, 2.5] })</span>
+  <span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">[1, 2</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Error(UnexpectedEnd(5))</span></code></pre>
+<p class="caption"><em>Reading a config file</em></p>
+<pre class="code"><code>  <span class="tok-keyword">match</span> <span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">config.json</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+    <span class="tok-bool">Ok</span><span class="tok-punct">(</span>config<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>config<span class="tok-punct">)</span>
+    <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span>   <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">config.json is not valid JSON: </span><span class="tok-string">${</span>e<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span></code></pre>
+
+</section>
+<section class="entity" id="function-stringify">
+<h2><span class="kind kind-function">function</span> <code>stringify</code></h2>
+<p>Renders a Kex value as strict JSON text.</p>
+<p>Maps become objects, lists become arrays, <code>None</code> becomes <code>null</code>, and strings are escaped. A map written with atom keys — the usual Kex spelling — renders with those names as strings, so <code>{ name: &quot;Ada&quot; }</code> becomes <code>{&quot;name&quot;:&quot;Ada&quot;}</code>. Object keys come out in canonical key order.</p>
+<p>Anything the encoder does not recognise renders as <code>null</code> rather than failing, so this never raises.</p>
+<pre class="code"><code><span class="tok-fn">stringify</span><span class="tok-punct">(</span>value<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Any</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code> <code>Any</code></dt><dd>the value to render</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the JSON text</p>
+<h5>Examples</h5>
+<pre class="code"><code>  <span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span><span class="tok-punct">{</span> name<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">Ada</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> n<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> ok<span class="tok-op">:</span> <span class="tok-bool">true</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+  <span class="tok-comment"># =&gt; '{&quot;n&quot;:1,&quot;name&quot;:&quot;Ada&quot;,&quot;ok&quot;:true}'</span>
+  <span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+  <span class="tok-comment"># =&gt; '[1,2,3]'</span></code></pre>
+<p class="caption"><em>Writing a JSON file</em></p>
+<pre class="code"><code>  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">out.json</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span>report<span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+<p class="caption"><em>A round trip</em></p>
+<pre class="code"><code>  <span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok({ a: 1 })</span></code></pre>
+
+</section>
+</section>
+</article>
+</main>
+</div>
+<footer class="foot">
+<div class="wrap">Generated by kex docgen at 2026-08-26T19:15:23.466486048Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+</footer>
+</body>
+</html>
