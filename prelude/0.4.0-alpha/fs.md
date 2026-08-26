@@ -227,7 +227,9 @@ Returns a lazy `Stream` of the file's lines, or `None` when it cannot be read.
 
 Unlike `readLines`, the file is consumed on demand, so this is the way to look at the first few lines of a very large file — or to process one without holding it all in memory.
 
-The stream does not end at the last line: asking for more lines than the file has yields `None` past the end. Take only what you need, or drop the tail with `reject { |line| line == None }`.
+The stream ends at the last line, so asking for more lines than the file has answers just the lines there are — unlike `Stream.Sequence`, which is deliberately infinite.
+
+  FS.File.feed("two-lines.txt").map { |lines| lines.take(5) }.or([])   # => ["one", "two"]
 
 
 ```kex

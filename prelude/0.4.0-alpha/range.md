@@ -52,7 +52,7 @@ Returns `true` when `value` falls inside the range, endpoints included.
 `5.in?(1..10)` says the same thing from the value's side, and often reads better.
 
 ```kex
-contains?(value)
+contains?(value) : A -> Bool
 ```
 
 **Returns**: `Bool` — `true` when the value is in range
@@ -69,7 +69,7 @@ contains?(value)
 Returns the elements as a list, ordered by `comparator`.
 
 ```kex
-sort(comparator)
+sort(comparator) : (A -> A -> Bool) -> [A]
 ```
 
 **Returns**: `[A]` — the sorted elements
@@ -85,7 +85,7 @@ sort(comparator)
 Renders the elements as text, with `separator` between them.
 
 ```kex
-join(separator)
+join(separator) : String -> String
 ```
 
 **Returns**: `String` — the joined text
@@ -108,7 +108,7 @@ Returns the element at index `index`, counting from 0, or `None` when out of ran
 Note that the index counts positions, not values: `(10..20).at(0)` is `Just(10)`.
 
 ```kex
-at(index)
+at(index) : Integer -> A?
 ```
 
 **Returns**: `A?` — the element, or `None`
@@ -120,12 +120,30 @@ at(index)
   (10..20).at(99)  # => None
 ```
 
+#### `get`
+
+Returns the element at index `index`, counting from 0, or `None` when out of range. The same as `at`, named to match `List` and `Map`.
+
+```kex
+get(index) : Integer -> A?
+get(index) : Integer -> A -> A
+```
+
+**Returns**: `A?` — the element, or `None`
+
+**Examples**
+
+```kex
+  (10..20).get(0)   # => Just(10)
+  (10..20).get(99)  # => None
+```
+
 #### `take`
 
 Returns the first `n` elements as a list.
 
 ```kex
-take(n)
+take(n) : Integer -> [A]
 ```
 
 **Returns**: `[A]` — the leading elements
@@ -141,7 +159,7 @@ take(n)
 Returns everything after the first `n` elements, as a list.
 
 ```kex
-drop(n)
+drop(n) : Integer -> [A]
 ```
 
 **Returns**: `[A]` — the remaining elements
@@ -156,10 +174,8 @@ drop(n)
 
 Returns the position of `value` in the range, or `None` when it is not in it.
 
-Note: on a numeric range the argument is currently inferred as a `Char`, so `(10..20).indexOf(12)` does not compile. Use `(10..20).items.indexOf(12)` for numbers.
-
 ```kex
-indexOf(value)
+indexOf(value) : A -> Integer?
 ```
 
 **Returns**: `Integer?` — the 0-based position, or `None`
@@ -167,8 +183,8 @@ indexOf(value)
 **Examples**
 
 ```kex
-  ('a'..'e').indexOf('c')      # => Just(2)
-  (10..20).items.indexOf(12)   # => Just(2)
+  ('a'..'e').indexOf('c')   # => Just(2)
+  (10..20).indexOf(12)      # => Just(2)
 ```
 
 #### `zip`
@@ -176,7 +192,7 @@ indexOf(value)
 Pairs each element with the element at the same position in `other`, stopping at the shorter of the two.
 
 ```kex
-zip(other)
+zip(other) : [B] -> [(A, B)]
 ```
 
 **Returns**: `[(A, B)]` — the pairs, in order
@@ -197,7 +213,7 @@ _Numbering a list_
 Splits the elements into those satisfying `pred` and those that do not.
 
 ```kex
-partition(pred)
+partition(pred) : (A -> Bool) -> ([A], [A])
 ```
 
 **Returns**: `([A], [A])` — the matching and non-matching elements
@@ -213,7 +229,7 @@ partition(pred)
 Returns the elements as a list with `value` added at the end.
 
 ```kex
-push(value)
+push(value) : A -> [A]
 ```
 
 **Returns**: `[A]` — the elements plus `value`
@@ -229,7 +245,7 @@ push(value)
 Returns the elements that do NOT satisfy `pred`, as a list.
 
 ```kex
-reject(pred)
+reject(pred) : (A -> Bool) -> [A]
 ```
 
 **Returns**: `[A]` — the elements that failed the predicate
