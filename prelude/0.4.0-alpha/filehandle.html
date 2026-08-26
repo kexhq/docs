@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Filehandle | Prelude 0.4.0-alpha | kex docs</title>
+<title>FileHandle | Standard Library 0.4.0-alpha | kex docs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -22,12 +22,12 @@ data-root="../../" data-package="prelude" data-version="0.4.0-alpha"
 data-page="filehandle.html">
 <span>Search</span><kbd>/</kbd>
 </button>
-<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="filehandle.html">Prelude 0.4.0-alpha</span>
+<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="filehandle.html">Standard Library 0.4.0-alpha</span>
 <a class="back" href="https://kex.run/docs">kex.run ↗</a>
 </div>
 </header>
 <div class="wrap layout">
-<aside class="side"><nav aria-label="Modules"><p class="side-heading">Prelude</p><ul class="side-list">
+<aside class="side"><nav aria-label="Modules"><p class="side-heading"><a href="index.html">Standard Library</a></p><ul class="side-list">
 <li><a href="algebra.html">Algebra</a></li>
 <li><a href="bits.html">Bits</a></li>
 <li><a href="blankable.html">Blankable</a></li>
@@ -37,7 +37,7 @@ data-page="filehandle.html">
 <li><a href="env.html">ENV</a></li>
 <li><a href="errorable.html">Errorable</a></li>
 <li><a href="evaluator.html">Evaluator</a></li>
-<li><a class="active" href="filehandle.html">Filehandle</a><ul class="side-sub">
+<li><a class="active" href="filehandle.html">FileHandle</a><ul class="side-sub">
 <li><a href="#trait-readable">Readable</a></li>
 <li><a href="#trait-writable">Writable</a></li>
 <li><a href="#type-filehandle">FileHandle</a></li>
@@ -78,15 +78,19 @@ data-page="filehandle.html">
 <li><a href="units/si.html">Units.SI</a></li>
 </ul></nav></aside>
 <main class="content">
-<nav class="crumbs"><a href="index.html">Prelude</a> <span class="sep">/</span> <span>Filehandle</span></nav>
+<nav class="crumbs"><a href="index.html">Standard Library</a> <span class="sep">/</span> <span>FileHandle</span></nav>
 <article class="prose">
-<h1>Filehandle</h1>
+<h1>FileHandle<span class="tag-prelude" title="In the prelude: no import needed">prelude</span></h1>
 <section class="entity" id="trait-readable">
 <h2><span class="kind kind-trait">trait</span> <code>Readable</code></h2>
 <p><code>Readable</code> — a source that yields text.</p>
 <p>Named so that anything can be one, not just a file: the vocabulary <code>FileHandle&lt;CanRead, W&gt;</code> already carried was an abstraction without a name, so nothing else could implement it and <code>IO</code> did not go through it (kexhq/kex#139). <code>IO.in</code> is a <code>Readable</code>; so is any handle opened for reading.</p>
-<p>  foul firstLine(source: Readable) -&gt; String do     source.getLine.or(&quot;(empty)&quot;)   end</p>
-<p>  firstLine(IO.in)   firstLine(FS.File.open(&quot;notes.txt&quot;, Read).try)</p>
+<pre class="code"><code><span class="tok-keyword">foul</span> <span class="tok-fn">firstLine</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <span class="tok-type">Readable</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-keyword">do</span>
+  source<span class="tok-op">.</span><span class="tok-method">getLine</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">(empty)</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span>
+
+<span class="tok-fn">firstLine</span><span class="tok-punct">(</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-keyword">in</span><span class="tok-punct">)</span>
+<span class="tok-fn">firstLine</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">notes.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Read</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span></code></pre>
 
 <div class="functions">
 <div class="fn" id="fn-getline">
@@ -137,8 +141,13 @@ data-page="filehandle.html">
 <h2><span class="kind kind-trait">trait</span> <code>Writable</code></h2>
 <p><code>Writable</code> — a sink that accepts text.</p>
 <p>The payoff of naming it is that a sink becomes a VALUE a library can accept, rather than a global switch it can only sit underneath: output from one library can go to a buffer while another's goes to the terminal (kexhq/kex#139).</p>
-<p>  foul report(out: Writable, lines: [String]) -&gt; Void do     lines.each { |line| out.printLine(line) }   end</p>
-<p>  report(IO.out, results)   report(IO.error, warnings)   report(FS.File.open(&quot;report.txt&quot;, Write).try, results)</p>
+<pre class="code"><code><span class="tok-keyword">foul</span> <span class="tok-fn">report</span><span class="tok-punct">(</span>out<span class="tok-op">:</span> <span class="tok-type">Writable</span><span class="tok-punct">,</span> lines<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span> <span class="tok-keyword">do</span>
+  lines<span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> out<span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>line<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">end</span>
+
+<span class="tok-fn">report</span><span class="tok-punct">(</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">out</span><span class="tok-punct">,</span> results<span class="tok-punct">)</span>
+<span class="tok-fn">report</span><span class="tok-punct">(</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">error</span><span class="tok-punct">,</span> warnings<span class="tok-punct">)</span>
+<span class="tok-fn">report</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">report.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Write</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">,</span> results<span class="tok-punct">)</span></code></pre>
 <p>Two deliberate choices, both settled in kexhq/kex#139:</p>
 <p>- The argument is <code>Showable</code>, not <code>String</code>. <code>IO.printLine</code> always took a   <code>Showable</code> while the handle methods took a <code>String</code>; the wider one is   right, and it is what makes <code>IO.printLine(x)</code> and <code>IO.out.printLine(x)</code>   the same call. - The result is <code>Void</code>, not <code>Bool</code>. A boolean nobody checks is not an error   channel, and <code>Result&lt;Void, IOError&gt;</code> on every print is miserable to use.   Erlang's answer is the one taken here: the call says <code>ok</code>, and failure   belongs to the device rather than to the call site.</p>
 
@@ -193,8 +202,17 @@ data-page="filehandle.html">
 <h2><span class="kind kind-type">type</span> <code>FileHandle&lt;R, W&gt;</code></h2>
 <p>An open file, obtained from <code>FS.File.open</code>.</p>
 <p>The two type parameters record what the handle is allowed to do: <code>R</code> is <code>CanRead</code> or <code>CannotRead</code>, <code>W</code> is <code>CanWrite</code> or <code>CannotWrite</code>. <code>FS.File.open</code> picks them from the mode you pass, so calling <code>write</code> on a handle opened <code>Read</code> is a compile error rather than a run-time failure.</p>
-<p>  using FS</p>
-<p>  main do     match FS.File.open(&quot;notes.txt&quot;, Read) do       Ok(handle) =&gt; do         IO.printLine(handle.read.or(&quot;&quot;))         handle.close       end       Error(e) =&gt; IO.printError(&quot;cannot open: ${e}&quot;)     end   end</p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">FS</span>
+
+<span class="tok-keyword">main</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">match</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">notes.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Read</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+    <span class="tok-bool">Ok</span><span class="tok-punct">(</span>handle<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">do</span>
+      <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>handle<span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+      handle<span class="tok-op">.</span><span class="tok-method">close</span>
+    <span class="tok-keyword">end</span>
+    <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cannot open: </span><span class="tok-string">${</span>e<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span></code></pre>
 <p>Reach for a handle when you want to walk a large file a line at a time, or make many small writes. When a file fits comfortably in memory, <code>FS.File.read</code> and <code>FS.File.write</code> are shorter and need no closing. To be rid of the closing entirely, pass <code>FS.File.open</code> a block.</p>
 <p>The handle methods are <code>foul</code>: obtaining a handle is not an effect, but reading or writing through one is, so a function that does so is <code>foul</code> no matter where the handle came from. Injection makes a thing substitutable, not pure.</p>
 
@@ -202,6 +220,96 @@ data-page="filehandle.html">
 <section class="entity" id="make-filehandle<canread,-w>">
 <h2><span class="kind kind-make">make</span> <code>FileHandle&lt;CanRead, W&gt;</code> implements <a class="xref" href="#trait-readable">Readable</a></h2>
 
+<div class="functions">
+<div class="fn" id="fn-getline">
+<h4><code>getLine</code></h4>
+<p>Reads the next line from the handle, without its newline.</p>
+<p>Answers <code>None</code> at end of file, which is what makes it usable as a loop condition. The same operation as <code>readLine</code>, under the name <code>IO.getLine</code> uses.</p>
+<pre class="code"><code><span class="tok-fn">getLine</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>String?</code> — the next line, or <code>None</code> at end of file</p>
+<h5>Examples</h5>
+<p class="caption"><em>Walking a file line by line</em></p>
+<pre class="code"><code><span class="tok-keyword">foul</span> <span class="tok-fn">echo</span><span class="tok-punct">(</span>handle<span class="tok-op">:</span> <span class="tok-type">FileHandle</span><span class="tok-op">&lt;</span><span class="tok-type">CanRead</span><span class="tok-punct">,</span> <span class="tok-type">W</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">match</span> handle<span class="tok-op">.</span><span class="tok-method">getLine</span> <span class="tok-keyword">do</span>
+    <span class="tok-bool">Just</span><span class="tok-punct">(</span>line<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">do</span>
+      <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>line<span class="tok-punct">)</span>
+      <span class="tok-fn">echo</span><span class="tok-punct">(</span>handle<span class="tok-punct">)</span>
+    <span class="tok-keyword">end</span>
+    <span class="tok-bool">None</span> <span class="tok-op">=&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="fn-get">
+<h4><code>get</code></h4>
+<p>Reads a single character from the handle, as a one-character <code>String</code>.</p>
+<p>Answers <code>None</code> at end of file.</p>
+<pre class="code"><code><span class="tok-fn">get</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>String?</code> — the next character, or <code>None</code> at end of file</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> firstChar <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-readline">
+<h4><code>readLine</code></h4>
+<p>Reads the next line from the handle, without its newline. The same as <code>getLine</code>, named for reading from a file rather than from a console.</p>
+<pre class="code"><code><span class="tok-fn">readLine</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>String?</code> — the next line, or <code>None</code> at end of file</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> header <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">readLine</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<p class="caption"><em>Reading the first three lines</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> head <span class="tok-op">=</span> <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>_<span class="tok-op">|</span> handle<span class="tok-op">.</span><span class="tok-method">readLine</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="fn-read">
+<h4><code>read</code></h4>
+<p>Reads everything remaining in the file and returns it as one <code>String</code>.</p>
+<p>Reads from the current position, so calling it after a <code>readLine</code> gives the rest of the file rather than the whole of it.</p>
+<pre class="code"><code><span class="tok-fn">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>String?</code> — the remaining contents, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> body <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<p class="caption"><em>Skipping a header line, then taking the rest</em></p>
+<pre class="code"><code>handle<span class="tok-op">.</span><span class="tok-method">readLine</span>
+<span class="tok-keyword">let</span> body <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-eof?">
+<h4><code>eof?</code></h4>
+<p>Returns <code>true</code> when the handle has reached the end of the file.</p>
+<pre class="code"><code><span class="tok-fn">eof?</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Bool</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> at end of file</p>
+<h5>Examples</h5>
+<pre class="code"><code>handle<span class="tok-op">.</span><span class="tok-method">eof?</span>   <span class="tok-comment"># =&gt; false, before anything has been read</span></code></pre>
+
+</div>
+<div class="fn" id="fn-atend?">
+<h4><code>atEnd?</code></h4>
+<p>Returns <code>true</code> when the handle has reached the end of the file. The same as <code>eof?</code>, spelled out.</p>
+<pre class="code"><code><span class="tok-fn">atEnd?</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Bool</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> at end of file</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">if</span> <span class="tok-op">!</span>handle<span class="tok-op">.</span><span class="tok-method">atEnd?</span>
+  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>handle<span class="tok-op">.</span><span class="tok-method">readLine</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="fn-feed">
+<h4><code>feed</code></h4>
+<p>Returns the handle's remaining lines as a lazy <code>Stream</code>.</p>
+<p>Lines are read on demand, so this is how to look at the start of a very large file, or process one without holding it all in memory.</p>
+<p>The stream ends at the last line, so taking more lines than the file has answers just the lines there are.</p>
+<p>NOT part of <code>Readable</code>. <code>docs/streams.md</code> describes a one-shot, stateful <code>Feed&lt;A&gt;</code> that does not exist, and a file feed is neither pure nor reusable the way <code>Stream&lt;A&gt;</code> claims to be. Until that is settled this is a FileHandle method rather than something every <code>Readable</code> must answer.</p>
+<pre class="code"><code><span class="tok-fn">feed</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Stream</span><span class="tok-op">&lt;</span><span class="tok-type">String</span><span class="tok-op">&gt;</span><span class="tok-op">?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Stream&lt;String&gt;?</code> — the lines as a stream, or <code>None</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>The first ten lines of a large file</em></p>
+<pre class="code"><code>handle<span class="tok-op">.</span><span class="tok-method">feed</span>
+  <span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>lines<span class="tok-op">|</span> lines<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+  <span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
 </section>
 <section class="entity" id="make-filehandle<r,-canwrite>">
 <h2><span class="kind kind-make">make</span> <code>FileHandle&lt;R, CanWrite&gt;</code> implements <a class="xref" href="#trait-writable">Writable</a></h2>
@@ -218,7 +326,7 @@ data-page="filehandle.html">
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
 <p class="caption"><em>Writing a report line by line</em></p>
-<pre class="code"><code>  rows<span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>row<span class="tok-op">|</span> handle<span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>row<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+<pre class="code"><code>rows<span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>row<span class="tok-op">|</span> handle<span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>row<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
 
 </div>
 <div class="fn" id="fn-print">
@@ -232,9 +340,9 @@ data-page="filehandle.html">
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
 <p class="caption"><em>Building a line from pieces</em></p>
-<pre class="code"><code>  handle<span class="tok-op">.</span><span class="tok-method">print</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">name,</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-  handle<span class="tok-op">.</span><span class="tok-method">print</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">age</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-  handle<span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code>handle<span class="tok-op">.</span><span class="tok-method">print</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">name,</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+handle<span class="tok-op">.</span><span class="tok-method">print</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">age</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+handle<span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-writeline">
@@ -247,7 +355,7 @@ data-page="filehandle.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
-<pre class="code"><code>  handle<span class="tok-op">.</span><span class="tok-method">writeLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">done</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code>handle<span class="tok-op">.</span><span class="tok-method">writeLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">done</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-write">
@@ -261,7 +369,7 @@ data-page="filehandle.html">
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
 <p class="caption"><em>Writing a whole document in one call</em></p>
-<pre class="code"><code>  handle<span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span>rendered<span class="tok-punct">)</span></code></pre>
+<pre class="code"><code>handle<span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span>rendered<span class="tok-punct">)</span></code></pre>
 
 </div>
 </div>
@@ -269,12 +377,30 @@ data-page="filehandle.html">
 <section class="entity" id="make-filehandle<r,-w>">
 <h2><span class="kind kind-make">make</span> <code>FileHandle&lt;R, W&gt;</code></h2>
 
+<div class="functions">
+<div class="fn" id="fn-close">
+<h4><code>close</code></h4>
+<p>Closes the handle, flushing anything still buffered.</p>
+<p>Close every handle you open. A written file is not guaranteed to be complete on disk until its handle is closed. Passing <code>FS.File.open</code> a block closes the handle for you.</p>
+<pre class="code"><code><span class="tok-fn">close</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">out.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Write</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>handle<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">do</span>
+    handle<span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+    handle<span class="tok-op">.</span><span class="tok-method">close</span>
+  <span class="tok-keyword">end</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span>_<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cannot open out.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+</div>
 </section>
 </article>
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-26T20:27:51.720473998Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-26T22:47:19.793944540Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

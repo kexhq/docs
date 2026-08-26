@@ -26,7 +26,10 @@ The rendering shows the value's STRUCTURE — quotes on strings, `Just(...)` aro
 
 Every type is inspectable through a structural fallback, so `inspected` and `IO.inspect` work on anything; a type that wants a different rendering overrides `inspectValue`.
 
-  [1, 2].inspected       # => "[1, 2]"   Just("hi").inspected   # => "Just(\"hi\")"
+```kex
+[1, 2].inspected       # => "[1, 2]"
+Just("hi").inspected   # => "Just(\"hi\")"
+```
 
 
 #### `inspectValue`
@@ -44,7 +47,7 @@ inspectValue : Bool -> String
 **Examples**
 
 ```kex
-  [1, 2].inspectValue(false)   # => "[1, 2]"
+[1, 2].inspectValue(false)   # => "[1, 2]"
 ```
 
 ## trait `Showable`
@@ -106,7 +109,11 @@ showValue(@Ok(x))
 
 The running toolchain: which backend, which version, which features.
 
-  Kex.BACKEND                  # => Interpreter   Kex.Kernel.VERSION.release   # => "0.4.0"   Kex.Feature.has?(Kex.FS)     # => true
+```kex
+Kex.BACKEND                  # => Interpreter
+Kex.Kernel.VERSION.release   # => "0.4.0"
+Kex.Feature.has?(Kex.FS)     # => true
+```
 
 ## type `Backend`
 

@@ -19,11 +19,19 @@ Keys are compared by structural equality and may be of any type; atom keys get t
 
 Entries come back in canonical key order, not insertion order, so `keys`, `values`, `entries` and any traversal are stable and comparable across equal maps.
 
-  let config = { host: "localhost", port: 8080 }   config.get(:host).or("0.0.0.0")     # => "localhost"   config.get(:user).or("anonymous")   # => "anonymous"   config.put(:port, 9090)             # => { :host: "localhost", :port: 9090 }
+```kex
+let config = { host: "localhost", port: 8080 }
+config.get(:host).or("0.0.0.0")     # => "localhost"
+config.get(:user).or("anonymous")   # => "anonymous"
+config.put(:port, 9090)             # => { :host: "localhost", :port: 9090 }
+```
 
 A map is `Enumerable` and `Foldable`, and the traversal blocks take the key and value as two parameters:
 
-  config.each { |k, v| IO.printLine("${k} = ${v}") }   config.filter { |k, v| k != :port }   # => { :host: "localhost" }
+```kex
+config.each { |k, v| IO.printLine("${k} = ${v}") }
+config.filter { |k, v| k != :port }   # => { :host: "localhost" }
+```
 
 Declared for the same reason list.kex declares `type List<X> = [X]`: it gives the name `Map` a source declaration, so it resolves as a type through the collected interfaces rather than needing to be known to the compiler.
 
@@ -53,16 +61,16 @@ reduce(acc, g)
 _Summing the values_
 
 ```kex
-  { a: 1, b: 2 }.reduce(0) do |acc, pair|
-    let (key, value) = pair
-    acc + value
-  end
-  # => 3
+{ a: 1, b: 2 }.reduce(0) do |acc, pair|
+  let (key, value) = pair
+  acc + value
+end
+# => 3
 ```
 _Rendering the map as a query string_
 
 ```kex
-  { a: 1, b: 2 }.entries.map { |k, v| "${k}=${v}" }.join("&")
+{ a: 1, b: 2 }.entries.map { |k, v| "${k}=${v}" }.join("&")
 ```
 
 #### `combine`
@@ -78,13 +86,13 @@ combine(other)
 **Examples**
 
 ```kex
-  { a: 1 }.combine({ b: 2 })   # => { :a: 1, :b: 2 }
+{ a: 1 }.combine({ b: 2 })   # => { :a: 1, :b: 2 }
 ```
 _Folding a list of maps into one_
 
 ```kex
-  [{ a: 1 }, { b: 2 }, { a: 9 }].reduce({}) { |acc, m| acc.combine(m) }
-  # => { :a: 9, :b: 2 }
+[{ a: 1 }, { b: 2 }, { a: 9 }].reduce({}) { |acc, m| acc.combine(m) }
+# => { :a: 9, :b: 2 }
 ```
 
 #### `get`
@@ -103,14 +111,14 @@ get(key) : K -> V -> V
 **Examples**
 
 ```kex
-  let user = { name: "Alice", age: 32 }
-  user.get(:name)      # => Just("Alice")
-  user.get(:missing)   # => None
+let user = { name: "Alice", age: 32 }
+user.get(:name)      # => Just("Alice")
+user.get(:missing)   # => None
 ```
 _Chaining through a nested map_
 
 ```kex
-  settings.get(:server).flatMap { |s| s.get(:port) }.or(8080)
+settings.get(:server).flatMap { |s| s.get(:port) }.or(8080)
 ```
 
 #### `put`
@@ -128,15 +136,15 @@ put(k, v) : K -> V -> Map<K, V>
 **Examples**
 
 ```kex
-  {}.put(:x, 1)              # => { :x: 1 }
-  { x: 1 }.put(:x, 2)        # => { :x: 2 }
+{}.put(:x, 1)              # => { :x: 1 }
+{ x: 1 }.put(:x, 2)        # => { :x: 2 }
 ```
 _Rebinding with the `!` form_
 
 ```kex
-  var totals = {}
-  totals.put!(:visits, 1)
-  totals                     # => { :visits: 1 }
+var totals = {}
+totals.put!(:visits, 1)
+totals                     # => { :visits: 1 }
 ```
 
 #### `delete`
@@ -154,13 +162,13 @@ delete(key) : K -> Map<K, V>
 **Examples**
 
 ```kex
-  { a: 1, b: 2 }.delete(:a)   # => { :b: 2 }
-  { a: 1 }.delete(:z)         # => { :a: 1 }
+{ a: 1, b: 2 }.delete(:a)   # => { :b: 2 }
+{ a: 1 }.delete(:z)         # => { :a: 1 }
 ```
 _Stripping a secret before logging_
 
 ```kex
-  IO.printLine(params.delete(:password))
+IO.printLine(params.delete(:password))
 ```
 
 #### `has?`
@@ -178,15 +186,15 @@ has?(key) : K -> Bool
 **Examples**
 
 ```kex
-  { a: 1 }.has?(:a)   # => true
-  { a: 1 }.has?(:z)   # => false
+{ a: 1 }.has?(:a)   # => true
+{ a: 1 }.has?(:z)   # => false
 ```
 _Checking a required setting_
 
 ```kex
-  if !config.has?(:host)
-    IO.printError("host is required")
-  end
+if !config.has?(:host)
+  IO.printError("host is required")
+end
 ```
 
 #### `count`
@@ -202,12 +210,12 @@ count : (K -> V -> Bool) -> Integer
 **Examples**
 
 ```kex
-  { a: 1, b: 2 }.count { |k, v| v > 1 }   # => 1
+{ a: 1, b: 2 }.count { |k, v| v > 1 }   # => 1
 ```
 _How many settings are still at their default_
 
 ```kex
-  config.count { |k, v| v == defaults.get(k, v) }
+config.count { |k, v| v == defaults.get(k, v) }
 ```
 
 #### `each`
@@ -223,7 +231,7 @@ each : (K -> V -> Void) -> Void
 **Examples**
 
 ```kex
-  scores.each { |k, v| IO.printLine("${k}: ${v}") }
+scores.each { |k, v| IO.printLine("${k}: ${v}") }
 ```
 
 #### `map`
@@ -241,12 +249,12 @@ map : (K -> V -> R) -> [R]
 **Examples**
 
 ```kex
-  { "a": 1, "b": 2 }.map { |k, v| "${k}=${v}" }   # => ["a=1", "b=2"]
+{ "a": 1, "b": 2 }.map { |k, v| "${k}=${v}" }   # => ["a=1", "b=2"]
 ```
 _Building a header block_
 
 ```kex
-  headers.map { |name, value| "${name}: ${value}" }.join("\n")
+headers.map { |name, value| "${name}: ${value}" }.join("\n")
 ```
 
 #### `mapValues`
@@ -262,12 +270,12 @@ mapValues(f) : (V -> W) -> Map<K, W>
 **Examples**
 
 ```kex
-  { a: 1, b: 2 }.mapValues { |v| v * 10 }   # => { :a: 10, :b: 20 }
+{ a: 1, b: 2 }.mapValues { |v| v * 10 }   # => { :a: 10, :b: 20 }
 ```
 _Normalising values read as text_
 
 ```kex
-  raw.mapValues { |s| s.trim.lowerCase }
+raw.mapValues { |s| s.trim.lowerCase }
 ```
 
 #### `mapKeys`
@@ -285,17 +293,19 @@ mapKeys(f) : (K -> J) -> Map<J, V>
 **Examples**
 
 ```kex
-  { "a": 1, "b": 2 }.mapKeys { |k| k.upperCase }   # => { A: 1, B: 2 }
+{ "a": 1, "b": 2 }.mapKeys { |k| k.upperCase }   # => { A: 1, B: 2 }
 ```
 _Making header lookups case-insensitive_
 
 ```kex
-  headers.mapKeys { |name| name.lowerCase }
+headers.mapKeys { |name| name.lowerCase }
 ```
 
 #### `filter`
 
 Returns a new map with only the entries for which `pred` answers `true`.
+
+Map overrides the map-returning HOFs (Enumerable's default returns a list).
 
 ```kex
 filter(pred) : (K -> V -> Bool) -> Map<K, V>
@@ -306,13 +316,12 @@ filter(pred) : (K -> V -> Bool) -> Map<K, V>
 **Examples**
 
 ```kex
-  { a: 1, b: 2, c: 3 }.filter { |k, v| v > 1 }   # => { :b: 2, :c: 3 }
+{ a: 1, b: 2, c: 3 }.filter { |k, v| v > 1 }   # => { :b: 2, :c: 3 }
 ```
 _Keeping only the options that were actually set_
 
 ```kex
-  options.filter { |name, value| !value.blank? }
-Map overrides the map-returning HOFs (Enumerable's default returns a list).
+options.filter { |name, value| !value.blank? }
 ```
 
 #### `reject`
@@ -328,12 +337,12 @@ reject(pred) : (K -> V -> Bool) -> Map<K, V>
 **Examples**
 
 ```kex
-  { a: 1, b: 2, c: 3 }.reject { |k, v| v > 1 }   # => { :a: 1 }
+{ a: 1, b: 2, c: 3 }.reject { |k, v| v > 1 }   # => { :a: 1 }
 ```
 _Dropping internal keys before serialising_
 
 ```kex
-  record.reject { |name, _| name.startsWith?("_") }
+record.reject { |name, _| name.startsWith?("_") }
 ```
 
 #### `merge`
@@ -351,12 +360,12 @@ merge(other) : Map<K, V> -> Map<K, V>
 **Examples**
 
 ```kex
-  { a: 1, b: 2 }.merge({ b: 99, c: 3 })   # => { :a: 1, :b: 99, :c: 3 }
+{ a: 1, b: 2 }.merge({ b: 99, c: 3 })   # => { :a: 1, :b: 99, :c: 3 }
 ```
 _Layering user settings over defaults_
 
 ```kex
-  defaults.merge(userConfig)
+defaults.merge(userConfig)
 ```
 
 #### `any?`
@@ -372,8 +381,8 @@ any? : (K -> V -> Bool) -> Bool
 **Examples**
 
 ```kex
-  { a: 1, b: 2 }.any? { |k, v| v > 1 }   # => true
-  { a: 1, b: 2 }.any? { |k, v| v > 9 }   # => false
+{ a: 1, b: 2 }.any? { |k, v| v > 1 }   # => true
+{ a: 1, b: 2 }.any? { |k, v| v > 9 }   # => false
 ```
 
 #### `all?`
@@ -389,13 +398,13 @@ all? : (K -> V -> Bool) -> Bool
 **Examples**
 
 ```kex
-  { a: 1, b: 2 }.all? { |k, v| v > 0 }   # => true
-  { a: 1, b: 2 }.all? { |k, v| v > 1 }   # => false
+{ a: 1, b: 2 }.all? { |k, v| v > 0 }   # => true
+{ a: 1, b: 2 }.all? { |k, v| v > 1 }   # => false
 ```
 _Validating a form_
 
 ```kex
-  fields.all? { |name, value| !value.blank? }
+fields.all? { |name, value| !value.blank? }
 ```
 
 #### `find`
@@ -413,13 +422,13 @@ find : (K -> V -> Bool) -> (K, V)?
 **Examples**
 
 ```kex
-  { a: 1, b: 2 }.find { |k, v| v > 1 }   # => Just((:b, 2))
-  { a: 1, b: 2 }.find { |k, v| v > 9 }   # => None
+{ a: 1, b: 2 }.find { |k, v| v > 1 }   # => Just((:b, 2))
+{ a: 1, b: 2 }.find { |k, v| v > 9 }   # => None
 ```
 _Locating a value without knowing its key_
 
 ```kex
-  users.find { |id, user| user.email == target }
+users.find { |id, user| user.email == target }
 ```
 
 ## make `Map<K, V>` implements [Blankable](blankable.md#trait-blankable)

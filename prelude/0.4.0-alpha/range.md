@@ -16,11 +16,19 @@ A span between two bounds, written `(1..10)` or `('a'..'z')`.
 
 A range stores only its two endpoints and computes everything else from them, so `(1..1000000)` costs nothing to make. Both ends are included.
 
-  (1..5).items          # => [1, 2, 3, 4, 5]   (1..5).sum            # => 15   5.in?(1..10)          # => true   ('a'..'e').items      # => ['a', 'b', 'c', 'd', 'e']
+```kex
+(1..5).items          # => [1, 2, 3, 4, 5]
+(1..5).sum            # => 15
+5.in?(1..10)          # => true
+('a'..'e').items      # => ['a', 'b', 'c', 'd', 'e']
+```
 
 It is `Enumerable` and `Foldable`, so the traversal methods work directly, and the list operations below answer in list terms. Use `items` when you want a real list to hand to something else.
 
-  (1..10).items.filter(~even?)   # => [2, 4, 6, 8, 10]   (1..3).items.each { |n| IO.printLine(n) }
+```kex
+(1..10).items.filter(~even?)   # => [2, 4, 6, 8, 10]
+(1..3).items.each { |n| IO.printLine(n) }
+```
 
 
 
@@ -42,7 +50,7 @@ reduce(acc, f)
 **Examples**
 
 ```kex
-  (1..4).reduce(0) { |sum, n| sum + n }   # => 10
+(1..4).reduce(0) { |sum, n| sum + n }   # => 10
 ```
 
 #### `contains?`
@@ -60,8 +68,8 @@ contains?(value) : A -> Bool
 **Examples**
 
 ```kex
-  (1..10).contains?(5)    # => true
-  (1..10).contains?(11)   # => false
+(1..10).contains?(5)    # => true
+(1..10).contains?(11)   # => false
 ```
 
 #### `sort`
@@ -77,7 +85,7 @@ sort(comparator) : (A -> A -> Bool) -> [A]
 **Examples**
 
 ```kex
-  (1..4).sort { |a, b| a > b }   # => [4, 3, 2, 1]
+(1..4).sort { |a, b| a > b }   # => [4, 3, 2, 1]
 ```
 
 #### `join`
@@ -93,12 +101,12 @@ join(separator) : String -> String
 **Examples**
 
 ```kex
-  (1..4).join(", ")   # => "1, 2, 3, 4"
+(1..4).join(", ")   # => "1, 2, 3, 4"
 ```
 _A comma-separated header_
 
 ```kex
-  "columns: ${(1..3).join(",")}"   # => "columns: 1,2,3"
+"columns: ${(1..3).join(",")}"   # => "columns: 1,2,3"
 ```
 
 #### `at`
@@ -116,8 +124,8 @@ at(index) : Integer -> A?
 **Examples**
 
 ```kex
-  (10..20).at(0)   # => Just(10)
-  (10..20).at(99)  # => None
+(10..20).at(0)   # => Just(10)
+(10..20).at(99)  # => None
 ```
 
 #### `get`
@@ -134,8 +142,8 @@ get(index) : Integer -> A -> A
 **Examples**
 
 ```kex
-  (10..20).get(0)   # => Just(10)
-  (10..20).get(99)  # => None
+(10..20).get(0)   # => Just(10)
+(10..20).get(99)  # => None
 ```
 
 #### `take`
@@ -151,7 +159,7 @@ take(n) : Integer -> [A]
 **Examples**
 
 ```kex
-  (1..10).take(3)   # => [1, 2, 3]
+(1..10).take(3)   # => [1, 2, 3]
 ```
 
 #### `drop`
@@ -167,7 +175,7 @@ drop(n) : Integer -> [A]
 **Examples**
 
 ```kex
-  (1..5).drop(3)   # => [4, 5]
+(1..5).drop(3)   # => [4, 5]
 ```
 
 #### `indexOf`
@@ -183,8 +191,8 @@ indexOf(value) : A -> Integer?
 **Examples**
 
 ```kex
-  ('a'..'e').indexOf('c')   # => Just(2)
-  (10..20).indexOf(12)      # => Just(2)
+('a'..'e').indexOf('c')   # => Just(2)
+(10..20).indexOf(12)      # => Just(2)
 ```
 
 #### `zip`
@@ -200,12 +208,12 @@ zip(other) : [B] -> [(A, B)]
 **Examples**
 
 ```kex
-  (1..3).zip(["a", "b", "c"])   # => [(1, "a"), (2, "b"), (3, "c")]
+(1..3).zip(["a", "b", "c"])   # => [(1, "a"), (2, "b"), (3, "c")]
 ```
 _Numbering a list_
 
 ```kex
-  (1..names.count).zip(names)
+(1..names.count).zip(names)
 ```
 
 #### `partition`
@@ -221,7 +229,7 @@ partition(pred) : (A -> Bool) -> ([A], [A])
 **Examples**
 
 ```kex
-  (1..4).partition { |n| n.even? }   # => ([2, 4], [1, 3])
+(1..4).partition { |n| n.even? }   # => ([2, 4], [1, 3])
 ```
 
 #### `push`
@@ -237,7 +245,7 @@ push(value) : A -> [A]
 **Examples**
 
 ```kex
-  (1..3).push(4)   # => [1, 2, 3, 4]
+(1..3).push(4)   # => [1, 2, 3, 4]
 ```
 
 #### `reject`
@@ -253,5 +261,5 @@ reject(pred) : (A -> Bool) -> [A]
 **Examples**
 
 ```kex
-  (1..5).reject { |n| n.even? }   # => [1, 3, 5]
+(1..5).reject { |n| n.even? }   # => [1, 3, 5]
 ```

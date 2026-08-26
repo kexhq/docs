@@ -19,13 +19,24 @@ Opt-in, not prelude: nothing here is in scope until `using Regex`.
 
 There are two ways to write a pattern. The tagged literal is the everyday one: it is checked when your program is compiled, so it cannot fail at run time and gives you a bare `Regex`.
 
-  using Regex
+```kex
+using Regex
 
-  main do     let line = "order #4271 shipped"     IO.printLine(line.matches?(re`#\d``))                     # => true     IO.printLine(line.matches(re`#(\d`)`).map { |m| m.get(1) })  # => 4271   end
+main do
+  let line = "order #4271 shipped"
+  IO.printLine(line.matches?(re`#\d``))                     # => true
+  IO.printLine(line.matches(re`#(\d`)`).map { |m| m.get(1) })  # => 4271
+end
+```
 
 The call form takes a pattern built at run time and answers a `Result`, because an arbitrary string may not be a valid pattern:
 
-  match regex(userSupplied) do     Ok(pattern) => IO.printLine(text.matches?(pattern))     Error(e)    => IO.printError("bad pattern at ${e.position}: ${e.message}")   end
+```kex
+match regex(userSupplied) do
+  Ok(pattern) => IO.printLine(text.matches?(pattern))
+  Error(e)    => IO.printError("bad pattern at ${e.position}: ${e.message}")
+end
+```
 
 The operations are `matches?` (is it there), `matches` (find the first), `scan` (find them all), `replace`, and `split`.
 
@@ -43,7 +54,11 @@ A pattern that failed to compile.
 
 Mirrors `ParseError` — the `position` is a *character* offset into the pattern, not a byte offset, so it agrees across backends on patterns containing non-ASCII.
 
-  regex("(")   # => Error(RegexError { source: "(", position: 1,   #                       message: "missing closing parenthesis" })
+```kex
+regex("(")
+# => Error(RegexError { source: "(", position: 1,
+#                       message: "missing closing parenthesis" })
+```
 
 **Fields**
 
@@ -147,16 +162,16 @@ get(key) : Atom | Integer -> String -> String
 **Examples**
 
 ```kex
-  let found = "order #4271".matches(re`#(\d+)`)
-  found.flatMap { |m| m.get(0) }   # => Just("#4271")
-  found.flatMap { |m| m.get(1) }   # => Just("4271")
+let found = "order #4271".matches(re`#(\d+)`)
+found.flatMap { |m| m.get(0) }   # => Just("#4271")
+found.flatMap { |m| m.get(1) }   # => Just("4271")
 ```
 _Named groups_
 
 ```kex
-  "2026-07-04".matches(re`(?<year>\d{4})-(?<month>\d{2})`)
-    .flatMap { |m| m.get(:year) }
-  # => Just("2026")
+"2026-07-04".matches(re`(?<year>\d{4})-(?<month>\d{2})`)
+  .flatMap { |m| m.get(:year) }
+# => Just("2026")
 ```
 
 ## function `matches`

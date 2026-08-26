@@ -32,11 +32,18 @@ Calendar dates, wall-clock times, and instants.
 
 Three civil types, each a plain record:
 
-  Date      a calendar day, no time and no zone       (2026-07-30)   Time      a time of day, no date and no zone        (14:03:00)   DateTime  both, plus a fixed offset from UTC        (2026-07-30T14:03:00`02:00)
+```kex
+Date      a calendar day, no time and no zone       (2026-07-30)
+Time      a time of day, no date and no zone        (14:03:00)
+DateTime  both, plus a fixed offset from UTC        (2026-07-30T14:03:00`02:00)
+```
 
 Two span types connect them, and which one you want depends on whether the calendar gets a say:
 
-  Duration  fixed elapsed time, a count of seconds   (36.hours, 10.days)   Period    a calendar step, resolved by the calendar (1.months, 2.years)
+```kex
+Duration  fixed elapsed time, a count of seconds   (36.hours, 10.days)
+Period    a calendar step, resolved by the calendar (1.months, 2.years)
+```
 
 `36.hours` is always 129600 seconds; `1.months` is however long that particular month turns out to be. So `date ` 1.months` clamps January 31st to the last day of February, while `date ` 30.days` counts thirty days.
 
@@ -44,7 +51,13 @@ A time `Measure` such as `5.sec` is a third thing and deliberately NOT a Duratio
 
 Values are built through their own module and used through methods:
 
-  let due = Date.of(2026, 7, 30).try           # Result<Date, TimeError>   due.weekday.name                             # "Thursday"   (due ` 10.days).iso                          # "2026-08-09"   (due ` 1.months).iso                         # "2026-08-30"   Time.now().iso                               # "2026-07-30T14:03:00`02:00"
+```kex
+let due = Date.of(2026, 7, 30).try           # Result<Date, TimeError>
+due.weekday.name                             # "Thursday"
+(due ` 10.days).iso                          # "2026-08-09"
+(due ` 1.months).iso                         # "2026-08-30"
+Time.now().iso                               # "2026-07-30T14:03:00`02:00"
+```
 
 Anything that reads the clock is mockable — see the test clock section in `module Time` for `Time.frozenAt`.
 
@@ -82,7 +95,12 @@ A field out of range, or text that is not a date/time.
 
 A calendar day: a year, a month and a day, with no time and no zone.
 
-  let due = Date.of(2026, 7, 30).try   due.iso              # => "2026-07-30"   due.weekday.name     # => "Thursday"   (due ` 10.days).iso  # => "2026-08-09"
+```kex
+let due = Date.of(2026, 7, 30).try
+due.iso              # => "2026-07-30"
+due.weekday.name     # => "Thursday"
+(due ` 10.days).iso  # => "2026-08-09"
+```
 
 Build one with `Date.of+, which validates, rather than with the record literal, which does not.
 
@@ -96,7 +114,11 @@ Build one with `Date.of+, which validates, rather than with the record literal, 
 
 A time of day, with no date and no zone.
 
-  let t = Time.of(14, 3, 0).try   t.iso                  # => "14:03:00"   (t ` 2.hours).iso      # => "16:03:00"
+```kex
+let t = Time.of(14, 3, 0).try
+t.iso                  # => "14:03:00"
+(t ` 2.hours).iso      # => "16:03:00"
+```
 
 Arithmetic wraps within the day: there is no date to carry into. Reach for `DateTime+ when the day rolling over matters.
 
@@ -111,7 +133,11 @@ Arithmetic wraps within the day: there is no date to carry into. Reach for `Date
 
 An instant: a calendar date, a time of day, and a fixed offset from UTC.
 
-  let m = DateTime.parse("2026-07-30T14:03:00`02:00").try   m.iso        # => "2026-07-30T14:03:00`02:00"   m.utc.iso    # => "2026-07-30T12:03:00Z"
+```kex
+let m = DateTime.parse("2026-07-30T14:03:00`02:00").try
+m.iso        # => "2026-07-30T14:03:00`02:00"
+m.utc.iso    # => "2026-07-30T12:03:00Z"
+```
 
 Two `DateTime` values that name the same instant compare equal whatever offsets they are written at — comparison goes through `epochSeconds`.
 
@@ -125,7 +151,10 @@ Two `DateTime` values that name the same instant compare equal whatever offsets 
 
 A calendar span. Months and years have no fixed length — February is 28 days or 29, a year 365 or 366 — so they cannot live in a `Duration`, which is a count of seconds and nothing else. A Period carries the calendar fields themselves and lets the calendar resolve them:
 
-  Date.of(2026, 1, 31).try ` 1.months        # 2026-02-28, not 2026-03-03   Date.of(2024, 2, 29).try ` 1.years         # 2025-02-28
+```kex
+Date.of(2026, 1, 31).try ` 1.months        # 2026-02-28, not 2026-03-03
+Date.of(2024, 2, 29).try ` 1.years         # 2025-02-28
+```
 
 Use a Duration for elapsed time (`36.hours` is always 129600 seconds) and a Period for calendar steps (`1.months` is however long that month is).
 
@@ -140,8 +169,6 @@ Use a Duration for elapsed time (`36.hours` is always 129600 seconds) and a Peri
 Building times of day, controlling the clock in tests, and the calendar arithmetic the rest of this file is written on.
 
 ## function `of`
-
-── Constructing ────────────────────────────────────────────────────────
 
 Builds a validated time of day.
 
@@ -225,9 +252,13 @@ parseOffset(text)
 
 ## function `nanosOf`
 
-── The test clock ────────────────────────────────────────────────────── Anything that asks what time it is — `Time.now`, `Date.today`, `DateTime.utcNow` — reads one primitive, so pinning that primitive pins the whole calendar. This is what makes code that calls `Date.today()` testable: freeze the clock, assert against a date you chose.
+Anything that asks what time it is — `Time.now`, `Date.today`, `DateTime.utcNow` — reads one primitive, so pinning that primitive pins the whole calendar. This is what makes code that calls `Date.today()` testable: freeze the clock, assert against a date you chose.
 
-  Time.freeze(DateTime.parse("2026-07-30T14:03:00Z").try)   Date.today().iso                            # "2026-07-30" — always   Time.release()
+```kex
+Time.freeze(DateTime.parse("2026-07-30T14:03:00Z").try)
+Date.today().iso                            # "2026-07-30" — always
+Time.release()
+```
 
 The clock is global, not per-process: a frozen clock stays frozen inside spawned processes, which is the only behavior that matches a real one. `release` is not automatic, so a test that freezes must also release — otherwise every later test in the run inherits the frozen clock.
 
@@ -289,8 +320,6 @@ Freezes the clock for the length of `body`, then releases it.
 
 This is the form to reach for: `freeze` and `release` have to be paired by hand, and a test that returns early — or fails an assertion — between them leaves the clock frozen for every test that runs after it.
 
-  Time.frozenAt(DateTime.parse("2026-07-30T14:03:00Z").try) do     Date.utcToday().iso                     # "2026-07-30"   end.try
-
 Result carries whatever `body` returned. An instant the clock cannot represent is an Error, and then the clock is never touched and the body never runs.
 
 Not nestable: `release` restores the HOST clock, not whatever control was in effect on entry, so an inner scope ending un-freezes the outer one too.
@@ -347,7 +376,7 @@ frozen?()
 
 ## function `leapYear?`
 
-── Calendar arithmetic ───────────────────────────────────────────────── Public because the `make` blocks below live at file level and reach them by qualification; they are equally useful on their own.
+Public because the `make` blocks below live at file level and reach them by qualification; they are equally useful on their own.
 
 Returns `true` when `year` is a leap year in the proleptic Gregorian calendar.
 
@@ -457,8 +486,6 @@ errorMessage(@InvalidDate(y, m, d))
 
 ## function `formatDate`
 
-── Formatting ──────────────────────────────────────────────────────────
-
 
 ```kex
 formatDate(value)
@@ -504,8 +531,6 @@ formatOffset(offset)
 
 
 ## function `withNanosecond`
-
-── Internals ───────────────────────────────────────────────────────────
 
 
 ```kex
@@ -775,7 +800,7 @@ epochNanos()
 
 ## make `Integer`
 
-── Durations ───────────────────────────────────────────────────────────── The plural spellings build a Duration; the singular ones from units.kex build a time Measure. `5.seconds` is an elapsed span, `5.sec` a measurement.
+The plural spellings build a Duration; the singular ones from units.kex build a time Measure. `5.seconds` is an elapsed span, `5.sec` a measurement.
 
 
 
@@ -801,7 +826,7 @@ Adds two spans.
 **Examples**
 
 ```kex
-  (90.minutes + 30.minutes).wholeHours   # => 2
+(90.minutes + 30.minutes).wholeHours   # => 2
 ```
 
 #### `-`
@@ -817,7 +842,7 @@ Subtracts a span. The result may be negative.
 **Examples**
 
 ```kex
-  (1.hours - 90.minutes).negative?   # => true
+(1.hours - 90.minutes).negative?   # => true
 ```
 
 #### `*`
@@ -835,7 +860,7 @@ Multiplies the span by a plain number.
 **Examples**
 
 ```kex
-  (90.minutes * 2).wholeHours   # => 3
+(90.minutes * 2).wholeHours   # => 3
 ```
 
 #### `/`
@@ -851,7 +876,7 @@ Divides the span by a plain number.
 **Examples**
 
 ```kex
-  (90.minutes / 2).wholeMinutes   # => 45
+(90.minutes / 2).wholeMinutes   # => 45
 ```
 
 #### `shorterThan?`
@@ -869,14 +894,14 @@ shorterThan?(other)
 **Examples**
 
 ```kex
-  30.minutes.shorterThan?(1.hours)   # => true
+30.minutes.shorterThan?(1.hours)   # => true
 ```
 _Enforcing a timeout_
 
 ```kex
-  if started.until(DateTime.utcNow()).longerThan?(30.seconds)
-    IO.printError("timed out")
-  end
+if started.until(DateTime.utcNow()).longerThan?(30.seconds)
+  IO.printError("timed out")
+end
 ```
 
 #### `longerThan?`
@@ -892,7 +917,7 @@ longerThan?(other)
 **Examples**
 
 ```kex
-  90.minutes.longerThan?(1.hours)   # => true
+90.minutes.longerThan?(1.hours)   # => true
 ```
 
 #### `compareTo`
@@ -910,12 +935,12 @@ compareTo(other)
 **Examples**
 
 ```kex
-  90.minutes.compareTo(60.minutes)   # => Greater
+90.minutes.compareTo(60.minutes)   # => Greater
 ```
 _Sorting by length_
 
 ```kex
-  spans.sort { |a, b| a.compareTo(b) == Less }
+spans.sort { |a, b| a.compareTo(b) == Less }
 ```
 
 ## module `Duration`
@@ -1006,8 +1031,6 @@ utcOffset(hours, minutes)
 
 ## module `Period`
 
-── Periods ───────────────────────────────────────────────────────────────
-
 Building calendar spans.
 
 ## function `zero`
@@ -1096,7 +1119,7 @@ Adds two calendar spans, field by field.
 **Examples**
 
 ```kex
-  (Period.of(1, 2, 3) + 1.years).iso   # => "P2Y2M3D"
+(Period.of(1, 2, 3) + 1.years).iso   # => "P2Y2M3D"
 ```
 
 #### `-`
@@ -1112,7 +1135,7 @@ Subtracts a calendar span, field by field. Fields may go negative.
 **Examples**
 
 ```kex
-  (Period.of(1, 2, 3) - 1.years).iso   # => "P2M3D"
+(Period.of(1, 2, 3) - 1.years).iso   # => "P2M3D"
 ```
 
 #### `*`
@@ -1128,12 +1151,10 @@ Multiplies every field by `factor`.
 **Examples**
 
 ```kex
-  (Period.of(1, 2, 3) * 2).iso   # => "P2Y4M6D"
+(Period.of(1, 2, 3) * 2).iso   # => "P2Y4M6D"
 ```
 
 ## make `Date` implements Inspectable, Showable
-
-── Date ──────────────────────────────────────────────────────────────────
 
 
 #### `inspectValue`
@@ -1161,8 +1182,8 @@ A Duration with a sub-day remainder truncates toward zero, so `date ` 36.hours` 
 **Examples**
 
 ```kex
-  (Date.of(2026, 7, 30).try ` 10.days).iso   # => "2026-08-09"
-  (Date.of(2026, 7, 30).try + 36.hours).iso  # => "2026-07-31"
+(Date.of(2026, 7, 30).try ` 10.days).iso   # => "2026-08-09"
+(Date.of(2026, 7, 30).try + 36.hours).iso  # => "2026-07-31"
 ```
 
 #### `-`
@@ -1178,7 +1199,7 @@ Moves the date back by a fixed span, whole days only.
 **Examples**
 
 ```kex
-  (Date.of(2026, 7, 30).try - 10.days).iso   # => "2026-07-20"
+(Date.of(2026, 7, 30).try - 10.days).iso   # => "2026-07-20"
 ```
 
 #### `addDays`
@@ -1194,8 +1215,8 @@ addDays(count)
 **Examples**
 
 ```kex
-  Date.of(2026, 7, 30).try.addDays(1).iso    # => "2026-07-31"
-  Date.of(2026, 7, 30).try.addDays(-1).iso   # => "2026-07-29"
+Date.of(2026, 7, 30).try.addDays(1).iso    # => "2026-07-31"
+Date.of(2026, 7, 30).try.addDays(-1).iso   # => "2026-07-29"
 ```
 
 #### `addWeeks`
@@ -1211,7 +1232,7 @@ addWeeks(count)
 **Examples**
 
 ```kex
-  Date.of(2026, 7, 30).try.addWeeks(2).iso   # => "2026-08-13"
+Date.of(2026, 7, 30).try.addWeeks(2).iso   # => "2026-08-13"
 ```
 
 #### `addMonths`
@@ -1231,8 +1252,8 @@ addMonths(count)
 **Examples**
 
 ```kex
-  Date.of(2026, 1, 31).try.addMonths(1).iso    # => "2026-02-28"
-  Date.of(2026, 7, 30).try.addMonths(-1).iso   # => "2026-06-30"
+Date.of(2026, 1, 31).try.addMonths(1).iso    # => "2026-02-28"
+Date.of(2026, 7, 30).try.addMonths(-1).iso   # => "2026-06-30"
 ```
 
 #### `addYears`
@@ -1248,7 +1269,7 @@ addYears(count)
 **Examples**
 
 ```kex
-  Date.of(2024, 2, 29).try.addYears(1).iso   # => "2025-02-28"
+Date.of(2024, 2, 29).try.addYears(1).iso   # => "2025-02-28"
 ```
 
 #### `daysUntil`
@@ -1264,8 +1285,8 @@ daysUntil(other)
 **Examples**
 
 ```kex
-  Date.of(2026, 7, 30).try.daysUntil(Date.of(2026, 8, 9).try)   # => 10
-  Date.of(2026, 8, 9).try.daysUntil(Date.of(2026, 7, 30).try)   # => -10
+Date.of(2026, 7, 30).try.daysUntil(Date.of(2026, 8, 9).try)   # => 10
+Date.of(2026, 8, 9).try.daysUntil(Date.of(2026, 7, 30).try)   # => -10
 ```
 
 #### `until`
@@ -1281,7 +1302,7 @@ until(other)
 **Examples**
 
 ```kex
-  Date.of(2026, 7, 30).try.until(Date.of(2026, 8, 9).try).wholeDays   # => 10
+Date.of(2026, 7, 30).try.until(Date.of(2026, 8, 9).try).wholeDays   # => 10
 ```
 
 #### `monthsUntil`
@@ -1301,8 +1322,8 @@ monthsUntil(other)
 **Examples**
 
 ```kex
-  Date.of(2026, 1, 15).try.monthsUntil(Date.of(2026, 2, 14).try)   # => 0
-  Date.of(2026, 1, 31).try.monthsUntil(Date.of(2026, 2, 28).try)   # => 1
+Date.of(2026, 1, 15).try.monthsUntil(Date.of(2026, 2, 14).try)   # => 0
+Date.of(2026, 1, 31).try.monthsUntil(Date.of(2026, 2, 28).try)   # => 1
 ```
 
 #### `yearsUntil`
@@ -1320,12 +1341,12 @@ yearsUntil(other)
 **Examples**
 
 ```kex
-  Date.of(2020, 1, 1).try.yearsUntil(Date.of(2026, 7, 30).try)   # => 6
+Date.of(2020, 1, 1).try.yearsUntil(Date.of(2026, 7, 30).try)   # => 6
 ```
 _Someone's age today_
 
 ```kex
-  born.yearsUntil(Date.today())
+born.yearsUntil(Date.today())
 ```
 
 #### `before?`
@@ -1341,7 +1362,7 @@ before?(other)
 **Examples**
 
 ```kex
-  Date.of(2026, 7, 30).try.before?(Date.of(2026, 8, 1).try)   # => true
+Date.of(2026, 7, 30).try.before?(Date.of(2026, 8, 1).try)   # => true
 ```
 
 #### `after?`
@@ -1357,7 +1378,7 @@ after?(other)
 **Examples**
 
 ```kex
-  Date.of(2026, 8, 1).try.after?(Date.of(2026, 7, 30).try)   # => true
+Date.of(2026, 8, 1).try.after?(Date.of(2026, 7, 30).try)   # => true
 ```
 
 #### `compareTo`
@@ -1373,12 +1394,12 @@ compareTo(other)
 **Examples**
 
 ```kex
-  Date.of(2026, 7, 30).try.compareTo(Date.of(2026, 8, 1).try)   # => Less
+Date.of(2026, 7, 30).try.compareTo(Date.of(2026, 8, 1).try)   # => Less
 ```
 _Sorting dates_
 
 ```kex
-  dates.sort { |a, b| a.compareTo(b) == Less }
+dates.sort { |a, b| a.compareTo(b) == Less }
 ```
 
 #### `at`
@@ -1394,13 +1415,11 @@ at(time, offset)
 **Examples**
 
 ```kex
-  Date.of(2026, 7, 30).try.at(Time.of(9, 0, 0).try, Duration.zero()).iso
-  # => "2026-07-30T09:00:00Z"
+Date.of(2026, 7, 30).try.at(Time.of(9, 0, 0).try, Duration.zero()).iso
+# => "2026-07-30T09:00:00Z"
 ```
 
 ## make `Time` implements Inspectable, Showable
-
-── Time ──────────────────────────────────────────────────────────────────
 
 
 #### `inspectValue`
@@ -1426,7 +1445,7 @@ before?(other)
 **Examples**
 
 ```kex
-  Time.of(14, 3, 0).try.before?(Time.of(15, 0, 0).try)   # => true
+Time.of(14, 3, 0).try.before?(Time.of(15, 0, 0).try)   # => true
 ```
 
 #### `after?`
@@ -1442,7 +1461,7 @@ after?(other)
 **Examples**
 
 ```kex
-  Time.of(15, 0, 0).try.after?(Time.of(14, 3, 0).try)   # => true
+Time.of(15, 0, 0).try.after?(Time.of(14, 3, 0).try)   # => true
 ```
 
 #### `+`
@@ -1462,8 +1481,8 @@ The nanosecond field rides along untouched — `wholeSeconds` truncates the span
 **Examples**
 
 ```kex
-  (Time.of(14, 3, 0).try ` 2.hours).iso    # => "16:03:00"
-  (Time.of(23, 0, 0).try + 2.hours).iso    # => "01:00:00"
+(Time.of(14, 3, 0).try ` 2.hours).iso    # => "16:03:00"
+(Time.of(23, 0, 0).try + 2.hours).iso    # => "01:00:00"
 ```
 
 #### `-`
@@ -1479,7 +1498,7 @@ Moves the time of day back by a span, wrapping within the day.
 **Examples**
 
 ```kex
-  (Time.midnight() - 1.seconds).iso   # => "23:59:59"
+(Time.midnight() - 1.seconds).iso   # => "23:59:59"
 ```
 
 #### `addSeconds`
@@ -1495,7 +1514,7 @@ addSeconds(count)
 **Examples**
 
 ```kex
-  Time.of(14, 3, 0).try.addSeconds(60).iso   # => "14:04:00"
+Time.of(14, 3, 0).try.addSeconds(60).iso   # => "14:04:00"
 ```
 
 #### `addMinutes`
@@ -1511,7 +1530,7 @@ addMinutes(count)
 **Examples**
 
 ```kex
-  Time.of(14, 3, 0).try.addMinutes(30).iso   # => "14:33:00"
+Time.of(14, 3, 0).try.addMinutes(30).iso   # => "14:33:00"
 ```
 
 #### `addHours`
@@ -1527,7 +1546,7 @@ addHours(count)
 **Examples**
 
 ```kex
-  Time.of(23, 0, 0).try.addHours(2).iso   # => "01:00:00"
+Time.of(23, 0, 0).try.addHours(2).iso   # => "01:00:00"
 ```
 
 #### `until`
@@ -1545,7 +1564,7 @@ until(other)
 **Examples**
 
 ```kex
-  Time.of(14, 3, 0).try.until(Time.of(15, 3, 0).try).wholeMinutes   # => 60
+Time.of(14, 3, 0).try.until(Time.of(15, 3, 0).try).wholeMinutes   # => 60
 ```
 
 #### `compareTo`
@@ -1561,12 +1580,10 @@ compareTo(other)
 **Examples**
 
 ```kex
-  Time.of(14, 3, 0).try.compareTo(Time.of(15, 0, 0).try)   # => Less
+Time.of(14, 3, 0).try.compareTo(Time.of(15, 0, 0).try)   # => Less
 ```
 
 ## make `DateTime` implements Inspectable, Showable
-
-── DateTime ──────────────────────────────────────────────────────────────
 
 
 #### `inspectValue`
@@ -1594,9 +1611,9 @@ at(offset)
 **Examples**
 
 ```kex
-  DateTime.parse("2026-07-30T14:03:00+02:00").try
-    .at(Duration.utcOffset(-5, 0)).iso
-  # => "2026-07-30T07:03:00-05:00"
+DateTime.parse("2026-07-30T14:03:00+02:00").try
+  .at(Duration.utcOffset(-5, 0)).iso
+# => "2026-07-30T07:03:00-05:00"
 ```
 
 #### `+`
@@ -1612,8 +1629,8 @@ Advances the instant by a fixed span, keeping its offset.
 **Examples**
 
 ```kex
-  (DateTime.parse("2026-07-30T14:03:00Z").try + 90.minutes).iso
-  # => "2026-07-30T15:33:00Z"
+(DateTime.parse("2026-07-30T14:03:00Z").try + 90.minutes).iso
+# => "2026-07-30T15:33:00Z"
 ```
 
 #### `-`
@@ -1629,7 +1646,7 @@ Moves the instant back by a fixed span, keeping its offset.
 **Examples**
 
 ```kex
-  (DateTime.utcNow() - 24.hours).iso   # yesterday, same wall clock
+(DateTime.utcNow() - 24.hours).iso   # yesterday, same wall clock
 ```
 
 #### `addDays`
@@ -1645,8 +1662,8 @@ addDays(count)
 **Examples**
 
 ```kex
-  DateTime.parse("2026-07-30T14:03:00Z").try.addDays(1).iso
-  # => "2026-07-31T14:03:00Z"
+DateTime.parse("2026-07-30T14:03:00Z").try.addDays(1).iso
+# => "2026-07-31T14:03:00Z"
 ```
 
 #### `addWeeks`
@@ -1662,8 +1679,8 @@ addWeeks(count)
 **Examples**
 
 ```kex
-  DateTime.parse("2026-07-30T14:03:00Z").try.addWeeks(1).iso
-  # => "2026-08-06T14:03:00Z"
+DateTime.parse("2026-07-30T14:03:00Z").try.addWeeks(1).iso
+# => "2026-08-06T14:03:00Z"
 ```
 
 #### `addMonths`
@@ -1679,8 +1696,8 @@ addMonths(count)
 **Examples**
 
 ```kex
-  DateTime.parse("2026-01-31T09:00:00Z").try.addMonths(1).iso
-  # => "2026-02-28T09:00:00Z"
+DateTime.parse("2026-01-31T09:00:00Z").try.addMonths(1).iso
+# => "2026-02-28T09:00:00Z"
 ```
 
 #### `addYears`
@@ -1696,8 +1713,8 @@ addYears(count)
 **Examples**
 
 ```kex
-  DateTime.parse("2024-02-29T09:00:00Z").try.addYears(1).iso
-  # => "2025-02-28T09:00:00Z"
+DateTime.parse("2024-02-29T09:00:00Z").try.addYears(1).iso
+# => "2025-02-28T09:00:00Z"
 ```
 
 #### `until`
@@ -1713,14 +1730,14 @@ until(other)
 **Examples**
 
 ```kex
-  started.until(DateTime.utcNow()).wholeSeconds
+started.until(DateTime.utcNow()).wholeSeconds
 ```
 _Enforcing a deadline_
 
 ```kex
-  if started.until(DateTime.utcNow()).longerThan?(30.seconds)
-    IO.printError("timed out")
-  end
+if started.until(DateTime.utcNow()).longerThan?(30.seconds)
+  IO.printError("timed out")
+end
 ```
 
 #### `before?`
@@ -1736,9 +1753,9 @@ before?(other)
 **Examples**
 
 ```kex
-  DateTime.parse("2026-07-30T14:03:00+02:00").try
-    .before?(DateTime.parse("2026-07-31T00:00:00Z").try)
-  # => true
+DateTime.parse("2026-07-30T14:03:00+02:00").try
+  .before?(DateTime.parse("2026-07-31T00:00:00Z").try)
+# => true
 ```
 
 #### `after?`
@@ -1754,7 +1771,7 @@ after?(other)
 **Examples**
 
 ```kex
-  DateTime.utcNow().after?(started)   # => true
+DateTime.utcNow().after?(started)   # => true
 ```
 
 #### `compareTo`
@@ -1772,12 +1789,12 @@ compareTo(other)
 **Examples**
 
 ```kex
-  DateTime.parse("2026-07-30T12:00:00Z").try
-    .compareTo(DateTime.parse("2026-07-30T14:00:00`02:00").try)
-  # => Equal
+DateTime.parse("2026-07-30T12:00:00Z").try
+  .compareTo(DateTime.parse("2026-07-30T14:00:00`02:00").try)
+# => Equal
 ```
 _Sorting events by when they happened_
 
 ```kex
-  events.sort { |a, b| a.at.compareTo(b.at) == Less }
+events.sort { |a, b| a.at.compareTo(b.at) == Less }
 ```

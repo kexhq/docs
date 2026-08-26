@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Prelude | Prelude 0.4.0-alpha | kex docs</title>
+<title>Prelude | Standard Library 0.4.0-alpha | kex docs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -22,12 +22,12 @@ data-root="../../" data-package="prelude" data-version="0.4.0-alpha"
 data-page="prelude.html">
 <span>Search</span><kbd>/</kbd>
 </button>
-<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="prelude.html">Prelude 0.4.0-alpha</span>
+<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="prelude.html">Standard Library 0.4.0-alpha</span>
 <a class="back" href="https://kex.run/docs">kex.run ↗</a>
 </div>
 </header>
 <div class="wrap layout">
-<aside class="side"><nav aria-label="Modules"><p class="side-heading">Prelude</p><ul class="side-list">
+<aside class="side"><nav aria-label="Modules"><p class="side-heading"><a href="index.html">Standard Library</a></p><ul class="side-list">
 <li><a href="algebra.html">Algebra</a></li>
 <li><a href="bits.html">Bits</a></li>
 <li><a href="blankable.html">Blankable</a></li>
@@ -37,7 +37,7 @@ data-page="prelude.html">
 <li><a href="env.html">ENV</a></li>
 <li><a href="errorable.html">Errorable</a></li>
 <li><a href="evaluator.html">Evaluator</a></li>
-<li><a href="filehandle.html">Filehandle</a></li>
+<li><a href="filehandle.html">FileHandle</a></li>
 <li><a href="fs.html">FS</a></li>
 <li><a href="http.html">Http</a></li>
 <li><a href="io.html">IO</a></li>
@@ -73,14 +73,59 @@ data-page="prelude.html">
 <li><a href="units/si.html">Units.SI</a></li>
 </ul></nav></aside>
 <main class="content">
-<nav class="crumbs"><a href="index.html">Prelude</a> <span class="sep">/</span> <span>Prelude</span></nav>
+<nav class="crumbs"><a href="index.html">Standard Library</a> <span class="sep">/</span> <span>Prelude</span></nav>
 <article class="prose">
 <h1>Prelude</h1>
+<p>The prelude is the part of the standard library every Kex file can see without asking for it. The modules listed below need no import — <code>List</code>, <code>Map</code>, <code>String</code>, <code>IO</code> and the rest are simply there, and so are the traits that make ordinary syntax work on your own types (<code>Enumerable</code> behind <code>.map</code>, <code>Truthyable</code> behind <code>if</code>, <code>Errorable</code> behind <code>.try</code>).</p>
+<p>What is NOT here is deliberate. A library that reaches outside the program — the filesystem (<code>FS</code>), regular expressions (<code>Regex</code>), JSON (<code>JSON</code>), the parser combinators (<code>Parsing</code>) — stays one <code>using</code> away, so a file's imports say what it touches:</p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">FS</span>
+
+<span class="tok-keyword">main</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">config.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># IO is free, FS is asked for</span>
+<span class="tok-keyword">end</span></code></pre>
+<p>Keep this file declarative: each bare <code>using</code> names a sibling stdlib source file, and the toolchain expands them in order when it builds or loads the prelude.</p>
+
+<h2 class="group">Modules in the prelude</h2>
+<p class="group-note">32 module(s), visible in every file with no import.</p>
+<ul class="prelude-list">
+<li><code><a class="xref" href="algebra.html">Algebra</a></code></li>
+<li><code><a class="xref" href="bits.html">Bits</a></code> <span class="prelude-note">Bitwise operations on <code>Integer</code>.</span></li>
+<li><code><a class="xref" href="blankable.html">Blankable</a></code></li>
+<li><code><a class="xref" href="console.html">Console</a></code> <span class="prelude-note">ANSI terminal styling: colors, text attributes, and cursor control.</span></li>
+<li><code><a class="xref" href="digest.html">Digest</a></code> <span class="prelude-note">Cryptographic content digests.</span></li>
+<li><code><a class="xref" href="enumerable.html">Enumerable</a></code></li>
+<li><code><a class="xref" href="env.html">Env</a></code></li>
+<li><code><a class="xref" href="errorable.html">Errorable</a></code></li>
+<li><code><a class="xref" href="evaluator.html">Evaluator</a></code> <span class="prelude-note">Running Kex source code at run time, in a sandbox.</span></li>
+<li><code><a class="xref" href="filehandle.html">FileHandle</a></code></li>
+<li><code><a class="xref" href="http.html">HTTP</a></code></li>
+<li><code><a class="xref" href="io.html">IO</a></code> <span class="prelude-note">Console input and output.</span></li>
+<li><code><a class="xref" href="kex.html">Kex</a></code> <span class="prelude-note">The running toolchain: which backend, which version, which features.</span></li>
+<li><code><a class="xref" href="list.html">List</a></code></li>
+<li><code><a class="xref" href="map.html">Map</a></code></li>
+<li><code><a class="xref" href="math.html">Math</a></code> <span class="prelude-note">Mathematical constants and functions.</span></li>
+<li><code><a class="xref" href="number.html">Number</a></code> <span class="prelude-note">Reading a number out of text without deciding in advance which half of the numeric tower it belongs to.</span></li>
+<li><code><a class="xref" href="optional.html">Optional</a></code></li>
+<li><code><a class="xref" href="optionparser.html">OptionParser</a></code></li>
+<li><code><a class="xref" href="process.html">Process</a></code> <span class="prelude-note">Spawning servers, running external commands, and the ambient process operations.</span></li>
+<li><code><a class="xref" href="range.html">Range</a></code></li>
+<li><code><a class="xref" href="set.html">Set</a></code> <span class="prelude-note">Constructors for the sorted <code>Set</code>.</span></li>
+<li><code><a class="xref" href="stream.html">Stream</a></code> <span class="prelude-note">Constructors for <code>Stream</code>.</span></li>
+<li><code><a class="xref" href="string.html">String</a></code> <span class="prelude-note">Constructors for <code>String</code> values that are built from something other than text — a Unicode codepoint, or raw UTF-8 bytes.</span></li>
+<li><code><a class="xref" href="system.html">System</a></code> <span class="prelude-note">The running process and the machine under it: exiting, and asking what platform this is.</span></li>
+<li><code><a class="xref" href="time.html">Time</a></code> <span class="prelude-note">Building times of day, controlling the clock in tests, and the calendar arithmetic the rest of this file is written on.</span></li>
+<li><code><a class="xref" href="test.html">Test</a></code></li>
+<li><code><a class="xref" href="taggedvalidation.html">TaggedValidation</a></code> <span class="prelude-note">Diagnostics returned by compile-time validators for tagged literals.</span></li>
+<li><code><a class="xref" href="truthyable.html">Truthyable</a></code></li>
+<li><code><a class="xref" href="type.html">Type</a></code> <span class="prelude-note">Building and obtaining <code>Type</code> values.</span></li>
+<li><code><a class="xref" href="units.html">Units</a></code> <span class="prelude-note">The time units are prelude-global, because every unit module measures against the same dimensions — <code>Units.SI</code> defines <code>Watt * Hour</code> with the <code>Hour</code> declared above, and future domains do the same. That makes <code>Hour</code> correct but not obviously located, so the same constructors are reachable under <code>Units</code> too, for call sites that would rather name where a unit comes from. These are aliases, not copies: each binds the identical constructor, so <code>Units.Hour</code> and <code>Hour</code> match the same patterns and compare equal.</span></li>
+<li><code><a class="xref" href="webserver.html">WebServer</a></code></li>
+</ul>
 </article>
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-26T20:27:51.720473998Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-26T22:47:19.793944540Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

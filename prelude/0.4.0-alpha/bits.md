@@ -13,7 +13,11 @@ entities:
 
 Bitwise operations on `Integer`.
 
-  Bits.and(0xff, 0x0f)      # => 15   Bits.shiftLeft(1, 8)      # => 256   Bits.test?(0b1010, 1)     # => true
+```kex
+Bits.and(0xff, 0x0f)      # => 15
+Bits.shiftLeft(1, 8)      # => 256
+Bits.test?(0b1010, 1)     # => true
+```
 
 Useful for packing flags into one number, reading a binary format, or working with a protocol that describes its fields in bits.
 

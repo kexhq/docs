@@ -17,7 +17,11 @@ All trigonometric functions work in radians. Every function here accepts a `Numb
 
 A Kex `Float` is always finite, so a domain error (`Math.sqrt(-1.0)`) or an overflow (`Math.exp(1000.0)`) raises rather than producing `NaN` or `Infinity` — the same rule the BEAM enforces, where those two values cannot exist at all. There is no non-finite float to test for afterwards.
 
-  Math.sqrt(2.0)              # => 1.4142135623730951   Math.hypot(3.0, 4.0)        # => 5.0   Math.sin(Math.PI / 2.0)     # => 1.0
+```kex
+Math.sqrt(2.0)              # => 1.4142135623730951
+Math.hypot(3.0, 4.0)        # => 5.0
+Math.sin(Math.PI / 2.0)     # => 1.0
+```
 
 The everyday operations on a single number — `abs`, `floor`, `ceil`, `round`, `sqrt` — are also methods on `Integer` and `Float`, which usually reads better in a chain: `x.abs` over `Math.abs(x)`.
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Units | Prelude 0.4.0-alpha | kex docs</title>
+<title>Units | Standard Library 0.4.0-alpha | kex docs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -22,12 +22,12 @@ data-root="../../" data-package="prelude" data-version="0.4.0-alpha"
 data-page="units.html">
 <span>Search</span><kbd>/</kbd>
 </button>
-<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="units.html">Prelude 0.4.0-alpha</span>
+<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="units.html">Standard Library 0.4.0-alpha</span>
 <a class="back" href="https://kex.run/docs">kex.run ↗</a>
 </div>
 </header>
 <div class="wrap layout">
-<aside class="side"><nav aria-label="Modules"><p class="side-heading">Prelude</p><ul class="side-list">
+<aside class="side"><nav aria-label="Modules"><p class="side-heading"><a href="index.html">Standard Library</a></p><ul class="side-list">
 <li><a href="algebra.html">Algebra</a></li>
 <li><a href="bits.html">Bits</a></li>
 <li><a href="blankable.html">Blankable</a></li>
@@ -37,7 +37,7 @@ data-page="units.html">
 <li><a href="env.html">ENV</a></li>
 <li><a href="errorable.html">Errorable</a></li>
 <li><a href="evaluator.html">Evaluator</a></li>
-<li><a href="filehandle.html">Filehandle</a></li>
+<li><a href="filehandle.html">FileHandle</a></li>
 <li><a href="fs.html">FS</a></li>
 <li><a href="http.html">Http</a></li>
 <li><a href="io.html">IO</a></li>
@@ -86,14 +86,17 @@ data-page="units.html">
 <li><a href="units/si.html">Units.SI</a></li>
 </ul></nav></aside>
 <main class="content">
-<nav class="crumbs"><a href="index.html">Prelude</a> <span class="sep">/</span> <span>Units</span></nav>
+<nav class="crumbs"><a href="index.html">Standard Library</a> <span class="sep">/</span> <span>Units</span></nav>
 <article class="prose">
-<h1>Units</h1>
+<h1>Units<span class="tag-prelude" title="In the prelude: no import needed">prelude</span></h1>
 <section class="entity" id="trait-unit">
 <h2><span class="kind kind-trait">trait</span> <code>Unit</code></h2>
 <p>Numbers that carry a unit.</p>
 <p>Writing <code>5.sec</code> or <code>90.minute</code> gives you a <code>Measure</code>: a number, the unit it was written in, and the same quantity in that dimension's base unit. Adding, subtracting and converting all go through the canonical value, so the arithmetic is right regardless of which units the operands were written in — and mixing dimensions is an <code>Error</code> rather than a silently wrong number.</p>
-<p>  5.sec.to(String)                     # =&gt; &quot;5.0 s&quot;   1.5.hour.to(String)                  # =&gt; &quot;1.5 h&quot;   (1.hour ` 30.minute).map(~to(String))  # =&gt; Ok(&quot;1.5 h&quot;)   90.minute.convert(Hour)              # =&gt; Ok(1.5 h)</p>
+<pre class="code"><code><span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">sec</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>                     <span class="tok-comment"># =&gt; &quot;5.0 s&quot;</span>
+<span class="tok-number">1.5</span><span class="tok-op">.</span><span class="tok-method">hour</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>                  <span class="tok-comment"># =&gt; &quot;1.5 h&quot;</span>
+<span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">hour</span> ` <span class="tok-number">30</span><span class="tok-op">.</span><span class="tok-method">minute</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span><span class="tok-punct">(</span><span class="tok-op">~</span><span class="tok-fn">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; Ok(&quot;1.5 h&quot;)</span>
+<span class="tok-number">90</span><span class="tok-op">.</span><span class="tok-method">minute</span><span class="tok-op">.</span><span class="tok-method">convert</span><span class="tok-punct">(</span><span class="tok-type">Hour</span><span class="tok-punct">)</span>              <span class="tok-comment"># =&gt; Ok(1.5 h)</span></code></pre>
 <p>The time units — <code>nanosecond</code> through <code>week</code> — are in the prelude. Other dimensions live in opt-in modules under <code>Units</code>, and every one of them measures against the same machinery here.</p>
 <p>A `Measure` is a measurement, not an elapsed span: `5.sec` describes a quantity, while `Duration` is what `Time` and `Date+ use for a span between two moments.</p>
 <p>The trait a unit implements: how it converts to its dimension's base unit, which dimension that is, and how it is written.</p>
@@ -105,7 +108,7 @@ data-page="units.html">
 <pre class="code"><code>factor <span class="tok-op">:</span> <span class="tok-type">Float</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>Float</code> — the conversion factor</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Minute</span><span class="tok-op">.</span><span class="tok-method">factor</span>   <span class="tok-comment"># =&gt; 60.0</span></code></pre>
+<pre class="code"><code><span class="tok-type">Minute</span><span class="tok-op">.</span><span class="tok-method">factor</span>   <span class="tok-comment"># =&gt; 60.0</span></code></pre>
 
 </div>
 <div class="fn" id="fn-kind">
@@ -114,7 +117,7 @@ data-page="units.html">
 <pre class="code"><code>kind <span class="tok-op">:</span> <span class="tok-type">Atom</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>Atom</code> — the dimension tag</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Second</span><span class="tok-op">.</span><span class="tok-method">kind</span>   <span class="tok-comment"># =&gt; :time</span></code></pre>
+<pre class="code"><code><span class="tok-type">Second</span><span class="tok-op">.</span><span class="tok-method">kind</span>   <span class="tok-comment"># =&gt; :time</span></code></pre>
 
 </div>
 <div class="fn" id="fn-symbol">
@@ -123,7 +126,7 @@ data-page="units.html">
 <pre class="code"><code>symbol <span class="tok-op">:</span> <span class="tok-type">String</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>String</code> — the unit's symbol</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Minute</span><span class="tok-op">.</span><span class="tok-method">symbol</span>   <span class="tok-comment"># =&gt; &quot;min&quot;</span></code></pre>
+<pre class="code"><code><span class="tok-type">Minute</span><span class="tok-op">.</span><span class="tok-method">symbol</span>   <span class="tok-comment"># =&gt; &quot;min&quot;</span></code></pre>
 
 </div>
 </div>
@@ -138,7 +141,7 @@ data-page="units.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Atom</code> — the dimension tag</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-fn">measureKind</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">sec</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; :time</span></code></pre>
+<pre class="code"><code><span class="tok-fn">measureKind</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">sec</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; :time</span></code></pre>
 
 </section>
 <section class="entity" id="function-measuresymbol">
@@ -151,7 +154,7 @@ data-page="units.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>String</code> — the unit's symbol</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-fn">measureSymbol</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">minute</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;min&quot;</span></code></pre>
+<pre class="code"><code><span class="tok-fn">measureSymbol</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">minute</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;min&quot;</span></code></pre>
 
 </section>
 <section class="entity" id="function-measurefactor">
@@ -164,7 +167,7 @@ data-page="units.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Float</code> — the conversion factor</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-fn">measureFactor</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">minute</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 60.0</span></code></pre>
+<pre class="code"><code><span class="tok-fn">measureFactor</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">minute</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 60.0</span></code></pre>
 
 </section>
 <section class="entity" id="record-unitdefinition">
@@ -279,8 +282,8 @@ data-page="units.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Measure</code> — the scaled measure</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">sec</span><span class="tok-op">.</span><span class="tok-method">scale</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; &quot;6.0 s&quot;</span>
-  <span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">hour</span><span class="tok-op">.</span><span class="tok-method">scale</span><span class="tok-punct">(</span><span class="tok-number">0.5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; &quot;0.5 h&quot;</span></code></pre>
+<pre class="code"><code><span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">sec</span><span class="tok-op">.</span><span class="tok-method">scale</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; &quot;6.0 s&quot;</span>
+<span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">hour</span><span class="tok-op">.</span><span class="tok-method">scale</span><span class="tok-punct">(</span><span class="tok-number">0.5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; &quot;0.5 h&quot;</span></code></pre>
 
 </div>
 <div class="fn" id="fn-^">
@@ -294,7 +297,7 @@ data-page="units.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Measure</code> — the raised measure</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">sec</span> ^ <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;4.0 s^2&quot;</span></code></pre>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">sec</span> ^ <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;4.0 s^2&quot;</span></code></pre>
 
 </div>
 <div class="fn" id="fn-convertto">
@@ -309,8 +312,8 @@ data-page="units.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;Measure, String&gt;</code> — the converted measure, or why it could not be</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">day</span><span class="tok-op">.</span><span class="tok-method">convertTo</span><span class="tok-punct">(</span><span class="tok-type">Hour</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>     <span class="tok-comment"># =&gt; Ok(&quot;24.0 h&quot;)</span>
-  <span class="tok-number">90</span><span class="tok-op">.</span><span class="tok-method">minute</span><span class="tok-op">.</span><span class="tok-method">convertTo</span><span class="tok-punct">(</span><span class="tok-type">Hour</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">}</span> <span class="tok-comment"># =&gt; Ok(&quot;1.5 h&quot;)</span></code></pre>
+<pre class="code"><code><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">day</span><span class="tok-op">.</span><span class="tok-method">convertTo</span><span class="tok-punct">(</span><span class="tok-type">Hour</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>     <span class="tok-comment"># =&gt; Ok(&quot;24.0 h&quot;)</span>
+<span class="tok-number">90</span><span class="tok-op">.</span><span class="tok-method">minute</span><span class="tok-op">.</span><span class="tok-method">convertTo</span><span class="tok-punct">(</span><span class="tok-type">Hour</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">}</span> <span class="tok-comment"># =&gt; Ok(&quot;1.5 h&quot;)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-convert">
@@ -323,7 +326,7 @@ data-page="units.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;Measure, String&gt;</code> — the converted measure, or why it could not be</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-number">90</span><span class="tok-op">.</span><span class="tok-method">minute</span><span class="tok-op">.</span><span class="tok-method">convert</span><span class="tok-punct">(</span><span class="tok-type">Hour</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(&quot;1.5 h&quot;)</span></code></pre>
+<pre class="code"><code><span class="tok-number">90</span><span class="tok-op">.</span><span class="tok-method">minute</span><span class="tok-op">.</span><span class="tok-method">convert</span><span class="tok-punct">(</span><span class="tok-type">Hour</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(&quot;1.5 h&quot;)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-+">
@@ -337,8 +340,8 @@ data-page="units.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;Measure, String&gt;</code> — the sum, or why they could not be added</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">hour</span> ` <span class="tok-number">30</span><span class="tok-op">.</span><span class="tok-method">minute</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(&quot;1.5 h&quot;)</span>
-  <span class="tok-punct">(</span><span class="tok-number">30</span><span class="tok-op">.</span><span class="tok-method">minute</span> ` <span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">hour</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(&quot;90.0 min&quot;)</span></code></pre>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">hour</span> ` <span class="tok-number">30</span><span class="tok-op">.</span><span class="tok-method">minute</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(&quot;1.5 h&quot;)</span>
+<span class="tok-punct">(</span><span class="tok-number">30</span><span class="tok-op">.</span><span class="tok-method">minute</span> ` <span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">hour</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(&quot;90.0 min&quot;)</span></code></pre>
 
 </div>
 <div class="fn" id="fn--">
@@ -352,7 +355,7 @@ data-page="units.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;Measure, String&gt;</code> — the difference, or why they could not be subtracted</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">hour</span> <span class="tok-op">-</span> <span class="tok-number">30</span><span class="tok-op">.</span><span class="tok-method">minute</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(&quot;0.5 h&quot;)</span></code></pre>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">hour</span> <span class="tok-op">-</span> <span class="tok-number">30</span><span class="tok-op">.</span><span class="tok-method">minute</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(&quot;0.5 h&quot;)</span></code></pre>
 
 </div>
 </div>
@@ -397,7 +400,7 @@ data-page="units.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-26T20:27:51.720473998Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-26T22:47:19.793944540Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

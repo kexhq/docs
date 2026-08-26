@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Map | Prelude 0.4.0-alpha | kex docs</title>
+<title>Map | Standard Library 0.4.0-alpha | kex docs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -22,12 +22,12 @@ data-root="../../" data-package="prelude" data-version="0.4.0-alpha"
 data-page="map.html">
 <span>Search</span><kbd>/</kbd>
 </button>
-<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="map.html">Prelude 0.4.0-alpha</span>
+<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="map.html">Standard Library 0.4.0-alpha</span>
 <a class="back" href="https://kex.run/docs">kex.run ↗</a>
 </div>
 </header>
 <div class="wrap layout">
-<aside class="side"><nav aria-label="Modules"><p class="side-heading">Prelude</p><ul class="side-list">
+<aside class="side"><nav aria-label="Modules"><p class="side-heading"><a href="index.html">Standard Library</a></p><ul class="side-list">
 <li><a href="algebra.html">Algebra</a></li>
 <li><a href="bits.html">Bits</a></li>
 <li><a href="blankable.html">Blankable</a></li>
@@ -37,7 +37,7 @@ data-page="map.html">
 <li><a href="env.html">ENV</a></li>
 <li><a href="errorable.html">Errorable</a></li>
 <li><a href="evaluator.html">Evaluator</a></li>
-<li><a href="filehandle.html">Filehandle</a></li>
+<li><a href="filehandle.html">FileHandle</a></li>
 <li><a href="fs.html">FS</a></li>
 <li><a href="http.html">Http</a></li>
 <li><a href="io.html">IO</a></li>
@@ -75,17 +75,21 @@ data-page="map.html">
 <li><a href="units/si.html">Units.SI</a></li>
 </ul></nav></aside>
 <main class="content">
-<nav class="crumbs"><a href="index.html">Prelude</a> <span class="sep">/</span> <span>Map</span></nav>
+<nav class="crumbs"><a href="index.html">Standard Library</a> <span class="sep">/</span> <span>Map</span></nav>
 <article class="prose">
-<h1>Map</h1>
+<h1>Map<span class="tag-prelude" title="In the prelude: no import needed">prelude</span></h1>
 <section class="entity" id="type-map">
 <h2><span class="kind kind-type">type</span> <code>Map&lt;K, V&gt;</code></h2>
 <p>An immutable key-value store, written <code>{key: value}</code>.</p>
 <p>Keys are compared by structural equality and may be of any type; atom keys get the shorthand <code>{name: &quot;Ada&quot;}</code>, string keys are written out in full as <code>{&quot;name&quot;: &quot;Ada&quot;}</code>. Every method answers with a new map — the <code>!</code> forms (<code>put!</code>, <code>delete!</code>) build a new map and rebind the receiver variable, they do not modify anything in place.</p>
 <p>Entries come back in canonical key order, not insertion order, so <code>keys</code>, <code>values</code>, <code>entries</code> and any traversal are stable and comparable across equal maps.</p>
-<p>  let config = { host: &quot;localhost&quot;, port: 8080 }   config.get(:host).or(&quot;0.0.0.0&quot;)     # =&gt; &quot;localhost&quot;   config.get(:user).or(&quot;anonymous&quot;)   # =&gt; &quot;anonymous&quot;   config.put(:port, 9090)             # =&gt; { :host: &quot;localhost&quot;, :port: 9090 }</p>
+<pre class="code"><code><span class="tok-keyword">let</span> config <span class="tok-op">=</span> <span class="tok-punct">{</span> host<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">localhost</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> port<span class="tok-op">:</span> <span class="tok-number">8080</span> <span class="tok-punct">}</span>
+config<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-op">:</span>host<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">0.0.0.0</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; &quot;localhost&quot;</span>
+config<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-op">:</span>user<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">anonymous</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;anonymous&quot;</span>
+config<span class="tok-op">.</span><span class="tok-method">put</span><span class="tok-punct">(</span><span class="tok-op">:</span>port<span class="tok-punct">,</span> <span class="tok-number">9090</span><span class="tok-punct">)</span>             <span class="tok-comment"># =&gt; { :host: &quot;localhost&quot;, :port: 9090 }</span></code></pre>
 <p>A map is <code>Enumerable</code> and <code>Foldable</code>, and the traversal blocks take the key and value as two parameters:</p>
-<p>  config.each { |k, v| IO.printLine(&quot;${k} = ${v}&quot;) }   config.filter { |k, v| k != :port }   # =&gt; { :host: &quot;localhost&quot; }</p>
+<pre class="code"><code>config<span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>k<span class="tok-string">}</span><span class="tok-string"> = </span><span class="tok-string">${</span>v<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+config<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> k <span class="tok-op">!=</span> <span class="tok-op">:</span>port <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; { :host: &quot;localhost&quot; }</span></code></pre>
 <p>Declared for the same reason list.kex declares <code>type List&lt;X&gt; = [X]</code>: it gives the name <code>Map</code> a source declaration, so it resolves as a type through the collected interfaces rather than needing to be known to the compiler.</p>
 <h3>Variants</h3>
 <ul class="variants">
@@ -109,13 +113,13 @@ data-page="map.html">
 <p class="returns"><strong>Returns:</strong> <code>A</code> — the final accumulator</p>
 <h5>Examples</h5>
 <p class="caption"><em>Summing the values</em></p>
-<pre class="code"><code>  <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">reduce</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>acc<span class="tok-punct">,</span> pair<span class="tok-op">|</span>
-    <span class="tok-keyword">let</span> <span class="tok-punct">(</span>key<span class="tok-punct">,</span> value<span class="tok-punct">)</span> <span class="tok-op">=</span> pair
-    acc <span class="tok-op">+</span> value
-  <span class="tok-keyword">end</span>
-  <span class="tok-comment"># =&gt; 3</span></code></pre>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">reduce</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>acc<span class="tok-punct">,</span> pair<span class="tok-op">|</span>
+  <span class="tok-keyword">let</span> <span class="tok-punct">(</span>key<span class="tok-punct">,</span> value<span class="tok-punct">)</span> <span class="tok-op">=</span> pair
+  acc <span class="tok-op">+</span> value
+<span class="tok-keyword">end</span>
+<span class="tok-comment"># =&gt; 3</span></code></pre>
 <p class="caption"><em>Rendering the map as a query string</em></p>
-<pre class="code"><code>  <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">entries</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> <span class="tok-string">&quot;</span><span class="tok-string">${</span>k<span class="tok-string">}</span><span class="tok-string">=</span><span class="tok-string">${</span>v<span class="tok-string">}</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&amp;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">entries</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> <span class="tok-string">&quot;</span><span class="tok-string">${</span>k<span class="tok-string">}</span><span class="tok-string">=</span><span class="tok-string">${</span>v<span class="tok-string">}</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&amp;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-combine">
@@ -128,10 +132,10 @@ data-page="map.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>This</code> — the combined map</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">combine</span><span class="tok-punct">(</span><span class="tok-punct">{</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; { :a: 1, :b: 2 }</span></code></pre>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">combine</span><span class="tok-punct">(</span><span class="tok-punct">{</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; { :a: 1, :b: 2 }</span></code></pre>
 <p class="caption"><em>Folding a list of maps into one</em></p>
-<pre class="code"><code>  <span class="tok-punct">[</span><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-punct">,</span> <span class="tok-punct">{</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-punct">,</span> <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">9</span> <span class="tok-punct">}</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">reduce</span><span class="tok-punct">(</span><span class="tok-punct">{</span><span class="tok-punct">}</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>acc<span class="tok-punct">,</span> m<span class="tok-op">|</span> acc<span class="tok-op">.</span><span class="tok-method">combine</span><span class="tok-punct">(</span>m<span class="tok-punct">)</span> <span class="tok-punct">}</span>
-  <span class="tok-comment"># =&gt; { :a: 9, :b: 2 }</span></code></pre>
+<pre class="code"><code><span class="tok-punct">[</span><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-punct">,</span> <span class="tok-punct">{</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-punct">,</span> <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">9</span> <span class="tok-punct">}</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">reduce</span><span class="tok-punct">(</span><span class="tok-punct">{</span><span class="tok-punct">}</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>acc<span class="tok-punct">,</span> m<span class="tok-op">|</span> acc<span class="tok-op">.</span><span class="tok-method">combine</span><span class="tok-punct">(</span>m<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-comment"># =&gt; { :a: 9, :b: 2 }</span></code></pre>
 
 </div>
 <div class="fn" id="fn-get">
@@ -146,11 +150,11 @@ data-page="map.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>V?</code> — the value, or <code>None</code></p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-keyword">let</span> user <span class="tok-op">=</span> <span class="tok-punct">{</span> name<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">Alice</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> age<span class="tok-op">:</span> <span class="tok-number">32</span> <span class="tok-punct">}</span>
-  user<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-op">:</span>name<span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; Just(&quot;Alice&quot;)</span>
-  user<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-op">:</span>missing<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; None</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">let</span> user <span class="tok-op">=</span> <span class="tok-punct">{</span> name<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">Alice</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> age<span class="tok-op">:</span> <span class="tok-number">32</span> <span class="tok-punct">}</span>
+user<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-op">:</span>name<span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; Just(&quot;Alice&quot;)</span>
+user<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-op">:</span>missing<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; None</span></code></pre>
 <p class="caption"><em>Chaining through a nested map</em></p>
-<pre class="code"><code>  settings<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-op">:</span>server<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">flatMap</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>s<span class="tok-op">|</span> s<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-op">:</span>port<span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">8080</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code>settings<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-op">:</span>server<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">flatMap</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>s<span class="tok-op">|</span> s<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-op">:</span>port<span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">8080</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-put">
@@ -165,12 +169,12 @@ data-page="map.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Map&lt;K, V&gt;</code> — a new map including the entry</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-punct">{</span><span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">put</span><span class="tok-punct">(</span><span class="tok-op">:</span>x<span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span>              <span class="tok-comment"># =&gt; { :x: 1 }</span>
-  <span class="tok-punct">{</span> x<span class="tok-op">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">put</span><span class="tok-punct">(</span><span class="tok-op">:</span>x<span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; { :x: 2 }</span></code></pre>
+<pre class="code"><code><span class="tok-punct">{</span><span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">put</span><span class="tok-punct">(</span><span class="tok-op">:</span>x<span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span>              <span class="tok-comment"># =&gt; { :x: 1 }</span>
+<span class="tok-punct">{</span> x<span class="tok-op">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">put</span><span class="tok-punct">(</span><span class="tok-op">:</span>x<span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; { :x: 2 }</span></code></pre>
 <p class="caption"><em>Rebinding with the <code>!</code> form</em></p>
-<pre class="code"><code>  <span class="tok-keyword">var</span> totals <span class="tok-op">=</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
-  totals<span class="tok-op">.</span><span class="tok-method">put!</span><span class="tok-punct">(</span><span class="tok-op">:</span>visits<span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span>
-  totals                     <span class="tok-comment"># =&gt; { :visits: 1 }</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">var</span> totals <span class="tok-op">=</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+totals<span class="tok-op">.</span><span class="tok-method">put!</span><span class="tok-punct">(</span><span class="tok-op">:</span>visits<span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span>
+totals                     <span class="tok-comment"># =&gt; { :visits: 1 }</span></code></pre>
 
 </div>
 <div class="fn" id="fn-delete">
@@ -184,10 +188,10 @@ data-page="map.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Map&lt;K, V&gt;</code> — a new map without that entry</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-op">:</span>a<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; { :b: 2 }</span>
-  <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-op">:</span>z<span class="tok-punct">)</span>         <span class="tok-comment"># =&gt; { :a: 1 }</span></code></pre>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-op">:</span>a<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; { :b: 2 }</span>
+<span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-op">:</span>z<span class="tok-punct">)</span>         <span class="tok-comment"># =&gt; { :a: 1 }</span></code></pre>
 <p class="caption"><em>Stripping a secret before logging</em></p>
-<pre class="code"><code>  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>params<span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-op">:</span>password<span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>params<span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-op">:</span>password<span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-has?">
@@ -201,12 +205,12 @@ data-page="map.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when the key is present</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">has?</span><span class="tok-punct">(</span><span class="tok-op">:</span>a<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span>
-  <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">has?</span><span class="tok-punct">(</span><span class="tok-op">:</span>z<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">has?</span><span class="tok-punct">(</span><span class="tok-op">:</span>a<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">has?</span><span class="tok-punct">(</span><span class="tok-op">:</span>z<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
 <p class="caption"><em>Checking a required setting</em></p>
-<pre class="code"><code>  <span class="tok-keyword">if</span> <span class="tok-op">!</span>config<span class="tok-op">.</span><span class="tok-method">has?</span><span class="tok-punct">(</span><span class="tok-op">:</span>host<span class="tok-punct">)</span>
-    <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">host is required</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-  <span class="tok-keyword">end</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">if</span> <span class="tok-op">!</span>config<span class="tok-op">.</span><span class="tok-method">has?</span><span class="tok-punct">(</span><span class="tok-op">:</span>host<span class="tok-punct">)</span>
+  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">host is required</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 
 </div>
 <div class="fn" id="fn-count">
@@ -219,9 +223,9 @@ data-page="map.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Integer</code> — how many entries matched</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">count</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; 1</span></code></pre>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">count</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; 1</span></code></pre>
 <p class="caption"><em>How many settings are still at their default</em></p>
-<pre class="code"><code>  config<span class="tok-op">.</span><span class="tok-method">count</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">==</span> defaults<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span>k<span class="tok-punct">,</span> v<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+<pre class="code"><code>config<span class="tok-op">.</span><span class="tok-method">count</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">==</span> defaults<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span>k<span class="tok-punct">,</span> v<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
 
 </div>
 <div class="fn" id="fn-each">
@@ -234,7 +238,7 @@ data-page="map.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
-<pre class="code"><code>  scores<span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>k<span class="tok-string">}</span><span class="tok-string">: </span><span class="tok-string">${</span>v<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+<pre class="code"><code>scores<span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>k<span class="tok-string">}</span><span class="tok-string">: </span><span class="tok-string">${</span>v<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
 
 </div>
 <div class="fn" id="fn-map">
@@ -248,9 +252,9 @@ data-page="map.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>[R]</code> — the results, in canonical key order</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> <span class="tok-string">&quot;</span><span class="tok-string">${</span>k<span class="tok-string">}</span><span class="tok-string">=</span><span class="tok-string">${</span>v<span class="tok-string">}</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; [&quot;a=1&quot;, &quot;b=2&quot;]</span></code></pre>
+<pre class="code"><code><span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> <span class="tok-string">&quot;</span><span class="tok-string">${</span>k<span class="tok-string">}</span><span class="tok-string">=</span><span class="tok-string">${</span>v<span class="tok-string">}</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; [&quot;a=1&quot;, &quot;b=2&quot;]</span></code></pre>
 <p class="caption"><em>Building a header block</em></p>
-<pre class="code"><code>  headers<span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>name<span class="tok-punct">,</span> value<span class="tok-op">|</span> <span class="tok-string">&quot;</span><span class="tok-string">${</span>name<span class="tok-string">}</span><span class="tok-string">: </span><span class="tok-string">${</span>value<span class="tok-string">}</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code>headers<span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>name<span class="tok-punct">,</span> value<span class="tok-op">|</span> <span class="tok-string">&quot;</span><span class="tok-string">${</span>name<span class="tok-string">}</span><span class="tok-string">: </span><span class="tok-string">${</span>value<span class="tok-string">}</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-mapvalues">
@@ -263,9 +267,9 @@ data-page="map.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Map&lt;K, W&gt;</code> — a map with the same keys and transformed values</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">mapValues</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>v<span class="tok-op">|</span> v <span class="tok-op">*</span> <span class="tok-number">10</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; { :a: 10, :b: 20 }</span></code></pre>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">mapValues</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>v<span class="tok-op">|</span> v <span class="tok-op">*</span> <span class="tok-number">10</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; { :a: 10, :b: 20 }</span></code></pre>
 <p class="caption"><em>Normalising values read as text</em></p>
-<pre class="code"><code>  raw<span class="tok-op">.</span><span class="tok-method">mapValues</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>s<span class="tok-op">|</span> s<span class="tok-op">.</span><span class="tok-method">trim</span><span class="tok-op">.</span><span class="tok-method">lowerCase</span> <span class="tok-punct">}</span></code></pre>
+<pre class="code"><code>raw<span class="tok-op">.</span><span class="tok-method">mapValues</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>s<span class="tok-op">|</span> s<span class="tok-op">.</span><span class="tok-method">trim</span><span class="tok-op">.</span><span class="tok-method">lowerCase</span> <span class="tok-punct">}</span></code></pre>
 
 </div>
 <div class="fn" id="fn-mapkeys">
@@ -279,14 +283,15 @@ data-page="map.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Map&lt;J, V&gt;</code> — a map with transformed keys</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">mapKeys</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-op">|</span> k<span class="tok-op">.</span><span class="tok-method">upperCase</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; { A: 1, B: 2 }</span></code></pre>
+<pre class="code"><code><span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">mapKeys</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-op">|</span> k<span class="tok-op">.</span><span class="tok-method">upperCase</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; { A: 1, B: 2 }</span></code></pre>
 <p class="caption"><em>Making header lookups case-insensitive</em></p>
-<pre class="code"><code>  headers<span class="tok-op">.</span><span class="tok-method">mapKeys</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>name<span class="tok-op">|</span> name<span class="tok-op">.</span><span class="tok-method">lowerCase</span> <span class="tok-punct">}</span></code></pre>
+<pre class="code"><code>headers<span class="tok-op">.</span><span class="tok-method">mapKeys</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>name<span class="tok-op">|</span> name<span class="tok-op">.</span><span class="tok-method">lowerCase</span> <span class="tok-punct">}</span></code></pre>
 
 </div>
 <div class="fn" id="fn-filter">
 <h4><code>filter</code></h4>
 <p>Returns a new map with only the entries for which <code>pred</code> answers <code>true</code>.</p>
+<p>Map overrides the map-returning HOFs (Enumerable's default returns a list).</p>
 <pre class="code"><code><span class="tok-fn">filter</span><span class="tok-punct">(</span>pred<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">K</span> <span class="tok-op">-&gt;</span> <span class="tok-type">V</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Map</span><span class="tok-op">&lt;</span><span class="tok-type">K</span><span class="tok-punct">,</span> <span class="tok-type">V</span><span class="tok-op">&gt;</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -294,10 +299,9 @@ data-page="map.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Map&lt;K, V&gt;</code> — the matching entries</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span><span class="tok-punct">,</span> c<span class="tok-op">:</span> <span class="tok-number">3</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; { :b: 2, :c: 3 }</span></code></pre>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span><span class="tok-punct">,</span> c<span class="tok-op">:</span> <span class="tok-number">3</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; { :b: 2, :c: 3 }</span></code></pre>
 <p class="caption"><em>Keeping only the options that were actually set</em></p>
-<pre class="code"><code>  options<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>name<span class="tok-punct">,</span> value<span class="tok-op">|</span> <span class="tok-op">!</span>value<span class="tok-op">.</span><span class="tok-method">blank?</span> <span class="tok-punct">}</span>
-<span class="tok-type">Map</span> overrides the map<span class="tok-op">-</span>returning <span class="tok-type">HOFs</span> <span class="tok-punct">(</span><span class="tok-type">Enumerable</span>'s default returns a list<span class="tok-punct">)</span><span class="tok-op">.</span></code></pre>
+<pre class="code"><code>options<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>name<span class="tok-punct">,</span> value<span class="tok-op">|</span> <span class="tok-op">!</span>value<span class="tok-op">.</span><span class="tok-method">blank?</span> <span class="tok-punct">}</span></code></pre>
 
 </div>
 <div class="fn" id="fn-reject">
@@ -310,9 +314,9 @@ data-page="map.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Map&lt;K, V&gt;</code> — the entries that failed the predicate</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span><span class="tok-punct">,</span> c<span class="tok-op">:</span> <span class="tok-number">3</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">reject</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; { :a: 1 }</span></code></pre>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span><span class="tok-punct">,</span> c<span class="tok-op">:</span> <span class="tok-number">3</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">reject</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; { :a: 1 }</span></code></pre>
 <p class="caption"><em>Dropping internal keys before serialising</em></p>
-<pre class="code"><code>  <span class="tok-keyword">record</span><span class="tok-op">.</span><span class="tok-method">reject</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>name<span class="tok-punct">,</span> _<span class="tok-op">|</span> name<span class="tok-op">.</span><span class="tok-method">startsWith?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">_</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">record</span><span class="tok-op">.</span><span class="tok-method">reject</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>name<span class="tok-punct">,</span> _<span class="tok-op">|</span> name<span class="tok-op">.</span><span class="tok-method">startsWith?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">_</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
 
 </div>
 <div class="fn" id="fn-merge">
@@ -326,9 +330,9 @@ data-page="map.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Map&lt;K, V&gt;</code> — the combined map</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">merge</span><span class="tok-punct">(</span><span class="tok-punct">{</span> b<span class="tok-op">:</span> <span class="tok-number">99</span><span class="tok-punct">,</span> c<span class="tok-op">:</span> <span class="tok-number">3</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; { :a: 1, :b: 99, :c: 3 }</span></code></pre>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">merge</span><span class="tok-punct">(</span><span class="tok-punct">{</span> b<span class="tok-op">:</span> <span class="tok-number">99</span><span class="tok-punct">,</span> c<span class="tok-op">:</span> <span class="tok-number">3</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; { :a: 1, :b: 99, :c: 3 }</span></code></pre>
 <p class="caption"><em>Layering user settings over defaults</em></p>
-<pre class="code"><code>  defaults<span class="tok-op">.</span><span class="tok-method">merge</span><span class="tok-punct">(</span>userConfig<span class="tok-punct">)</span></code></pre>
+<pre class="code"><code>defaults<span class="tok-op">.</span><span class="tok-method">merge</span><span class="tok-punct">(</span>userConfig<span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-any?">
@@ -341,8 +345,8 @@ data-page="map.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when any entry matches</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">any?</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; true</span>
-  <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">any?</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">9</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">any?</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">any?</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">9</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
 
 </div>
 <div class="fn" id="fn-all?">
@@ -355,10 +359,10 @@ data-page="map.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when all entries match</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">all?</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">0</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; true</span>
-  <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">all?</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">all?</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">0</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">all?</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
 <p class="caption"><em>Validating a form</em></p>
-<pre class="code"><code>  fields<span class="tok-op">.</span><span class="tok-method">all?</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>name<span class="tok-punct">,</span> value<span class="tok-op">|</span> <span class="tok-op">!</span>value<span class="tok-op">.</span><span class="tok-method">blank?</span> <span class="tok-punct">}</span></code></pre>
+<pre class="code"><code>fields<span class="tok-op">.</span><span class="tok-method">all?</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>name<span class="tok-punct">,</span> value<span class="tok-op">|</span> <span class="tok-op">!</span>value<span class="tok-op">.</span><span class="tok-method">blank?</span> <span class="tok-punct">}</span></code></pre>
 
 </div>
 <div class="fn" id="fn-find">
@@ -372,10 +376,10 @@ data-page="map.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>(K, V)?</code> — the matching entry, or <code>None</code></p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">find</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Just((:b, 2))</span>
-  <span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">find</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">9</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; None</span></code></pre>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">find</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Just((:b, 2))</span>
+<span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">find</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">9</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; None</span></code></pre>
 <p class="caption"><em>Locating a value without knowing its key</em></p>
-<pre class="code"><code>  users<span class="tok-op">.</span><span class="tok-method">find</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>id<span class="tok-punct">,</span> user<span class="tok-op">|</span> user<span class="tok-op">.</span><span class="tok-method">email</span> <span class="tok-op">==</span> target <span class="tok-punct">}</span></code></pre>
+<pre class="code"><code>users<span class="tok-op">.</span><span class="tok-method">find</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>id<span class="tok-punct">,</span> user<span class="tok-op">|</span> user<span class="tok-op">.</span><span class="tok-method">email</span> <span class="tok-op">==</span> target <span class="tok-punct">}</span></code></pre>
 
 </div>
 </div>
@@ -388,7 +392,7 @@ data-page="map.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-26T20:27:51.720473998Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-26T22:47:19.793944540Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

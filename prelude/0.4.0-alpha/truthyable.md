@@ -22,7 +22,13 @@ entities:
 
 The rule is Crystal's, and it is short: only `false`, `None` and `()` are falsy. Everything else is truthy — including `0`, `""` and `[]`, which some languages treat as false and Kex deliberately does not.
 
-  0.truthy?       # => true   "".truthy?      # => true   [].truthy?      # => true   None.truthy?    # => false   false.truthy?   # => false
+```kex
+0.truthy?       # => true
+"".truthy?      # => true
+[].truthy?      # => true
+None.truthy?    # => false
+false.truthy?   # => false
+```
 
 When you want the "is there anything here" question instead, that is `Blankable`'s `blank?` / `present?`.
 
@@ -42,8 +48,8 @@ truthy? : Bool
 **Examples**
 
 ```kex
-  1.truthy?        # => true
-  None.truthy?     # => false
+1.truthy?        # => true
+None.truthy?     # => false
 ```
 
 ## make `Bool` implements [Truthyable](#trait-truthyable)
@@ -68,8 +74,8 @@ truthy? : Bool
 **Examples**
 
 ```kex
-  0.truthy?    # => true
-  42.truthy?   # => true
+0.truthy?    # => true
+42.truthy?   # => true
 ```
 
 ## make `Float` implements [Truthyable](#trait-truthyable)
@@ -88,7 +94,7 @@ truthy? : Bool
 **Examples**
 
 ```kex
-  0.0.truthy?   # => true
+0.0.truthy?   # => true
 ```
 
 ## make `String` implements [Truthyable](#trait-truthyable)
@@ -109,8 +115,8 @@ truthy? : Bool
 **Examples**
 
 ```kex
-  "".truthy?      # => true
-  "".blank?       # => true   (the question usually meant)
+"".truthy?      # => true
+"".blank?       # => true   (the question usually meant)
 ```
 
 ## make `Optional<X>` implements [Truthyable](#trait-truthyable)
@@ -131,8 +137,8 @@ truthy? : Bool
 **Examples**
 
 ```kex
-  Just(0).truthy?    # => true
-  None.truthy?       # => false
+Just(0).truthy?    # => true
+None.truthy?       # => false
 ```
 
 ## make `[X]` implements [Truthyable](#trait-truthyable)
@@ -153,8 +159,8 @@ truthy? : Bool
 **Examples**
 
 ```kex
-  [].truthy?   # => true
-  [].blank?    # => true   (the question usually meant)
+[].truthy?   # => true
+[].blank?    # => true   (the question usually meant)
 ```
 
 ## make `Map<K, V>` implements [Truthyable](#trait-truthyable)
@@ -173,6 +179,6 @@ truthy? : Bool
 **Examples**
 
 ```kex
-  {}.truthy?   # => true
-  {}.blank?    # => true   (the question usually meant)
+{}.truthy?   # => true
+{}.blank?    # => true   (the question usually meant)
 ```

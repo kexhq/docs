@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Regex | Prelude 0.4.0-alpha | kex docs</title>
+<title>Regex | Standard Library 0.4.0-alpha | kex docs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -22,12 +22,12 @@ data-root="../../" data-package="prelude" data-version="0.4.0-alpha"
 data-page="regex.html">
 <span>Search</span><kbd>/</kbd>
 </button>
-<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="regex.html">Prelude 0.4.0-alpha</span>
+<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="regex.html">Standard Library 0.4.0-alpha</span>
 <a class="back" href="https://kex.run/docs">kex.run ↗</a>
 </div>
 </header>
 <div class="wrap layout">
-<aside class="side"><nav aria-label="Modules"><p class="side-heading">Prelude</p><ul class="side-list">
+<aside class="side"><nav aria-label="Modules"><p class="side-heading"><a href="index.html">Standard Library</a></p><ul class="side-list">
 <li><a href="algebra.html">Algebra</a></li>
 <li><a href="bits.html">Bits</a></li>
 <li><a href="blankable.html">Blankable</a></li>
@@ -37,7 +37,7 @@ data-page="regex.html">
 <li><a href="env.html">ENV</a></li>
 <li><a href="errorable.html">Errorable</a></li>
 <li><a href="evaluator.html">Evaluator</a></li>
-<li><a href="filehandle.html">Filehandle</a></li>
+<li><a href="filehandle.html">FileHandle</a></li>
 <li><a href="fs.html">FS</a></li>
 <li><a href="http.html">Http</a></li>
 <li><a href="io.html">IO</a></li>
@@ -73,7 +73,7 @@ data-page="regex.html">
 <li><a href="units/si.html">Units.SI</a></li>
 </ul></nav></aside>
 <main class="content">
-<nav class="crumbs"><a href="index.html">Prelude</a> <span class="sep">/</span> <span>Regex</span></nav>
+<nav class="crumbs"><a href="index.html">Standard Library</a> <span class="sep">/</span> <span>Regex</span></nav>
 <article class="prose">
 <h1>Regex</h1>
 <section class="entity" id="module-regex">
@@ -83,10 +83,18 @@ data-page="regex.html">
 <p>Regular expressions, backed by PCRE2 in the interpreter and Erlang's <code>re</code> on BEAM — the same PCRE pattern language on both.</p>
 <p>Opt-in, not prelude: nothing here is in scope until <code>using Regex</code>.</p>
 <p>There are two ways to write a pattern. The tagged literal is the everyday one: it is checked when your program is compiled, so it cannot fail at run time and gives you a bare <code>Regex</code>.</p>
-<p>  using Regex</p>
-<p>  main do     let line = &quot;order #4271 shipped&quot;     IO.printLine(line.matches?(re<code>#\d</code><code>))                     # =&gt; true     IO.printLine(line.matches(re</code>#(\d<code>)</code>).map { |m| m.get(1) })  # =&gt; 4271   end</p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Regex</span>
+
+<span class="tok-keyword">main</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">let</span> line <span class="tok-op">=</span> <span class="tok-string">&quot;</span><span class="tok-string">order #4271 shipped</span><span class="tok-string">&quot;</span>
+  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>line<span class="tok-op">.</span><span class="tok-method">matches?</span><span class="tok-punct">(</span>re`<span class="tok-comment">#\d``))                     # =&gt; true</span>
+  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>line<span class="tok-op">.</span><span class="tok-method">matches</span><span class="tok-punct">(</span>re`<span class="tok-comment">#(\d`)`).map { |m| m.get(1) })  # =&gt; 4271</span>
+<span class="tok-keyword">end</span></code></pre>
 <p>The call form takes a pattern built at run time and answers a <code>Result</code>, because an arbitrary string may not be a valid pattern:</p>
-<p>  match regex(userSupplied) do     Ok(pattern) =&gt; IO.printLine(text.matches?(pattern))     Error(e)    =&gt; IO.printError(&quot;bad pattern at ${e.position}: ${e.message}&quot;)   end</p>
+<pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-fn">regex</span><span class="tok-punct">(</span>userSupplied<span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>pattern<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>text<span class="tok-op">.</span><span class="tok-method">matches?</span><span class="tok-punct">(</span>pattern<span class="tok-punct">)</span><span class="tok-punct">)</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span>    <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">bad pattern at </span><span class="tok-string">${</span>e<span class="tok-op">.</span><span class="tok-method">position</span><span class="tok-string">}</span><span class="tok-string">: </span><span class="tok-string">${</span>e<span class="tok-op">.</span><span class="tok-method">message</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 <p>The operations are <code>matches?</code> (is it there), <code>matches</code> (find the first), <code>scan</code> (find them all), <code>replace</code>, and <code>split</code>.</p>
 <p>A compiled regular expression.</p>
 <p><code>Regex</code> carries only its pattern source. The compiled engine object lives in a runtime cache keyed by that source, deliberately: a compiled pattern bakes in the host's PCRE version and must never be embedded in a distributed artifact, so the source string is the value's identity.</p>
@@ -99,7 +107,9 @@ data-page="regex.html">
 <h2><span class="kind kind-record">record</span> <code>RegexError</code></h2>
 <p>A pattern that failed to compile.</p>
 <p>Mirrors <code>ParseError</code> — the <code>position</code> is a *character* offset into the pattern, not a byte offset, so it agrees across backends on patterns containing non-ASCII.</p>
-<p>  regex(&quot;(&quot;)   # =&gt; Error(RegexError { source: &quot;(&quot;, position: 1,   #                       message: &quot;missing closing parenthesis&quot; })</p>
+<pre class="code"><code><span class="tok-fn">regex</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">(</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; Error(RegexError { source: &quot;(&quot;, position: 1,</span>
+<span class="tok-comment">#                       message: &quot;missing closing parenthesis&quot; })</span></code></pre>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>source</code></dt><dd><code>String</code></dd></div>
@@ -120,16 +130,16 @@ data-page="regex.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;Regex, <a class="xref" href="#record-regexerror">RegexError</a>&gt;</code> — the compiled pattern, or why it failed</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-fn">regex</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">\\d`</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(Regex { source: &quot;\\d+&quot; })</span>
-  <span class="tok-fn">regex</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">(</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; Error(RegexError { message: &quot;missing closing parenthesis&quot;, ... })</span></code></pre>
+<pre class="code"><code><span class="tok-fn">regex</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">\\d`</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(Regex { source: &quot;\\d+&quot; })</span>
+<span class="tok-fn">regex</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">(</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; Error(RegexError { message: &quot;missing closing parenthesis&quot;, ... })</span></code></pre>
 <p class="caption"><em>Compiling a user-supplied filter</em></p>
-<pre class="code"><code>  <span class="tok-keyword">match</span> <span class="tok-fn">regex</span><span class="tok-punct">(</span>pattern<span class="tok-punct">)</span> <span class="tok-keyword">do</span>
-    <span class="tok-bool">Ok</span><span class="tok-punct">(</span>re<span class="tok-punct">)</span>   <span class="tok-op">=&gt;</span> lines<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> line<span class="tok-op">.</span><span class="tok-method">matches?</span><span class="tok-punct">(</span>re<span class="tok-punct">)</span> <span class="tok-punct">}</span>
-    <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">do</span>
-      <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">bad pattern at </span><span class="tok-string">${</span>e<span class="tok-op">.</span><span class="tok-method">position</span><span class="tok-string">}</span><span class="tok-string">: </span><span class="tok-string">${</span>e<span class="tok-op">.</span><span class="tok-method">message</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-      <span class="tok-punct">[</span><span class="tok-punct">]</span>
-    <span class="tok-keyword">end</span>
-  <span class="tok-keyword">end</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-fn">regex</span><span class="tok-punct">(</span>pattern<span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>re<span class="tok-punct">)</span>   <span class="tok-op">=&gt;</span> lines<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> line<span class="tok-op">.</span><span class="tok-method">matches?</span><span class="tok-punct">(</span>re<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">do</span>
+    <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">bad pattern at </span><span class="tok-string">${</span>e<span class="tok-op">.</span><span class="tok-method">position</span><span class="tok-string">}</span><span class="tok-string">: </span><span class="tok-string">${</span>e<span class="tok-op">.</span><span class="tok-method">message</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-punct">[</span><span class="tok-punct">]</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span></code></pre>
 
 </section>
 <section class="entity" id="function-validateregex">
@@ -156,8 +166,8 @@ data-page="regex.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;Regex, <a class="xref" href="#record-regexerror">RegexError</a>&gt;</code> — the compiled pattern, or why it failed</p>
 <h5>Examples</h5>
-<pre class="code"><code>  re`https?<span class="tok-op">:</span><span class="tok-op">/</span><span class="tok-op">/</span>\<span class="tok-type">S</span>``   <span class="tok-comment"># tag form  -&gt; Regex</span>
-  <span class="tok-fn">re</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">\\d`</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>         <span class="tok-comment"># call form -&gt; Result&lt;Regex, RegexError&gt;</span></code></pre>
+<pre class="code"><code>re`https?<span class="tok-op">:</span><span class="tok-op">/</span><span class="tok-op">/</span>\<span class="tok-type">S</span>``   <span class="tok-comment"># tag form  -&gt; Regex</span>
+<span class="tok-fn">re</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">\\d`</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>         <span class="tok-comment"># call form -&gt; Result&lt;Regex, RegexError&gt;</span></code></pre>
 
 </section>
 <section class="entity" id="function-validatere">
@@ -182,12 +192,12 @@ data-page="regex.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>String</code> — a pattern matching <code>s</code> literally</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Regex</span><span class="tok-op">.</span><span class="tok-method">quote</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a.b</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;a\\.b&quot;</span></code></pre>
+<pre class="code"><code><span class="tok-type">Regex</span><span class="tok-op">.</span><span class="tok-method">quote</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a.b</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;a\\.b&quot;</span></code></pre>
 <p class="caption"><em>Searching for a literal term supplied by a user</em></p>
-<pre class="code"><code>  <span class="tok-keyword">match</span> <span class="tok-fn">regex</span><span class="tok-punct">(</span><span class="tok-type">Regex</span><span class="tok-op">.</span><span class="tok-method">quote</span><span class="tok-punct">(</span>term<span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
-    <span class="tok-bool">Ok</span><span class="tok-punct">(</span>needle<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> lines<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> line<span class="tok-op">.</span><span class="tok-method">matches?</span><span class="tok-punct">(</span>needle<span class="tok-punct">)</span> <span class="tok-punct">}</span>
-    <span class="tok-bool">Error</span><span class="tok-punct">(</span>_<span class="tok-punct">)</span>   <span class="tok-op">=&gt;</span> <span class="tok-punct">[</span><span class="tok-punct">]</span>
-  <span class="tok-keyword">end</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-fn">regex</span><span class="tok-punct">(</span><span class="tok-type">Regex</span><span class="tok-op">.</span><span class="tok-method">quote</span><span class="tok-punct">(</span>term<span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>needle<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> lines<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> line<span class="tok-op">.</span><span class="tok-method">matches?</span><span class="tok-punct">(</span>needle<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span>_<span class="tok-punct">)</span>   <span class="tok-op">=&gt;</span> <span class="tok-punct">[</span><span class="tok-punct">]</span>
+<span class="tok-keyword">end</span></code></pre>
 
 </section>
 <section class="entity" id="record-match">
@@ -217,13 +227,13 @@ data-page="regex.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>String?</code> — the captured text, or <code>None</code></p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-keyword">let</span> found <span class="tok-op">=</span> <span class="tok-string">&quot;</span><span class="tok-string">order #4271</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">matches</span><span class="tok-punct">(</span>re`<span class="tok-comment">#(\d+)`)</span>
-  found<span class="tok-op">.</span><span class="tok-method">flatMap</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Just(&quot;#4271&quot;)</span>
-  found<span class="tok-op">.</span><span class="tok-method">flatMap</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Just(&quot;4271&quot;)</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">let</span> found <span class="tok-op">=</span> <span class="tok-string">&quot;</span><span class="tok-string">order #4271</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">matches</span><span class="tok-punct">(</span>re`<span class="tok-comment">#(\d+)`)</span>
+found<span class="tok-op">.</span><span class="tok-method">flatMap</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Just(&quot;#4271&quot;)</span>
+found<span class="tok-op">.</span><span class="tok-method">flatMap</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Just(&quot;4271&quot;)</span></code></pre>
 <p class="caption"><em>Named groups</em></p>
-<pre class="code"><code>  <span class="tok-string">&quot;</span><span class="tok-string">2026-07-04</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">matches</span><span class="tok-punct">(</span>re`<span class="tok-punct">(</span><span class="tok-op">?</span><span class="tok-op">&lt;</span>year<span class="tok-op">&gt;</span>\d<span class="tok-punct">{</span><span class="tok-number">4</span><span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-op">-</span><span class="tok-punct">(</span><span class="tok-op">?</span><span class="tok-op">&lt;</span>month<span class="tok-op">&gt;</span>\d<span class="tok-punct">{</span><span class="tok-number">2</span><span class="tok-punct">}</span><span class="tok-punct">)</span>`<span class="tok-punct">)</span>
-    <span class="tok-op">.</span><span class="tok-method">flatMap</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-op">:</span>year<span class="tok-punct">)</span> <span class="tok-punct">}</span>
-  <span class="tok-comment"># =&gt; Just(&quot;2026&quot;)</span></code></pre>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">2026-07-04</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">matches</span><span class="tok-punct">(</span>re`<span class="tok-punct">(</span><span class="tok-op">?</span><span class="tok-op">&lt;</span>year<span class="tok-op">&gt;</span>\d<span class="tok-punct">{</span><span class="tok-number">4</span><span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-op">-</span><span class="tok-punct">(</span><span class="tok-op">?</span><span class="tok-op">&lt;</span>month<span class="tok-op">&gt;</span>\d<span class="tok-punct">{</span><span class="tok-number">2</span><span class="tok-punct">}</span><span class="tok-punct">)</span>`<span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">flatMap</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-op">:</span>year<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-comment"># =&gt; Just(&quot;2026&quot;)</span></code></pre>
 
 </div>
 </div>
@@ -240,10 +250,10 @@ data-page="regex.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Match?</code> — the first match, or <code>None</code></p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-string">&quot;</span><span class="tok-string">order #4271</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">matches</span><span class="tok-punct">(</span>re`<span class="tok-comment">#(\d`)`).flatMap { |m| m.get(1) }   # =&gt; Just(&quot;4271&quot;)</span>
-  <span class="tok-string">&quot;</span><span class="tok-string">no number here</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">matches</span><span class="tok-punct">(</span>re`<span class="tok-comment">#(\d`)`)                          # =&gt; None</span></code></pre>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">order #4271</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">matches</span><span class="tok-punct">(</span>re`<span class="tok-comment">#(\d`)`).flatMap { |m| m.get(1) }   # =&gt; Just(&quot;4271&quot;)</span>
+<span class="tok-string">&quot;</span><span class="tok-string">no number here</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">matches</span><span class="tok-punct">(</span>re`<span class="tok-comment">#(\d`)`)                          # =&gt; None</span></code></pre>
 <p class="caption"><em>Pulling a version out of a line</em></p>
-<pre class="code"><code>  line<span class="tok-op">.</span><span class="tok-method">matches</span><span class="tok-punct">(</span>re`<span class="tok-fn">v</span><span class="tok-punct">(</span>\d`<span class="tok-punct">)</span>\<span class="tok-op">.</span><span class="tok-punct">(</span>\d`<span class="tok-punct">)</span>`<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> <span class="tok-punct">(</span>m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">0</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">0</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+<pre class="code"><code>line<span class="tok-op">.</span><span class="tok-method">matches</span><span class="tok-punct">(</span>re`<span class="tok-fn">v</span><span class="tok-punct">(</span>\d`<span class="tok-punct">)</span>\<span class="tok-op">.</span><span class="tok-punct">(</span>\d`<span class="tok-punct">)</span>`<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> <span class="tok-punct">(</span>m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">0</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">0</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
 
 </section>
 <section class="entity" id="function-matches?">
@@ -258,10 +268,10 @@ data-page="regex.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when the pattern occurs</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">matches?</span><span class="tok-punct">(</span>re`^h`<span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; true</span>
-  <span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">matches?</span><span class="tok-punct">(</span>re`\d`<span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; false</span></code></pre>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">matches?</span><span class="tok-punct">(</span>re`^h`<span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; true</span>
+<span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">matches?</span><span class="tok-punct">(</span>re`\d`<span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; false</span></code></pre>
 <p class="caption"><em>Keeping only the lines that look like assignments</em></p>
-<pre class="code"><code>  lines<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> line<span class="tok-op">.</span><span class="tok-method">matches?</span><span class="tok-punct">(</span>re`^\w<span class="tok-op">+</span>\s<span class="tok-op">*</span><span class="tok-op">=</span>`<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+<pre class="code"><code>lines<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> line<span class="tok-op">.</span><span class="tok-method">matches?</span><span class="tok-punct">(</span>re`^\w<span class="tok-op">+</span>\s<span class="tok-op">*</span><span class="tok-op">=</span>`<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
 
 </section>
 <section class="entity" id="function-scan">
@@ -276,12 +286,12 @@ data-page="regex.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>[Match]</code> — every match, in order</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-string">&quot;</span><span class="tok-string">cat=1, dog=2</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">scan</span><span class="tok-punct">(</span>re`<span class="tok-punct">(</span>\w`<span class="tok-punct">)</span><span class="tok-op">=</span><span class="tok-punct">(</span>\d`<span class="tok-punct">)</span>`<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
-  <span class="tok-comment"># =&gt; [&quot;cat&quot;, &quot;dog&quot;]</span></code></pre>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">cat=1, dog=2</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">scan</span><span class="tok-punct">(</span>re`<span class="tok-punct">(</span>\w`<span class="tok-punct">)</span><span class="tok-op">=</span><span class="tok-punct">(</span>\d`<span class="tok-punct">)</span>`<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-comment"># =&gt; [&quot;cat&quot;, &quot;dog&quot;]</span></code></pre>
 <p class="caption"><em>Building a map out of key=value pairs</em></p>
-<pre class="code"><code>  <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Intrinsic</span><span class="tok-op">.</span><span class="tok-type">Map</span><span class="tok-op">.</span><span class="tok-method">fromEntries</span><span class="tok-punct">(</span>
-    text<span class="tok-op">.</span><span class="tok-method">scan</span><span class="tok-punct">(</span>re`<span class="tok-punct">(</span>\w`<span class="tok-punct">)</span><span class="tok-op">=</span><span class="tok-punct">(</span>\w`<span class="tok-punct">)</span>`<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> <span class="tok-punct">(</span>m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
-  <span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Intrinsic</span><span class="tok-op">.</span><span class="tok-type">Map</span><span class="tok-op">.</span><span class="tok-method">fromEntries</span><span class="tok-punct">(</span>
+  text<span class="tok-op">.</span><span class="tok-method">scan</span><span class="tok-punct">(</span>re`<span class="tok-punct">(</span>\w`<span class="tok-punct">)</span><span class="tok-op">=</span><span class="tok-punct">(</span>\w`<span class="tok-punct">)</span>`<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> <span class="tok-punct">(</span>m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-replace">
@@ -298,14 +308,14 @@ data-page="regex.html">
 <p class="returns"><strong>Returns:</strong> <code>String</code> — the rewritten text</p>
 <h5>Examples</h5>
 <p class="caption"><em>A literal replacement</em></p>
-<pre class="code"><code>  <span class="tok-string">&quot;</span><span class="tok-string">a-b-c</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">replace</span><span class="tok-punct">(</span>re`<span class="tok-op">-</span>`<span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">`</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;a`b`c&quot;</span></code></pre>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">a-b-c</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">replace</span><span class="tok-punct">(</span>re`<span class="tok-op">-</span>`<span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">`</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;a`b`c&quot;</span></code></pre>
 <p class="caption"><em>A replacement computed from the match</em></p>
-<pre class="code"><code>  <span class="tok-string">&quot;</span><span class="tok-string">2026-7-4</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">replace</span><span class="tok-punct">(</span>re`<span class="tok-punct">(</span>\d`<span class="tok-punct">)</span>`<span class="tok-punct">)</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>m<span class="tok-op">|</span>
-    m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">length</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-  <span class="tok-keyword">end</span>
-  <span class="tok-comment"># =&gt; &quot;4-1-1&quot;</span></code></pre>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">2026-7-4</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">replace</span><span class="tok-punct">(</span>re`<span class="tok-punct">(</span>\d`<span class="tok-punct">)</span>`<span class="tok-punct">)</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>m<span class="tok-op">|</span>
+  m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">length</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span>
+<span class="tok-comment"># =&gt; &quot;4-1-1&quot;</span></code></pre>
 <p class="caption"><em>Redacting numbers in a log line</em></p>
-<pre class="code"><code>  line<span class="tok-op">.</span><span class="tok-method">replace</span><span class="tok-punct">(</span>re`\d`<span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">x</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code>line<span class="tok-op">.</span><span class="tok-method">replace</span><span class="tok-punct">(</span>re`\d`<span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">x</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-splitlimit">
@@ -324,11 +334,11 @@ data-page="regex.html">
 <p class="returns"><strong>Returns:</strong> <code>[String]</code> — the fields</p>
 <h5>Examples</h5>
 <p class="caption"><em>Plain splitting needs no limit</em></p>
-<pre class="code"><code>  <span class="tok-string">&quot;</span><span class="tok-string">a, b ,c</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">split</span><span class="tok-punct">(</span>re`\s<span class="tok-op">*</span><span class="tok-punct">,</span>\s<span class="tok-op">*</span>`<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]</span></code></pre>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">a, b ,c</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">split</span><span class="tok-punct">(</span>re`\s<span class="tok-op">*</span><span class="tok-punct">,</span>\s<span class="tok-op">*</span>`<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]</span></code></pre>
 <p class="caption"><em>Splitting off just the first field</em></p>
-<pre class="code"><code>  <span class="tok-type">Regex</span><span class="tok-op">.</span><span class="tok-method">splitLimit</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a,b,c</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> re`<span class="tok-punct">,</span>`<span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; [&quot;a&quot;, &quot;b,c&quot;]</span></code></pre>
+<pre class="code"><code><span class="tok-type">Regex</span><span class="tok-op">.</span><span class="tok-method">splitLimit</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a,b,c</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> re`<span class="tok-punct">,</span>`<span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; [&quot;a&quot;, &quot;b,c&quot;]</span></code></pre>
 <p class="caption"><em>Keeping the trailing empty fields</em></p>
-<pre class="code"><code>  <span class="tok-type">Regex</span><span class="tok-op">.</span><span class="tok-method">splitLimit</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a,b,,</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> re`<span class="tok-punct">,</span>`<span class="tok-punct">,</span> <span class="tok-op">-</span><span class="tok-number">1</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;, &quot;&quot;, &quot;&quot;]</span></code></pre>
+<pre class="code"><code><span class="tok-type">Regex</span><span class="tok-op">.</span><span class="tok-method">splitLimit</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a,b,,</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> re`<span class="tok-punct">,</span>`<span class="tok-punct">,</span> <span class="tok-op">-</span><span class="tok-number">1</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;, &quot;&quot;, &quot;&quot;]</span></code></pre>
 
 </section>
 </section>
@@ -336,7 +346,7 @@ data-page="regex.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-26T20:27:51.720473998Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-26T22:47:19.793944540Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

@@ -35,19 +35,36 @@ Kex's concurrency is the BEAM's: lightweight processes that share nothing and co
 
 `Task` runs one piece of work somewhere else and gives you the answer back:
 
-  let a = Task.start do expensiveThing(1) end   let b = Task.start do expensiveThing(2) end   a.await ` b.await
+```kex
+let a = Task.start do expensiveThing(1) end
+let b = Task.start do expensiveThing(2) end
+a.await ` b.await
+```
 
 `serving` plus `Process.spawn` gives a piece of state its own process, with typed calls into it:
 
-  record RateLimiter do     remaining : Integer   end
+```kex
+record RateLimiter do
+  remaining : Integer
+end
 
-  serving RateLimiter do     slot allowed? -> Reply<Bool> do       let allowed = @remaining > 0       new.remaining = allowed then @remaining - 1 else @remaining       return { new, reply: allowed }     end   end
+serving RateLimiter do
+  slot allowed? -> Reply<Bool> do
+    let allowed = @remaining > 0
+    new.remaining = allowed then @remaining - 1 else @remaining
+    return { new, reply: allowed }
+  end
+end
 
-  let api = Process.spawn(RateLimiter { remaining: 2 })   api.allowed?()   # => Ok(true)
+let api = Process.spawn(RateLimiter { remaining: 2 })
+api.allowed?()   # => Ok(true)
+```
 
 `Process.run` and `Process.stream` run an external program.
 
-  Process.run("git", ["rev-parse", "HEAD"])
+```kex
+Process.run("git", ["rev-parse", "HEAD"])
+```
 
 Backed by Kex.Intrinsic.Process and the BEAM runtime.
 
@@ -93,9 +110,15 @@ What a synchronous `slot` returns: an answer for the caller, and optionally a ne
 
 `reply` answers the caller immediately. A slot may omit it only when it sends a deferred response with `from.reply(...)`. `new` installs the next serving state; omitting it preserves the current state. `stop` terminates the server after applying the transition. Within a `serving X` block, the checker narrows `new` from `Any?` to `X?`.
 
-  slot allowed? -> Reply<Bool> do     let allowed = @remaining > 0     new.remaining = allowed then @remaining - 1 else @remaining     return { new, reply: allowed }   end
+```kex
+slot allowed? -> Reply<Bool> do
+  let allowed = @remaining > 0
+  new.remaining = allowed then @remaining - 1 else @remaining
+  return { new, reply: allowed }
+end
 
-  slot stop -> Reply<Integer> = { stop: :normal, reply: @remaining }
+slot stop -> Reply<Integer> = { stop: :normal, reply: @remaining }
+```
 
 **Fields**
 
@@ -188,10 +211,14 @@ exec(command, args) : String -> [String] -> Integer
 ```
 
 
-## constant `self`
+## function `self`
 
 Returns the calling process's own `Pid`.
 
+
+```kex
+self() : Pid
+```
 
 
 ## function `exit`
@@ -256,8 +283,8 @@ send(msg) : X -> Void
 **Examples**
 
 ```kex
-  worker.send(:stop)
-  worker.send(("job", 42))
+worker.send(:stop)
+worker.send(("job", 42))
 ```
 
 #### `sendFrom`
@@ -273,7 +300,7 @@ sendFrom(msg) : X -> Void
 **Examples**
 
 ```kex
-  server.sendFrom(:status)   # the server receives (senderPid, :status)
+server.sendFrom(:status)   # the server receives (senderPid, :status)
 ```
 
 ## make `Process<X>`
@@ -321,7 +348,7 @@ within(timeout) : Integer -> Server<X>
 _Giving one call longer to answer_
 
 ```kex
-  api.within(30000).rebuildIndex()
+api.within(30000).rebuildIndex()
 ```
 
 ## make `From<X>`
@@ -344,9 +371,9 @@ reply(value) : X -> Void
 _Answering after the work is done_
 
 ```kex
-  Task.start do
-    from.reply(expensiveThing())
-  end
+Task.start do
+  from.reply(expensiveThing())
+end
 ```
 
 ## module `Task`
@@ -395,8 +422,8 @@ await(timeout) : Integer -> X
 **Examples**
 
 ```kex
-  let t = Task.start do slowThing() end
-  t.await(1000)
+let t = Task.start do slowThing() end
+t.await(1000)
 ```
 
 ## function `worker`

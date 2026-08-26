@@ -15,7 +15,10 @@ Running Kex source code at run time, in a sandbox.
 
 Each call builds a fresh, isolated evaluator: the caller's environment is never shared, and the evaluated code sees only what `EvaluatorOptions` allows. Step and depth limits make a runaway program stop rather than hang.
 
-  Evaluator.runExpression("1 ` 2")           # => Ok(3)   Evaluator.runExpression("[3,1,2].sort")    # => Ok([1, 2, 3])
+```kex
+Evaluator.runExpression("1 ` 2")           # => Ok(3)
+Evaluator.runExpression("[3,1,2].sort")    # => Ok([1, 2, 3])
+```
 
 This is for evaluating expressions your program was given — a formula in a config file, a filter typed by a user. Every result is a `Result+, so a syntax error or a rejected call is a value you handle.
 

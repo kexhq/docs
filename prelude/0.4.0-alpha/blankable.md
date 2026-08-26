@@ -21,11 +21,19 @@ entities:
 
 A value is blank when it has no meaningful content: `None`, an empty or all-whitespace string, an empty collection, or `false`. The semantics are Rails's, and the point is the same — one question that works across types, so a validation does not need a different test per field.
 
-  "".blank?        # => true   "   ".blank?     # => true   (unlike "   ".empty?)   [].blank?        # => true   None.blank?      # => true   "hi".present?    # => true
+```kex
+"".blank?        # => true
+"   ".blank?     # => true   (unlike "   ".empty?)
+[].blank?        # => true
+None.blank?      # => true
+"hi".present?    # => true
+```
 
 `present?` is the negation, and is often what reads better:
 
-  fields.all? { |name, value| value.present? }
+```kex
+fields.all? { |name, value| value.present? }
+```
 
 
 #### `blank?`
@@ -43,9 +51,9 @@ blank? : Bool
 **Examples**
 
 ```kex
-  "".blank?      # => true
-  "  ".blank?    # => true
-  "hi".blank?    # => false
+"".blank?      # => true
+"  ".blank?    # => true
+"hi".blank?    # => false
 ```
 
 ## make `Bool` implements [Blankable](#trait-blankable)
@@ -68,8 +76,8 @@ blank? : Bool
 **Examples**
 
 ```kex
-  0.blank?    # => false
-  42.blank?   # => false
+0.blank?    # => false
+42.blank?   # => false
 ```
 
 ## make `Float` implements [Blankable](#trait-blankable)
@@ -88,7 +96,7 @@ blank? : Bool
 **Examples**
 
 ```kex
-  0.0.blank?   # => false
+0.0.blank?   # => false
 ```
 
 ## make `String` implements [Blankable](#trait-blankable)
@@ -113,9 +121,9 @@ blank? : Bool
 **Examples**
 
 ```kex
-  None.blank?        # => true
-  Just(1).blank?     # => false
-  Just("").blank?    # => false
+None.blank?        # => true
+Just(1).blank?     # => false
+Just("").blank?    # => false
 ```
 
 ## make `[X]` implements [Blankable](#trait-blankable)
@@ -134,13 +142,13 @@ blank? : Bool
 **Examples**
 
 ```kex
-  [].blank?         # => true
-  [1, 2].blank?     # => false
+[].blank?         # => true
+[1, 2].blank?     # => false
 ```
 _Reporting an empty result set_
 
 ```kex
-  if matches.blank?
-    IO.printLine("no matches")
-  end
+if matches.blank?
+  IO.printLine("no matches")
+end
 ```

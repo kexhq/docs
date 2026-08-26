@@ -15,9 +15,15 @@ SI units: metres, grams, watts, volts and the rest, with prefixes and dimensiona
 
 Opt-in — nothing here is in scope until `using Units.SI`.
 
-  using Units.SI
+```kex
+using Units.SI
 
-  main do     IO.printLine(3.kilo.watt.to(String))          # prints: 3000.0 W     IO.printLine(5000.meter.kilo.to(String))      # prints: 5.0 km     IO.printLine((100.meter / 10.sec).to(String)) # prints: 10.0 m/s   end
+main do
+  IO.printLine(3.kilo.watt.to(String))          # prints: 3000.0 W
+  IO.printLine(5000.meter.kilo.to(String))      # prints: 5.0 km
+  IO.printLine((100.meter / 10.sec).to(String)) # prints: 10.0 m/s
+end
+```
 
 Every value is a `Measure` from the prelude, so the arithmetic, conversion and comparison described there apply unchanged. What this module adds is the SI vocabulary, the prefixes, and a table of which dimension results from multiplying or dividing two others — so `2.newton * 3.meter` answers in joules and `100.meter / 10.sec` in metres per second.
 
@@ -50,7 +56,9 @@ A decimal prefix applied to a unit, for display.
 
 A display prefix carries the unit it will display, for example `Kilo(Watt * Hour)`. Pass one to `to(String, in:)` to render a measure at that scale.
 
-  1500.watt.to(String, in: Kilo(Watt))   # => Just("1.5 kW")
+```kex
+1500.watt.to(String, in: Kilo(Watt))   # => Just("1.5 kW")
+```
 
 
 

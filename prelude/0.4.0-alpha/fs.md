@@ -15,13 +15,24 @@ The filesystem: reading and writing files, walking directories, and manipulating
 
 `FS` is not in the prelude — start with `using FS`.
 
-  using FS
+```kex
+using FS
 
-  main do     match FS.File.read("config.txt") do       Just(text) => IO.printLine(text.lines.count)       None       => IO.printError("config.txt is missing")     end   end
+main do
+  match FS.File.read("config.txt") do
+    Just(text) => IO.printLine(text.lines.count)
+    None       => IO.printError("config.txt is missing")
+  end
+end
+```
 
 It is organised in three parts:
 
-  FS.File        reading, writing, copying and deleting files   FS.Directory   creating, listing and removing directories   FS.Path        pure path arithmetic, with no filesystem access at all
+```kex
+FS.File        reading, writing, copying and deleting files
+FS.Directory   creating, listing and removing directories
+FS.Path        pure path arithmetic, with no filesystem access at all
+```
 
 The first two are capabilities: everything in them touches the real filesystem, so they can only be called from `foul` code, and a test can replace the whole of `FS.File` for a lexical region rather than mutating global state. `FS.Path` is ordinary pure code.
 
@@ -215,6 +226,8 @@ Reads the file and returns its lines, without their newlines.
 
 Answers `None` when the file cannot be read. A trailing newline does not produce a final empty line, so the count is the number of lines you would see in an editor.
 
+NOT `lines`: FilePath is an alias for String, so a receiver function named `lines` here is indistinguishable from String's own `lines` at every call site, and merely saying `using FS` made `text.lines` ambiguous. `readLines` also says what it does — it reads the file.
+
 
 ```kex
 readLines(path) : FilePath -> [String]?
@@ -229,7 +242,10 @@ Unlike `readLines`, the file is consumed on demand, so this is the way to look a
 
 The stream ends at the last line, so asking for more lines than the file has answers just the lines there are — unlike `Stream.Sequence`, which is deliberately infinite.
 
-  FS.File.feed("two-lines.txt").map { |lines| lines.take(5) }.or([])   # => ["one", "two"]
+```kex
+FS.File.feed("two-lines.txt").map { |lines| lines.take(5) }.or([])
+# => ["one", "two"]
+```
 
 
 ```kex
@@ -255,6 +271,8 @@ Resolves `path` against the process's current directory and returns the absolute
 
 This is the one path operation that is not in `FS.Path`, because it is not lexical: it asks the process where it is.
 
+Path manipulation lives in FS.Path — `basename`, `dirname`, `extension` and `join` used to be here too, but a name cannot sit in both modules: FilePath IS String, so two same-named receiver functions on it are indistinguishable at every call site. `absolute` stays because it is not lexical — it asks the process where it is.
+
 
 ```kex
 absolute(path) : FilePath -> String?
@@ -267,7 +285,11 @@ Path arithmetic: joining, splitting, normalising and comparing paths.
 
 Everything here is pure string manipulation with no filesystem access, so the answer is the same whether or not the path exists — which also means these functions can be called from ordinary pure code, unlike `FS.File`. POSIX separators only for now.
 
-  FS.Path.join("src", "main.kex")            # => "src/main.kex"   FS.Path.extension("src/main.kex")          # => ".kex"   FS.Path.withExtension("src/main.kex", "beam")   # => "src/main.beam"
+```kex
+FS.Path.join("src", "main.kex")            # => "src/main.kex"
+FS.Path.extension("src/main.kex")          # => ".kex"
+FS.Path.withExtension("src/main.kex", "beam")   # => "src/main.beam"
+```
 
 ## constant `separator`
 
@@ -291,6 +313,8 @@ join(a, b) : FilePath -> FilePath -> FilePath -> String
 ## function `joinAll`
 
 Joins any number of path parts, skipping empty ones, and normalises the result. An empty list gives `"."`.
+
+The list form is `joinAll`, not another `join` overload: a list receiver already has `List.join`, and a second one-argument `join` on the same receiver would be indistinguishable from it.
 
 
 ```kex
@@ -514,14 +538,22 @@ directories(path) : FilePath -> [String]?
 ```
 
 
-## constant `current`
+## function `current`
 
 Returns the process's current working directory, as an absolute path.
 
 
+```kex
+current() : String
+```
 
-## constant `home`
+
+## function `home`
 
 Returns the current user's home directory, or `None` when it cannot be determined.
 
+
+```kex
+home() : String?
+```
 

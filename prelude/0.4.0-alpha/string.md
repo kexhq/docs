@@ -18,11 +18,19 @@ Text. A `String` is a sequence of Unicode characters, immutable like every other
 
 A `String` is its own type, not a list of characters. It is `Enumerable`, so `each`, `reduce`, `find` and friends walk it one `Char` at a time, and the sequence operations that could reasonably answer in either currency pick the useful one: `take`, `drop` and `sort` hand back a `String`, while `first` and `last` hand back a `Char`. Use `chars` to cross over to a real list.
 
-  let line = "  Hello, World  "   line.trim.lowerCase.split(", ")   # => ["hello", "world"]   line.trim.take(5)                 # => "Hello"   line.trim.chars.count(~upper?)    # => 2
+```kex
+let line = "  Hello, World  "
+line.trim.lowerCase.split(", ")   # => ["hello", "world"]
+line.trim.take(5)                 # => "Hello"
+line.trim.chars.count(~upper?)    # => 2
+```
 
 Strings interpolate with `${...}`:
 
-  let name = "Ada"   "hello, ${name}"                  # => "hello, Ada"
+```kex
+let name = "Ada"
+"hello, ${name}"                  # => "hello, Ada"
+```
 
 
 #### `reduce`
@@ -42,15 +50,15 @@ reduce(acc, f) : A -> (A -> Char -> A) -> A
 _Summing digit values_
 
 ```kex
-  "12345".reduce(0) { |sum, c| sum ` c.codepoint - 48 }   # => 15
+"12345".reduce(0) { |sum, c| sum ` c.codepoint - 48 }   # => 15
 ```
 _Building a character histogram_
 
 ```kex
-  "banana".reduce({}) do |counts, c|
-    counts.put(c.string, counts.get(c.string).or(0) ` 1)
-  end
-  # => {"a": 3, "b": 1, "n": 2}
+"banana".reduce({}) do |counts, c|
+  counts.put(c.string, counts.get(c.string).or(0) ` 1)
+end
+# => {"a": 3, "b": 1, "n": 2}
 ```
 
 #### `mapChars`
@@ -68,16 +76,16 @@ mapChars(f) : (Char -> Char) -> String
 **Examples**
 
 ```kex
-  "hi".mapChars(&.upperCase)   # => "HI"
-  "hi".map(&.upperCase)        # => ['H', 'I']  (a list, per Enumerable)
+"hi".mapChars(&.upperCase)   # => "HI"
+"hi".map(&.upperCase)        # => ['H', 'I']  (a list, per Enumerable)
 ```
 _Shifting every character up one codepoint_
 
 ```kex
-  "abc".mapChars do |c|
-    String.fromCodepoint(c.codepoint + 1).or("").first.or(c)
-  end
-  # => "bcd"
+"abc".mapChars do |c|
+  String.fromCodepoint(c.codepoint + 1).or("").first.or(c)
+end
+# => "bcd"
 ```
 
 #### `filter`
@@ -95,12 +103,12 @@ filter(pred) : (Char -> Bool) -> String
 _Keeping only the digits_
 
 ```kex
-  "a1b2c3".filter(~digit?)   # => "123"
+"a1b2c3".filter(~digit?)   # => "123"
 ```
 _Stripping punctuation before comparing_
 
 ```kex
-  "Hello, World!".filter(~alpha?).lowerCase   # => "helloworld"
+"Hello, World!".filter(~alpha?).lowerCase   # => "helloworld"
 ```
 
 #### `get`
@@ -119,8 +127,8 @@ get(i) : Integer -> Char -> Char
 **Examples**
 
 ```kex
-  "hi".get(1)    # => Just('i')
-  "hi".get(9)    # => None
+"hi".get(1)    # => Just('i')
+"hi".get(9)    # => None
 ```
 
 #### `take`
@@ -136,14 +144,14 @@ take(n) : Integer -> String
 **Examples**
 
 ```kex
-  "hello".take(2)    # => "he"
-  "hello".take(99)   # => "hello"
-  "hello".take(0)    # => ""
+"hello".take(2)    # => "he"
+"hello".take(99)   # => "hello"
+"hello".take(0)    # => ""
 ```
 _Truncating for display_
 
 ```kex
-  let preview = title.take(30) + (title.count > 30 then "…" else "")
+let preview = title.take(30) + (title.count > 30 then "…" else "")
 ```
 
 #### `drop`
@@ -159,14 +167,14 @@ drop(n) : Integer -> String
 **Examples**
 
 ```kex
-  "hello".drop(2)    # => "llo"
-  "hello".drop(99)   # => ""
+"hello".drop(2)    # => "llo"
+"hello".drop(99)   # => ""
 ```
 _Removing a known prefix_
 
 ```kex
-  let flag = "--verbose"
-  flag.startsWith?("--") then flag.drop(2) else flag   # => "verbose"
+let flag = "--verbose"
+flag.startsWith?("--") then flag.drop(2) else flag   # => "verbose"
 ```
 
 #### `reject`
@@ -182,12 +190,12 @@ reject(pred) : (Char -> Bool) -> String
 **Examples**
 
 ```kex
-  "hello".reject { |c| c == 'l' }   # => "heo"
+"hello".reject { |c| c == 'l' }   # => "heo"
 ```
 _Removing whitespace_
 
 ```kex
-  "1 234 567".reject(~space?)   # => "1234567"
+"1 234 567".reject(~space?)   # => "1234567"
 ```
 
 #### `indexOf`
@@ -203,15 +211,15 @@ indexOf(c) : Char -> Integer?
 **Examples**
 
 ```kex
-  "hello".indexOf('l')   # => Just(2)
-  "hello".indexOf('z')   # => None
+"hello".indexOf('l')   # => Just(2)
+"hello".indexOf('z')   # => None
 ```
 _Splitting a `key=value` pair at the first `=`_
 
 ```kex
-  let pair = "host=localhost"
-  pair.indexOf('=').map { |i| (pair.take(i), pair.drop(i + 1)) }
-  # => Just(("host", "localhost"))
+let pair = "host=localhost"
+pair.indexOf('=').map { |i| (pair.take(i), pair.drop(i + 1)) }
+# => Just(("host", "localhost"))
 ```
 
 #### `findIndex`
@@ -229,13 +237,13 @@ findIndex(pred) : (Char -> Bool) -> Integer?
 **Examples**
 
 ```kex
-  "hello".findIndex { |c| c == 'l' }   # => Just(2)
-  "hello".findIndex(~digit?)           # => None
+"hello".findIndex { |c| c == 'l' }   # => Just(2)
+"hello".findIndex(~digit?)           # => None
 ```
 _Finding where the leading indentation ends_
 
 ```kex
-  "    text".findIndex { |c| !c.space? }   # => Just(4)
+"    text".findIndex { |c| !c.space? }   # => Just(4)
 ```
 
 #### `zip`
@@ -251,13 +259,13 @@ zip(other) : [Y] -> [(Char, Y)]
 **Examples**
 
 ```kex
-  "ab".zip([1, 2])      # => [('a', 1), ('b', 2)]
-  "abc".zip([1, 2])     # => [('a', 1), ('b', 2)]
+"ab".zip([1, 2])      # => [('a', 1), ('b', 2)]
+"abc".zip([1, 2])     # => [('a', 1), ('b', 2)]
 ```
 _Numbering the characters_
 
 ```kex
-  "abc".zip((0..2).items)   # => [('a', 0), ('b', 1), ('c', 2)]
+"abc".zip((0..2).items)   # => [('a', 0), ('b', 1), ('c', 2)]
 ```
 
 #### `partition`
@@ -273,14 +281,14 @@ partition(pred) : (Char -> Bool) -> (String, String)
 **Examples**
 
 ```kex
-  "hello".partition { |c| c == 'l' }   # => ("ll", "heo")
+"hello".partition { |c| c == 'l' }   # => ("ll", "heo")
 ```
 _Separating digits from the rest_
 
 ```kex
-  let (digits, other) = "a1b2".partition(~digit?)
-  digits   # => "12"
-  other    # => "ab"
+let (digits, other) = "a1b2".partition(~digit?)
+digits   # => "12"
+other    # => "ab"
 ```
 
 #### `enclose`
@@ -297,13 +305,13 @@ enclose(wrapper) : String -> String -> String
 **Examples**
 
 ```kex
-  "hello".enclose("*")    # => "*hello*"
-  "hello".enclose("__")   # => "__hello__"
+"hello".enclose("*")    # => "*hello*"
+"hello".enclose("__")   # => "__hello__"
 ```
 _Quoting a value for output_
 
 ```kex
-  value.enclose("\"")   # => "\"localhost\""
+value.enclose("\"")   # => "\"localhost\""
 ```
 
 #### `at`
@@ -319,8 +327,40 @@ at(i) : Integer -> Char?
 **Examples**
 
 ```kex
-  "hello".at(1)   # => Just('e')
-  "hello".at(9)   # => None
+"hello".at(1)   # => Just('e')
+"hello".at(9)   # => None
+```
+
+#### `split`
+
+Splits the string on every occurrence of `sep`, which may be a literal string or a `Regex`.
+
+Separators at the ends produce empty parts, so splitting `",a,"` on `","` gives three parts. Filter or trim afterwards when that is not wanted.
+
+```kex
+split(sep) : String | Regex -> [String]
+split : [String]
+```
+
+**Returns**: `[String]` — the parts, in order
+
+**Examples**
+
+_Splitting a delimited line_
+
+```kex
+"a,b,c".split(",")     # => ["a", "b", "c"]
+"a, b, c".split(", ")  # => ["a", "b", "c"]
+```
+_Splitting on a pattern (needs `using Regex`)_
+
+```kex
+"a1b22c".split(re`[0-9]+`)   # => ["a", "b", "c"]
+```
+_Empty parts at the edges are kept_
+
+```kex
+",a,".split(",")   # => ["", "a", ""]
 ```
 
 #### `indentRest`
@@ -338,15 +378,15 @@ indentRest(prefix) : String -> String
 **Examples**
 
 ```kex
-  "a\nb\n".indentRest("  ")   # => "a\n  b"
-  "a".indentRest("  ")        # => "a"
+"a\nb\n".indentRest("  ")   # => "a\n  b"
+"a".indentRest("  ")        # => "a"
 ```
 _Splicing a block into a template_
 
 ```kex
-  let body = "one\ntwo"
-  "items:\n  ${body.indentRest("  ")}"
-  # => "items:\n  one\n  two"
+let body = "one\ntwo"
+"items:\n  ${body.indentRest("  ")}"
+# => "items:\n  one\n  two"
 ```
 
 #### `replace`
@@ -364,13 +404,13 @@ replace(pattern, replacement) : String -> String -> String
 **Examples**
 
 ```kex
-  "a-b-c".replace("-", "`")   # => "a`b+c"
-  "abc".replace("", "-")      # => "-a-b-c-"
+"a-b-c".replace("-", "`")   # => "a`b+c"
+"abc".replace("", "-")      # => "-a-b-c-"
 ```
 _Normalising a path separator_
 
 ```kex
-  "a\\b\\c".replace("\\", "/")   # => "a/b/c"
+"a\\b\\c".replace("\\", "/")   # => "a/b/c"
 ```
 
 #### `substitute`
@@ -394,15 +434,15 @@ substitute(replacements) : {String: String} -> String
 **Examples**
 
 ```kex
-  "Hello, $WHO$!".substitute({"$WHO$": "world"})           # => "Hello, world!"
-  "$A$ and $B$".substitute({"$A$": "x", "$B$": "y"})       # => "x and y"
-  "__A__".substitute({"__A__": "any key works"})           # => "any key works"
+"Hello, $WHO$!".substitute({"$WHO$": "world"})           # => "Hello, world!"
+"$A$ and $B$".substitute({"$A$": "x", "$B$": "y"})       # => "x and y"
+"__A__".substitute({"__A__": "any key works"})           # => "any key works"
 ```
 _A reusable template_
 
 ```kex
-  let greeting = "Dear $NAME$,\n\nYour order $ID$ has shipped."
-  greeting.substitute({"$NAME$": "Ada", "$ID$": "A-1701"})
+let greeting = "Dear $NAME$,\n\nYour order $ID$ has shipped."
+greeting.substitute({"$NAME$": "Ada", "$ID$": "A-1701"})
 ```
 
 #### `contains?`
@@ -420,14 +460,14 @@ contains?(sub) : String -> Bool
 **Examples**
 
 ```kex
-  "hello world".contains?("world")   # => true
-  "hello world".contains?("xyz")     # => false
-  "hello world".contains?("World")   # => false
+"hello world".contains?("world")   # => true
+"hello world".contains?("xyz")     # => false
+"hello world".contains?("World")   # => false
 ```
 _Ignoring case_
 
 ```kex
-  "Hello".lowerCase.contains?("hello")   # => true
+"Hello".lowerCase.contains?("hello")   # => true
 ```
 
 #### `startsWith?`
@@ -443,13 +483,13 @@ startsWith?(prefix) : String -> Bool
 **Examples**
 
 ```kex
-  "hello".startsWith?("hel")   # => true
-  "hello".startsWith?("llo")   # => false
+"hello".startsWith?("hel")   # => true
+"hello".startsWith?("llo")   # => false
 ```
 _Recognising a command-line flag_
 
 ```kex
-  args.filter { |a| a.startsWith?("--") }
+args.filter { |a| a.startsWith?("--") }
 ```
 
 #### `endsWith?`
@@ -465,13 +505,13 @@ endsWith?(suffix) : String -> Bool
 **Examples**
 
 ```kex
-  "hello".endsWith?("llo")   # => true
-  "hello".endsWith?("hel")   # => false
+"hello".endsWith?("llo")   # => true
+"hello".endsWith?("hel")   # => false
 ```
 _Selecting files by extension_
 
 ```kex
-  paths.filter { |p| p.endsWith?(".kex") }
+paths.filter { |p| p.endsWith?(".kex") }
 ```
 
 ## make `Char`
@@ -480,7 +520,11 @@ A single Unicode character.
 
 Character literals are written with single quotes — `'a'` — and are a different type from the one-character string `"a"`. The classification methods (`digit?`, `alpha?`, `space?` and the rest) are what most character code needs; `codepoint` and `String.fromCodepoint` are the escape hatch to raw Unicode values.
 
-  "hello world".chars.count(~alpha?)   # => 10   'a'.upperCase                        # => 'A'   'a'.string                           # => "a"
+```kex
+"hello world".chars.count(~alpha?)   # => 10
+'a'.upperCase                        # => 'A'
+'a'.string                           # => "a"
+```
 
 
 #### `in?`
@@ -496,13 +540,13 @@ in?(range) : Range<Char> -> Bool
 **Examples**
 
 ```kex
-  'b'.in?('a'..'z')   # => true
-  'B'.in?('a'..'z')   # => false
+'b'.in?('a'..'z')   # => true
+'B'.in?('a'..'z')   # => false
 ```
 _A hexadecimal-digit test_
 
 ```kex
-  let hex?(c: Char) -> Bool = c.digit? || c.lowerCase.in?('a'..'f')
+let hex?(c: Char) -> Bool = c.digit? || c.lowerCase.in?('a'..'f')
 ```
 
 ## module `String`
@@ -537,6 +581,9 @@ fromBytes(values) : [Byte] -> String?
 
 A fixed-size group of values, written `(a, b)`. Unlike a list, a tuple's size and the type of each position are part of its type, so the `List` methods do not apply to it — destructure it, match on it, or convert it with `items`.
 
-  let (name, age) = ("Ada", 36)   [1, 2, 3].partition { |n| n.even? }   # => ([2], [1, 3])
+```kex
+let (name, age) = ("Ada", 36)
+[1, 2, 3].partition { |n| n.even? }   # => ([2], [1, 3])
+```
 
 

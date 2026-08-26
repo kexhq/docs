@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Process | Prelude 0.4.0-alpha | kex docs</title>
+<title>Process | Standard Library 0.4.0-alpha | kex docs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -22,12 +22,12 @@ data-root="../../" data-package="prelude" data-version="0.4.0-alpha"
 data-page="process.html">
 <span>Search</span><kbd>/</kbd>
 </button>
-<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="process.html">Prelude 0.4.0-alpha</span>
+<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="process.html">Standard Library 0.4.0-alpha</span>
 <a class="back" href="https://kex.run/docs">kex.run ↗</a>
 </div>
 </header>
 <div class="wrap layout">
-<aside class="side"><nav aria-label="Modules"><p class="side-heading">Prelude</p><ul class="side-list">
+<aside class="side"><nav aria-label="Modules"><p class="side-heading"><a href="index.html">Standard Library</a></p><ul class="side-list">
 <li><a href="algebra.html">Algebra</a></li>
 <li><a href="bits.html">Bits</a></li>
 <li><a href="blankable.html">Blankable</a></li>
@@ -37,7 +37,7 @@ data-page="process.html">
 <li><a href="env.html">ENV</a></li>
 <li><a href="errorable.html">Errorable</a></li>
 <li><a href="evaluator.html">Evaluator</a></li>
-<li><a href="filehandle.html">Filehandle</a></li>
+<li><a href="filehandle.html">FileHandle</a></li>
 <li><a href="fs.html">FS</a></li>
 <li><a href="http.html">Http</a></li>
 <li><a href="io.html">IO</a></li>
@@ -91,21 +91,34 @@ data-page="process.html">
 <li><a href="units/si.html">Units.SI</a></li>
 </ul></nav></aside>
 <main class="content">
-<nav class="crumbs"><a href="index.html">Prelude</a> <span class="sep">/</span> <span>Process</span></nav>
+<nav class="crumbs"><a href="index.html">Standard Library</a> <span class="sep">/</span> <span>Process</span></nav>
 <article class="prose">
-<h1>Process</h1>
+<h1>Process<span class="tag-prelude" title="In the prelude: no import needed">prelude</span></h1>
 <section class="entity" id="type-pid">
 <h2><span class="kind kind-type">type</span> <code>Pid</code></h2>
 <p>Processes, tasks and external commands.</p>
 <p>Kex's concurrency is the BEAM's: lightweight processes that share nothing and communicate by message. There are three things here, and they answer different questions.</p>
 <p><code>Task</code> runs one piece of work somewhere else and gives you the answer back:</p>
-<p>  let a = Task.start do expensiveThing(1) end   let b = Task.start do expensiveThing(2) end   a.await ` b.await</p>
+<pre class="code"><code><span class="tok-keyword">let</span> a <span class="tok-op">=</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-fn">expensiveThing</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span> <span class="tok-keyword">end</span>
+<span class="tok-keyword">let</span> b <span class="tok-op">=</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-fn">expensiveThing</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span> <span class="tok-keyword">end</span>
+a<span class="tok-op">.</span><span class="tok-method">await</span> ` b<span class="tok-op">.</span><span class="tok-method">await</span></code></pre>
 <p><code>serving</code> plus <code>Process.spawn</code> gives a piece of state its own process, with typed calls into it:</p>
-<p>  record RateLimiter do     remaining : Integer   end</p>
-<p>  serving RateLimiter do     slot allowed? -&gt; Reply&lt;Bool&gt; do       let allowed = @remaining &gt; 0       new.remaining = allowed then @remaining - 1 else @remaining       return { new, reply: allowed }     end   end</p>
-<p>  let api = Process.spawn(RateLimiter { remaining: 2 })   api.allowed?()   # =&gt; Ok(true)</p>
+<pre class="code"><code><span class="tok-keyword">record</span> <span class="tok-type">RateLimiter</span> <span class="tok-keyword">do</span>
+  remaining <span class="tok-op">:</span> <span class="tok-type">Integer</span>
+<span class="tok-keyword">end</span>
+
+serving <span class="tok-type">RateLimiter</span> <span class="tok-keyword">do</span>
+  slot allowed? <span class="tok-op">-&gt;</span> <span class="tok-type">Reply</span><span class="tok-op">&lt;</span><span class="tok-type">Bool</span><span class="tok-op">&gt;</span> <span class="tok-keyword">do</span>
+    <span class="tok-keyword">let</span> allowed <span class="tok-op">=</span> <span class="tok-op">@</span><span class="tok-field">remaining</span> <span class="tok-op">&gt;</span> <span class="tok-number">0</span>
+    new<span class="tok-op">.</span><span class="tok-method">remaining</span> <span class="tok-op">=</span> allowed <span class="tok-keyword">then</span> <span class="tok-op">@</span><span class="tok-field">remaining</span> <span class="tok-op">-</span> <span class="tok-number">1</span> <span class="tok-keyword">else</span> <span class="tok-op">@</span><span class="tok-field">remaining</span>
+    <span class="tok-keyword">return</span> <span class="tok-punct">{</span> new<span class="tok-punct">,</span> reply<span class="tok-op">:</span> allowed <span class="tok-punct">}</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span>
+
+<span class="tok-keyword">let</span> api <span class="tok-op">=</span> <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-keyword">spawn</span><span class="tok-punct">(</span><span class="tok-type">RateLimiter</span> <span class="tok-punct">{</span> remaining<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+api<span class="tok-op">.</span><span class="tok-method">allowed?</span><span class="tok-punct">(</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(true)</span></code></pre>
 <p><code>Process.run</code> and <code>Process.stream</code> run an external program.</p>
-<p>  Process.run(&quot;git&quot;, [&quot;rev-parse&quot;, &quot;HEAD&quot;])</p>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">git</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">rev-parse</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">HEAD</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
 <p>Backed by Kex.Intrinsic.Process and the BEAM runtime.</p>
 <p>An opaque BEAM process identifier.</p>
 <p>Obtained from `Process.self` or `Process.whereis+. Send it messages, link to it, monitor it, or ask whether it is still alive.</p>
@@ -139,8 +152,13 @@ data-page="process.html">
 <h2><span class="kind kind-record">record</span> <code>Reply&lt;A&gt;</code></h2>
 <p>What a synchronous <code>slot</code> returns: an answer for the caller, and optionally a new state and a reason to stop.</p>
 <p><code>reply</code> answers the caller immediately. A slot may omit it only when it sends a deferred response with <code>from.reply(...)</code>. <code>new</code> installs the next serving state; omitting it preserves the current state. <code>stop</code> terminates the server after applying the transition. Within a <code>serving X</code> block, the checker narrows <code>new</code> from <code>Any?</code> to <code>X?</code>.</p>
-<p>  slot allowed? -&gt; Reply&lt;Bool&gt; do     let allowed = @remaining &gt; 0     new.remaining = allowed then @remaining - 1 else @remaining     return { new, reply: allowed }   end</p>
-<p>  slot stop -&gt; Reply&lt;Integer&gt; = { stop: :normal, reply: @remaining }</p>
+<pre class="code"><code>slot allowed? <span class="tok-op">-&gt;</span> <span class="tok-type">Reply</span><span class="tok-op">&lt;</span><span class="tok-type">Bool</span><span class="tok-op">&gt;</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">let</span> allowed <span class="tok-op">=</span> <span class="tok-op">@</span><span class="tok-field">remaining</span> <span class="tok-op">&gt;</span> <span class="tok-number">0</span>
+  new<span class="tok-op">.</span><span class="tok-method">remaining</span> <span class="tok-op">=</span> allowed <span class="tok-keyword">then</span> <span class="tok-op">@</span><span class="tok-field">remaining</span> <span class="tok-op">-</span> <span class="tok-number">1</span> <span class="tok-keyword">else</span> <span class="tok-op">@</span><span class="tok-field">remaining</span>
+  <span class="tok-keyword">return</span> <span class="tok-punct">{</span> new<span class="tok-punct">,</span> reply<span class="tok-op">:</span> allowed <span class="tok-punct">}</span>
+<span class="tok-keyword">end</span>
+
+slot stop <span class="tok-op">-&gt;</span> <span class="tok-type">Reply</span><span class="tok-op">&lt;</span><span class="tok-type">Integer</span><span class="tok-op">&gt;</span> <span class="tok-op">=</span> <span class="tok-punct">{</span> stop<span class="tok-op">:</span> <span class="tok-op">:</span>normal<span class="tok-punct">,</span> reply<span class="tok-op">:</span> <span class="tok-op">@</span><span class="tok-field">remaining</span> <span class="tok-punct">}</span></code></pre>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>reply</code></dt><dd><code>A</code></dd></div>
@@ -187,11 +205,11 @@ data-page="process.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Server&lt;X&gt;</code> — a handle on the running server</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-keyword">let</span> api <span class="tok-op">=</span> <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-keyword">spawn</span><span class="tok-punct">(</span><span class="tok-type">RateLimiter</span> <span class="tok-punct">{</span> remaining<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
-  api<span class="tok-op">.</span><span class="tok-method">allowed?</span><span class="tok-punct">(</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(true)</span>
-  api<span class="tok-op">.</span><span class="tok-method">allowed?</span><span class="tok-punct">(</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(true)</span>
-  api<span class="tok-op">.</span><span class="tok-method">allowed?</span><span class="tok-punct">(</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(false)</span>
-  api<span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">let</span> api <span class="tok-op">=</span> <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-keyword">spawn</span><span class="tok-punct">(</span><span class="tok-type">RateLimiter</span> <span class="tok-punct">{</span> remaining<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+api<span class="tok-op">.</span><span class="tok-method">allowed?</span><span class="tok-punct">(</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(true)</span>
+api<span class="tok-op">.</span><span class="tok-method">allowed?</span><span class="tok-punct">(</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(true)</span>
+api<span class="tok-op">.</span><span class="tok-method">allowed?</span><span class="tok-punct">(</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(false)</span>
+api<span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-run">
@@ -207,18 +225,18 @@ data-page="process.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;<a class="xref" href="#record-processresult">ProcessResult</a>, String&gt;</code> — the captured result, or why it could not start</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-keyword">match</span> <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">echo</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
-    <span class="tok-bool">Ok</span><span class="tok-punct">(</span>r<span class="tok-punct">)</span>    <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>r<span class="tok-op">.</span><span class="tok-method">stdout</span><span class="tok-op">.</span><span class="tok-method">trim</span><span class="tok-punct">)</span>   <span class="tok-comment"># prints: hello</span>
-    <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span>
-  <span class="tok-keyword">end</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">echo</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>r<span class="tok-punct">)</span>    <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>r<span class="tok-op">.</span><span class="tok-method">stdout</span><span class="tok-op">.</span><span class="tok-method">trim</span><span class="tok-punct">)</span>   <span class="tok-comment"># prints: hello</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 <p class="caption"><em>A non-zero status is still Ok</em></p>
-<pre class="code"><code>  <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">false</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(ProcessResult { exitCode: 1, ... })</span></code></pre>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">false</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(ProcessResult { exitCode: 1, ... })</span></code></pre>
 <p class="caption"><em>A command that does not exist is an Error</em></p>
-<pre class="code"><code>  <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">no-such-command</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Error(&quot;executable not found&quot;)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">no-such-command</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Error(&quot;executable not found&quot;)</span></code></pre>
 <p class="caption"><em>Reading a command's output as data</em></p>
-<pre class="code"><code>  <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">git</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">rev-parse</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">HEAD</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
-    <span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>r<span class="tok-op">|</span> r<span class="tok-op">.</span><span class="tok-method">stdout</span><span class="tok-op">.</span><span class="tok-method">trim</span> <span class="tok-punct">}</span>
-    <span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">unknown</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">git</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">rev-parse</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">HEAD</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>r<span class="tok-op">|</span> r<span class="tok-op">.</span><span class="tok-method">stdout</span><span class="tok-op">.</span><span class="tok-method">trim</span> <span class="tok-punct">}</span>
+  <span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">unknown</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-stream">
@@ -235,11 +253,11 @@ data-page="process.html">
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;Integer, String&gt;</code> — the exit code, or why it could not start</p>
 <h5>Examples</h5>
 <p class="caption"><em>Watching a build as it runs</em></p>
-<pre class="code"><code>  <span class="tok-keyword">match</span> <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">stream</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">make</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">-j8</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
-    <span class="tok-bool">Ok</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span>    <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build succeeded</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-    <span class="tok-bool">Ok</span><span class="tok-punct">(</span>code<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build failed with </span><span class="tok-string">${</span>code<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-    <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span>
-  <span class="tok-keyword">end</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">stream</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">make</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">-j8</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span>    <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build succeeded</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>code<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build failed with </span><span class="tok-string">${</span>code<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 
 </section>
 <section class="entity" id="function-exec">
@@ -254,16 +272,21 @@ data-page="process.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Integer</code> — the exit code, or <code>127</code> if it could not start</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">exec</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">true</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>              <span class="tok-comment"># =&gt; 0</span>
-  <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">exec</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">false</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>             <span class="tok-comment"># =&gt; 1</span>
-  <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">exec</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">no-such-command</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 127</span></code></pre>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">exec</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">true</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>              <span class="tok-comment"># =&gt; 0</span>
+<span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">exec</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">false</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>             <span class="tok-comment"># =&gt; 1</span>
+<span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">exec</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">no-such-command</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 127</span></code></pre>
 <p class="caption"><em>Testing for a tool's presence</em></p>
-<pre class="code"><code>  <span class="tok-keyword">let</span> haveGit <span class="tok-op">=</span> <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">exec</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">git</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">--version</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-number">0</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">let</span> haveGit <span class="tok-op">=</span> <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">exec</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">git</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">--version</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-number">0</span></code></pre>
 
 </section>
-<section class="entity" id="constant-self">
-<h2><span class="kind kind-constant">constant</span> <code>self</code> <code>Pid</code></h2>
+<section class="entity" id="function-self">
+<h2><span class="kind kind-function">function</span> <code>self</code></h2>
 <p>Returns the calling process's own <code>Pid</code>.</p>
+<pre class="code"><code><span class="tok-fn">self</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Pid</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Pid</code> — this process's identifier</p>
+<h5>Examples</h5>
+<p class="caption"><em>Telling another process where to answer</em></p>
+<pre class="code"><code>worker<span class="tok-op">.</span><span class="tok-method">send</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">self</span><span class="tok-punct">,</span> <span class="tok-op">:</span>ping<span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-exit">
@@ -278,7 +301,7 @@ data-page="process.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">exit</span><span class="tok-punct">(</span>worker<span class="tok-punct">,</span> <span class="tok-op">:</span>shutdown<span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">exit</span><span class="tok-punct">(</span>worker<span class="tok-punct">,</span> <span class="tok-op">:</span>shutdown<span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-register">
@@ -292,7 +315,7 @@ data-page="process.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">register</span><span class="tok-punct">(</span><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">self</span><span class="tok-punct">,</span> <span class="tok-op">:</span><span class="tok-keyword">main</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">register</span><span class="tok-punct">(</span><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">self</span><span class="tok-punct">,</span> <span class="tok-op">:</span><span class="tok-keyword">main</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-whereis">
@@ -305,10 +328,10 @@ data-page="process.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Pid?</code> — the process, or <code>None</code></p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">whereis</span><span class="tok-punct">(</span><span class="tok-op">:</span><span class="tok-keyword">main</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; Just(pid)</span>
-  <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">whereis</span><span class="tok-punct">(</span><span class="tok-op">:</span>not_there<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; None</span></code></pre>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">whereis</span><span class="tok-punct">(</span><span class="tok-op">:</span><span class="tok-keyword">main</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; Just(pid)</span>
+<span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">whereis</span><span class="tok-punct">(</span><span class="tok-op">:</span>not_there<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; None</span></code></pre>
 <p class="caption"><em>Sending to a named process if it is there</em></p>
-<pre class="code"><code>  <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">whereis</span><span class="tok-punct">(</span><span class="tok-op">:</span>logger<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>pid<span class="tok-op">|</span> pid<span class="tok-op">.</span><span class="tok-method">send</span><span class="tok-punct">(</span>message<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">whereis</span><span class="tok-punct">(</span><span class="tok-op">:</span>logger<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>pid<span class="tok-op">|</span> pid<span class="tok-op">.</span><span class="tok-method">send</span><span class="tok-punct">(</span>message<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
 
 </section>
 </section>
@@ -338,8 +361,8 @@ data-page="process.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
-<pre class="code"><code>  worker<span class="tok-op">.</span><span class="tok-method">send</span><span class="tok-punct">(</span><span class="tok-op">:</span>stop<span class="tok-punct">)</span>
-  worker<span class="tok-op">.</span><span class="tok-method">send</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">job</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code>worker<span class="tok-op">.</span><span class="tok-method">send</span><span class="tok-punct">(</span><span class="tok-op">:</span>stop<span class="tok-punct">)</span>
+worker<span class="tok-op">.</span><span class="tok-method">send</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">job</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-sendfrom">
@@ -352,7 +375,7 @@ data-page="process.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
-<pre class="code"><code>  server<span class="tok-op">.</span><span class="tok-method">sendFrom</span><span class="tok-punct">(</span><span class="tok-op">:</span>status<span class="tok-punct">)</span>   <span class="tok-comment"># the server receives (senderPid, :status)</span></code></pre>
+<pre class="code"><code>server<span class="tok-op">.</span><span class="tok-method">sendFrom</span><span class="tok-punct">(</span><span class="tok-op">:</span>status<span class="tok-punct">)</span>   <span class="tok-comment"># the server receives (senderPid, :status)</span></code></pre>
 
 </div>
 </div>
@@ -402,7 +425,7 @@ data-page="process.html">
 <p class="returns"><strong>Returns:</strong> <code>Server&lt;X&gt;</code> — a view of the server with that timeout</p>
 <h5>Examples</h5>
 <p class="caption"><em>Giving one call longer to answer</em></p>
-<pre class="code"><code>  api<span class="tok-op">.</span><span class="tok-method">within</span><span class="tok-punct">(</span><span class="tok-number">30000</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">rebuildIndex</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code>api<span class="tok-op">.</span><span class="tok-method">within</span><span class="tok-punct">(</span><span class="tok-number">30000</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">rebuildIndex</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 </div>
@@ -423,9 +446,9 @@ data-page="process.html">
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
 <p class="caption"><em>Answering after the work is done</em></p>
-<pre class="code"><code>  <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span>
-    <span class="tok-keyword">from</span><span class="tok-op">.</span><span class="tok-method">reply</span><span class="tok-punct">(</span><span class="tok-fn">expensiveThing</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
-  <span class="tok-keyword">end</span></code></pre>
+<pre class="code"><code><span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">from</span><span class="tok-op">.</span><span class="tok-method">reply</span><span class="tok-punct">(</span><span class="tok-fn">expensiveThing</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 
 </div>
 </div>
@@ -444,12 +467,12 @@ data-page="process.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Task</code> — a handle on the result</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-keyword">let</span> t <span class="tok-op">=</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-number">1</span> <span class="tok-op">+</span> <span class="tok-number">1</span> <span class="tok-keyword">end</span>
-  t<span class="tok-op">.</span><span class="tok-method">await</span>   <span class="tok-comment"># =&gt; 2</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">let</span> t <span class="tok-op">=</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-number">1</span> <span class="tok-op">+</span> <span class="tok-number">1</span> <span class="tok-keyword">end</span>
+t<span class="tok-op">.</span><span class="tok-method">await</span>   <span class="tok-comment"># =&gt; 2</span></code></pre>
 <p class="caption"><em>Two pieces of work at once</em></p>
-<pre class="code"><code>  <span class="tok-keyword">let</span> a <span class="tok-op">=</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-fn">slowThing</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">end</span>
-  <span class="tok-keyword">let</span> b <span class="tok-op">=</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-fn">slowThing</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">end</span>
-  <span class="tok-punct">(</span>a<span class="tok-op">.</span><span class="tok-method">await</span><span class="tok-punct">,</span> b<span class="tok-op">.</span><span class="tok-method">await</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">let</span> a <span class="tok-op">=</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-fn">slowThing</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">end</span>
+<span class="tok-keyword">let</span> b <span class="tok-op">=</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-fn">slowThing</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">end</span>
+<span class="tok-punct">(</span>a<span class="tok-op">.</span><span class="tok-method">await</span><span class="tok-punct">,</span> b<span class="tok-op">.</span><span class="tok-method">await</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-awaitall">
@@ -463,10 +486,10 @@ data-page="process.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>[X]</code> — their results, in order</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-keyword">let</span> tasks <span class="tok-op">=</span> <span class="tok-punct">[</span><span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-number">1</span> <span class="tok-keyword">end</span><span class="tok-punct">,</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-number">2</span> <span class="tok-keyword">end</span><span class="tok-punct">]</span>
-  <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">awaitAll</span><span class="tok-punct">(</span>tasks<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [Ok(1), Ok(2)]</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">let</span> tasks <span class="tok-op">=</span> <span class="tok-punct">[</span><span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-number">1</span> <span class="tok-keyword">end</span><span class="tok-punct">,</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-number">2</span> <span class="tok-keyword">end</span><span class="tok-punct">]</span>
+<span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">awaitAll</span><span class="tok-punct">(</span>tasks<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [Ok(1), Ok(2)]</span></code></pre>
 <p class="caption"><em>Fanning work out over a list</em></p>
-<pre class="code"><code>  <span class="tok-keyword">let</span> results <span class="tok-op">=</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">awaitAll</span><span class="tok-punct">(</span>paths<span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-fn">process</span><span class="tok-punct">(</span>p<span class="tok-punct">)</span> <span class="tok-keyword">end</span> <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">let</span> results <span class="tok-op">=</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">awaitAll</span><span class="tok-punct">(</span>paths<span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-fn">process</span><span class="tok-punct">(</span>p<span class="tok-punct">)</span> <span class="tok-keyword">end</span> <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 </section>
@@ -485,8 +508,8 @@ data-page="process.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>X</code> — the task's result, or <code>None</code> on timeout</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-keyword">let</span> t <span class="tok-op">=</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-fn">slowThing</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">end</span>
-  t<span class="tok-op">.</span><span class="tok-method">await</span><span class="tok-punct">(</span><span class="tok-number">1000</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">let</span> t <span class="tok-op">=</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-fn">slowThing</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">end</span>
+t<span class="tok-op">.</span><span class="tok-method">await</span><span class="tok-punct">(</span><span class="tok-number">1000</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 </div>
@@ -510,7 +533,7 @@ data-page="process.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-26T20:27:51.720473998Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-26T22:47:19.793944540Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

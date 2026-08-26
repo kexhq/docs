@@ -17,7 +17,12 @@ Types as values.
 
 `Type.of(x)` answers what a value IS, as something you can hold, print, compare, and take apart:
 
-  Type.of(42)                     # Type { name: "Integer", args: [] }   Type.of([1, 2]).toString        # "[Integer]"   Type.of(x) == Type.of(y)        # structural equality, like any record   Type.of(due).fields             # ["year", "month", "day"]
+```kex
+Type.of(42)                     # Type { name: "Integer", args: [] }
+Type.of([1, 2]).toString        # "[Integer]"
+Type.of(x) == Type.of(y)        # structural equality, like any record
+Type.of(due).fields             # ["year", "month", "day"]
+```
 
 The answer comes from the compiler where it can: a checked expression knows things a value cannot carry, such as the unused half of a `Result` or the element type of an empty list. Where the checker has no concrete answer — gradual code, `--no-check`, a value arriving from another process — the value itself is asked instead. That fallback is honest but lossy: an empty list has no element to inspect, and a `Result` only ever holds one side.
 
@@ -56,6 +61,8 @@ named(name)
 ## function `generic`
 
 Builds a type that takes arguments, from its name and those arguments.
+
+Renamed from `Type.with` when `with` became the capability-substitution keyword (kexhq/kex#143).
 
 
 ```kex

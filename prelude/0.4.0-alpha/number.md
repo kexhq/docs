@@ -21,7 +21,12 @@ Whole numbers, of arbitrary size.
 
 `Integer` and `Float` are one numeric tower: they compare and order across the boundary, so `0 == 0.0` is `true` and `[1, 2.5, 3].sort` works. What differs is the arithmetic. `/` on two integers is integer division, and `sqrt` answers a `Float` because a square root generally is one.
 
-  7 / 2          # => 3      (integer division)   7.0 / 2.0      # => 3.5   16.sqrt        # => 4.0    (a Float, even from an Integer)   (-7).modulo(3) # => 2      (mathematical modulo, not C remainder)
+```kex
+7 / 2          # => 3      (integer division)
+7.0 / 2.0      # => 3.5
+16.sqrt        # => 4.0    (a Float, even from an Integer)
+(-7).modulo(3) # => 2      (mathematical modulo, not C remainder)
+```
 
 
 #### `modulo`
@@ -39,14 +44,14 @@ modulo(n) : Integer -> Integer
 **Examples**
 
 ```kex
-  7.modulo(3)      # => 1
-  (-7).modulo(3)   # => 2
+7.modulo(3)      # => 1
+(-7).modulo(3)   # => 2
 ```
 _Wrapping an index around a list_
 
 ```kex
-  let items = ["a", "b", "c"]
-  items.at((-1).modulo(items.count))   # => Just("c")
+let items = ["a", "b", "c"]
+items.at((-1).modulo(items.count))   # => Just("c")
 ```
 
 #### `in?`
@@ -62,13 +67,13 @@ in?(range) : Range<Integer> -> Bool
 **Examples**
 
 ```kex
-  5.in?(1..10)    # => true
-  11.in?(1..10)   # => false
+5.in?(1..10)    # => true
+11.in?(1..10)   # => false
 ```
 _Validating a port number_
 
 ```kex
-  port.in?(1..65535)
+port.in?(1..65535)
 ```
 
 #### `times`
@@ -86,12 +91,12 @@ times(block) : (Integer -> Void) -> Void
 **Examples**
 
 ```kex
-  3.times { |i| IO.printLine(i) }   # prints 0, then 1, then 2
+3.times { |i| IO.printLine(i) }   # prints 0, then 1, then 2
 ```
 _Repeating an action_
 
 ```kex
-  retries.times { |_| attemptConnection }
+retries.times { |_| attemptConnection }
 ```
 
 ## make `Float`
@@ -102,7 +107,11 @@ A Kex `Float` is always finite. An operation that would produce `NaN` or `Infini
 
 `Float` and `Integer` compare and order across the boundary; see `Integer` for the rest of the numeric tower.
 
-  3.7.floor      # => 3   3.7.round      # => 4   (-3.7).toInteger  # => -3   (truncates toward zero)
+```kex
+3.7.floor      # => 3
+3.7.round      # => 4
+(-3.7).toInteger  # => -3   (truncates toward zero)
+```
 
 
 #### `in?`
@@ -120,8 +129,8 @@ in?(range) : Range<Float> -> Bool
 _Comparing directly is usually clearer for floats_
 
 ```kex
-  let ratio = 0.75
-  ratio >= 0.0 && ratio <= 1.0   # => true
+let ratio = 0.75
+ratio >= 0.0 && ratio <= 1.0   # => true
 ```
 
 ## module `Integer`

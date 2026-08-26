@@ -15,9 +15,14 @@ Data sizes: bytes, kilobytes, and their binary counterparts.
 
 Opt-in — nothing here is in scope until `using Units.Data`.
 
-  using Units.Data
+```kex
+using Units.Data
 
-  main do     IO.printLine(1500.megabytes.to(String))              # prints: 1500.0 MB     IO.printLine(1500000000.byteSize.to(String, in: Giga)) # prints: 1.5 GB   end
+main do
+  IO.printLine(1500.megabytes.to(String))              # prints: 1500.0 MB
+  IO.printLine(1500000000.byteSize.to(String, in: Giga)) # prints: 1.5 GB
+end
+```
 
 Both families are here and they are not the same: `KB` is 1000 bytes, `KiB` is 1024. Values built from either convert freely, because both are counted in bytes underneath — so `1.gibibytes.convertTo(MiB)` answers 1024 MiB.
 
@@ -27,7 +32,10 @@ Every value is a `Measure` from the prelude, so its arithmetic, comparison and `
 
 The data units this module names: decimal (`KB`, `MB`, `GB`, `TB`) and binary (`KiB`, `MiB`, `GiB`, `TiB`), plus the plain byte `B`.
 
-  1.KB   # 1000 bytes   1.KiB  # 1024 bytes
+```kex
+1.KB   # 1000 bytes
+1.KiB  # 1024 bytes
+```
 
 
 

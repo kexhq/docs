@@ -25,11 +25,17 @@ Kex traits do not inherit from one another, so concrete types explicitly impleme
 
 Two things live here that you will meet in everyday code. `Ordering` is what a comparison answers, and it composes — which is how a multi-key sort is written without nested `if`s:
 
-  a.age.compare(b.age).thenBy { a.score.compare(b.score) }
+```kex
+a.age.compare(b.age).thenBy { a.score.compare(b.score) }
+```
 
 `Monoid` is "these two values combine, and there is a neutral one". Numbers, strings and lists all satisfy it, which is what lets `repeat` be written once:
 
-  "ab".repeat(3)   # => "ababab"   [1].repeat(2)    # => [1, 1]   5.repeat(3)      # => 15
+```kex
+"ab".repeat(3)   # => "ababab"
+[1].repeat(2)    # => [1, 1]
+5.repeat(3)      # => 15
+```
 
 The result of a comparison: `Less`, `Equal` or `Greater`.
 
@@ -56,6 +62,8 @@ Compares this value with `other` and answers `Less`, `Equal` or `Greater`.
 
 `==` stays independent of this — a type may be equatable without being ordered.
 
+A total order: `compare` answers Less, Equal or Greater. `==` stays independent — a type may be Equatable without being ordered.
+
 ```kex
 compare : This -> Ordering
 ```
@@ -65,16 +73,14 @@ compare : This -> Ordering
 **Examples**
 
 ```kex
-  1.compare(2)     # => Less
-  2.compare(2)     # => Equal
-  3.compare(2)     # => Greater
+1.compare(2)     # => Less
+2.compare(2)     # => Equal
+3.compare(2)     # => Greater
 ```
 _Sorting with an explicit comparison_
 
 ```kex
-  people.sort { |a, b| a.age.compare(b.age) == Less }
-A total order: `compare` answers Less, Equal or Greater. `==` stays
-independent — a type may be Equatable without being ordered.
+people.sort { |a, b| a.age.compare(b.age) == Less }
 ```
 
 ## make `Number` implements [Comparable](#trait-comparable)
@@ -97,9 +103,9 @@ compare(other)
 **Examples**
 
 ```kex
-  1.compare(2)      # => Less
-  1.compare(1.0)    # => Equal
-  2.5.compare(2)    # => Greater
+1.compare(2)      # => Less
+1.compare(1.0)    # => Equal
+2.5.compare(2)    # => Greater
 ```
 
 ## trait `Monoid`
@@ -113,6 +119,8 @@ Implemented by `Integer` (addition), `String` and `List` (concatenation), `Map` 
 
 The neutral element: combining it with any value gives that value back.
 
+`combine` must be associative and `identity` neutral on both sides.
+
 ```kex
 identity : This
 ```
@@ -122,9 +130,8 @@ identity : This
 **Examples**
 
 ```kex
-  Integer.identity   # => 0
-  String.identity    # => ""
-`combine` must be associative and `identity` neutral on both sides.
+Integer.identity   # => 0
+String.identity    # => ""
 ```
 
 #### `combine`
@@ -142,14 +149,14 @@ combine : This -> This
 **Examples**
 
 ```kex
-  5.combine(3)          # => 8
-  "ab".combine("cd")    # => "abcd"
-  [1].combine([2])      # => [1, 2]
+5.combine(3)          # => 8
+"ab".combine("cd")    # => "abcd"
+[1].combine([2])      # => [1, 2]
 ```
 _Folding a list of values into one_
 
 ```kex
-  parts.reduce(String.identity) { |acc, s| acc.combine(s) }
+parts.reduce(String.identity) { |acc, s| acc.combine(s) }
 ```
 
 #### `repeat`
@@ -167,15 +174,15 @@ repeat(n)
 **Examples**
 
 ```kex
-  "ab".repeat(3)   # => "ababab"
-  [1].repeat(2)    # => [1, 1]
-  5.repeat(3)      # => 15
-  "x".repeat(0)    # => ""
+"ab".repeat(3)   # => "ababab"
+[1].repeat(2)    # => [1, 1]
+5.repeat(3)      # => 15
+"x".repeat(0)    # => ""
 ```
 _Drawing a separator line_
 
 ```kex
-  IO.printLine("-".repeat(40))
+IO.printLine("-".repeat(40))
 ```
 
 ## trait `Group`
@@ -218,8 +225,8 @@ inverse : This
 **Examples**
 
 ```kex
-  5.inverse             # => -5
-  5.combine(5.inverse)  # => 0
+5.inverse             # => -5
+5.combine(5.inverse)  # => 0
 ```
 
 ## make `Integer` implements [Monoid](#trait-monoid), [Group](#trait-group)
@@ -238,7 +245,7 @@ combine(other)
 **Examples**
 
 ```kex
-  5.combine(3)   # => 8
+5.combine(3)   # => 8
 ```
 
 ## make `String` implements [Monoid](#trait-monoid)
@@ -257,7 +264,7 @@ combine(other)
 **Examples**
 
 ```kex
-  "ab".combine("cd")   # => "abcd"
+"ab".combine("cd")   # => "abcd"
 ```
 
 ## make `[A]` implements [Monoid](#trait-monoid)
@@ -276,19 +283,21 @@ combine(other)
 **Examples**
 
 ```kex
-  [1].combine([2, 3])   # => [1, 2, 3]
+[1].combine([2, 3])   # => [1, 2, 3]
 ```
 _Flattening a list of lists_
 
 ```kex
-  groups.reduce([]) { |acc, g| acc.combine(g) }
+groups.reduce([]) { |acc, g| acc.combine(g) }
 ```
 
 ## make `Ordering` implements [Monoid](#trait-monoid)
 
 `Ordering` is a Monoid under "first decision wins", with Equal as identity. That is what makes multi-key comparison compose instead of nesting ifs:
 
-  a.name.compare(b.name).combine(a.age.compare(b.age))
+```kex
+a.name.compare(b.name).combine(a.age.compare(b.age))
+```
 
 `combine` evaluates its argument eagerly, so the later comparison runs even when the earlier one already decided. Use `thenBy` when that matters.
 
@@ -308,13 +317,13 @@ combine(@Equal, other)
 **Examples**
 
 ```kex
-  Equal.combine(Less)     # => Less
-  Less.combine(Greater)   # => Less
+Equal.combine(Less)     # => Less
+Less.combine(Greater)   # => Less
 ```
 _Sorting by surname, then by first name_
 
 ```kex
-  a.last.compare(b.last).combine(a.first.compare(b.first))
+a.last.compare(b.last).combine(a.first.compare(b.first))
 ```
 
 #### `reverse`
@@ -332,14 +341,14 @@ reverse : Ordering
 **Examples**
 
 ```kex
-  Less.reverse      # => Greater
-  Greater.reverse   # => Less
-  Equal.reverse     # => Equal
+Less.reverse      # => Greater
+Greater.reverse   # => Less
+Equal.reverse     # => Equal
 ```
 _Sorting newest first_
 
 ```kex
-  a.created.compare(b.created).reverse
+a.created.compare(b.created).reverse
 ```
 
 #### `thenBy`
@@ -357,13 +366,13 @@ thenBy : Block<Ordering> -> Ordering
 **Examples**
 
 ```kex
-  Equal.thenBy { 2.compare(1) }   # => Greater
-  Less.thenBy { 2.compare(1) }    # => Less
+Equal.thenBy { 2.compare(1) }   # => Greater
+Less.thenBy { 2.compare(1) }    # => Less
 ```
 _Sorting by age, then by an expensive score_
 
 ```kex
-  a.age.compare(b.age).thenBy { score(a).compare(score(b)) }
+a.age.compare(b.age).thenBy { score(a).compare(score(b)) }
 ```
 
 
@@ -384,7 +393,11 @@ entities:
 
 Bitwise operations on `Integer`.
 
-  Bits.and(0xff, 0x0f)      # => 15   Bits.shiftLeft(1, 8)      # => 256   Bits.test?(0b1010, 1)     # => true
+```kex
+Bits.and(0xff, 0x0f)      # => 15
+Bits.shiftLeft(1, 8)      # => 256
+Bits.test?(0b1010, 1)     # => true
+```
 
 Useful for packing flags into one number, reading a binary format, or working with a protocol that describes its fields in bits.
 
@@ -536,11 +549,19 @@ entities:
 
 A value is blank when it has no meaningful content: `None`, an empty or all-whitespace string, an empty collection, or `false`. The semantics are Rails's, and the point is the same — one question that works across types, so a validation does not need a different test per field.
 
-  "".blank?        # => true   "   ".blank?     # => true   (unlike "   ".empty?)   [].blank?        # => true   None.blank?      # => true   "hi".present?    # => true
+```kex
+"".blank?        # => true
+"   ".blank?     # => true   (unlike "   ".empty?)
+[].blank?        # => true
+None.blank?      # => true
+"hi".present?    # => true
+```
 
 `present?` is the negation, and is often what reads better:
 
-  fields.all? { |name, value| value.present? }
+```kex
+fields.all? { |name, value| value.present? }
+```
 
 
 #### `blank?`
@@ -558,9 +579,9 @@ blank? : Bool
 **Examples**
 
 ```kex
-  "".blank?      # => true
-  "  ".blank?    # => true
-  "hi".blank?    # => false
+"".blank?      # => true
+"  ".blank?    # => true
+"hi".blank?    # => false
 ```
 
 ## make `Bool` implements [Blankable](#trait-blankable)
@@ -583,8 +604,8 @@ blank? : Bool
 **Examples**
 
 ```kex
-  0.blank?    # => false
-  42.blank?   # => false
+0.blank?    # => false
+42.blank?   # => false
 ```
 
 ## make `Float` implements [Blankable](#trait-blankable)
@@ -603,7 +624,7 @@ blank? : Bool
 **Examples**
 
 ```kex
-  0.0.blank?   # => false
+0.0.blank?   # => false
 ```
 
 ## make `String` implements [Blankable](#trait-blankable)
@@ -628,9 +649,9 @@ blank? : Bool
 **Examples**
 
 ```kex
-  None.blank?        # => true
-  Just(1).blank?     # => false
-  Just("").blank?    # => false
+None.blank?        # => true
+Just(1).blank?     # => false
+Just("").blank?    # => false
 ```
 
 ## make `[X]` implements [Blankable](#trait-blankable)
@@ -649,15 +670,15 @@ blank? : Bool
 **Examples**
 
 ```kex
-  [].blank?         # => true
-  [1, 2].blank?     # => false
+[].blank?         # => true
+[1, 2].blank?     # => false
 ```
 _Reporting an empty result set_
 
 ```kex
-  if matches.blank?
-    IO.printLine("no matches")
-  end
+if matches.blank?
+  IO.printLine("no matches")
+end
 ```
 
 
@@ -680,7 +701,10 @@ ANSI terminal styling: colors, text attributes, and cursor control.
 
 Every constant here becomes an empty string when Kex is started with `--no-colors`, or when output is not going to a terminal. That is the point of the design — you can splice them into a string unconditionally and the result is plain text where color is unwanted, with no branching at the call site.
 
-  IO.printLine("${Console.GREEN}ok${Console.RESET}")   IO.printLine(Console.colorize("failed", Console.RED))
+```kex
+IO.printLine("${Console.GREEN}ok${Console.RESET}")
+IO.printLine(Console.colorize("failed", Console.RED))
+```
 
 `colorize` is usually what you want, since it applies the reset for you.
 
@@ -798,6 +822,8 @@ Erases the screen and moves the cursor to the top-left corner.
 
 Use it to start a fresh frame. When you are redrawing repeatedly, `HOME` gives a smoother result — see below.
 
+Cursor and screen control, empty under --no-colors like the styles above. CLEAR erases the screen and homes the cursor; HOME only moves the cursor, so a redraw paints over the previous frame without a blank flash between them; CLEARLINE erases the current line and returns to its start.
+
 
 
 ## constant `HOME`
@@ -856,7 +882,10 @@ Cryptographic content digests.
 
 Digests are returned as lowercase hex strings, so a Kex program never has to handle backend-specific binary values — they compare with `==`, print directly, and go into a map key unchanged.
 
-  Digest.sha256("hello")   # => "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+```kex
+Digest.sha256("hello")
+# => "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+```
 
 SHA-256 is a content fingerprint: use it to tell whether two things are the same, to key a cache, or to check that a download arrived intact. It is not a password hash — a purpose-built password KDF is what that needs.
 
@@ -903,7 +932,11 @@ Traversal operations that every foldable collection gets for free.
 
 A type becomes `Foldable` by implementing one method, `reduce`; the rest — `each`, `all?`, `any?`, `find`, `count` — are derived from it. `List`, `String`, `Map`, `Range` and both flavours of `Set` all implement it, so these methods read the same whatever you point them at.
 
-  [1, 2, 3].all? { |n| n > 0 }        # => true   "hello".any?(~digit?)               # => false   { a: 1, b: 2 }.count { |k, v| v > 1 }   # => 1
+```kex
+[1, 2, 3].all? { |n| n > 0 }        # => true
+"hello".any?(~digit?)               # => false
+{ a: 1, b: 2 }.count { |k, v| v > 1 }   # => 1
+```
 
 Blocks are applied via Kex.Intrinsic.Fun.applyItem, which auto-splats a pair item into a two-argument block. That is what lets a `Map` traversal be written `{ |key, value| ... }` even though the fold hands over one tuple.
 
@@ -921,7 +954,7 @@ reduce : A -> (A -> T -> A) -> A
 **Examples**
 
 ```kex
-  [1, 2, 3].reduce(0) { |sum, n| sum + n }   # => 6
+[1, 2, 3].reduce(0) { |sum, n| sum + n }   # => 6
 ```
 
 #### `each`
@@ -939,14 +972,14 @@ each(f)
 **Examples**
 
 ```kex
-  ["ada", "grace"].each { |name| IO.printLine(name) }
+["ada", "grace"].each { |name| IO.printLine(name) }
 ```
 _Over a map, the block takes key and value_
 
 ```kex
-  { host: "localhost", port: 8080 }.each do |key, value|
-    IO.printLine("${key} = ${value}")
-  end
+{ host: "localhost", port: 8080 }.each do |key, value|
+  IO.printLine("${key} = ${value}")
+end
 ```
 
 #### `eachIndexed`
@@ -964,14 +997,14 @@ eachIndexed(f)
 **Examples**
 
 ```kex
-  ["a", "b"].eachIndexed { |s, i| IO.printLine("${i}: ${s}") }
-  # prints: 0: a
-  #         1: b
+["a", "b"].eachIndexed { |s, i| IO.printLine("${i}: ${s}") }
+# prints: 0: a
+#         1: b
 ```
 _Numbering the lines of a file_
 
 ```kex
-  text.lines.eachIndexed { |line, i| IO.printLine("${i + 1}\t${line}") }
+text.lines.eachIndexed { |line, i| IO.printLine("${i + 1}\t${line}") }
 ```
 
 #### `all?`
@@ -987,14 +1020,14 @@ all?(pred)
 **Examples**
 
 ```kex
-  [2, 4].all? { |n| n.even? }   # => true
-  [2, 5].all? { |n| n.even? }   # => false
-  [].all? { |n| n.even? }       # => true
+[2, 4].all? { |n| n.even? }   # => true
+[2, 5].all? { |n| n.even? }   # => false
+[].all? { |n| n.even? }       # => true
 ```
 _Validating every field of a form_
 
 ```kex
-  fields.all? { |name, value| !value.blank? }
+fields.all? { |name, value| !value.blank? }
 ```
 
 #### `any?`
@@ -1010,13 +1043,13 @@ any?(pred)
 **Examples**
 
 ```kex
-  [1, 2, 3].any? { |n| n > 2 }   # => true
-  [1, 2, 3].any? { |n| n > 9 }   # => false
+[1, 2, 3].any? { |n| n > 2 }   # => true
+[1, 2, 3].any? { |n| n > 9 }   # => false
 ```
 _Detecting a flag among arguments_
 
 ```kex
-  args.any? { |a| a == "--verbose" }
+args.any? { |a| a == "--verbose" }
 ```
 
 #### `find`
@@ -1032,13 +1065,13 @@ find(pred)
 **Examples**
 
 ```kex
-  [1, 2, 3].find { |n| n > 1 }   # => Just(2)
-  [1, 2, 3].find { |n| n > 9 }   # => None
+[1, 2, 3].find { |n| n > 1 }   # => Just(2)
+[1, 2, 3].find { |n| n > 9 }   # => None
 ```
 _Looking a record up by one of its fields_
 
 ```kex
-  users.find { |u| u.email == target }.map { |u| u.name }.or("unknown")
+users.find { |u| u.email == target }.map { |u| u.name }.or("unknown")
 ```
 
 #### `count`
@@ -1054,12 +1087,12 @@ count(pred)
 **Examples**
 
 ```kex
-  [1, 2, 3, 4].count { |n| n.even? }   # => 2
+[1, 2, 3, 4].count { |n| n.even? }   # => 2
 ```
 _How many lines are comments_
 
 ```kex
-  text.lines.count { |line| line.trim.startsWith?("#") }
+text.lines.count { |line| line.trim.startsWith?("#") }
 ```
 
 ## trait `Enumerable`
@@ -1068,7 +1101,11 @@ Collection-producing operations that every foldable collection gets for free.
 
 Like `Foldable`, a type joins by implementing `reduce` alone. The defaults here answer with a list, because the block may return anything at all; a type that can do better overrides them — `Map.filter` gives back a map, `Set.map` gives back a set, `String.filter` gives back a string.
 
-  [1, 2, 3].map { |n| n * 2 }              # => [2, 4, 6]   "a1b2".filter(~digit?)                   # => "12"   { a: 1, b: 2 }.filter { |k, v| v > 1 }   # => { :b: 2 }
+```kex
+[1, 2, 3].map { |n| n * 2 }              # => [2, 4, 6]
+"a1b2".filter(~digit?)                   # => "12"
+{ a: 1, b: 2 }.filter { |k, v| v > 1 }   # => { :b: 2 }
+```
 
 
 #### `reduce`
@@ -1084,7 +1121,7 @@ reduce : A -> (A -> T -> A) -> A
 **Examples**
 
 ```kex
-  [1, 2, 3].reduce(1) { |product, n| product * n }   # => 6
+[1, 2, 3].reduce(1) { |product, n| product * n }   # => 6
 ```
 
 #### `map`
@@ -1102,13 +1139,13 @@ map(f)
 **Examples**
 
 ```kex
-  [1, 2, 3].map { |n| n * 2 }        # => [2, 4, 6]
-  ["a", "b"].map(~upperCase)         # => ["A", "B"]
+[1, 2, 3].map { |n| n * 2 }        # => [2, 4, 6]
+["a", "b"].map(~upperCase)         # => ["A", "B"]
 ```
 _Extracting one field from a list of records_
 
 ```kex
-  users.map { |u| u.email }
+users.map { |u| u.email }
 ```
 
 #### `mapIndexed`
@@ -1126,12 +1163,12 @@ mapIndexed(f)
 **Examples**
 
 ```kex
-  ["a", "b"].mapIndexed { |s, i| "${i}${s}" }   # => ["0a", "1b"]
+["a", "b"].mapIndexed { |s, i| "${i}${s}" }   # => ["0a", "1b"]
 ```
 _Building a numbered list_
 
 ```kex
-  items.mapIndexed { |item, i| "${i + 1}. ${item}" }.join("\n")
+items.mapIndexed { |item, i| "${i + 1}. ${item}" }.join("\n")
 ```
 
 #### `filter`
@@ -1147,12 +1184,12 @@ filter(pred)
 **Examples**
 
 ```kex
-  [1, 2, 3, 4].filter { |n| n.even? }   # => [2, 4]
+[1, 2, 3, 4].filter { |n| n.even? }   # => [2, 4]
 ```
 _Dropping blank lines_
 
 ```kex
-  text.lines.filter { |line| !line.trim.empty? }
+text.lines.filter { |line| !line.trim.empty? }
 ```
 
 #### `flatMap`
@@ -1170,13 +1207,13 @@ flatMap(f)
 **Examples**
 
 ```kex
-  [[1, 2], [3]].flatMap { |xs| xs }            # => [1, 2, 3]
-  ["a b", "c"].flatMap { |s| s.split(" ") }    # => ["a", "b", "c"]
+[[1, 2], [3]].flatMap { |xs| xs }            # => [1, 2, 3]
+["a b", "c"].flatMap { |s| s.split(" ") }    # => ["a", "b", "c"]
 ```
 _Every tag used across a list of posts_
 
 ```kex
-  posts.flatMap { |p| p.tags }
+posts.flatMap { |p| p.tags }
 ```
 
 #### `collect`
@@ -1194,12 +1231,12 @@ collect(f)
 **Examples**
 
 ```kex
-  ["1", "x", "3"].collect { |s| s.to(Integer) }   # => [1, 3]
+["1", "x", "3"].collect { |s| s.to(Integer) }   # => [1, 3]
 ```
 _Looking several keys up at once, skipping the missing ones_
 
 ```kex
-  keys.collect { |k| config.get(k) }
+keys.collect { |k| config.get(k) }
 ```
 
 
@@ -1222,13 +1259,22 @@ The process environment, as an immutable `Map<String, String>` snapshot taken at
 
 `ENV` supports the whole `Map` API — `get`, `has?`, `keys`, `values`, `count`, `each`, `entries` — so reading a variable looks like any other map lookup:
 
-  ENV.get("HOME")                  # => Just("/home/ada")   ENV.get("LOG_LEVEL", "info")     # => "info" when unset   ENV.has?("PATH")                 # => true
+```kex
+ENV.get("HOME")                  # => Just("/home/ada")
+ENV.get("LOG_LEVEL", "info")     # => "info" when unset
+ENV.has?("PATH")                 # => true
+```
 
 The snapshot itself is immutable, but the global `ENV` namespace is an ambient input: the same call can answer differently between runs without anything appearing in a function's arguments. That is why reading it is `foul`.
 
 When you would rather the dependency be visible, take it as a parameter — `main` receives the same snapshot as its second argument, and reading a parameter is pure:
 
-  main(args, env) do     let level = env.get("LOG_LEVEL", "info")     IO.printLine("log level: ${level}")   end
+```kex
+main(args, env) do
+  let level = env.get("LOG_LEVEL", "info")
+  IO.printLine("log level: ${level}")
+end
+```
 
 ## function `get`
 
@@ -1252,22 +1298,34 @@ has?(key)
 ```
 
 
-## constant `keys`
+## function `keys`
 
 Returns every variable name in the environment.
 
 
+```kex
+keys()
+```
 
-## constant `values`
+
+## function `values`
 
 Returns every variable value in the environment.
 
 
+```kex
+values()
+```
 
-## constant `count`
+
+## function `count`
 
 Returns how many variables the environment has.
 
+
+```kex
+count()
+```
 
 
 ## function `each`
@@ -1280,12 +1338,16 @@ each(f)
 ```
 
 
-## constant `entries`
+## function `entries`
 
 Returns the environment as a list of `(name, value)` pairs.
 
 The bridge to the `List` operations — sorting, grouping, taking a slice.
 
+
+```kex
+entries()
+```
 
 
 ## function `set`
@@ -1295,6 +1357,8 @@ Sets an environment variable for this process and every child it starts.
 `ENV` is a snapshot, and the write rebuilds it — a later `ENV.get` answers what was set, not what the process started with.
 
 This is how a program decides what a child sees. `Kex.AST`, for instance, shells out to the compiler named by `$KEX`, so a tool that knows which compiler it means says so here rather than hoping `PATH` agrees.
+
+Sets a variable for THIS process and every child it starts. `ENV` is a snapshot, so it is rebuilt by the write — a later `ENV.get` answers what was set, not what the process started with.
 
 This is how a program decides what a child sees: `Kex.AST` shells out to the compiler named by `$KEX`, so a tool that knows which compiler it means says so here rather than hoping PATH agrees.
 
@@ -1335,7 +1399,11 @@ entities:
 
 Implemented by error types that carry a human-readable message, so a generic handler can display or log any error without knowing its concrete type or its structured fields.
 
-  foul report(e: Errorable) -> Void do     IO.printError("error: ${e.message}")   end
+```kex
+foul report(e: Errorable) -> Void do
+  IO.printError("error: ${e.message}")
+end
+```
 
 
 #### `message`
@@ -1353,7 +1421,7 @@ message : String
 **Examples**
 
 ```kex
-  IO.printError("error: ${e.message}")
+IO.printError("error: ${e.message}")
 ```
 
 ## record `ParseError`
@@ -1362,7 +1430,12 @@ A parse failure, with everything needed to report it or to carry on from it.
 
 Answered by `Integer.parse`, `Float.parse` and `Number.parse` when the input is not what they expected. Reach for those over `to(Integer)` exactly when this detail matters: `to` answers a plain `None`.
 
-  Integer.parse("12x")   # => Error(ParseError { input: "12x", position: 2, value: 12,   #                       message: "trailing characters after integer",   #                       rest: "x" })
+```kex
+Integer.parse("12x")
+# => Error(ParseError { input: "12x", position: 2, value: 12,
+#                       message: "trailing characters after integer",
+#                       rest: "x" })
+```
 
 The `position` and `rest` are what make a hand-written scanner possible: the error says exactly where it stopped and what was left.
 
@@ -1394,7 +1467,10 @@ Running Kex source code at run time, in a sandbox.
 
 Each call builds a fresh, isolated evaluator: the caller's environment is never shared, and the evaluated code sees only what `EvaluatorOptions` allows. Step and depth limits make a runaway program stop rather than hang.
 
-  Evaluator.runExpression("1 ` 2")           # => Ok(3)   Evaluator.runExpression("[3,1,2].sort")    # => Ok([1, 2, 3])
+```kex
+Evaluator.runExpression("1 ` 2")           # => Ok(3)
+Evaluator.runExpression("[3,1,2].sort")    # => Ok([1, 2, 3])
+```
 
 This is for evaluating expressions your program was given — a formula in a config file, a filter typed by a user. Every result is a `Result+, so a syntax error or a rejected call is a value you handle.
 
@@ -1444,7 +1520,7 @@ The defaults are already conservative — pure computation over the common data 
 package: prelude
 version: "0.4.0-alpha"
 source: filehandle.kex
-title: Filehandle
+title: FileHandle
 entities:
   - { kind: trait, name: "Readable" }
   - { kind: trait, name: "Writable" }
@@ -1454,7 +1530,7 @@ entities:
   - { kind: make, name: "FileHandle<R, W>" }
 ---
 
-# Filehandle
+# FileHandle
 
 ## trait `Readable`
 
@@ -1462,9 +1538,14 @@ entities:
 
 Named so that anything can be one, not just a file: the vocabulary `FileHandle<CanRead, W>` already carried was an abstraction without a name, so nothing else could implement it and `IO` did not go through it (kexhq/kex#139). `IO.in` is a `Readable`; so is any handle opened for reading.
 
-  foul firstLine(source: Readable) -> String do     source.getLine.or("(empty)")   end
+```kex
+foul firstLine(source: Readable) -> String do
+  source.getLine.or("(empty)")
+end
 
-  firstLine(IO.in)   firstLine(FS.File.open("notes.txt", Read).try)
+firstLine(IO.in)
+firstLine(FS.File.open("notes.txt", Read).try)
+```
 
 
 #### `getLine`
@@ -1533,9 +1614,15 @@ atEnd? : Bool
 
 The payoff of naming it is that a sink becomes a VALUE a library can accept, rather than a global switch it can only sit underneath: output from one library can go to a buffer while another's goes to the terminal (kexhq/kex#139).
 
-  foul report(out: Writable, lines: [String]) -> Void do     lines.each { |line| out.printLine(line) }   end
+```kex
+foul report(out: Writable, lines: [String]) -> Void do
+  lines.each { |line| out.printLine(line) }
+end
 
-  report(IO.out, results)   report(IO.error, warnings)   report(FS.File.open("report.txt", Write).try, results)
+report(IO.out, results)
+report(IO.error, warnings)
+report(FS.File.open("report.txt", Write).try, results)
+```
 
 Two deliberate choices, both settled in kexhq/kex#139:
 
@@ -1588,9 +1675,19 @@ An open file, obtained from `FS.File.open`.
 
 The two type parameters record what the handle is allowed to do: `R` is `CanRead` or `CannotRead`, `W` is `CanWrite` or `CannotWrite`. `FS.File.open` picks them from the mode you pass, so calling `write` on a handle opened `Read` is a compile error rather than a run-time failure.
 
-  using FS
+```kex
+using FS
 
-  main do     match FS.File.open("notes.txt", Read) do       Ok(handle) => do         IO.printLine(handle.read.or(""))         handle.close       end       Error(e) => IO.printError("cannot open: ${e}")     end   end
+main do
+  match FS.File.open("notes.txt", Read) do
+    Ok(handle) => do
+      IO.printLine(handle.read.or(""))
+      handle.close
+    end
+    Error(e) => IO.printError("cannot open: ${e}")
+  end
+end
+```
 
 Reach for a handle when you want to walk a large file a line at a time, or make many small writes. When a file fits comfortably in memory, `FS.File.read` and `FS.File.write` are shorter and need no closing. To be rid of the closing entirely, pass `FS.File.open` a block.
 
@@ -1601,6 +1698,156 @@ The handle methods are `foul`: obtaining a handle is not an effect, but reading 
 ## make `FileHandle<CanRead, W>` implements [Readable](#trait-readable)
 
 
+#### `getLine`
+
+Reads the next line from the handle, without its newline.
+
+Answers `None` at end of file, which is what makes it usable as a loop condition. The same operation as `readLine`, under the name `IO.getLine` uses.
+
+```kex
+getLine() : String?
+```
+
+**Returns**: `String?` — the next line, or `None` at end of file
+
+**Examples**
+
+_Walking a file line by line_
+
+```kex
+foul echo(handle: FileHandle<CanRead, W>) -> Void do
+  match handle.getLine do
+    Just(line) => do
+      IO.printLine(line)
+      echo(handle)
+    end
+    None => ()
+  end
+end
+```
+
+#### `get`
+
+Reads a single character from the handle, as a one-character `String`.
+
+Answers `None` at end of file.
+
+```kex
+get() : String?
+```
+
+**Returns**: `String?` — the next character, or `None` at end of file
+
+**Examples**
+
+```kex
+let firstChar = handle.get.or("")
+```
+
+#### `readLine`
+
+Reads the next line from the handle, without its newline. The same as `getLine`, named for reading from a file rather than from a console.
+
+```kex
+readLine() : String?
+```
+
+**Returns**: `String?` — the next line, or `None` at end of file
+
+**Examples**
+
+```kex
+let header = handle.readLine.or("")
+```
+_Reading the first three lines_
+
+```kex
+let head = (1..3).items.map { |_| handle.readLine.or("") }
+```
+
+#### `read`
+
+Reads everything remaining in the file and returns it as one `String`.
+
+Reads from the current position, so calling it after a `readLine` gives the rest of the file rather than the whole of it.
+
+```kex
+read() : String?
+```
+
+**Returns**: `String?` — the remaining contents, or `None`
+
+**Examples**
+
+```kex
+let body = handle.read.or("")
+```
+_Skipping a header line, then taking the rest_
+
+```kex
+handle.readLine
+let body = handle.read.or("")
+```
+
+#### `eof?`
+
+Returns `true` when the handle has reached the end of the file.
+
+```kex
+eof?() : Bool
+```
+
+**Returns**: `Bool` — `true` at end of file
+
+**Examples**
+
+```kex
+handle.eof?   # => false, before anything has been read
+```
+
+#### `atEnd?`
+
+Returns `true` when the handle has reached the end of the file. The same as `eof?`, spelled out.
+
+```kex
+atEnd?() : Bool
+```
+
+**Returns**: `Bool` — `true` at end of file
+
+**Examples**
+
+```kex
+if !handle.atEnd?
+  IO.printLine(handle.readLine.or(""))
+end
+```
+
+#### `feed`
+
+Returns the handle's remaining lines as a lazy `Stream`.
+
+Lines are read on demand, so this is how to look at the start of a very large file, or process one without holding it all in memory.
+
+The stream ends at the last line, so taking more lines than the file has answers just the lines there are.
+
+NOT part of `Readable`. `docs/streams.md` describes a one-shot, stateful `Feed<A>` that does not exist, and a file feed is neither pure nor reusable the way `Stream<A>` claims to be. Until that is settled this is a FileHandle method rather than something every `Readable` must answer.
+
+```kex
+feed() : Stream<String>?
+```
+
+**Returns**: `Stream<String>?` — the lines as a stream, or `None`
+
+**Examples**
+
+_The first ten lines of a large file_
+
+```kex
+handle.feed
+  .map { |lines| lines.take(10) }
+  .or([])
+```
 
 ## make `FileHandle<R, CanWrite>` implements [Writable](#trait-writable)
 
@@ -1620,7 +1867,7 @@ printLine(content) : Showable -> Void
 _Writing a report line by line_
 
 ```kex
-  rows.each { |row| handle.printLine(row) }
+rows.each { |row| handle.printLine(row) }
 ```
 
 #### `print`
@@ -1638,9 +1885,9 @@ print(content) : Showable -> Void
 _Building a line from pieces_
 
 ```kex
-  handle.print("name,")
-  handle.print("age")
-  handle.printLine("")
+handle.print("name,")
+handle.print("age")
+handle.printLine("")
 ```
 
 #### `writeLine`
@@ -1656,7 +1903,7 @@ writeLine(content) : Showable -> Void
 **Examples**
 
 ```kex
-  handle.writeLine("done")
+handle.writeLine("done")
 ```
 
 #### `write`
@@ -1674,12 +1921,35 @@ write(content) : Showable -> Void
 _Writing a whole document in one call_
 
 ```kex
-  handle.write(rendered)
+handle.write(rendered)
 ```
 
 ## make `FileHandle<R, W>`
 
 
+#### `close`
+
+Closes the handle, flushing anything still buffered.
+
+Close every handle you open. A written file is not guaranteed to be complete on disk until its handle is closed. Passing `FS.File.open` a block closes the handle for you.
+
+```kex
+close() : Void
+```
+
+**Returns**: `Void`
+
+**Examples**
+
+```kex
+match FS.File.open("out.txt", Write) do
+  Ok(handle) => do
+    handle.printLine("hello")
+    handle.close
+  end
+  Error(_) => IO.printError("cannot open out.txt")
+end
+```
 
 
 ---
@@ -1701,13 +1971,24 @@ The filesystem: reading and writing files, walking directories, and manipulating
 
 `FS` is not in the prelude — start with `using FS`.
 
-  using FS
+```kex
+using FS
 
-  main do     match FS.File.read("config.txt") do       Just(text) => IO.printLine(text.lines.count)       None       => IO.printError("config.txt is missing")     end   end
+main do
+  match FS.File.read("config.txt") do
+    Just(text) => IO.printLine(text.lines.count)
+    None       => IO.printError("config.txt is missing")
+  end
+end
+```
 
 It is organised in three parts:
 
-  FS.File        reading, writing, copying and deleting files   FS.Directory   creating, listing and removing directories   FS.Path        pure path arithmetic, with no filesystem access at all
+```kex
+FS.File        reading, writing, copying and deleting files
+FS.Directory   creating, listing and removing directories
+FS.Path        pure path arithmetic, with no filesystem access at all
+```
 
 The first two are capabilities: everything in them touches the real filesystem, so they can only be called from `foul` code, and a test can replace the whole of `FS.File` for a lexical region rather than mutating global state. `FS.Path` is ordinary pure code.
 
@@ -1901,6 +2182,8 @@ Reads the file and returns its lines, without their newlines.
 
 Answers `None` when the file cannot be read. A trailing newline does not produce a final empty line, so the count is the number of lines you would see in an editor.
 
+NOT `lines`: FilePath is an alias for String, so a receiver function named `lines` here is indistinguishable from String's own `lines` at every call site, and merely saying `using FS` made `text.lines` ambiguous. `readLines` also says what it does — it reads the file.
+
 
 ```kex
 readLines(path) : FilePath -> [String]?
@@ -1915,7 +2198,10 @@ Unlike `readLines`, the file is consumed on demand, so this is the way to look a
 
 The stream ends at the last line, so asking for more lines than the file has answers just the lines there are — unlike `Stream.Sequence`, which is deliberately infinite.
 
-  FS.File.feed("two-lines.txt").map { |lines| lines.take(5) }.or([])   # => ["one", "two"]
+```kex
+FS.File.feed("two-lines.txt").map { |lines| lines.take(5) }.or([])
+# => ["one", "two"]
+```
 
 
 ```kex
@@ -1941,6 +2227,8 @@ Resolves `path` against the process's current directory and returns the absolute
 
 This is the one path operation that is not in `FS.Path`, because it is not lexical: it asks the process where it is.
 
+Path manipulation lives in FS.Path — `basename`, `dirname`, `extension` and `join` used to be here too, but a name cannot sit in both modules: FilePath IS String, so two same-named receiver functions on it are indistinguishable at every call site. `absolute` stays because it is not lexical — it asks the process where it is.
+
 
 ```kex
 absolute(path) : FilePath -> String?
@@ -1953,7 +2241,11 @@ Path arithmetic: joining, splitting, normalising and comparing paths.
 
 Everything here is pure string manipulation with no filesystem access, so the answer is the same whether or not the path exists — which also means these functions can be called from ordinary pure code, unlike `FS.File`. POSIX separators only for now.
 
-  FS.Path.join("src", "main.kex")            # => "src/main.kex"   FS.Path.extension("src/main.kex")          # => ".kex"   FS.Path.withExtension("src/main.kex", "beam")   # => "src/main.beam"
+```kex
+FS.Path.join("src", "main.kex")            # => "src/main.kex"
+FS.Path.extension("src/main.kex")          # => ".kex"
+FS.Path.withExtension("src/main.kex", "beam")   # => "src/main.beam"
+```
 
 ## constant `separator`
 
@@ -1977,6 +2269,8 @@ join(a, b) : FilePath -> FilePath -> FilePath -> String
 ## function `joinAll`
 
 Joins any number of path parts, skipping empty ones, and normalises the result. An empty list gives `"."`.
+
+The list form is `joinAll`, not another `join` overload: a list receiver already has `List.join`, and a second one-argument `join` on the same receiver would be indistinguishable from it.
 
 
 ```kex
@@ -2200,16 +2494,24 @@ directories(path) : FilePath -> [String]?
 ```
 
 
-## constant `current`
+## function `current`
 
 Returns the process's current working directory, as an absolute path.
 
 
+```kex
+current() : String
+```
 
-## constant `home`
+
+## function `home`
 
 Returns the current user's home directory, or `None` when it cannot be determined.
 
+
+```kex
+home() : String?
+```
 
 
 
@@ -2236,7 +2538,14 @@ HTTP client requests.
 
 One function per method — `get`, `post`, `put`, `patch`, `delete`, `head`, `options` — each answering a `Result`, so a network failure is a value you handle rather than an exception.
 
-  main do     match Http.get("https://example.com/api/status") do       Ok(response) => IO.printLine("${response.status}: ${response.body}")       Error(e)     => IO.printError("request failed: ${e.message}")     end   end
+```kex
+main do
+  match Http.get("https://example.com/api/status") do
+    Ok(response) => IO.printLine("${response.status}: ${response.body}")
+    Error(e)     => IO.printError("request failed: ${e.message}")
+  end
+end
+```
 
 An HTTP error status is NOT an `Error`: a 404 is a response the server chose to send, so it arrives as `Ok` with `status: 404`. `Error` means the request never got an answer — refused, timed out, DNS failed.
 
@@ -2281,7 +2590,12 @@ Why a request could not be completed.
 
 Per-request settings: headers to send, and how long to wait.
 
-  Http.get(url, HttpOptions {     headers: { "Authorization": "Bearer ${token}" },     timeout: 5000   })
+```kex
+Http.get(url, HttpOptions {
+  headers: { "Authorization": "Bearer ${token}" },
+  timeout: 5000
+})
+```
 
 **Fields**
 
@@ -2397,22 +2711,36 @@ Console input and output.
 
 `IO` is a capability: every function in it touches the outside world, so it can only be called from `foul` code (or from `main`). Reading a line and printing a line are the two workhorses; `inspect` is the debugging tool that can be dropped into the middle of a chain without changing its value.
 
-  main do     IO.print("name? ")     let name = IO.getLine.or("world")     IO.printLine("hello, ${name.trim}")   end
+```kex
+main do
+  IO.print("name? ")
+  let name = IO.getLine.or("world")
+  IO.printLine("hello, ${name.trim}")
+end
+```
 
-## constant `printLine`
+## function `printLine`
 
 Writes `msg` to stdout followed by a newline.
 
 Any `Showable` value is accepted, not just strings — numbers, lists, maps and records print through their own `show` implementation. Called with no argument it prints an empty line.
 
 
+```kex
+printLine(msg) : Showable -> Void
+```
 
-## constant `print`
+
+## function `print`
 
 Writes `msg` to stdout without a trailing newline.
 
 Use it to build a line from several pieces, or to write a prompt that the cursor should stay on.
 
+
+```kex
+print(msg) : Showable -> Void
+```
 
 
 ## function `inspect`
@@ -2429,28 +2757,40 @@ inspect(val) : A -> A
 ```
 
 
-## constant `getLine`
+## function `getLine`
 
 Reads one line from stdin, without the trailing newline.
 
 Returns `None` at end of input, which is what makes it usable as a loop condition: the `None` is the end of the stream, not an error.
 
 
+```kex
+getLine() : String?
+```
 
-## constant `get`
+
+## function `get`
 
 Reads a single character from stdin.
 
 Returns `None` at end of input. Note that the result is a one-character `String`, not a `Char`.
 
 
+```kex
+get() : String?
+```
 
-## constant `printError`
+
+## function `printError`
 
 Writes `msg` to stderr followed by a newline.
 
 Diagnostics belong on stderr so that a program's real output can be piped or redirected on its own. Unlike a raised error, this only prints — it does not stop the program.
 
+
+```kex
+printError(msg) : Showable -> Void
+```
 
 
 ## function `warn`
@@ -2483,8 +2823,6 @@ Typestate says what each one permits: writing to `IO.in`, or reading from `IO.ou
 
 These three are PURE, so they are not part of the capability interface a stand-in must implement — naming a device performs no effect, writing THROUGH it does, and the handle methods are the `foul` ones. That also draws the seam between the two ways to redirect output: `with IO = ...` replaces the CALLS, so it does not touch a handle obtained here, while `Mock.IO` replaces the DEVICE (a group leader, kexhq/kex#141) and so captures `IO.out.printLine(x)` and `IO.printLine(x)` alike.
 
-  report(IO.out, results)   report(IO.error, warnings)   report(FS.File.open("report.txt", Write).try, results)
-
 
 
 ## constant `error`
@@ -2496,8 +2834,6 @@ Standard error, as a handle. The sink `IO.printError` and `IO.warn` write to, re
 ## constant `in`
 
 Standard input, as a handle. The source `IO.getLine` and `IO.get` read from, reachable as a value.
-
-  firstLine(IO.in)
 
 
 
@@ -2521,7 +2857,10 @@ entities:
 
 Why a document could not be parsed. Every variant carries the position in the input where the parser stopped, so a caller can point at the problem.
 
-  JSON.parse("[1, 2")    # => Error(UnexpectedEnd(5))   JSON.parse("// c\n1")  # => Error(UnexpectedCharacter("/", 0))
+```kex
+JSON.parse("[1, 2")    # => Error(UnexpectedEnd(5))
+JSON.parse("// c\n1")  # => Error(UnexpectedCharacter("/", 0))
+```
 
 
 
@@ -2595,7 +2934,10 @@ The rendering shows the value's STRUCTURE — quotes on strings, `Just(...)` aro
 
 Every type is inspectable through a structural fallback, so `inspected` and `IO.inspect` work on anything; a type that wants a different rendering overrides `inspectValue`.
 
-  [1, 2].inspected       # => "[1, 2]"   Just("hi").inspected   # => "Just(\"hi\")"
+```kex
+[1, 2].inspected       # => "[1, 2]"
+Just("hi").inspected   # => "Just(\"hi\")"
+```
 
 
 #### `inspectValue`
@@ -2613,7 +2955,7 @@ inspectValue : Bool -> String
 **Examples**
 
 ```kex
-  [1, 2].inspectValue(false)   # => "[1, 2]"
+[1, 2].inspectValue(false)   # => "[1, 2]"
 ```
 
 ## trait `Showable`
@@ -2675,7 +3017,11 @@ showValue(@Ok(x))
 
 The running toolchain: which backend, which version, which features.
 
-  Kex.BACKEND                  # => Interpreter   Kex.Kernel.VERSION.release   # => "0.4.0"   Kex.Feature.has?(Kex.FS)     # => true
+```kex
+Kex.BACKEND                  # => Interpreter
+Kex.Kernel.VERSION.release   # => "0.4.0"
+Kex.Feature.has?(Kex.FS)     # => true
+```
 
 ## type `Backend`
 
@@ -2831,11 +3177,19 @@ An ordered, immutable sequence, written [1, 2, 3].
 
 Lists are the default collection in Kex. Every operation answers with a new list rather than changing the receiver, so a chain of transformations is safe to read from either end.
 
-  let scores = [7, 2, 9, 4]   scores.filter { |n| n > 3 }      # => [7, 9, 4]   scores.sort                      # => [2, 4, 7, 9]   scores.map { |n| n * 10 }.sum    # => 220
+```kex
+let scores = [7, 2, 9, 4]
+scores.filter { |n| n > 3 }      # => [7, 9, 4]
+scores.sort                      # => [2, 4, 7, 9]
+scores.map { |n| n * 10 }.sum    # => 220
+```
 
 Anything that might not be there — the first element, an element at an index, a search result — answers with an `Optional`, so an empty list is an ordinary case rather than a crash:
 
-  [].first.or(0)        # => 0   [1, 2].at(9).or(0)    # => 0
+```kex
+[].first.or(0)        # => 0
+[1, 2].at(9).or(0)    # => 0
+```
 
 A list is `Enumerable` and `Foldable`, which is where `map`, `filter`, `find`, `all?` and `reduce` come from.
 
@@ -2861,7 +3215,7 @@ product(f) : (X -> Number) -> Number
 **Examples**
 
 ```kex
-  [[1,2],[3,4]].product { |pair| pair.first.or(1) }   # => 3
+[[1,2],[3,4]].product { |pair| pair.first.or(1) }   # => 3
 ```
 
 ## make `[X]` implements [Enumerable](enumerable.md#trait-enumerable), [Foldable](enumerable.md#trait-foldable)
@@ -2870,6 +3224,8 @@ product(f) : (X -> Number) -> Number
 #### `count`
 
 Returns how many elements satisfy `pred`.
+
+count(pred) is provided by the Enumerable trait.
 
 ```kex
 count(pred) : (X -> Bool) -> Integer
@@ -2880,9 +3236,8 @@ count(pred) : (X -> Bool) -> Integer
 **Examples**
 
 ```kex
-  [1, 2, 3, 4].count(~even?)              # => 2
-  ["a", "", "b"].count { |s| s.empty? }   # => 1
-count(pred) is provided by the Enumerable trait.
+[1, 2, 3, 4].count(~even?)              # => 2
+["a", "", "b"].count { |s| s.empty? }   # => 1
 ```
 
 #### `empty?`
@@ -2898,13 +3253,15 @@ empty? : Bool
 **Examples**
 
 ```kex
-  [].empty?      # => true
-  [1, 2].empty?  # => false
+[].empty?      # => true
+[1, 2].empty?  # => false
 ```
 
 #### `find`
 
 Returns the first element satisfying the predicate wrapped in `Just`, or `None` if no element matches.
+
+find/any?/all? are provided by the Enumerable trait.
 
 ```kex
 find(pred) : (X -> Bool) -> X?
@@ -2915,9 +3272,8 @@ find(pred) : (X -> Bool) -> X?
 **Examples**
 
 ```kex
-  [1, 2, 3].find { |x| x > 1 }   # => Just(2)
-  [1, 2, 3].find { |x| x > 9 }   # => None
-find/any?/all? are provided by the Enumerable trait.
+[1, 2, 3].find { |x| x > 1 }   # => Just(2)
+[1, 2, 3].find { |x| x > 9 }   # => None
 ```
 
 #### `any?`
@@ -2933,8 +3289,8 @@ any?(pred) : (X -> Bool) -> Bool
 **Examples**
 
 ```kex
-  [1, 2, 3].any? { |x| x > 2 }   # => true
-  [1, 2, 3].any? { |x| x > 9 }   # => false
+[1, 2, 3].any? { |x| x > 2 }   # => true
+[1, 2, 3].any? { |x| x > 9 }   # => false
 ```
 
 #### `all?`
@@ -2950,13 +3306,15 @@ all?(pred) : (X -> Bool) -> Bool
 **Examples**
 
 ```kex
-  [1, 2, 3].all? { |x| x > 0 }   # => true
-  [1, 2, 3].all? { |x| x > 1 }   # => false
+[1, 2, 3].all? { |x| x > 0 }   # => true
+[1, 2, 3].all? { |x| x > 1 }   # => false
 ```
 
 #### `map`
 
 Transforms each element by applying `f`.
+
+map/filter/each are provided by the Enumerable trait (in terms of reduce).
 
 ```kex
 map(f) : (X -> Y) -> [Y]
@@ -2967,8 +3325,7 @@ map(f) : (X -> Y) -> [Y]
 **Examples**
 
 ```kex
-  [1, 2, 3].map { |x| x * 2 }   # => [2, 4, 6]
-map/filter/each are provided by the Enumerable trait (in terms of reduce).
+[1, 2, 3].map { |x| x * 2 }   # => [2, 4, 6]
 ```
 
 #### `filter`
@@ -2984,7 +3341,7 @@ filter(pred) : (X -> Bool) -> [X]
 **Examples**
 
 ```kex
-  [1, 2, 3, 4].filter { |x| x.even? }   # => [2, 4]
+[1, 2, 3, 4].filter { |x| x.even? }   # => [2, 4]
 ```
 
 #### `reject`
@@ -3000,7 +3357,7 @@ reject(pred) : (X -> Bool) -> [X]
 **Examples**
 
 ```kex
-  [1, 2, 3, 4].reject { |x| x.even? }   # => [1, 3]
+[1, 2, 3, 4].reject { |x| x.even? }   # => [1, 3]
 ```
 
 #### `each`
@@ -3016,7 +3373,7 @@ each(f) : (X -> Void) -> Void
 **Examples**
 
 ```kex
-  [1, 2, 3].each { |x| IO.printLine(x) }
+[1, 2, 3].each { |x| IO.printLine(x) }
 ```
 
 #### `reduce`
@@ -3032,8 +3389,8 @@ reduce(acc, f) : A -> (A -> X -> A) -> A
 **Examples**
 
 ```kex
-  [1, 2, 3].reduce(0) { |acc, x| acc + x }   # => 6
-  [1, 2, 3].reduce(1) { |acc, x| acc * x }   # => 6
+[1, 2, 3].reduce(0) { |acc, x| acc + x }   # => 6
+[1, 2, 3].reduce(1) { |acc, x| acc * x }   # => 6
 ```
 
 #### `flatMap`
@@ -3049,7 +3406,7 @@ flatMap(f) : (X -> [Y]) -> [Y]
 **Examples**
 
 ```kex
-  [1, 2, 3].flatMap { |n| [n, n * 10] }   # => [1, 10, 2, 20, 3, 30]
+[1, 2, 3].flatMap { |n| [n, n * 10] }   # => [1, 10, 2, 20, 3, 30]
 ```
 
 #### `at`
@@ -3065,8 +3422,8 @@ at(i) : Integer -> X?
 **Examples**
 
 ```kex
-  [10, 20, 30].at(1)   # => Just(20)
-  [10, 20, 30].at(9)   # => None
+[10, 20, 30].at(1)   # => Just(20)
+[10, 20, 30].at(9)   # => None
 ```
 
 #### `get`
@@ -3083,8 +3440,8 @@ get(i) : Integer -> X -> X
 **Examples**
 
 ```kex
-  [10, 20, 30].get(1)   # => Just(20)
-  [10, 20, 30].get(9)   # => None
+[10, 20, 30].get(1)   # => Just(20)
+[10, 20, 30].get(9)   # => None
 ```
 
 #### `contains?`
@@ -3100,8 +3457,8 @@ contains?(elem) : X -> Bool
 **Examples**
 
 ```kex
-  [1, 2, 3].contains?(2)   # => true
-  [1, 2, 3].contains?(9)   # => false
+[1, 2, 3].contains?(2)   # => true
+[1, 2, 3].contains?(9)   # => false
 ```
 
 #### `indexOf`
@@ -3117,8 +3474,8 @@ indexOf(elem) : X -> Integer?
 **Examples**
 
 ```kex
-  [10, 20, 30].indexOf(20)   # => Just(1)
-  [10, 20, 30].indexOf(99)   # => None
+[10, 20, 30].indexOf(20)   # => Just(1)
+[10, 20, 30].indexOf(99)   # => None
 ```
 
 #### `findIndex`
@@ -3134,8 +3491,8 @@ findIndex(pred) : (X -> Bool) -> Integer?
 **Examples**
 
 ```kex
-  [10, 25, 30].findIndex { |n| n > 20 }   # => Just(1)
-  [10, 25, 30].findIndex { |n| n > 99 }   # => None
+[10, 25, 30].findIndex { |n| n > 20 }   # => Just(1)
+[10, 25, 30].findIndex { |n| n > 99 }   # => None
 ```
 
 #### `takeWhile`
@@ -3151,7 +3508,7 @@ takeWhile : (X -> Bool) -> [X]
 **Examples**
 
 ```kex
-  [1, 2, 9, 1].takeWhile { |n| n < 5 }   # => [1, 2]
+[1, 2, 9, 1].takeWhile { |n| n < 5 }   # => [1, 2]
 ```
 
 #### `dropWhile`
@@ -3167,7 +3524,7 @@ dropWhile : (X -> Bool) -> [X]
 **Examples**
 
 ```kex
-  [1, 2, 9, 1].dropWhile { |n| n < 5 }   # => [9, 1]
+[1, 2, 9, 1].dropWhile { |n| n < 5 }   # => [9, 1]
 ```
 
 #### `partition`
@@ -3183,7 +3540,7 @@ partition(pred) : (X -> Bool) -> ([X], [X])
 **Examples**
 
 ```kex
-  [1, 2, 3, 4].partition { |n| n.even? }   # => ([2, 4], [1, 3])
+[1, 2, 3, 4].partition { |n| n.even? }   # => ([2, 4], [1, 3])
 ```
 
 #### `collect`
@@ -3199,7 +3556,7 @@ collect : (X -> Y?) -> [Y]
 **Examples**
 
 ```kex
-  [1, 2, 3, 4].collect { |n| n > 2 then Just(n * 10) else None }   # => [30, 40]
+[1, 2, 3, 4].collect { |n| n > 2 then Just(n * 10) else None }   # => [30, 40]
 ```
 
 #### `take`
@@ -3215,7 +3572,7 @@ take(n) : Integer -> [X]
 **Examples**
 
 ```kex
-  [1, 2, 3, 4, 5].take(3)   # => [1, 2, 3]
+[1, 2, 3, 4, 5].take(3)   # => [1, 2, 3]
 ```
 
 #### `drop`
@@ -3231,7 +3588,7 @@ drop(n) : Integer -> [X]
 **Examples**
 
 ```kex
-  [1, 2, 3, 4, 5].drop(2)   # => [3, 4, 5]
+[1, 2, 3, 4, 5].drop(2)   # => [3, 4, 5]
 ```
 
 #### `push`
@@ -3247,7 +3604,7 @@ push(x) : X -> [X]
 **Examples**
 
 ```kex
-  [1, 2].push(3)   # => [1, 2, 3]
+[1, 2].push(3)   # => [1, 2, 3]
 ```
 
 #### `zip`
@@ -3263,7 +3620,7 @@ zip(other) : [Y] -> [(X, Y)]
 **Examples**
 
 ```kex
-  [1, 2, 3].zip(["a", "b", "c"])   # => [(1, "a"), (2, "b"), (3, "c")]
+[1, 2, 3].zip(["a", "b", "c"])   # => [(1, "a"), (2, "b"), (3, "c")]
 ```
 
 #### `sort`
@@ -3279,7 +3636,7 @@ sort(comp) : (X -> X -> Bool) -> [X]
 **Examples**
 
 ```kex
-  [3, 1, 2].sort { |a, b| a > b }   # => [3, 2, 1]
+[3, 1, 2].sort { |a, b| a > b }   # => [3, 2, 1]
 ```
 
 #### `min`
@@ -3295,7 +3652,7 @@ min(f) : (X -> Y) -> X?
 **Examples**
 
 ```kex
-  ["hey", "hi"].min { |s| s.count }   # => Just("hi")
+["hey", "hi"].min { |s| s.count }   # => Just("hi")
 ```
 
 #### `max`
@@ -3311,7 +3668,7 @@ max(f) : (X -> Y) -> X?
 **Examples**
 
 ```kex
-  ["hey", "hi"].max { |s| s.count }   # => Just("hey")
+["hey", "hi"].max { |s| s.count }   # => Just("hey")
 ```
 
 #### `sum`
@@ -3327,7 +3684,25 @@ sum(f) : (X -> Number) -> Number
 **Examples**
 
 ```kex
-  ["hello", "hi"].sum { |s| s.count }   # => 7
+["hello", "hi"].sum { |s| s.count }   # => 7
+```
+
+#### `join`
+
+Receiver is `[X]`, not `[String | Char]`: the intrinsic renders whatever it is given, so `[1, 2].join(", ")` is "1, 2" on both backends. The narrower receiver only ever fired once element types became precise enough to catch it — until then `map`/`filter` handed `join` an unknown element type and the restriction checked nothing. Concatenates all elements, placing `sep` between each adjacent pair. With no separator the elements are joined directly.
+
+```kex
+join(sep) : String -> String
+join : String
+```
+
+**Returns**: `String`
+
+**Examples**
+
+```kex
+["hello", "world", "kex"].join(", ")   # => "hello, world, kex"
+["a", "b", "c"].join                   # => "abc"
 ```
 
 
@@ -3354,11 +3729,19 @@ Keys are compared by structural equality and may be of any type; atom keys get t
 
 Entries come back in canonical key order, not insertion order, so `keys`, `values`, `entries` and any traversal are stable and comparable across equal maps.
 
-  let config = { host: "localhost", port: 8080 }   config.get(:host).or("0.0.0.0")     # => "localhost"   config.get(:user).or("anonymous")   # => "anonymous"   config.put(:port, 9090)             # => { :host: "localhost", :port: 9090 }
+```kex
+let config = { host: "localhost", port: 8080 }
+config.get(:host).or("0.0.0.0")     # => "localhost"
+config.get(:user).or("anonymous")   # => "anonymous"
+config.put(:port, 9090)             # => { :host: "localhost", :port: 9090 }
+```
 
 A map is `Enumerable` and `Foldable`, and the traversal blocks take the key and value as two parameters:
 
-  config.each { |k, v| IO.printLine("${k} = ${v}") }   config.filter { |k, v| k != :port }   # => { :host: "localhost" }
+```kex
+config.each { |k, v| IO.printLine("${k} = ${v}") }
+config.filter { |k, v| k != :port }   # => { :host: "localhost" }
+```
 
 Declared for the same reason list.kex declares `type List<X> = [X]`: it gives the name `Map` a source declaration, so it resolves as a type through the collected interfaces rather than needing to be known to the compiler.
 
@@ -3388,16 +3771,16 @@ reduce(acc, g)
 _Summing the values_
 
 ```kex
-  { a: 1, b: 2 }.reduce(0) do |acc, pair|
-    let (key, value) = pair
-    acc + value
-  end
-  # => 3
+{ a: 1, b: 2 }.reduce(0) do |acc, pair|
+  let (key, value) = pair
+  acc + value
+end
+# => 3
 ```
 _Rendering the map as a query string_
 
 ```kex
-  { a: 1, b: 2 }.entries.map { |k, v| "${k}=${v}" }.join("&")
+{ a: 1, b: 2 }.entries.map { |k, v| "${k}=${v}" }.join("&")
 ```
 
 #### `combine`
@@ -3413,13 +3796,13 @@ combine(other)
 **Examples**
 
 ```kex
-  { a: 1 }.combine({ b: 2 })   # => { :a: 1, :b: 2 }
+{ a: 1 }.combine({ b: 2 })   # => { :a: 1, :b: 2 }
 ```
 _Folding a list of maps into one_
 
 ```kex
-  [{ a: 1 }, { b: 2 }, { a: 9 }].reduce({}) { |acc, m| acc.combine(m) }
-  # => { :a: 9, :b: 2 }
+[{ a: 1 }, { b: 2 }, { a: 9 }].reduce({}) { |acc, m| acc.combine(m) }
+# => { :a: 9, :b: 2 }
 ```
 
 #### `get`
@@ -3438,14 +3821,14 @@ get(key) : K -> V -> V
 **Examples**
 
 ```kex
-  let user = { name: "Alice", age: 32 }
-  user.get(:name)      # => Just("Alice")
-  user.get(:missing)   # => None
+let user = { name: "Alice", age: 32 }
+user.get(:name)      # => Just("Alice")
+user.get(:missing)   # => None
 ```
 _Chaining through a nested map_
 
 ```kex
-  settings.get(:server).flatMap { |s| s.get(:port) }.or(8080)
+settings.get(:server).flatMap { |s| s.get(:port) }.or(8080)
 ```
 
 #### `put`
@@ -3463,15 +3846,15 @@ put(k, v) : K -> V -> Map<K, V>
 **Examples**
 
 ```kex
-  {}.put(:x, 1)              # => { :x: 1 }
-  { x: 1 }.put(:x, 2)        # => { :x: 2 }
+{}.put(:x, 1)              # => { :x: 1 }
+{ x: 1 }.put(:x, 2)        # => { :x: 2 }
 ```
 _Rebinding with the `!` form_
 
 ```kex
-  var totals = {}
-  totals.put!(:visits, 1)
-  totals                     # => { :visits: 1 }
+var totals = {}
+totals.put!(:visits, 1)
+totals                     # => { :visits: 1 }
 ```
 
 #### `delete`
@@ -3489,13 +3872,13 @@ delete(key) : K -> Map<K, V>
 **Examples**
 
 ```kex
-  { a: 1, b: 2 }.delete(:a)   # => { :b: 2 }
-  { a: 1 }.delete(:z)         # => { :a: 1 }
+{ a: 1, b: 2 }.delete(:a)   # => { :b: 2 }
+{ a: 1 }.delete(:z)         # => { :a: 1 }
 ```
 _Stripping a secret before logging_
 
 ```kex
-  IO.printLine(params.delete(:password))
+IO.printLine(params.delete(:password))
 ```
 
 #### `has?`
@@ -3513,15 +3896,15 @@ has?(key) : K -> Bool
 **Examples**
 
 ```kex
-  { a: 1 }.has?(:a)   # => true
-  { a: 1 }.has?(:z)   # => false
+{ a: 1 }.has?(:a)   # => true
+{ a: 1 }.has?(:z)   # => false
 ```
 _Checking a required setting_
 
 ```kex
-  if !config.has?(:host)
-    IO.printError("host is required")
-  end
+if !config.has?(:host)
+  IO.printError("host is required")
+end
 ```
 
 #### `count`
@@ -3537,12 +3920,12 @@ count : (K -> V -> Bool) -> Integer
 **Examples**
 
 ```kex
-  { a: 1, b: 2 }.count { |k, v| v > 1 }   # => 1
+{ a: 1, b: 2 }.count { |k, v| v > 1 }   # => 1
 ```
 _How many settings are still at their default_
 
 ```kex
-  config.count { |k, v| v == defaults.get(k, v) }
+config.count { |k, v| v == defaults.get(k, v) }
 ```
 
 #### `each`
@@ -3558,7 +3941,7 @@ each : (K -> V -> Void) -> Void
 **Examples**
 
 ```kex
-  scores.each { |k, v| IO.printLine("${k}: ${v}") }
+scores.each { |k, v| IO.printLine("${k}: ${v}") }
 ```
 
 #### `map`
@@ -3576,12 +3959,12 @@ map : (K -> V -> R) -> [R]
 **Examples**
 
 ```kex
-  { "a": 1, "b": 2 }.map { |k, v| "${k}=${v}" }   # => ["a=1", "b=2"]
+{ "a": 1, "b": 2 }.map { |k, v| "${k}=${v}" }   # => ["a=1", "b=2"]
 ```
 _Building a header block_
 
 ```kex
-  headers.map { |name, value| "${name}: ${value}" }.join("\n")
+headers.map { |name, value| "${name}: ${value}" }.join("\n")
 ```
 
 #### `mapValues`
@@ -3597,12 +3980,12 @@ mapValues(f) : (V -> W) -> Map<K, W>
 **Examples**
 
 ```kex
-  { a: 1, b: 2 }.mapValues { |v| v * 10 }   # => { :a: 10, :b: 20 }
+{ a: 1, b: 2 }.mapValues { |v| v * 10 }   # => { :a: 10, :b: 20 }
 ```
 _Normalising values read as text_
 
 ```kex
-  raw.mapValues { |s| s.trim.lowerCase }
+raw.mapValues { |s| s.trim.lowerCase }
 ```
 
 #### `mapKeys`
@@ -3620,17 +4003,19 @@ mapKeys(f) : (K -> J) -> Map<J, V>
 **Examples**
 
 ```kex
-  { "a": 1, "b": 2 }.mapKeys { |k| k.upperCase }   # => { A: 1, B: 2 }
+{ "a": 1, "b": 2 }.mapKeys { |k| k.upperCase }   # => { A: 1, B: 2 }
 ```
 _Making header lookups case-insensitive_
 
 ```kex
-  headers.mapKeys { |name| name.lowerCase }
+headers.mapKeys { |name| name.lowerCase }
 ```
 
 #### `filter`
 
 Returns a new map with only the entries for which `pred` answers `true`.
+
+Map overrides the map-returning HOFs (Enumerable's default returns a list).
 
 ```kex
 filter(pred) : (K -> V -> Bool) -> Map<K, V>
@@ -3641,13 +4026,12 @@ filter(pred) : (K -> V -> Bool) -> Map<K, V>
 **Examples**
 
 ```kex
-  { a: 1, b: 2, c: 3 }.filter { |k, v| v > 1 }   # => { :b: 2, :c: 3 }
+{ a: 1, b: 2, c: 3 }.filter { |k, v| v > 1 }   # => { :b: 2, :c: 3 }
 ```
 _Keeping only the options that were actually set_
 
 ```kex
-  options.filter { |name, value| !value.blank? }
-Map overrides the map-returning HOFs (Enumerable's default returns a list).
+options.filter { |name, value| !value.blank? }
 ```
 
 #### `reject`
@@ -3663,12 +4047,12 @@ reject(pred) : (K -> V -> Bool) -> Map<K, V>
 **Examples**
 
 ```kex
-  { a: 1, b: 2, c: 3 }.reject { |k, v| v > 1 }   # => { :a: 1 }
+{ a: 1, b: 2, c: 3 }.reject { |k, v| v > 1 }   # => { :a: 1 }
 ```
 _Dropping internal keys before serialising_
 
 ```kex
-  record.reject { |name, _| name.startsWith?("_") }
+record.reject { |name, _| name.startsWith?("_") }
 ```
 
 #### `merge`
@@ -3686,12 +4070,12 @@ merge(other) : Map<K, V> -> Map<K, V>
 **Examples**
 
 ```kex
-  { a: 1, b: 2 }.merge({ b: 99, c: 3 })   # => { :a: 1, :b: 99, :c: 3 }
+{ a: 1, b: 2 }.merge({ b: 99, c: 3 })   # => { :a: 1, :b: 99, :c: 3 }
 ```
 _Layering user settings over defaults_
 
 ```kex
-  defaults.merge(userConfig)
+defaults.merge(userConfig)
 ```
 
 #### `any?`
@@ -3707,8 +4091,8 @@ any? : (K -> V -> Bool) -> Bool
 **Examples**
 
 ```kex
-  { a: 1, b: 2 }.any? { |k, v| v > 1 }   # => true
-  { a: 1, b: 2 }.any? { |k, v| v > 9 }   # => false
+{ a: 1, b: 2 }.any? { |k, v| v > 1 }   # => true
+{ a: 1, b: 2 }.any? { |k, v| v > 9 }   # => false
 ```
 
 #### `all?`
@@ -3724,13 +4108,13 @@ all? : (K -> V -> Bool) -> Bool
 **Examples**
 
 ```kex
-  { a: 1, b: 2 }.all? { |k, v| v > 0 }   # => true
-  { a: 1, b: 2 }.all? { |k, v| v > 1 }   # => false
+{ a: 1, b: 2 }.all? { |k, v| v > 0 }   # => true
+{ a: 1, b: 2 }.all? { |k, v| v > 1 }   # => false
 ```
 _Validating a form_
 
 ```kex
-  fields.all? { |name, value| !value.blank? }
+fields.all? { |name, value| !value.blank? }
 ```
 
 #### `find`
@@ -3748,13 +4132,13 @@ find : (K -> V -> Bool) -> (K, V)?
 **Examples**
 
 ```kex
-  { a: 1, b: 2 }.find { |k, v| v > 1 }   # => Just((:b, 2))
-  { a: 1, b: 2 }.find { |k, v| v > 9 }   # => None
+{ a: 1, b: 2 }.find { |k, v| v > 1 }   # => Just((:b, 2))
+{ a: 1, b: 2 }.find { |k, v| v > 9 }   # => None
 ```
 _Locating a value without knowing its key_
 
 ```kex
-  users.find { |id, user| user.email == target }
+users.find { |id, user| user.email == target }
 ```
 
 ## make `Map<K, V>` implements [Blankable](blankable.md#trait-blankable)
@@ -3783,7 +4167,11 @@ All trigonometric functions work in radians. Every function here accepts a `Numb
 
 A Kex `Float` is always finite, so a domain error (`Math.sqrt(-1.0)`) or an overflow (`Math.exp(1000.0)`) raises rather than producing `NaN` or `Infinity` — the same rule the BEAM enforces, where those two values cannot exist at all. There is no non-finite float to test for afterwards.
 
-  Math.sqrt(2.0)              # => 1.4142135623730951   Math.hypot(3.0, 4.0)        # => 5.0   Math.sin(Math.PI / 2.0)     # => 1.0
+```kex
+Math.sqrt(2.0)              # => 1.4142135623730951
+Math.hypot(3.0, 4.0)        # => 5.0
+Math.sin(Math.PI / 2.0)     # => 1.0
+```
 
 The everyday operations on a single number — `abs`, `floor`, `ceil`, `round`, `sqrt` — are also methods on `Integer` and `Float`, which usually reads better in a chain: `x.abs` over `Math.abs(x)`.
 
@@ -4083,7 +4471,11 @@ An environment stand-in's WRITE hook: the name and the value a program set. A `M
 
 A stand-in for the `FS.File` capability, for `with FS.File = ...`. Unlike the `Mock.*` functions below it holds no global state, needs no `clear()`, and cannot leak past its block. What it cannot do is change: `write` then `read` back is not something a value does, so a test needing that round trip still wants `Mock.FS` (kexhq/kex#143).
 
-  with FS.File = Mock.Files { files: {"kex.toml": "name = \"demo\""} } do     assert(loadConfig() == "demo")   end
+```kex
+with FS.File = Mock.Files { files: {"kex.toml": "name = \"demo\""} } do
+  assert(loadConfig() == "demo")
+end
+```
 
 `onRead` takes over when a test needs an ANSWER rather than a fixture — content derived from the path, a failure on the third call, a record of what was asked for. It is consulted first and its `None` means "no such file", so a callback can model absence too.
 
@@ -4096,7 +4488,11 @@ A stand-in for the `FS.File` capability, for `with FS.File = ...`. Unlike the `M
 
 A stand-in for the `ENV` capability. A name simply left out of `vars` reads as unset, which is the whole reason `Mock.ENV.unset` exists — absence is an answer programs act on. `onGet` answers instead of the map when a test wants a rule rather than a fixture.
 
-  with ENV = Mock.Env { vars: {"HOME": "/fake"} } do     assert(configHome() == "/fake/.config")   end
+```kex
+with ENV = Mock.Env { vars: {"HOME": "/fake"} } do
+  assert(configHome() == "/fake/.config")
+end
+```
 
 **Fields**
 
@@ -4122,11 +4518,21 @@ A stateful stand-in for the filesystem: files a test declares, that the real `FS
 
 The store is global and lives until `clear`, which is what makes a write followed by a read testable — and what makes two tests able to interfere. Clear it in an `after` hook.
 
-  describe "the config loader" do     before do       Mock.FS.files({ "app.conf": "port = 8080\n" })     end
+```kex
+describe "the config loader" do
+  before do
+    Mock.FS.files({ "app.conf": "port = 8080\n" })
+  end
 
-    after do       Mock.FS.clear()     end
+  after do
+    Mock.FS.clear()
+  end
 
-    it "reads the port" do       Assert.equal(loadPort(), 8080)     end   end
+  it "reads the port" do
+    Assert.equal(loadPort(), 8080)
+  end
+end
+```
 
 ## function `File`
 
@@ -4190,7 +4596,12 @@ A stateful stand-in for the network: responses a test queues, that the real `Htt
 
 Responses are consumed in FIFO order — the first `respond` answers the first request. When the queue runs out, the next request answers `Error(HttpError)` with kind `MockEmpty`, so a test that made more calls than it expected fails rather than reaching the network.
 
-  Mock.Http.start()   Mock.Http.respond(200, "{\"ok\": true}")   assert(fetchStatus() == "ok")   Mock.Http.stop()
+```kex
+Mock.Http.start()
+Mock.Http.respond(200, "{\"ok\": true}")
+assert(fetchStatus() == "ok")
+Mock.Http.stop()
+```
 
 ## function `start`
 
@@ -4229,7 +4640,11 @@ Overlays the process environment, so a test can say what `ENV` holds instead of 
 
 The overlay is global and lives until `clear` — clear it in an `after` hook.
 
-  Mock.ENV.vars({ "HOME": "/fake", "LOG_LEVEL": "debug" })   assert(configPath() == "/fake/.config")   Mock.ENV.clear()
+```kex
+Mock.ENV.vars({ "HOME": "/fake", "LOG_LEVEL": "debug" })
+assert(configPath() == "/fake/.config")
+Mock.ENV.clear()
+```
 
 ## function `set`
 
@@ -4281,7 +4696,13 @@ A stateful stand-in for the console: captures what a program prints, and feeds i
 
 The way to test a program that talks to a person without one being there.
 
-  Mock.IO.start()   Mock.IO.input("Ada", "42")   greet()   Assert.equal(Mock.IO.output(), "hello, Ada\n")   Mock.IO.stop()
+```kex
+Mock.IO.start()
+Mock.IO.input("Ada", "42")
+greet()
+Assert.equal(Mock.IO.output(), "hello, Ada\n")
+Mock.IO.stop()
+```
 
 ## function `start`
 
@@ -4459,10 +4880,34 @@ get(key)
 has?(key)
 ```
 
+#### `keys`
+
+```kex
+keys()
+```
+
+#### `values`
+
+```kex
+values()
+```
+
+#### `count`
+
+```kex
+count()
+```
+
 #### `each`
 
 ```kex
 each(f)
+```
+
+#### `entries`
+
+```kex
+entries()
 ```
 
 #### `set`
@@ -4550,7 +4995,12 @@ Whole numbers, of arbitrary size.
 
 `Integer` and `Float` are one numeric tower: they compare and order across the boundary, so `0 == 0.0` is `true` and `[1, 2.5, 3].sort` works. What differs is the arithmetic. `/` on two integers is integer division, and `sqrt` answers a `Float` because a square root generally is one.
 
-  7 / 2          # => 3      (integer division)   7.0 / 2.0      # => 3.5   16.sqrt        # => 4.0    (a Float, even from an Integer)   (-7).modulo(3) # => 2      (mathematical modulo, not C remainder)
+```kex
+7 / 2          # => 3      (integer division)
+7.0 / 2.0      # => 3.5
+16.sqrt        # => 4.0    (a Float, even from an Integer)
+(-7).modulo(3) # => 2      (mathematical modulo, not C remainder)
+```
 
 
 #### `modulo`
@@ -4568,14 +5018,14 @@ modulo(n) : Integer -> Integer
 **Examples**
 
 ```kex
-  7.modulo(3)      # => 1
-  (-7).modulo(3)   # => 2
+7.modulo(3)      # => 1
+(-7).modulo(3)   # => 2
 ```
 _Wrapping an index around a list_
 
 ```kex
-  let items = ["a", "b", "c"]
-  items.at((-1).modulo(items.count))   # => Just("c")
+let items = ["a", "b", "c"]
+items.at((-1).modulo(items.count))   # => Just("c")
 ```
 
 #### `in?`
@@ -4591,13 +5041,13 @@ in?(range) : Range<Integer> -> Bool
 **Examples**
 
 ```kex
-  5.in?(1..10)    # => true
-  11.in?(1..10)   # => false
+5.in?(1..10)    # => true
+11.in?(1..10)   # => false
 ```
 _Validating a port number_
 
 ```kex
-  port.in?(1..65535)
+port.in?(1..65535)
 ```
 
 #### `times`
@@ -4615,12 +5065,12 @@ times(block) : (Integer -> Void) -> Void
 **Examples**
 
 ```kex
-  3.times { |i| IO.printLine(i) }   # prints 0, then 1, then 2
+3.times { |i| IO.printLine(i) }   # prints 0, then 1, then 2
 ```
 _Repeating an action_
 
 ```kex
-  retries.times { |_| attemptConnection }
+retries.times { |_| attemptConnection }
 ```
 
 ## make `Float`
@@ -4631,7 +5081,11 @@ A Kex `Float` is always finite. An operation that would produce `NaN` or `Infini
 
 `Float` and `Integer` compare and order across the boundary; see `Integer` for the rest of the numeric tower.
 
-  3.7.floor      # => 3   3.7.round      # => 4   (-3.7).toInteger  # => -3   (truncates toward zero)
+```kex
+3.7.floor      # => 3
+3.7.round      # => 4
+(-3.7).toInteger  # => -3   (truncates toward zero)
+```
 
 
 #### `in?`
@@ -4649,8 +5103,8 @@ in?(range) : Range<Float> -> Bool
 _Comparing directly is usually clearer for floats_
 
 ```kex
-  let ratio = 0.75
-  ratio >= 0.0 && ratio <= 1.0   # => true
+let ratio = 0.75
+ratio >= 0.0 && ratio <= 1.0   # => true
 ```
 
 ## module `Integer`
@@ -4756,11 +5210,21 @@ An optional value: `Just(x)` carries a value, `None` says there is none.
 
 `X?` is shorthand for `Optional<X>`, and is the spelling you will normally write. Kex has no `null` — anything that might not produce a value returns an `Optional` instead, so the compiler makes you say what happens when it is empty. Most of the time that is a single `.or(default)` at the end of a chain.
 
-  let names = ["ada", "grace"]   names.first.or("nobody")        # => "ada"   names.at(9).or("nobody")        # => "nobody"   names.first.map(~upperCase)        # => Just("ADA")
+```kex
+let names = ["ada", "grace"]
+names.first.or("nobody")        # => "ada"
+names.at(9).or("nobody")        # => "nobody"
+names.first.map(~upperCase)        # => Just("ADA")
+```
 
 Pattern matching handles the cases that need more than a default:
 
-  match config.get("port") do     Just(port) => IO.printLine("listening on ${port}")     None       => IO.printLine("no port configured")   end
+```kex
+match config.get("port") do
+  Just(port) => IO.printLine("listening on ${port}")
+  None       => IO.printLine("no port configured")
+end
+```
 
 
 
@@ -4775,9 +5239,15 @@ The outcome of an operation that can fail: `Ok(x)` on success, `Error(e)` on fai
 
 Use `Result` over `Optional` when the *reason* for failure matters to the caller. Parsing is the standard example: `"12x".to(Integer)` answers `None`, while `Integer.parse("12x")` answers an `Error` that says where it stopped.
 
-  Integer.parse("42").or(0)     # => 42   Integer.parse("4x").or(0)     # => 0
+```kex
+Integer.parse("42").or(0)     # => 42
+Integer.parse("4x").or(0)     # => 0
 
-  match Integer.parse(input) do     Ok(n)    => IO.printLine("got ${n}")     Error(e) => IO.printError("bad number: ${e}")   end
+match Integer.parse(input) do
+  Ok(n)    => IO.printLine("got ${n}")
+  Error(e) => IO.printError("bad number: ${e}")
+end
+```
 
 
 
@@ -4792,9 +5262,16 @@ One of two values, of possibly different types: `Left(l)` or `Right(r)`.
 
 Unlike `Result`, neither side means failure — `Either` is for a value that is legitimately one of two shapes.
 
-  type Id = Either<Integer, String>
+```kex
+type Id = Either<Integer, String>
 
-  let describe(id: Id) -> String do     match id do       Left(n)  => "numeric id ${n}"       Right(s) => "slug id ${s}"     end   end
+let describe(id: Id) -> String do
+  match id do
+    Left(n)  => "numeric id ${n}"
+    Right(s) => "slug id ${s}"
+  end
+end
+```
 
 
 
@@ -4837,16 +5314,16 @@ set? : Bool
 **Examples**
 
 ```kex
-  Just(42).set?   # => true
-  None.set?       # => false
+Just(42).set?   # => true
+None.set?       # => false
 ```
 _Guarding on presence_
 
 ```kex
-  let cached = lookup(key)
-  if cached.set?
-    IO.printLine("hit")
-  end
+let cached = lookup(key)
+if cached.set?
+  IO.printLine("hit")
+end
 ```
 
 #### `none?`
@@ -4862,15 +5339,15 @@ none? : Bool
 **Examples**
 
 ```kex
-  None.none?       # => true
-  Just(42).none?   # => false
+None.none?       # => true
+Just(42).none?   # => false
 ```
 _Reporting a missing entry_
 
 ```kex
-  if config.get("host").none?
-    IO.printError("host is required")
-  end
+if config.get("host").none?
+  IO.printError("host is required")
+end
 ```
 
 #### `or`
@@ -4888,15 +5365,15 @@ or : X -> X
 **Examples**
 
 ```kex
-  Just(42).or(0)   # => 42
-  None.or(0)       # => 0
+Just(42).or(0)   # => 42
+None.or(0)       # => 0
 ```
 _Closing a chain of lookups_
 
 ```kex
-  ["a", "b"].first.or("?")            # => "a"
-  [].first.or("?")                    # => "?"
-  "hello".indexOf('z').or(-1)         # => -1
+["a", "b"].first.or("?")            # => "a"
+[].first.or("?")                    # => "?"
+"hello".indexOf('z').or(-1)         # => -1
 ```
 
 #### `map`
@@ -4912,14 +5389,14 @@ map : (X -> Y) -> Y?
 **Examples**
 
 ```kex
-  Just(2).map { |x| x * 3 }   # => Just(6)
-  None.map { |x| x * 3 }      # => None
+Just(2).map { |x| x * 3 }   # => Just(6)
+None.map { |x| x * 3 }      # => None
 ```
 _Transforming before supplying a default_
 
 ```kex
-  ["ada"].first.map(~upperCase).or("ANON")   # => "ADA"
-  [].first.map(~upperCase).or("ANON")        # => "ANON"
+["ada"].first.map(~upperCase).or("ANON")   # => "ADA"
+[].first.map(~upperCase).or("ANON")        # => "ANON"
 ```
 
 #### `flatMap`
@@ -4937,17 +5414,17 @@ flatMap : (X -> Y?) -> Y?
 **Examples**
 
 ```kex
-  Just(4).flatMap { |x| x > 0 then Just(x * 2) else None }   # => Just(8)
-  Just(-4).flatMap { |x| x > 0 then Just(x * 2) else None }  # => None
-  None.flatMap { |x| Just(x * 2) }                           # => None
+Just(4).flatMap { |x| x > 0 then Just(x * 2) else None }   # => Just(8)
+Just(-4).flatMap { |x| x > 0 then Just(x * 2) else None }  # => None
+None.flatMap { |x| Just(x * 2) }                           # => None
 ```
 _Chaining lookups that may each come up empty_
 
 ```kex
-  users.get(id)
-    .flatMap { |user| user.address }
-    .flatMap { |address| address.postcode }
-    .or("unknown")
+users.get(id)
+  .flatMap { |user| user.address }
+  .flatMap { |address| address.postcode }
+  .or("unknown")
 ```
 
 ## make `Result<X, E>` implements [Resultable](#trait-resultable)
@@ -4966,13 +5443,13 @@ ok? : Bool
 **Examples**
 
 ```kex
-  Ok(42).ok?         # => true
-  Error("!").ok?     # => false
+Ok(42).ok?         # => true
+Error("!").ok?     # => false
 ```
 _Counting successes_
 
 ```kex
-  inputs.map(~Integer.parse).count(~ok?)
+inputs.map(~Integer.parse).count(~ok?)
 ```
 
 #### `error?`
@@ -4988,8 +5465,8 @@ error? : Bool
 **Examples**
 
 ```kex
-  Error("oops").error?   # => true
-  Ok(42).error?          # => false
+Error("oops").error?   # => true
+Ok(42).error?          # => false
 ```
 
 #### `or`
@@ -5007,13 +5484,13 @@ or : X -> X
 **Examples**
 
 ```kex
-  Ok(42).or(0)       # => 42
-  Error("!").or(0)   # => 0
+Ok(42).or(0)       # => 42
+Error("!").or(0)   # => 0
 ```
 _Parsing with a fallback_
 
 ```kex
-  Integer.parse(input).or(8080)
+Integer.parse(input).or(8080)
 ```
 
 #### `map`
@@ -5029,13 +5506,13 @@ map : (X -> Y) -> Result<Y, E>
 **Examples**
 
 ```kex
-  Ok(2).map { |x| x * 3 }        # => Ok(6)
-  Error("oops").map { |x| x }    # => Error("oops")
+Ok(2).map { |x| x * 3 }        # => Ok(6)
+Error("oops").map { |x| x }    # => Error("oops")
 ```
 _Converting a parsed value_
 
 ```kex
-  Integer.parse("21").map { |n| n * 2 }   # => Ok(42)
+Integer.parse("21").map { |n| n * 2 }   # => Ok(42)
 ```
 
 #### `flatMap`
@@ -5053,15 +5530,15 @@ flatMap : (X -> Result<Y, E>) -> Result<Y, E>
 **Examples**
 
 ```kex
-  Ok(4).flatMap { |x| x > 0 then Ok(x * 2) else Error("neg") }    # => Ok(8)
-  Ok(-4).flatMap { |x| x > 0 then Ok(x * 2) else Error("neg") }   # => Error("neg")
+Ok(4).flatMap { |x| x > 0 then Ok(x * 2) else Error("neg") }    # => Ok(8)
+Ok(-4).flatMap { |x| x > 0 then Ok(x * 2) else Error("neg") }   # => Error("neg")
 ```
 _A pipeline where each stage may fail_
 
 ```kex
-  Integer.parse(raw)
-    .flatMap { |n| n > 0 then Ok(n) else Error("must be positive") }
-    .flatMap { |n| n < 65536 then Ok(n) else Error("out of range") }
+Integer.parse(raw)
+  .flatMap { |n| n > 0 then Ok(n) else Error("must be positive") }
+  .flatMap { |n| n < 65536 then Ok(n) else Error("out of range") }
 ```
 
 #### `optional`
@@ -5079,16 +5556,16 @@ optional : X?
 **Examples**
 
 ```kex
-  Ok(42).optional          # => Just(42)
-  Error("oops").optional   # => None
+Ok(42).optional          # => Just(42)
+Error("oops").optional   # => None
 ```
 _Keeping only the values that parsed_
 
 ```kex
-  ["1", "x", "3"]
-    .map { |s| Integer.parse(s).optional }
-    .filter(~set?)
-    .map { |o| o.or(0) }    # => [1, 3]
+["1", "x", "3"]
+  .map { |s| Integer.parse(s).optional }
+  .filter(~set?)
+  .map { |o| o.or(0) }    # => [1, 3]
 ```
 
 ## function `or`
@@ -5150,11 +5627,23 @@ Declarative command-line parsing, shared by Kex tools and applications.
 
 You describe the options and commands a tool accepts, and the parser turns an argument list into typed values, dispatches to the right command, and renders the help text.
 
-  foul greet(options: ParsedOptions) -> Integer do     IO.printLine("hello, ${options.value("name", "world")}")     return 0   end
+```kex
+foul greet(options: ParsedOptions) -> Integer do
+  IO.printLine("hello, ${options.value("name", "world")}")
+  return 0
+end
 
-  main(args) do     let cli = OptionParser.define("demo", "a small demo tool")       .string("name", Just('n'), "who to greet", Just("world"), false)       .flag("help", Just('h'), "show this help")       .command("greet", "", "print a greeting", ~greet)     System.exit(cli.run(args))   end
+main(args) do
+  let cli = OptionParser.define("demo", "a small demo tool")
+    .string("name", Just('n'), "who to greet", Just("world"), false)
+    .flag("help", Just('h'), "show this help")
+    .command("greet", "", "print a greeting", ~greet)
+  System.exit(cli.run(args))
+end
 
-  $ demo greet --name Ada   hello, Ada
+$ demo greet --name Ada
+hello, Ada
+```
 
 Note that `--help` is not automatic: `run` shows the help when a flag named `help` is set, so declare that flag if you want it.
 
@@ -5259,8 +5748,8 @@ value(name)
 **Examples**
 
 ```kex
-  options.value("name")     # => Just("Ada")
-  options.value("missing")  # => None
+options.value("name")     # => Just("Ada")
+options.value("missing")  # => None
 ```
 
 #### `flagEnabled?`
@@ -5276,9 +5765,9 @@ flagEnabled?(name)
 **Examples**
 
 ```kex
-  if options.flagEnabled?("verbose")
-    IO.printLine("verbose mode")
-  end
+if options.flagEnabled?("verbose")
+  IO.printLine("verbose mode")
+end
 ```
 
 #### `integerValue`
@@ -5296,7 +5785,7 @@ integerValue(name)
 **Examples**
 
 ```kex
-  let times = options.integerValue("times").or(1)
+let times = options.integerValue("times").or(1)
 ```
 
 ## make `OptionConfig`
@@ -5315,13 +5804,13 @@ string(long, short, description, default, required?)
 **Examples**
 
 ```kex
-  OptionParser.define("demo", "a small demo tool")
-    .string("name", Just('n'), "who to greet", Just("world"), false)
+OptionParser.define("demo", "a small demo tool")
+  .string("name", Just('n'), "who to greet", Just("world"), false)
 ```
 _An option the tool cannot run without_
 
 ```kex
-  config.string("output", Just('o'), "where to write", None, true)
+config.string("output", Just('o'), "where to write", None, true)
 ```
 
 #### `integer`
@@ -5339,7 +5828,7 @@ integer(long, short, description, default, required?)
 **Examples**
 
 ```kex
-  config.integer("port", Just('p'), "port to listen on", Just("8080"), false)
+config.integer("port", Just('p'), "port to listen on", Just("8080"), false)
 ```
 
 #### `flag`
@@ -5359,9 +5848,9 @@ flag(long, short, description)
 **Examples**
 
 ```kex
-  config
-    .flag("verbose", Just('v'), "print more detail")
-    .flag("help", Just('h'), "show this help")
+config
+  .flag("verbose", Just('v'), "print more detail")
+  .flag("help", Just('h'), "show this help")
 ```
 
 #### `command`
@@ -5370,7 +5859,7 @@ Declares a command and the function that runs it.
 
 A command name may be several words — `"docs build"` — and the longest match wins, so a group and its subcommands can both be declared. The handler receives the parsed options with the command's own words already removed, and returns the process exit code.
 
-  config.command("greet", "print a greeting", ~greet) Declares a command. `usage` is what the help line shows after the name (`<name>`, `[args...]`); leave it empty for a command that takes none.
+Declares a command. `usage` is what the help line shows after the name (`<name>`, `[args...]`); leave it empty for a command that takes none.
 
 ```kex
 command(name, description, handler)
@@ -5381,10 +5870,12 @@ command(name, description, handler)
 **Examples**
 
 ```kex
-  foul greet(options: ParsedOptions) -> Integer do
-    IO.printLine("hello, ${options.value("name", "world")}")
-    return 0
-  end
+foul greet(options: ParsedOptions) -> Integer do
+  IO.printLine("hello, ${options.value("name", "world")}")
+  return 0
+end
+
+config.command("greet", "print a greeting", ~greet)
 ```
 
 #### `parse`
@@ -5402,10 +5893,10 @@ parse(args)
 **Examples**
 
 ```kex
-  match config.parse(args) do
-    Ok(options) => IO.printLine(options.value("name", "world"))
-    Error(e)    => IO.printError(OptionParser.errorMessage(e))
-  end
+match config.parse(args) do
+  Ok(options) => IO.printLine(options.value("name", "world"))
+  Error(e)    => IO.printError(OptionParser.errorMessage(e))
+end
 ```
 
 #### `run`
@@ -5425,12 +5916,32 @@ run(args)
 **Examples**
 
 ```kex
-  main(args) do
-    let cli = OptionParser.define("demo", "a small demo tool")
-      .flag("help", Just('h'), "show this help")
-      .command("greet", "", "print a greeting", ~greet)
-    System.exit(cli.run(args))
-  end
+main(args) do
+  let cli = OptionParser.define("demo", "a small demo tool")
+    .flag("help", Just('h'), "show this help")
+    .command("greet", "", "print a greeting", ~greet)
+  System.exit(cli.run(args))
+end
+```
+
+#### `printHelp`
+
+Prints the help text and returns 0, the exit code for a successful run.
+
+`run` calls this for you when the `help` flag is set; call it directly when a tool decides on its own that help is the right answer.
+
+```kex
+printHelp()
+```
+
+**Returns**: `Integer` — always 0
+
+**Examples**
+
+_A tool with no arguments shows its help_
+
+```kex
+args.empty? then cli.printHelp else cli.run(args)
 ```
 
 ## module `OptionParser`
@@ -5523,9 +6034,17 @@ Opt-in — nothing here is in scope until `using Parsing`.
 
 An `Input` is an immutable cursor over a string. A parser takes one and answers either the value it read together with an advanced cursor, or a `ParseError` saying where it gave up. Because the cursor is immutable, a failed attempt costs nothing: the caller still holds the position it started from and can try something else.
 
-  using Parsing
+```kex
+using Parsing
 
-  main do     let cursor = Input { input: "abc 123" }     let word = cursor.takeWhile(~alpha?)     let (text, rest) = word     IO.printLine(text)              # prints: abc     IO.printLine(rest.pos)          # prints: 3   end
+main do
+  let cursor = Input { input: "abc 123" }
+  let word = cursor.takeWhile(~alpha?)
+  let (text, rest) = word
+  IO.printLine(text)              # prints: abc
+  IO.printLine(rest.pos)          # prints: 3
+end
+```
 
 The building blocks are `char` and `charWhen` for one character, `string` for a literal, `takeWhile` for a run, and `many` / `some` / `choice` for repetition and alternatives. `JSON` in this same stdlib is written with them.
 
@@ -5535,7 +6054,10 @@ Why a parser gave up, and at which position.
 
 `Expected` carries what the grammar WANTED rather than what it found — the difference between "unexpected `d`" and "expected `version(`". It is what `label` and `string` report.
 
-  Input { input: "abc" }.char('z')      # => Error(Unexpected("a", 0))   Input { input: "abc" }.string("abd")  # => Error(Expected("abd", 0))
+```kex
+Input { input: "abc" }.char('z')      # => Error(Unexpected("a", 0))
+Input { input: "abc" }.string("abd")  # => Error(Expected("abd", 0))
+```
 
 
 
@@ -5574,8 +6096,8 @@ peekAt(offset)
 **Examples**
 
 ```kex
-  Input { input: "abc" }.peekAt(1)   # => Just('b')
-  Input { input: "abc" }.peekAt(9)   # => None
+Input { input: "abc" }.peekAt(1)   # => Just('b')
+Input { input: "abc" }.peekAt(9)   # => None
 ```
 
 #### `advanceBy`
@@ -5591,7 +6113,7 @@ advanceBy(count)
 **Examples**
 
 ```kex
-  Input { input: "abc 123" }.advanceBy(4).peek   # => Just('1')
+Input { input: "abc 123" }.advanceBy(4).peek   # => Just('1')
 ```
 
 #### `charWhen`
@@ -5609,13 +6131,13 @@ charWhen(pred)
 **Examples**
 
 ```kex
-  Input { input: "abc" }.charWhen(~alpha?)   # => Ok(('a', cursor at 1))
-  Input { input: "123" }.charWhen(~alpha?)   # => Error(Unexpected("1", 0))
+Input { input: "abc" }.charWhen(~alpha?)   # => Ok(('a', cursor at 1))
+Input { input: "123" }.charWhen(~alpha?)   # => Error(Unexpected("1", 0))
 ```
 _Reading one digit_
 
 ```kex
-  cursor.charWhen(~digit?)
+cursor.charWhen(~digit?)
 ```
 
 #### `char`
@@ -5631,13 +6153,13 @@ char(expected)
 **Examples**
 
 ```kex
-  Input { input: "abc" }.char('a')   # => Ok(('a', cursor at 1))
-  Input { input: "abc" }.char('z')   # => Error(Unexpected("a", 0))
+Input { input: "abc" }.char('a')   # => Ok(('a', cursor at 1))
+Input { input: "abc" }.char('z')   # => Error(Unexpected("a", 0))
 ```
 _Consuming a separator_
 
 ```kex
-  let (_, afterComma) = cursor.char(',').try
+let (_, afterComma) = cursor.char(',').try
 ```
 
 #### `many`
@@ -5655,14 +6177,14 @@ many(f)
 **Examples**
 
 ```kex
-  Input { input: "abc 1" }.many { |p| p.charWhen(~alpha?) }
-  # => (['a', 'b', 'c'], cursor at 3)
+Input { input: "abc 1" }.many { |p| p.charWhen(~alpha?) }
+# => (['a', 'b', 'c'], cursor at 3)
 ```
 _Zero matches is not an error_
 
 ```kex
-  Input { input: "123" }.many { |p| p.charWhen(~alpha?) }
-  # => ([], cursor at 0)
+Input { input: "123" }.many { |p| p.charWhen(~alpha?) }
+# => ([], cursor at 0)
 ```
 
 #### `some`
@@ -5680,10 +6202,10 @@ some(f)
 **Examples**
 
 ```kex
-  Input { input: "abc" }.some { |p| p.charWhen(~alpha?) }
-  # => Ok((['a', 'b', 'c'], cursor at 3))
-  Input { input: "123" }.some { |p| p.charWhen(~alpha?) }
-  # => Error(Unexpected("1", 0))
+Input { input: "abc" }.some { |p| p.charWhen(~alpha?) }
+# => Ok((['a', 'b', 'c'], cursor at 3))
+Input { input: "123" }.some { |p| p.charWhen(~alpha?) }
+# => Error(Unexpected("1", 0))
 ```
 
 #### `string`
@@ -5701,13 +6223,13 @@ string(expected)
 **Examples**
 
 ```kex
-  Input { input: "abc" }.string("abc")   # => Ok(("abc", cursor at 3))
-  Input { input: "abc" }.string("abd")   # => Error(Expected("abd", 0))
+Input { input: "abc" }.string("abc")   # => Ok(("abc", cursor at 3))
+Input { input: "abc" }.string("abd")   # => Error(Expected("abd", 0))
 ```
 _Matching a keyword_
 
 ```kex
-  let (_, rest) = cursor.string("version(").try
+let (_, rest) = cursor.string("version(").try
 ```
 
 #### `takeWhile`
@@ -5725,13 +6247,13 @@ takeWhile(pred)
 **Examples**
 
 ```kex
-  Input { input: "abc 123" }.takeWhile(~alpha?)   # => ("abc", cursor at 3)
-  Input { input: "123" }.takeWhile(~alpha?)       # => ("", cursor at 0)
+Input { input: "abc 123" }.takeWhile(~alpha?)   # => ("abc", cursor at 3)
+Input { input: "123" }.takeWhile(~alpha?)       # => ("", cursor at 0)
 ```
 _Reading an identifier_
 
 ```kex
-  let name = cursor.takeWhile { |c| c.alpha? || c == '_' }
+let name = cursor.takeWhile { |c| c.alpha? || c == '_' }
 ```
 
 #### `choice`
@@ -5749,10 +6271,10 @@ choice(alts)
 **Examples**
 
 ```kex
-  cursor.choice([
-    { |p| p.charWhen(~digit?) },
-    { |p| p.charWhen(~alpha?) }
-  ])
+cursor.choice([
+  { |p| p.charWhen(~digit?) },
+  { |p| p.charWhen(~alpha?) }
+])
 ```
 
 
@@ -5811,19 +6333,36 @@ Kex's concurrency is the BEAM's: lightweight processes that share nothing and co
 
 `Task` runs one piece of work somewhere else and gives you the answer back:
 
-  let a = Task.start do expensiveThing(1) end   let b = Task.start do expensiveThing(2) end   a.await ` b.await
+```kex
+let a = Task.start do expensiveThing(1) end
+let b = Task.start do expensiveThing(2) end
+a.await ` b.await
+```
 
 `serving` plus `Process.spawn` gives a piece of state its own process, with typed calls into it:
 
-  record RateLimiter do     remaining : Integer   end
+```kex
+record RateLimiter do
+  remaining : Integer
+end
 
-  serving RateLimiter do     slot allowed? -> Reply<Bool> do       let allowed = @remaining > 0       new.remaining = allowed then @remaining - 1 else @remaining       return { new, reply: allowed }     end   end
+serving RateLimiter do
+  slot allowed? -> Reply<Bool> do
+    let allowed = @remaining > 0
+    new.remaining = allowed then @remaining - 1 else @remaining
+    return { new, reply: allowed }
+  end
+end
 
-  let api = Process.spawn(RateLimiter { remaining: 2 })   api.allowed?()   # => Ok(true)
+let api = Process.spawn(RateLimiter { remaining: 2 })
+api.allowed?()   # => Ok(true)
+```
 
 `Process.run` and `Process.stream` run an external program.
 
-  Process.run("git", ["rev-parse", "HEAD"])
+```kex
+Process.run("git", ["rev-parse", "HEAD"])
+```
 
 Backed by Kex.Intrinsic.Process and the BEAM runtime.
 
@@ -5869,9 +6408,15 @@ What a synchronous `slot` returns: an answer for the caller, and optionally a ne
 
 `reply` answers the caller immediately. A slot may omit it only when it sends a deferred response with `from.reply(...)`. `new` installs the next serving state; omitting it preserves the current state. `stop` terminates the server after applying the transition. Within a `serving X` block, the checker narrows `new` from `Any?` to `X?`.
 
-  slot allowed? -> Reply<Bool> do     let allowed = @remaining > 0     new.remaining = allowed then @remaining - 1 else @remaining     return { new, reply: allowed }   end
+```kex
+slot allowed? -> Reply<Bool> do
+  let allowed = @remaining > 0
+  new.remaining = allowed then @remaining - 1 else @remaining
+  return { new, reply: allowed }
+end
 
-  slot stop -> Reply<Integer> = { stop: :normal, reply: @remaining }
+slot stop -> Reply<Integer> = { stop: :normal, reply: @remaining }
+```
 
 **Fields**
 
@@ -5964,10 +6509,14 @@ exec(command, args) : String -> [String] -> Integer
 ```
 
 
-## constant `self`
+## function `self`
 
 Returns the calling process's own `Pid`.
 
+
+```kex
+self() : Pid
+```
 
 
 ## function `exit`
@@ -6032,8 +6581,8 @@ send(msg) : X -> Void
 **Examples**
 
 ```kex
-  worker.send(:stop)
-  worker.send(("job", 42))
+worker.send(:stop)
+worker.send(("job", 42))
 ```
 
 #### `sendFrom`
@@ -6049,7 +6598,7 @@ sendFrom(msg) : X -> Void
 **Examples**
 
 ```kex
-  server.sendFrom(:status)   # the server receives (senderPid, :status)
+server.sendFrom(:status)   # the server receives (senderPid, :status)
 ```
 
 ## make `Process<X>`
@@ -6097,7 +6646,7 @@ within(timeout) : Integer -> Server<X>
 _Giving one call longer to answer_
 
 ```kex
-  api.within(30000).rebuildIndex()
+api.within(30000).rebuildIndex()
 ```
 
 ## make `From<X>`
@@ -6120,9 +6669,9 @@ reply(value) : X -> Void
 _Answering after the work is done_
 
 ```kex
-  Task.start do
-    from.reply(expensiveThing())
-  end
+Task.start do
+  from.reply(expensiveThing())
+end
 ```
 
 ## module `Task`
@@ -6171,8 +6720,8 @@ await(timeout) : Integer -> X
 **Examples**
 
 ```kex
-  let t = Task.start do slowThing() end
-  t.await(1000)
+let t = Task.start do slowThing() end
+t.await(1000)
 ```
 
 ## function `worker`
@@ -6210,11 +6759,19 @@ A span between two bounds, written `(1..10)` or `('a'..'z')`.
 
 A range stores only its two endpoints and computes everything else from them, so `(1..1000000)` costs nothing to make. Both ends are included.
 
-  (1..5).items          # => [1, 2, 3, 4, 5]   (1..5).sum            # => 15   5.in?(1..10)          # => true   ('a'..'e').items      # => ['a', 'b', 'c', 'd', 'e']
+```kex
+(1..5).items          # => [1, 2, 3, 4, 5]
+(1..5).sum            # => 15
+5.in?(1..10)          # => true
+('a'..'e').items      # => ['a', 'b', 'c', 'd', 'e']
+```
 
 It is `Enumerable` and `Foldable`, so the traversal methods work directly, and the list operations below answer in list terms. Use `items` when you want a real list to hand to something else.
 
-  (1..10).items.filter(~even?)   # => [2, 4, 6, 8, 10]   (1..3).items.each { |n| IO.printLine(n) }
+```kex
+(1..10).items.filter(~even?)   # => [2, 4, 6, 8, 10]
+(1..3).items.each { |n| IO.printLine(n) }
+```
 
 
 
@@ -6236,7 +6793,7 @@ reduce(acc, f)
 **Examples**
 
 ```kex
-  (1..4).reduce(0) { |sum, n| sum + n }   # => 10
+(1..4).reduce(0) { |sum, n| sum + n }   # => 10
 ```
 
 #### `contains?`
@@ -6254,8 +6811,8 @@ contains?(value) : A -> Bool
 **Examples**
 
 ```kex
-  (1..10).contains?(5)    # => true
-  (1..10).contains?(11)   # => false
+(1..10).contains?(5)    # => true
+(1..10).contains?(11)   # => false
 ```
 
 #### `sort`
@@ -6271,7 +6828,7 @@ sort(comparator) : (A -> A -> Bool) -> [A]
 **Examples**
 
 ```kex
-  (1..4).sort { |a, b| a > b }   # => [4, 3, 2, 1]
+(1..4).sort { |a, b| a > b }   # => [4, 3, 2, 1]
 ```
 
 #### `join`
@@ -6287,12 +6844,12 @@ join(separator) : String -> String
 **Examples**
 
 ```kex
-  (1..4).join(", ")   # => "1, 2, 3, 4"
+(1..4).join(", ")   # => "1, 2, 3, 4"
 ```
 _A comma-separated header_
 
 ```kex
-  "columns: ${(1..3).join(",")}"   # => "columns: 1,2,3"
+"columns: ${(1..3).join(",")}"   # => "columns: 1,2,3"
 ```
 
 #### `at`
@@ -6310,8 +6867,8 @@ at(index) : Integer -> A?
 **Examples**
 
 ```kex
-  (10..20).at(0)   # => Just(10)
-  (10..20).at(99)  # => None
+(10..20).at(0)   # => Just(10)
+(10..20).at(99)  # => None
 ```
 
 #### `get`
@@ -6328,8 +6885,8 @@ get(index) : Integer -> A -> A
 **Examples**
 
 ```kex
-  (10..20).get(0)   # => Just(10)
-  (10..20).get(99)  # => None
+(10..20).get(0)   # => Just(10)
+(10..20).get(99)  # => None
 ```
 
 #### `take`
@@ -6345,7 +6902,7 @@ take(n) : Integer -> [A]
 **Examples**
 
 ```kex
-  (1..10).take(3)   # => [1, 2, 3]
+(1..10).take(3)   # => [1, 2, 3]
 ```
 
 #### `drop`
@@ -6361,7 +6918,7 @@ drop(n) : Integer -> [A]
 **Examples**
 
 ```kex
-  (1..5).drop(3)   # => [4, 5]
+(1..5).drop(3)   # => [4, 5]
 ```
 
 #### `indexOf`
@@ -6377,8 +6934,8 @@ indexOf(value) : A -> Integer?
 **Examples**
 
 ```kex
-  ('a'..'e').indexOf('c')   # => Just(2)
-  (10..20).indexOf(12)      # => Just(2)
+('a'..'e').indexOf('c')   # => Just(2)
+(10..20).indexOf(12)      # => Just(2)
 ```
 
 #### `zip`
@@ -6394,12 +6951,12 @@ zip(other) : [B] -> [(A, B)]
 **Examples**
 
 ```kex
-  (1..3).zip(["a", "b", "c"])   # => [(1, "a"), (2, "b"), (3, "c")]
+(1..3).zip(["a", "b", "c"])   # => [(1, "a"), (2, "b"), (3, "c")]
 ```
 _Numbering a list_
 
 ```kex
-  (1..names.count).zip(names)
+(1..names.count).zip(names)
 ```
 
 #### `partition`
@@ -6415,7 +6972,7 @@ partition(pred) : (A -> Bool) -> ([A], [A])
 **Examples**
 
 ```kex
-  (1..4).partition { |n| n.even? }   # => ([2, 4], [1, 3])
+(1..4).partition { |n| n.even? }   # => ([2, 4], [1, 3])
 ```
 
 #### `push`
@@ -6431,7 +6988,7 @@ push(value) : A -> [A]
 **Examples**
 
 ```kex
-  (1..3).push(4)   # => [1, 2, 3, 4]
+(1..3).push(4)   # => [1, 2, 3, 4]
 ```
 
 #### `reject`
@@ -6447,7 +7004,7 @@ reject(pred) : (A -> Bool) -> [A]
 **Examples**
 
 ```kex
-  (1..5).reject { |n| n.even? }   # => [1, 3, 5]
+(1..5).reject { |n| n.even? }   # => [1, 3, 5]
 ```
 
 
@@ -6474,13 +7031,24 @@ Opt-in, not prelude: nothing here is in scope until `using Regex`.
 
 There are two ways to write a pattern. The tagged literal is the everyday one: it is checked when your program is compiled, so it cannot fail at run time and gives you a bare `Regex`.
 
-  using Regex
+```kex
+using Regex
 
-  main do     let line = "order #4271 shipped"     IO.printLine(line.matches?(re`#\d``))                     # => true     IO.printLine(line.matches(re`#(\d`)`).map { |m| m.get(1) })  # => 4271   end
+main do
+  let line = "order #4271 shipped"
+  IO.printLine(line.matches?(re`#\d``))                     # => true
+  IO.printLine(line.matches(re`#(\d`)`).map { |m| m.get(1) })  # => 4271
+end
+```
 
 The call form takes a pattern built at run time and answers a `Result`, because an arbitrary string may not be a valid pattern:
 
-  match regex(userSupplied) do     Ok(pattern) => IO.printLine(text.matches?(pattern))     Error(e)    => IO.printError("bad pattern at ${e.position}: ${e.message}")   end
+```kex
+match regex(userSupplied) do
+  Ok(pattern) => IO.printLine(text.matches?(pattern))
+  Error(e)    => IO.printError("bad pattern at ${e.position}: ${e.message}")
+end
+```
 
 The operations are `matches?` (is it there), `matches` (find the first), `scan` (find them all), `replace`, and `split`.
 
@@ -6498,7 +7066,11 @@ A pattern that failed to compile.
 
 Mirrors `ParseError` — the `position` is a *character* offset into the pattern, not a byte offset, so it agrees across backends on patterns containing non-ASCII.
 
-  regex("(")   # => Error(RegexError { source: "(", position: 1,   #                       message: "missing closing parenthesis" })
+```kex
+regex("(")
+# => Error(RegexError { source: "(", position: 1,
+#                       message: "missing closing parenthesis" })
+```
 
 **Fields**
 
@@ -6602,16 +7174,16 @@ get(key) : Atom | Integer -> String -> String
 **Examples**
 
 ```kex
-  let found = "order #4271".matches(re`#(\d+)`)
-  found.flatMap { |m| m.get(0) }   # => Just("#4271")
-  found.flatMap { |m| m.get(1) }   # => Just("4271")
+let found = "order #4271".matches(re`#(\d+)`)
+found.flatMap { |m| m.get(0) }   # => Just("#4271")
+found.flatMap { |m| m.get(1) }   # => Just("4271")
 ```
 _Named groups_
 
 ```kex
-  "2026-07-04".matches(re`(?<year>\d{4})-(?<month>\d{2})`)
-    .flatMap { |m| m.get(:year) }
-  # => Just("2026")
+"2026-07-04".matches(re`(?<year>\d{4})-(?<month>\d{2})`)
+  .flatMap { |m| m.get(:year) }
+# => Just("2026")
 ```
 
 ## function `matches`
@@ -6705,11 +7277,22 @@ Immutable collections of distinct elements.
 
 Membership is decided by structural equality — the same equality `==` and map keys use — so records and tuples are compared by value, not identity. Every method answers with a new set; the `!` forms (`add!`, `delete!`) build a new set and rebind the receiver variable rather than modifying anything in place.
 
-  let tags = Set.from(["kex", "beam", "kex"])   tags.count                     # => 2   tags.contains?("beam")         # => true   tags.add("erlang").items       # => ["beam", "erlang", "kex"]
+```kex
+let tags = Set.from(["kex", "beam", "kex"])
+tags.count                     # => 2
+tags.contains?("beam")         # => true
+tags.add("erlang").items       # => ["beam", "erlang", "kex"]
+```
 
 There are two flavours, differing only in how they store their elements:
 
-  Set           sorted, so iteration is in ascending element order and the                 elements must be Orderable.   UnorderedSet  hash-backed, so membership does not pay for ordering and                 the elements need only be comparable. Iteration order is                 unspecified — never write a test against it.
+```kex
+Set           sorted, so iteration is in ascending element order and the
+              elements must be Orderable.
+UnorderedSet  hash-backed, so membership does not pay for ordering and
+              the elements need only be comparable. Iteration order is
+              unspecified — never write a test against it.
+```
 
 Reach for `Set` when you will read the elements back out, and for `UnorderedSet` when the set exists to answer `contains?` quickly.
 
@@ -6723,7 +7306,9 @@ A set whose elements are kept sorted and duplicate free.
 
 Build one with `Set.from` rather than by hand — the record literal does no deduplication and no sorting, and every method here relies on both. Reading `items` back is the field itself, so handing a set's elements to list code costs nothing.
 
-  Set.from([3, 1, 2]).items   # => [1, 2, 3]
+```kex
+Set.from([3, 1, 2]).items   # => [1, 2, 3]
+```
 
 **Fields**
 
@@ -6735,7 +7320,9 @@ A set backed by a map from each member to `true`; its keys ARE the elements.
 
 Build one with `UnorderedSet.from`. Iteration order is whatever the map hands back, so use `items.sort` when you need a stable order.
 
-  UnorderedSet.from([3, 1, 2]).contains?(2)   # => true
+```kex
+UnorderedSet.from([3, 1, 2]).contains?(2)   # => true
+```
 
 **Fields**
 
@@ -6803,7 +7390,7 @@ reduce(acc, f)
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
+Set.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
 ```
 
 #### `combine`
@@ -6821,9 +7408,9 @@ combine(other)
 _Merging many sets into one_
 
 ```kex
-  [Set.from([1]), Set.from([2]), Set.from([1, 3])]
-    .reduce(Set.empty) { |acc, s| acc.combine(s) }
-  # => Set(1, 2, 3)
+[Set.from([1]), Set.from([2]), Set.from([1, 3])]
+  .reduce(Set.empty) { |acc, s| acc.combine(s) }
+# => Set(1, 2, 3)
 ```
 
 #### `contains?`
@@ -6839,14 +7426,14 @@ contains?(value) : A -> Bool
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]).contains?(2)   # => true
-  Set.from([1, 2, 3]).contains?(9)   # => false
+Set.from([1, 2, 3]).contains?(2)   # => true
+Set.from([1, 2, 3]).contains?(9)   # => false
 ```
 _Filtering a list against an allow-list_
 
 ```kex
-  let allowed = Set.from(["get", "post"])
-  methods.filter { |m| allowed.contains?(m.lowerCase) }
+let allowed = Set.from(["get", "post"])
+methods.filter { |m| allowed.contains?(m.lowerCase) }
 ```
 
 #### `add`
@@ -6864,14 +7451,14 @@ add(value) : A -> Set<A>
 **Examples**
 
 ```kex
-  Set.from([1, 2]).add(3)   # => Set(1, 2, 3)
-  Set.from([1, 2]).add(2)   # => Set(1, 2)
+Set.from([1, 2]).add(3)   # => Set(1, 2, 3)
+Set.from([1, 2]).add(2)   # => Set(1, 2)
 ```
 _Accumulating as you go_
 
 ```kex
-  var seen = Set.empty
-  ids.each { |id| seen.add!(id) }
+var seen = Set.empty
+ids.each { |id| seen.add!(id) }
 ```
 
 #### `delete`
@@ -6889,8 +7476,8 @@ delete(value) : A -> Set<A>
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]).delete(2)   # => Set(1, 3)
-  Set.from([1, 2, 3]).delete(9)   # => Set(1, 2, 3)
+Set.from([1, 2, 3]).delete(2)   # => Set(1, 3)
+Set.from([1, 2, 3]).delete(9)   # => Set(1, 2, 3)
 ```
 
 #### `union`
@@ -6906,12 +7493,12 @@ union(other) : Set<A> -> Set<A>
 **Examples**
 
 ```kex
-  Set.from([1, 2]).union(Set.from([2, 3]))   # => Set(1, 2, 3)
+Set.from([1, 2]).union(Set.from([2, 3]))   # => Set(1, 2, 3)
 ```
 _Collecting every tag used across posts_
 
 ```kex
-  posts.reduce(Set.empty) { |all, p| all.union(Set.from(p.tags)) }
+posts.reduce(Set.empty) { |all, p| all.union(Set.from(p.tags)) }
 ```
 
 #### `intersect`
@@ -6927,13 +7514,13 @@ intersect(other) : Set<A> -> Set<A>
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]).intersect(Set.from([2, 3, 4]))   # => Set(2, 3)
-  Set.from([1]).intersect(Set.from([2]))               # => Set()
+Set.from([1, 2, 3]).intersect(Set.from([2, 3, 4]))   # => Set(2, 3)
+Set.from([1]).intersect(Set.from([2]))               # => Set()
 ```
 _Which requested permissions the user actually has_
 
 ```kex
-  requested.intersect(granted)
+requested.intersect(granted)
 ```
 
 #### `difference`
@@ -6951,12 +7538,12 @@ difference(other) : Set<A> -> Set<A>
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]).difference(Set.from([2]))   # => Set(1, 3)
+Set.from([1, 2, 3]).difference(Set.from([2]))   # => Set(1, 3)
 ```
 _Which required fields are still missing_
 
 ```kex
-  required.difference(Set.from(form.keys))
+required.difference(Set.from(form.keys))
 ```
 
 #### `symmetricDifference`
@@ -6972,12 +7559,12 @@ symmetricDifference(other) : Set<A> -> Set<A>
 **Examples**
 
 ```kex
-  Set.from([1, 2]).symmetricDifference(Set.from([2, 3]))   # => Set(1, 3)
+Set.from([1, 2]).symmetricDifference(Set.from([2, 3]))   # => Set(1, 3)
 ```
 _What changed between two snapshots_
 
 ```kex
-  before.symmetricDifference(after)
+before.symmetricDifference(after)
 ```
 
 #### `subset?`
@@ -6993,13 +7580,13 @@ subset?(other) : Set<A> -> Bool
 **Examples**
 
 ```kex
-  Set.from([1, 2]).subset?(Set.from([1, 2, 3]))   # => true
-  Set.from([1, 9]).subset?(Set.from([1, 2, 3]))   # => false
+Set.from([1, 2]).subset?(Set.from([1, 2, 3]))   # => true
+Set.from([1, 9]).subset?(Set.from([1, 2, 3]))   # => false
 ```
 _An authorisation check_
 
 ```kex
-  required.subset?(granted)
+required.subset?(granted)
 ```
 
 #### `superset?`
@@ -7015,8 +7602,8 @@ superset?(other) : Set<A> -> Bool
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]).superset?(Set.from([1, 2]))   # => true
-  Set.from([1, 2]).superset?(Set.from([1, 9]))      # => false
+Set.from([1, 2, 3]).superset?(Set.from([1, 2]))   # => true
+Set.from([1, 2]).superset?(Set.from([1, 9]))      # => false
 ```
 
 #### `disjoint?`
@@ -7032,13 +7619,13 @@ disjoint?(other) : Set<A> -> Bool
 **Examples**
 
 ```kex
-  Set.from([1, 2]).disjoint?(Set.from([3]))      # => true
-  Set.from([1, 2]).disjoint?(Set.from([2, 3]))   # => false
+Set.from([1, 2]).disjoint?(Set.from([3]))      # => true
+Set.from([1, 2]).disjoint?(Set.from([2, 3]))   # => false
 ```
 _Checking that two rulesets cannot both apply_
 
 ```kex
-  allowList.disjoint?(denyList)
+allowList.disjoint?(denyList)
 ```
 
 #### `+`
@@ -7056,8 +7643,8 @@ The list form is the everyday way to add one element without naming a method: `s
 **Examples**
 
 ```kex
-  Set.from([1, 2]) ` [3]           # => Set(1, 2, 3)
-  Set.from([1]) + Set.from([2])    # => Set(1, 2)
+Set.from([1, 2]) ` [3]           # => Set(1, 2, 3)
+Set.from([1]) + Set.from([2])    # => Set(1, 2)
 ```
 
 #### `-`
@@ -7073,8 +7660,8 @@ Removes another set's elements, or a plain list's.
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]) - [2]                # => Set(1, 3)
-  Set.from([1, 2, 3]) - Set.from([2, 3])   # => Set(1)
+Set.from([1, 2, 3]) - [2]                # => Set(1, 3)
+Set.from([1, 2, 3]) - Set.from([2, 3])   # => Set(1)
 ```
 
 #### `map`
@@ -7092,13 +7679,13 @@ map(f) : (A -> B) -> Set<B>
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]).map { |x| x * 2 }   # => Set(2, 4, 6)
-  Set.from([1, -1]).map { |x| x.abs }     # => Set(1)
+Set.from([1, 2, 3]).map { |x| x * 2 }   # => Set(2, 4, 6)
+Set.from([1, -1]).map { |x| x.abs }     # => Set(1)
 ```
 _Collecting the distinct extensions in a file list_
 
 ```kex
-  Set.from(paths).map { |p| p.split(".").last.or("") }
+Set.from(paths).map { |p| p.split(".").last.or("") }
 ```
 
 #### `filter`
@@ -7114,7 +7701,7 @@ filter(pred) : (A -> Bool) -> Set<A>
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]).filter { |x| x > 1 }   # => Set(2, 3)
+Set.from([1, 2, 3]).filter { |x| x > 1 }   # => Set(2, 3)
 ```
 
 #### `reject`
@@ -7130,7 +7717,7 @@ reject(pred) : (A -> Bool) -> Set<A>
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]).reject { |x| x > 1 }   # => Set(1)
+Set.from([1, 2, 3]).reject { |x| x > 1 }   # => Set(1)
 ```
 
 ## make `Set<A>` implements [Blankable](blankable.md#trait-blankable)
@@ -7155,7 +7742,7 @@ reduce(acc, f)
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
+UnorderedSet.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
 ```
 
 #### `combine`
@@ -7183,8 +7770,8 @@ contains?(value) : A -> Bool
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2, 3]).contains?(2)   # => true
-  UnorderedSet.from([1, 2, 3]).contains?(9)   # => false
+UnorderedSet.from([1, 2, 3]).contains?(2)   # => true
+UnorderedSet.from([1, 2, 3]).contains?(9)   # => false
 ```
 
 #### `add`
@@ -7202,8 +7789,8 @@ add(value) : A -> UnorderedSet<A>
 **Examples**
 
 ```kex
-  UnorderedSet.from([1]).add(2).count   # => 2
-  UnorderedSet.from([1]).add(1).count   # => 1
+UnorderedSet.from([1]).add(2).count   # => 2
+UnorderedSet.from([1]).add(1).count   # => 1
 ```
 
 #### `delete`
@@ -7221,7 +7808,7 @@ delete(value) : A -> UnorderedSet<A>
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2]).delete(1).count   # => 1
+UnorderedSet.from([1, 2]).delete(1).count   # => 1
 ```
 
 #### `union`
@@ -7237,7 +7824,7 @@ union(other) : UnorderedSet<A> -> UnorderedSet<A>
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2]).union(UnorderedSet.from([2, 3])).count   # => 3
+UnorderedSet.from([1, 2]).union(UnorderedSet.from([2, 3])).count   # => 3
 ```
 
 #### `intersect`
@@ -7253,8 +7840,8 @@ intersect(other) : UnorderedSet<A> -> UnorderedSet<A>
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2, 3]).intersect(UnorderedSet.from([2, 3, 4])).items.sort
-  # => [2, 3]
+UnorderedSet.from([1, 2, 3]).intersect(UnorderedSet.from([2, 3, 4])).items.sort
+# => [2, 3]
 ```
 
 #### `difference`
@@ -7270,8 +7857,8 @@ difference(other) : UnorderedSet<A> -> UnorderedSet<A>
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2, 3]).difference(UnorderedSet.from([2])).items.sort
-  # => [1, 3]
+UnorderedSet.from([1, 2, 3]).difference(UnorderedSet.from([2])).items.sort
+# => [1, 3]
 ```
 
 #### `symmetricDifference`
@@ -7287,8 +7874,8 @@ symmetricDifference(other) : UnorderedSet<A> -> UnorderedSet<A>
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2]).symmetricDifference(UnorderedSet.from([2, 3])).items.sort
-  # => [1, 3]
+UnorderedSet.from([1, 2]).symmetricDifference(UnorderedSet.from([2, 3])).items.sort
+# => [1, 3]
 ```
 
 #### `subset?`
@@ -7304,7 +7891,7 @@ subset?(other) : UnorderedSet<A> -> Bool
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2]).subset?(UnorderedSet.from([1, 2, 3]))   # => true
+UnorderedSet.from([1, 2]).subset?(UnorderedSet.from([1, 2, 3]))   # => true
 ```
 
 #### `superset?`
@@ -7320,7 +7907,7 @@ superset?(other) : UnorderedSet<A> -> Bool
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2, 3]).superset?(UnorderedSet.from([1, 2]))   # => true
+UnorderedSet.from([1, 2, 3]).superset?(UnorderedSet.from([1, 2]))   # => true
 ```
 
 #### `disjoint?`
@@ -7336,7 +7923,7 @@ disjoint?(other) : UnorderedSet<A> -> Bool
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2]).disjoint?(UnorderedSet.from([3]))   # => true
+UnorderedSet.from([1, 2]).disjoint?(UnorderedSet.from([3]))   # => true
 ```
 
 #### `+`
@@ -7352,7 +7939,7 @@ Unions with another unordered set, or with a plain list.
 **Examples**
 
 ```kex
-  (UnorderedSet.from([1, 2]) + [3]).count   # => 3
+(UnorderedSet.from([1, 2]) + [3]).count   # => 3
 ```
 
 #### `-`
@@ -7368,7 +7955,7 @@ Removes another unordered set's elements, or a plain list's.
 **Examples**
 
 ```kex
-  (UnorderedSet.from([1, 2, 3]) - [2]).count   # => 2
+(UnorderedSet.from([1, 2, 3]) - [2]).count   # => 2
 ```
 
 #### `map`
@@ -7384,7 +7971,7 @@ map(f) : (A -> B) -> UnorderedSet<B>
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2, 3]).map { |x| x * 2 }.items.sort   # => [2, 4, 6]
+UnorderedSet.from([1, 2, 3]).map { |x| x * 2 }.items.sort   # => [2, 4, 6]
 ```
 
 #### `filter`
@@ -7400,7 +7987,7 @@ filter(pred) : (A -> Bool) -> UnorderedSet<A>
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2, 3]).filter { |x| x > 1 }.items.sort   # => [2, 3]
+UnorderedSet.from([1, 2, 3]).filter { |x| x > 1 }.items.sort   # => [2, 3]
 ```
 
 #### `reject`
@@ -7416,7 +8003,7 @@ reject(pred) : (A -> Bool) -> UnorderedSet<A>
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2, 3]).reject { |x| x > 1 }.items   # => [1]
+UnorderedSet.from([1, 2, 3]).reject { |x| x > 1 }.items   # => [1]
 ```
 
 ## make `UnorderedSet<A>` implements [Blankable](blankable.md#trait-blankable)
@@ -7445,7 +8032,12 @@ A lazy, potentially infinite sequence.
 
 A stream describes how to produce its elements rather than holding them, so an infinite one is an ordinary value. Nothing is computed until you ask for elements with `take`.
 
-  let naturals = Stream.Sequence(from: 0) { |n| n ` 1 }   naturals.take(5)                              # => [0, 1, 2, 3, 4]   naturals.map { |n| n * n }.take(4)            # => [0, 1, 4, 9]   naturals.filter { |n| n.even? }.take(3)       # => [0, 2, 4]
+```kex
+let naturals = Stream.Sequence(from: 0) { |n| n ` 1 }
+naturals.take(5)                              # => [0, 1, 2, 3, 4]
+naturals.map { |n| n * n }.take(4)            # => [0, 1, 4, 9]
+naturals.filter { |n| n.even? }.take(3)       # => [0, 2, 4]
+```
 
 `map`, `filter` and `drop` all answer with another stream, so a pipeline stays lazy end to end; `take` is what turns it into a list.
 
@@ -7497,14 +8089,14 @@ take(n) : Integer -> [A]
 **Examples**
 
 ```kex
-  Stream.Sequence(from: 1) { |n| n ` 1 }.take(3)   # => [1, 2, 3]
+Stream.Sequence(from: 1) { |n| n ` 1 }.take(3)   # => [1, 2, 3]
 ```
 _The first ten squares_
 
 ```kex
-  Stream.Sequence(from: 1) { |n| n ` 1 }
-    .map { |n| n * n }
-    .take(10)
+Stream.Sequence(from: 1) { |n| n ` 1 }
+  .map { |n| n * n }
+  .take(10)
 ```
 
 #### `drop`
@@ -7522,12 +8114,12 @@ drop(n) : Integer -> Stream<A>
 **Examples**
 
 ```kex
-  Stream.Sequence(from: 0) { |n| n + 1 }.drop(3).take(3)   # => [3, 4, 5]
+Stream.Sequence(from: 0) { |n| n + 1 }.drop(3).take(3)   # => [3, 4, 5]
 ```
 _Paging through a generated sequence_
 
 ```kex
-  let page(n: Integer) = source.drop(n * 20).take(20)
+let page(n: Integer) = source.drop(n * 20).take(20)
 ```
 
 #### `map`
@@ -7545,16 +8137,16 @@ map(f) : (A -> B) -> Stream<B>
 **Examples**
 
 ```kex
-  Stream.Sequence(from: 1) { |n| n ` 1 }.map { |n| n * n }.take(4)
-  # => [1, 4, 9, 16]
+Stream.Sequence(from: 1) { |n| n ` 1 }.map { |n| n * n }.take(4)
+# => [1, 4, 9, 16]
 ```
 _Formatting as it goes_
 
 ```kex
-  Stream.Sequence(from: 1) { |n| n ` 1 }
-    .map { |n| "item ${n}" }
-    .take(3)
-  # => ["item 1", "item 2", "item 3"]
+Stream.Sequence(from: 1) { |n| n ` 1 }
+  .map { |n| "item ${n}" }
+  .take(3)
+# => ["item 1", "item 2", "item 3"]
 ```
 
 #### `filter`
@@ -7572,17 +8164,17 @@ filter(pred) : (A -> Bool) -> Stream<A>
 **Examples**
 
 ```kex
-  let evens = Stream.Sequence(from: 0) { |n| n ` 1 }.filter { |n| n.even? }
-  evens.take(4)   # => [0, 2, 4, 6]
+let evens = Stream.Sequence(from: 0) { |n| n ` 1 }.filter { |n| n.even? }
+evens.take(4)   # => [0, 2, 4, 6]
 ```
 _Multiples of three, formatted_
 
 ```kex
-  Stream.Sequence(from: 1) { |n| n ` 1 }
-    .filter { |n| n.modulo(3) == 0 }
-    .map { |n| "#${n}" }
-    .take(3)
-  # => ["#3", "#6", "#9"]
+Stream.Sequence(from: 1) { |n| n ` 1 }
+  .filter { |n| n.modulo(3) == 0 }
+  .map { |n| "#${n}" }
+  .take(3)
+# => ["#3", "#6", "#9"]
 ```
 
 
@@ -7608,11 +8200,19 @@ Text. A `String` is a sequence of Unicode characters, immutable like every other
 
 A `String` is its own type, not a list of characters. It is `Enumerable`, so `each`, `reduce`, `find` and friends walk it one `Char` at a time, and the sequence operations that could reasonably answer in either currency pick the useful one: `take`, `drop` and `sort` hand back a `String`, while `first` and `last` hand back a `Char`. Use `chars` to cross over to a real list.
 
-  let line = "  Hello, World  "   line.trim.lowerCase.split(", ")   # => ["hello", "world"]   line.trim.take(5)                 # => "Hello"   line.trim.chars.count(~upper?)    # => 2
+```kex
+let line = "  Hello, World  "
+line.trim.lowerCase.split(", ")   # => ["hello", "world"]
+line.trim.take(5)                 # => "Hello"
+line.trim.chars.count(~upper?)    # => 2
+```
 
 Strings interpolate with `${...}`:
 
-  let name = "Ada"   "hello, ${name}"                  # => "hello, Ada"
+```kex
+let name = "Ada"
+"hello, ${name}"                  # => "hello, Ada"
+```
 
 
 #### `reduce`
@@ -7632,15 +8232,15 @@ reduce(acc, f) : A -> (A -> Char -> A) -> A
 _Summing digit values_
 
 ```kex
-  "12345".reduce(0) { |sum, c| sum ` c.codepoint - 48 }   # => 15
+"12345".reduce(0) { |sum, c| sum ` c.codepoint - 48 }   # => 15
 ```
 _Building a character histogram_
 
 ```kex
-  "banana".reduce({}) do |counts, c|
-    counts.put(c.string, counts.get(c.string).or(0) ` 1)
-  end
-  # => {"a": 3, "b": 1, "n": 2}
+"banana".reduce({}) do |counts, c|
+  counts.put(c.string, counts.get(c.string).or(0) ` 1)
+end
+# => {"a": 3, "b": 1, "n": 2}
 ```
 
 #### `mapChars`
@@ -7658,16 +8258,16 @@ mapChars(f) : (Char -> Char) -> String
 **Examples**
 
 ```kex
-  "hi".mapChars(&.upperCase)   # => "HI"
-  "hi".map(&.upperCase)        # => ['H', 'I']  (a list, per Enumerable)
+"hi".mapChars(&.upperCase)   # => "HI"
+"hi".map(&.upperCase)        # => ['H', 'I']  (a list, per Enumerable)
 ```
 _Shifting every character up one codepoint_
 
 ```kex
-  "abc".mapChars do |c|
-    String.fromCodepoint(c.codepoint + 1).or("").first.or(c)
-  end
-  # => "bcd"
+"abc".mapChars do |c|
+  String.fromCodepoint(c.codepoint + 1).or("").first.or(c)
+end
+# => "bcd"
 ```
 
 #### `filter`
@@ -7685,12 +8285,12 @@ filter(pred) : (Char -> Bool) -> String
 _Keeping only the digits_
 
 ```kex
-  "a1b2c3".filter(~digit?)   # => "123"
+"a1b2c3".filter(~digit?)   # => "123"
 ```
 _Stripping punctuation before comparing_
 
 ```kex
-  "Hello, World!".filter(~alpha?).lowerCase   # => "helloworld"
+"Hello, World!".filter(~alpha?).lowerCase   # => "helloworld"
 ```
 
 #### `get`
@@ -7709,8 +8309,8 @@ get(i) : Integer -> Char -> Char
 **Examples**
 
 ```kex
-  "hi".get(1)    # => Just('i')
-  "hi".get(9)    # => None
+"hi".get(1)    # => Just('i')
+"hi".get(9)    # => None
 ```
 
 #### `take`
@@ -7726,14 +8326,14 @@ take(n) : Integer -> String
 **Examples**
 
 ```kex
-  "hello".take(2)    # => "he"
-  "hello".take(99)   # => "hello"
-  "hello".take(0)    # => ""
+"hello".take(2)    # => "he"
+"hello".take(99)   # => "hello"
+"hello".take(0)    # => ""
 ```
 _Truncating for display_
 
 ```kex
-  let preview = title.take(30) + (title.count > 30 then "…" else "")
+let preview = title.take(30) + (title.count > 30 then "…" else "")
 ```
 
 #### `drop`
@@ -7749,14 +8349,14 @@ drop(n) : Integer -> String
 **Examples**
 
 ```kex
-  "hello".drop(2)    # => "llo"
-  "hello".drop(99)   # => ""
+"hello".drop(2)    # => "llo"
+"hello".drop(99)   # => ""
 ```
 _Removing a known prefix_
 
 ```kex
-  let flag = "--verbose"
-  flag.startsWith?("--") then flag.drop(2) else flag   # => "verbose"
+let flag = "--verbose"
+flag.startsWith?("--") then flag.drop(2) else flag   # => "verbose"
 ```
 
 #### `reject`
@@ -7772,12 +8372,12 @@ reject(pred) : (Char -> Bool) -> String
 **Examples**
 
 ```kex
-  "hello".reject { |c| c == 'l' }   # => "heo"
+"hello".reject { |c| c == 'l' }   # => "heo"
 ```
 _Removing whitespace_
 
 ```kex
-  "1 234 567".reject(~space?)   # => "1234567"
+"1 234 567".reject(~space?)   # => "1234567"
 ```
 
 #### `indexOf`
@@ -7793,15 +8393,15 @@ indexOf(c) : Char -> Integer?
 **Examples**
 
 ```kex
-  "hello".indexOf('l')   # => Just(2)
-  "hello".indexOf('z')   # => None
+"hello".indexOf('l')   # => Just(2)
+"hello".indexOf('z')   # => None
 ```
 _Splitting a `key=value` pair at the first `=`_
 
 ```kex
-  let pair = "host=localhost"
-  pair.indexOf('=').map { |i| (pair.take(i), pair.drop(i + 1)) }
-  # => Just(("host", "localhost"))
+let pair = "host=localhost"
+pair.indexOf('=').map { |i| (pair.take(i), pair.drop(i + 1)) }
+# => Just(("host", "localhost"))
 ```
 
 #### `findIndex`
@@ -7819,13 +8419,13 @@ findIndex(pred) : (Char -> Bool) -> Integer?
 **Examples**
 
 ```kex
-  "hello".findIndex { |c| c == 'l' }   # => Just(2)
-  "hello".findIndex(~digit?)           # => None
+"hello".findIndex { |c| c == 'l' }   # => Just(2)
+"hello".findIndex(~digit?)           # => None
 ```
 _Finding where the leading indentation ends_
 
 ```kex
-  "    text".findIndex { |c| !c.space? }   # => Just(4)
+"    text".findIndex { |c| !c.space? }   # => Just(4)
 ```
 
 #### `zip`
@@ -7841,13 +8441,13 @@ zip(other) : [Y] -> [(Char, Y)]
 **Examples**
 
 ```kex
-  "ab".zip([1, 2])      # => [('a', 1), ('b', 2)]
-  "abc".zip([1, 2])     # => [('a', 1), ('b', 2)]
+"ab".zip([1, 2])      # => [('a', 1), ('b', 2)]
+"abc".zip([1, 2])     # => [('a', 1), ('b', 2)]
 ```
 _Numbering the characters_
 
 ```kex
-  "abc".zip((0..2).items)   # => [('a', 0), ('b', 1), ('c', 2)]
+"abc".zip((0..2).items)   # => [('a', 0), ('b', 1), ('c', 2)]
 ```
 
 #### `partition`
@@ -7863,14 +8463,14 @@ partition(pred) : (Char -> Bool) -> (String, String)
 **Examples**
 
 ```kex
-  "hello".partition { |c| c == 'l' }   # => ("ll", "heo")
+"hello".partition { |c| c == 'l' }   # => ("ll", "heo")
 ```
 _Separating digits from the rest_
 
 ```kex
-  let (digits, other) = "a1b2".partition(~digit?)
-  digits   # => "12"
-  other    # => "ab"
+let (digits, other) = "a1b2".partition(~digit?)
+digits   # => "12"
+other    # => "ab"
 ```
 
 #### `enclose`
@@ -7887,13 +8487,13 @@ enclose(wrapper) : String -> String -> String
 **Examples**
 
 ```kex
-  "hello".enclose("*")    # => "*hello*"
-  "hello".enclose("__")   # => "__hello__"
+"hello".enclose("*")    # => "*hello*"
+"hello".enclose("__")   # => "__hello__"
 ```
 _Quoting a value for output_
 
 ```kex
-  value.enclose("\"")   # => "\"localhost\""
+value.enclose("\"")   # => "\"localhost\""
 ```
 
 #### `at`
@@ -7909,8 +8509,40 @@ at(i) : Integer -> Char?
 **Examples**
 
 ```kex
-  "hello".at(1)   # => Just('e')
-  "hello".at(9)   # => None
+"hello".at(1)   # => Just('e')
+"hello".at(9)   # => None
+```
+
+#### `split`
+
+Splits the string on every occurrence of `sep`, which may be a literal string or a `Regex`.
+
+Separators at the ends produce empty parts, so splitting `",a,"` on `","` gives three parts. Filter or trim afterwards when that is not wanted.
+
+```kex
+split(sep) : String | Regex -> [String]
+split : [String]
+```
+
+**Returns**: `[String]` — the parts, in order
+
+**Examples**
+
+_Splitting a delimited line_
+
+```kex
+"a,b,c".split(",")     # => ["a", "b", "c"]
+"a, b, c".split(", ")  # => ["a", "b", "c"]
+```
+_Splitting on a pattern (needs `using Regex`)_
+
+```kex
+"a1b22c".split(re`[0-9]+`)   # => ["a", "b", "c"]
+```
+_Empty parts at the edges are kept_
+
+```kex
+",a,".split(",")   # => ["", "a", ""]
 ```
 
 #### `indentRest`
@@ -7928,15 +8560,15 @@ indentRest(prefix) : String -> String
 **Examples**
 
 ```kex
-  "a\nb\n".indentRest("  ")   # => "a\n  b"
-  "a".indentRest("  ")        # => "a"
+"a\nb\n".indentRest("  ")   # => "a\n  b"
+"a".indentRest("  ")        # => "a"
 ```
 _Splicing a block into a template_
 
 ```kex
-  let body = "one\ntwo"
-  "items:\n  ${body.indentRest("  ")}"
-  # => "items:\n  one\n  two"
+let body = "one\ntwo"
+"items:\n  ${body.indentRest("  ")}"
+# => "items:\n  one\n  two"
 ```
 
 #### `replace`
@@ -7954,13 +8586,13 @@ replace(pattern, replacement) : String -> String -> String
 **Examples**
 
 ```kex
-  "a-b-c".replace("-", "`")   # => "a`b+c"
-  "abc".replace("", "-")      # => "-a-b-c-"
+"a-b-c".replace("-", "`")   # => "a`b+c"
+"abc".replace("", "-")      # => "-a-b-c-"
 ```
 _Normalising a path separator_
 
 ```kex
-  "a\\b\\c".replace("\\", "/")   # => "a/b/c"
+"a\\b\\c".replace("\\", "/")   # => "a/b/c"
 ```
 
 #### `substitute`
@@ -7984,15 +8616,15 @@ substitute(replacements) : {String: String} -> String
 **Examples**
 
 ```kex
-  "Hello, $WHO$!".substitute({"$WHO$": "world"})           # => "Hello, world!"
-  "$A$ and $B$".substitute({"$A$": "x", "$B$": "y"})       # => "x and y"
-  "__A__".substitute({"__A__": "any key works"})           # => "any key works"
+"Hello, $WHO$!".substitute({"$WHO$": "world"})           # => "Hello, world!"
+"$A$ and $B$".substitute({"$A$": "x", "$B$": "y"})       # => "x and y"
+"__A__".substitute({"__A__": "any key works"})           # => "any key works"
 ```
 _A reusable template_
 
 ```kex
-  let greeting = "Dear $NAME$,\n\nYour order $ID$ has shipped."
-  greeting.substitute({"$NAME$": "Ada", "$ID$": "A-1701"})
+let greeting = "Dear $NAME$,\n\nYour order $ID$ has shipped."
+greeting.substitute({"$NAME$": "Ada", "$ID$": "A-1701"})
 ```
 
 #### `contains?`
@@ -8010,14 +8642,14 @@ contains?(sub) : String -> Bool
 **Examples**
 
 ```kex
-  "hello world".contains?("world")   # => true
-  "hello world".contains?("xyz")     # => false
-  "hello world".contains?("World")   # => false
+"hello world".contains?("world")   # => true
+"hello world".contains?("xyz")     # => false
+"hello world".contains?("World")   # => false
 ```
 _Ignoring case_
 
 ```kex
-  "Hello".lowerCase.contains?("hello")   # => true
+"Hello".lowerCase.contains?("hello")   # => true
 ```
 
 #### `startsWith?`
@@ -8033,13 +8665,13 @@ startsWith?(prefix) : String -> Bool
 **Examples**
 
 ```kex
-  "hello".startsWith?("hel")   # => true
-  "hello".startsWith?("llo")   # => false
+"hello".startsWith?("hel")   # => true
+"hello".startsWith?("llo")   # => false
 ```
 _Recognising a command-line flag_
 
 ```kex
-  args.filter { |a| a.startsWith?("--") }
+args.filter { |a| a.startsWith?("--") }
 ```
 
 #### `endsWith?`
@@ -8055,13 +8687,13 @@ endsWith?(suffix) : String -> Bool
 **Examples**
 
 ```kex
-  "hello".endsWith?("llo")   # => true
-  "hello".endsWith?("hel")   # => false
+"hello".endsWith?("llo")   # => true
+"hello".endsWith?("hel")   # => false
 ```
 _Selecting files by extension_
 
 ```kex
-  paths.filter { |p| p.endsWith?(".kex") }
+paths.filter { |p| p.endsWith?(".kex") }
 ```
 
 ## make `Char`
@@ -8070,7 +8702,11 @@ A single Unicode character.
 
 Character literals are written with single quotes — `'a'` — and are a different type from the one-character string `"a"`. The classification methods (`digit?`, `alpha?`, `space?` and the rest) are what most character code needs; `codepoint` and `String.fromCodepoint` are the escape hatch to raw Unicode values.
 
-  "hello world".chars.count(~alpha?)   # => 10   'a'.upperCase                        # => 'A'   'a'.string                           # => "a"
+```kex
+"hello world".chars.count(~alpha?)   # => 10
+'a'.upperCase                        # => 'A'
+'a'.string                           # => "a"
+```
 
 
 #### `in?`
@@ -8086,13 +8722,13 @@ in?(range) : Range<Char> -> Bool
 **Examples**
 
 ```kex
-  'b'.in?('a'..'z')   # => true
-  'B'.in?('a'..'z')   # => false
+'b'.in?('a'..'z')   # => true
+'B'.in?('a'..'z')   # => false
 ```
 _A hexadecimal-digit test_
 
 ```kex
-  let hex?(c: Char) -> Bool = c.digit? || c.lowerCase.in?('a'..'f')
+let hex?(c: Char) -> Bool = c.digit? || c.lowerCase.in?('a'..'f')
 ```
 
 ## module `String`
@@ -8127,7 +8763,10 @@ fromBytes(values) : [Byte] -> String?
 
 A fixed-size group of values, written `(a, b)`. Unlike a list, a tuple's size and the type of each position are part of its type, so the `List` methods do not apply to it — destructure it, match on it, or convert it with `items`.
 
-  let (name, age) = ("Ada", 36)   [1, 2, 3].partition { |n| n.even? }   # => ([2], [1, 3])
+```kex
+let (name, age) = ("Ada", 36)
+[1, 2, 3].partition { |n| n.even? }   # => ([2], [1, 3])
+```
 
 
 
@@ -8150,7 +8789,11 @@ entities:
 
 The running process and the machine under it: exiting, and asking what platform this is.
 
-  System.OS          # => :macos   System.posix?      # => true   System.exit(1)     # ends the program with status 1
+```kex
+System.OS          # => :macos
+System.posix?      # => true
+System.exit(1)     # ends the program with status 1
+```
 
 Deliberately NOT a capability, and `OS`/`BITWIDTH` stay pure. Faking the reported OS only exercises a program's branching, not the platform behaviour behind it — the file semantics, path rules and process handling that actually differ are unaffected by the atom. Testing those means running on the platform, which CI does across macOS, Ubuntu and Alpine. `Mock.System` existed for this and had exactly one caller: the spec that tested it (kexhq/kex#143).
 
@@ -8266,7 +8909,14 @@ Diagnostics returned by compile-time validators for tagged literals.
 
 A tagged literal — `` re`\d`` ``, `` sql`SELECT ...` `` — can be checked while your program is compiled rather than when it runs. The compiler finds the checker by name: a tag `foo` is validated by a function named `validateFoo` taking the literal's text and returning a list of `Issue` values. An empty list means the literal is fine.
 
-  let validateHex(source: String) -> [TaggedValidation.Issue] do     match source.chars.findIndex { |c| !c.digit? && !c.in?('a'..'f') } do       Just(offset) => [TaggedValidation.fatalAt(offset, "not a hex digit")]       None         => []     end   end
+```kex
+let validateHex(source: String) -> [TaggedValidation.Issue] do
+  match source.chars.findIndex { |c| !c.digit? && !c.in?('a'..'f') } do
+    Just(offset) => [TaggedValidation.fatalAt(offset, "not a hex digit")]
+    None         => []
+  end
+end
+```
 
 A `Fatal` issue stops the build with the message, pointing the caret at the offset; a `Warn+ reports without stopping.
 
@@ -8385,11 +9035,22 @@ The built-in testing DSL: `describe`, `it`, `before`, `after`, and assertion hel
 
 Everything here is always in scope — no import, and no separate test runner. Write a test file and run it with `kex`:
 
-  describe "arithmetic" do     it "adds numbers" do       assert(1 ` 1 == 2)     end
+```kex
+describe "arithmetic" do
+  it "adds numbers" do
+    assert(1 ` 1 == 2)
+  end
 
-    it "multiplies numbers" do       Assert.equal(3 * 4, 12)     end   end
+  it "multiplies numbers" do
+    Assert.equal(3 * 4, 12)
+  end
+end
 
-  $ kex my_test.kex   arithmetic     ✓ adds numbers     ✓ multiplies numbers
+$ kex my_test.kex
+arithmetic
+  ✓ adds numbers
+  ✓ multiplies numbers
+```
 
 Output uses ✓ / ✗ markers and nests by `describe` depth. A failing `assert` marks its test failed and moves on; the rest of the suite still runs.
 
@@ -8411,8 +9072,6 @@ Defines a single test case, and runs it.
 
 The block runs, and anything thrown inside it — typically a failed `assert` — marks the test failed without aborting the rest of the suite. This is a foul function — it prints.
 
-  it "trims trailing whitespace" do     Assert.equal("hi  ".trim, "hi")   end
-
 
 ```kex
 it : String -> Block<Void> -> Void
@@ -8424,8 +9083,6 @@ it : String -> Block<Void> -> Void
 Registers setup to run before the current group's tests.
 
 `before { ... }` and `before(:each) { ... }` run before every test in the group; `before(:all) { ... }` runs once before the group's first test, following RSpec's scope convention.
-
-    it "reads two lines" do       Assert.equal(FS.File.readLines("input.txt").or([]).count, 2)     end   end
 
 
 ```kex
@@ -8466,7 +9123,11 @@ Focused assertions, each reporting what was expected and what arrived.
 
 These are ordinary Kex stdlib functions layered on the primitive `assert`, so adding another helper does not require compiler or runtime work.
 
-  Assert.equal("hi".upperCase, "HI")   Assert.some(users.first)   Assert.ok(Integer.parse("42"))
+```kex
+Assert.equal("hi".upperCase, "HI")
+Assert.some(users.first)
+Assert.ok(Integer.parse("42"))
+```
 
 ## function `equal`
 
@@ -8587,11 +9248,18 @@ Calendar dates, wall-clock times, and instants.
 
 Three civil types, each a plain record:
 
-  Date      a calendar day, no time and no zone       (2026-07-30)   Time      a time of day, no date and no zone        (14:03:00)   DateTime  both, plus a fixed offset from UTC        (2026-07-30T14:03:00`02:00)
+```kex
+Date      a calendar day, no time and no zone       (2026-07-30)
+Time      a time of day, no date and no zone        (14:03:00)
+DateTime  both, plus a fixed offset from UTC        (2026-07-30T14:03:00`02:00)
+```
 
 Two span types connect them, and which one you want depends on whether the calendar gets a say:
 
-  Duration  fixed elapsed time, a count of seconds   (36.hours, 10.days)   Period    a calendar step, resolved by the calendar (1.months, 2.years)
+```kex
+Duration  fixed elapsed time, a count of seconds   (36.hours, 10.days)
+Period    a calendar step, resolved by the calendar (1.months, 2.years)
+```
 
 `36.hours` is always 129600 seconds; `1.months` is however long that particular month turns out to be. So `date ` 1.months` clamps January 31st to the last day of February, while `date ` 30.days` counts thirty days.
 
@@ -8599,7 +9267,13 @@ A time `Measure` such as `5.sec` is a third thing and deliberately NOT a Duratio
 
 Values are built through their own module and used through methods:
 
-  let due = Date.of(2026, 7, 30).try           # Result<Date, TimeError>   due.weekday.name                             # "Thursday"   (due ` 10.days).iso                          # "2026-08-09"   (due ` 1.months).iso                         # "2026-08-30"   Time.now().iso                               # "2026-07-30T14:03:00`02:00"
+```kex
+let due = Date.of(2026, 7, 30).try           # Result<Date, TimeError>
+due.weekday.name                             # "Thursday"
+(due ` 10.days).iso                          # "2026-08-09"
+(due ` 1.months).iso                         # "2026-08-30"
+Time.now().iso                               # "2026-07-30T14:03:00`02:00"
+```
 
 Anything that reads the clock is mockable — see the test clock section in `module Time` for `Time.frozenAt`.
 
@@ -8637,7 +9311,12 @@ A field out of range, or text that is not a date/time.
 
 A calendar day: a year, a month and a day, with no time and no zone.
 
-  let due = Date.of(2026, 7, 30).try   due.iso              # => "2026-07-30"   due.weekday.name     # => "Thursday"   (due ` 10.days).iso  # => "2026-08-09"
+```kex
+let due = Date.of(2026, 7, 30).try
+due.iso              # => "2026-07-30"
+due.weekday.name     # => "Thursday"
+(due ` 10.days).iso  # => "2026-08-09"
+```
 
 Build one with `Date.of+, which validates, rather than with the record literal, which does not.
 
@@ -8651,7 +9330,11 @@ Build one with `Date.of+, which validates, rather than with the record literal, 
 
 A time of day, with no date and no zone.
 
-  let t = Time.of(14, 3, 0).try   t.iso                  # => "14:03:00"   (t ` 2.hours).iso      # => "16:03:00"
+```kex
+let t = Time.of(14, 3, 0).try
+t.iso                  # => "14:03:00"
+(t ` 2.hours).iso      # => "16:03:00"
+```
 
 Arithmetic wraps within the day: there is no date to carry into. Reach for `DateTime+ when the day rolling over matters.
 
@@ -8666,7 +9349,11 @@ Arithmetic wraps within the day: there is no date to carry into. Reach for `Date
 
 An instant: a calendar date, a time of day, and a fixed offset from UTC.
 
-  let m = DateTime.parse("2026-07-30T14:03:00`02:00").try   m.iso        # => "2026-07-30T14:03:00`02:00"   m.utc.iso    # => "2026-07-30T12:03:00Z"
+```kex
+let m = DateTime.parse("2026-07-30T14:03:00`02:00").try
+m.iso        # => "2026-07-30T14:03:00`02:00"
+m.utc.iso    # => "2026-07-30T12:03:00Z"
+```
 
 Two `DateTime` values that name the same instant compare equal whatever offsets they are written at — comparison goes through `epochSeconds`.
 
@@ -8680,7 +9367,10 @@ Two `DateTime` values that name the same instant compare equal whatever offsets 
 
 A calendar span. Months and years have no fixed length — February is 28 days or 29, a year 365 or 366 — so they cannot live in a `Duration`, which is a count of seconds and nothing else. A Period carries the calendar fields themselves and lets the calendar resolve them:
 
-  Date.of(2026, 1, 31).try ` 1.months        # 2026-02-28, not 2026-03-03   Date.of(2024, 2, 29).try ` 1.years         # 2025-02-28
+```kex
+Date.of(2026, 1, 31).try ` 1.months        # 2026-02-28, not 2026-03-03
+Date.of(2024, 2, 29).try ` 1.years         # 2025-02-28
+```
 
 Use a Duration for elapsed time (`36.hours` is always 129600 seconds) and a Period for calendar steps (`1.months` is however long that month is).
 
@@ -8695,8 +9385,6 @@ Use a Duration for elapsed time (`36.hours` is always 129600 seconds) and a Peri
 Building times of day, controlling the clock in tests, and the calendar arithmetic the rest of this file is written on.
 
 ## function `of`
-
-── Constructing ────────────────────────────────────────────────────────
 
 Builds a validated time of day.
 
@@ -8780,9 +9468,13 @@ parseOffset(text)
 
 ## function `nanosOf`
 
-── The test clock ────────────────────────────────────────────────────── Anything that asks what time it is — `Time.now`, `Date.today`, `DateTime.utcNow` — reads one primitive, so pinning that primitive pins the whole calendar. This is what makes code that calls `Date.today()` testable: freeze the clock, assert against a date you chose.
+Anything that asks what time it is — `Time.now`, `Date.today`, `DateTime.utcNow` — reads one primitive, so pinning that primitive pins the whole calendar. This is what makes code that calls `Date.today()` testable: freeze the clock, assert against a date you chose.
 
-  Time.freeze(DateTime.parse("2026-07-30T14:03:00Z").try)   Date.today().iso                            # "2026-07-30" — always   Time.release()
+```kex
+Time.freeze(DateTime.parse("2026-07-30T14:03:00Z").try)
+Date.today().iso                            # "2026-07-30" — always
+Time.release()
+```
 
 The clock is global, not per-process: a frozen clock stays frozen inside spawned processes, which is the only behavior that matches a real one. `release` is not automatic, so a test that freezes must also release — otherwise every later test in the run inherits the frozen clock.
 
@@ -8844,8 +9536,6 @@ Freezes the clock for the length of `body`, then releases it.
 
 This is the form to reach for: `freeze` and `release` have to be paired by hand, and a test that returns early — or fails an assertion — between them leaves the clock frozen for every test that runs after it.
 
-  Time.frozenAt(DateTime.parse("2026-07-30T14:03:00Z").try) do     Date.utcToday().iso                     # "2026-07-30"   end.try
-
 Result carries whatever `body` returned. An instant the clock cannot represent is an Error, and then the clock is never touched and the body never runs.
 
 Not nestable: `release` restores the HOST clock, not whatever control was in effect on entry, so an inner scope ending un-freezes the outer one too.
@@ -8902,7 +9592,7 @@ frozen?()
 
 ## function `leapYear?`
 
-── Calendar arithmetic ───────────────────────────────────────────────── Public because the `make` blocks below live at file level and reach them by qualification; they are equally useful on their own.
+Public because the `make` blocks below live at file level and reach them by qualification; they are equally useful on their own.
 
 Returns `true` when `year` is a leap year in the proleptic Gregorian calendar.
 
@@ -9012,8 +9702,6 @@ errorMessage(@InvalidDate(y, m, d))
 
 ## function `formatDate`
 
-── Formatting ──────────────────────────────────────────────────────────
-
 
 ```kex
 formatDate(value)
@@ -9059,8 +9747,6 @@ formatOffset(offset)
 
 
 ## function `withNanosecond`
-
-── Internals ───────────────────────────────────────────────────────────
 
 
 ```kex
@@ -9330,7 +10016,7 @@ epochNanos()
 
 ## make `Integer`
 
-── Durations ───────────────────────────────────────────────────────────── The plural spellings build a Duration; the singular ones from units.kex build a time Measure. `5.seconds` is an elapsed span, `5.sec` a measurement.
+The plural spellings build a Duration; the singular ones from units.kex build a time Measure. `5.seconds` is an elapsed span, `5.sec` a measurement.
 
 
 
@@ -9356,7 +10042,7 @@ Adds two spans.
 **Examples**
 
 ```kex
-  (90.minutes + 30.minutes).wholeHours   # => 2
+(90.minutes + 30.minutes).wholeHours   # => 2
 ```
 
 #### `-`
@@ -9372,7 +10058,7 @@ Subtracts a span. The result may be negative.
 **Examples**
 
 ```kex
-  (1.hours - 90.minutes).negative?   # => true
+(1.hours - 90.minutes).negative?   # => true
 ```
 
 #### `*`
@@ -9390,7 +10076,7 @@ Multiplies the span by a plain number.
 **Examples**
 
 ```kex
-  (90.minutes * 2).wholeHours   # => 3
+(90.minutes * 2).wholeHours   # => 3
 ```
 
 #### `/`
@@ -9406,7 +10092,7 @@ Divides the span by a plain number.
 **Examples**
 
 ```kex
-  (90.minutes / 2).wholeMinutes   # => 45
+(90.minutes / 2).wholeMinutes   # => 45
 ```
 
 #### `shorterThan?`
@@ -9424,14 +10110,14 @@ shorterThan?(other)
 **Examples**
 
 ```kex
-  30.minutes.shorterThan?(1.hours)   # => true
+30.minutes.shorterThan?(1.hours)   # => true
 ```
 _Enforcing a timeout_
 
 ```kex
-  if started.until(DateTime.utcNow()).longerThan?(30.seconds)
-    IO.printError("timed out")
-  end
+if started.until(DateTime.utcNow()).longerThan?(30.seconds)
+  IO.printError("timed out")
+end
 ```
 
 #### `longerThan?`
@@ -9447,7 +10133,7 @@ longerThan?(other)
 **Examples**
 
 ```kex
-  90.minutes.longerThan?(1.hours)   # => true
+90.minutes.longerThan?(1.hours)   # => true
 ```
 
 #### `compareTo`
@@ -9465,12 +10151,12 @@ compareTo(other)
 **Examples**
 
 ```kex
-  90.minutes.compareTo(60.minutes)   # => Greater
+90.minutes.compareTo(60.minutes)   # => Greater
 ```
 _Sorting by length_
 
 ```kex
-  spans.sort { |a, b| a.compareTo(b) == Less }
+spans.sort { |a, b| a.compareTo(b) == Less }
 ```
 
 ## module `Duration`
@@ -9561,8 +10247,6 @@ utcOffset(hours, minutes)
 
 ## module `Period`
 
-── Periods ───────────────────────────────────────────────────────────────
-
 Building calendar spans.
 
 ## function `zero`
@@ -9651,7 +10335,7 @@ Adds two calendar spans, field by field.
 **Examples**
 
 ```kex
-  (Period.of(1, 2, 3) + 1.years).iso   # => "P2Y2M3D"
+(Period.of(1, 2, 3) + 1.years).iso   # => "P2Y2M3D"
 ```
 
 #### `-`
@@ -9667,7 +10351,7 @@ Subtracts a calendar span, field by field. Fields may go negative.
 **Examples**
 
 ```kex
-  (Period.of(1, 2, 3) - 1.years).iso   # => "P2M3D"
+(Period.of(1, 2, 3) - 1.years).iso   # => "P2M3D"
 ```
 
 #### `*`
@@ -9683,12 +10367,10 @@ Multiplies every field by `factor`.
 **Examples**
 
 ```kex
-  (Period.of(1, 2, 3) * 2).iso   # => "P2Y4M6D"
+(Period.of(1, 2, 3) * 2).iso   # => "P2Y4M6D"
 ```
 
 ## make `Date` implements Inspectable, Showable
-
-── Date ──────────────────────────────────────────────────────────────────
 
 
 #### `inspectValue`
@@ -9716,8 +10398,8 @@ A Duration with a sub-day remainder truncates toward zero, so `date ` 36.hours` 
 **Examples**
 
 ```kex
-  (Date.of(2026, 7, 30).try ` 10.days).iso   # => "2026-08-09"
-  (Date.of(2026, 7, 30).try + 36.hours).iso  # => "2026-07-31"
+(Date.of(2026, 7, 30).try ` 10.days).iso   # => "2026-08-09"
+(Date.of(2026, 7, 30).try + 36.hours).iso  # => "2026-07-31"
 ```
 
 #### `-`
@@ -9733,7 +10415,7 @@ Moves the date back by a fixed span, whole days only.
 **Examples**
 
 ```kex
-  (Date.of(2026, 7, 30).try - 10.days).iso   # => "2026-07-20"
+(Date.of(2026, 7, 30).try - 10.days).iso   # => "2026-07-20"
 ```
 
 #### `addDays`
@@ -9749,8 +10431,8 @@ addDays(count)
 **Examples**
 
 ```kex
-  Date.of(2026, 7, 30).try.addDays(1).iso    # => "2026-07-31"
-  Date.of(2026, 7, 30).try.addDays(-1).iso   # => "2026-07-29"
+Date.of(2026, 7, 30).try.addDays(1).iso    # => "2026-07-31"
+Date.of(2026, 7, 30).try.addDays(-1).iso   # => "2026-07-29"
 ```
 
 #### `addWeeks`
@@ -9766,7 +10448,7 @@ addWeeks(count)
 **Examples**
 
 ```kex
-  Date.of(2026, 7, 30).try.addWeeks(2).iso   # => "2026-08-13"
+Date.of(2026, 7, 30).try.addWeeks(2).iso   # => "2026-08-13"
 ```
 
 #### `addMonths`
@@ -9786,8 +10468,8 @@ addMonths(count)
 **Examples**
 
 ```kex
-  Date.of(2026, 1, 31).try.addMonths(1).iso    # => "2026-02-28"
-  Date.of(2026, 7, 30).try.addMonths(-1).iso   # => "2026-06-30"
+Date.of(2026, 1, 31).try.addMonths(1).iso    # => "2026-02-28"
+Date.of(2026, 7, 30).try.addMonths(-1).iso   # => "2026-06-30"
 ```
 
 #### `addYears`
@@ -9803,7 +10485,7 @@ addYears(count)
 **Examples**
 
 ```kex
-  Date.of(2024, 2, 29).try.addYears(1).iso   # => "2025-02-28"
+Date.of(2024, 2, 29).try.addYears(1).iso   # => "2025-02-28"
 ```
 
 #### `daysUntil`
@@ -9819,8 +10501,8 @@ daysUntil(other)
 **Examples**
 
 ```kex
-  Date.of(2026, 7, 30).try.daysUntil(Date.of(2026, 8, 9).try)   # => 10
-  Date.of(2026, 8, 9).try.daysUntil(Date.of(2026, 7, 30).try)   # => -10
+Date.of(2026, 7, 30).try.daysUntil(Date.of(2026, 8, 9).try)   # => 10
+Date.of(2026, 8, 9).try.daysUntil(Date.of(2026, 7, 30).try)   # => -10
 ```
 
 #### `until`
@@ -9836,7 +10518,7 @@ until(other)
 **Examples**
 
 ```kex
-  Date.of(2026, 7, 30).try.until(Date.of(2026, 8, 9).try).wholeDays   # => 10
+Date.of(2026, 7, 30).try.until(Date.of(2026, 8, 9).try).wholeDays   # => 10
 ```
 
 #### `monthsUntil`
@@ -9856,8 +10538,8 @@ monthsUntil(other)
 **Examples**
 
 ```kex
-  Date.of(2026, 1, 15).try.monthsUntil(Date.of(2026, 2, 14).try)   # => 0
-  Date.of(2026, 1, 31).try.monthsUntil(Date.of(2026, 2, 28).try)   # => 1
+Date.of(2026, 1, 15).try.monthsUntil(Date.of(2026, 2, 14).try)   # => 0
+Date.of(2026, 1, 31).try.monthsUntil(Date.of(2026, 2, 28).try)   # => 1
 ```
 
 #### `yearsUntil`
@@ -9875,12 +10557,12 @@ yearsUntil(other)
 **Examples**
 
 ```kex
-  Date.of(2020, 1, 1).try.yearsUntil(Date.of(2026, 7, 30).try)   # => 6
+Date.of(2020, 1, 1).try.yearsUntil(Date.of(2026, 7, 30).try)   # => 6
 ```
 _Someone's age today_
 
 ```kex
-  born.yearsUntil(Date.today())
+born.yearsUntil(Date.today())
 ```
 
 #### `before?`
@@ -9896,7 +10578,7 @@ before?(other)
 **Examples**
 
 ```kex
-  Date.of(2026, 7, 30).try.before?(Date.of(2026, 8, 1).try)   # => true
+Date.of(2026, 7, 30).try.before?(Date.of(2026, 8, 1).try)   # => true
 ```
 
 #### `after?`
@@ -9912,7 +10594,7 @@ after?(other)
 **Examples**
 
 ```kex
-  Date.of(2026, 8, 1).try.after?(Date.of(2026, 7, 30).try)   # => true
+Date.of(2026, 8, 1).try.after?(Date.of(2026, 7, 30).try)   # => true
 ```
 
 #### `compareTo`
@@ -9928,12 +10610,12 @@ compareTo(other)
 **Examples**
 
 ```kex
-  Date.of(2026, 7, 30).try.compareTo(Date.of(2026, 8, 1).try)   # => Less
+Date.of(2026, 7, 30).try.compareTo(Date.of(2026, 8, 1).try)   # => Less
 ```
 _Sorting dates_
 
 ```kex
-  dates.sort { |a, b| a.compareTo(b) == Less }
+dates.sort { |a, b| a.compareTo(b) == Less }
 ```
 
 #### `at`
@@ -9949,13 +10631,11 @@ at(time, offset)
 **Examples**
 
 ```kex
-  Date.of(2026, 7, 30).try.at(Time.of(9, 0, 0).try, Duration.zero()).iso
-  # => "2026-07-30T09:00:00Z"
+Date.of(2026, 7, 30).try.at(Time.of(9, 0, 0).try, Duration.zero()).iso
+# => "2026-07-30T09:00:00Z"
 ```
 
 ## make `Time` implements Inspectable, Showable
-
-── Time ──────────────────────────────────────────────────────────────────
 
 
 #### `inspectValue`
@@ -9981,7 +10661,7 @@ before?(other)
 **Examples**
 
 ```kex
-  Time.of(14, 3, 0).try.before?(Time.of(15, 0, 0).try)   # => true
+Time.of(14, 3, 0).try.before?(Time.of(15, 0, 0).try)   # => true
 ```
 
 #### `after?`
@@ -9997,7 +10677,7 @@ after?(other)
 **Examples**
 
 ```kex
-  Time.of(15, 0, 0).try.after?(Time.of(14, 3, 0).try)   # => true
+Time.of(15, 0, 0).try.after?(Time.of(14, 3, 0).try)   # => true
 ```
 
 #### `+`
@@ -10017,8 +10697,8 @@ The nanosecond field rides along untouched — `wholeSeconds` truncates the span
 **Examples**
 
 ```kex
-  (Time.of(14, 3, 0).try ` 2.hours).iso    # => "16:03:00"
-  (Time.of(23, 0, 0).try + 2.hours).iso    # => "01:00:00"
+(Time.of(14, 3, 0).try ` 2.hours).iso    # => "16:03:00"
+(Time.of(23, 0, 0).try + 2.hours).iso    # => "01:00:00"
 ```
 
 #### `-`
@@ -10034,7 +10714,7 @@ Moves the time of day back by a span, wrapping within the day.
 **Examples**
 
 ```kex
-  (Time.midnight() - 1.seconds).iso   # => "23:59:59"
+(Time.midnight() - 1.seconds).iso   # => "23:59:59"
 ```
 
 #### `addSeconds`
@@ -10050,7 +10730,7 @@ addSeconds(count)
 **Examples**
 
 ```kex
-  Time.of(14, 3, 0).try.addSeconds(60).iso   # => "14:04:00"
+Time.of(14, 3, 0).try.addSeconds(60).iso   # => "14:04:00"
 ```
 
 #### `addMinutes`
@@ -10066,7 +10746,7 @@ addMinutes(count)
 **Examples**
 
 ```kex
-  Time.of(14, 3, 0).try.addMinutes(30).iso   # => "14:33:00"
+Time.of(14, 3, 0).try.addMinutes(30).iso   # => "14:33:00"
 ```
 
 #### `addHours`
@@ -10082,7 +10762,7 @@ addHours(count)
 **Examples**
 
 ```kex
-  Time.of(23, 0, 0).try.addHours(2).iso   # => "01:00:00"
+Time.of(23, 0, 0).try.addHours(2).iso   # => "01:00:00"
 ```
 
 #### `until`
@@ -10100,7 +10780,7 @@ until(other)
 **Examples**
 
 ```kex
-  Time.of(14, 3, 0).try.until(Time.of(15, 3, 0).try).wholeMinutes   # => 60
+Time.of(14, 3, 0).try.until(Time.of(15, 3, 0).try).wholeMinutes   # => 60
 ```
 
 #### `compareTo`
@@ -10116,12 +10796,10 @@ compareTo(other)
 **Examples**
 
 ```kex
-  Time.of(14, 3, 0).try.compareTo(Time.of(15, 0, 0).try)   # => Less
+Time.of(14, 3, 0).try.compareTo(Time.of(15, 0, 0).try)   # => Less
 ```
 
 ## make `DateTime` implements Inspectable, Showable
-
-── DateTime ──────────────────────────────────────────────────────────────
 
 
 #### `inspectValue`
@@ -10149,9 +10827,9 @@ at(offset)
 **Examples**
 
 ```kex
-  DateTime.parse("2026-07-30T14:03:00+02:00").try
-    .at(Duration.utcOffset(-5, 0)).iso
-  # => "2026-07-30T07:03:00-05:00"
+DateTime.parse("2026-07-30T14:03:00+02:00").try
+  .at(Duration.utcOffset(-5, 0)).iso
+# => "2026-07-30T07:03:00-05:00"
 ```
 
 #### `+`
@@ -10167,8 +10845,8 @@ Advances the instant by a fixed span, keeping its offset.
 **Examples**
 
 ```kex
-  (DateTime.parse("2026-07-30T14:03:00Z").try + 90.minutes).iso
-  # => "2026-07-30T15:33:00Z"
+(DateTime.parse("2026-07-30T14:03:00Z").try + 90.minutes).iso
+# => "2026-07-30T15:33:00Z"
 ```
 
 #### `-`
@@ -10184,7 +10862,7 @@ Moves the instant back by a fixed span, keeping its offset.
 **Examples**
 
 ```kex
-  (DateTime.utcNow() - 24.hours).iso   # yesterday, same wall clock
+(DateTime.utcNow() - 24.hours).iso   # yesterday, same wall clock
 ```
 
 #### `addDays`
@@ -10200,8 +10878,8 @@ addDays(count)
 **Examples**
 
 ```kex
-  DateTime.parse("2026-07-30T14:03:00Z").try.addDays(1).iso
-  # => "2026-07-31T14:03:00Z"
+DateTime.parse("2026-07-30T14:03:00Z").try.addDays(1).iso
+# => "2026-07-31T14:03:00Z"
 ```
 
 #### `addWeeks`
@@ -10217,8 +10895,8 @@ addWeeks(count)
 **Examples**
 
 ```kex
-  DateTime.parse("2026-07-30T14:03:00Z").try.addWeeks(1).iso
-  # => "2026-08-06T14:03:00Z"
+DateTime.parse("2026-07-30T14:03:00Z").try.addWeeks(1).iso
+# => "2026-08-06T14:03:00Z"
 ```
 
 #### `addMonths`
@@ -10234,8 +10912,8 @@ addMonths(count)
 **Examples**
 
 ```kex
-  DateTime.parse("2026-01-31T09:00:00Z").try.addMonths(1).iso
-  # => "2026-02-28T09:00:00Z"
+DateTime.parse("2026-01-31T09:00:00Z").try.addMonths(1).iso
+# => "2026-02-28T09:00:00Z"
 ```
 
 #### `addYears`
@@ -10251,8 +10929,8 @@ addYears(count)
 **Examples**
 
 ```kex
-  DateTime.parse("2024-02-29T09:00:00Z").try.addYears(1).iso
-  # => "2025-02-28T09:00:00Z"
+DateTime.parse("2024-02-29T09:00:00Z").try.addYears(1).iso
+# => "2025-02-28T09:00:00Z"
 ```
 
 #### `until`
@@ -10268,14 +10946,14 @@ until(other)
 **Examples**
 
 ```kex
-  started.until(DateTime.utcNow()).wholeSeconds
+started.until(DateTime.utcNow()).wholeSeconds
 ```
 _Enforcing a deadline_
 
 ```kex
-  if started.until(DateTime.utcNow()).longerThan?(30.seconds)
-    IO.printError("timed out")
-  end
+if started.until(DateTime.utcNow()).longerThan?(30.seconds)
+  IO.printError("timed out")
+end
 ```
 
 #### `before?`
@@ -10291,9 +10969,9 @@ before?(other)
 **Examples**
 
 ```kex
-  DateTime.parse("2026-07-30T14:03:00+02:00").try
-    .before?(DateTime.parse("2026-07-31T00:00:00Z").try)
-  # => true
+DateTime.parse("2026-07-30T14:03:00+02:00").try
+  .before?(DateTime.parse("2026-07-31T00:00:00Z").try)
+# => true
 ```
 
 #### `after?`
@@ -10309,7 +10987,7 @@ after?(other)
 **Examples**
 
 ```kex
-  DateTime.utcNow().after?(started)   # => true
+DateTime.utcNow().after?(started)   # => true
 ```
 
 #### `compareTo`
@@ -10327,14 +11005,14 @@ compareTo(other)
 **Examples**
 
 ```kex
-  DateTime.parse("2026-07-30T12:00:00Z").try
-    .compareTo(DateTime.parse("2026-07-30T14:00:00`02:00").try)
-  # => Equal
+DateTime.parse("2026-07-30T12:00:00Z").try
+  .compareTo(DateTime.parse("2026-07-30T14:00:00`02:00").try)
+# => Equal
 ```
 _Sorting events by when they happened_
 
 ```kex
-  events.sort { |a, b| a.at.compareTo(b.at) == Less }
+events.sort { |a, b| a.at.compareTo(b.at) == Less }
 ```
 
 
@@ -10364,7 +11042,13 @@ entities:
 
 The rule is Crystal's, and it is short: only `false`, `None` and `()` are falsy. Everything else is truthy — including `0`, `""` and `[]`, which some languages treat as false and Kex deliberately does not.
 
-  0.truthy?       # => true   "".truthy?      # => true   [].truthy?      # => true   None.truthy?    # => false   false.truthy?   # => false
+```kex
+0.truthy?       # => true
+"".truthy?      # => true
+[].truthy?      # => true
+None.truthy?    # => false
+false.truthy?   # => false
+```
 
 When you want the "is there anything here" question instead, that is `Blankable`'s `blank?` / `present?`.
 
@@ -10384,8 +11068,8 @@ truthy? : Bool
 **Examples**
 
 ```kex
-  1.truthy?        # => true
-  None.truthy?     # => false
+1.truthy?        # => true
+None.truthy?     # => false
 ```
 
 ## make `Bool` implements [Truthyable](#trait-truthyable)
@@ -10410,8 +11094,8 @@ truthy? : Bool
 **Examples**
 
 ```kex
-  0.truthy?    # => true
-  42.truthy?   # => true
+0.truthy?    # => true
+42.truthy?   # => true
 ```
 
 ## make `Float` implements [Truthyable](#trait-truthyable)
@@ -10430,7 +11114,7 @@ truthy? : Bool
 **Examples**
 
 ```kex
-  0.0.truthy?   # => true
+0.0.truthy?   # => true
 ```
 
 ## make `String` implements [Truthyable](#trait-truthyable)
@@ -10451,8 +11135,8 @@ truthy? : Bool
 **Examples**
 
 ```kex
-  "".truthy?      # => true
-  "".blank?       # => true   (the question usually meant)
+"".truthy?      # => true
+"".blank?       # => true   (the question usually meant)
 ```
 
 ## make `Optional<X>` implements [Truthyable](#trait-truthyable)
@@ -10473,8 +11157,8 @@ truthy? : Bool
 **Examples**
 
 ```kex
-  Just(0).truthy?    # => true
-  None.truthy?       # => false
+Just(0).truthy?    # => true
+None.truthy?       # => false
 ```
 
 ## make `[X]` implements [Truthyable](#trait-truthyable)
@@ -10495,8 +11179,8 @@ truthy? : Bool
 **Examples**
 
 ```kex
-  [].truthy?   # => true
-  [].blank?    # => true   (the question usually meant)
+[].truthy?   # => true
+[].blank?    # => true   (the question usually meant)
 ```
 
 ## make `Map<K, V>` implements [Truthyable](#trait-truthyable)
@@ -10515,8 +11199,8 @@ truthy? : Bool
 **Examples**
 
 ```kex
-  {}.truthy?   # => true
-  {}.blank?    # => true   (the question usually meant)
+{}.truthy?   # => true
+{}.blank?    # => true   (the question usually meant)
 ```
 
 
@@ -10541,7 +11225,12 @@ Types as values.
 
 `Type.of(x)` answers what a value IS, as something you can hold, print, compare, and take apart:
 
-  Type.of(42)                     # Type { name: "Integer", args: [] }   Type.of([1, 2]).toString        # "[Integer]"   Type.of(x) == Type.of(y)        # structural equality, like any record   Type.of(due).fields             # ["year", "month", "day"]
+```kex
+Type.of(42)                     # Type { name: "Integer", args: [] }
+Type.of([1, 2]).toString        # "[Integer]"
+Type.of(x) == Type.of(y)        # structural equality, like any record
+Type.of(due).fields             # ["year", "month", "day"]
+```
 
 The answer comes from the compiler where it can: a checked expression knows things a value cannot carry, such as the unused half of a `Result` or the element type of an empty list. Where the checker has no concrete answer — gradual code, `--no-check`, a value arriving from another process — the value itself is asked instead. That fallback is honest but lossy: an empty list has no element to inspect, and a `Result` only ever holds one side.
 
@@ -10580,6 +11269,8 @@ named(name)
 ## function `generic`
 
 Builds a type that takes arguments, from its name and those arguments.
+
+Renamed from `Type.with` when `with` became the capability-substitution keyword (kexhq/kex#143).
 
 
 ```kex
@@ -10648,7 +11339,12 @@ Numbers that carry a unit.
 
 Writing `5.sec` or `90.minute` gives you a `Measure`: a number, the unit it was written in, and the same quantity in that dimension's base unit. Adding, subtracting and converting all go through the canonical value, so the arithmetic is right regardless of which units the operands were written in — and mixing dimensions is an `Error` rather than a silently wrong number.
 
-  5.sec.to(String)                     # => "5.0 s"   1.5.hour.to(String)                  # => "1.5 h"   (1.hour ` 30.minute).map(~to(String))  # => Ok("1.5 h")   90.minute.convert(Hour)              # => Ok(1.5 h)
+```kex
+5.sec.to(String)                     # => "5.0 s"
+1.5.hour.to(String)                  # => "1.5 h"
+(1.hour ` 30.minute).map(~to(String))  # => Ok("1.5 h")
+90.minute.convert(Hour)              # => Ok(1.5 h)
+```
 
 The time units — `nanosecond` through `week` — are in the prelude. Other dimensions live in opt-in modules under `Units`, and every one of them measures against the same machinery here.
 
@@ -10670,7 +11366,7 @@ factor : Float
 **Examples**
 
 ```kex
-  Minute.factor   # => 60.0
+Minute.factor   # => 60.0
 ```
 
 #### `kind`
@@ -10686,7 +11382,7 @@ kind : Atom
 **Examples**
 
 ```kex
-  Second.kind   # => :time
+Second.kind   # => :time
 ```
 
 #### `symbol`
@@ -10702,7 +11398,7 @@ symbol : String
 **Examples**
 
 ```kex
-  Minute.symbol   # => "min"
+Minute.symbol   # => "min"
 ```
 
 ## function `measureKind`
@@ -10855,8 +11551,8 @@ scale(multiplier)
 **Examples**
 
 ```kex
-  2.sec.scale(3).to(String)     # => "6.0 s"
-  1.hour.scale(0.5).to(String)  # => "0.5 h"
+2.sec.scale(3).to(String)     # => "6.0 s"
+1.hour.scale(0.5).to(String)  # => "0.5 h"
 ```
 
 #### `^`
@@ -10874,7 +11570,7 @@ Raising a measure preserves its display unit while applying the power to its can
 **Examples**
 
 ```kex
-  (2.sec ^ 2).to(String)   # => "4.0 s^2"
+(2.sec ^ 2).to(String)   # => "4.0 s^2"
 ```
 
 #### `convertTo`
@@ -10894,8 +11590,8 @@ convertTo(unit)
 **Examples**
 
 ```kex
-  1.day.convertTo(Hour).map { |m| m.to(String) }     # => Ok("24.0 h")
-  90.minute.convertTo(Hour).map { |m| m.to(String) } # => Ok("1.5 h")
+1.day.convertTo(Hour).map { |m| m.to(String) }     # => Ok("24.0 h")
+90.minute.convertTo(Hour).map { |m| m.to(String) } # => Ok("1.5 h")
 ```
 
 #### `convert`
@@ -10911,7 +11607,7 @@ convert(unit)
 **Examples**
 
 ```kex
-  90.minute.convert(Hour).map { |m| m.to(String) }   # => Ok("1.5 h")
+90.minute.convert(Hour).map { |m| m.to(String) }   # => Ok("1.5 h")
 ```
 
 #### `+`
@@ -10929,8 +11625,8 @@ The units need not match — the sum goes through the canonical values, and come
 **Examples**
 
 ```kex
-  (1.hour ` 30.minute).map { |m| m.to(String) }   # => Ok("1.5 h")
-  (30.minute ` 1.hour).map { |m| m.to(String) }   # => Ok("90.0 min")
+(1.hour ` 30.minute).map { |m| m.to(String) }   # => Ok("1.5 h")
+(30.minute ` 1.hour).map { |m| m.to(String) }   # => Ok("90.0 min")
 ```
 
 #### `-`
@@ -10948,7 +11644,7 @@ Like ```, the result is displayed in the left operand's unit, and mixing dimensi
 **Examples**
 
 ```kex
-  (1.hour - 30.minute).map { |m| m.to(String) }   # => Ok("0.5 h")
+(1.hour - 30.minute).map { |m| m.to(String) }   # => Ok("0.5 h")
 ```
 
 ## module `Units`
@@ -11007,11 +11703,24 @@ A small, WEBrick-style web server.
 
 You build a server by naming a port and mounting routes on it, then start it. Configuration is immutable: mounting a route returns an updated server, and `start` hands that configuration to the BEAM runtime.
 
-  let hello(request: Web.Request) -> Web.Response do     let name = request.query.get("name", "world")     return Web.Response.text("Hello, ${name}!\n")   end
+```kex
+let hello(request: Web.Request) -> Web.Response do
+  let name = request.query.get("name", "world")
+  return Web.Response.text("Hello, ${name}!\n")
+end
 
-  main do     let server = Web.Server.build(8080)       .get("/", ~home)       .get("/hello", ~hello)       .post("/echo", ~echo)
+main do
+  let server = Web.Server.build(8080)
+    .get("/", ~home)
+    .get("/hello", ~hello)
+    .post("/echo", ~echo)
 
-    IO.printLine("listening on http://localhost:8080")     if let Error(reason) = server.start()       IO.printLine("server stopped: ${reason}")     end   end
+  IO.printLine("listening on http://localhost:8080")
+  if let Error(reason) = server.start()
+    IO.printLine("server stopped: ${reason}")
+  end
+end
+```
 
 A handler is any function from a `Web.Request` to a `Web.Response`, and the `Web.Response` constructors cover the usual replies — text, HTML, JSON, a redirect, a 404.
 
@@ -11145,7 +11854,7 @@ mount(path, handler)
 **Examples**
 
 ```kex
-  Web.Server.build(8080).mount("/health", ~health)
+Web.Server.build(8080).mount("/health", ~health)
 ```
 
 #### `get`
@@ -11161,9 +11870,9 @@ get(path, handler)
 **Examples**
 
 ```kex
-  Web.Server.build(8080)
-    .get("/", ~home)
-    .get("/hello", ~hello)
+Web.Server.build(8080)
+  .get("/", ~home)
+  .get("/hello", ~hello)
 ```
 
 #### `post`
@@ -11179,7 +11888,7 @@ post(path, handler)
 **Examples**
 
 ```kex
-  server.post("/echo", ~echo)
+server.post("/echo", ~echo)
 ```
 
 #### `put`
@@ -11195,7 +11904,7 @@ put(path, handler)
 **Examples**
 
 ```kex
-  server.put("/items", ~replaceItem)
+server.put("/items", ~replaceItem)
 ```
 
 #### `patch`
@@ -11211,7 +11920,7 @@ patch(path, handler)
 **Examples**
 
 ```kex
-  server.patch("/items", ~updateItem)
+server.patch("/items", ~updateItem)
 ```
 
 #### `delete`
@@ -11227,7 +11936,7 @@ delete(path, handler)
 **Examples**
 
 ```kex
-  server.delete("/items", ~removeItem)
+server.delete("/items", ~removeItem)
 ```
 
 #### `start`
@@ -11247,10 +11956,10 @@ start()
 **Examples**
 
 ```kex
-  IO.printLine("listening on http://localhost:8080")
-  if let Error(reason) = server.start()
-    IO.printLine("server stopped: ${reason}")
-  end
+IO.printLine("listening on http://localhost:8080")
+if let Error(reason) = server.start()
+  IO.printLine("server stopped: ${reason}")
+end
 ```
 
 ## module `Web.Server`
@@ -11285,9 +11994,16 @@ Opt-in — nothing here is in scope until `using Kex.AST`.
 
 This is the entry point for tools that read Kex source: linters, formatters, documentation generators, code search. The AST includes module definitions, function signatures, type/record definitions, traits, make blocks, and the doc-comments extracted from `#` lines — which is how the standard library's own documentation is generated.
 
-  using Kex.AST
+```kex
+using Kex.AST
 
-  main do     match Kex.AST.parseFile("src/main.kex") do       Ok(program) => IO.printLine("${program.items.count} top-level items")       Error(e)    => IO.printError(e.message)     end   end
+main do
+  match Kex.AST.parseFile("src/main.kex") do
+    Ok(program) => IO.printLine("${program.items.count} top-level items")
+    Error(e)    => IO.printError(e.message)
+  end
+end
+```
 
 Everything answers a `Result`, so a source file that does not parse is a value you handle rather than an exception.
 
@@ -11825,9 +12541,14 @@ Data sizes: bytes, kilobytes, and their binary counterparts.
 
 Opt-in — nothing here is in scope until `using Units.Data`.
 
-  using Units.Data
+```kex
+using Units.Data
 
-  main do     IO.printLine(1500.megabytes.to(String))              # prints: 1500.0 MB     IO.printLine(1500000000.byteSize.to(String, in: Giga)) # prints: 1.5 GB   end
+main do
+  IO.printLine(1500.megabytes.to(String))              # prints: 1500.0 MB
+  IO.printLine(1500000000.byteSize.to(String, in: Giga)) # prints: 1.5 GB
+end
+```
 
 Both families are here and they are not the same: `KB` is 1000 bytes, `KiB` is 1024. Values built from either convert freely, because both are counted in bytes underneath — so `1.gibibytes.convertTo(MiB)` answers 1024 MiB.
 
@@ -11837,7 +12558,10 @@ Every value is a `Measure` from the prelude, so its arithmetic, comparison and `
 
 The data units this module names: decimal (`KB`, `MB`, `GB`, `TB`) and binary (`KiB`, `MiB`, `GiB`, `TiB`), plus the plain byte `B`.
 
-  1.KB   # 1000 bytes   1.KiB  # 1024 bytes
+```kex
+1.KB   # 1000 bytes
+1.KiB  # 1024 bytes
+```
 
 
 
@@ -12038,9 +12762,15 @@ SI units: metres, grams, watts, volts and the rest, with prefixes and dimensiona
 
 Opt-in — nothing here is in scope until `using Units.SI`.
 
-  using Units.SI
+```kex
+using Units.SI
 
-  main do     IO.printLine(3.kilo.watt.to(String))          # prints: 3000.0 W     IO.printLine(5000.meter.kilo.to(String))      # prints: 5.0 km     IO.printLine((100.meter / 10.sec).to(String)) # prints: 10.0 m/s   end
+main do
+  IO.printLine(3.kilo.watt.to(String))          # prints: 3000.0 W
+  IO.printLine(5000.meter.kilo.to(String))      # prints: 5.0 km
+  IO.printLine((100.meter / 10.sec).to(String)) # prints: 10.0 m/s
+end
+```
 
 Every value is a `Measure` from the prelude, so the arithmetic, conversion and comparison described there apply unchanged. What this module adds is the SI vocabulary, the prefixes, and a table of which dimension results from multiplying or dividing two others — so `2.newton * 3.meter` answers in joules and `100.meter / 10.sec` in metres per second.
 
@@ -12073,7 +12803,9 @@ A decimal prefix applied to a unit, for display.
 
 A display prefix carries the unit it will display, for example `Kilo(Watt * Hour)`. Pass one to `to(String, in:)` to render a measure at that scale.
 
-  1500.watt.to(String, in: Kilo(Watt))   # => Just("1.5 kW")
+```kex
+1500.watt.to(String, in: Kilo(Watt))   # => Just("1.5 kW")
+```
 
 
 

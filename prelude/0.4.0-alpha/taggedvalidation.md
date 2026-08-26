@@ -15,7 +15,14 @@ Diagnostics returned by compile-time validators for tagged literals.
 
 A tagged literal — `` re`\d`` ``, `` sql`SELECT ...` `` — can be checked while your program is compiled rather than when it runs. The compiler finds the checker by name: a tag `foo` is validated by a function named `validateFoo` taking the literal's text and returning a list of `Issue` values. An empty list means the literal is fine.
 
-  let validateHex(source: String) -> [TaggedValidation.Issue] do     match source.chars.findIndex { |c| !c.digit? && !c.in?('a'..'f') } do       Just(offset) => [TaggedValidation.fatalAt(offset, "not a hex digit")]       None         => []     end   end
+```kex
+let validateHex(source: String) -> [TaggedValidation.Issue] do
+  match source.chars.findIndex { |c| !c.digit? && !c.in?('a'..'f') } do
+    Just(offset) => [TaggedValidation.fatalAt(offset, "not a hex digit")]
+    None         => []
+  end
+end
+```
 
 A `Fatal` issue stops the build with the message, pointing the caret at the offset; a `Warn+ reports without stopping.
 

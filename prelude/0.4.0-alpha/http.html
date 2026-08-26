@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Http | Prelude 0.4.0-alpha | kex docs</title>
+<title>Http | Standard Library 0.4.0-alpha | kex docs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -22,12 +22,12 @@ data-root="../../" data-package="prelude" data-version="0.4.0-alpha"
 data-page="http.html">
 <span>Search</span><kbd>/</kbd>
 </button>
-<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="http.html">Prelude 0.4.0-alpha</span>
+<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="http.html">Standard Library 0.4.0-alpha</span>
 <a class="back" href="https://kex.run/docs">kex.run ↗</a>
 </div>
 </header>
 <div class="wrap layout">
-<aside class="side"><nav aria-label="Modules"><p class="side-heading">Prelude</p><ul class="side-list">
+<aside class="side"><nav aria-label="Modules"><p class="side-heading"><a href="index.html">Standard Library</a></p><ul class="side-list">
 <li><a href="algebra.html">Algebra</a></li>
 <li><a href="bits.html">Bits</a></li>
 <li><a href="blankable.html">Blankable</a></li>
@@ -37,7 +37,7 @@ data-page="http.html">
 <li><a href="env.html">ENV</a></li>
 <li><a href="errorable.html">Errorable</a></li>
 <li><a href="evaluator.html">Evaluator</a></li>
-<li><a href="filehandle.html">Filehandle</a></li>
+<li><a href="filehandle.html">FileHandle</a></li>
 <li><a href="fs.html">FS</a></li>
 <li><a class="active" href="http.html">Http</a><ul class="side-sub">
 <li><a href="#type-networkerror">NetworkError</a></li>
@@ -77,14 +77,19 @@ data-page="http.html">
 <li><a href="units/si.html">Units.SI</a></li>
 </ul></nav></aside>
 <main class="content">
-<nav class="crumbs"><a href="index.html">Prelude</a> <span class="sep">/</span> <span>Http</span></nav>
+<nav class="crumbs"><a href="index.html">Standard Library</a> <span class="sep">/</span> <span>Http</span></nav>
 <article class="prose">
-<h1>Http</h1>
+<h1>Http<span class="tag-prelude" title="In the prelude: no import needed">prelude</span></h1>
 <section class="entity" id="type-networkerror">
 <h2><span class="kind kind-type">type</span> <code>NetworkError</code></h2>
 <p>HTTP client requests.</p>
 <p>One function per method — <code>get</code>, <code>post</code>, <code>put</code>, <code>patch</code>, <code>delete</code>, <code>head</code>, <code>options</code> — each answering a <code>Result</code>, so a network failure is a value you handle rather than an exception.</p>
-<p>  main do     match Http.get(&quot;https://example.com/api/status&quot;) do       Ok(response) =&gt; IO.printLine(&quot;${response.status}: ${response.body}&quot;)       Error(e)     =&gt; IO.printError(&quot;request failed: ${e.message}&quot;)     end   end</p>
+<pre class="code"><code><span class="tok-keyword">main</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">match</span> <span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://example.com/api/status</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+    <span class="tok-bool">Ok</span><span class="tok-punct">(</span>response<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>response<span class="tok-op">.</span><span class="tok-method">status</span><span class="tok-string">}</span><span class="tok-string">: </span><span class="tok-string">${</span>response<span class="tok-op">.</span><span class="tok-method">body</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span>     <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">request failed: </span><span class="tok-string">${</span>e<span class="tok-op">.</span><span class="tok-method">message</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span></code></pre>
 <p>An HTTP error status is NOT an <code>Error</code>: a 404 is a response the server chose to send, so it arrives as <code>Ok</code> with <code>status: 404</code>. <code>Error</code> means the request never got an answer — refused, timed out, DNS failed.</p>
 <p>Every call has a second form taking <code>HttpOptions</code>, for headers and timeouts.</p>
 <p>Why a request never reached an answer.</p>
@@ -122,7 +127,10 @@ data-page="http.html">
 <section class="entity" id="record-httpoptions">
 <h2><span class="kind kind-record">record</span> <code>HttpOptions</code></h2>
 <p>Per-request settings: headers to send, and how long to wait.</p>
-<p>  Http.get(url, HttpOptions {     headers: { &quot;Authorization&quot;: &quot;Bearer ${token}&quot; },     timeout: 5000   })</p>
+<pre class="code"><code><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span>url<span class="tok-punct">,</span> <span class="tok-type">HttpOptions</span> <span class="tok-punct">{</span>
+  headers<span class="tok-op">:</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">Authorization</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">Bearer </span><span class="tok-string">${</span>token<span class="tok-string">}</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+  timeout<span class="tok-op">:</span> <span class="tok-number">5000</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>headers</code></dt><dd><code>Map&lt;String, String&gt;</code> <span class="opt">optional</span></dd></div>
@@ -146,16 +154,16 @@ data-page="http.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;<a class="xref" href="#record-httpresponse">HttpResponse</a>, <a class="xref" href="#record-httperror">HttpError</a>&gt;</code> — the response, or why it failed</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-keyword">match</span> <span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://example.com/</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
-    <span class="tok-bool">Ok</span><span class="tok-punct">(</span>response<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>response<span class="tok-op">.</span><span class="tok-method">body</span><span class="tok-punct">)</span>
-    <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span>     <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span>e<span class="tok-op">.</span><span class="tok-method">message</span><span class="tok-punct">)</span>
-  <span class="tok-keyword">end</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://example.com/</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>response<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>response<span class="tok-op">.</span><span class="tok-method">body</span><span class="tok-punct">)</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span>     <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span>e<span class="tok-op">.</span><span class="tok-method">message</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 <p class="caption"><em>An HTTP error status is still Ok</em></p>
-<pre class="code"><code>  <span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span>url<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>r<span class="tok-op">|</span> r<span class="tok-op">.</span><span class="tok-method">status</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(404)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span>url<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>r<span class="tok-op">|</span> r<span class="tok-op">.</span><span class="tok-method">status</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(404)</span></code></pre>
 <p class="caption"><em>With an authorization header</em></p>
-<pre class="code"><code>  <span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span>url<span class="tok-punct">,</span> <span class="tok-type">HttpOptions</span> <span class="tok-punct">{</span>
-    headers<span class="tok-op">:</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">Authorization</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">Bearer </span><span class="tok-string">${</span>token<span class="tok-string">}</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span>
-  <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span>url<span class="tok-punct">,</span> <span class="tok-type">HttpOptions</span> <span class="tok-punct">{</span>
+  headers<span class="tok-op">:</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">Authorization</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">Bearer </span><span class="tok-string">${</span>token<span class="tok-string">}</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-post">
@@ -173,13 +181,13 @@ data-page="http.html">
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;<a class="xref" href="#record-httpresponse">HttpResponse</a>, <a class="xref" href="#record-httperror">HttpError</a>&gt;</code> — the response, or why it failed</p>
 <h5>Examples</h5>
 <p class="caption"><em>Posting JSON</em></p>
-<pre class="code"><code>  <span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">post</span><span class="tok-punct">(</span>url<span class="tok-punct">,</span> <span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span>payload<span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">HttpOptions</span> <span class="tok-punct">{</span>
-    headers<span class="tok-op">:</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span>
-  <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">post</span><span class="tok-punct">(</span>url<span class="tok-punct">,</span> <span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span>payload<span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">HttpOptions</span> <span class="tok-punct">{</span>
+  headers<span class="tok-op">:</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
 <p class="caption"><em>Posting a form body</em></p>
-<pre class="code"><code>  <span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">post</span><span class="tok-punct">(</span>url<span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">name=Ada&amp;role=admin</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">HttpOptions</span> <span class="tok-punct">{</span>
-    headers<span class="tok-op">:</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">application/x-www-form-urlencoded</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span>
-  <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">post</span><span class="tok-punct">(</span>url<span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">name=Ada&amp;role=admin</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">HttpOptions</span> <span class="tok-punct">{</span>
+  headers<span class="tok-op">:</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">application/x-www-form-urlencoded</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-put">
@@ -195,9 +203,9 @@ data-page="http.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;<a class="xref" href="#record-httpresponse">HttpResponse</a>, <a class="xref" href="#record-httperror">HttpError</a>&gt;</code> — the response, or why it failed</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">put</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>base<span class="tok-string">}</span><span class="tok-string">/items/42</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span>item<span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">HttpOptions</span> <span class="tok-punct">{</span>
-    headers<span class="tok-op">:</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span>
-  <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">put</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>base<span class="tok-string">}</span><span class="tok-string">/items/42</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span>item<span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">HttpOptions</span> <span class="tok-punct">{</span>
+  headers<span class="tok-op">:</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-patch">
@@ -213,7 +221,7 @@ data-page="http.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;<a class="xref" href="#record-httpresponse">HttpResponse</a>, <a class="xref" href="#record-httperror">HttpError</a>&gt;</code> — the response, or why it failed</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">patch</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>base<span class="tok-string">}</span><span class="tok-string">/items/42</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span><span class="tok-punct">{</span> done<span class="tok-op">:</span> <span class="tok-bool">true</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">patch</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>base<span class="tok-string">}</span><span class="tok-string">/items/42</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span><span class="tok-punct">{</span> done<span class="tok-op">:</span> <span class="tok-bool">true</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-delete">
@@ -228,7 +236,7 @@ data-page="http.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;<a class="xref" href="#record-httpresponse">HttpResponse</a>, <a class="xref" href="#record-httperror">HttpError</a>&gt;</code> — the response, or why it failed</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>base<span class="tok-string">}</span><span class="tok-string">/items/42</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>r<span class="tok-op">|</span> r<span class="tok-op">.</span><span class="tok-method">status</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(204)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>base<span class="tok-string">}</span><span class="tok-string">/items/42</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>r<span class="tok-op">|</span> r<span class="tok-op">.</span><span class="tok-method">status</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(204)</span></code></pre>
 
 </section>
 <section class="entity" id="function-head">
@@ -245,9 +253,9 @@ data-page="http.html">
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;<a class="xref" href="#record-httpresponse">HttpResponse</a>, <a class="xref" href="#record-httperror">HttpError</a>&gt;</code> — the response, or why it failed</p>
 <h5>Examples</h5>
 <p class="caption"><em>Checking that a resource exists</em></p>
-<pre class="code"><code>  <span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">head</span><span class="tok-punct">(</span>url<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>r<span class="tok-op">|</span> r<span class="tok-op">.</span><span class="tok-method">status</span> <span class="tok-op">==</span> <span class="tok-number">200</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-bool">false</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">head</span><span class="tok-punct">(</span>url<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>r<span class="tok-op">|</span> r<span class="tok-op">.</span><span class="tok-method">status</span> <span class="tok-op">==</span> <span class="tok-number">200</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-bool">false</span><span class="tok-punct">)</span></code></pre>
 <p class="caption"><em>Reading a header without downloading the body</em></p>
-<pre class="code"><code>  <span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">head</span><span class="tok-punct">(</span>url<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">flatMap</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>r<span class="tok-op">|</span> r<span class="tok-op">.</span><span class="tok-method">headers</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Length</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">ok?</span> <span class="tok-punct">}</span></code></pre>
+<pre class="code"><code><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">head</span><span class="tok-punct">(</span>url<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">flatMap</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>r<span class="tok-op">|</span> r<span class="tok-op">.</span><span class="tok-method">headers</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Length</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">ok?</span> <span class="tok-punct">}</span></code></pre>
 
 </section>
 <section class="entity" id="function-options">
@@ -262,7 +270,7 @@ data-page="http.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;<a class="xref" href="#record-httpresponse">HttpResponse</a>, <a class="xref" href="#record-httperror">HttpError</a>&gt;</code> — the response, or why it failed</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">options</span><span class="tok-punct">(</span>url<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">flatMap</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>r<span class="tok-op">|</span> r<span class="tok-op">.</span><span class="tok-method">headers</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Allow</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+<pre class="code"><code><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">options</span><span class="tok-punct">(</span>url<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">flatMap</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>r<span class="tok-op">|</span> r<span class="tok-op">.</span><span class="tok-method">headers</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Allow</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
 
 </section>
 </section>
@@ -270,7 +278,7 @@ data-page="http.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-26T20:27:51.720473998Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-26T22:47:19.793944540Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

@@ -56,7 +56,11 @@ An environment stand-in's WRITE hook: the name and the value a program set. A `M
 
 A stand-in for the `FS.File` capability, for `with FS.File = ...`. Unlike the `Mock.*` functions below it holds no global state, needs no `clear()`, and cannot leak past its block. What it cannot do is change: `write` then `read` back is not something a value does, so a test needing that round trip still wants `Mock.FS` (kexhq/kex#143).
 
-  with FS.File = Mock.Files { files: {"kex.toml": "name = \"demo\""} } do     assert(loadConfig() == "demo")   end
+```kex
+with FS.File = Mock.Files { files: {"kex.toml": "name = \"demo\""} } do
+  assert(loadConfig() == "demo")
+end
+```
 
 `onRead` takes over when a test needs an ANSWER rather than a fixture — content derived from the path, a failure on the third call, a record of what was asked for. It is consulted first and its `None` means "no such file", so a callback can model absence too.
 
@@ -69,7 +73,11 @@ A stand-in for the `FS.File` capability, for `with FS.File = ...`. Unlike the `M
 
 A stand-in for the `ENV` capability. A name simply left out of `vars` reads as unset, which is the whole reason `Mock.ENV.unset` exists — absence is an answer programs act on. `onGet` answers instead of the map when a test wants a rule rather than a fixture.
 
-  with ENV = Mock.Env { vars: {"HOME": "/fake"} } do     assert(configHome() == "/fake/.config")   end
+```kex
+with ENV = Mock.Env { vars: {"HOME": "/fake"} } do
+  assert(configHome() == "/fake/.config")
+end
+```
 
 **Fields**
 
@@ -95,11 +103,21 @@ A stateful stand-in for the filesystem: files a test declares, that the real `FS
 
 The store is global and lives until `clear`, which is what makes a write followed by a read testable — and what makes two tests able to interfere. Clear it in an `after` hook.
 
-  describe "the config loader" do     before do       Mock.FS.files({ "app.conf": "port = 8080\n" })     end
+```kex
+describe "the config loader" do
+  before do
+    Mock.FS.files({ "app.conf": "port = 8080\n" })
+  end
 
-    after do       Mock.FS.clear()     end
+  after do
+    Mock.FS.clear()
+  end
 
-    it "reads the port" do       Assert.equal(loadPort(), 8080)     end   end
+  it "reads the port" do
+    Assert.equal(loadPort(), 8080)
+  end
+end
+```
 
 ## function `File`
 
@@ -163,7 +181,12 @@ A stateful stand-in for the network: responses a test queues, that the real `Htt
 
 Responses are consumed in FIFO order — the first `respond` answers the first request. When the queue runs out, the next request answers `Error(HttpError)` with kind `MockEmpty`, so a test that made more calls than it expected fails rather than reaching the network.
 
-  Mock.Http.start()   Mock.Http.respond(200, "{\"ok\": true}")   assert(fetchStatus() == "ok")   Mock.Http.stop()
+```kex
+Mock.Http.start()
+Mock.Http.respond(200, "{\"ok\": true}")
+assert(fetchStatus() == "ok")
+Mock.Http.stop()
+```
 
 ## function `start`
 
@@ -202,7 +225,11 @@ Overlays the process environment, so a test can say what `ENV` holds instead of 
 
 The overlay is global and lives until `clear` — clear it in an `after` hook.
 
-  Mock.ENV.vars({ "HOME": "/fake", "LOG_LEVEL": "debug" })   assert(configPath() == "/fake/.config")   Mock.ENV.clear()
+```kex
+Mock.ENV.vars({ "HOME": "/fake", "LOG_LEVEL": "debug" })
+assert(configPath() == "/fake/.config")
+Mock.ENV.clear()
+```
 
 ## function `set`
 
@@ -254,7 +281,13 @@ A stateful stand-in for the console: captures what a program prints, and feeds i
 
 The way to test a program that talks to a person without one being there.
 
-  Mock.IO.start()   Mock.IO.input("Ada", "42")   greet()   Assert.equal(Mock.IO.output(), "hello, Ada\n")   Mock.IO.stop()
+```kex
+Mock.IO.start()
+Mock.IO.input("Ada", "42")
+greet()
+Assert.equal(Mock.IO.output(), "hello, Ada\n")
+Mock.IO.stop()
+```
 
 ## function `start`
 
@@ -432,10 +465,34 @@ get(key)
 has?(key)
 ```
 
+#### `keys`
+
+```kex
+keys()
+```
+
+#### `values`
+
+```kex
+values()
+```
+
+#### `count`
+
+```kex
+count()
+```
+
 #### `each`
 
 ```kex
 each(f)
+```
+
+#### `entries`
+
+```kex
+entries()
 ```
 
 #### `set`

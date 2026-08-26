@@ -17,11 +17,19 @@ An ordered, immutable sequence, written [1, 2, 3].
 
 Lists are the default collection in Kex. Every operation answers with a new list rather than changing the receiver, so a chain of transformations is safe to read from either end.
 
-  let scores = [7, 2, 9, 4]   scores.filter { |n| n > 3 }      # => [7, 9, 4]   scores.sort                      # => [2, 4, 7, 9]   scores.map { |n| n * 10 }.sum    # => 220
+```kex
+let scores = [7, 2, 9, 4]
+scores.filter { |n| n > 3 }      # => [7, 9, 4]
+scores.sort                      # => [2, 4, 7, 9]
+scores.map { |n| n * 10 }.sum    # => 220
+```
 
 Anything that might not be there — the first element, an element at an index, a search result — answers with an `Optional`, so an empty list is an ordinary case rather than a crash:
 
-  [].first.or(0)        # => 0   [1, 2].at(9).or(0)    # => 0
+```kex
+[].first.or(0)        # => 0
+[1, 2].at(9).or(0)    # => 0
+```
 
 A list is `Enumerable` and `Foldable`, which is where `map`, `filter`, `find`, `all?` and `reduce` come from.
 
@@ -47,7 +55,7 @@ product(f) : (X -> Number) -> Number
 **Examples**
 
 ```kex
-  [[1,2],[3,4]].product { |pair| pair.first.or(1) }   # => 3
+[[1,2],[3,4]].product { |pair| pair.first.or(1) }   # => 3
 ```
 
 ## make `[X]` implements [Enumerable](enumerable.md#trait-enumerable), [Foldable](enumerable.md#trait-foldable)
@@ -56,6 +64,8 @@ product(f) : (X -> Number) -> Number
 #### `count`
 
 Returns how many elements satisfy `pred`.
+
+count(pred) is provided by the Enumerable trait.
 
 ```kex
 count(pred) : (X -> Bool) -> Integer
@@ -66,9 +76,8 @@ count(pred) : (X -> Bool) -> Integer
 **Examples**
 
 ```kex
-  [1, 2, 3, 4].count(~even?)              # => 2
-  ["a", "", "b"].count { |s| s.empty? }   # => 1
-count(pred) is provided by the Enumerable trait.
+[1, 2, 3, 4].count(~even?)              # => 2
+["a", "", "b"].count { |s| s.empty? }   # => 1
 ```
 
 #### `empty?`
@@ -84,13 +93,15 @@ empty? : Bool
 **Examples**
 
 ```kex
-  [].empty?      # => true
-  [1, 2].empty?  # => false
+[].empty?      # => true
+[1, 2].empty?  # => false
 ```
 
 #### `find`
 
 Returns the first element satisfying the predicate wrapped in `Just`, or `None` if no element matches.
+
+find/any?/all? are provided by the Enumerable trait.
 
 ```kex
 find(pred) : (X -> Bool) -> X?
@@ -101,9 +112,8 @@ find(pred) : (X -> Bool) -> X?
 **Examples**
 
 ```kex
-  [1, 2, 3].find { |x| x > 1 }   # => Just(2)
-  [1, 2, 3].find { |x| x > 9 }   # => None
-find/any?/all? are provided by the Enumerable trait.
+[1, 2, 3].find { |x| x > 1 }   # => Just(2)
+[1, 2, 3].find { |x| x > 9 }   # => None
 ```
 
 #### `any?`
@@ -119,8 +129,8 @@ any?(pred) : (X -> Bool) -> Bool
 **Examples**
 
 ```kex
-  [1, 2, 3].any? { |x| x > 2 }   # => true
-  [1, 2, 3].any? { |x| x > 9 }   # => false
+[1, 2, 3].any? { |x| x > 2 }   # => true
+[1, 2, 3].any? { |x| x > 9 }   # => false
 ```
 
 #### `all?`
@@ -136,13 +146,15 @@ all?(pred) : (X -> Bool) -> Bool
 **Examples**
 
 ```kex
-  [1, 2, 3].all? { |x| x > 0 }   # => true
-  [1, 2, 3].all? { |x| x > 1 }   # => false
+[1, 2, 3].all? { |x| x > 0 }   # => true
+[1, 2, 3].all? { |x| x > 1 }   # => false
 ```
 
 #### `map`
 
 Transforms each element by applying `f`.
+
+map/filter/each are provided by the Enumerable trait (in terms of reduce).
 
 ```kex
 map(f) : (X -> Y) -> [Y]
@@ -153,8 +165,7 @@ map(f) : (X -> Y) -> [Y]
 **Examples**
 
 ```kex
-  [1, 2, 3].map { |x| x * 2 }   # => [2, 4, 6]
-map/filter/each are provided by the Enumerable trait (in terms of reduce).
+[1, 2, 3].map { |x| x * 2 }   # => [2, 4, 6]
 ```
 
 #### `filter`
@@ -170,7 +181,7 @@ filter(pred) : (X -> Bool) -> [X]
 **Examples**
 
 ```kex
-  [1, 2, 3, 4].filter { |x| x.even? }   # => [2, 4]
+[1, 2, 3, 4].filter { |x| x.even? }   # => [2, 4]
 ```
 
 #### `reject`
@@ -186,7 +197,7 @@ reject(pred) : (X -> Bool) -> [X]
 **Examples**
 
 ```kex
-  [1, 2, 3, 4].reject { |x| x.even? }   # => [1, 3]
+[1, 2, 3, 4].reject { |x| x.even? }   # => [1, 3]
 ```
 
 #### `each`
@@ -202,7 +213,7 @@ each(f) : (X -> Void) -> Void
 **Examples**
 
 ```kex
-  [1, 2, 3].each { |x| IO.printLine(x) }
+[1, 2, 3].each { |x| IO.printLine(x) }
 ```
 
 #### `reduce`
@@ -218,8 +229,8 @@ reduce(acc, f) : A -> (A -> X -> A) -> A
 **Examples**
 
 ```kex
-  [1, 2, 3].reduce(0) { |acc, x| acc + x }   # => 6
-  [1, 2, 3].reduce(1) { |acc, x| acc * x }   # => 6
+[1, 2, 3].reduce(0) { |acc, x| acc + x }   # => 6
+[1, 2, 3].reduce(1) { |acc, x| acc * x }   # => 6
 ```
 
 #### `flatMap`
@@ -235,7 +246,7 @@ flatMap(f) : (X -> [Y]) -> [Y]
 **Examples**
 
 ```kex
-  [1, 2, 3].flatMap { |n| [n, n * 10] }   # => [1, 10, 2, 20, 3, 30]
+[1, 2, 3].flatMap { |n| [n, n * 10] }   # => [1, 10, 2, 20, 3, 30]
 ```
 
 #### `at`
@@ -251,8 +262,8 @@ at(i) : Integer -> X?
 **Examples**
 
 ```kex
-  [10, 20, 30].at(1)   # => Just(20)
-  [10, 20, 30].at(9)   # => None
+[10, 20, 30].at(1)   # => Just(20)
+[10, 20, 30].at(9)   # => None
 ```
 
 #### `get`
@@ -269,8 +280,8 @@ get(i) : Integer -> X -> X
 **Examples**
 
 ```kex
-  [10, 20, 30].get(1)   # => Just(20)
-  [10, 20, 30].get(9)   # => None
+[10, 20, 30].get(1)   # => Just(20)
+[10, 20, 30].get(9)   # => None
 ```
 
 #### `contains?`
@@ -286,8 +297,8 @@ contains?(elem) : X -> Bool
 **Examples**
 
 ```kex
-  [1, 2, 3].contains?(2)   # => true
-  [1, 2, 3].contains?(9)   # => false
+[1, 2, 3].contains?(2)   # => true
+[1, 2, 3].contains?(9)   # => false
 ```
 
 #### `indexOf`
@@ -303,8 +314,8 @@ indexOf(elem) : X -> Integer?
 **Examples**
 
 ```kex
-  [10, 20, 30].indexOf(20)   # => Just(1)
-  [10, 20, 30].indexOf(99)   # => None
+[10, 20, 30].indexOf(20)   # => Just(1)
+[10, 20, 30].indexOf(99)   # => None
 ```
 
 #### `findIndex`
@@ -320,8 +331,8 @@ findIndex(pred) : (X -> Bool) -> Integer?
 **Examples**
 
 ```kex
-  [10, 25, 30].findIndex { |n| n > 20 }   # => Just(1)
-  [10, 25, 30].findIndex { |n| n > 99 }   # => None
+[10, 25, 30].findIndex { |n| n > 20 }   # => Just(1)
+[10, 25, 30].findIndex { |n| n > 99 }   # => None
 ```
 
 #### `takeWhile`
@@ -337,7 +348,7 @@ takeWhile : (X -> Bool) -> [X]
 **Examples**
 
 ```kex
-  [1, 2, 9, 1].takeWhile { |n| n < 5 }   # => [1, 2]
+[1, 2, 9, 1].takeWhile { |n| n < 5 }   # => [1, 2]
 ```
 
 #### `dropWhile`
@@ -353,7 +364,7 @@ dropWhile : (X -> Bool) -> [X]
 **Examples**
 
 ```kex
-  [1, 2, 9, 1].dropWhile { |n| n < 5 }   # => [9, 1]
+[1, 2, 9, 1].dropWhile { |n| n < 5 }   # => [9, 1]
 ```
 
 #### `partition`
@@ -369,7 +380,7 @@ partition(pred) : (X -> Bool) -> ([X], [X])
 **Examples**
 
 ```kex
-  [1, 2, 3, 4].partition { |n| n.even? }   # => ([2, 4], [1, 3])
+[1, 2, 3, 4].partition { |n| n.even? }   # => ([2, 4], [1, 3])
 ```
 
 #### `collect`
@@ -385,7 +396,7 @@ collect : (X -> Y?) -> [Y]
 **Examples**
 
 ```kex
-  [1, 2, 3, 4].collect { |n| n > 2 then Just(n * 10) else None }   # => [30, 40]
+[1, 2, 3, 4].collect { |n| n > 2 then Just(n * 10) else None }   # => [30, 40]
 ```
 
 #### `take`
@@ -401,7 +412,7 @@ take(n) : Integer -> [X]
 **Examples**
 
 ```kex
-  [1, 2, 3, 4, 5].take(3)   # => [1, 2, 3]
+[1, 2, 3, 4, 5].take(3)   # => [1, 2, 3]
 ```
 
 #### `drop`
@@ -417,7 +428,7 @@ drop(n) : Integer -> [X]
 **Examples**
 
 ```kex
-  [1, 2, 3, 4, 5].drop(2)   # => [3, 4, 5]
+[1, 2, 3, 4, 5].drop(2)   # => [3, 4, 5]
 ```
 
 #### `push`
@@ -433,7 +444,7 @@ push(x) : X -> [X]
 **Examples**
 
 ```kex
-  [1, 2].push(3)   # => [1, 2, 3]
+[1, 2].push(3)   # => [1, 2, 3]
 ```
 
 #### `zip`
@@ -449,7 +460,7 @@ zip(other) : [Y] -> [(X, Y)]
 **Examples**
 
 ```kex
-  [1, 2, 3].zip(["a", "b", "c"])   # => [(1, "a"), (2, "b"), (3, "c")]
+[1, 2, 3].zip(["a", "b", "c"])   # => [(1, "a"), (2, "b"), (3, "c")]
 ```
 
 #### `sort`
@@ -465,7 +476,7 @@ sort(comp) : (X -> X -> Bool) -> [X]
 **Examples**
 
 ```kex
-  [3, 1, 2].sort { |a, b| a > b }   # => [3, 2, 1]
+[3, 1, 2].sort { |a, b| a > b }   # => [3, 2, 1]
 ```
 
 #### `min`
@@ -481,7 +492,7 @@ min(f) : (X -> Y) -> X?
 **Examples**
 
 ```kex
-  ["hey", "hi"].min { |s| s.count }   # => Just("hi")
+["hey", "hi"].min { |s| s.count }   # => Just("hi")
 ```
 
 #### `max`
@@ -497,7 +508,7 @@ max(f) : (X -> Y) -> X?
 **Examples**
 
 ```kex
-  ["hey", "hi"].max { |s| s.count }   # => Just("hey")
+["hey", "hi"].max { |s| s.count }   # => Just("hey")
 ```
 
 #### `sum`
@@ -513,5 +524,23 @@ sum(f) : (X -> Number) -> Number
 **Examples**
 
 ```kex
-  ["hello", "hi"].sum { |s| s.count }   # => 7
+["hello", "hi"].sum { |s| s.count }   # => 7
+```
+
+#### `join`
+
+Receiver is `[X]`, not `[String | Char]`: the intrinsic renders whatever it is given, so `[1, 2].join(", ")` is "1, 2" on both backends. The narrower receiver only ever fired once element types became precise enough to catch it — until then `map`/`filter` handed `join` an unknown element type and the restriction checked nothing. Concatenates all elements, placing `sep` between each adjacent pair. With no separator the elements are joined directly.
+
+```kex
+join(sep) : String -> String
+join : String
+```
+
+**Returns**: `String`
+
+**Examples**
+
+```kex
+["hello", "world", "kex"].join(", ")   # => "hello, world, kex"
+["a", "b", "c"].join                   # => "abc"
 ```

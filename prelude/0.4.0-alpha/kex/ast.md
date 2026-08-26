@@ -17,9 +17,16 @@ Opt-in — nothing here is in scope until `using Kex.AST`.
 
 This is the entry point for tools that read Kex source: linters, formatters, documentation generators, code search. The AST includes module definitions, function signatures, type/record definitions, traits, make blocks, and the doc-comments extracted from `#` lines — which is how the standard library's own documentation is generated.
 
-  using Kex.AST
+```kex
+using Kex.AST
 
-  main do     match Kex.AST.parseFile("src/main.kex") do       Ok(program) => IO.printLine("${program.items.count} top-level items")       Error(e)    => IO.printError(e.message)     end   end
+main do
+  match Kex.AST.parseFile("src/main.kex") do
+    Ok(program) => IO.printLine("${program.items.count} top-level items")
+    Error(e)    => IO.printError(e.message)
+  end
+end
+```
 
 Everything answers a `Result`, so a source file that does not parse is a value you handle rather than an exception.
 

@@ -20,11 +20,22 @@ The built-in testing DSL: `describe`, `it`, `before`, `after`, and assertion hel
 
 Everything here is always in scope — no import, and no separate test runner. Write a test file and run it with `kex`:
 
-  describe "arithmetic" do     it "adds numbers" do       assert(1 ` 1 == 2)     end
+```kex
+describe "arithmetic" do
+  it "adds numbers" do
+    assert(1 ` 1 == 2)
+  end
 
-    it "multiplies numbers" do       Assert.equal(3 * 4, 12)     end   end
+  it "multiplies numbers" do
+    Assert.equal(3 * 4, 12)
+  end
+end
 
-  $ kex my_test.kex   arithmetic     ✓ adds numbers     ✓ multiplies numbers
+$ kex my_test.kex
+arithmetic
+  ✓ adds numbers
+  ✓ multiplies numbers
+```
 
 Output uses ✓ / ✗ markers and nests by `describe` depth. A failing `assert` marks its test failed and moves on; the rest of the suite still runs.
 
@@ -46,8 +57,6 @@ Defines a single test case, and runs it.
 
 The block runs, and anything thrown inside it — typically a failed `assert` — marks the test failed without aborting the rest of the suite. This is a foul function — it prints.
 
-  it "trims trailing whitespace" do     Assert.equal("hi  ".trim, "hi")   end
-
 
 ```kex
 it : String -> Block<Void> -> Void
@@ -59,8 +68,6 @@ it : String -> Block<Void> -> Void
 Registers setup to run before the current group's tests.
 
 `before { ... }` and `before(:each) { ... }` run before every test in the group; `before(:all) { ... }` runs once before the group's first test, following RSpec's scope convention.
-
-    it "reads two lines" do       Assert.equal(FS.File.readLines("input.txt").or([]).count, 2)     end   end
 
 
 ```kex
@@ -101,7 +108,11 @@ Focused assertions, each reporting what was expected and what arrived.
 
 These are ordinary Kex stdlib functions layered on the primitive `assert`, so adding another helper does not require compiler or runtime work.
 
-  Assert.equal("hi".upperCase, "HI")   Assert.some(users.first)   Assert.ok(Integer.parse("42"))
+```kex
+Assert.equal("hi".upperCase, "HI")
+Assert.some(users.first)
+Assert.ok(Integer.parse("42"))
+```
 
 ## function `equal`
 

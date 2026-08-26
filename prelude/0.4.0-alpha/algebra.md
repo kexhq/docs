@@ -25,11 +25,17 @@ Kex traits do not inherit from one another, so concrete types explicitly impleme
 
 Two things live here that you will meet in everyday code. `Ordering` is what a comparison answers, and it composes — which is how a multi-key sort is written without nested `if`s:
 
-  a.age.compare(b.age).thenBy { a.score.compare(b.score) }
+```kex
+a.age.compare(b.age).thenBy { a.score.compare(b.score) }
+```
 
 `Monoid` is "these two values combine, and there is a neutral one". Numbers, strings and lists all satisfy it, which is what lets `repeat` be written once:
 
-  "ab".repeat(3)   # => "ababab"   [1].repeat(2)    # => [1, 1]   5.repeat(3)      # => 15
+```kex
+"ab".repeat(3)   # => "ababab"
+[1].repeat(2)    # => [1, 1]
+5.repeat(3)      # => 15
+```
 
 The result of a comparison: `Less`, `Equal` or `Greater`.
 
@@ -56,6 +62,8 @@ Compares this value with `other` and answers `Less`, `Equal` or `Greater`.
 
 `==` stays independent of this — a type may be equatable without being ordered.
 
+A total order: `compare` answers Less, Equal or Greater. `==` stays independent — a type may be Equatable without being ordered.
+
 ```kex
 compare : This -> Ordering
 ```
@@ -65,16 +73,14 @@ compare : This -> Ordering
 **Examples**
 
 ```kex
-  1.compare(2)     # => Less
-  2.compare(2)     # => Equal
-  3.compare(2)     # => Greater
+1.compare(2)     # => Less
+2.compare(2)     # => Equal
+3.compare(2)     # => Greater
 ```
 _Sorting with an explicit comparison_
 
 ```kex
-  people.sort { |a, b| a.age.compare(b.age) == Less }
-A total order: `compare` answers Less, Equal or Greater. `==` stays
-independent — a type may be Equatable without being ordered.
+people.sort { |a, b| a.age.compare(b.age) == Less }
 ```
 
 ## make `Number` implements [Comparable](#trait-comparable)
@@ -97,9 +103,9 @@ compare(other)
 **Examples**
 
 ```kex
-  1.compare(2)      # => Less
-  1.compare(1.0)    # => Equal
-  2.5.compare(2)    # => Greater
+1.compare(2)      # => Less
+1.compare(1.0)    # => Equal
+2.5.compare(2)    # => Greater
 ```
 
 ## trait `Monoid`
@@ -113,6 +119,8 @@ Implemented by `Integer` (addition), `String` and `List` (concatenation), `Map` 
 
 The neutral element: combining it with any value gives that value back.
 
+`combine` must be associative and `identity` neutral on both sides.
+
 ```kex
 identity : This
 ```
@@ -122,9 +130,8 @@ identity : This
 **Examples**
 
 ```kex
-  Integer.identity   # => 0
-  String.identity    # => ""
-`combine` must be associative and `identity` neutral on both sides.
+Integer.identity   # => 0
+String.identity    # => ""
 ```
 
 #### `combine`
@@ -142,14 +149,14 @@ combine : This -> This
 **Examples**
 
 ```kex
-  5.combine(3)          # => 8
-  "ab".combine("cd")    # => "abcd"
-  [1].combine([2])      # => [1, 2]
+5.combine(3)          # => 8
+"ab".combine("cd")    # => "abcd"
+[1].combine([2])      # => [1, 2]
 ```
 _Folding a list of values into one_
 
 ```kex
-  parts.reduce(String.identity) { |acc, s| acc.combine(s) }
+parts.reduce(String.identity) { |acc, s| acc.combine(s) }
 ```
 
 #### `repeat`
@@ -167,15 +174,15 @@ repeat(n)
 **Examples**
 
 ```kex
-  "ab".repeat(3)   # => "ababab"
-  [1].repeat(2)    # => [1, 1]
-  5.repeat(3)      # => 15
-  "x".repeat(0)    # => ""
+"ab".repeat(3)   # => "ababab"
+[1].repeat(2)    # => [1, 1]
+5.repeat(3)      # => 15
+"x".repeat(0)    # => ""
 ```
 _Drawing a separator line_
 
 ```kex
-  IO.printLine("-".repeat(40))
+IO.printLine("-".repeat(40))
 ```
 
 ## trait `Group`
@@ -218,8 +225,8 @@ inverse : This
 **Examples**
 
 ```kex
-  5.inverse             # => -5
-  5.combine(5.inverse)  # => 0
+5.inverse             # => -5
+5.combine(5.inverse)  # => 0
 ```
 
 ## make `Integer` implements [Monoid](#trait-monoid), [Group](#trait-group)
@@ -238,7 +245,7 @@ combine(other)
 **Examples**
 
 ```kex
-  5.combine(3)   # => 8
+5.combine(3)   # => 8
 ```
 
 ## make `String` implements [Monoid](#trait-monoid)
@@ -257,7 +264,7 @@ combine(other)
 **Examples**
 
 ```kex
-  "ab".combine("cd")   # => "abcd"
+"ab".combine("cd")   # => "abcd"
 ```
 
 ## make `[A]` implements [Monoid](#trait-monoid)
@@ -276,19 +283,21 @@ combine(other)
 **Examples**
 
 ```kex
-  [1].combine([2, 3])   # => [1, 2, 3]
+[1].combine([2, 3])   # => [1, 2, 3]
 ```
 _Flattening a list of lists_
 
 ```kex
-  groups.reduce([]) { |acc, g| acc.combine(g) }
+groups.reduce([]) { |acc, g| acc.combine(g) }
 ```
 
 ## make `Ordering` implements [Monoid](#trait-monoid)
 
 `Ordering` is a Monoid under "first decision wins", with Equal as identity. That is what makes multi-key comparison compose instead of nesting ifs:
 
-  a.name.compare(b.name).combine(a.age.compare(b.age))
+```kex
+a.name.compare(b.name).combine(a.age.compare(b.age))
+```
 
 `combine` evaluates its argument eagerly, so the later comparison runs even when the earlier one already decided. Use `thenBy` when that matters.
 
@@ -308,13 +317,13 @@ combine(@Equal, other)
 **Examples**
 
 ```kex
-  Equal.combine(Less)     # => Less
-  Less.combine(Greater)   # => Less
+Equal.combine(Less)     # => Less
+Less.combine(Greater)   # => Less
 ```
 _Sorting by surname, then by first name_
 
 ```kex
-  a.last.compare(b.last).combine(a.first.compare(b.first))
+a.last.compare(b.last).combine(a.first.compare(b.first))
 ```
 
 #### `reverse`
@@ -332,14 +341,14 @@ reverse : Ordering
 **Examples**
 
 ```kex
-  Less.reverse      # => Greater
-  Greater.reverse   # => Less
-  Equal.reverse     # => Equal
+Less.reverse      # => Greater
+Greater.reverse   # => Less
+Equal.reverse     # => Equal
 ```
 _Sorting newest first_
 
 ```kex
-  a.created.compare(b.created).reverse
+a.created.compare(b.created).reverse
 ```
 
 #### `thenBy`
@@ -357,11 +366,11 @@ thenBy : Block<Ordering> -> Ordering
 **Examples**
 
 ```kex
-  Equal.thenBy { 2.compare(1) }   # => Greater
-  Less.thenBy { 2.compare(1) }    # => Less
+Equal.thenBy { 2.compare(1) }   # => Greater
+Less.thenBy { 2.compare(1) }    # => Less
 ```
 _Sorting by age, then by an expensive score_
 
 ```kex
-  a.age.compare(b.age).thenBy { score(a).compare(score(b)) }
+a.age.compare(b.age).thenBy { score(a).compare(score(b)) }
 ```

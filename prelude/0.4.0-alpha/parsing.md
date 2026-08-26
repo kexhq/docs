@@ -17,9 +17,17 @@ Opt-in — nothing here is in scope until `using Parsing`.
 
 An `Input` is an immutable cursor over a string. A parser takes one and answers either the value it read together with an advanced cursor, or a `ParseError` saying where it gave up. Because the cursor is immutable, a failed attempt costs nothing: the caller still holds the position it started from and can try something else.
 
-  using Parsing
+```kex
+using Parsing
 
-  main do     let cursor = Input { input: "abc 123" }     let word = cursor.takeWhile(~alpha?)     let (text, rest) = word     IO.printLine(text)              # prints: abc     IO.printLine(rest.pos)          # prints: 3   end
+main do
+  let cursor = Input { input: "abc 123" }
+  let word = cursor.takeWhile(~alpha?)
+  let (text, rest) = word
+  IO.printLine(text)              # prints: abc
+  IO.printLine(rest.pos)          # prints: 3
+end
+```
 
 The building blocks are `char` and `charWhen` for one character, `string` for a literal, `takeWhile` for a run, and `many` / `some` / `choice` for repetition and alternatives. `JSON` in this same stdlib is written with them.
 
@@ -29,7 +37,10 @@ Why a parser gave up, and at which position.
 
 `Expected` carries what the grammar WANTED rather than what it found — the difference between "unexpected `d`" and "expected `version(`". It is what `label` and `string` report.
 
-  Input { input: "abc" }.char('z')      # => Error(Unexpected("a", 0))   Input { input: "abc" }.string("abd")  # => Error(Expected("abd", 0))
+```kex
+Input { input: "abc" }.char('z')      # => Error(Unexpected("a", 0))
+Input { input: "abc" }.string("abd")  # => Error(Expected("abd", 0))
+```
 
 
 
@@ -68,8 +79,8 @@ peekAt(offset)
 **Examples**
 
 ```kex
-  Input { input: "abc" }.peekAt(1)   # => Just('b')
-  Input { input: "abc" }.peekAt(9)   # => None
+Input { input: "abc" }.peekAt(1)   # => Just('b')
+Input { input: "abc" }.peekAt(9)   # => None
 ```
 
 #### `advanceBy`
@@ -85,7 +96,7 @@ advanceBy(count)
 **Examples**
 
 ```kex
-  Input { input: "abc 123" }.advanceBy(4).peek   # => Just('1')
+Input { input: "abc 123" }.advanceBy(4).peek   # => Just('1')
 ```
 
 #### `charWhen`
@@ -103,13 +114,13 @@ charWhen(pred)
 **Examples**
 
 ```kex
-  Input { input: "abc" }.charWhen(~alpha?)   # => Ok(('a', cursor at 1))
-  Input { input: "123" }.charWhen(~alpha?)   # => Error(Unexpected("1", 0))
+Input { input: "abc" }.charWhen(~alpha?)   # => Ok(('a', cursor at 1))
+Input { input: "123" }.charWhen(~alpha?)   # => Error(Unexpected("1", 0))
 ```
 _Reading one digit_
 
 ```kex
-  cursor.charWhen(~digit?)
+cursor.charWhen(~digit?)
 ```
 
 #### `char`
@@ -125,13 +136,13 @@ char(expected)
 **Examples**
 
 ```kex
-  Input { input: "abc" }.char('a')   # => Ok(('a', cursor at 1))
-  Input { input: "abc" }.char('z')   # => Error(Unexpected("a", 0))
+Input { input: "abc" }.char('a')   # => Ok(('a', cursor at 1))
+Input { input: "abc" }.char('z')   # => Error(Unexpected("a", 0))
 ```
 _Consuming a separator_
 
 ```kex
-  let (_, afterComma) = cursor.char(',').try
+let (_, afterComma) = cursor.char(',').try
 ```
 
 #### `many`
@@ -149,14 +160,14 @@ many(f)
 **Examples**
 
 ```kex
-  Input { input: "abc 1" }.many { |p| p.charWhen(~alpha?) }
-  # => (['a', 'b', 'c'], cursor at 3)
+Input { input: "abc 1" }.many { |p| p.charWhen(~alpha?) }
+# => (['a', 'b', 'c'], cursor at 3)
 ```
 _Zero matches is not an error_
 
 ```kex
-  Input { input: "123" }.many { |p| p.charWhen(~alpha?) }
-  # => ([], cursor at 0)
+Input { input: "123" }.many { |p| p.charWhen(~alpha?) }
+# => ([], cursor at 0)
 ```
 
 #### `some`
@@ -174,10 +185,10 @@ some(f)
 **Examples**
 
 ```kex
-  Input { input: "abc" }.some { |p| p.charWhen(~alpha?) }
-  # => Ok((['a', 'b', 'c'], cursor at 3))
-  Input { input: "123" }.some { |p| p.charWhen(~alpha?) }
-  # => Error(Unexpected("1", 0))
+Input { input: "abc" }.some { |p| p.charWhen(~alpha?) }
+# => Ok((['a', 'b', 'c'], cursor at 3))
+Input { input: "123" }.some { |p| p.charWhen(~alpha?) }
+# => Error(Unexpected("1", 0))
 ```
 
 #### `string`
@@ -195,13 +206,13 @@ string(expected)
 **Examples**
 
 ```kex
-  Input { input: "abc" }.string("abc")   # => Ok(("abc", cursor at 3))
-  Input { input: "abc" }.string("abd")   # => Error(Expected("abd", 0))
+Input { input: "abc" }.string("abc")   # => Ok(("abc", cursor at 3))
+Input { input: "abc" }.string("abd")   # => Error(Expected("abd", 0))
 ```
 _Matching a keyword_
 
 ```kex
-  let (_, rest) = cursor.string("version(").try
+let (_, rest) = cursor.string("version(").try
 ```
 
 #### `takeWhile`
@@ -219,13 +230,13 @@ takeWhile(pred)
 **Examples**
 
 ```kex
-  Input { input: "abc 123" }.takeWhile(~alpha?)   # => ("abc", cursor at 3)
-  Input { input: "123" }.takeWhile(~alpha?)       # => ("", cursor at 0)
+Input { input: "abc 123" }.takeWhile(~alpha?)   # => ("abc", cursor at 3)
+Input { input: "123" }.takeWhile(~alpha?)       # => ("", cursor at 0)
 ```
 _Reading an identifier_
 
 ```kex
-  let name = cursor.takeWhile { |c| c.alpha? || c == '_' }
+let name = cursor.takeWhile { |c| c.alpha? || c == '_' }
 ```
 
 #### `choice`
@@ -243,8 +254,8 @@ choice(alts)
 **Examples**
 
 ```kex
-  cursor.choice([
-    { |p| p.charWhen(~digit?) },
-    { |p| p.charWhen(~alpha?) }
-  ])
+cursor.choice([
+  { |p| p.charWhen(~digit?) },
+  { |p| p.charWhen(~alpha?) }
+])
 ```

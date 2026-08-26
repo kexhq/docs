@@ -25,11 +25,21 @@ An optional value: `Just(x)` carries a value, `None` says there is none.
 
 `X?` is shorthand for `Optional<X>`, and is the spelling you will normally write. Kex has no `null` — anything that might not produce a value returns an `Optional` instead, so the compiler makes you say what happens when it is empty. Most of the time that is a single `.or(default)` at the end of a chain.
 
-  let names = ["ada", "grace"]   names.first.or("nobody")        # => "ada"   names.at(9).or("nobody")        # => "nobody"   names.first.map(~upperCase)        # => Just("ADA")
+```kex
+let names = ["ada", "grace"]
+names.first.or("nobody")        # => "ada"
+names.at(9).or("nobody")        # => "nobody"
+names.first.map(~upperCase)        # => Just("ADA")
+```
 
 Pattern matching handles the cases that need more than a default:
 
-  match config.get("port") do     Just(port) => IO.printLine("listening on ${port}")     None       => IO.printLine("no port configured")   end
+```kex
+match config.get("port") do
+  Just(port) => IO.printLine("listening on ${port}")
+  None       => IO.printLine("no port configured")
+end
+```
 
 
 
@@ -44,9 +54,15 @@ The outcome of an operation that can fail: `Ok(x)` on success, `Error(e)` on fai
 
 Use `Result` over `Optional` when the *reason* for failure matters to the caller. Parsing is the standard example: `"12x".to(Integer)` answers `None`, while `Integer.parse("12x")` answers an `Error` that says where it stopped.
 
-  Integer.parse("42").or(0)     # => 42   Integer.parse("4x").or(0)     # => 0
+```kex
+Integer.parse("42").or(0)     # => 42
+Integer.parse("4x").or(0)     # => 0
 
-  match Integer.parse(input) do     Ok(n)    => IO.printLine("got ${n}")     Error(e) => IO.printError("bad number: ${e}")   end
+match Integer.parse(input) do
+  Ok(n)    => IO.printLine("got ${n}")
+  Error(e) => IO.printError("bad number: ${e}")
+end
+```
 
 
 
@@ -61,9 +77,16 @@ One of two values, of possibly different types: `Left(l)` or `Right(r)`.
 
 Unlike `Result`, neither side means failure — `Either` is for a value that is legitimately one of two shapes.
 
-  type Id = Either<Integer, String>
+```kex
+type Id = Either<Integer, String>
 
-  let describe(id: Id) -> String do     match id do       Left(n)  => "numeric id ${n}"       Right(s) => "slug id ${s}"     end   end
+let describe(id: Id) -> String do
+  match id do
+    Left(n)  => "numeric id ${n}"
+    Right(s) => "slug id ${s}"
+  end
+end
+```
 
 
 
@@ -106,16 +129,16 @@ set? : Bool
 **Examples**
 
 ```kex
-  Just(42).set?   # => true
-  None.set?       # => false
+Just(42).set?   # => true
+None.set?       # => false
 ```
 _Guarding on presence_
 
 ```kex
-  let cached = lookup(key)
-  if cached.set?
-    IO.printLine("hit")
-  end
+let cached = lookup(key)
+if cached.set?
+  IO.printLine("hit")
+end
 ```
 
 #### `none?`
@@ -131,15 +154,15 @@ none? : Bool
 **Examples**
 
 ```kex
-  None.none?       # => true
-  Just(42).none?   # => false
+None.none?       # => true
+Just(42).none?   # => false
 ```
 _Reporting a missing entry_
 
 ```kex
-  if config.get("host").none?
-    IO.printError("host is required")
-  end
+if config.get("host").none?
+  IO.printError("host is required")
+end
 ```
 
 #### `or`
@@ -157,15 +180,15 @@ or : X -> X
 **Examples**
 
 ```kex
-  Just(42).or(0)   # => 42
-  None.or(0)       # => 0
+Just(42).or(0)   # => 42
+None.or(0)       # => 0
 ```
 _Closing a chain of lookups_
 
 ```kex
-  ["a", "b"].first.or("?")            # => "a"
-  [].first.or("?")                    # => "?"
-  "hello".indexOf('z').or(-1)         # => -1
+["a", "b"].first.or("?")            # => "a"
+[].first.or("?")                    # => "?"
+"hello".indexOf('z').or(-1)         # => -1
 ```
 
 #### `map`
@@ -181,14 +204,14 @@ map : (X -> Y) -> Y?
 **Examples**
 
 ```kex
-  Just(2).map { |x| x * 3 }   # => Just(6)
-  None.map { |x| x * 3 }      # => None
+Just(2).map { |x| x * 3 }   # => Just(6)
+None.map { |x| x * 3 }      # => None
 ```
 _Transforming before supplying a default_
 
 ```kex
-  ["ada"].first.map(~upperCase).or("ANON")   # => "ADA"
-  [].first.map(~upperCase).or("ANON")        # => "ANON"
+["ada"].first.map(~upperCase).or("ANON")   # => "ADA"
+[].first.map(~upperCase).or("ANON")        # => "ANON"
 ```
 
 #### `flatMap`
@@ -206,17 +229,17 @@ flatMap : (X -> Y?) -> Y?
 **Examples**
 
 ```kex
-  Just(4).flatMap { |x| x > 0 then Just(x * 2) else None }   # => Just(8)
-  Just(-4).flatMap { |x| x > 0 then Just(x * 2) else None }  # => None
-  None.flatMap { |x| Just(x * 2) }                           # => None
+Just(4).flatMap { |x| x > 0 then Just(x * 2) else None }   # => Just(8)
+Just(-4).flatMap { |x| x > 0 then Just(x * 2) else None }  # => None
+None.flatMap { |x| Just(x * 2) }                           # => None
 ```
 _Chaining lookups that may each come up empty_
 
 ```kex
-  users.get(id)
-    .flatMap { |user| user.address }
-    .flatMap { |address| address.postcode }
-    .or("unknown")
+users.get(id)
+  .flatMap { |user| user.address }
+  .flatMap { |address| address.postcode }
+  .or("unknown")
 ```
 
 ## make `Result<X, E>` implements [Resultable](#trait-resultable)
@@ -235,13 +258,13 @@ ok? : Bool
 **Examples**
 
 ```kex
-  Ok(42).ok?         # => true
-  Error("!").ok?     # => false
+Ok(42).ok?         # => true
+Error("!").ok?     # => false
 ```
 _Counting successes_
 
 ```kex
-  inputs.map(~Integer.parse).count(~ok?)
+inputs.map(~Integer.parse).count(~ok?)
 ```
 
 #### `error?`
@@ -257,8 +280,8 @@ error? : Bool
 **Examples**
 
 ```kex
-  Error("oops").error?   # => true
-  Ok(42).error?          # => false
+Error("oops").error?   # => true
+Ok(42).error?          # => false
 ```
 
 #### `or`
@@ -276,13 +299,13 @@ or : X -> X
 **Examples**
 
 ```kex
-  Ok(42).or(0)       # => 42
-  Error("!").or(0)   # => 0
+Ok(42).or(0)       # => 42
+Error("!").or(0)   # => 0
 ```
 _Parsing with a fallback_
 
 ```kex
-  Integer.parse(input).or(8080)
+Integer.parse(input).or(8080)
 ```
 
 #### `map`
@@ -298,13 +321,13 @@ map : (X -> Y) -> Result<Y, E>
 **Examples**
 
 ```kex
-  Ok(2).map { |x| x * 3 }        # => Ok(6)
-  Error("oops").map { |x| x }    # => Error("oops")
+Ok(2).map { |x| x * 3 }        # => Ok(6)
+Error("oops").map { |x| x }    # => Error("oops")
 ```
 _Converting a parsed value_
 
 ```kex
-  Integer.parse("21").map { |n| n * 2 }   # => Ok(42)
+Integer.parse("21").map { |n| n * 2 }   # => Ok(42)
 ```
 
 #### `flatMap`
@@ -322,15 +345,15 @@ flatMap : (X -> Result<Y, E>) -> Result<Y, E>
 **Examples**
 
 ```kex
-  Ok(4).flatMap { |x| x > 0 then Ok(x * 2) else Error("neg") }    # => Ok(8)
-  Ok(-4).flatMap { |x| x > 0 then Ok(x * 2) else Error("neg") }   # => Error("neg")
+Ok(4).flatMap { |x| x > 0 then Ok(x * 2) else Error("neg") }    # => Ok(8)
+Ok(-4).flatMap { |x| x > 0 then Ok(x * 2) else Error("neg") }   # => Error("neg")
 ```
 _A pipeline where each stage may fail_
 
 ```kex
-  Integer.parse(raw)
-    .flatMap { |n| n > 0 then Ok(n) else Error("must be positive") }
-    .flatMap { |n| n < 65536 then Ok(n) else Error("out of range") }
+Integer.parse(raw)
+  .flatMap { |n| n > 0 then Ok(n) else Error("must be positive") }
+  .flatMap { |n| n < 65536 then Ok(n) else Error("out of range") }
 ```
 
 #### `optional`
@@ -348,16 +371,16 @@ optional : X?
 **Examples**
 
 ```kex
-  Ok(42).optional          # => Just(42)
-  Error("oops").optional   # => None
+Ok(42).optional          # => Just(42)
+Error("oops").optional   # => None
 ```
 _Keeping only the values that parsed_
 
 ```kex
-  ["1", "x", "3"]
-    .map { |s| Integer.parse(s).optional }
-    .filter(~set?)
-    .map { |o| o.or(0) }    # => [1, 3]
+["1", "x", "3"]
+  .map { |s| Integer.parse(s).optional }
+  .filter(~set?)
+  .map { |o| o.or(0) }    # => [1, 3]
 ```
 
 ## function `or`

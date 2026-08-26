@@ -15,13 +15,22 @@ The process environment, as an immutable `Map<String, String>` snapshot taken at
 
 `ENV` supports the whole `Map` API — `get`, `has?`, `keys`, `values`, `count`, `each`, `entries` — so reading a variable looks like any other map lookup:
 
-  ENV.get("HOME")                  # => Just("/home/ada")   ENV.get("LOG_LEVEL", "info")     # => "info" when unset   ENV.has?("PATH")                 # => true
+```kex
+ENV.get("HOME")                  # => Just("/home/ada")
+ENV.get("LOG_LEVEL", "info")     # => "info" when unset
+ENV.has?("PATH")                 # => true
+```
 
 The snapshot itself is immutable, but the global `ENV` namespace is an ambient input: the same call can answer differently between runs without anything appearing in a function's arguments. That is why reading it is `foul`.
 
 When you would rather the dependency be visible, take it as a parameter — `main` receives the same snapshot as its second argument, and reading a parameter is pure:
 
-  main(args, env) do     let level = env.get("LOG_LEVEL", "info")     IO.printLine("log level: ${level}")   end
+```kex
+main(args, env) do
+  let level = env.get("LOG_LEVEL", "info")
+  IO.printLine("log level: ${level}")
+end
+```
 
 ## function `get`
 
@@ -45,22 +54,34 @@ has?(key)
 ```
 
 
-## constant `keys`
+## function `keys`
 
 Returns every variable name in the environment.
 
 
+```kex
+keys()
+```
 
-## constant `values`
+
+## function `values`
 
 Returns every variable value in the environment.
 
 
+```kex
+values()
+```
 
-## constant `count`
+
+## function `count`
 
 Returns how many variables the environment has.
 
+
+```kex
+count()
+```
 
 
 ## function `each`
@@ -73,12 +94,16 @@ each(f)
 ```
 
 
-## constant `entries`
+## function `entries`
 
 Returns the environment as a list of `(name, value)` pairs.
 
 The bridge to the `List` operations — sorting, grouping, taking a slice.
 
+
+```kex
+entries()
+```
 
 
 ## function `set`
@@ -88,6 +113,8 @@ Sets an environment variable for this process and every child it starts.
 `ENV` is a snapshot, and the write rebuilds it — a later `ENV.get` answers what was set, not what the process started with.
 
 This is how a program decides what a child sees. `Kex.AST`, for instance, shells out to the compiler named by `$KEX`, so a tool that knows which compiler it means says so here rather than hoping `PATH` agrees.
+
+Sets a variable for THIS process and every child it starts. `ENV` is a snapshot, so it is rebuilt by the write — a later `ENV.get` answers what was set, not what the process started with.
 
 This is how a program decides what a child sees: `Kex.AST` shells out to the compiler named by `$KEX`, so a tool that knows which compiler it means says so here rather than hoping PATH agrees.
 

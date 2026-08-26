@@ -28,7 +28,12 @@ Numbers that carry a unit.
 
 Writing `5.sec` or `90.minute` gives you a `Measure`: a number, the unit it was written in, and the same quantity in that dimension's base unit. Adding, subtracting and converting all go through the canonical value, so the arithmetic is right regardless of which units the operands were written in — and mixing dimensions is an `Error` rather than a silently wrong number.
 
-  5.sec.to(String)                     # => "5.0 s"   1.5.hour.to(String)                  # => "1.5 h"   (1.hour ` 30.minute).map(~to(String))  # => Ok("1.5 h")   90.minute.convert(Hour)              # => Ok(1.5 h)
+```kex
+5.sec.to(String)                     # => "5.0 s"
+1.5.hour.to(String)                  # => "1.5 h"
+(1.hour ` 30.minute).map(~to(String))  # => Ok("1.5 h")
+90.minute.convert(Hour)              # => Ok(1.5 h)
+```
 
 The time units — `nanosecond` through `week` — are in the prelude. Other dimensions live in opt-in modules under `Units`, and every one of them measures against the same machinery here.
 
@@ -50,7 +55,7 @@ factor : Float
 **Examples**
 
 ```kex
-  Minute.factor   # => 60.0
+Minute.factor   # => 60.0
 ```
 
 #### `kind`
@@ -66,7 +71,7 @@ kind : Atom
 **Examples**
 
 ```kex
-  Second.kind   # => :time
+Second.kind   # => :time
 ```
 
 #### `symbol`
@@ -82,7 +87,7 @@ symbol : String
 **Examples**
 
 ```kex
-  Minute.symbol   # => "min"
+Minute.symbol   # => "min"
 ```
 
 ## function `measureKind`
@@ -235,8 +240,8 @@ scale(multiplier)
 **Examples**
 
 ```kex
-  2.sec.scale(3).to(String)     # => "6.0 s"
-  1.hour.scale(0.5).to(String)  # => "0.5 h"
+2.sec.scale(3).to(String)     # => "6.0 s"
+1.hour.scale(0.5).to(String)  # => "0.5 h"
 ```
 
 #### `^`
@@ -254,7 +259,7 @@ Raising a measure preserves its display unit while applying the power to its can
 **Examples**
 
 ```kex
-  (2.sec ^ 2).to(String)   # => "4.0 s^2"
+(2.sec ^ 2).to(String)   # => "4.0 s^2"
 ```
 
 #### `convertTo`
@@ -274,8 +279,8 @@ convertTo(unit)
 **Examples**
 
 ```kex
-  1.day.convertTo(Hour).map { |m| m.to(String) }     # => Ok("24.0 h")
-  90.minute.convertTo(Hour).map { |m| m.to(String) } # => Ok("1.5 h")
+1.day.convertTo(Hour).map { |m| m.to(String) }     # => Ok("24.0 h")
+90.minute.convertTo(Hour).map { |m| m.to(String) } # => Ok("1.5 h")
 ```
 
 #### `convert`
@@ -291,7 +296,7 @@ convert(unit)
 **Examples**
 
 ```kex
-  90.minute.convert(Hour).map { |m| m.to(String) }   # => Ok("1.5 h")
+90.minute.convert(Hour).map { |m| m.to(String) }   # => Ok("1.5 h")
 ```
 
 #### `+`
@@ -309,8 +314,8 @@ The units need not match — the sum goes through the canonical values, and come
 **Examples**
 
 ```kex
-  (1.hour ` 30.minute).map { |m| m.to(String) }   # => Ok("1.5 h")
-  (30.minute ` 1.hour).map { |m| m.to(String) }   # => Ok("90.0 min")
+(1.hour ` 30.minute).map { |m| m.to(String) }   # => Ok("1.5 h")
+(30.minute ` 1.hour).map { |m| m.to(String) }   # => Ok("90.0 min")
 ```
 
 #### `-`
@@ -328,7 +333,7 @@ Like ```, the result is displayed in the left operand's unit, and mixing dimensi
 **Examples**
 
 ```kex
-  (1.hour - 30.minute).map { |m| m.to(String) }   # => Ok("0.5 h")
+(1.hour - 30.minute).map { |m| m.to(String) }   # => Ok("0.5 h")
 ```
 
 ## module `Units`

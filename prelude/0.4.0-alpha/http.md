@@ -19,7 +19,14 @@ HTTP client requests.
 
 One function per method — `get`, `post`, `put`, `patch`, `delete`, `head`, `options` — each answering a `Result`, so a network failure is a value you handle rather than an exception.
 
-  main do     match Http.get("https://example.com/api/status") do       Ok(response) => IO.printLine("${response.status}: ${response.body}")       Error(e)     => IO.printError("request failed: ${e.message}")     end   end
+```kex
+main do
+  match Http.get("https://example.com/api/status") do
+    Ok(response) => IO.printLine("${response.status}: ${response.body}")
+    Error(e)     => IO.printError("request failed: ${e.message}")
+  end
+end
+```
 
 An HTTP error status is NOT an `Error`: a 404 is a response the server chose to send, so it arrives as `Ok` with `status: 404`. `Error` means the request never got an answer — refused, timed out, DNS failed.
 
@@ -64,7 +71,12 @@ Why a request could not be completed.
 
 Per-request settings: headers to send, and how long to wait.
 
-  Http.get(url, HttpOptions {     headers: { "Authorization": "Bearer ${token}" },     timeout: 5000   })
+```kex
+Http.get(url, HttpOptions {
+  headers: { "Authorization": "Bearer ${token}" },
+  timeout: 5000
+})
+```
 
 **Fields**
 

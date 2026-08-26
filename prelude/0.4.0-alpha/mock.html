@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mock | Prelude 0.4.0-alpha | kex docs</title>
+<title>Mock | Standard Library 0.4.0-alpha | kex docs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -22,12 +22,12 @@ data-root="../../" data-package="prelude" data-version="0.4.0-alpha"
 data-page="mock.html">
 <span>Search</span><kbd>/</kbd>
 </button>
-<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="mock.html">Prelude 0.4.0-alpha</span>
+<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="mock.html">Standard Library 0.4.0-alpha</span>
 <a class="back" href="https://kex.run/docs">kex.run ↗</a>
 </div>
 </header>
 <div class="wrap layout">
-<aside class="side"><nav aria-label="Modules"><p class="side-heading">Prelude</p><ul class="side-list">
+<aside class="side"><nav aria-label="Modules"><p class="side-heading"><a href="index.html">Standard Library</a></p><ul class="side-list">
 <li><a href="algebra.html">Algebra</a></li>
 <li><a href="bits.html">Bits</a></li>
 <li><a href="blankable.html">Blankable</a></li>
@@ -37,7 +37,7 @@ data-page="mock.html">
 <li><a href="env.html">ENV</a></li>
 <li><a href="errorable.html">Errorable</a></li>
 <li><a href="evaluator.html">Evaluator</a></li>
-<li><a href="filehandle.html">Filehandle</a></li>
+<li><a href="filehandle.html">FileHandle</a></li>
 <li><a href="fs.html">FS</a></li>
 <li><a href="http.html">Http</a></li>
 <li><a href="io.html">IO</a></li>
@@ -76,7 +76,7 @@ data-page="mock.html">
 <li><a href="units/si.html">Units.SI</a></li>
 </ul></nav></aside>
 <main class="content">
-<nav class="crumbs"><a href="index.html">Prelude</a> <span class="sep">/</span> <span>Mock</span></nav>
+<nav class="crumbs"><a href="index.html">Standard Library</a> <span class="sep">/</span> <span>Mock</span></nav>
 <article class="prose">
 <h1>Mock</h1>
 <section class="entity" id="type-reader">
@@ -112,7 +112,9 @@ data-page="mock.html">
 <section class="entity" id="record-files">
 <h2><span class="kind kind-record">record</span> <code>Files</code></h2>
 <p>A stand-in for the <code>FS.File</code> capability, for <code>with FS.File = ...</code>. Unlike the <code>Mock.*</code> functions below it holds no global state, needs no <code>clear()</code>, and cannot leak past its block. What it cannot do is change: <code>write</code> then <code>read</code> back is not something a value does, so a test needing that round trip still wants <code>Mock.FS</code> (kexhq/kex#143).</p>
-<p>  with FS.File = Mock.Files { files: {&quot;kex.toml&quot;: &quot;name = \&quot;demo\&quot;&quot;} } do     assert(loadConfig() == &quot;demo&quot;)   end</p>
+<pre class="code"><code><span class="tok-keyword">with</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span> <span class="tok-op">=</span> <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Files</span> <span class="tok-punct">{</span> files<span class="tok-op">:</span> <span class="tok-punct">{</span><span class="tok-string">&quot;</span><span class="tok-string">kex.toml</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">name = \&quot;demo\&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">}</span> <span class="tok-punct">}</span> <span class="tok-keyword">do</span>
+  <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-fn">loadConfig</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">demo</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 <p><code>onRead</code> takes over when a test needs an ANSWER rather than a fixture — content derived from the path, a failure on the third call, a record of what was asked for. It is consulted first and its <code>None</code> means &quot;no such file&quot;, so a callback can model absence too.</p>
 <h3>Fields</h3>
 <dl class="fields">
@@ -123,7 +125,9 @@ data-page="mock.html">
 <section class="entity" id="record-env">
 <h2><span class="kind kind-record">record</span> <code>Env</code></h2>
 <p>A stand-in for the <code>ENV</code> capability. A name simply left out of <code>vars</code> reads as unset, which is the whole reason <code>Mock.ENV.unset</code> exists — absence is an answer programs act on. <code>onGet</code> answers instead of the map when a test wants a rule rather than a fixture.</p>
-<p>  with ENV = Mock.Env { vars: {&quot;HOME&quot;: &quot;/fake&quot;} } do     assert(configHome() == &quot;/fake/.config&quot;)   end</p>
+<pre class="code"><code><span class="tok-keyword">with</span> <span class="tok-type">ENV</span> <span class="tok-op">=</span> <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Env</span> <span class="tok-punct">{</span> vars<span class="tok-op">:</span> <span class="tok-punct">{</span><span class="tok-string">&quot;</span><span class="tok-string">HOME</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">/fake</span><span class="tok-string">&quot;</span><span class="tok-punct">}</span> <span class="tok-punct">}</span> <span class="tok-keyword">do</span>
+  <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-fn">configHome</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">/fake/.config</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>vars</code></dt><dd><code>Map&lt;String, String&gt;</code> <span class="opt">optional</span></dd></div>
@@ -146,9 +150,19 @@ data-page="mock.html">
 <h2><span class="kind kind-module">module</span> <code>Mock.FS</code></h2>
 <p>A stateful stand-in for the filesystem: files a test declares, that the real <code>FS.File</code> then reads back.</p>
 <p>The store is global and lives until <code>clear</code>, which is what makes a write followed by a read testable — and what makes two tests able to interfere. Clear it in an <code>after</code> hook.</p>
-<p>  describe &quot;the config loader&quot; do     before do       Mock.FS.files({ &quot;app.conf&quot;: &quot;port = 8080\n&quot; })     end</p>
-<p>    after do       Mock.FS.clear()     end</p>
-<p>    it &quot;reads the port&quot; do       Assert.equal(loadPort(), 8080)     end   end</p>
+<pre class="code"><code>describe <span class="tok-string">&quot;</span><span class="tok-string">the config loader</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+  before <span class="tok-keyword">do</span>
+    <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">files</span><span class="tok-punct">(</span><span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">app.conf</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">port = 8080\n</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+
+  after <span class="tok-keyword">do</span>
+    <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+
+  it <span class="tok-string">&quot;</span><span class="tok-string">reads the port</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+    <span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-fn">loadPort</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">8080</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span></code></pre>
 <section class="entity" id="function-file">
 <h2><span class="kind kind-function">function</span> <code>File</code></h2>
 <p>Declares one file and its content.</p>
@@ -160,7 +174,7 @@ data-page="mock.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.conf</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">port = 8080\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.conf</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">port = 8080\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-directory">
@@ -173,7 +187,7 @@ data-page="mock.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-clear">
@@ -183,9 +197,9 @@ data-page="mock.html">
 <pre class="code"><code><span class="tok-fn">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
-<pre class="code"><code>  after <span class="tok-keyword">do</span>
-    <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
-  <span class="tok-keyword">end</span></code></pre>
+<pre class="code"><code>after <span class="tok-keyword">do</span>
+  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 
 </section>
 <section class="entity" id="function-files">
@@ -199,10 +213,10 @@ data-page="mock.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">files</span><span class="tok-punct">(</span><span class="tok-punct">{</span>
-    <span class="tok-string">&quot;</span><span class="tok-string">app.conf</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">port = 8080\n</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span>
-    <span class="tok-string">&quot;</span><span class="tok-string">hosts</span><span class="tok-string">&quot;</span><span class="tok-op">:</span>    <span class="tok-string">&quot;</span><span class="tok-string">localhost\n</span><span class="tok-string">&quot;</span>
-  <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">files</span><span class="tok-punct">(</span><span class="tok-punct">{</span>
+  <span class="tok-string">&quot;</span><span class="tok-string">app.conf</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">port = 8080\n</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span>
+  <span class="tok-string">&quot;</span><span class="tok-string">hosts</span><span class="tok-string">&quot;</span><span class="tok-op">:</span>    <span class="tok-string">&quot;</span><span class="tok-string">localhost\n</span><span class="tok-string">&quot;</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-onread">
@@ -217,9 +231,9 @@ data-page="mock.html">
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
 <p class="caption"><em>Every .txt path has content, nothing else exists</em></p>
-<pre class="code"><code>  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">onRead</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>path<span class="tok-op">|</span>
-    path<span class="tok-op">.</span><span class="tok-method">endsWith?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">then</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">stub</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">else</span> <span class="tok-bool">None</span>
-  <span class="tok-keyword">end</span></code></pre>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">onRead</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>path<span class="tok-op">|</span>
+  path<span class="tok-op">.</span><span class="tok-method">endsWith?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">then</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">stub</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">else</span> <span class="tok-bool">None</span>
+<span class="tok-keyword">end</span></code></pre>
 
 </section>
 </section>
@@ -227,16 +241,19 @@ data-page="mock.html">
 <h2><span class="kind kind-module">module</span> <code>Mock.Http</code></h2>
 <p>A stateful stand-in for the network: responses a test queues, that the real <code>Http</code> then hands back.</p>
 <p>Responses are consumed in FIFO order — the first <code>respond</code> answers the first request. When the queue runs out, the next request answers <code>Error(HttpError)</code> with kind <code>MockEmpty</code>, so a test that made more calls than it expected fails rather than reaching the network.</p>
-<p>  Mock.Http.start()   Mock.Http.respond(200, &quot;{\&quot;ok\&quot;: true}&quot;)   assert(fetchStatus() == &quot;ok&quot;)   Mock.Http.stop()</p>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">respond</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">{\&quot;ok\&quot;: true}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-fn">fetchStatus</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">ok</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
 <section class="entity" id="function-start">
 <h2><span class="kind kind-function">function</span> <code>start</code></h2>
 <p>Starts intercepting HTTP requests. Call it before queueing responses.</p>
 <pre class="code"><code><span class="tok-fn">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
-<pre class="code"><code>  before <span class="tok-keyword">do</span>
-    <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
-  <span class="tok-keyword">end</span></code></pre>
+<pre class="code"><code>before <span class="tok-keyword">do</span>
+  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 
 </section>
 <section class="entity" id="function-respond">
@@ -253,10 +270,10 @@ data-page="mock.html">
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
 <p class="caption"><em>Two requests, two queued answers</em></p>
-<pre class="code"><code>  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">respond</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">first</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">respond</span><span class="tok-punct">(</span><span class="tok-number">404</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">not found</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">respond</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">first</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">respond</span><span class="tok-punct">(</span><span class="tok-number">404</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">not found</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 <p class="caption"><em>With headers</em></p>
-<pre class="code"><code>  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">respond</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">{}</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">respond</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">{}</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-stop">
@@ -265,9 +282,9 @@ data-page="mock.html">
 <pre class="code"><code><span class="tok-fn">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
-<pre class="code"><code>  after <span class="tok-keyword">do</span>
-    <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
-  <span class="tok-keyword">end</span></code></pre>
+<pre class="code"><code>after <span class="tok-keyword">do</span>
+  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 
 </section>
 </section>
@@ -275,7 +292,9 @@ data-page="mock.html">
 <h2><span class="kind kind-module">module</span> <code>Mock.ENV</code></h2>
 <p>Overlays the process environment, so a test can say what <code>ENV</code> holds instead of depending on how it was launched.</p>
 <p>The overlay is global and lives until <code>clear</code> — clear it in an <code>after</code> hook.</p>
-<p>  Mock.ENV.vars({ &quot;HOME&quot;: &quot;/fake&quot;, &quot;LOG_LEVEL&quot;: &quot;debug&quot; })   assert(configPath() == &quot;/fake/.config&quot;)   Mock.ENV.clear()</p>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">vars</span><span class="tok-punct">(</span><span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">HOME</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">/fake</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">LOG_LEVEL</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">debug</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-fn">configPath</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">/fake/.config</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
 <section class="entity" id="function-set">
 <h2><span class="kind kind-function">function</span> <code>set</code></h2>
 <p>Sets one variable in the overlay.</p>
@@ -287,7 +306,7 @@ data-page="mock.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">set</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">LOG_LEVEL</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">debug</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">set</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">LOG_LEVEL</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">debug</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-unset">
@@ -302,8 +321,8 @@ data-page="mock.html">
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
 <p class="caption"><em>Testing the unset path</em></p>
-<pre class="code"><code>  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">unset</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">HOME</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-  <span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-fn">configPath</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">.</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">unset</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">HOME</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-fn">configPath</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">.</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-clear">
@@ -312,9 +331,9 @@ data-page="mock.html">
 <pre class="code"><code><span class="tok-fn">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
-<pre class="code"><code>  after <span class="tok-keyword">do</span>
-    <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
-  <span class="tok-keyword">end</span></code></pre>
+<pre class="code"><code>after <span class="tok-keyword">do</span>
+  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 
 </section>
 <section class="entity" id="function-vars">
@@ -328,7 +347,7 @@ data-page="mock.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">vars</span><span class="tok-punct">(</span><span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">HOME</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">/fake</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">LOG_LEVEL</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">debug</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">vars</span><span class="tok-punct">(</span><span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">HOME</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">/fake</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">LOG_LEVEL</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">debug</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 </section>
@@ -336,16 +355,20 @@ data-page="mock.html">
 <h2><span class="kind kind-module">module</span> <code>Mock.IO</code></h2>
 <p>A stateful stand-in for the console: captures what a program prints, and feeds it lines as if they had been typed.</p>
 <p>The way to test a program that talks to a person without one being there.</p>
-<p>  Mock.IO.start()   Mock.IO.input(&quot;Ada&quot;, &quot;42&quot;)   greet()   Assert.equal(Mock.IO.output(), &quot;hello, Ada\n&quot;)   Mock.IO.stop()</p>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">input</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Ada</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">42</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-fn">greet</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">output</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">hello, Ada\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
 <section class="entity" id="function-start">
 <h2><span class="kind kind-function">function</span> <code>start</code></h2>
 <p>Starts capturing output and serving queued input.</p>
 <pre class="code"><code><span class="tok-fn">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
-<pre class="code"><code>  before <span class="tok-keyword">do</span>
-    <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
-  <span class="tok-keyword">end</span></code></pre>
+<pre class="code"><code>before <span class="tok-keyword">do</span>
+  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 
 </section>
 <section class="entity" id="function-stop">
@@ -354,9 +377,9 @@ data-page="mock.html">
 <pre class="code"><code><span class="tok-fn">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
-<pre class="code"><code>  after <span class="tok-keyword">do</span>
-    <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
-  <span class="tok-keyword">end</span></code></pre>
+<pre class="code"><code>after <span class="tok-keyword">do</span>
+  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 
 </section>
 <section class="entity" id="function-output">
@@ -366,9 +389,9 @@ data-page="mock.html">
 <pre class="code"><code><span class="tok-fn">output</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>String</code> — the captured output</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
-  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-  <span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">output</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">hello\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">output</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">hello\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-clear">
@@ -378,10 +401,10 @@ data-page="mock.html">
 <pre class="code"><code><span class="tok-fn">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-fn">setUpNoisily</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
-  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
-  <span class="tok-fn">theThingUnderTest</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
-  <span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">output</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">done\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-fn">setUpNoisily</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-fn">theThingUnderTest</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">output</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">done\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-input">
@@ -396,9 +419,9 @@ data-page="mock.html">
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 <h5>Examples</h5>
 <p class="caption"><em>A list of lines</em></p>
-<pre class="code"><code>  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">input</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">Ada</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">42</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">input</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">Ada</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">42</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
 <p class="caption"><em>The same, as separate arguments</em></p>
-<pre class="code"><code>  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">input</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Ada</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">42</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">input</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Ada</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">42</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 </section>
@@ -505,9 +528,29 @@ data-page="mock.html">
 <pre class="code"><code><span class="tok-fn">has?</span><span class="tok-punct">(</span>key<span class="tok-punct">)</span></code></pre>
 
 </div>
+<div class="fn" id="fn-keys">
+<h4><code>keys</code></h4>
+<pre class="code"><code><span class="tok-fn">keys</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-values">
+<h4><code>values</code></h4>
+<pre class="code"><code><span class="tok-fn">values</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-count">
+<h4><code>count</code></h4>
+<pre class="code"><code><span class="tok-fn">count</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
+
+</div>
 <div class="fn" id="fn-each">
 <h4><code>each</code></h4>
 <pre class="code"><code><span class="tok-fn">each</span><span class="tok-punct">(</span>f<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-entries">
+<h4><code>entries</code></h4>
+<pre class="code"><code><span class="tok-fn">entries</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-set">
@@ -569,7 +612,7 @@ data-page="mock.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-26T20:27:51.720473998Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-26T22:47:19.793944540Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

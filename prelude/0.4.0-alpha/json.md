@@ -15,7 +15,10 @@ entities:
 
 Why a document could not be parsed. Every variant carries the position in the input where the parser stopped, so a caller can point at the problem.
 
-  JSON.parse("[1, 2")    # => Error(UnexpectedEnd(5))   JSON.parse("// c\n1")  # => Error(UnexpectedCharacter("/", 0))
+```kex
+JSON.parse("[1, 2")    # => Error(UnexpectedEnd(5))
+JSON.parse("// c\n1")  # => Error(UnexpectedCharacter("/", 0))
+```
 
 
 

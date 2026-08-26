@@ -24,11 +24,23 @@ Declarative command-line parsing, shared by Kex tools and applications.
 
 You describe the options and commands a tool accepts, and the parser turns an argument list into typed values, dispatches to the right command, and renders the help text.
 
-  foul greet(options: ParsedOptions) -> Integer do     IO.printLine("hello, ${options.value("name", "world")}")     return 0   end
+```kex
+foul greet(options: ParsedOptions) -> Integer do
+  IO.printLine("hello, ${options.value("name", "world")}")
+  return 0
+end
 
-  main(args) do     let cli = OptionParser.define("demo", "a small demo tool")       .string("name", Just('n'), "who to greet", Just("world"), false)       .flag("help", Just('h'), "show this help")       .command("greet", "", "print a greeting", ~greet)     System.exit(cli.run(args))   end
+main(args) do
+  let cli = OptionParser.define("demo", "a small demo tool")
+    .string("name", Just('n'), "who to greet", Just("world"), false)
+    .flag("help", Just('h'), "show this help")
+    .command("greet", "", "print a greeting", ~greet)
+  System.exit(cli.run(args))
+end
 
-  $ demo greet --name Ada   hello, Ada
+$ demo greet --name Ada
+hello, Ada
+```
 
 Note that `--help` is not automatic: `run` shows the help when a flag named `help` is set, so declare that flag if you want it.
 
@@ -133,8 +145,8 @@ value(name)
 **Examples**
 
 ```kex
-  options.value("name")     # => Just("Ada")
-  options.value("missing")  # => None
+options.value("name")     # => Just("Ada")
+options.value("missing")  # => None
 ```
 
 #### `flagEnabled?`
@@ -150,9 +162,9 @@ flagEnabled?(name)
 **Examples**
 
 ```kex
-  if options.flagEnabled?("verbose")
-    IO.printLine("verbose mode")
-  end
+if options.flagEnabled?("verbose")
+  IO.printLine("verbose mode")
+end
 ```
 
 #### `integerValue`
@@ -170,7 +182,7 @@ integerValue(name)
 **Examples**
 
 ```kex
-  let times = options.integerValue("times").or(1)
+let times = options.integerValue("times").or(1)
 ```
 
 ## make `OptionConfig`
@@ -189,13 +201,13 @@ string(long, short, description, default, required?)
 **Examples**
 
 ```kex
-  OptionParser.define("demo", "a small demo tool")
-    .string("name", Just('n'), "who to greet", Just("world"), false)
+OptionParser.define("demo", "a small demo tool")
+  .string("name", Just('n'), "who to greet", Just("world"), false)
 ```
 _An option the tool cannot run without_
 
 ```kex
-  config.string("output", Just('o'), "where to write", None, true)
+config.string("output", Just('o'), "where to write", None, true)
 ```
 
 #### `integer`
@@ -213,7 +225,7 @@ integer(long, short, description, default, required?)
 **Examples**
 
 ```kex
-  config.integer("port", Just('p'), "port to listen on", Just("8080"), false)
+config.integer("port", Just('p'), "port to listen on", Just("8080"), false)
 ```
 
 #### `flag`
@@ -233,9 +245,9 @@ flag(long, short, description)
 **Examples**
 
 ```kex
-  config
-    .flag("verbose", Just('v'), "print more detail")
-    .flag("help", Just('h'), "show this help")
+config
+  .flag("verbose", Just('v'), "print more detail")
+  .flag("help", Just('h'), "show this help")
 ```
 
 #### `command`
@@ -244,7 +256,7 @@ Declares a command and the function that runs it.
 
 A command name may be several words — `"docs build"` — and the longest match wins, so a group and its subcommands can both be declared. The handler receives the parsed options with the command's own words already removed, and returns the process exit code.
 
-  config.command("greet", "print a greeting", ~greet) Declares a command. `usage` is what the help line shows after the name (`<name>`, `[args...]`); leave it empty for a command that takes none.
+Declares a command. `usage` is what the help line shows after the name (`<name>`, `[args...]`); leave it empty for a command that takes none.
 
 ```kex
 command(name, description, handler)
@@ -255,10 +267,12 @@ command(name, description, handler)
 **Examples**
 
 ```kex
-  foul greet(options: ParsedOptions) -> Integer do
-    IO.printLine("hello, ${options.value("name", "world")}")
-    return 0
-  end
+foul greet(options: ParsedOptions) -> Integer do
+  IO.printLine("hello, ${options.value("name", "world")}")
+  return 0
+end
+
+config.command("greet", "print a greeting", ~greet)
 ```
 
 #### `parse`
@@ -276,10 +290,10 @@ parse(args)
 **Examples**
 
 ```kex
-  match config.parse(args) do
-    Ok(options) => IO.printLine(options.value("name", "world"))
-    Error(e)    => IO.printError(OptionParser.errorMessage(e))
-  end
+match config.parse(args) do
+  Ok(options) => IO.printLine(options.value("name", "world"))
+  Error(e)    => IO.printError(OptionParser.errorMessage(e))
+end
 ```
 
 #### `run`
@@ -299,12 +313,32 @@ run(args)
 **Examples**
 
 ```kex
-  main(args) do
-    let cli = OptionParser.define("demo", "a small demo tool")
-      .flag("help", Just('h'), "show this help")
-      .command("greet", "", "print a greeting", ~greet)
-    System.exit(cli.run(args))
-  end
+main(args) do
+  let cli = OptionParser.define("demo", "a small demo tool")
+    .flag("help", Just('h'), "show this help")
+    .command("greet", "", "print a greeting", ~greet)
+  System.exit(cli.run(args))
+end
+```
+
+#### `printHelp`
+
+Prints the help text and returns 0, the exit code for a successful run.
+
+`run` calls this for you when the `help` flag is set; call it directly when a tool decides on its own that help is the right answer.
+
+```kex
+printHelp()
+```
+
+**Returns**: `Integer` — always 0
+
+**Examples**
+
+_A tool with no arguments shows its help_
+
+```kex
+args.empty? then cli.printHelp else cli.run(args)
 ```
 
 ## module `OptionParser`

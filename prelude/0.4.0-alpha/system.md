@@ -14,7 +14,11 @@ entities:
 
 The running process and the machine under it: exiting, and asking what platform this is.
 
-  System.OS          # => :macos   System.posix?      # => true   System.exit(1)     # ends the program with status 1
+```kex
+System.OS          # => :macos
+System.posix?      # => true
+System.exit(1)     # ends the program with status 1
+```
 
 Deliberately NOT a capability, and `OS`/`BITWIDTH` stay pure. Faking the reported OS only exercises a program's branching, not the platform behaviour behind it — the file semantics, path rules and process handling that actually differ are unaffected by the atom. Testing those means running on the platform, which CI does across macOS, Ubuntu and Alpine. `Mock.System` existed for this and had exactly one caller: the spec that tested it (kexhq/kex#143).
 

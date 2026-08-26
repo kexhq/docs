@@ -22,11 +22,22 @@ Immutable collections of distinct elements.
 
 Membership is decided by structural equality — the same equality `==` and map keys use — so records and tuples are compared by value, not identity. Every method answers with a new set; the `!` forms (`add!`, `delete!`) build a new set and rebind the receiver variable rather than modifying anything in place.
 
-  let tags = Set.from(["kex", "beam", "kex"])   tags.count                     # => 2   tags.contains?("beam")         # => true   tags.add("erlang").items       # => ["beam", "erlang", "kex"]
+```kex
+let tags = Set.from(["kex", "beam", "kex"])
+tags.count                     # => 2
+tags.contains?("beam")         # => true
+tags.add("erlang").items       # => ["beam", "erlang", "kex"]
+```
 
 There are two flavours, differing only in how they store their elements:
 
-  Set           sorted, so iteration is in ascending element order and the                 elements must be Orderable.   UnorderedSet  hash-backed, so membership does not pay for ordering and                 the elements need only be comparable. Iteration order is                 unspecified — never write a test against it.
+```kex
+Set           sorted, so iteration is in ascending element order and the
+              elements must be Orderable.
+UnorderedSet  hash-backed, so membership does not pay for ordering and
+              the elements need only be comparable. Iteration order is
+              unspecified — never write a test against it.
+```
 
 Reach for `Set` when you will read the elements back out, and for `UnorderedSet` when the set exists to answer `contains?` quickly.
 
@@ -40,7 +51,9 @@ A set whose elements are kept sorted and duplicate free.
 
 Build one with `Set.from` rather than by hand — the record literal does no deduplication and no sorting, and every method here relies on both. Reading `items` back is the field itself, so handing a set's elements to list code costs nothing.
 
-  Set.from([3, 1, 2]).items   # => [1, 2, 3]
+```kex
+Set.from([3, 1, 2]).items   # => [1, 2, 3]
+```
 
 **Fields**
 
@@ -52,7 +65,9 @@ A set backed by a map from each member to `true`; its keys ARE the elements.
 
 Build one with `UnorderedSet.from`. Iteration order is whatever the map hands back, so use `items.sort` when you need a stable order.
 
-  UnorderedSet.from([3, 1, 2]).contains?(2)   # => true
+```kex
+UnorderedSet.from([3, 1, 2]).contains?(2)   # => true
+```
 
 **Fields**
 
@@ -120,7 +135,7 @@ reduce(acc, f)
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
+Set.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
 ```
 
 #### `combine`
@@ -138,9 +153,9 @@ combine(other)
 _Merging many sets into one_
 
 ```kex
-  [Set.from([1]), Set.from([2]), Set.from([1, 3])]
-    .reduce(Set.empty) { |acc, s| acc.combine(s) }
-  # => Set(1, 2, 3)
+[Set.from([1]), Set.from([2]), Set.from([1, 3])]
+  .reduce(Set.empty) { |acc, s| acc.combine(s) }
+# => Set(1, 2, 3)
 ```
 
 #### `contains?`
@@ -156,14 +171,14 @@ contains?(value) : A -> Bool
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]).contains?(2)   # => true
-  Set.from([1, 2, 3]).contains?(9)   # => false
+Set.from([1, 2, 3]).contains?(2)   # => true
+Set.from([1, 2, 3]).contains?(9)   # => false
 ```
 _Filtering a list against an allow-list_
 
 ```kex
-  let allowed = Set.from(["get", "post"])
-  methods.filter { |m| allowed.contains?(m.lowerCase) }
+let allowed = Set.from(["get", "post"])
+methods.filter { |m| allowed.contains?(m.lowerCase) }
 ```
 
 #### `add`
@@ -181,14 +196,14 @@ add(value) : A -> Set<A>
 **Examples**
 
 ```kex
-  Set.from([1, 2]).add(3)   # => Set(1, 2, 3)
-  Set.from([1, 2]).add(2)   # => Set(1, 2)
+Set.from([1, 2]).add(3)   # => Set(1, 2, 3)
+Set.from([1, 2]).add(2)   # => Set(1, 2)
 ```
 _Accumulating as you go_
 
 ```kex
-  var seen = Set.empty
-  ids.each { |id| seen.add!(id) }
+var seen = Set.empty
+ids.each { |id| seen.add!(id) }
 ```
 
 #### `delete`
@@ -206,8 +221,8 @@ delete(value) : A -> Set<A>
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]).delete(2)   # => Set(1, 3)
-  Set.from([1, 2, 3]).delete(9)   # => Set(1, 2, 3)
+Set.from([1, 2, 3]).delete(2)   # => Set(1, 3)
+Set.from([1, 2, 3]).delete(9)   # => Set(1, 2, 3)
 ```
 
 #### `union`
@@ -223,12 +238,12 @@ union(other) : Set<A> -> Set<A>
 **Examples**
 
 ```kex
-  Set.from([1, 2]).union(Set.from([2, 3]))   # => Set(1, 2, 3)
+Set.from([1, 2]).union(Set.from([2, 3]))   # => Set(1, 2, 3)
 ```
 _Collecting every tag used across posts_
 
 ```kex
-  posts.reduce(Set.empty) { |all, p| all.union(Set.from(p.tags)) }
+posts.reduce(Set.empty) { |all, p| all.union(Set.from(p.tags)) }
 ```
 
 #### `intersect`
@@ -244,13 +259,13 @@ intersect(other) : Set<A> -> Set<A>
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]).intersect(Set.from([2, 3, 4]))   # => Set(2, 3)
-  Set.from([1]).intersect(Set.from([2]))               # => Set()
+Set.from([1, 2, 3]).intersect(Set.from([2, 3, 4]))   # => Set(2, 3)
+Set.from([1]).intersect(Set.from([2]))               # => Set()
 ```
 _Which requested permissions the user actually has_
 
 ```kex
-  requested.intersect(granted)
+requested.intersect(granted)
 ```
 
 #### `difference`
@@ -268,12 +283,12 @@ difference(other) : Set<A> -> Set<A>
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]).difference(Set.from([2]))   # => Set(1, 3)
+Set.from([1, 2, 3]).difference(Set.from([2]))   # => Set(1, 3)
 ```
 _Which required fields are still missing_
 
 ```kex
-  required.difference(Set.from(form.keys))
+required.difference(Set.from(form.keys))
 ```
 
 #### `symmetricDifference`
@@ -289,12 +304,12 @@ symmetricDifference(other) : Set<A> -> Set<A>
 **Examples**
 
 ```kex
-  Set.from([1, 2]).symmetricDifference(Set.from([2, 3]))   # => Set(1, 3)
+Set.from([1, 2]).symmetricDifference(Set.from([2, 3]))   # => Set(1, 3)
 ```
 _What changed between two snapshots_
 
 ```kex
-  before.symmetricDifference(after)
+before.symmetricDifference(after)
 ```
 
 #### `subset?`
@@ -310,13 +325,13 @@ subset?(other) : Set<A> -> Bool
 **Examples**
 
 ```kex
-  Set.from([1, 2]).subset?(Set.from([1, 2, 3]))   # => true
-  Set.from([1, 9]).subset?(Set.from([1, 2, 3]))   # => false
+Set.from([1, 2]).subset?(Set.from([1, 2, 3]))   # => true
+Set.from([1, 9]).subset?(Set.from([1, 2, 3]))   # => false
 ```
 _An authorisation check_
 
 ```kex
-  required.subset?(granted)
+required.subset?(granted)
 ```
 
 #### `superset?`
@@ -332,8 +347,8 @@ superset?(other) : Set<A> -> Bool
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]).superset?(Set.from([1, 2]))   # => true
-  Set.from([1, 2]).superset?(Set.from([1, 9]))      # => false
+Set.from([1, 2, 3]).superset?(Set.from([1, 2]))   # => true
+Set.from([1, 2]).superset?(Set.from([1, 9]))      # => false
 ```
 
 #### `disjoint?`
@@ -349,13 +364,13 @@ disjoint?(other) : Set<A> -> Bool
 **Examples**
 
 ```kex
-  Set.from([1, 2]).disjoint?(Set.from([3]))      # => true
-  Set.from([1, 2]).disjoint?(Set.from([2, 3]))   # => false
+Set.from([1, 2]).disjoint?(Set.from([3]))      # => true
+Set.from([1, 2]).disjoint?(Set.from([2, 3]))   # => false
 ```
 _Checking that two rulesets cannot both apply_
 
 ```kex
-  allowList.disjoint?(denyList)
+allowList.disjoint?(denyList)
 ```
 
 #### `+`
@@ -373,8 +388,8 @@ The list form is the everyday way to add one element without naming a method: `s
 **Examples**
 
 ```kex
-  Set.from([1, 2]) ` [3]           # => Set(1, 2, 3)
-  Set.from([1]) + Set.from([2])    # => Set(1, 2)
+Set.from([1, 2]) ` [3]           # => Set(1, 2, 3)
+Set.from([1]) + Set.from([2])    # => Set(1, 2)
 ```
 
 #### `-`
@@ -390,8 +405,8 @@ Removes another set's elements, or a plain list's.
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]) - [2]                # => Set(1, 3)
-  Set.from([1, 2, 3]) - Set.from([2, 3])   # => Set(1)
+Set.from([1, 2, 3]) - [2]                # => Set(1, 3)
+Set.from([1, 2, 3]) - Set.from([2, 3])   # => Set(1)
 ```
 
 #### `map`
@@ -409,13 +424,13 @@ map(f) : (A -> B) -> Set<B>
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]).map { |x| x * 2 }   # => Set(2, 4, 6)
-  Set.from([1, -1]).map { |x| x.abs }     # => Set(1)
+Set.from([1, 2, 3]).map { |x| x * 2 }   # => Set(2, 4, 6)
+Set.from([1, -1]).map { |x| x.abs }     # => Set(1)
 ```
 _Collecting the distinct extensions in a file list_
 
 ```kex
-  Set.from(paths).map { |p| p.split(".").last.or("") }
+Set.from(paths).map { |p| p.split(".").last.or("") }
 ```
 
 #### `filter`
@@ -431,7 +446,7 @@ filter(pred) : (A -> Bool) -> Set<A>
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]).filter { |x| x > 1 }   # => Set(2, 3)
+Set.from([1, 2, 3]).filter { |x| x > 1 }   # => Set(2, 3)
 ```
 
 #### `reject`
@@ -447,7 +462,7 @@ reject(pred) : (A -> Bool) -> Set<A>
 **Examples**
 
 ```kex
-  Set.from([1, 2, 3]).reject { |x| x > 1 }   # => Set(1)
+Set.from([1, 2, 3]).reject { |x| x > 1 }   # => Set(1)
 ```
 
 ## make `Set<A>` implements [Blankable](blankable.md#trait-blankable)
@@ -472,7 +487,7 @@ reduce(acc, f)
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
+UnorderedSet.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
 ```
 
 #### `combine`
@@ -500,8 +515,8 @@ contains?(value) : A -> Bool
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2, 3]).contains?(2)   # => true
-  UnorderedSet.from([1, 2, 3]).contains?(9)   # => false
+UnorderedSet.from([1, 2, 3]).contains?(2)   # => true
+UnorderedSet.from([1, 2, 3]).contains?(9)   # => false
 ```
 
 #### `add`
@@ -519,8 +534,8 @@ add(value) : A -> UnorderedSet<A>
 **Examples**
 
 ```kex
-  UnorderedSet.from([1]).add(2).count   # => 2
-  UnorderedSet.from([1]).add(1).count   # => 1
+UnorderedSet.from([1]).add(2).count   # => 2
+UnorderedSet.from([1]).add(1).count   # => 1
 ```
 
 #### `delete`
@@ -538,7 +553,7 @@ delete(value) : A -> UnorderedSet<A>
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2]).delete(1).count   # => 1
+UnorderedSet.from([1, 2]).delete(1).count   # => 1
 ```
 
 #### `union`
@@ -554,7 +569,7 @@ union(other) : UnorderedSet<A> -> UnorderedSet<A>
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2]).union(UnorderedSet.from([2, 3])).count   # => 3
+UnorderedSet.from([1, 2]).union(UnorderedSet.from([2, 3])).count   # => 3
 ```
 
 #### `intersect`
@@ -570,8 +585,8 @@ intersect(other) : UnorderedSet<A> -> UnorderedSet<A>
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2, 3]).intersect(UnorderedSet.from([2, 3, 4])).items.sort
-  # => [2, 3]
+UnorderedSet.from([1, 2, 3]).intersect(UnorderedSet.from([2, 3, 4])).items.sort
+# => [2, 3]
 ```
 
 #### `difference`
@@ -587,8 +602,8 @@ difference(other) : UnorderedSet<A> -> UnorderedSet<A>
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2, 3]).difference(UnorderedSet.from([2])).items.sort
-  # => [1, 3]
+UnorderedSet.from([1, 2, 3]).difference(UnorderedSet.from([2])).items.sort
+# => [1, 3]
 ```
 
 #### `symmetricDifference`
@@ -604,8 +619,8 @@ symmetricDifference(other) : UnorderedSet<A> -> UnorderedSet<A>
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2]).symmetricDifference(UnorderedSet.from([2, 3])).items.sort
-  # => [1, 3]
+UnorderedSet.from([1, 2]).symmetricDifference(UnorderedSet.from([2, 3])).items.sort
+# => [1, 3]
 ```
 
 #### `subset?`
@@ -621,7 +636,7 @@ subset?(other) : UnorderedSet<A> -> Bool
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2]).subset?(UnorderedSet.from([1, 2, 3]))   # => true
+UnorderedSet.from([1, 2]).subset?(UnorderedSet.from([1, 2, 3]))   # => true
 ```
 
 #### `superset?`
@@ -637,7 +652,7 @@ superset?(other) : UnorderedSet<A> -> Bool
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2, 3]).superset?(UnorderedSet.from([1, 2]))   # => true
+UnorderedSet.from([1, 2, 3]).superset?(UnorderedSet.from([1, 2]))   # => true
 ```
 
 #### `disjoint?`
@@ -653,7 +668,7 @@ disjoint?(other) : UnorderedSet<A> -> Bool
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2]).disjoint?(UnorderedSet.from([3]))   # => true
+UnorderedSet.from([1, 2]).disjoint?(UnorderedSet.from([3]))   # => true
 ```
 
 #### `+`
@@ -669,7 +684,7 @@ Unions with another unordered set, or with a plain list.
 **Examples**
 
 ```kex
-  (UnorderedSet.from([1, 2]) + [3]).count   # => 3
+(UnorderedSet.from([1, 2]) + [3]).count   # => 3
 ```
 
 #### `-`
@@ -685,7 +700,7 @@ Removes another unordered set's elements, or a plain list's.
 **Examples**
 
 ```kex
-  (UnorderedSet.from([1, 2, 3]) - [2]).count   # => 2
+(UnorderedSet.from([1, 2, 3]) - [2]).count   # => 2
 ```
 
 #### `map`
@@ -701,7 +716,7 @@ map(f) : (A -> B) -> UnorderedSet<B>
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2, 3]).map { |x| x * 2 }.items.sort   # => [2, 4, 6]
+UnorderedSet.from([1, 2, 3]).map { |x| x * 2 }.items.sort   # => [2, 4, 6]
 ```
 
 #### `filter`
@@ -717,7 +732,7 @@ filter(pred) : (A -> Bool) -> UnorderedSet<A>
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2, 3]).filter { |x| x > 1 }.items.sort   # => [2, 3]
+UnorderedSet.from([1, 2, 3]).filter { |x| x > 1 }.items.sort   # => [2, 3]
 ```
 
 #### `reject`
@@ -733,7 +748,7 @@ reject(pred) : (A -> Bool) -> UnorderedSet<A>
 **Examples**
 
 ```kex
-  UnorderedSet.from([1, 2, 3]).reject { |x| x > 1 }.items   # => [1]
+UnorderedSet.from([1, 2, 3]).reject { |x| x > 1 }.items   # => [1]
 ```
 
 ## make `UnorderedSet<A>` implements [Blankable](blankable.md#trait-blankable)

@@ -15,22 +15,36 @@ Console input and output.
 
 `IO` is a capability: every function in it touches the outside world, so it can only be called from `foul` code (or from `main`). Reading a line and printing a line are the two workhorses; `inspect` is the debugging tool that can be dropped into the middle of a chain without changing its value.
 
-  main do     IO.print("name? ")     let name = IO.getLine.or("world")     IO.printLine("hello, ${name.trim}")   end
+```kex
+main do
+  IO.print("name? ")
+  let name = IO.getLine.or("world")
+  IO.printLine("hello, ${name.trim}")
+end
+```
 
-## constant `printLine`
+## function `printLine`
 
 Writes `msg` to stdout followed by a newline.
 
 Any `Showable` value is accepted, not just strings — numbers, lists, maps and records print through their own `show` implementation. Called with no argument it prints an empty line.
 
 
+```kex
+printLine(msg) : Showable -> Void
+```
 
-## constant `print`
+
+## function `print`
 
 Writes `msg` to stdout without a trailing newline.
 
 Use it to build a line from several pieces, or to write a prompt that the cursor should stay on.
 
+
+```kex
+print(msg) : Showable -> Void
+```
 
 
 ## function `inspect`
@@ -47,28 +61,40 @@ inspect(val) : A -> A
 ```
 
 
-## constant `getLine`
+## function `getLine`
 
 Reads one line from stdin, without the trailing newline.
 
 Returns `None` at end of input, which is what makes it usable as a loop condition: the `None` is the end of the stream, not an error.
 
 
+```kex
+getLine() : String?
+```
 
-## constant `get`
+
+## function `get`
 
 Reads a single character from stdin.
 
 Returns `None` at end of input. Note that the result is a one-character `String`, not a `Char`.
 
 
+```kex
+get() : String?
+```
 
-## constant `printError`
+
+## function `printError`
 
 Writes `msg` to stderr followed by a newline.
 
 Diagnostics belong on stderr so that a program's real output can be piped or redirected on its own. Unlike a raised error, this only prints — it does not stop the program.
 
+
+```kex
+printError(msg) : Showable -> Void
+```
 
 
 ## function `warn`
@@ -101,8 +127,6 @@ Typestate says what each one permits: writing to `IO.in`, or reading from `IO.ou
 
 These three are PURE, so they are not part of the capability interface a stand-in must implement — naming a device performs no effect, writing THROUGH it does, and the handle methods are the `foul` ones. That also draws the seam between the two ways to redirect output: `with IO = ...` replaces the CALLS, so it does not touch a handle obtained here, while `Mock.IO` replaces the DEVICE (a group leader, kexhq/kex#141) and so captures `IO.out.printLine(x)` and `IO.printLine(x)` alike.
 
-  report(IO.out, results)   report(IO.error, warnings)   report(FS.File.open("report.txt", Write).try, results)
-
 
 
 ## constant `error`
@@ -114,7 +138,5 @@ Standard error, as a handle. The sink `IO.printError` and `IO.warn` write to, re
 ## constant `in`
 
 Standard input, as a handle. The source `IO.getLine` and `IO.get` read from, reachable as a value.
-
-  firstLine(IO.in)
 
 

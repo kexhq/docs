@@ -15,11 +15,24 @@ A small, WEBrick-style web server.
 
 You build a server by naming a port and mounting routes on it, then start it. Configuration is immutable: mounting a route returns an updated server, and `start` hands that configuration to the BEAM runtime.
 
-  let hello(request: Web.Request) -> Web.Response do     let name = request.query.get("name", "world")     return Web.Response.text("Hello, ${name}!\n")   end
+```kex
+let hello(request: Web.Request) -> Web.Response do
+  let name = request.query.get("name", "world")
+  return Web.Response.text("Hello, ${name}!\n")
+end
 
-  main do     let server = Web.Server.build(8080)       .get("/", ~home)       .get("/hello", ~hello)       .post("/echo", ~echo)
+main do
+  let server = Web.Server.build(8080)
+    .get("/", ~home)
+    .get("/hello", ~hello)
+    .post("/echo", ~echo)
 
-    IO.printLine("listening on http://localhost:8080")     if let Error(reason) = server.start()       IO.printLine("server stopped: ${reason}")     end   end
+  IO.printLine("listening on http://localhost:8080")
+  if let Error(reason) = server.start()
+    IO.printLine("server stopped: ${reason}")
+  end
+end
+```
 
 A handler is any function from a `Web.Request` to a `Web.Response`, and the `Web.Response` constructors cover the usual replies — text, HTML, JSON, a redirect, a 404.
 
@@ -153,7 +166,7 @@ mount(path, handler)
 **Examples**
 
 ```kex
-  Web.Server.build(8080).mount("/health", ~health)
+Web.Server.build(8080).mount("/health", ~health)
 ```
 
 #### `get`
@@ -169,9 +182,9 @@ get(path, handler)
 **Examples**
 
 ```kex
-  Web.Server.build(8080)
-    .get("/", ~home)
-    .get("/hello", ~hello)
+Web.Server.build(8080)
+  .get("/", ~home)
+  .get("/hello", ~hello)
 ```
 
 #### `post`
@@ -187,7 +200,7 @@ post(path, handler)
 **Examples**
 
 ```kex
-  server.post("/echo", ~echo)
+server.post("/echo", ~echo)
 ```
 
 #### `put`
@@ -203,7 +216,7 @@ put(path, handler)
 **Examples**
 
 ```kex
-  server.put("/items", ~replaceItem)
+server.put("/items", ~replaceItem)
 ```
 
 #### `patch`
@@ -219,7 +232,7 @@ patch(path, handler)
 **Examples**
 
 ```kex
-  server.patch("/items", ~updateItem)
+server.patch("/items", ~updateItem)
 ```
 
 #### `delete`
@@ -235,7 +248,7 @@ delete(path, handler)
 **Examples**
 
 ```kex
-  server.delete("/items", ~removeItem)
+server.delete("/items", ~removeItem)
 ```
 
 #### `start`
@@ -255,10 +268,10 @@ start()
 **Examples**
 
 ```kex
-  IO.printLine("listening on http://localhost:8080")
-  if let Error(reason) = server.start()
-    IO.printLine("server stopped: ${reason}")
-  end
+IO.printLine("listening on http://localhost:8080")
+if let Error(reason) = server.start()
+  IO.printLine("server stopped: ${reason}")
+end
 ```
 
 ## module `Web.Server`

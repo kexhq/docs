@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Parsing | Prelude 0.4.0-alpha | kex docs</title>
+<title>Parsing | Standard Library 0.4.0-alpha | kex docs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -22,12 +22,12 @@ data-root="../../" data-package="prelude" data-version="0.4.0-alpha"
 data-page="parsing.html">
 <span>Search</span><kbd>/</kbd>
 </button>
-<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="parsing.html">Prelude 0.4.0-alpha</span>
+<span class="pkg-badge" id="version-badge" data-root="../../" data-package="prelude" data-version="0.4.0-alpha" data-page="parsing.html">Standard Library 0.4.0-alpha</span>
 <a class="back" href="https://kex.run/docs">kex.run ↗</a>
 </div>
 </header>
 <div class="wrap layout">
-<aside class="side"><nav aria-label="Modules"><p class="side-heading">Prelude</p><ul class="side-list">
+<aside class="side"><nav aria-label="Modules"><p class="side-heading"><a href="index.html">Standard Library</a></p><ul class="side-list">
 <li><a href="algebra.html">Algebra</a></li>
 <li><a href="bits.html">Bits</a></li>
 <li><a href="blankable.html">Blankable</a></li>
@@ -37,7 +37,7 @@ data-page="parsing.html">
 <li><a href="env.html">ENV</a></li>
 <li><a href="errorable.html">Errorable</a></li>
 <li><a href="evaluator.html">Evaluator</a></li>
-<li><a href="filehandle.html">Filehandle</a></li>
+<li><a href="filehandle.html">FileHandle</a></li>
 <li><a href="fs.html">FS</a></li>
 <li><a href="http.html">Http</a></li>
 <li><a href="io.html">IO</a></li>
@@ -73,7 +73,7 @@ data-page="parsing.html">
 <li><a href="units/si.html">Units.SI</a></li>
 </ul></nav></aside>
 <main class="content">
-<nav class="crumbs"><a href="index.html">Prelude</a> <span class="sep">/</span> <span>Parsing</span></nav>
+<nav class="crumbs"><a href="index.html">Standard Library</a> <span class="sep">/</span> <span>Parsing</span></nav>
 <article class="prose">
 <h1>Parsing</h1>
 <section class="entity" id="module-parsing">
@@ -81,14 +81,22 @@ data-page="parsing.html">
 <p>Parser combinators, for reading a text format you define yourself.</p>
 <p>Opt-in — nothing here is in scope until <code>using Parsing</code>.</p>
 <p>An <code>Input</code> is an immutable cursor over a string. A parser takes one and answers either the value it read together with an advanced cursor, or a <code>ParseError</code> saying where it gave up. Because the cursor is immutable, a failed attempt costs nothing: the caller still holds the position it started from and can try something else.</p>
-<p>  using Parsing</p>
-<p>  main do     let cursor = Input { input: &quot;abc 123&quot; }     let word = cursor.takeWhile(~alpha?)     let (text, rest) = word     IO.printLine(text)              # prints: abc     IO.printLine(rest.pos)          # prints: 3   end</p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Parsing</span>
+
+<span class="tok-keyword">main</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">let</span> cursor <span class="tok-op">=</span> <span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc 123</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span>
+  <span class="tok-keyword">let</span> word <span class="tok-op">=</span> cursor<span class="tok-op">.</span><span class="tok-method">takeWhile</span><span class="tok-punct">(</span><span class="tok-op">~</span>alpha?<span class="tok-punct">)</span>
+  <span class="tok-keyword">let</span> <span class="tok-punct">(</span>text<span class="tok-punct">,</span> rest<span class="tok-punct">)</span> <span class="tok-op">=</span> word
+  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span>              <span class="tok-comment"># prints: abc</span>
+  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>rest<span class="tok-op">.</span><span class="tok-method">pos</span><span class="tok-punct">)</span>          <span class="tok-comment"># prints: 3</span>
+<span class="tok-keyword">end</span></code></pre>
 <p>The building blocks are <code>char</code> and <code>charWhen</code> for one character, <code>string</code> for a literal, <code>takeWhile</code> for a run, and <code>many</code> / <code>some</code> / <code>choice</code> for repetition and alternatives. <code>JSON</code> in this same stdlib is written with them.</p>
 <section class="entity" id="type-parseerror">
 <h2><span class="kind kind-type">type</span> <code>ParseError</code></h2>
 <p>Why a parser gave up, and at which position.</p>
 <p><code>Expected</code> carries what the grammar WANTED rather than what it found — the difference between &quot;unexpected <code>d</code>&quot; and &quot;expected <code>version(</code>&quot;. It is what <code>label</code> and <code>string</code> report.</p>
-<p>  Input { input: &quot;abc&quot; }.char('z')      # =&gt; Error(Unexpected(&quot;a&quot;, 0))   Input { input: &quot;abc&quot; }.string(&quot;abd&quot;)  # =&gt; Error(Expected(&quot;abd&quot;, 0))</p>
+<pre class="code"><code><span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">char</span><span class="tok-punct">(</span>'z'<span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; Error(Unexpected(&quot;a&quot;, 0))</span>
+<span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">string</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">abd</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; Error(Expected(&quot;abd&quot;, 0))</span></code></pre>
 <h3>Variants</h3>
 <ul class="variants">
 <li><code>Unexpected(String, Integer)</code></li>
@@ -121,8 +129,8 @@ data-page="parsing.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code><a class="xref" href="string.html#make-char">Char</a>?</code> — the character there, or <code>None</code></p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">peekAt</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just('b')</span>
-  <span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">peekAt</span><span class="tok-punct">(</span><span class="tok-number">9</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; None</span></code></pre>
+<pre class="code"><code><span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">peekAt</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just('b')</span>
+<span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">peekAt</span><span class="tok-punct">(</span><span class="tok-number">9</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; None</span></code></pre>
 
 </div>
 <div class="fn" id="fn-advanceby">
@@ -135,7 +143,7 @@ data-page="parsing.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Input</code> — the advanced cursor</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc 123</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">advanceBy</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">peek</span>   <span class="tok-comment"># =&gt; Just('1')</span></code></pre>
+<pre class="code"><code><span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc 123</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">advanceBy</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">peek</span>   <span class="tok-comment"># =&gt; Just('1')</span></code></pre>
 
 </div>
 <div class="fn" id="fn-charwhen">
@@ -149,10 +157,10 @@ data-page="parsing.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;(<a class="xref" href="string.html#make-char">Char</a>, Input), ParseError&gt;</code> — the character and cursor, or why not</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">charWhen</span><span class="tok-punct">(</span><span class="tok-op">~</span>alpha?<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(('a', cursor at 1))</span>
-  <span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">123</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">charWhen</span><span class="tok-punct">(</span><span class="tok-op">~</span>alpha?<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Error(Unexpected(&quot;1&quot;, 0))</span></code></pre>
+<pre class="code"><code><span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">charWhen</span><span class="tok-punct">(</span><span class="tok-op">~</span>alpha?<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(('a', cursor at 1))</span>
+<span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">123</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">charWhen</span><span class="tok-punct">(</span><span class="tok-op">~</span>alpha?<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Error(Unexpected(&quot;1&quot;, 0))</span></code></pre>
 <p class="caption"><em>Reading one digit</em></p>
-<pre class="code"><code>  cursor<span class="tok-op">.</span><span class="tok-method">charWhen</span><span class="tok-punct">(</span><span class="tok-op">~</span>digit?<span class="tok-punct">)</span></code></pre>
+<pre class="code"><code>cursor<span class="tok-op">.</span><span class="tok-method">charWhen</span><span class="tok-punct">(</span><span class="tok-op">~</span>digit?<span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-char">
@@ -165,10 +173,10 @@ data-page="parsing.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;(<a class="xref" href="string.html#make-char">Char</a>, Input), ParseError&gt;</code> — the character and cursor, or why not</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">char</span><span class="tok-punct">(</span>'a'<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(('a', cursor at 1))</span>
-  <span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">char</span><span class="tok-punct">(</span>'z'<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Error(Unexpected(&quot;a&quot;, 0))</span></code></pre>
+<pre class="code"><code><span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">char</span><span class="tok-punct">(</span>'a'<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(('a', cursor at 1))</span>
+<span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">char</span><span class="tok-punct">(</span>'z'<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Error(Unexpected(&quot;a&quot;, 0))</span></code></pre>
 <p class="caption"><em>Consuming a separator</em></p>
-<pre class="code"><code>  <span class="tok-keyword">let</span> <span class="tok-punct">(</span>_<span class="tok-punct">,</span> afterComma<span class="tok-punct">)</span> <span class="tok-op">=</span> cursor<span class="tok-op">.</span><span class="tok-method">char</span><span class="tok-punct">(</span>'<span class="tok-punct">,</span>'<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">let</span> <span class="tok-punct">(</span>_<span class="tok-punct">,</span> afterComma<span class="tok-punct">)</span> <span class="tok-op">=</span> cursor<span class="tok-op">.</span><span class="tok-method">char</span><span class="tok-punct">(</span>'<span class="tok-punct">,</span>'<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </div>
 <div class="fn" id="fn-many">
@@ -182,11 +190,11 @@ data-page="parsing.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>([T], Input)</code> — the results, and the cursor after them</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc 1</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">many</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> p<span class="tok-op">.</span><span class="tok-method">charWhen</span><span class="tok-punct">(</span><span class="tok-op">~</span>alpha?<span class="tok-punct">)</span> <span class="tok-punct">}</span>
-  <span class="tok-comment"># =&gt; (['a', 'b', 'c'], cursor at 3)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc 1</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">many</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> p<span class="tok-op">.</span><span class="tok-method">charWhen</span><span class="tok-punct">(</span><span class="tok-op">~</span>alpha?<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-comment"># =&gt; (['a', 'b', 'c'], cursor at 3)</span></code></pre>
 <p class="caption"><em>Zero matches is not an error</em></p>
-<pre class="code"><code>  <span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">123</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">many</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> p<span class="tok-op">.</span><span class="tok-method">charWhen</span><span class="tok-punct">(</span><span class="tok-op">~</span>alpha?<span class="tok-punct">)</span> <span class="tok-punct">}</span>
-  <span class="tok-comment"># =&gt; ([], cursor at 0)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">123</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">many</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> p<span class="tok-op">.</span><span class="tok-method">charWhen</span><span class="tok-punct">(</span><span class="tok-op">~</span>alpha?<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-comment"># =&gt; ([], cursor at 0)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-some">
@@ -200,10 +208,10 @@ data-page="parsing.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>([T], Input)</code> — the results and the cursor, or the first failure</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">some</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> p<span class="tok-op">.</span><span class="tok-method">charWhen</span><span class="tok-punct">(</span><span class="tok-op">~</span>alpha?<span class="tok-punct">)</span> <span class="tok-punct">}</span>
-  <span class="tok-comment"># =&gt; Ok((['a', 'b', 'c'], cursor at 3))</span>
-  <span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">123</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">some</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> p<span class="tok-op">.</span><span class="tok-method">charWhen</span><span class="tok-punct">(</span><span class="tok-op">~</span>alpha?<span class="tok-punct">)</span> <span class="tok-punct">}</span>
-  <span class="tok-comment"># =&gt; Error(Unexpected(&quot;1&quot;, 0))</span></code></pre>
+<pre class="code"><code><span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">some</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> p<span class="tok-op">.</span><span class="tok-method">charWhen</span><span class="tok-punct">(</span><span class="tok-op">~</span>alpha?<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-comment"># =&gt; Ok((['a', 'b', 'c'], cursor at 3))</span>
+<span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">123</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">some</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> p<span class="tok-op">.</span><span class="tok-method">charWhen</span><span class="tok-punct">(</span><span class="tok-op">~</span>alpha?<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-comment"># =&gt; Error(Unexpected(&quot;1&quot;, 0))</span></code></pre>
 
 </div>
 <div class="fn" id="fn-string">
@@ -217,10 +225,10 @@ data-page="parsing.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>(String, Input)</code> — the literal and the cursor, or an <code>Expected</code> error</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">string</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok((&quot;abc&quot;, cursor at 3))</span>
-  <span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">string</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">abd</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Error(Expected(&quot;abd&quot;, 0))</span></code></pre>
+<pre class="code"><code><span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">string</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok((&quot;abc&quot;, cursor at 3))</span>
+<span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">string</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">abd</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Error(Expected(&quot;abd&quot;, 0))</span></code></pre>
 <p class="caption"><em>Matching a keyword</em></p>
-<pre class="code"><code>  <span class="tok-keyword">let</span> <span class="tok-punct">(</span>_<span class="tok-punct">,</span> rest<span class="tok-punct">)</span> <span class="tok-op">=</span> cursor<span class="tok-op">.</span><span class="tok-method">string</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">version(</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">let</span> <span class="tok-punct">(</span>_<span class="tok-punct">,</span> rest<span class="tok-punct">)</span> <span class="tok-op">=</span> cursor<span class="tok-op">.</span><span class="tok-method">string</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">version(</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </div>
 <div class="fn" id="fn-takewhile">
@@ -234,10 +242,10 @@ data-page="parsing.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>(String, Input)</code> — the text read, and the cursor after it</p>
 <h5>Examples</h5>
-<pre class="code"><code>  <span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc 123</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">takeWhile</span><span class="tok-punct">(</span><span class="tok-op">~</span>alpha?<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; (&quot;abc&quot;, cursor at 3)</span>
-  <span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">123</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">takeWhile</span><span class="tok-punct">(</span><span class="tok-op">~</span>alpha?<span class="tok-punct">)</span>       <span class="tok-comment"># =&gt; (&quot;&quot;, cursor at 0)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc 123</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">takeWhile</span><span class="tok-punct">(</span><span class="tok-op">~</span>alpha?<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; (&quot;abc&quot;, cursor at 3)</span>
+<span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">123</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">takeWhile</span><span class="tok-punct">(</span><span class="tok-op">~</span>alpha?<span class="tok-punct">)</span>       <span class="tok-comment"># =&gt; (&quot;&quot;, cursor at 0)</span></code></pre>
 <p class="caption"><em>Reading an identifier</em></p>
-<pre class="code"><code>  <span class="tok-keyword">let</span> name <span class="tok-op">=</span> cursor<span class="tok-op">.</span><span class="tok-method">takeWhile</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>c<span class="tok-op">|</span> c<span class="tok-op">.</span><span class="tok-method">alpha?</span> <span class="tok-op">||</span> c <span class="tok-op">==</span> '_' <span class="tok-punct">}</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">let</span> name <span class="tok-op">=</span> cursor<span class="tok-op">.</span><span class="tok-method">takeWhile</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>c<span class="tok-op">|</span> c<span class="tok-op">.</span><span class="tok-method">alpha?</span> <span class="tok-op">||</span> c <span class="tok-op">==</span> '_' <span class="tok-punct">}</span></code></pre>
 
 </div>
 <div class="fn" id="fn-choice">
@@ -251,10 +259,10 @@ data-page="parsing.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>(T, Input)</code> — the first success, or <code>NoMatch</code></p>
 <h5>Examples</h5>
-<pre class="code"><code>  cursor<span class="tok-op">.</span><span class="tok-method">choice</span><span class="tok-punct">(</span><span class="tok-punct">[</span>
-    <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> p<span class="tok-op">.</span><span class="tok-method">charWhen</span><span class="tok-punct">(</span><span class="tok-op">~</span>digit?<span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
-    <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> p<span class="tok-op">.</span><span class="tok-method">charWhen</span><span class="tok-punct">(</span><span class="tok-op">~</span>alpha?<span class="tok-punct">)</span> <span class="tok-punct">}</span>
-  <span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code>cursor<span class="tok-op">.</span><span class="tok-method">choice</span><span class="tok-punct">(</span><span class="tok-punct">[</span>
+  <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> p<span class="tok-op">.</span><span class="tok-method">charWhen</span><span class="tok-punct">(</span><span class="tok-op">~</span>digit?<span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+  <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> p<span class="tok-op">.</span><span class="tok-method">charWhen</span><span class="tok-punct">(</span><span class="tok-op">~</span>alpha?<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 </div>
@@ -264,7 +272,7 @@ data-page="parsing.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-26T20:27:51.720473998Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-26T22:47:19.793944540Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

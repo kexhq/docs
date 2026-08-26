@@ -15,7 +15,10 @@ ANSI terminal styling: colors, text attributes, and cursor control.
 
 Every constant here becomes an empty string when Kex is started with `--no-colors`, or when output is not going to a terminal. That is the point of the design — you can splice them into a string unconditionally and the result is plain text where color is unwanted, with no branching at the call site.
 
-  IO.printLine("${Console.GREEN}ok${Console.RESET}")   IO.printLine(Console.colorize("failed", Console.RED))
+```kex
+IO.printLine("${Console.GREEN}ok${Console.RESET}")
+IO.printLine(Console.colorize("failed", Console.RED))
+```
 
 `colorize` is usually what you want, since it applies the reset for you.
 
@@ -132,6 +135,8 @@ Purple.
 Erases the screen and moves the cursor to the top-left corner.
 
 Use it to start a fresh frame. When you are redrawing repeatedly, `HOME` gives a smoother result — see below.
+
+Cursor and screen control, empty under --no-colors like the styles above. CLEAR erases the screen and homes the cursor; HOME only moves the cursor, so a redraw paints over the previous frame without a blank flash between them; CLEARLINE erases the current line and returns to its start.
 
 
 
