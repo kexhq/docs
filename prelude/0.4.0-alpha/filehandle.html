@@ -29,6 +29,7 @@ data-page="filehandle.html">
 <div class="wrap layout">
 <aside class="side"><nav aria-label="Modules"><p class="side-heading"><a href="index.html">Standard Library</a></p><ul class="side-list">
 <li><a href="algebra.html">Algebra</a></li>
+<li><a href="binary.html">Binary</a></li>
 <li><a href="bits.html">Bits</a></li>
 <li><a href="blankable.html">Blankable</a></li>
 <li><a href="console.html">Console</a></li>
@@ -38,6 +39,7 @@ data-page="filehandle.html">
 <li><a href="errorable.html">Errorable</a></li>
 <li><a href="evaluator.html">Evaluator</a></li>
 <li><a class="active" href="filehandle.html">FileHandle</a><ul class="side-sub">
+<li><a href="#type-readerror">ReadError</a></li>
 <li><a href="#trait-readable">Readable</a></li>
 <li><a href="#trait-writable">Writable</a></li>
 <li><a href="#type-filehandle">FileHandle</a></li>
@@ -81,6 +83,16 @@ data-page="filehandle.html">
 <nav class="crumbs"><a href="index.html">Standard Library</a> <span class="sep">/</span> <span>FileHandle</span></nav>
 <article class="prose">
 <h1>FileHandle<span class="tag-prelude" title="In the prelude: no import needed">prelude</span></h1>
+<section class="entity" id="type-readerror">
+<h2><span class="kind kind-type">type</span> <code>ReadError</code></h2>
+<p>Why a read failed.</p>
+<p><code>ReadFailed</code> means the source refused the read. <code>InvalidUtf8</code> means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U<code>FFFD — use </code>readBytes+ to recover the payload verbatim.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>ReadFailed</code></li>
+<li><code>InvalidUtf8(Integer)</code></li>
+</ul>
+</section>
 <section class="entity" id="trait-readable">
 <h2><span class="kind kind-trait">trait</span> <code>Readable</code></h2>
 <p><code>Readable</code> — a source that yields text.</p>
@@ -96,29 +108,39 @@ data-page="filehandle.html">
 <div class="fn" id="fn-getline">
 <h4><code>getLine</code></h4>
 <p>Reads the next line, without its newline.</p>
-<pre class="code"><code>getLine <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
-<p class="returns"><strong>Returns:</strong> <code>String?</code> — the next line, or <code>None</code> at end of input</p>
+<pre class="code"><code>getLine <span class="tok-op">:</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">String?</span><span class="tok-punct">,</span> <span class="tok-type">ReadError</span><span class="tok-op">&gt;</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;String?, <a class="xref" href="#type-readerror">ReadError</a>&gt;</code> — the next line, <code>Ok(None)</code> at end of</p>
 
 </div>
 <div class="fn" id="fn-get">
 <h4><code>get</code></h4>
 <p>Reads a single character, as a one-character <code>String</code>.</p>
-<pre class="code"><code>get <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
-<p class="returns"><strong>Returns:</strong> <code>String?</code> — the next character, or <code>None</code> at end of input</p>
+<p>Reads one complete Unicode scalar, not one byte.</p>
+<pre class="code"><code>get <span class="tok-op">:</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">String?</span><span class="tok-punct">,</span> <span class="tok-type">ReadError</span><span class="tok-op">&gt;</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;String?, <a class="xref" href="#type-readerror">ReadError</a>&gt;</code> — the next character, <code>Ok(None)</code> at end</p>
 
 </div>
 <div class="fn" id="fn-readline">
 <h4><code>readLine</code></h4>
 <p>Reads the next line, without its newline. The same as <code>getLine</code>.</p>
-<pre class="code"><code>readLine <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
-<p class="returns"><strong>Returns:</strong> <code>String?</code> — the next line, or <code>None</code> at end of input</p>
+<pre class="code"><code>readLine <span class="tok-op">:</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">String?</span><span class="tok-punct">,</span> <span class="tok-type">ReadError</span><span class="tok-op">&gt;</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;String?, <a class="xref" href="#type-readerror">ReadError</a>&gt;</code> — the next line, <code>Ok(None)</code> at end of</p>
 
 </div>
 <div class="fn" id="fn-read">
 <h4><code>read</code></h4>
 <p>Reads everything remaining, as one <code>String</code>.</p>
-<pre class="code"><code>read <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
-<p class="returns"><strong>Returns:</strong> <code>String?</code> — the remaining contents, or <code>None</code></p>
+<p>Draining an exhausted source answers <code>Ok(&quot;&quot;)</code>.</p>
+<pre class="code"><code>read <span class="tok-op">:</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">ReadError</span><span class="tok-op">&gt;</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;String, <a class="xref" href="#type-readerror">ReadError</a>&gt;</code> — the remaining contents, or the failure</p>
+
+</div>
+<div class="fn" id="fn-readbytes">
+<h4><code>readBytes</code></h4>
+<p>Reads everything remaining as raw bytes, without decoding it as text.</p>
+<p>The byte counterpart of <code>read</code>: it never validates UTF-8, so it recovers the payload of a source that is not text — or one <code>read</code> has just rejected. Draining an exhausted source answers <code>Ok(Binary.fromBytes([]))</code>.</p>
+<pre class="code"><code>readBytes <span class="tok-op">:</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Binary</span><span class="tok-punct">,</span> <span class="tok-type">ReadError</span><span class="tok-op">&gt;</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;Binary, <a class="xref" href="#type-readerror">ReadError</a>&gt;</code> — the remaining bytes, or the failure</p>
 
 </div>
 <div class="fn" id="fn-eof?">
@@ -196,6 +218,18 @@ data-page="filehandle.html">
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 
 </div>
+<div class="fn" id="fn-writebytes">
+<h4><code>writeBytes</code></h4>
+<p>Writes <code>content</code> as raw bytes, with no trailing newline.</p>
+<p>The byte counterpart of <code>write</code>: the payload goes to the sink exactly as given. It never renders the value, so a <code>Binary</code> reaches the sink as its bytes rather than as the <code>#Binary&lt;N bytes&gt;</code> that <code>Showable</code> would print.</p>
+<pre class="code"><code>writeBytes <span class="tok-op">:</span> <span class="tok-type">Binary</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>content</code> <code>Binary</code></dt><dd>the bytes to write</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
+
+</div>
 </div>
 </section>
 <section class="entity" id="type-filehandle">
@@ -225,7 +259,7 @@ data-page="filehandle.html">
 <h4><code>getLine</code></h4>
 <p>Reads the next line from the handle, without its newline.</p>
 <p>Answers <code>None</code> at end of file, which is what makes it usable as a loop condition. The same operation as <code>readLine</code>, under the name <code>IO.getLine</code> uses.</p>
-<pre class="code"><code><span class="tok-fn">getLine</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
+<pre class="code"><code><span class="tok-fn">getLine</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">String?</span><span class="tok-punct">,</span> <span class="tok-type">ReadError</span><span class="tok-op">&gt;</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>String?</code> — the next line, or <code>None</code> at end of file</p>
 <h5>Examples</h5>
 <p class="caption"><em>Walking a file line by line</em></p>
@@ -244,7 +278,7 @@ data-page="filehandle.html">
 <h4><code>get</code></h4>
 <p>Reads a single character from the handle, as a one-character <code>String</code>.</p>
 <p>Answers <code>None</code> at end of file.</p>
-<pre class="code"><code><span class="tok-fn">get</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
+<pre class="code"><code><span class="tok-fn">get</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">String?</span><span class="tok-punct">,</span> <span class="tok-type">ReadError</span><span class="tok-op">&gt;</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>String?</code> — the next character, or <code>None</code> at end of file</p>
 <h5>Examples</h5>
 <pre class="code"><code><span class="tok-keyword">let</span> firstChar <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
@@ -253,7 +287,7 @@ data-page="filehandle.html">
 <div class="fn" id="fn-readline">
 <h4><code>readLine</code></h4>
 <p>Reads the next line from the handle, without its newline. The same as <code>getLine</code>, named for reading from a file rather than from a console.</p>
-<pre class="code"><code><span class="tok-fn">readLine</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
+<pre class="code"><code><span class="tok-fn">readLine</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">String?</span><span class="tok-punct">,</span> <span class="tok-type">ReadError</span><span class="tok-op">&gt;</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>String?</code> — the next line, or <code>None</code> at end of file</p>
 <h5>Examples</h5>
 <pre class="code"><code><span class="tok-keyword">let</span> header <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">readLine</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
@@ -265,13 +299,18 @@ data-page="filehandle.html">
 <h4><code>read</code></h4>
 <p>Reads everything remaining in the file and returns it as one <code>String</code>.</p>
 <p>Reads from the current position, so calling it after a <code>readLine</code> gives the rest of the file rather than the whole of it.</p>
-<pre class="code"><code><span class="tok-fn">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
+<pre class="code"><code><span class="tok-fn">read</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">ReadError</span><span class="tok-op">&gt;</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>String?</code> — the remaining contents, or <code>None</code></p>
 <h5>Examples</h5>
 <pre class="code"><code><span class="tok-keyword">let</span> body <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 <p class="caption"><em>Skipping a header line, then taking the rest</em></p>
 <pre class="code"><code>handle<span class="tok-op">.</span><span class="tok-method">readLine</span>
 <span class="tok-keyword">let</span> body <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-readbytes">
+<h4><code>readBytes</code></h4>
+<pre class="code"><code><span class="tok-fn">readBytes</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Binary</span><span class="tok-punct">,</span> <span class="tok-type">ReadError</span><span class="tok-op">&gt;</span></code></pre>
 
 </div>
 <div class="fn" id="fn-eof?">
@@ -315,6 +354,11 @@ data-page="filehandle.html">
 <h2><span class="kind kind-make">make</span> <code>FileHandle&lt;R, CanWrite&gt;</code> implements <a class="xref" href="#trait-writable">Writable</a></h2>
 
 <div class="functions">
+<div class="fn" id="fn-writebytes">
+<h4><code>writeBytes</code></h4>
+<pre class="code"><code><span class="tok-fn">writeBytes</span><span class="tok-punct">(</span>content<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Binary</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+
+</div>
 <div class="fn" id="fn-printline">
 <h4><code>printLine</code></h4>
 <p>Writes <code>content</code> followed by a newline.</p>
@@ -400,7 +444,7 @@ handle<span class="tok-op">.</span><span class="tok-method">printLine</span><spa
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-26T22:47:19.793944540Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-27T01:01:54.921816755Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

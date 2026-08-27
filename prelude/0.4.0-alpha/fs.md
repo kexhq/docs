@@ -85,13 +85,17 @@ Whether a `FileHandle` may be written to. Part of the handle's type, so writing 
 
 ## type `FileError`
 
-A file that could not be opened, carrying the path that failed.
+A file operation that failed, carrying the path it failed on.
+
+`OpenFailed` and `ReadFailed` mean the filesystem refused the operation. `InvalidUtf8` means the bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence.
 
 
 
 **Variants**
 
   - `OpenFailed(FilePath)`
+  - `ReadFailed(FilePath)`
+  - `InvalidUtf8(FilePath, Integer)`
 
 ## module `FS.File`
 
@@ -124,13 +128,37 @@ open(path, mode) : FilePath -> ReadWrite -> (FileHandle<CanRead, CanWrite> -> A)
 
 ## function `read`
 
-Reads the whole file and returns its contents as a `String`.
+Reads the whole file and decodes it as UTF-8 text.
 
-Answers `None` when the file does not exist or cannot be read, so a missing file is something you handle rather than something that stops the program.
+Answers `Error(ReadFailed(path))` when the file does not exist or cannot be read, and `Error(InvalidUtf8(path, offset))` when the bytes are not valid UTF-8 — so a missing or non-text file is something you handle rather than something that stops the program. Reach for `FS.File.readBytes` when the contents are not text.
 
 
 ```kex
-read(path) : FilePath -> String?
+read(path) : FilePath -> Result<String, FileError>
+```
+
+
+## function `readBytes`
+
+Reads the whole file as raw bytes, without decoding it as text.
+
+The byte counterpart of `FS.File.read`: it never validates UTF-8, so it round trips images, archives, and any other non-text payload losslessly. Answers `Error(ReadFailed(path))` when the file cannot be read.
+
+
+```kex
+readBytes(path) : FilePath -> Result<Binary, FileError>
+```
+
+
+## function `writeBytes`
+
+Writes `content` to `path` as raw bytes, replacing whatever was there.
+
+The byte counterpart of `FS.File.write`: the payload lands on disk exactly as given, with no encoding step. Answers `false` when the write fails.
+
+
+```kex
+writeBytes(path, content) : FilePath -> Binary -> Bool
 ```
 
 
@@ -555,5 +583,19 @@ Returns the current user's home directory, or `None` when it cannot be determine
 
 ```kex
 home() : String?
+```
+
+
+## function `temporary`
+
+Returns the directory this system puts temporary files in.
+
+Total, unlike `home`: it answers `TMPDIR` when the environment sets one (`TEMP` or `TMP` on Windows) and falls back to `/tmp`, so there is always somewhere to write. The path never ends in a separator, so it composes with `FS.Path.join` directly.
+
+The directory is shared with every other process on the machine, so pick a name unlikely to collide and delete it when you are done.
+
+
+```kex
+temporary() : String
 ```
 

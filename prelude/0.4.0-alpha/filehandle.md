@@ -4,6 +4,7 @@ version: "0.4.0-alpha"
 source: filehandle.kex
 title: FileHandle
 entities:
+  - { kind: type, name: "ReadError" }
   - { kind: trait, name: "Readable" }
   - { kind: trait, name: "Writable" }
   - { kind: type, name: "FileHandle" }
@@ -13,6 +14,19 @@ entities:
 ---
 
 # FileHandle
+
+## type `ReadError`
+
+Why a read failed.
+
+`ReadFailed` means the source refused the read. `InvalidUtf8` means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U`FFFD — use `readBytes+ to recover the payload verbatim.
+
+
+
+**Variants**
+
+  - `ReadFailed`
+  - `InvalidUtf8(Integer)`
 
 ## trait `Readable`
 
@@ -35,40 +49,56 @@ firstLine(FS.File.open("notes.txt", Read).try)
 Reads the next line, without its newline.
 
 ```kex
-getLine : String?
+getLine : Result<String?, ReadError>
 ```
 
-**Returns**: `String?` — the next line, or `None` at end of input
+**Returns**: `Result<String?, ReadError>` — the next line, `Ok(None)` at end of
 
 #### `get`
 
 Reads a single character, as a one-character `String`.
 
+Reads one complete Unicode scalar, not one byte.
+
 ```kex
-get : String?
+get : Result<String?, ReadError>
 ```
 
-**Returns**: `String?` — the next character, or `None` at end of input
+**Returns**: `Result<String?, ReadError>` — the next character, `Ok(None)` at end
 
 #### `readLine`
 
 Reads the next line, without its newline. The same as `getLine`.
 
 ```kex
-readLine : String?
+readLine : Result<String?, ReadError>
 ```
 
-**Returns**: `String?` — the next line, or `None` at end of input
+**Returns**: `Result<String?, ReadError>` — the next line, `Ok(None)` at end of
 
 #### `read`
 
 Reads everything remaining, as one `String`.
 
+Draining an exhausted source answers `Ok("")`.
+
 ```kex
-read : String?
+read : Result<String, ReadError>
 ```
 
-**Returns**: `String?` — the remaining contents, or `None`
+**Returns**: `Result<String, ReadError>` — the remaining contents, or the failure
+
+#### `readBytes`
+
+Reads everything remaining as raw bytes, without decoding it as text.
+
+The byte counterpart of `read`: it never validates UTF-8, so it recovers the payload of a source that is not text — or one `read` has just rejected. Draining an exhausted source answers `Ok(Binary.fromBytes([]))`.
+
+```kex
+readBytes : Result<Binary, ReadError>
+```
+
+**Returns**: `Result<Binary, ReadError>` — the remaining bytes, or the failure
 
 #### `eof?`
 
@@ -151,6 +181,18 @@ write : Showable -> Void
 
 **Returns**: `Void`
 
+#### `writeBytes`
+
+Writes `content` as raw bytes, with no trailing newline.
+
+The byte counterpart of `write`: the payload goes to the sink exactly as given. It never renders the value, so a `Binary` reaches the sink as its bytes rather than as the `#Binary<N bytes>` that `Showable` would print.
+
+```kex
+writeBytes : Binary -> Void
+```
+
+**Returns**: `Void`
+
 ## type `FileHandle<R, W>`
 
 An open file, obtained from `FS.File.open`.
@@ -187,7 +229,7 @@ Reads the next line from the handle, without its newline.
 Answers `None` at end of file, which is what makes it usable as a loop condition. The same operation as `readLine`, under the name `IO.getLine` uses.
 
 ```kex
-getLine() : String?
+getLine() : Result<String?, ReadError>
 ```
 
 **Returns**: `String?` — the next line, or `None` at end of file
@@ -215,7 +257,7 @@ Reads a single character from the handle, as a one-character `String`.
 Answers `None` at end of file.
 
 ```kex
-get() : String?
+get() : Result<String?, ReadError>
 ```
 
 **Returns**: `String?` — the next character, or `None` at end of file
@@ -231,7 +273,7 @@ let firstChar = handle.get.or("")
 Reads the next line from the handle, without its newline. The same as `getLine`, named for reading from a file rather than from a console.
 
 ```kex
-readLine() : String?
+readLine() : Result<String?, ReadError>
 ```
 
 **Returns**: `String?` — the next line, or `None` at end of file
@@ -254,7 +296,7 @@ Reads everything remaining in the file and returns it as one `String`.
 Reads from the current position, so calling it after a `readLine` gives the rest of the file rather than the whole of it.
 
 ```kex
-read() : String?
+read() : Result<String, ReadError>
 ```
 
 **Returns**: `String?` — the remaining contents, or `None`
@@ -269,6 +311,12 @@ _Skipping a header line, then taking the rest_
 ```kex
 handle.readLine
 let body = handle.read.or("")
+```
+
+#### `readBytes`
+
+```kex
+readBytes() : Result<Binary, ReadError>
 ```
 
 #### `eof?`
@@ -333,6 +381,12 @@ handle.feed
 
 ## make `FileHandle<R, CanWrite>` implements [Writable](#trait-writable)
 
+
+#### `writeBytes`
+
+```kex
+writeBytes(content) : Binary -> Void
+```
 
 #### `printLine`
 

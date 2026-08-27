@@ -29,6 +29,7 @@ Returns the SHA-256 digest of `content`, as a 64-character lowercase hex string.
 
 ```kex
 sha256(content) : String -> String
+sha256(content) : Binary -> Binary
 ```
 
 

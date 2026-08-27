@@ -29,6 +29,7 @@ data-page="fs.html">
 <div class="wrap layout">
 <aside class="side"><nav aria-label="Modules"><p class="side-heading"><a href="index.html">Standard Library</a></p><ul class="side-list">
 <li><a href="algebra.html">Algebra</a></li>
+<li><a href="binary.html">Binary</a></li>
 <li><a href="bits.html">Bits</a></li>
 <li><a href="blankable.html">Blankable</a></li>
 <li><a href="console.html">Console</a></li>
@@ -133,10 +134,13 @@ data-page="fs.html">
 </section>
 <section class="entity" id="type-fileerror">
 <h2><span class="kind kind-type">type</span> <code>FileError</code></h2>
-<p>A file that could not be opened, carrying the path that failed.</p>
+<p>A file operation that failed, carrying the path it failed on.</p>
+<p><code>OpenFailed</code> and <code>ReadFailed</code> mean the filesystem refused the operation. <code>InvalidUtf8</code> means the bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence.</p>
 <h3>Variants</h3>
 <ul class="variants">
 <li><code>OpenFailed(FilePath)</code></li>
+<li><code>ReadFailed(FilePath)</code></li>
+<li><code>InvalidUtf8(FilePath, Integer)</code></li>
 </ul>
 </section>
 <section class="entity" id="module-fs-file">
@@ -186,21 +190,54 @@ data-page="fs.html">
 </section>
 <section class="entity" id="function-read">
 <h2><span class="kind kind-function">function</span> <code>read</code></h2>
-<p>Reads the whole file and returns its contents as a <code>String</code>.</p>
-<p>Answers <code>None</code> when the file does not exist or cannot be read, so a missing file is something you handle rather than something that stops the program.</p>
-<pre class="code"><code><span class="tok-fn">read</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></code></pre>
+<p>Reads the whole file and decodes it as UTF-8 text.</p>
+<p>Answers <code>Error(ReadFailed(path))</code> when the file does not exist or cannot be read, and <code>Error(InvalidUtf8(path, offset))</code> when the bytes are not valid UTF-8 — so a missing or non-text file is something you handle rather than something that stops the program. Reach for <code>FS.File.readBytes</code> when the contents are not text.</p>
+<pre class="code"><code><span class="tok-fn">read</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">FileError</span><span class="tok-op">&gt;</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the file to read</dd></div>
 </dl>
-<p class="returns"><strong>Returns:</strong> <code>String?</code> — the contents, or <code>None</code></p>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;String, <a class="xref" href="#type-fileerror">FileError</a>&gt;</code> — the contents, or the failure</p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; Just(&quot;hello\n&quot;)</span>
-<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">nowhere.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; None</span></code></pre>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; Ok(&quot;hello\n&quot;)</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">nowhere.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Error(ReadFailed(&quot;nowhere.txt&quot;))</span></code></pre>
 <p class="caption"><em>Reading with a default</em></p>
 <pre class="code"><code><span class="tok-keyword">let</span> config <span class="tok-op">=</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.conf</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 <p class="caption"><em>Counting words in a file</em></p>
 <pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">essay.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">split</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string"> </span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reject</span><span class="tok-punct">(</span><span class="tok-op">~</span>empty?<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span></code></pre>
+
+</section>
+<section class="entity" id="function-readbytes">
+<h2><span class="kind kind-function">function</span> <code>readBytes</code></h2>
+<p>Reads the whole file as raw bytes, without decoding it as text.</p>
+<p>The byte counterpart of <code>FS.File.read</code>: it never validates UTF-8, so it round trips images, archives, and any other non-text payload losslessly. Answers <code>Error(ReadFailed(path))</code> when the file cannot be read.</p>
+<pre class="code"><code><span class="tok-fn">readBytes</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Binary</span><span class="tok-punct">,</span> <span class="tok-type">FileError</span><span class="tok-op">&gt;</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the file to read</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;Binary, <a class="xref" href="#type-fileerror">FileError</a>&gt;</code> — the contents, or the failure</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">readBytes</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">logo.png</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(#Binary&lt;2048 bytes&gt;)</span></code></pre>
+<p class="caption"><em>Hashing a file</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">readBytes</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>data<span class="tok-op">|</span> <span class="tok-type">Digest</span><span class="tok-op">.</span><span class="tok-method">sha256</span><span class="tok-punct">(</span>data<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">hex</span> <span class="tok-punct">}</span></code></pre>
+
+</section>
+<section class="entity" id="function-writebytes">
+<h2><span class="kind kind-function">function</span> <code>writeBytes</code></h2>
+<p>Writes <code>content</code> to <code>path</code> as raw bytes, replacing whatever was there.</p>
+<p>The byte counterpart of <code>FS.File.write</code>: the payload lands on disk exactly as given, with no encoding step. Answers <code>false</code> when the write fails.</p>
+<pre class="code"><code><span class="tok-fn">writeBytes</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> content<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Binary</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code> <code><a class="xref" href="#type-filepath">FilePath</a></code></dt><dd>the file to write</dd></div>
+<div class="param"><dt><code>content</code> <code>Binary</code></dt><dd>the bytes to write</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when the write succeeded</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">writeBytes</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">out.bin</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Binary</span><span class="tok-op">.</span><span class="tok-method">fromBytes</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">255</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>Copying a file without decoding it</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">readBytes</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>data<span class="tok-op">|</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">writeBytes</span><span class="tok-punct">(</span>target<span class="tok-punct">,</span> data<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
 
 </section>
 <section class="entity" id="function-write">
@@ -814,13 +851,28 @@ data-page="fs.html">
 <pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">home</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">.</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">.apprc</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </section>
+<section class="entity" id="function-temporary">
+<h2><span class="kind kind-function">function</span> <code>temporary</code></h2>
+<p>Returns the directory this system puts temporary files in.</p>
+<p>Total, unlike <code>home</code>: it answers <code>TMPDIR</code> when the environment sets one (<code>TEMP</code> or <code>TMP</code> on Windows) and falls back to <code>/tmp</code>, so there is always somewhere to write. The path never ends in a separator, so it composes with <code>FS.Path.join</code> directly.</p>
+<p>The directory is shared with every other process on the machine, so pick a name unlikely to collide and delete it when you are done.</p>
+<pre class="code"><code><span class="tok-fn">temporary</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the temporary directory</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">temporary</span>   <span class="tok-comment"># =&gt; &quot;/tmp&quot;</span></code></pre>
+<p class="caption"><em>A scratch file that cleans up after itself</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> scratch <span class="tok-op">=</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">temporary</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">report.bin</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">writeBytes</span><span class="tok-punct">(</span>scratch<span class="tok-punct">,</span> payload<span class="tok-punct">)</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span>scratch<span class="tok-punct">)</span></code></pre>
+
+</section>
 </section>
 </section>
 </article>
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-26T22:47:19.793944540Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-27T01:01:54.921816755Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

@@ -362,6 +362,12 @@ cannedRead(path)
 read(path)
 ```
 
+#### `readBytes`
+
+```kex
+readBytes(path)
+```
+
 #### `readLines`
 
 ```kex
@@ -416,6 +422,12 @@ open(path, mode)
 
 ```kex
 write(path, content)
+```
+
+#### `writeBytes`
+
+```kex
+writeBytes(path, content)
 ```
 
 #### `append`

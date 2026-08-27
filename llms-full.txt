@@ -381,6 +381,184 @@ a.age.compare(b.age).thenBy { score(a).compare(score(b)) }
 ---
 package: prelude
 version: "0.4.0-alpha"
+source: binary.kex
+title: Binary
+entities:
+  - { kind: type, name: "Binary" }
+  - { kind: module, name: "Binary" }
+  - { kind: make, name: "Binary" }
+---
+
+# Binary
+
+## type `Binary`
+
+An opaque, immutable sequence of bytes. Binary never implicitly becomes text.
+
+`[Byte]` is the materialized list of bytes; `Binary` is the storage form. A file, an HTTP body, or a digest is a `Binary` — on the BEAM it is a native binary, so slicing it shares storage instead of copying, and none of the operations here ever walks a character list.
+
+```kex
+let data = Binary.fromHex("00686900").try
+data.length            # => 4
+data.at(1)             # => Just(104)
+data.take(2).hex       # => "0068"
+data.showValue         # => "#Binary<4 bytes>"
+```
+
+The type is opaque on purpose: there is no field to reach through, so text operations cannot be run on bytes by accident. Crossing the boundary is always explicit, in both directions, and both directions can fail — text is only some of the byte sequences there are:
+
+```kex
+"héllo".to(Binary)               # => Just(#Binary<6 bytes>)
+Binary.fromBytes([255]).to(String)   # => None
+```
+
+`Showable` and `Inspectable` deliberately render the length alone. Neither ever decodes or interpolates the payload, so printing a binary cannot leak its contents or fail on bytes that are not text. Use `hex`, `base64`, or `to(String)` when you actually want to see it.
+
+
+
+## module `Binary`
+
+## function `fromBytes`
+
+Builds a binary from a list of bytes.
+
+Total: every `Byte` is in `0..255` by construction, so there is no rejection case. `Binary.fromBytes([])` is the empty binary.
+
+
+```kex
+fromBytes(values) : [Byte] -> Binary
+```
+
+
+## function `fromHex`
+
+Decodes lowercase hexadecimal text.
+
+Strict, so that decoding is the exact inverse of `hex`: uppercase digits, an odd length, whitespace, a `0x` prefix, and any non-hex character all answer `None` rather than being repaired.
+
+
+```kex
+fromHex(text) : String -> Binary?
+```
+
+
+## function `fromBase64`
+
+Decodes standard base64 text (RFC 4648).
+
+Strict, so that decoding is the exact inverse of `base64`: the URL-safe alphabet, missing or malformed padding, whitespace, and any other noncanonical encoding all answer `None`.
+
+
+```kex
+fromBase64(text) : String -> Binary?
+```
+
+
+## make `Binary` implements Showable, Inspectable
+
+
+#### `at`
+
+The byte at `index`, counting from zero.
+
+Answers `None` for a negative or out-of-range index, so an index you did not check is something you handle rather than something that stops the program.
+
+```kex
+at(index)
+```
+
+**Returns**: `Byte?` — the byte, or `None` when the index is outside the binary
+
+**Examples**
+
+```kex
+let data = Binary.fromBytes([104, 105])
+data.at(0)    # => Just(104)
+data.at(2)    # => None
+data.at(-1)   # => None
+```
+
+#### `take`
+
+The first `count` bytes.
+
+Clamped at both ends, like the list operations: a `count` of zero or less answers the empty binary, and an oversized one answers the whole binary.
+
+```kex
+take(count)
+```
+
+**Returns**: `Binary` — the leading bytes
+
+**Examples**
+
+```kex
+let data = Binary.fromBytes([104, 105])
+data.take(1).bytes     # => [104]
+data.take(0).bytes     # => []
+data.take(999) == data # => true
+```
+
+#### `drop`
+
+Everything after the first `count` bytes.
+
+Clamped at both ends: a `count` of zero or less answers the whole binary, and an oversized one answers the empty binary. `take(n)` and `drop(n)` therefore always concatenate back to the original.
+
+```kex
+drop(count)
+```
+
+**Returns**: `Binary` — the remaining bytes
+
+**Examples**
+
+```kex
+let data = Binary.fromBytes([104, 105])
+data.drop(1).bytes                    # => [105]
+(data.take(1) + data.drop(1)) == data # => true
+```
+
+#### `+`
+
+Joins two binaries end to end.
+
+```kex
++(other)
+```
+
+**Returns**: `Binary` — the two payloads, in order
+
+**Examples**
+
+```kex
+Binary.fromBytes([104]) + Binary.fromBytes([105])   # => #Binary<2 bytes>
+```
+
+#### `inspectValue`
+
+The length-only rendering — never the payload. The same as `showValue`.
+
+```kex
+inspectValue(_)
+```
+
+**Returns**: `String` — `#Binary<N bytes>`
+
+#### `to`
+
+Binary's String conversion decodes its payload; it must not inherit the Showable fallback, which would convert the safe length-only rendering.
+
+```kex
+to(String)
+```
+
+
+---
+
+---
+package: prelude
+version: "0.4.0-alpha"
 source: bits.kex
 title: Bits
 entities:
@@ -896,6 +1074,7 @@ Returns the SHA-256 digest of `content`, as a 64-character lowercase hex string.
 
 ```kex
 sha256(content) : String -> String
+sha256(content) : Binary -> Binary
 ```
 
 
@@ -1522,6 +1701,7 @@ version: "0.4.0-alpha"
 source: filehandle.kex
 title: FileHandle
 entities:
+  - { kind: type, name: "ReadError" }
   - { kind: trait, name: "Readable" }
   - { kind: trait, name: "Writable" }
   - { kind: type, name: "FileHandle" }
@@ -1531,6 +1711,19 @@ entities:
 ---
 
 # FileHandle
+
+## type `ReadError`
+
+Why a read failed.
+
+`ReadFailed` means the source refused the read. `InvalidUtf8` means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U`FFFD — use `readBytes+ to recover the payload verbatim.
+
+
+
+**Variants**
+
+  - `ReadFailed`
+  - `InvalidUtf8(Integer)`
 
 ## trait `Readable`
 
@@ -1553,40 +1746,56 @@ firstLine(FS.File.open("notes.txt", Read).try)
 Reads the next line, without its newline.
 
 ```kex
-getLine : String?
+getLine : Result<String?, ReadError>
 ```
 
-**Returns**: `String?` — the next line, or `None` at end of input
+**Returns**: `Result<String?, ReadError>` — the next line, `Ok(None)` at end of
 
 #### `get`
 
 Reads a single character, as a one-character `String`.
 
+Reads one complete Unicode scalar, not one byte.
+
 ```kex
-get : String?
+get : Result<String?, ReadError>
 ```
 
-**Returns**: `String?` — the next character, or `None` at end of input
+**Returns**: `Result<String?, ReadError>` — the next character, `Ok(None)` at end
 
 #### `readLine`
 
 Reads the next line, without its newline. The same as `getLine`.
 
 ```kex
-readLine : String?
+readLine : Result<String?, ReadError>
 ```
 
-**Returns**: `String?` — the next line, or `None` at end of input
+**Returns**: `Result<String?, ReadError>` — the next line, `Ok(None)` at end of
 
 #### `read`
 
 Reads everything remaining, as one `String`.
 
+Draining an exhausted source answers `Ok("")`.
+
 ```kex
-read : String?
+read : Result<String, ReadError>
 ```
 
-**Returns**: `String?` — the remaining contents, or `None`
+**Returns**: `Result<String, ReadError>` — the remaining contents, or the failure
+
+#### `readBytes`
+
+Reads everything remaining as raw bytes, without decoding it as text.
+
+The byte counterpart of `read`: it never validates UTF-8, so it recovers the payload of a source that is not text — or one `read` has just rejected. Draining an exhausted source answers `Ok(Binary.fromBytes([]))`.
+
+```kex
+readBytes : Result<Binary, ReadError>
+```
+
+**Returns**: `Result<Binary, ReadError>` — the remaining bytes, or the failure
 
 #### `eof?`
 
@@ -1669,6 +1878,18 @@ write : Showable -> Void
 
 **Returns**: `Void`
 
+#### `writeBytes`
+
+Writes `content` as raw bytes, with no trailing newline.
+
+The byte counterpart of `write`: the payload goes to the sink exactly as given. It never renders the value, so a `Binary` reaches the sink as its bytes rather than as the `#Binary<N bytes>` that `Showable` would print.
+
+```kex
+writeBytes : Binary -> Void
+```
+
+**Returns**: `Void`
+
 ## type `FileHandle<R, W>`
 
 An open file, obtained from `FS.File.open`.
@@ -1705,7 +1926,7 @@ Reads the next line from the handle, without its newline.
 Answers `None` at end of file, which is what makes it usable as a loop condition. The same operation as `readLine`, under the name `IO.getLine` uses.
 
 ```kex
-getLine() : String?
+getLine() : Result<String?, ReadError>
 ```
 
 **Returns**: `String?` — the next line, or `None` at end of file
@@ -1733,7 +1954,7 @@ Reads a single character from the handle, as a one-character `String`.
 Answers `None` at end of file.
 
 ```kex
-get() : String?
+get() : Result<String?, ReadError>
 ```
 
 **Returns**: `String?` — the next character, or `None` at end of file
@@ -1749,7 +1970,7 @@ let firstChar = handle.get.or("")
 Reads the next line from the handle, without its newline. The same as `getLine`, named for reading from a file rather than from a console.
 
 ```kex
-readLine() : String?
+readLine() : Result<String?, ReadError>
 ```
 
 **Returns**: `String?` — the next line, or `None` at end of file
@@ -1772,7 +1993,7 @@ Reads everything remaining in the file and returns it as one `String`.
 Reads from the current position, so calling it after a `readLine` gives the rest of the file rather than the whole of it.
 
 ```kex
-read() : String?
+read() : Result<String, ReadError>
 ```
 
 **Returns**: `String?` — the remaining contents, or `None`
@@ -1787,6 +2008,12 @@ _Skipping a header line, then taking the rest_
 ```kex
 handle.readLine
 let body = handle.read.or("")
+```
+
+#### `readBytes`
+
+```kex
+readBytes() : Result<Binary, ReadError>
 ```
 
 #### `eof?`
@@ -1851,6 +2078,12 @@ handle.feed
 
 ## make `FileHandle<R, CanWrite>` implements [Writable](#trait-writable)
 
+
+#### `writeBytes`
+
+```kex
+writeBytes(content) : Binary -> Void
+```
 
 #### `printLine`
 
@@ -2041,13 +2274,17 @@ Whether a `FileHandle` may be written to. Part of the handle's type, so writing 
 
 ## type `FileError`
 
-A file that could not be opened, carrying the path that failed.
+A file operation that failed, carrying the path it failed on.
+
+`OpenFailed` and `ReadFailed` mean the filesystem refused the operation. `InvalidUtf8` means the bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence.
 
 
 
 **Variants**
 
   - `OpenFailed(FilePath)`
+  - `ReadFailed(FilePath)`
+  - `InvalidUtf8(FilePath, Integer)`
 
 ## module `FS.File`
 
@@ -2080,13 +2317,37 @@ open(path, mode) : FilePath -> ReadWrite -> (FileHandle<CanRead, CanWrite> -> A)
 
 ## function `read`
 
-Reads the whole file and returns its contents as a `String`.
+Reads the whole file and decodes it as UTF-8 text.
 
-Answers `None` when the file does not exist or cannot be read, so a missing file is something you handle rather than something that stops the program.
+Answers `Error(ReadFailed(path))` when the file does not exist or cannot be read, and `Error(InvalidUtf8(path, offset))` when the bytes are not valid UTF-8 — so a missing or non-text file is something you handle rather than something that stops the program. Reach for `FS.File.readBytes` when the contents are not text.
 
 
 ```kex
-read(path) : FilePath -> String?
+read(path) : FilePath -> Result<String, FileError>
+```
+
+
+## function `readBytes`
+
+Reads the whole file as raw bytes, without decoding it as text.
+
+The byte counterpart of `FS.File.read`: it never validates UTF-8, so it round trips images, archives, and any other non-text payload losslessly. Answers `Error(ReadFailed(path))` when the file cannot be read.
+
+
+```kex
+readBytes(path) : FilePath -> Result<Binary, FileError>
+```
+
+
+## function `writeBytes`
+
+Writes `content` to `path` as raw bytes, replacing whatever was there.
+
+The byte counterpart of `FS.File.write`: the payload lands on disk exactly as given, with no encoding step. Answers `false` when the write fails.
+
+
+```kex
+writeBytes(path, content) : FilePath -> Binary -> Bool
 ```
 
 
@@ -2511,6 +2772,20 @@ Returns the current user's home directory, or `None` when it cannot be determine
 
 ```kex
 home() : String?
+```
+
+
+## function `temporary`
+
+Returns the directory this system puts temporary files in.
+
+Total, unlike `home`: it answers `TMPDIR` when the environment sets one (`TEMP` or `TMP` on Windows) and falls back to `/tmp`, so there is always somewhere to write. The path never ends in a separator, so it composes with `FS.Path.join` directly.
+
+The directory is shared with every other process on the machine, so pick a name unlikely to collide and delete it when you are done.
+
+
+```kex
+temporary() : String
 ```
 
 
@@ -4777,6 +5052,12 @@ cannedRead(path)
 read(path)
 ```
 
+#### `readBytes`
+
+```kex
+readBytes(path)
+```
+
 #### `readLines`
 
 ```kex
@@ -4831,6 +5112,12 @@ open(path, mode)
 
 ```kex
 write(path, content)
+```
+
+#### `writeBytes`
+
+```kex
+writeBytes(path, content)
 ```
 
 #### `append`
