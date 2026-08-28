@@ -40,7 +40,6 @@ data-page="mock.html">
 <li><a href="evaluator.html">Evaluator</a></li>
 <li><a href="filehandle.html">FileHandle</a></li>
 <li><a href="fs.html">FS</a></li>
-<li><a href="http.html">Http</a></li>
 <li><a href="io.html">IO</a></li>
 <li><a href="json.html">JSON</a></li>
 <li><a href="kex.html">Kex</a></li>
@@ -53,6 +52,7 @@ data-page="mock.html">
 <li><a href="#type-writer">Writer</a></li>
 <li><a href="#module-mock">Mock</a></li>
 </ul></li>
+<li><a href="net.html">Net</a></li>
 <li><a href="number.html">Number</a></li>
 <li><a href="optional.html">Optional</a></li>
 <li><a href="optionparser.html">OptionParser</a></li>
@@ -71,8 +71,14 @@ data-page="mock.html">
 <li><a href="truthyable.html">Truthyable</a></li>
 <li><a href="type.html">Type</a></li>
 <li><a href="units.html">Units</a></li>
-<li><a href="webserver.html">Web</a></li>
+<li><a href="uri.html">URI</a></li>
+<li><a href="control/retry.html">Control.Retry</a></li>
 <li><a href="kex/ast.html">Kex.AST</a></li>
+<li><a href="net/dns.html">Net.DNS</a></li>
+<li><a href="net/http.html">Net.HTTP</a></li>
+<li><a href="net/ip.html">Net.IP</a></li>
+<li><a href="net/socket.html">Net.Socket</a></li>
+<li><a href="net/http/websocket.html">Net.HTTP.WebSocket</a></li>
 <li><a href="units/data.html">Units.Data</a></li>
 <li><a href="units/si.html">Units.SI</a></li>
 </ul></nav></aside>
@@ -82,10 +88,10 @@ data-page="mock.html">
 <h1>Mock</h1>
 <section class="entity" id="type-reader">
 <h2><span class="kind kind-type">type</span> <code>Reader</code></h2>
-<p>Mock — deterministic stand-ins for the world outside the program: the filesystem, the network, the environment, the console.</p>
+<p>Mock — deterministic stand-ins for the world outside the program: the filesystem, environment, and console. Networking mocks live under Mock.Net.</p>
 <p>These are STATEFUL: <code>Mock.FS.File(path, content)</code> writes into a store the real <code>FS.File</code> then reads back, so a test can write and read again, and <code>clear()</code> undoes it. That state is global and lives until cleared, which is what makes hook ordering and write/read round trips testable — and also what makes two tests able to interfere.</p>
 <p>When a test only needs canned ANSWERS, replacing the capability is the better tool: <code>with FS.File = MyFake { ... } do ... end</code> swaps the implementation for one lexical region, holds no global state, needs no clearing, and cannot leak into another test. See spec/capability_stdlib_fs.kex for the shape of a stand-in (kexhq/kex#143).</p>
-<p>Opt-in on purpose (issue #144): this module used to ride along inside http.kex, so <code>using HTTP</code> in the prelude made every Mock.* reachable from every program without anyone asking for it. Reachable is still not callable — the runtime denies the mock intrinsics outside spec files, the REPL, and --allow-mocks — but it should also not be in scope by accident. A qualified <code>Mock.FS.File(...)</code> auto-loads this file like any other opt-in module.</p>
+<p>Opt-in on purpose (issue #144): this module used to ride along inside a prelude networking file, so importing the prelude made every Mock.* reachable from every program without anyone asking for it. Reachable is still not callable — the runtime denies the mock intrinsics outside spec files, the REPL, and --allow-mocks — but it should also not be in scope by accident. A qualified <code>Mock.FS.File(...)</code> auto-loads this file like any other opt-in module.</p>
 <p>All Mock.* sub-modules live in a single <code>module Mock</code> block so merged compilation units never see duplicate top-level <code>Mock</code> modules. A stand-in's read hook: a path in, its content or <code>None</code> out.</p>
 <h3>Variants</h3>
 <ul class="variants">
@@ -134,17 +140,6 @@ data-page="mock.html">
 <div class="field"><dt><code>vars</code></dt><dd><code>Map&lt;String, String&gt;</code> <span class="opt">optional</span></dd></div>
 <div class="field"><dt><code>onGet</code></dt><dd><code><a class="xref" href="#type-lookup">Lookup</a>?</code> <span class="opt">optional</span></dd></div>
 <div class="field"><dt><code>onSet</code></dt><dd><code><a class="xref" href="#type-writer">Writer</a>?</code> <span class="opt">optional</span></dd></div>
-</dl>
-</section>
-<section class="entity" id="record-response">
-<h2><span class="kind kind-record">record</span> <code>Response</code></h2>
-<p>A stand-in for the <code>Http</code> capability: one canned response for every request, whatever the verb, URL or body. That is what a client test needs, being about what the program does WITH a response.</p>
-<p>NOT named <code>Http</code>: a record of that name is indistinguishable from the capability itself at a call site, and the <code>make</code> block binds to the capability rather than the record — every request then reaches the real network while the test looks like it is faking one.</p>
-<h3>Fields</h3>
-<dl class="fields">
-<div class="field"><dt><code>status</code></dt><dd><code>Integer</code></dd></div>
-<div class="field"><dt><code>body</code></dt><dd><code>String</code></dd></div>
-<div class="field"><dt><code>headers</code></dt><dd><code>Map&lt;String, String&gt;</code> <span class="opt">optional</span></dd></div>
 </dl>
 </section>
 <section class="entity" id="module-mock-fs">
@@ -234,57 +229,6 @@ data-page="mock.html">
 <p class="caption"><em>Every .txt path has content, nothing else exists</em></p>
 <pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">onRead</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>path<span class="tok-op">|</span>
   path<span class="tok-op">.</span><span class="tok-method">endsWith?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">then</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">stub</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">else</span> <span class="tok-bool">None</span>
-<span class="tok-keyword">end</span></code></pre>
-
-</section>
-</section>
-<section class="entity" id="module-mock-http">
-<h2><span class="kind kind-module">module</span> <code>Mock.Http</code></h2>
-<p>A stateful stand-in for the network: responses a test queues, that the real <code>Http</code> then hands back.</p>
-<p>Responses are consumed in FIFO order — the first <code>respond</code> answers the first request. When the queue runs out, the next request answers <code>Error(HttpError)</code> with kind <code>MockEmpty</code>, so a test that made more calls than it expected fails rather than reaching the network.</p>
-<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
-<span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">respond</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">{\&quot;ok\&quot;: true}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-<span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-fn">fetchStatus</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">ok</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-<span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
-<section class="entity" id="function-start">
-<h2><span class="kind kind-function">function</span> <code>start</code></h2>
-<p>Starts intercepting HTTP requests. Call it before queueing responses.</p>
-<pre class="code"><code><span class="tok-fn">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
-<p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
-<h5>Examples</h5>
-<pre class="code"><code>before <span class="tok-keyword">do</span>
-  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
-<span class="tok-keyword">end</span></code></pre>
-
-</section>
-<section class="entity" id="function-respond">
-<h2><span class="kind kind-function">function</span> <code>respond</code></h2>
-<p>Queues one response, to be handed to the next request.</p>
-<pre class="code"><code><span class="tok-fn">respond</span><span class="tok-punct">(</span>status<span class="tok-punct">,</span> body<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span>
-<span class="tok-fn">respond</span><span class="tok-punct">(</span>status<span class="tok-punct">,</span> body<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Map</span><span class="tok-op">&lt;</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">String</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
-<h5>Parameters</h5>
-<dl class="params">
-<div class="param"><dt><code>status</code> <code>Integer</code></dt><dd>the status code to answer with</dd></div>
-<div class="param"><dt><code>body</code> <code>String</code></dt><dd>the body to answer with</dd></div>
-<div class="param"><dt><code>headers</code> <code>Map&lt;String, String&gt;</code></dt><dd>the headers; omitted for none</dd></div>
-</dl>
-<p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
-<h5>Examples</h5>
-<p class="caption"><em>Two requests, two queued answers</em></p>
-<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">respond</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">first</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-<span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">respond</span><span class="tok-punct">(</span><span class="tok-number">404</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">not found</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
-<p class="caption"><em>With headers</em></p>
-<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">respond</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">{}</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
-
-</section>
-<section class="entity" id="function-stop">
-<h2><span class="kind kind-function">function</span> <code>stop</code></h2>
-<p>Stops intercepting, and discards anything still queued.</p>
-<pre class="code"><code><span class="tok-fn">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
-<p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
-<h5>Examples</h5>
-<pre class="code"><code>after <span class="tok-keyword">do</span>
-  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Http</span><span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
 <span class="tok-keyword">end</span></code></pre>
 
 </section>
@@ -577,53 +521,56 @@ data-page="mock.html">
 </div>
 </div>
 </section>
-<section class="entity" id="make-response">
-<h2><span class="kind kind-make">make</span> <code>Response</code> implements <a class="xref" href="http.html#module-http">Http</a></h2>
-
-<div class="functions">
-<div class="fn" id="fn-get">
-<h4><code>get</code></h4>
-<pre class="code"><code><span class="tok-fn">get</span><span class="tok-punct">(</span>url<span class="tok-punct">)</span></code></pre>
-
-</div>
-<div class="fn" id="fn-post">
-<h4><code>post</code></h4>
-<pre class="code"><code><span class="tok-fn">post</span><span class="tok-punct">(</span>url<span class="tok-punct">,</span> body<span class="tok-punct">)</span></code></pre>
-
-</div>
-<div class="fn" id="fn-put">
-<h4><code>put</code></h4>
-<pre class="code"><code><span class="tok-fn">put</span><span class="tok-punct">(</span>url<span class="tok-punct">,</span> body<span class="tok-punct">)</span></code></pre>
-
-</div>
-<div class="fn" id="fn-patch">
-<h4><code>patch</code></h4>
-<pre class="code"><code><span class="tok-fn">patch</span><span class="tok-punct">(</span>url<span class="tok-punct">,</span> body<span class="tok-punct">)</span></code></pre>
-
-</div>
-<div class="fn" id="fn-delete">
-<h4><code>delete</code></h4>
-<pre class="code"><code><span class="tok-fn">delete</span><span class="tok-punct">(</span>url<span class="tok-punct">)</span></code></pre>
-
-</div>
-<div class="fn" id="fn-head">
-<h4><code>head</code></h4>
-<pre class="code"><code><span class="tok-fn">head</span><span class="tok-punct">(</span>url<span class="tok-punct">)</span></code></pre>
-
-</div>
-<div class="fn" id="fn-options">
-<h4><code>options</code></h4>
-<pre class="code"><code><span class="tok-fn">options</span><span class="tok-punct">(</span>url<span class="tok-punct">)</span></code></pre>
-
-</div>
-</div>
+<section class="entity" id="module-mock-net">
+<h2><span class="kind kind-module">module</span> <code>Mock.Net</code></h2>
+<p>Scriptable networking values are namespaced so importing Mock does not recreate any of the removed global HTTP types.</p>
+<section class="entity" id="module-mock-net-http">
+<h2><span class="kind kind-module">module</span> <code>Mock.Net.HTTP</code></h2>
+<section class="entity" id="record-transport">
+<h2><span class="kind kind-record">record</span> <code>Transport</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>responses</code></dt><dd><code>[Any]</code></dd></div>
+</dl>
+</section>
+</section>
+<section class="entity" id="module-mock-net-dns">
+<h2><span class="kind kind-module">module</span> <code>Mock.Net.DNS</code></h2>
+<section class="entity" id="record-resolverscript">
+<h2><span class="kind kind-record">record</span> <code>ResolverScript</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>answers</code></dt><dd><code>{String: [String]}</code></dd></div>
+</dl>
+</section>
+</section>
+<section class="entity" id="module-mock-net-socket">
+<h2><span class="kind kind-module">module</span> <code>Mock.Net.Socket</code></h2>
+<section class="entity" id="record-script">
+<h2><span class="kind kind-record">record</span> <code>Script</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>incoming</code></dt><dd><code>[Binary]</code></dd></div>
+</dl>
+</section>
+</section>
+<section class="entity" id="module-mock-net-websocket">
+<h2><span class="kind kind-module">module</span> <code>Mock.Net.WebSocket</code></h2>
+<section class="entity" id="record-script">
+<h2><span class="kind kind-record">record</span> <code>Script</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>incoming</code></dt><dd><code>[Any]</code></dd></div>
+</dl>
+</section>
+</section>
 </section>
 </section>
 </article>
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-27T01:01:54.921816755Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-28T19:46:07.752516845Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

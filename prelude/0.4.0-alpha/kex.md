@@ -134,10 +134,8 @@ An optional capability a build may or may not include. Ask about one with `Kex.F
 
 **Variants**
 
-  - `Http`
   - `FS`
   - `Process`
-  - `WebServer`
 
 ## constant `BACKEND`
 
@@ -191,7 +189,7 @@ This build's version.
 
 Which optional capabilities this build includes.
 
-A slim build may leave out the network or the web server; asking first is how a program degrades gracefully instead of failing at the call.
+Optional non-network capabilities in this build. Networking has its own granular opt-in `Net.Support` report.
 
 ## function `has?`
 

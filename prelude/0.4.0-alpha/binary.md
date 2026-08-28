@@ -38,6 +38,14 @@ Binary.fromBytes([255]).to(String)   # => None
 
 ## module `Binary`
 
+## constant `empty`
+
+The binary holding no bytes.
+
+The same value `Binary.fromBytes([])` builds, under the name the rest of the library uses for a neutral starting value (`Headers.empty`).
+
+
+
 ## function `fromBytes`
 
 Builds a binary from a list of bytes.

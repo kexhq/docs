@@ -418,6 +418,14 @@ Binary.fromBytes([255]).to(String)   # => None
 
 ## module `Binary`
 
+## constant `empty`
+
+The binary holding no bytes.
+
+The same value `Binary.fromBytes([])` builds, under the name the rest of the library uses for a neutral starting value (`Headers.empty`).
+
+
+
 ## function `fromBytes`
 
 Builds a binary from a list of bytes.
@@ -2795,183 +2803,6 @@ temporary() : String
 ---
 package: prelude
 version: "0.4.0-alpha"
-source: http.kex
-title: Http
-entities:
-  - { kind: type, name: "NetworkError" }
-  - { kind: record, name: "HttpResponse" }
-  - { kind: record, name: "HttpError" }
-  - { kind: record, name: "HttpOptions" }
-  - { kind: module, name: "Http" }
----
-
-# Http
-
-## type `NetworkError`
-
-HTTP client requests.
-
-One function per method — `get`, `post`, `put`, `patch`, `delete`, `head`, `options` — each answering a `Result`, so a network failure is a value you handle rather than an exception.
-
-```kex
-main do
-  match Http.get("https://example.com/api/status") do
-    Ok(response) => IO.printLine("${response.status}: ${response.body}")
-    Error(e)     => IO.printError("request failed: ${e.message}")
-  end
-end
-```
-
-An HTTP error status is NOT an `Error`: a 404 is a response the server chose to send, so it arrives as `Ok` with `status: 404`. `Error` means the request never got an answer — refused, timed out, DNS failed.
-
-Every call has a second form taking `HttpOptions`, for headers and timeouts.
-
-Why a request never reached an answer.
-
-Distinct from an HTTP status, which is an answer. `MockEmpty` appears only under `Mock.Http`, when the queued responses have run out.
-
-
-
-**Variants**
-
-  - `ConnectionRefused`
-  - `Timeout`
-  - `DnsError`
-  - `SslError`
-  - `NotImplemented`
-  - `MockEmpty`
-  - `Unknown`
-
-## record `HttpResponse`
-
-What the server answered.
-
-**Fields**
-
-  - `status` : Integer
-  - `body` : String
-  - `headers` : Map<String, String>
-
-## record `HttpError`
-
-Why a request could not be completed.
-
-**Fields**
-
-  - `kind` : [NetworkError](#type-networkerror)
-  - `message` : String
-
-## record `HttpOptions`
-
-Per-request settings: headers to send, and how long to wait.
-
-```kex
-Http.get(url, HttpOptions {
-  headers: { "Authorization": "Bearer ${token}" },
-  timeout: 5000
-})
-```
-
-**Fields**
-
-  - `headers` : Map<String, String> (optional)
-  - `timeout` : Integer (optional)
-
-## module `Http`
-
-HTTP client requests.
-
-A capability: every member performs a real network request, so a test can replace it for a lexical region with `with Http = ...` rather than mutating global mock state (kexhq/kex#143).
-
-## function `get`
-
-Fetches `url`.
-
-Answers `Ok` whenever the server replied, whatever the status — check `response.status` for that. `Error` means no answer arrived at all.
-
-
-```kex
-get(url) : String -> Result<HttpResponse, HttpError>
-get(url) : String -> HttpOptions -> Result<HttpResponse, HttpError>
-```
-
-
-## function `post`
-
-Sends `body` to `url` with the POST method.
-
-The body is sent as given — set `Content-Type` yourself through `opts` when the server needs to know what it is.
-
-
-```kex
-post(url, body) : String -> String -> Result<HttpResponse, HttpError>
-post(url, body) : String -> String -> HttpOptions -> Result<HttpResponse, HttpError>
-```
-
-
-## function `put`
-
-Sends `body` to `url` with the PUT method, replacing the resource there.
-
-
-```kex
-put(url, body) : String -> String -> Result<HttpResponse, HttpError>
-put(url, body) : String -> String -> HttpOptions -> Result<HttpResponse, HttpError>
-```
-
-
-## function `patch`
-
-Sends `body` to `url` with the PATCH method, updating part of the resource there.
-
-
-```kex
-patch(url, body) : String -> String -> Result<HttpResponse, HttpError>
-patch(url, body) : String -> String -> HttpOptions -> Result<HttpResponse, HttpError>
-```
-
-
-## function `delete`
-
-Sends a DELETE request to `url`.
-
-
-```kex
-delete(url) : String -> Result<HttpResponse, HttpError>
-delete(url) : String -> HttpOptions -> Result<HttpResponse, HttpError>
-```
-
-
-## function `head`
-
-Fetches `url`'s headers without its body.
-
-The cheap way to ask whether something is there, how big it is, or when it last changed.
-
-
-```kex
-head(url) : String -> Result<HttpResponse, HttpError>
-head(url) : String -> HttpOptions -> Result<HttpResponse, HttpError>
-```
-
-
-## function `options`
-
-Asks `url` which methods it supports, with an OPTIONS request.
-
-
-```kex
-options(url) : String -> Result<HttpResponse, HttpError>
-options(url) : String -> HttpOptions -> Result<HttpResponse, HttpError>
-```
-
-
-
----
-
----
-package: prelude
-version: "0.4.0-alpha"
 source: io.kex
 title: IO
 entities:
@@ -3317,10 +3148,8 @@ An optional capability a build may or may not include. Ask about one with `Kex.F
 
 **Variants**
 
-  - `Http`
   - `FS`
   - `Process`
-  - `WebServer`
 
 ## constant `BACKEND`
 
@@ -3374,7 +3203,7 @@ This build's version.
 
 Which optional capabilities this build includes.
 
-A slim build may leave out the network or the web server; asking first is how a program degrades gracefully instead of failing at the call.
+Optional non-network capabilities in this build. Networking has its own granular opt-in `Net.Support` report.
 
 ## function `has?`
 
@@ -4704,13 +4533,13 @@ entities:
 
 ## type `Reader`
 
-Mock — deterministic stand-ins for the world outside the program: the filesystem, the network, the environment, the console.
+Mock — deterministic stand-ins for the world outside the program: the filesystem, environment, and console. Networking mocks live under Mock.Net.
 
 These are STATEFUL: `Mock.FS.File(path, content)` writes into a store the real `FS.File` then reads back, so a test can write and read again, and `clear()` undoes it. That state is global and lives until cleared, which is what makes hook ordering and write/read round trips testable — and also what makes two tests able to interfere.
 
 When a test only needs canned ANSWERS, replacing the capability is the better tool: `with FS.File = MyFake { ... } do ... end` swaps the implementation for one lexical region, holds no global state, needs no clearing, and cannot leak into another test. See spec/capability_stdlib_fs.kex for the shape of a stand-in (kexhq/kex#143).
 
-Opt-in on purpose (issue #144): this module used to ride along inside http.kex, so `using HTTP` in the prelude made every Mock.* reachable from every program without anyone asking for it. Reachable is still not callable — the runtime denies the mock intrinsics outside spec files, the REPL, and --allow-mocks — but it should also not be in scope by accident. A qualified `Mock.FS.File(...)` auto-loads this file like any other opt-in module.
+Opt-in on purpose (issue #144): this module used to ride along inside a prelude networking file, so importing the prelude made every Mock.* reachable from every program without anyone asking for it. Reachable is still not callable — the runtime denies the mock intrinsics outside spec files, the REPL, and --allow-mocks — but it should also not be in scope by accident. A qualified `Mock.FS.File(...)` auto-loads this file like any other opt-in module.
 
 All Mock.* sub-modules live in a single `module Mock` block so merged compilation units never see duplicate top-level `Mock` modules. A stand-in's read hook: a path in, its content or `None` out.
 
@@ -4774,18 +4603,6 @@ end
   - `vars` : Map<String, String> (optional)
   - `onGet` : [Lookup](#type-lookup)? (optional)
   - `onSet` : [Writer](#type-writer)? (optional)
-
-## record `Response`
-
-A stand-in for the `Http` capability: one canned response for every request, whatever the verb, URL or body. That is what a client test needs, being about what the program does WITH a response.
-
-NOT named `Http`: a record of that name is indistinguishable from the capability itself at a call site, and the `make` block binds to the capability rather than the record — every request then reaches the real network while the test looks like it is faking one.
-
-**Fields**
-
-  - `status` : Integer
-  - `body` : String
-  - `headers` : Map<String, String> (optional)
 
 ## module `Mock.FS`
 
@@ -4862,50 +4679,6 @@ Content derived from the path, a failure on the third call, a record of what was
 
 ```kex
 onRead(reader) : Reader -> Void
-```
-
-
-## module `Mock.Http`
-
-A stateful stand-in for the network: responses a test queues, that the real `Http` then hands back.
-
-Responses are consumed in FIFO order — the first `respond` answers the first request. When the queue runs out, the next request answers `Error(HttpError)` with kind `MockEmpty`, so a test that made more calls than it expected fails rather than reaching the network.
-
-```kex
-Mock.Http.start()
-Mock.Http.respond(200, "{\"ok\": true}")
-assert(fetchStatus() == "ok")
-Mock.Http.stop()
-```
-
-## function `start`
-
-Starts intercepting HTTP requests. Call it before queueing responses.
-
-
-```kex
-start() : Void
-```
-
-
-## function `respond`
-
-Queues one response, to be handed to the next request.
-
-
-```kex
-respond(status, body) : Integer -> String -> Void
-respond(status, body) : Integer -> String -> Map<String, String> -> Void
-```
-
-
-## function `stop`
-
-Stops intercepting, and discards anything still queued.
-
-
-```kex
-stop() : Void
 ```
 
 
@@ -5211,50 +4984,179 @@ set(name, value)
 unset(name)
 ```
 
-## make `Response` implements [Http](http.md#module-http)
+## module `Mock.Net`
+
+Scriptable networking values are namespaced so importing Mock does not recreate any of the removed global HTTP types.
+
+## module `Mock.Net.HTTP`
+
+## record `Transport`
+
+**Fields**
+
+  - `responses` : [Any]
+
+## module `Mock.Net.DNS`
+
+## record `ResolverScript`
+
+**Fields**
+
+  - `answers` : {String: [String]}
+
+## module `Mock.Net.Socket`
+
+## record `Script`
+
+**Fields**
+
+  - `incoming` : [Binary]
+
+## module `Mock.Net.WebSocket`
+
+## record `Script`
+
+**Fields**
+
+  - `incoming` : [Any]
 
 
-#### `get`
+---
+
+---
+package: prelude
+version: "0.4.0-alpha"
+source: net.kex
+title: Net
+entities:
+  - { kind: module, name: "Net" }
+---
+
+# Net
+
+## module `Net`
+
+## record `Port`
+
+Shared networking values, capability discovery, and typed failures.
 
 ```kex
-get(url)
+using Net
+
+let https = Port.from(443).try
+if Support.current.tls.usable? then https.string else "TLS unavailable" end
 ```
 
-#### `post`
+A validated TCP or UDP port number in `0..65535`.
+
+Use `Port.from` at input boundaries. Port zero requests an ephemeral port where a listening API permits it.
+
+**Fields**
+
+  - `value` : Integer
+
+## record `SupportValue`
+
+Whether a feature was compiled into this backend and is usable now.
+
+**Fields**
+
+  - `compiled?` : Bool
+  - `usable?` : Bool
+
+## record `SupportReport`
+
+Granular networking capabilities for the current backend and environment.
+
+**Fields**
+
+  - `dns` : [SupportValue](#record-supportvalue)
+  - `tcp` : [SupportValue](#record-supportvalue)
+  - `udp` : [SupportValue](#record-supportvalue)
+  - `unix` : [SupportValue](#record-supportvalue)
+  - `tls` : [SupportValue](#record-supportvalue)
+  - `httpClient` : [SupportValue](#record-supportvalue)
+  - `httpServer` : [SupportValue](#record-supportvalue)
+  - `webSocketClient` : [SupportValue](#record-supportvalue)
+  - `webSocketServer` : [SupportValue](#record-supportvalue)
+
+## module `Net.Port`
+
+## function `from`
+
+Validates a port number.
+
 
 ```kex
-post(url, body)
+from(value) : Integer -> Result<Port, NetError>
 ```
 
-#### `put`
 
-```kex
-put(url, body)
-```
+## module `Net.Support`
 
-#### `patch`
+## constant `current`
 
-```kex
-patch(url, body)
-```
+Reports compiled and currently usable networking features.
 
-#### `delete`
 
-```kex
-delete(url)
-```
 
-#### `head`
+## type `NetOperation`
 
-```kex
-head(url)
-```
+The subsystem or operation that produced a networking error.
 
-#### `options`
 
-```kex
-options(url)
-```
+
+**Variants**
+
+  - `DNS`
+  - `TCP`
+  - `UDP`
+  - `Unix`
+  - `TLS`
+  - `HTTPClient`
+  - `HTTPServer`
+  - `WebSocketClient`
+  - `WebSocketServer`
+
+## type `NetErrorKind`
+
+Stable, backend-independent networking failure categories.
+
+
+
+**Variants**
+
+  - `Parse`
+  - `Resolve`
+  - `Connect`
+  - `Protocol`
+  - `Timeout`
+  - `Cancelled`
+  - `Limit`
+  - `Closed`
+  - `ReadInProgress`
+  - `UnsupportedBackend`
+  - `UnsupportedOption`
+  - `BrowserRestricted`
+  - `OpaqueRedirect`
+  - `MockEmpty`
+  - `Backend`
+
+## record `NetError`
+
+A typed networking failure. `phase` adds optional protocol context and `progress` records bytes transferred before a partial-operation failure.
+
+**Fields**
+
+  - `kind` : [NetErrorKind](#type-neterrorkind)
+  - `operation` : [NetOperation](#type-netoperation)
+  - `message` : String
+  - `phase` : String?
+  - `progress` : Integer?
+
+## make `Port`
+
+
 
 
 ---
@@ -6964,6 +6866,16 @@ end
 ## module `Task`
 
 Running work in another process and collecting the answer.
+
+## function `sleep`
+
+Suspends for an elapsed duration. Negative durations are treated as zero.
+
+
+```kex
+sleep(duration) : Duration -> Void
+```
+
 
 ## function `start`
 
@@ -11976,131 +11888,274 @@ The time units are prelude-global, because every unit module measures against th
 ---
 package: prelude
 version: "0.4.0-alpha"
-source: webserver.kex
-title: Web
+source: uri.kex
+title: URI
 entities:
-  - { kind: module, name: "Web" }
+  - { kind: module, name: "URI" }
 ---
 
-# Web
+# URI
 
-## module `Web`
+## module `URI`
 
-A small, WEBrick-style web server.
+## record `URI`
 
-You build a server by naming a port and mounting routes on it, then start it. Configuration is immutable: mounting a route returns an updated server, and `start` hands that configuration to the BEAM runtime.
+Strict RFC 3986 URI values, hierarchical URLs, query strings, and HTML form encoding. Parsing preserves caller spelling; normalization is always explicit.
 
 ```kex
-let hello(request: Web.Request) -> Web.Response do
-  let name = request.query.get("name", "world")
-  return Web.Response.text("Hello, ${name}!\n")
-end
+using URI
 
-main do
-  let server = Web.Server.build(8080)
-    .get("/", ~home)
-    .get("/hello", ~hello)
-    .post("/echo", ~echo)
-
-  IO.printLine("listening on http://localhost:8080")
-  if let Error(reason) = server.start()
-    IO.printLine("server stopped: ${reason}")
-  end
-end
+let base = URL.parse("https://example.test/a/").try
+let reference = URI.parse("../items?limit=10").try
+base.resolve(reference).try.string
 ```
 
-A handler is any function from a `Web.Request` to a `Web.Response`, and the `Web.Response` constructors cover the usual replies — text, HTML, JSON, a redirect, a 404.
-
-The server runs on the BEAM backend: `kex -R yourfile.kex`.
-
-## record `Request`
-
-One incoming HTTP request.
+A parsed RFC 3986 URI reference. Construction is strict; use `parse` rather than building this representation directly. `string` preserves the spelling supplied by the caller, while `normalize` is explicit.
 
 **Fields**
 
-  - `method` : String
-  - `path` : String
-  - `queryString` : String
-  - `query` : Map<String, String>
-  - `headers` : Map<String, String>
-  - `body` : String
+  - `source` : String
 
-## record `Response`
+## record `URL`
 
-One outgoing HTTP response.
-
-Build one with the `Web.Response` constructors rather than by hand — they set the status and content type for you.
+An absolute hierarchical URI with an authority component.
 
 **Fields**
 
-  - `status` : Integer (optional)
-  - `headers` : Map<String, String> (optional)
-  - `body` : String (optional)
+  - `source` : String
 
-## module `Web.Response`
+## record `Host`
 
-Constructors for the usual kinds of reply.
+A host's display spelling and normalized ASCII/IDNA spelling.
 
-## function `text`
+**Fields**
 
-A 200 response carrying plain text.
+  - `display` : String
+  - `ascii` : String
+
+## record `Query`
+
+Ordered URI query entries. `None` distinguishes a bare key from `key=`.
+
+**Fields**
+
+  - `entries` : [(String, String?)]
+
+## record `Form`
+
+Ordered `application/x-www-form-urlencoded` entries.
+
+**Fields**
+
+  - `entries` : [(String, String?)]
+
+## record `URIError`
+
+A typed URI parsing, conversion, or resolution failure.
+
+**Fields**
+
+  - `kind` : [URIErrorKind](#type-urierrorkind)
+  - `message` : String
+  - `position` : Integer?
+
+## type `URIErrorKind`
+
+Stable URI failure categories.
+
+
+
+**Variants**
+
+  - `InvalidSyntax`
+  - `InvalidEscape`
+  - `InvalidAuthority`
+  - `InvalidPort`
+  - `NonASCII`
+  - `NotAbsolute`
+  - `NotHierarchical`
+  - `MissingAuthority`
+  - `UnsupportedScheme`
+
+## function `parse`
+
+Strictly parses an ASCII RFC 3986 URI reference.
 
 
 ```kex
-text(body)
+parse(text) : String -> Result<URI, URIError>
 ```
 
 
-## function `textWithStatus`
+## function `fromIRI`
 
-A plain-text response with a status you choose.
+Converts a Unicode IRI to an ASCII URI using IDNA and UTF-8 percent encoding.
 
 
 ```kex
-textWithStatus(body, status)
+fromIRI(text) : String -> Result<URI, URIError>
 ```
 
 
-## function `html`
+## module `URI.URL`
 
-A 200 response carrying HTML.
+## function `parse`
+
+Parses an absolute hierarchical URL with an authority.
 
 
 ```kex
-html(body)
+parse(text) : String -> Result<URL, URIError>
 ```
 
 
-## function `json`
+## function `build`
 
-A 200 response carrying JSON.
-
-Takes the JSON as text, so pair it with `JSON.stringify`.
+Builds and validates a URL from decoded path segments and a query value.
 
 
 ```kex
-json(body)
+build : String -> String -> [String] -> Query -> Result<URL, URIError>
 ```
 
 
-## function `redirect`
+## module `URI.Query`
 
-A 302 response sending the client to `location`.
+## function `from`
+
+Builds a query while preserving order, duplicates, and bare keys.
 
 
 ```kex
-redirect(location)
+from(entries) : [(String, String?)] -> Query
 ```
 
 
-## constant `notFound`
+## function `parse`
 
-A 404 response with a plain-text body.
+Parses generic URI query encoding; `` remains a literal plus.
+
+
+```kex
+parse(text) : String -> Result<Query, URIError>
+```
+
+
+## module `URI.Form`
+
+## function `from`
+
+Builds a form value while preserving order and duplicates.
+
+
+```kex
+from(entries) : [(String, String)] -> Form
+```
+
+
+## function `parse`
+
+Parses form encoding where `` represents a space.
+
+
+```kex
+parse(text) : String -> Result<Form, URIError>
+```
+
+
+## make `URI` implements Showable, Inspectable
+
+
+#### `equivalent?`
+
+```kex
+equivalent?(other)
+```
+
+**Returns**: `Bool` — whether normalized representations are equal
+
+#### `resolve`
+
+Resolves a URI reference against this absolute base.
+
+```kex
+resolve(reference)
+```
+
+#### `inspectValue`
+
+Structural inspection is also credential-safe.
+
+```kex
+inspectValue(colors)
+```
+
+## make `URL` implements Showable, Inspectable
+
+
+#### `equivalent?`
+
+```kex
+equivalent?(other)
+```
+
+**Returns**: `Bool` — whether normalized representations are equal
+
+#### `resolve`
+
+Resolves a URI reference while preserving the URL invariant.
+
+```kex
+resolve(reference)
+```
+
+#### `inspectValue`
+
+Structural inspection is also credential-safe.
+
+```kex
+inspectValue(colors)
+```
+
+## make `Query`
 
 
 
-## type `Handler`
+## make `Form`
+
+
+
+
+---
+
+---
+package: prelude
+version: "0.4.0-alpha"
+source: control/retry.kex
+title: Control.Retry
+entities:
+  - { kind: module, name: "Control.Retry" }
+---
+
+# Control.Retry
+
+## module `Control.Retry`
+
+## record `Policy`
+
+A bounded retry schedule. Attempts includes the initial call. Delays are immutable `Duration` values and never exceed `maximumDelay`.
+
+**Fields**
+
+  - `maximumAttempts` : Integer
+  - `initialDelay` : Duration
+  - `multiplier` : Float
+  - `maximumDelay` : Duration
+  - `maximumElapsed` : Duration? (optional)
+
+## type `Predicate<E>`
+
+Decides whether an application error is eligible for another attempt.
 
 
 
@@ -12108,154 +12163,134 @@ A 404 response with a plain-text body.
 
   - _(abstract)_
 
-## record `Route`
+## type `Sleeper`
 
-**Fields**
-
-  - `method` : String
-  - `path` : String
-  - `handler` : [Handler](#type-handler)
-
-## record `Server`
-
-**Fields**
-
-  - `port` : Integer
-  - `routes` : [[Route](#record-route)] (optional)
-
-## make `Web.Server`
+Performs one scheduled delay. Supplying this callback makes retry tests deterministic without sleeping.
 
 
-#### `mount`
 
-Mounts `handler` at `path` for ANY HTTP method.
+**Variants**
 
-Use the method-specific forms below when only one method should be answered.
+  - _(abstract)_
+
+## function `fixed`
+
+Builds a constant-delay retry policy.
+
 
 ```kex
-mount(path, handler)
+fixed(maximumAttempts, delay) : Integer -> Duration -> Policy
 ```
 
-**Returns**: `Server` — the server, with the route added
+
+## function `exponential`
+
+Builds a doubling backoff capped at `maximumDelay`.
+
+
+```kex
+exponential : Integer -> Duration -> Duration -> Policy
+```
+
+
+## make `Policy`
+
+
+#### `withMaximumElapsed`
+
+Returns the same schedule with a bound on total scheduled sleep time.
+
+The operation's own execution time is not counted; use operation-specific deadlines for that. A retry whose next delay would exceed this bound is not started.
+
+```kex
+withMaximumElapsed(maximumElapsed)
+```
+
+**Returns**: `Policy` — a copied policy with the elapsed bound
 
 **Examples**
 
+_`Retry.fixed(5, Duration.seconds(1)).withMaximumElapsed(Duration.seconds(2))`._
+
 ```kex
-Web.Server.build(8080).mount("/health", ~health)
+
 ```
 
-#### `get`
+## function `run`
 
-Mounts `handler` at `path` for GET requests.
+Runs `operation` until it succeeds or exhausts the policy.
+
+The last application error is returned unchanged. This helper performs no network-specific classification: callers decide what operation to wrap.
+
 
 ```kex
-get(path, handler)
+run(policy, operation) : Policy -> Block<Result<X, E>> -> Result<X, E>
+run(policy, operation) : Policy -> Predicate<E> -> Block<Result<X, E>> -> Result<X, E>
 ```
 
-**Returns**: `Server` — the server, with the route added
 
-**Examples**
+## function `runWith`
+
+Runs with injected error classification and sleeping.
+
+This is the deterministic testing seam: a fake sleeper can record durations or advance a virtual clock. Production callers normally use `Retry.run`.
+
 
 ```kex
-Web.Server.build(8080)
-  .get("/", ~home)
-  .get("/hello", ~hello)
+runWith : Policy -> Predicate<E> -> Sleeper -> Block<Result<X, E>> -> Result<X, E>
 ```
 
-#### `post`
 
-Mounts `handler` at `path` for POST requests.
+## function `attempt`
+
 
 ```kex
-post(path, handler)
+attempt(policy, predicate, sleeper, operation, number, delay, elapsed)
 ```
 
-**Returns**: `Server` — the server, with the route added
 
-**Examples**
+## module `Control.Retry.Retry`
+
+The imported public namespace: `using Control.Retry` then `Retry.run(...)`.
+
+## function `fixed`
+
+Public imported alias of `Control.Retry.fixed`.
+
 
 ```kex
-server.post("/echo", ~echo)
+fixed(maximumAttempts, delay) : Integer -> Duration -> Policy
 ```
 
-#### `put`
 
-Mounts `handler` at `path` for PUT requests.
+## function `exponential`
+
+Public imported alias of `Control.Retry.exponential`.
+
 
 ```kex
-put(path, handler)
+exponential : Integer -> Duration -> Duration -> Policy
 ```
 
-**Returns**: `Server` — the server, with the route added
 
-**Examples**
+## function `run`
+
+Public imported alias of `Control.Retry.run`.
+
 
 ```kex
-server.put("/items", ~replaceItem)
+run(policy, operation) : Policy -> Block<Result<X, E>> -> Result<X, E>
+run(policy, operation) : Policy -> Predicate<E> -> Block<Result<X, E>> -> Result<X, E>
 ```
 
-#### `patch`
 
-Mounts `handler` at `path` for PATCH requests.
+## function `runWith`
 
-```kex
-patch(path, handler)
-```
-
-**Returns**: `Server` — the server, with the route added
-
-**Examples**
-
-```kex
-server.patch("/items", ~updateItem)
-```
-
-#### `delete`
-
-Mounts `handler` at `path` for DELETE requests.
-
-```kex
-delete(path, handler)
-```
-
-**Returns**: `Server` — the server, with the route added
-
-**Examples**
-
-```kex
-server.delete("/items", ~removeItem)
-```
-
-#### `start`
-
-Starts listening, and blocks until the server stops.
-
-Answers `Error` with a reason when the server could not start — a port already in use, for instance — or when it stops unexpectedly.
-
-Runs on the BEAM backend: `kex -R yourfile.kex`.
-
-```kex
-start()
-```
-
-**Returns**: `Result<Void, String>` — why the server stopped
-
-**Examples**
-
-```kex
-IO.printLine("listening on http://localhost:8080")
-if let Error(reason) = server.start()
-  IO.printLine("server stopped: ${reason}")
-end
-```
-
-## module `Web.Server`
-
-## function `build`
+Deterministic seam with an injected sleeper, primarily for specifications.
 
 
 ```kex
-build(port)
+runWith : Policy -> Predicate<E> -> Sleeper -> Block<Result<X, E>> -> Result<X, E>
 ```
 
 
@@ -12807,6 +12842,1643 @@ Source-like conversion through the standard `.to(String)` spelling.
 ```kex
 to(String)
 ```
+
+
+---
+
+---
+package: prelude
+version: "0.4.0-alpha"
+source: net/dns.kex
+title: Net.DNS
+entities:
+  - { kind: module, name: "Net.DNS" }
+---
+
+# Net.DNS
+
+## module `Net.DNS`
+
+## record `Name`
+
+Typed DNS lookup with explicit resolver ownership and bounded caching.
+
+```kex
+using Net.DNS
+
+let resolver = Resolver.system.try
+let name = Name.parse("example.test").try
+let addresses = resolver.addresses(name).try
+resolver.close
+```
+
+A validated DNS name with caller-facing and IDNA ASCII spellings.
+
+**Fields**
+
+  - `display` : String
+  - `ascii` : String
+
+## type `RecordType`
+
+Record families supported by `Resolver.lookup`.
+
+
+
+**Variants**
+
+  - `A`
+  - `AAAA`
+  - `CNAME`
+  - `MX`
+  - `TXT`
+  - `SRV`
+  - `PTR`
+
+## type `DNSSECStatus`
+
+DNSSEC state reported by the underlying resolver. Kex does not independently validate DNSSEC and therefore commonly reports `Indeterminate`.
+
+
+
+**Variants**
+
+  - `Secure`
+  - `Insecure`
+  - `Bogus`
+  - `Indeterminate`
+
+## type `DNSRecord`
+
+Typed DNS resource records, preserving MX/SRV priorities and TXT chunks.
+
+
+
+**Variants**
+
+  - `AddressRecord(Net.IP.Address)`
+  - `CanonicalName(Name)`
+  - `MailExchange(Integer, Name)`
+  - `TextRecord([String])`
+  - `ServiceRecord(Integer, Integer, Net.Port, Name)`
+  - `PointerRecord(Name)`
+
+## record `LookupResponse`
+
+Records and the reported DNSSEC state from one lookup.
+
+**Fields**
+
+  - `records` : [[DNSRecord](#type-dnsrecord)]
+  - `dnssec` : [DNSSECStatus](#type-dnssecstatus)
+
+## record `CacheOptions`
+
+Bounds for a resolver-owned positive and negative cache.
+
+**Fields**
+
+  - `entries` : Integer (optional)
+  - `maximumTtl` : Duration (optional)
+  - `negativeTtl` : Duration (optional)
+
+## record `CacheStatistics`
+
+Lifetime cache counters. `clear` empties entries but keeps these counters.
+
+**Fields**
+
+  - `entries` : Integer
+  - `hits` : Integer
+  - `misses` : Integer
+  - `negativeHits` : Integer
+  - `evictions` : Integer
+
+## type `Resolver`
+
+An opaque, process-safe resolver that owns its cache.
+
+
+
+## module `Net.DNS.Name`
+
+## function `parse`
+
+Validates a name and converts Unicode labels to IDNA ASCII.
+
+
+```kex
+parse(text) : String -> Result<Name, NetError>
+```
+
+
+## module `Net.DNS.Resolver`
+
+## function `system`
+
+Opens a resolver using system configuration and default cache bounds.
+
+
+```kex
+system()
+```
+
+
+## make `Resolver`
+
+
+#### `addresses`
+
+Resolves AAAA and A records, returning IPv6 addresses first.
+
+```kex
+addresses(name)
+```
+
+**Returns**: `Result<[Net.IP.Address], NetError>` — addresses or `Resolve`
+
+**Examples**
+
+_`resolver.addresses(Name.parse("example.test").try).try`_
+
+```kex
+
+```
+
+#### `lookup`
+
+Looks up one supported resource-record family.
+
+```kex
+lookup(kind, name)
+```
+
+**Returns**: `Result<LookupResponse, NetError>` — typed records or `Resolve`
+
+#### `clear`
+
+Empties cached entries without resetting lifetime counters.
+
+```kex
+clear()
+```
+
+**Returns**: `Void`
+
+#### `statistics`
+
+```kex
+statistics()
+```
+
+**Returns**: `CacheStatistics` — current entries and lifetime counters
+
+#### `close`
+
+Idempotently closes the resolver.
+
+```kex
+close()
+```
+
+**Returns**: `Void`
+
+## module `Net.DNS.DNS`
+
+## function `addresses`
+
+Resolves a name once with a short-lived system resolver.
+
+
+```kex
+addresses(name) : Name -> Result<[Net.IP.Address], NetError>
+```
+
+
+
+---
+
+---
+package: prelude
+version: "0.4.0-alpha"
+source: net/http.kex
+title: Net.HTTP
+entities:
+  - { kind: module, name: "Net.HTTP" }
+---
+
+# Net.HTTP
+
+## module `Net.HTTP`
+
+## record `Headers`
+
+Buffered HTTP clients, responses, and a small declaration-ordered server router. Requests never follow redirects or perform generic retries implicitly.
+
+```kex
+using Net.HTTP
+
+let response = HTTP.get("https://example.test/").try
+response.status.success?   # => true
+```
+
+For connection reuse and statistics, own a client explicitly:
+
+```kex
+let client = Client.open.try
+let response = client.get("https://example.test/").try
+client.close.try
+```
+
+An insertion-ordered HTTP field collection. Names compare case-insensitively and duplicate fields are preserved.
+
+**Fields**
+
+  - `entries` : [(String, String)]
+
+## record `Status`
+
+A validated HTTP status code in `100..599`.
+
+**Fields**
+
+  - `code` : Integer
+
+## record `Response<B>`
+
+A typed HTTP response envelope whose body representation is explicit.
+
+**Fields**
+
+  - `status` : Status
+  - `headers` : Headers
+  - `body` : B
+
+## record `Request<B>`
+
+A typed HTTP request envelope whose body representation is explicit.
+
+**Fields**
+
+  - `method` : String
+  - `target` : URI
+  - `headers` : Headers
+  - `body` : B
+
+## record `RouteContext`
+
+Route captures decoded after path segmentation.
+
+**Fields**
+
+  - `parameters` : Map<String, String> (optional)
+
+## record `Context`
+
+Per-request server context.
+
+**Fields**
+
+  - `route` : RouteContext
+
+## type `Handler`
+
+A buffered HTTP route handler.
+
+
+
+**Variants**
+
+  - _(abstract)_
+
+## record `Route`
+
+One declared route; routers preserve declaration order.
+
+**Fields**
+
+  - `method` : String
+  - `path` : String
+  - `handler` : [Handler](#type-handler)
+
+## record `Router`
+
+An immutable, declaration-ordered HTTP router.
+
+**Fields**
+
+  - `routes` : [[Route](#record-route)] (optional)
+
+## record `ShutdownReport`
+
+Counts and elapsed time from graceful server shutdown.
+
+**Fields**
+
+  - `completed` : Integer
+  - `failed` : Integer
+  - `forced` : Integer
+  - `elapsedMilliseconds` : Integer
+
+## record `ServerOptions`
+
+Bounded HTTP server resources and default graceful-shutdown duration.
+
+**Fields**
+
+  - `maximumHandlers` : Integer (optional)
+  - `backlog` : Integer (optional)
+  - `gracefulShutdown` : Duration (optional)
+
+## record `PoolOptions`
+
+HTTP connection-pool bounds and idle lifetime.
+
+**Fields**
+
+  - `perOrigin` : Integer (optional)
+  - `total` : Integer (optional)
+  - `queuedRequests` : Integer (optional)
+  - `idleExpiryMilliseconds` : Integer (optional)
+
+## record `ClientOptions`
+
+Options owned by an explicit HTTP client.
+
+**Fields**
+
+  - `pool` : [PoolOptions](#record-pooloptions) (optional)
+
+## record `ClientStatistics`
+
+Lifetime request/reuse counters plus current pooled connections.
+
+**Fields**
+
+  - `openConnections` : Integer
+  - `requests` : Integer
+  - `reusedConnections` : Integer
+
+## record `ClientCloseReport`
+
+Resources released by `Client.close`.
+
+**Fields**
+
+  - `closedConnections` : Integer
+
+## type `Client`
+
+The pooled HTTP client. An opaque handle over the connection pool that owns it; `Client.open` makes one and `client.close` releases it.
+
+
+
+## module `Net.HTTP.Headers`
+
+## constant `empty`
+
+
+
+## function `from`
+
+Validates header names and values without folding duplicates.
+
+
+```kex
+from(entries) : [(String, String)] -> Result<Headers, NetError>
+```
+
+
+## function `parse`
+
+Parses CRLF- or LF-separated header fields.
+
+
+```kex
+parse(text) : String -> Result<Headers, NetError>
+```
+
+
+## module `Net.HTTP.Status`
+
+## function `from`
+
+
+```kex
+from(code) : Integer -> Result<Status, NetError>
+```
+
+
+## module `Net.HTTP.Response`
+
+## function `binary`
+
+Builds a buffered binary response with validated headers.
+
+
+```kex
+binary(status, body, headers)
+```
+
+
+## function `text`
+
+Builds a UTF-8 text response with an explicit text/plain content type.
+
+
+```kex
+text(status, body)
+```
+
+
+## function `empty`
+
+Builds a response with an empty body.
+
+
+```kex
+empty(status)
+```
+
+
+## module `Net.HTTP.Router`
+
+## constant `build`
+
+
+
+## make `Router`
+
+
+#### `route`
+
+Appends a route; earlier matching declarations win.
+
+```kex
+route(method, path, handler)
+```
+
+#### `get`
+
+Appends a GET route. GET also supplies automatic HEAD fallback.
+
+```kex
+get(path, handler)
+```
+
+#### `head`
+
+Appends an explicit HEAD route, overriding automatic GET fallback.
+
+```kex
+head(path, handler)
+```
+
+#### `options`
+
+Appends an explicit OPTIONS route, overriding generated OPTIONS.
+
+```kex
+options(path, handler)
+```
+
+#### `post`
+
+Appends a POST route.
+
+```kex
+post(path, handler)
+```
+
+#### `put`
+
+Appends a PUT route.
+
+```kex
+put(path, handler)
+```
+
+#### `patch`
+
+Appends a PATCH route.
+
+```kex
+patch(path, handler)
+```
+
+#### `delete`
+
+Appends a DELETE route.
+
+```kex
+delete(path, handler)
+```
+
+## module `Net.HTTP.Server`
+
+## type `Running`
+
+An opaque asynchronous HTTP server handle.
+
+
+
+## function `start`
+
+Starts a server with conservative defaults and returns immediately.
+
+
+```kex
+start(endpoint, router)
+```
+
+
+## function `serve`
+
+Starts with defaults and blocks until the server stops.
+
+
+```kex
+serve(endpoint, router)
+```
+
+
+## function `stop`
+
+Gracefully stops using the duration captured at start.
+
+
+```kex
+stop(server)
+```
+
+
+## function `join`
+
+Waits until the server owner exits.
+
+
+```kex
+join(server)
+```
+
+
+## function `running?`
+
+
+```kex
+running?(server)
+```
+
+
+## function `localAddress`
+
+
+```kex
+localAddress(server)
+```
+
+
+## module `Net.HTTP.Client`
+
+## function `open`
+
+Opens an explicit pooled client with conservative defaults.
+
+
+```kex
+open() : Result<Client, NetError>
+```
+
+
+## make `Client`
+
+
+#### `request`
+
+Sends a buffered request. Redirects and generic retries are not implicit.
+
+```kex
+request(method, url, headers, body)
+```
+
+#### `get`
+
+Sends a buffered GET request.
+
+```kex
+get(url)
+```
+
+#### `post`
+
+Sends a buffered binary POST request.
+
+```kex
+post(url, body)
+```
+
+#### `put`
+
+Sends a buffered binary PUT request.
+
+```kex
+put(url, body)
+```
+
+#### `patch`
+
+Sends a buffered binary PATCH request.
+
+```kex
+patch(url, body)
+```
+
+#### `delete`
+
+Sends a DELETE request with an empty body.
+
+```kex
+delete(url)
+```
+
+#### `head`
+
+Sends a HEAD request; the returned body is empty.
+
+```kex
+head(url)
+```
+
+#### `options`
+
+Sends an OPTIONS request.
+
+```kex
+options(url)
+```
+
+#### `statistics`
+
+```kex
+statistics()
+```
+
+**Returns**: `ClientStatistics` — current pool and lifetime request counters
+
+#### `close`
+
+Idempotently closes the client and every idle pooled connection.
+
+```kex
+close()
+```
+
+## make `Headers` implements Showable, Inspectable
+
+
+#### `add`
+
+Appends a field without replacing existing fields of the same name.
+
+```kex
+add(name, value)
+```
+
+**Examples**
+
+_`Headers.empty.add("Accept", "text/plain")`_
+
+```kex
+
+```
+
+#### `set`
+
+Replaces all fields of `name` with one value.
+
+```kex
+set(name, value)
+```
+
+**Examples**
+
+_`headers.set("Content-Type", "application/json")`_
+
+```kex
+
+```
+
+#### `remove`
+
+Removes every field matching `name` case-insensitively.
+
+```kex
+remove(name)
+```
+
+#### `get`
+
+Returns the first matching field value.
+
+```kex
+get(name)
+```
+
+#### `getAll`
+
+Returns every matching value in insertion order.
+
+```kex
+getAll(name)
+```
+
+#### `inspectValue`
+
+Structural inspection uses the same credential-safe rendering.
+
+```kex
+inspectValue(colors)
+```
+
+## make `Status`
+
+
+
+## make `RouteContext`
+
+
+#### `parameter`
+
+Returns one decoded named or wildcard route capture.
+
+```kex
+parameter(name)
+```
+
+**Returns**: `Result<String, NetError>` — the capture, or `Parse` when absent
+
+## module `Net.HTTP.HTTP`
+
+## function `request`
+
+Sends one stateless buffered request with no redirect or hidden retry.
+
+
+```kex
+request : String -> String -> Headers -> Binary -> Result<Response<Binary>, NetError>
+```
+
+
+## function `get`
+
+Sends one stateless buffered GET.
+
+
+```kex
+get(url) : String -> Result<Response<Binary>, NetError>
+```
+
+
+## function `delete`
+
+Sends one stateless DELETE with an empty body.
+
+
+```kex
+delete(url) : String -> Result<Response<Binary>, NetError>
+```
+
+
+## function `head`
+
+Sends one stateless HEAD and returns an empty response body.
+
+
+```kex
+head(url) : String -> Result<Response<Binary>, NetError>
+```
+
+
+## function `options`
+
+Sends one stateless OPTIONS request.
+
+
+```kex
+options(url) : String -> Result<Response<Binary>, NetError>
+```
+
+
+## function `post`
+
+Sends one stateless buffered binary POST.
+
+
+```kex
+post(url, body) : String -> Binary -> Result<Response<Binary>, NetError>
+```
+
+
+## function `put`
+
+Sends one stateless buffered binary PUT.
+
+
+```kex
+put(url, body) : String -> Binary -> Result<Response<Binary>, NetError>
+```
+
+
+## function `patch`
+
+Sends one stateless buffered binary PATCH.
+
+
+```kex
+patch(url, body) : String -> Binary -> Result<Response<Binary>, NetError>
+```
+
+
+
+---
+
+---
+package: prelude
+version: "0.4.0-alpha"
+source: net/ip.kex
+title: Net.IP
+entities:
+  - { kind: module, name: "Net.IP" }
+---
+
+# Net.IP
+
+## module `Net.IP`
+
+## record `Address`
+
+Validated, canonical IP addresses and CIDR networks.
+
+```kex
+using Net.IP
+
+let address = Address.parse("192.0.2.42").try
+let network = Network.parse("192.0.2.0/24").try
+network.contains(address)   # => true
+```
+
+A canonical IPv4 or IPv6 address. Zone identifiers belong to endpoints.
+
+**Fields**
+
+  - `source` : String
+
+## record `Network`
+
+A canonical CIDR network with host bits cleared.
+
+**Fields**
+
+  - `source` : String
+
+## module `Net.IP.Address`
+
+## function `parse`
+
+Parses IPv4 or IPv6 text and canonicalizes its spelling.
+
+
+```kex
+parse(text) : String -> Result<Address, NetError>
+```
+
+
+## module `Net.IP.Network`
+
+## function `parse`
+
+Parses a CIDR and clears host bits.
+
+
+```kex
+parse(text) : String -> Result<Network, NetError>
+```
+
+
+## make `Address`
+
+
+
+## make `Network`
+
+
+#### `contains`
+
+```kex
+contains(address)
+```
+
+**Returns**: `Bool` — whether `address` belongs to this network
+
+
+---
+
+---
+package: prelude
+version: "0.4.0-alpha"
+source: net/socket.kex
+title: Net.Socket
+entities:
+  - { kind: module, name: "Net.Socket" }
+---
+
+# Net.Socket
+
+## module `Net.Socket`
+
+## module `Net.Socket.TCP`
+
+Process-owned TCP byte streams and listeners. All blocking operations return typed `NetError` values; close operations are idempotent.
+
+```kex
+using Net
+using Net.Socket
+
+let listener = TCP.listen(TCP.Endpoint.loopback(Port.from(0).try)).try
+let address = listener.localAddress.try
+let client = TCP.connect(address).try
+client.sendAll("ping".to(Binary).try).try
+listener.close
+```
+
+## type `Plain`
+
+Marker for an unencrypted stream.
+
+
+
+## type `TCPConnection`
+
+An opaque connected TCP stream.
+
+
+
+## type `TCPListener`
+
+An opaque TCP listening socket.
+
+
+
+## record `Endpoint`
+
+A host name or numeric address paired with a validated port.
+
+**Fields**
+
+  - `host` : String
+  - `port` : Net.Port
+
+## module `Net.Socket.TCP.Endpoint`
+
+## function `host`
+
+
+```kex
+host(name, port) : String -> Net.Port -> Endpoint
+```
+
+
+## function `any`
+
+
+```kex
+any(port) : Net.Port -> Endpoint
+```
+
+
+## function `loopback`
+
+
+```kex
+loopback(port) : Net.Port -> Endpoint
+```
+
+
+## function `connect`
+
+Connects to a TCP endpoint with the backend's bounded connect deadline.
+
+
+```kex
+connect(endpoint) : Endpoint -> Result<TCPConnection, NetError>
+```
+
+
+## function `listen`
+
+Binds and starts listening. Port zero selects an ephemeral local port.
+
+
+```kex
+listen(endpoint) : Endpoint -> Result<TCPListener, NetError>
+```
+
+
+## function `sendAll`
+
+Sends every byte or reports the failure and transfer progress.
+
+
+```kex
+sendAll(connection, data)
+```
+
+
+## function `receiveChunk`
+
+Receives one bounded chunk; EOF is reported as `Closed`.
+
+
+```kex
+receiveChunk(connection, limit)
+```
+
+
+## function `receiveExactly`
+
+Receives exactly `count` bytes or returns a typed EOF/timeout failure.
+
+
+```kex
+receiveExactly(connection, count)
+```
+
+
+## function `receiveUntil`
+
+Receives through the first `delimiter` without exceeding `limit` bytes.
+
+The delimiter is included in the returned bytes. An empty delimiter is a `Parse` error; reaching the bound first is a `Limit` error.
+
+
+```kex
+receiveUntil(connection, delimiter, limit)
+```
+
+
+## function `receiveLine`
+
+Receives through a newline without exceeding `limit` bytes.
+
+
+```kex
+receiveLine(connection, limit)
+```
+
+
+## function `shutdownWrite`
+
+Half-closes the write side while leaving reads available.
+
+
+```kex
+shutdownWrite(connection)
+```
+
+
+## function `accept`
+
+Waits for and returns the next connection.
+
+
+```kex
+accept(listener)
+```
+
+
+## function `close`
+
+Idempotently closes a connected stream.
+
+
+```kex
+close(connection)
+```
+
+
+## function `closed?`
+
+
+```kex
+closed?(connection)
+```
+
+
+## function `localAddress`
+
+Returns the bound local endpoint, including an ephemeral assigned port.
+
+
+```kex
+localAddress(connection)
+```
+
+
+## function `peerAddress`
+
+Returns the remote endpoint of a connected stream.
+
+
+```kex
+peerAddress(connection)
+```
+
+
+## module `Net.Socket.UDP`
+
+## type `Socket`
+
+Connectionless datagrams. A receive limit rejects an oversized datagram instead of returning a silently truncated payload.
+
+```kex
+let socket = UDP.bind(UDP.Endpoint.loopback(Port.from(0).try)).try
+let address = socket.localAddress.try
+socket.sendTo(address, "hello".to(Binary).try).try
+let packet = socket.receiveFrom(1024).try
+socket.close
+```
+
+An opaque bound datagram socket.
+
+
+
+## record `Endpoint`
+
+A datagram address paired with a validated port.
+
+**Fields**
+
+  - `host` : String
+  - `port` : Net.Port
+
+## record `Datagram`
+
+A received datagram and its source endpoint.
+
+**Fields**
+
+  - `source` : [Endpoint](#record-endpoint)
+  - `data` : Binary
+
+## module `Net.Socket.UDP.Endpoint`
+
+## function `host`
+
+
+```kex
+host(name, port) : String -> Net.Port -> Endpoint
+```
+
+
+## function `any`
+
+
+```kex
+any(port) : Net.Port -> Endpoint
+```
+
+
+## function `loopback`
+
+
+```kex
+loopback(port) : Net.Port -> Endpoint
+```
+
+
+## function `bind`
+
+Binds a datagram socket. Port zero selects an ephemeral local port.
+
+
+```kex
+bind(endpoint) : Endpoint -> Result<Socket, NetError>
+```
+
+
+## function `sendTo`
+
+Sends one complete datagram and returns its byte count.
+
+
+```kex
+sendTo(socket, endpoint, data)
+```
+
+
+## function `receiveFrom`
+
+Receives one datagram no larger than `limit` bytes.
+
+
+```kex
+receiveFrom(socket, limit)
+```
+
+
+## function `close`
+
+Idempotently closes the socket.
+
+
+```kex
+close(socket)
+```
+
+
+## function `closed?`
+
+
+```kex
+closed?(socket)
+```
+
+
+## function `localAddress`
+
+Returns the bound endpoint, including an ephemeral assigned port.
+
+
+```kex
+localAddress(socket)
+```
+
+
+## module `Net.Socket.Unix`
+
+## type `UnixConnection`
+
+Filesystem-domain streams for local IPC. The listener owns and removes only the socket path it successfully created.
+
+```kex
+let address = Unix.Address.path("/tmp/my-service.sock").try
+let listener = Unix.listen(address).try
+let client = Unix.connect(address).try
+listener.close
+```
+
+An opaque connected filesystem-domain byte stream.
+
+
+
+## type `UnixListener`
+
+An opaque filesystem-domain stream listener.
+
+
+
+## record `Address`
+
+A validated absolute filesystem socket path.
+
+**Fields**
+
+  - `path` : String
+
+## module `Net.Socket.Unix.Address`
+
+## function `path`
+
+Validates a nonempty absolute Unix-domain socket path.
+
+
+```kex
+path(value) : String -> Result<Address, NetError>
+```
+
+
+## function `connect`
+
+Connects to a filesystem-domain listener.
+
+
+```kex
+connect(address) : Address -> Result<UnixConnection, NetError>
+```
+
+
+## function `listen`
+
+Binds a new path; an existing filesystem entry is never removed implicitly.
+
+
+```kex
+listen(address) : Address -> Result<UnixListener, NetError>
+```
+
+
+## function `sendAll`
+
+Sends every byte and returns the count.
+
+
+```kex
+sendAll(connection, data)
+```
+
+
+## function `receiveChunk`
+
+Receives one bounded chunk; EOF is `Closed`.
+
+
+```kex
+receiveChunk(connection, limit)
+```
+
+
+## function `receiveExactly`
+
+Receives exactly `count` bytes or returns a typed EOF/timeout failure.
+
+
+```kex
+receiveExactly(connection, count)
+```
+
+
+## function `receiveUntil`
+
+Receives through `delimiter`, including it, within an explicit bound.
+
+
+```kex
+receiveUntil(connection, delimiter, limit)
+```
+
+
+## function `receiveLine`
+
+Receives through a newline without exceeding `limit` bytes.
+
+
+```kex
+receiveLine(connection, limit)
+```
+
+
+## function `shutdownWrite`
+
+Half-closes the write side while leaving reads available.
+
+
+```kex
+shutdownWrite(connection)
+```
+
+
+## function `accept`
+
+Waits for and returns the next stream connection.
+
+
+```kex
+accept(listener)
+```
+
+
+## function `close`
+
+Idempotently closes a stream.
+
+
+```kex
+close(connection)
+```
+
+
+## function `closed?`
+
+
+```kex
+closed?(connection)
+```
+
+
+## module `Net.Socket.TLS`
+
+## type `TLSConnection`
+
+TLS client streams. Certificate and hostname verification are enabled by default; disabling verification must be an explicit configuration choice.
+
+```kex
+let endpoint = TCP.Endpoint.host("example.test", Port.from(443).try)
+let tls = TLS.connect(endpoint, TLS.ClientConfig {
+  serverName: "example.test"
+}).try
+tls.close
+```
+
+An opaque verified or explicitly unverified TLS byte stream.
+
+
+
+## record `ClientConfig`
+
+Client handshake policy. TLS 1.2/1.3 are enabled; verification defaults on.
+
+**Fields**
+
+  - `serverName` : String
+  - `verify?` : Bool (optional)
+  - `alpn` : [String] (optional)
+
+## function `connect`
+
+Opens a direct TLS connection with a bounded handshake deadline.
+
+
+```kex
+connect(endpoint, config) : Net.Socket.TCP.Endpoint -> ClientConfig -> Result<TLSConnection, NetError>
+```
+
+
+## function `sendAll`
+
+Sends every plaintext byte through the TLS stream.
+
+
+```kex
+sendAll(connection, data)
+```
+
+
+## function `receiveChunk`
+
+Receives one decrypted chunk no larger than `limit`.
+
+
+```kex
+receiveChunk(connection, limit)
+```
+
+
+## function `close`
+
+Idempotently closes the TLS stream.
+
+
+```kex
+close(connection)
+```
+
+
+## function `closed?`
+
+
+```kex
+closed?(connection)
+```
+
+
+
+---
+
+---
+package: prelude
+version: "0.4.0-alpha"
+source: net/http/websocket.kex
+title: Net.HTTP.WebSocket
+entities:
+  - { kind: module, name: "Net.HTTP.WebSocket" }
+---
+
+# Net.HTTP.WebSocket
+
+## module `Net.HTTP.WebSocket`
+
+## type `Message`
+
+High-level RFC 6455 client messages. The runtime handles fragmentation and ping/pong frames; reconnect and heartbeat policies remain application-owned.
+
+```kex
+using Net.HTTP.WebSocket
+
+let socket = WebSocket.connect("wss://example.test/events").try
+socket.send(Text("hello")).try
+let message = socket.receiveMessage.try
+socket.close
+```
+
+A complete high-level WebSocket message. Fragmentation and ping/pong control frames are handled by the connection runtime.
+
+
+
+**Variants**
+
+  - `Text(String)`
+  - `BinaryMessage(Binary)`
+  - `CloseMessage(Integer, String)`
+
+## record `ClientOptions`
+
+Client handshake policy and the maximum reassembled message size.
+
+**Fields**
+
+  - `subprotocols` : [String] (optional)
+  - `maximumMessageBytes` : Integer (optional)
+
+## record `Session`
+
+Negotiated handshake information. The subprotocol is `None` when the server selected none.
+
+**Fields**
+
+  - `subprotocol` : String?
+
+## type `Connection`
+
+An opaque RFC 6455 client connection. It does not reconnect automatically.
+
+
+
+## module `Net.HTTP.WebSocket.WebSocket`
+
+## function `connect`
+
+Opens a `ws:` or verified `wss:` connection with default options.
+
+
+```kex
+connect(url)
+```
+
+
+## make `Connection`
+
+
+#### `send`
+
+Sends one masked text, binary, or close message.
+
+```kex
+send(message)
+```
+
+**Returns**: `Result<Void, NetError>` — success or `Protocol`/`Limit`/`Closed`
+
+**Examples**
+
+_`connection.send(Text("hello")).try`_
+
+```kex
+
+```
+
+#### `receiveMessage`
+
+`receive` is a Kex process keyword, so the public method spells out the operation while preserving the plan's high-level message semantics. Reassembles fragments, validates UTF-8, and automatically answers pings.
+
+```kex
+receiveMessage()
+```
+
+**Returns**: `Result<Message, NetError>` — the next data or close message
+
+**Examples**
+
+_`connection.receiveMessage.try`_
+
+```kex
+
+```
+
+#### `session`
+
+```kex
+session()
+```
+
+**Returns**: `Session` — the selected subprotocol, if any
+
+#### `close`
+
+Sends a normal close frame and idempotently releases the transport.
+
+```kex
+close()
+```
+
+**Returns**: `Void`
+
+#### `closed?`
+
+```kex
+closed?()
+```
+
+**Returns**: `Bool` — whether the connection owner has stopped
 
 
 ---

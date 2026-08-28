@@ -380,6 +380,16 @@ end
 
 Running work in another process and collecting the answer.
 
+## function `sleep`
+
+Suspends for an elapsed duration. Negative durations are treated as zero.
+
+
+```kex
+sleep(duration) : Duration -> Void
+```
+
+
 ## function `start`
 
 Runs `f` in a new process and returns a handle on its result.

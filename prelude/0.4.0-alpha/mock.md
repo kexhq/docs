@@ -14,13 +14,13 @@ entities:
 
 ## type `Reader`
 
-Mock — deterministic stand-ins for the world outside the program: the filesystem, the network, the environment, the console.
+Mock — deterministic stand-ins for the world outside the program: the filesystem, environment, and console. Networking mocks live under Mock.Net.
 
 These are STATEFUL: `Mock.FS.File(path, content)` writes into a store the real `FS.File` then reads back, so a test can write and read again, and `clear()` undoes it. That state is global and lives until cleared, which is what makes hook ordering and write/read round trips testable — and also what makes two tests able to interfere.
 
 When a test only needs canned ANSWERS, replacing the capability is the better tool: `with FS.File = MyFake { ... } do ... end` swaps the implementation for one lexical region, holds no global state, needs no clearing, and cannot leak into another test. See spec/capability_stdlib_fs.kex for the shape of a stand-in (kexhq/kex#143).
 
-Opt-in on purpose (issue #144): this module used to ride along inside http.kex, so `using HTTP` in the prelude made every Mock.* reachable from every program without anyone asking for it. Reachable is still not callable — the runtime denies the mock intrinsics outside spec files, the REPL, and --allow-mocks — but it should also not be in scope by accident. A qualified `Mock.FS.File(...)` auto-loads this file like any other opt-in module.
+Opt-in on purpose (issue #144): this module used to ride along inside a prelude networking file, so importing the prelude made every Mock.* reachable from every program without anyone asking for it. Reachable is still not callable — the runtime denies the mock intrinsics outside spec files, the REPL, and --allow-mocks — but it should also not be in scope by accident. A qualified `Mock.FS.File(...)` auto-loads this file like any other opt-in module.
 
 All Mock.* sub-modules live in a single `module Mock` block so merged compilation units never see duplicate top-level `Mock` modules. A stand-in's read hook: a path in, its content or `None` out.
 
@@ -84,18 +84,6 @@ end
   - `vars` : Map<String, String> (optional)
   - `onGet` : [Lookup](#type-lookup)? (optional)
   - `onSet` : [Writer](#type-writer)? (optional)
-
-## record `Response`
-
-A stand-in for the `Http` capability: one canned response for every request, whatever the verb, URL or body. That is what a client test needs, being about what the program does WITH a response.
-
-NOT named `Http`: a record of that name is indistinguishable from the capability itself at a call site, and the `make` block binds to the capability rather than the record — every request then reaches the real network while the test looks like it is faking one.
-
-**Fields**
-
-  - `status` : Integer
-  - `body` : String
-  - `headers` : Map<String, String> (optional)
 
 ## module `Mock.FS`
 
@@ -172,50 +160,6 @@ Content derived from the path, a failure on the third call, a record of what was
 
 ```kex
 onRead(reader) : Reader -> Void
-```
-
-
-## module `Mock.Http`
-
-A stateful stand-in for the network: responses a test queues, that the real `Http` then hands back.
-
-Responses are consumed in FIFO order — the first `respond` answers the first request. When the queue runs out, the next request answers `Error(HttpError)` with kind `MockEmpty`, so a test that made more calls than it expected fails rather than reaching the network.
-
-```kex
-Mock.Http.start()
-Mock.Http.respond(200, "{\"ok\": true}")
-assert(fetchStatus() == "ok")
-Mock.Http.stop()
-```
-
-## function `start`
-
-Starts intercepting HTTP requests. Call it before queueing responses.
-
-
-```kex
-start() : Void
-```
-
-
-## function `respond`
-
-Queues one response, to be handed to the next request.
-
-
-```kex
-respond(status, body) : Integer -> String -> Void
-respond(status, body) : Integer -> String -> Map<String, String> -> Void
-```
-
-
-## function `stop`
-
-Stops intercepting, and discards anything still queued.
-
-
-```kex
-stop() : Void
 ```
 
 
@@ -521,47 +465,38 @@ set(name, value)
 unset(name)
 ```
 
-## make `Response` implements [Http](http.md#module-http)
+## module `Mock.Net`
 
+Scriptable networking values are namespaced so importing Mock does not recreate any of the removed global HTTP types.
 
-#### `get`
+## module `Mock.Net.HTTP`
 
-```kex
-get(url)
-```
+## record `Transport`
 
-#### `post`
+**Fields**
 
-```kex
-post(url, body)
-```
+  - `responses` : [Any]
 
-#### `put`
+## module `Mock.Net.DNS`
 
-```kex
-put(url, body)
-```
+## record `ResolverScript`
 
-#### `patch`
+**Fields**
 
-```kex
-patch(url, body)
-```
+  - `answers` : {String: [String]}
 
-#### `delete`
+## module `Mock.Net.Socket`
 
-```kex
-delete(url)
-```
+## record `Script`
 
-#### `head`
+**Fields**
 
-```kex
-head(url)
-```
+  - `incoming` : [Binary]
 
-#### `options`
+## module `Mock.Net.WebSocket`
 
-```kex
-options(url)
-```
+## record `Script`
+
+**Fields**
+
+  - `incoming` : [Any]
