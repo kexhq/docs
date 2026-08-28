@@ -71,7 +71,5 @@ parse(text) : String -> Result<Network, NetError>
 #### `contains`
 
 ```kex
-contains(address)
+contains(address) : Address -> Bool
 ```
-
-**Returns**: `Bool` — whether `address` belongs to this network

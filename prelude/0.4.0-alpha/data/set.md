@@ -1,24 +1,23 @@
 ---
 package: prelude
 version: "0.4.0-alpha"
-source: set.kex
-title: Set
+source: data/set.kex
+title: Data
 entities:
-  - { kind: record, name: "Set" }
-  - { kind: record, name: "UnorderedSet" }
-  - { kind: module, name: "Set" }
-  - { kind: module, name: "UnorderedSet" }
-  - { kind: make, name: "Set<A>" }
-  - { kind: make, name: "Set<A>" }
-  - { kind: make, name: "UnorderedSet<A>" }
-  - { kind: make, name: "UnorderedSet<A>" }
+  - { kind: module, name: "Data" }
 ---
 
-# Set
+# Data
 
-## record `Set<A>`
+## module `Data`
 
 Immutable collections of distinct elements.
+
+Opt-in — nothing here is in scope until `using Data.Set`, which brings both flavours below into scope at once.
+
+```kex
+using Data.Set
+```
 
 Membership is decided by structural equality — the same equality `==` and map keys use — so records and tuples are compared by value, not identity. Every method answers with a new set; the `!` forms (`add!`, `delete!`) build a new set and rebind the receiver variable rather than modifying anything in place.
 
@@ -47,6 +46,8 @@ Both wrap structures the runtime already has (a list and a map), so no set is op
 
 Those two backings are also the ones the BEAM's own set libraries use — a `Set` is laid out exactly like an `ordsets` term and an `UnorderedSet` exactly like a `sets` v2 term — so the operations here can be routed to the native BIFs later without changing what a set IS. What rules out adopting `gb_sets` instead is the other backend: a tree-walk interpreter cannot produce an opaque BEAM term, and a set that only one backend can build is not a set the prelude can offer.
 
+## record `Set<A>`
+
 A set whose elements are kept sorted and duplicate free.
 
 Build one with `Set.from` rather than by hand — the record literal does no deduplication and no sorting, and every method here relies on both. Reading `items` back is the field itself, so handing a set's elements to list code costs nothing.
@@ -73,7 +74,7 @@ UnorderedSet.from([3, 1, 2]).contains?(2)   # => true
 
   - `slots` : {A: Bool} (optional)
 
-## module `Set`
+## module `Data.Set`
 
 Constructors for the sorted `Set`.
 
@@ -95,7 +96,7 @@ The set with no elements. Also the `Monoid` identity, so `s.combine(Set.empty)` 
 
 
 
-## module `UnorderedSet`
+## module `Data.UnorderedSet`
 
 Constructors for the hash-backed `UnorderedSet`.
 
@@ -117,7 +118,7 @@ The unordered set with no elements. Also the `Monoid` identity.
 
 
 
-## make `Set<A>` implements [Enumerable](enumerable.md#trait-enumerable), [Foldable](enumerable.md#trait-foldable), [Monoid](algebra.md#trait-monoid), Showable
+## make `Set<A>` implements [Enumerable](../enumerable.md#trait-enumerable), [Foldable](../enumerable.md#trait-foldable), [Monoid](../algebra.md#trait-monoid), Showable
 
 
 #### `reduce`
@@ -127,7 +128,7 @@ Folds over the elements in ascending order.
 This is `Set`'s `Enumerable` primitive; `each`, `find`, `any?` and the rest are built on it. The collection-returning operations are overridden below, because `Enumerable`'s defaults answer with a list.
 
 ```kex
-reduce(acc, f)
+reduce(acc, f) : B -> (B -> A -> B) -> B
 ```
 
 **Returns**: `B` — the final accumulator
@@ -143,7 +144,7 @@ Set.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
 Combines two sets by union. The `Monoid` operation.
 
 ```kex
-combine(other)
+combine(other) : Set<A> -> Set<A>
 ```
 
 **Returns**: `Set<A>` — every element of either set
@@ -380,7 +381,8 @@ Unions with another set, or with a plain list.
 The list form is the everyday way to add one element without naming a method: `s ` [x]`.
 
 ```kex
-+(other)
++(other) : Set<A> -> Set<A>
++(other) : [A] -> Set<A>
 ```
 
 **Returns**: `Set<A>` — the union
@@ -397,7 +399,8 @@ Set.from([1]) + Set.from([2])    # => Set(1, 2)
 Removes another set's elements, or a plain list's.
 
 ```kex
--(other)
+-(other) : Set<A> -> Set<A>
+-(other) : [A] -> Set<A>
 ```
 
 **Returns**: `Set<A>` — the difference
@@ -465,11 +468,11 @@ reject(pred) : (A -> Bool) -> Set<A>
 Set.from([1, 2, 3]).reject { |x| x > 1 }   # => Set(1)
 ```
 
-## make `Set<A>` implements [Blankable](blankable.md#trait-blankable)
+## make `Set<A>` implements [Blankable](../blankable.md#trait-blankable)
 
 
 
-## make `UnorderedSet<A>` implements [Enumerable](enumerable.md#trait-enumerable), [Foldable](enumerable.md#trait-foldable), [Monoid](algebra.md#trait-monoid), Showable
+## make `UnorderedSet<A>` implements [Enumerable](../enumerable.md#trait-enumerable), [Foldable](../enumerable.md#trait-foldable), [Monoid](../algebra.md#trait-monoid), Showable
 
 
 #### `reduce`
@@ -479,7 +482,7 @@ Folds over the elements.
 The order is whatever the underlying map hands back — unspecified, and not to be relied on. Use a `Set` when the order of the fold matters.
 
 ```kex
-reduce(acc, f)
+reduce(acc, f) : B -> (B -> A -> B) -> B
 ```
 
 **Returns**: `B` — the final accumulator
@@ -495,7 +498,7 @@ UnorderedSet.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
 Combines two sets by union. The `Monoid` operation.
 
 ```kex
-combine(other)
+combine(other) : UnorderedSet<A> -> UnorderedSet<A>
 ```
 
 **Returns**: `UnorderedSet<A>` — every element of either set
@@ -676,7 +679,8 @@ UnorderedSet.from([1, 2]).disjoint?(UnorderedSet.from([3]))   # => true
 Unions with another unordered set, or with a plain list.
 
 ```kex
-+(other)
++(other) : UnorderedSet<A> -> UnorderedSet<A>
++(other) : [A] -> UnorderedSet<A>
 ```
 
 **Returns**: `UnorderedSet<A>` — the union
@@ -692,7 +696,8 @@ Unions with another unordered set, or with a plain list.
 Removes another unordered set's elements, or a plain list's.
 
 ```kex
--(other)
+-(other) : UnorderedSet<A> -> UnorderedSet<A>
+-(other) : [A] -> UnorderedSet<A>
 ```
 
 **Returns**: `UnorderedSet<A>` — the difference
@@ -751,6 +756,6 @@ reject(pred) : (A -> Bool) -> UnorderedSet<A>
 UnorderedSet.from([1, 2, 3]).reject { |x| x > 1 }.items   # => [1]
 ```
 
-## make `UnorderedSet<A>` implements [Blankable](blankable.md#trait-blankable)
+## make `UnorderedSet<A>` implements [Blankable](../blankable.md#trait-blankable)
 
 
