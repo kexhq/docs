@@ -11,8 +11,6 @@ entities:
 
 ## module `Net.HTTP`
 
-## record `Headers`
-
 Buffered HTTP clients, responses, and a small declaration-ordered server router. Requests never follow redirects or perform generic retries implicitly.
 
 ```kex
@@ -29,6 +27,8 @@ let client = Client.open.try
 let response = client.get("https://example.test/").try
 client.close.try
 ```
+
+## record `Headers`
 
 An insertion-ordered HTTP field collection. Names compare case-insensitively and duplicate fields are preserved.
 

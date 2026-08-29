@@ -11,8 +11,6 @@ entities:
 
 ## module `Net.IP`
 
-## record `Address`
-
 Validated, canonical IP addresses and CIDR networks.
 
 ```kex
@@ -22,6 +20,8 @@ let address = Address.parse("192.0.2.42").try
 let network = Network.parse("192.0.2.0/24").try
 network.contains(address)   # => true
 ```
+
+## record `Address`
 
 A canonical IPv4 or IPv6 address. Zone identifiers belong to endpoints.
 

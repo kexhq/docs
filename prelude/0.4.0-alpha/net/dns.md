@@ -11,8 +11,6 @@ entities:
 
 ## module `Net.DNS`
 
-## record `Name`
-
 Typed DNS lookup with explicit resolver ownership and bounded caching.
 
 ```kex
@@ -23,6 +21,8 @@ let name = Name.parse("example.test").try
 let addresses = resolver.addresses(name).try
 resolver.close
 ```
+
+## record `Name`
 
 A validated DNS name with caller-facing and IDNA ASCII spellings.
 

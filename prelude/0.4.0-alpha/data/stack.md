@@ -2,12 +2,12 @@
 package: prelude
 version: "0.4.0-alpha"
 source: data/stack.kex
-title: Data
+title: Data.Stack
 entities:
   - { kind: module, name: "Data" }
 ---
 
-# Data
+# Data.Stack
 
 ## module `Data`
 

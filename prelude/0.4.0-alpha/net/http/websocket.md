@@ -11,8 +11,6 @@ entities:
 
 ## module `Net.HTTP.WebSocket`
 
-## type `Message`
-
 High-level RFC 6455 client messages. The runtime handles fragmentation and ping/pong frames; reconnect and heartbeat policies remain application-owned.
 
 ```kex
@@ -23,6 +21,8 @@ socket.send(Text("hello")).try
 let message = socket.receiveMessage.try
 socket.close
 ```
+
+## type `Message`
 
 A complete high-level WebSocket message. Fragmentation and ping/pong control frames are handled by the connection runtime.
 

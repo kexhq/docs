@@ -11,8 +11,6 @@ entities:
 
 ## module `Net.Socket`
 
-## module `Net.Socket.TCP`
-
 Process-owned TCP byte streams and listeners. All blocking operations return typed `NetError` values; close operations are idempotent.
 
 ```kex
@@ -25,6 +23,8 @@ let client = TCP.connect(address).try
 client.sendAll("ping".to(Binary).try).try
 listener.close
 ```
+
+## module `Net.Socket.TCP`
 
 ## type `Plain`
 

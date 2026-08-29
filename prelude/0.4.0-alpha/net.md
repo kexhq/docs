@@ -11,8 +11,6 @@ entities:
 
 ## module `Net`
 
-## record `Port`
-
 Shared networking values, capability discovery, and typed failures.
 
 ```kex
@@ -21,6 +19,8 @@ using Net
 let https = Port.from(443).try
 if Support.current.tls.usable? then https.string else "TLS unavailable" end
 ```
+
+## record `Port`
 
 A validated TCP or UDP port number in `0..65535`.
 

@@ -2,12 +2,12 @@
 package: prelude
 version: "0.4.0-alpha"
 source: data/set.kex
-title: Data
+title: Data.Set
 entities:
   - { kind: module, name: "Data" }
 ---
 
-# Data
+# Data.Set
 
 ## module `Data`
 

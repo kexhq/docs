@@ -2,12 +2,12 @@
 package: prelude
 version: "0.4.0-alpha"
 source: data/queue.kex
-title: Data
+title: Data.Queue
 entities:
   - { kind: module, name: "Data" }
 ---
 
-# Data
+# Data.Queue
 
 ## module `Data`
 
