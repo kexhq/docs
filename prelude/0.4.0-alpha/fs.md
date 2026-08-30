@@ -264,11 +264,13 @@ readLines(path) : FilePath -> [String]?
 
 ## function `feed`
 
-Returns a lazy `Stream` of the file's lines, or `None` when it cannot be read.
+Returns a lazy `Feed` of the file's lines, or `None` when it cannot be read.
 
-Unlike `readLines`, the file is consumed on demand, so this is the way to look at the first few lines of a very large file — or to process one without holding it all in memory.
+Unlike `readLines`, the file is read a line at a time off a handle held open for the feed's lifetime, so this is the way to walk a file too large to hold in memory — nothing but the current line is retained.
 
-The stream ends at the last line, so asking for more lines than the file has answers just the lines there are — unlike `Stream.Sequence`, which is deliberately infinite.
+A `Feed` rather than a `Stream` because that is what a file honestly is: reading consumes, and there is no rewinding. Taking twice walks forward rather than answering the same lines again. On a file small enough to replay, `toStream` buys that back.
+
+The feed ends at the last line, so asking for more lines than the file has answers just the lines there are — unlike `Stream.Sequence`, which is deliberately infinite.
 
 ```kex
 FS.File.feed("two-lines.txt").map { |lines| lines.take(5) }.or([])
@@ -277,7 +279,7 @@ FS.File.feed("two-lines.txt").map { |lines| lines.take(5) }.or([])
 
 
 ```kex
-feed(path) : FilePath -> Stream<String>?
+feed(path) : FilePath -> Feed<String>?
 ```
 
 

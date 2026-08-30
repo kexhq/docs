@@ -56,6 +56,12 @@ Iterate(seed, step)
 ```
 
 
+## constant `empty`
+
+The stream with no elements.
+
+
+
 ## make `Stream<A>`
 
 
@@ -160,4 +166,26 @@ Stream.Sequence(from: 1) { |n| n ` 1 }
   .map { |n| "#${n}" }
   .take(3)
 # => ["#3", "#6", "#9"]
+```
+
+#### `each`
+
+Applies `f` to every element.
+
+Only ever finishes on a stream that ends — a file's lines converted with `Feed.toStream`, or anything `take` has bounded. On `Stream.Sequence` this runs forever, exactly as writing the same loop by hand would.
+
+```kex
+each(f) : (A -> Void) -> Void
+```
+
+**Returns**: `Void`
+
+**Examples**
+
+```kex
+Stream.Sequence(from: 1) { |n| n + 1 }
+  .map { |n| n * n }
+  .toFeed
+  .take(3)
+  .each { |n| IO.printLine(n) }
 ```

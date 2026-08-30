@@ -355,19 +355,19 @@ end
 
 #### `feed`
 
-Returns the handle's remaining lines as a lazy `Stream`.
+Returns the handle's remaining lines as a lazy `Feed`.
 
-Lines are read on demand, so this is how to look at the start of a very large file, or process one without holding it all in memory.
+Lines are read on demand off the handle's own position, so this is how to look at the start of a very large file, or process one without holding it all in memory. The feed shares the handle's cursor: interleaving `readLine` with it advances one position through one open file.
 
-The stream ends at the last line, so taking more lines than the file has answers just the lines there are.
+The feed ends at the last line, so taking more lines than the file has answers just the lines there are.
 
-NOT part of `Readable`. `docs/streams.md` describes a one-shot, stateful `Feed<A>` that does not exist, and a file feed is neither pure nor reusable the way `Stream<A>` claims to be. Until that is settled this is a FileHandle method rather than something every `Readable` must answer.
+NOT part of `Readable`: a feed is neither pure nor reusable, so requiring it of every `Readable` would put a foul, one-shot operation on types that have no such cursor to offer. It stays a FileHandle method.
 
 ```kex
-feed() : Stream<String>?
+feed() : Feed<String>?
 ```
 
-**Returns**: `Stream<String>?` — the lines as a stream, or `None`
+**Returns**: `Feed<String>?` — the lines as a feed, or `None`
 
 **Examples**
 
