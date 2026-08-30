@@ -53,6 +53,27 @@ A host name or numeric address paired with a validated port.
   - `host` : String
   - `port` : Net.Port
 
+## record `ConnectOptions`
+
+**Fields**
+
+  - `connectTimeout` : Duration (optional)
+  - `noDelay?` : Bool (optional)
+  - `keepAlive?` : Bool (optional)
+  - `sendBuffer` : Integer (optional)
+  - `receiveBuffer` : Integer (optional)
+
+## record `ListenOptions`
+
+**Fields**
+
+  - `backlog` : Integer (optional)
+  - `reuseAddress?` : Bool (optional)
+  - `noDelay?` : Bool (optional)
+  - `keepAlive?` : Bool (optional)
+  - `sendBuffer` : Integer (optional)
+  - `receiveBuffer` : Integer (optional)
+
 ## module `Net.Socket.TCP.Endpoint`
 
 ## function `host`
@@ -86,6 +107,7 @@ Connects to a TCP endpoint with the backend's bounded connect deadline.
 
 ```kex
 connect(endpoint) : Endpoint -> Result<TCPConnection, NetError>
+connect(endpoint) : Endpoint -> ConnectOptions -> Result<TCPConnection, NetError>
 ```
 
 
@@ -96,6 +118,7 @@ Binds and starts listening. Port zero selects an ephemeral local port.
 
 ```kex
 listen(endpoint) : Endpoint -> Result<TCPListener, NetError>
+listen(endpoint) : Endpoint -> ListenOptions -> Result<TCPListener, NetError>
 ```
 
 
@@ -245,6 +268,17 @@ A received datagram and its source endpoint.
   - `source` : [Endpoint](#record-endpoint)
   - `data` : Binary
 
+## record `BindOptions`
+
+Curated socket policy. Broadcast is opt-in. The receive timeout applies to each `receiveFrom` call; multicast TTL is bounded to the IP hop-limit range.
+
+**Fields**
+
+  - `broadcast?` : Bool (optional)
+  - `multicastTtl` : Integer (optional)
+  - `multicastLoopback?` : Bool (optional)
+  - `receiveTimeout` : Duration (optional)
+
 ## module `Net.Socket.UDP.Endpoint`
 
 ## function `host`
@@ -278,6 +312,7 @@ Binds a datagram socket. Port zero selects an ephemeral local port.
 
 ```kex
 bind(endpoint) : Endpoint -> Result<Socket, NetError>
+bind(endpoint) : Endpoint -> BindOptions -> Result<Socket, NetError>
 ```
 
 
@@ -329,6 +364,26 @@ localAddress(socket)
 ```
 
 
+## function `joinMulticast`
+
+Joins an IPv4 multicast group on the selected local interface. The group must be multicast and the interface must be an IPv4 address.
+
+
+```kex
+joinMulticast(socket, group, interface)
+```
+
+
+## function `leaveMulticast`
+
+Leaves a membership previously joined with the same group and interface.
+
+
+```kex
+leaveMulticast(socket, group, interface)
+```
+
+
 ## module `Net.Socket.Unix`
 
 ## type `UnixConnection`
@@ -360,6 +415,22 @@ A validated absolute filesystem socket path.
 
   - `path` : String
 
+## record `ConnectOptions`
+
+**Fields**
+
+  - `connectTimeout` : Duration (optional)
+  - `receiveTimeout` : Duration (optional)
+
+## record `ListenOptions`
+
+**Fields**
+
+  - `backlog` : Integer (optional)
+  - `removeStale?` : Bool (optional)
+  - `acceptTimeout` : Duration (optional)
+  - `receiveTimeout` : Duration (optional)
+
 ## module `Net.Socket.Unix.Address`
 
 ## function `path`
@@ -379,6 +450,7 @@ Connects to a filesystem-domain listener.
 
 ```kex
 connect(address) : Address -> Result<UnixConnection, NetError>
+connect(address) : Address -> ConnectOptions -> Result<UnixConnection, NetError>
 ```
 
 
@@ -389,6 +461,7 @@ Binds a new path; an existing filesystem entry is never removed implicitly.
 
 ```kex
 listen(address) : Address -> Result<UnixListener, NetError>
+listen(address) : Address -> ListenOptions -> Result<UnixListener, NetError>
 ```
 
 

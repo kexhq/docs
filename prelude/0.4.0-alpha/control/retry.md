@@ -22,6 +22,7 @@ A bounded retry schedule. Attempts includes the initial call. Delays are immutab
   - `multiplier` : Float
   - `maximumDelay` : Duration
   - `maximumElapsed` : Duration? (optional)
+  - `jitterFraction` : Float (optional)
 
 ## type `Predicate<E>`
 
@@ -80,10 +81,18 @@ withMaximumElapsed(maximumElapsed)
 
 **Examples**
 
-_`Retry.fixed(5, Duration.seconds(1)).withMaximumElapsed(Duration.seconds(2))`._
+_`Retry.fixed(5, 1.seconds).withMaximumElapsed(2.seconds)`._
 
 ```kex
 
+```
+
+#### `withJitter`
+
+Returns the same schedule with symmetric bounded jitter. A fraction of `0.25` selects each actual delay from 75% through 125% of its scheduled value. Fractions are clamped to `0.0..1.0`.
+
+```kex
+withJitter(fraction)
 ```
 
 ## function `run`
@@ -111,11 +120,21 @@ runWith : Policy -> Predicate<E> -> Sleeper -> Block<Result<X, E>> -> Result<X, 
 ```
 
 
+## function `runWithRandom`
+
+Runs with injected sleeping and a random source returning a value in `0.0..1.0`. Out-of-range test values are clamped. Production `run` uses a cryptographically secure backend source; this overload makes jitter specs deterministic.
+
+
+```kex
+runWithRandom : Policy -> Predicate<E> -> Sleeper -> Block<Float> -> Block<Result<X, E>> -> Result<X, E>
+```
+
+
 ## function `attempt`
 
 
 ```kex
-attempt(policy, predicate, sleeper, operation, number, delay, elapsed)
+attempt(policy, predicate, sleeper, random, operation, number, delay, elapsed)
 ```
 
 
@@ -161,5 +180,15 @@ Deterministic seam with an injected sleeper, primarily for specifications.
 
 ```kex
 runWith : Policy -> Predicate<E> -> Sleeper -> Block<Result<X, E>> -> Result<X, E>
+```
+
+
+## function `runWithRandom`
+
+Deterministic seam with injected sleeping and random sampling.
+
+
+```kex
+runWithRandom : Policy -> Predicate<E> -> Sleeper -> Block<Float> -> Block<Result<X, E>> -> Result<X, E>
 ```
 

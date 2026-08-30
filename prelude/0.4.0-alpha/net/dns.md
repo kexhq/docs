@@ -94,6 +94,27 @@ Bounds for a resolver-owned positive and negative cache.
   - `maximumTtl` : Duration (optional)
   - `negativeTtl` : Duration (optional)
 
+## record `Nameserver`
+
+One DNS server used by a custom resolver.
+
+**Fields**
+
+  - `address` : Net.IP.Address
+  - `port` : Net.Port
+
+## record `ResolverOptions`
+
+Isolated resolver configuration. An empty search list only queries the name as written; search domains are tried in order for single-label names.
+
+**Fields**
+
+  - `cache` : [CacheOptions](#record-cacheoptions) (optional)
+  - `nameservers` : [[Nameserver](#record-nameserver)]
+  - `search` : [[Name](#record-name)] (optional)
+  - `retries` : Integer (optional)
+  - `timeout` : Duration (optional)
+
 ## record `CacheStatistics`
 
 Lifetime cache counters. `clear` empties entries but keeps these counters.
@@ -133,6 +154,16 @@ Opens a resolver using system configuration and default cache bounds.
 
 ```kex
 system()
+```
+
+
+## function `custom`
+
+Opens an isolated resolver with typed nameservers and query bounds.
+
+
+```kex
+custom(options)
 ```
 
 

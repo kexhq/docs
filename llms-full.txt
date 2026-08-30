@@ -11590,6 +11590,7 @@ A bounded retry schedule. Attempts includes the initial call. Delays are immutab
   - `multiplier` : Float
   - `maximumDelay` : Duration
   - `maximumElapsed` : Duration? (optional)
+  - `jitterFraction` : Float (optional)
 
 ## type `Predicate<E>`
 
@@ -11648,10 +11649,18 @@ withMaximumElapsed(maximumElapsed)
 
 **Examples**
 
-_`Retry.fixed(5, Duration.seconds(1)).withMaximumElapsed(Duration.seconds(2))`._
+_`Retry.fixed(5, 1.seconds).withMaximumElapsed(2.seconds)`._
 
 ```kex
 
+```
+
+#### `withJitter`
+
+Returns the same schedule with symmetric bounded jitter. A fraction of `0.25` selects each actual delay from 75% through 125% of its scheduled value. Fractions are clamped to `0.0..1.0`.
+
+```kex
+withJitter(fraction)
 ```
 
 ## function `run`
@@ -11679,11 +11688,21 @@ runWith : Policy -> Predicate<E> -> Sleeper -> Block<Result<X, E>> -> Result<X, 
 ```
 
 
+## function `runWithRandom`
+
+Runs with injected sleeping and a random source returning a value in `0.0..1.0`. Out-of-range test values are clamped. Production `run` uses a cryptographically secure backend source; this overload makes jitter specs deterministic.
+
+
+```kex
+runWithRandom : Policy -> Predicate<E> -> Sleeper -> Block<Float> -> Block<Result<X, E>> -> Result<X, E>
+```
+
+
 ## function `attempt`
 
 
 ```kex
-attempt(policy, predicate, sleeper, operation, number, delay, elapsed)
+attempt(policy, predicate, sleeper, random, operation, number, delay, elapsed)
 ```
 
 
@@ -11729,6 +11748,16 @@ Deterministic seam with an injected sleeper, primarily for specifications.
 
 ```kex
 runWith : Policy -> Predicate<E> -> Sleeper -> Block<Result<X, E>> -> Result<X, E>
+```
+
+
+## function `runWithRandom`
+
+Deterministic seam with injected sleeping and random sampling.
+
+
+```kex
+runWithRandom : Policy -> Predicate<E> -> Sleeper -> Block<Float> -> Block<Result<X, E>> -> Result<X, E>
 ```
 
 
@@ -13531,6 +13560,27 @@ Bounds for a resolver-owned positive and negative cache.
   - `maximumTtl` : Duration (optional)
   - `negativeTtl` : Duration (optional)
 
+## record `Nameserver`
+
+One DNS server used by a custom resolver.
+
+**Fields**
+
+  - `address` : Net.IP.Address
+  - `port` : Net.Port
+
+## record `ResolverOptions`
+
+Isolated resolver configuration. An empty search list only queries the name as written; search domains are tried in order for single-label names.
+
+**Fields**
+
+  - `cache` : [CacheOptions](#record-cacheoptions) (optional)
+  - `nameservers` : [[Nameserver](#record-nameserver)]
+  - `search` : [[Name](#record-name)] (optional)
+  - `retries` : Integer (optional)
+  - `timeout` : Duration (optional)
+
 ## record `CacheStatistics`
 
 Lifetime cache counters. `clear` empties entries but keeps these counters.
@@ -13570,6 +13620,16 @@ Opens a resolver using system configuration and default cache bounds.
 
 ```kex
 system()
+```
+
+
+## function `custom`
+
+Opens an isolated resolver with typed nameservers and query bounds.
+
+
+```kex
+custom(options)
 ```
 
 
@@ -14036,6 +14096,7 @@ Opens an explicit pooled client with conservative defaults.
 
 ```kex
 open() : Result<Client, NetError>
+open(options) : ClientOptions -> Result<Client, NetError>
 ```
 
 
@@ -14425,6 +14486,27 @@ A host name or numeric address paired with a validated port.
   - `host` : String
   - `port` : Net.Port
 
+## record `ConnectOptions`
+
+**Fields**
+
+  - `connectTimeout` : Duration (optional)
+  - `noDelay?` : Bool (optional)
+  - `keepAlive?` : Bool (optional)
+  - `sendBuffer` : Integer (optional)
+  - `receiveBuffer` : Integer (optional)
+
+## record `ListenOptions`
+
+**Fields**
+
+  - `backlog` : Integer (optional)
+  - `reuseAddress?` : Bool (optional)
+  - `noDelay?` : Bool (optional)
+  - `keepAlive?` : Bool (optional)
+  - `sendBuffer` : Integer (optional)
+  - `receiveBuffer` : Integer (optional)
+
 ## module `Net.Socket.TCP.Endpoint`
 
 ## function `host`
@@ -14458,6 +14540,7 @@ Connects to a TCP endpoint with the backend's bounded connect deadline.
 
 ```kex
 connect(endpoint) : Endpoint -> Result<TCPConnection, NetError>
+connect(endpoint) : Endpoint -> ConnectOptions -> Result<TCPConnection, NetError>
 ```
 
 
@@ -14468,6 +14551,7 @@ Binds and starts listening. Port zero selects an ephemeral local port.
 
 ```kex
 listen(endpoint) : Endpoint -> Result<TCPListener, NetError>
+listen(endpoint) : Endpoint -> ListenOptions -> Result<TCPListener, NetError>
 ```
 
 
@@ -14617,6 +14701,17 @@ A received datagram and its source endpoint.
   - `source` : [Endpoint](#record-endpoint)
   - `data` : Binary
 
+## record `BindOptions`
+
+Curated socket policy. Broadcast is opt-in. The receive timeout applies to each `receiveFrom` call; multicast TTL is bounded to the IP hop-limit range.
+
+**Fields**
+
+  - `broadcast?` : Bool (optional)
+  - `multicastTtl` : Integer (optional)
+  - `multicastLoopback?` : Bool (optional)
+  - `receiveTimeout` : Duration (optional)
+
 ## module `Net.Socket.UDP.Endpoint`
 
 ## function `host`
@@ -14650,6 +14745,7 @@ Binds a datagram socket. Port zero selects an ephemeral local port.
 
 ```kex
 bind(endpoint) : Endpoint -> Result<Socket, NetError>
+bind(endpoint) : Endpoint -> BindOptions -> Result<Socket, NetError>
 ```
 
 
@@ -14701,6 +14797,26 @@ localAddress(socket)
 ```
 
 
+## function `joinMulticast`
+
+Joins an IPv4 multicast group on the selected local interface. The group must be multicast and the interface must be an IPv4 address.
+
+
+```kex
+joinMulticast(socket, group, interface)
+```
+
+
+## function `leaveMulticast`
+
+Leaves a membership previously joined with the same group and interface.
+
+
+```kex
+leaveMulticast(socket, group, interface)
+```
+
+
 ## module `Net.Socket.Unix`
 
 ## type `UnixConnection`
@@ -14732,6 +14848,22 @@ A validated absolute filesystem socket path.
 
   - `path` : String
 
+## record `ConnectOptions`
+
+**Fields**
+
+  - `connectTimeout` : Duration (optional)
+  - `receiveTimeout` : Duration (optional)
+
+## record `ListenOptions`
+
+**Fields**
+
+  - `backlog` : Integer (optional)
+  - `removeStale?` : Bool (optional)
+  - `acceptTimeout` : Duration (optional)
+  - `receiveTimeout` : Duration (optional)
+
 ## module `Net.Socket.Unix.Address`
 
 ## function `path`
@@ -14751,6 +14883,7 @@ Connects to a filesystem-domain listener.
 
 ```kex
 connect(address) : Address -> Result<UnixConnection, NetError>
+connect(address) : Address -> ConnectOptions -> Result<UnixConnection, NetError>
 ```
 
 
@@ -14761,6 +14894,7 @@ Binds a new path; an existing filesystem entry is never removed implicitly.
 
 ```kex
 listen(address) : Address -> Result<UnixListener, NetError>
+listen(address) : Address -> ListenOptions -> Result<UnixListener, NetError>
 ```
 
 

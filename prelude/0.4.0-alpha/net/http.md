@@ -387,6 +387,7 @@ Opens an explicit pooled client with conservative defaults.
 
 ```kex
 open() : Result<Client, NetError>
+open(options) : ClientOptions -> Result<Client, NetError>
 ```
 
 

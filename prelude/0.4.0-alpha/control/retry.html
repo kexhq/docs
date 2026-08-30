@@ -102,6 +102,7 @@ data-page="control/retry.html">
 <div class="field"><dt><code>multiplier</code></dt><dd><code>Float</code></dd></div>
 <div class="field"><dt><code>maximumDelay</code></dt><dd><code>Duration</code></dd></div>
 <div class="field"><dt><code>maximumElapsed</code></dt><dd><code>Duration?</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>jitterFraction</code></dt><dd><code>Float</code> <span class="opt">optional</span></dd></div>
 </dl>
 </section>
 <section class="entity" id="type-predicate">
@@ -131,7 +132,7 @@ data-page="control/retry.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Policy</code> — the retry schedule</p>
 <h5>Examples</h5>
-<p class="caption"><em><code>Retry.fixed(3, Duration.milliseconds(100))</code>.</em></p>
+<p class="caption"><em><code>Retry.fixed(3, 100.milliseconds)</code>.</em></p>
 <pre class="code"><code></code></pre>
 
 </section>
@@ -163,8 +164,14 @@ data-page="control/retry.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Policy</code> — a copied policy with the elapsed bound</p>
 <h5>Examples</h5>
-<p class="caption"><em><code>Retry.fixed(5, Duration.seconds(1)).withMaximumElapsed(Duration.seconds(2))</code>.</em></p>
+<p class="caption"><em><code>Retry.fixed(5, 1.seconds).withMaximumElapsed(2.seconds)</code>.</em></p>
 <pre class="code"><code></code></pre>
+
+</div>
+<div class="fn" id="fn-withjitter">
+<h4><code>withJitter</code></h4>
+<p>Returns the same schedule with symmetric bounded jitter. A fraction of <code>0.25</code> selects each actual delay from 75% through 125% of its scheduled value. Fractions are clamped to <code>0.0..1.0</code>.</p>
+<pre class="code"><code><span class="tok-fn">withJitter</span><span class="tok-punct">(</span>fraction<span class="tok-punct">)</span></code></pre>
 
 </div>
 </div>
@@ -198,9 +205,15 @@ data-page="control/retry.html">
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;X,<a class="xref" href="../math.html#constant-e">E</a>&gt;</code> — the first success or final failure</p>
 
 </section>
+<section class="entity" id="function-runwithrandom">
+<h2><span class="kind kind-function">function</span> <code>runWithRandom</code></h2>
+<p>Runs with injected sleeping and a random source returning a value in <code>0.0..1.0</code>. Out-of-range test values are clamped. Production <code>run</code> uses a cryptographically secure backend source; this overload makes jitter specs deterministic.</p>
+<pre class="code"><code>runWithRandom <span class="tok-op">:</span> <span class="tok-type">Policy</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Predicate</span><span class="tok-op">&lt;</span><span class="tok-type">E</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Sleeper</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Float</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span></code></pre>
+
+</section>
 <section class="entity" id="function-attempt">
 <h2><span class="kind kind-function">function</span> <code>attempt</code></h2>
-<pre class="code"><code><span class="tok-fn">attempt</span><span class="tok-punct">(</span>policy<span class="tok-punct">,</span> predicate<span class="tok-punct">,</span> sleeper<span class="tok-punct">,</span> operation<span class="tok-punct">,</span> number<span class="tok-punct">,</span> delay<span class="tok-punct">,</span> elapsed<span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-fn">attempt</span><span class="tok-punct">(</span>policy<span class="tok-punct">,</span> predicate<span class="tok-punct">,</span> sleeper<span class="tok-punct">,</span> random<span class="tok-punct">,</span> operation<span class="tok-punct">,</span> number<span class="tok-punct">,</span> delay<span class="tok-punct">,</span> elapsed<span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="module-control-retry-retry">
@@ -231,13 +244,19 @@ data-page="control/retry.html">
 <pre class="code"><code>runWith <span class="tok-op">:</span> <span class="tok-type">Policy</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Predicate</span><span class="tok-op">&lt;</span><span class="tok-type">E</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Sleeper</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span></code></pre>
 
 </section>
+<section class="entity" id="function-runwithrandom">
+<h2><span class="kind kind-function">function</span> <code>runWithRandom</code></h2>
+<p>Deterministic seam with injected sleeping and random sampling.</p>
+<pre class="code"><code>runWithRandom <span class="tok-op">:</span> <span class="tok-type">Policy</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Predicate</span><span class="tok-op">&lt;</span><span class="tok-type">E</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Sleeper</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Float</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span></code></pre>
+
+</section>
 </section>
 </section>
 </article>
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T13:30:52.530657985Z · <a href="../../../llms.txt">llms.txt</a> · <a href="../../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-30T13:46:54.152510135Z · <a href="../../../llms.txt">llms.txt</a> · <a href="../../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>
