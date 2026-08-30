@@ -51,7 +51,7 @@ A parsed source file: its schema version, and its top-level items.
 **Fields**
 
   - `schemaVersion` : Integer
-  - `items` : [[Node](#type-node)]
+  - `items` : [Node]
 
 ## record `ParseError`
 
@@ -427,7 +427,7 @@ A declaration template whose name (and, for a make block, target) is computed by
   - `name` : String
   - `doc` : String?
   - `typeParams` : [String]
-  - `body` : [[Node](#type-node)]
+  - `body` : [Node]
   - `location` : [Location](#record-location)
 
 ## record `MakeInfo`
@@ -438,7 +438,7 @@ A declaration template whose name (and, for a make block, target) is computed by
   - `doc` : String?
   - `isFinal` : Bool
   - `implements` : [[TypeRef](#type-typeref)]
-  - `body` : [[Node](#type-node)]
+  - `body` : [Node]
   - `location` : [Location](#record-location)
 
 ## record `PragmaInfo`
@@ -455,7 +455,7 @@ A declaration template whose name (and, for a make block, target) is computed by
 
   - `name` : String
   - `doc` : String?
-  - `items` : [[Node](#type-node)]
+  - `items` : [Node]
   - `location` : [Location](#record-location)
 
 ## record `ConstantInfo`
@@ -472,7 +472,7 @@ A declaration template whose name (and, for a make block, target) is computed by
 **Fields**
 
   - `isPublic` : Bool
-  - `items` : [[Node](#type-node)]
+  - `items` : [Node]
   - `location` : [Location](#record-location)
 
 ## record `UsingInfo`
