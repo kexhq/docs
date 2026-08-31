@@ -13,13 +13,13 @@ entities:
 
 Immutable collections of distinct elements.
 
-Opt-in — nothing here is in scope until `using Data.Set`, which brings both flavours below into scope at once.
+Opt-in: nothing here is in scope until `using Data.Set`, which brings both flavours below into scope at once.
 
 ```kex
 using Data.Set
 ```
 
-Membership is decided by structural equality — the same equality `==` and map keys use — so records and tuples are compared by value, not identity. Every method answers with a new set; the `!` forms (`add!`, `delete!`) build a new set and rebind the receiver variable rather than modifying anything in place.
+Membership is decided by structural equality: the same equality `==` and map keys use, so records and tuples are compared by value, not identity. Every method answers with a new set; the `!` forms (`add!`, `delete!`) build a new set and rebind the receiver variable rather than modifying anything in place.
 
 ```kex
 let tags = Set.from(["kex", "beam", "kex"])
@@ -35,22 +35,22 @@ Set           sorted, so iteration is in ascending element order and the
               elements must be Orderable.
 UnorderedSet  hash-backed, so membership does not pay for ordering and
               the elements need only be comparable. Iteration order is
-              unspecified — never write a test against it.
+              unspecified: never write a test against it.
 ```
 
 Reach for `Set` when you will read the elements back out, and for `UnorderedSet` when the set exists to answer `contains?` quickly.
 
-`==` between two sets needs no overload of its own: each flavour keeps its backing canonical — sorted and duplicate free, or a map — so comparing the records structurally already IS set equality.
+`==` between two sets needs no overload of its own: each flavour keeps its backing canonical (sorted and duplicate free, or a map) so comparing the records structurally already IS set equality.
 
 Both wrap structures the runtime already has (a list and a map), so no set is opaque: `.items` is always a real list you can hand to anything.
 
-Those two backings are also the ones the BEAM's own set libraries use — a `Set` is laid out exactly like an `ordsets` term and an `UnorderedSet` exactly like a `sets` v2 term — so the operations here can be routed to the native BIFs later without changing what a set IS. What rules out adopting `gb_sets` instead is the other backend: a tree-walk interpreter cannot produce an opaque BEAM term, and a set that only one backend can build is not a set the prelude can offer.
+Those two backings are also the ones the BEAM's own set libraries use: a `Set` is laid out exactly like an `ordsets` term and an `UnorderedSet` exactly like a `sets` v2 term, so the operations here can be routed to the native BIFs later without changing what a set IS. What rules out adopting `gb_sets` instead is the other backend: a tree-walk interpreter cannot produce an opaque BEAM term, and a set that only one backend can build is not a set the prelude can offer.
 
 ## record `Set<A>`
 
 A set whose elements are kept sorted and duplicate free.
 
-Build one with `Set.from` rather than by hand — the record literal does no deduplication and no sorting, and every method here relies on both. Reading `items` back is the field itself, so handing a set's elements to list code costs nothing.
+Build one with `Set.from` rather than by hand: the record literal does no deduplication and no sorting, and every method here relies on both. Reading `items` back is the field itself, so handing a set's elements to list code costs nothing.
 
 ```kex
 Set.from([3, 1, 2]).items   # => [1, 2, 3]
@@ -184,7 +184,7 @@ methods.filter { |m| allowed.contains?(m.lowerCase) }
 
 #### `add`
 
-Returns a new set with `value` added. Adding an element that is already a member changes nothing — that is what makes a set a set.
+Returns a new set with `value` added. Adding an element that is already a member changes nothing: that is what makes a set a set.
 
 Use `add!` to rebind the receiver variable.
 
@@ -294,7 +294,7 @@ required.difference(Set.from(form.keys))
 
 #### `symmetricDifference`
 
-Returns the elements in exactly one of the two sets — everything they do not agree on.
+Returns the elements in exactly one of the two sets: everything they do not agree on.
 
 ```kex
 symmetricDifference(other) : Set<A> -> Set<A>
@@ -416,7 +416,7 @@ Set.from([1, 2, 3]) - Set.from([2, 3])   # => Set(1)
 
 Applies `f` to every element and returns a set of the results.
 
-Mapping a set may collapse elements: if `f` sends two members to the same value, the result has one. That is not a loss of information so much as the point of a set — `Set.from([1, -1]).map(~abs)` has one member.
+Mapping a set may collapse elements: if `f` sends two members to the same value, the result has one. That is not a loss of information so much as the point of a set: `Set.from([1, -1]).map(~abs)` has one member.
 
 ```kex
 map(f) : (A -> B) -> Set<B>
@@ -479,7 +479,7 @@ Set.from([1, 2, 3]).reject { |x| x > 1 }   # => Set(1)
 
 Folds over the elements.
 
-The order is whatever the underlying map hands back — unspecified, and not to be relied on. Use a `Set` when the order of the fold matters.
+The order is whatever the underlying map hands back: unspecified, and not to be relied on. Use a `Set` when the order of the fold matters.
 
 ```kex
 reduce(acc, f) : B -> (B -> A -> B) -> B

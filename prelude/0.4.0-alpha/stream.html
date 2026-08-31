@@ -102,7 +102,7 @@ naturals<span class="tok-op">.</span><span class="tok-method">take</span><span c
 naturals<span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n <span class="tok-op">*</span> n <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">)</span>            <span class="tok-comment"># =&gt; [0, 1, 4, 9]</span>
 naturals<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n<span class="tok-op">.</span><span class="tok-method">even?</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span>       <span class="tok-comment"># =&gt; [0, 2, 4]</span></code></pre>
 <p><code>map</code>, <code>filter</code> and <code>drop</code> all answer with another stream, so a pipeline stays lazy end to end; <code>take</code> is what turns it into a list.</p>
-<p>`FS.File.feed+ hands back a stream of a file's lines, which is how to walk a file too large to hold in memory.</p>
+<p>Streams are best for generated sequences you may revisit. A file or socket is different: it can only be consumed once, so those APIs return a `Feed`. Convert a small feed with `toStream+ only when replaying it is worth keeping every value already read.</p>
 
 </section>
 <section class="entity" id="module-stream">
@@ -111,7 +111,7 @@ naturals<span class="tok-op">.</span><span class="tok-method">filter</span> <spa
 <section class="entity" id="function-sequence">
 <h2><span class="kind kind-function">function</span> <code>Sequence</code></h2>
 <p>Builds an infinite stream from a first element and a step function.</p>
-<p>The stream is <code>from</code>, then <code>step(from)</code>, then <code>step(step(from))</code>, and so on — nothing is computed until you take from it.</p>
+<p>The stream is <code>from</code>, then <code>step(from)</code>, then <code>step(step(from))</code>, and so on: nothing is computed until you take from it.</p>
 <pre class="code"><code><span class="tok-type">Sequence</span><span class="tok-punct">(</span><span class="tok-keyword">from</span><span class="tok-punct">,</span> step<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -133,7 +133,7 @@ powers<span class="tok-op">.</span><span class="tok-method">take</span><span cla
 </section>
 <section class="entity" id="function-iterate">
 <h2><span class="kind kind-function">function</span> <code>Iterate</code></h2>
-<p>Builds an infinite stream from a seed and a step function. The same thing as <code>Sequence</code> — use whichever reads better where you are.</p>
+<p>Builds an infinite stream from a seed and a step function. The same thing as <code>Sequence</code>: use whichever reads better where you are.</p>
 <pre class="code"><code><span class="tok-type">Iterate</span><span class="tok-punct">(</span>seed<span class="tok-punct">,</span> step<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -172,12 +172,15 @@ odds<span class="tok-op">.</span><span class="tok-method">take</span><span class
 <pre class="code"><code><span class="tok-type">Stream</span><span class="tok-op">.</span><span class="tok-type">Sequence</span><span class="tok-punct">(</span><span class="tok-keyword">from</span><span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n ` <span class="tok-number">1</span> <span class="tok-punct">}</span>
   <span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n <span class="tok-op">*</span> n <span class="tok-punct">}</span>
   <span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-punct">)</span></code></pre>
+<p class="caption"><em>Generating retry delays without building an unbounded list</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> delays <span class="tok-op">=</span> <span class="tok-type">Stream</span><span class="tok-op">.</span><span class="tok-type">Sequence</span><span class="tok-punct">(</span><span class="tok-keyword">from</span><span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">seconds</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>d<span class="tok-op">|</span> d <span class="tok-op">*</span> <span class="tok-number">2</span> <span class="tok-punct">}</span>
+delays<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [1 second, 2 seconds, 4 seconds, 8 seconds]</span></code></pre>
 
 </div>
 <div class="fn" id="fn-drop">
 <h4><code>drop</code></h4>
 <p>Returns a new stream that skips the first <code>n</code> elements.</p>
-<p>Still a stream, so the result stays lazy — pair it with <code>take</code> to get a window out of the middle.</p>
+<p>Still a stream, so the result stays lazy: pair it with <code>take</code> to get a window out of the middle.</p>
 <pre class="code"><code><span class="tok-fn">drop</span><span class="tok-punct">(</span>n<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Stream</span><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -213,7 +216,7 @@ odds<span class="tok-op">.</span><span class="tok-method">take</span><span class
 <div class="fn" id="fn-filter">
 <h4><code>filter</code></h4>
 <p>Returns a new stream with only the elements <code>pred</code> accepts.</p>
-<p>Producing <code>n</code> filtered elements may require walking many more upstream ones, so a predicate that almost never holds makes <code>take</code> run for a long time — and one that never holds makes it run forever.</p>
+<p>Producing <code>n</code> filtered elements may require walking many more upstream ones, so a predicate that almost never holds makes <code>take</code> run for a long time, and one that never holds makes it run forever.</p>
 <pre class="code"><code><span class="tok-fn">filter</span><span class="tok-punct">(</span>pred<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Stream</span><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -234,7 +237,7 @@ evens<span class="tok-op">.</span><span class="tok-method">take</span><span clas
 <div class="fn" id="fn-each">
 <h4><code>each</code></h4>
 <p>Applies <code>f</code> to every element.</p>
-<p>Only ever finishes on a stream that ends — a file's lines converted with <code>Feed.toStream</code>, or anything <code>take</code> has bounded. On <code>Stream.Sequence</code> this runs forever, exactly as writing the same loop by hand would.</p>
+<p>Only ever finishes on a stream that ends: a file's lines converted with <code>Feed.toStream</code>, or anything <code>take</code> has bounded. On <code>Stream.Sequence</code> this runs forever, exactly as writing the same loop by hand would.</p>
 <pre class="code"><code><span class="tok-fn">each</span><span class="tok-punct">(</span>f<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -255,7 +258,7 @@ evens<span class="tok-op">.</span><span class="tok-method">take</span><span clas
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T19:07:27.076569085Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-31T00:21:50.485524575Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

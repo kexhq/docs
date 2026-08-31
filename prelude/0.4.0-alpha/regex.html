@@ -95,7 +95,7 @@ data-page="regex.html">
 <h2><span class="kind kind-module">module</span> <code>Regex</code></h2>
 <section class="entity" id="record-regex">
 <h2><span class="kind kind-record">record</span> <code>Regex</code></h2>
-<p>Regular expressions, backed by PCRE2 in the interpreter and Erlang's <code>re</code> on BEAM — the same PCRE pattern language on both.</p>
+<p>Regular expressions, backed by PCRE2 in the interpreter and Erlang's <code>re</code> on BEAM: the same PCRE pattern language on both.</p>
 <p>Opt-in, not prelude: nothing here is in scope until <code>using Regex</code>.</p>
 <p>There are two ways to write a pattern. The tagged literal is the everyday one: it is checked when your program is compiled, so it cannot fail at run time and gives you a bare <code>Regex</code>.</p>
 <pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Regex</span>
@@ -121,7 +121,7 @@ data-page="regex.html">
 <section class="entity" id="record-regexerror">
 <h2><span class="kind kind-record">record</span> <code>RegexError</code></h2>
 <p>A pattern that failed to compile.</p>
-<p>Mirrors <code>ParseError</code> — the <code>position</code> is a *character* offset into the pattern, not a byte offset, so it agrees across backends on patterns containing non-ASCII.</p>
+<p>Mirrors <code>ParseError</code>: the <code>position</code> is a *character* offset into the pattern, not a byte offset, so it agrees across backends on patterns containing non-ASCII.</p>
 <pre class="code"><code><span class="tok-fn">regex</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">(</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
 <span class="tok-comment"># =&gt; Error(RegexError { source: &quot;(&quot;, position: 1,</span>
 <span class="tok-comment">#                       message: &quot;missing closing parenthesis&quot; })</span></code></pre>
@@ -134,9 +134,9 @@ data-page="regex.html">
 </section>
 <section class="entity" id="function-regex">
 <h2><span class="kind kind-function">function</span> <code>regex</code></h2>
-<p>NOTE: deliberately does NOT <code>implement: Errorable</code>, even though the trait exists for exactly this shape. Declaring a <code>message</code> method alongside the <code>message</code> field makes <code>e.message</code> dispatch to the method instead of reading the field, which fails with <code>undef</code> on the BEAM backend. <code>ParseError</code> — the prelude's equivalent error record — carries a bare <code>message</code> field for the same reason; nothing in the tree implements Errorable today.</p>
+<p>NOTE: deliberately does NOT <code>implement: Errorable</code>, even though the trait exists for exactly this shape. Declaring a <code>message</code> method alongside the <code>message</code> field makes <code>e.message</code> dispatch to the method instead of reading the field, which fails with <code>undef</code> on the BEAM backend. <code>ParseError</code>: the prelude's equivalent error record: carries a bare <code>message</code> field for the same reason; nothing in the tree implements Errorable today.</p>
 <p>Compiles <code>source</code> into a <code>Regex</code>.</p>
-<p>Answers a `Result` because an arbitrary string may not be a valid pattern. Use this form when the pattern is built at run time — from a config file, from user input. For a pattern you write yourself, the tag form `` regex`\d`` `` is checked at compile time and hands back a bare `Regex`.</p>
+<p>Answers a `Result` because an arbitrary string may not be a valid pattern. Use this form when the pattern is built at run time: from a config file, from user input. For a pattern you write yourself, the tag form `` regex`\d`` `` is checked at compile time and hands back a bare `Regex`.</p>
 <pre class="code"><code><span class="tok-fn">regex</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Regex</span><span class="tok-punct">,</span> <span class="tok-type">RegexError</span><span class="tok-op">&gt;</span>
 <span class="tok-fn">regex</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">Any</span><span class="tok-punct">]</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Regex</span></code></pre>
 <h5>Parameters</h5>
@@ -173,7 +173,7 @@ data-page="regex.html">
 <section class="entity" id="function-re">
 <h2><span class="kind kind-function">function</span> <code>re</code></h2>
 <p>A short alias for <code>regex</code>, in both its forms.</p>
-<p>A second name bound to the same two functions, not a lexer synonym, so every property of <code>regex</code> — escaping, backend mapping, error shape — applies to it unchanged. Most code uses the tag form, where the shorter name reads better.</p>
+<p>A second name bound to the same two functions, not a lexer synonym, so every property of <code>regex</code> (escaping, backend mapping, error shape) applies to it unchanged. Most code uses the tag form, where the shorter name reads better.</p>
 <pre class="code"><code><span class="tok-fn">re</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -199,7 +199,7 @@ data-page="regex.html">
 <section class="entity" id="function-quote">
 <h2><span class="kind kind-function">function</span> <code>quote</code></h2>
 <p>Escapes every regex metacharacter in <code>s</code>, so the result matches <code>s</code> literally.</p>
-<p>This is how to search for text that may itself contain pattern syntax — a search term typed by a user, a filename, a version string. It escapes per character rather than wrapping in <code>\Q...\E</code>, which a value containing <code>\E</code> would break out of.</p>
+<p>This is how to search for text that may itself contain pattern syntax: a search term typed by a user, a filename, a version string. It escapes per character rather than wrapping in <code>\Q...\E</code>, which a value containing <code>\E</code> would break out of.</p>
 <pre class="code"><code><span class="tok-fn">quote</span><span class="tok-punct">(</span>s<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -219,7 +219,7 @@ data-page="regex.html">
 <h2><span class="kind kind-record">record</span> <code>Match</code></h2>
 <p>A successful match, and the groups it captured.</p>
 <p>It behaves like a map keyed by both group number (<code>0</code> is the whole match) and group name (<code>:year</code>), but is a named type so it can grow spans and surrounding context later without breaking existing <code>get</code> call sites.</p>
-<p>A group that did not participate is an absent key, so <code>get</code> answers <code>None</code> — which is different from a group that matched the empty string, and answers <code>Just(&quot;&quot;)</code>.</p>
+<p>A group that did not participate is an absent key, so <code>get</code> answers <code>None</code>. This differs from a group that matched the empty string, which answers <code>Just(&quot;&quot;)</code>.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>captures</code></dt><dd><code>Map&lt;Any, String&gt;</code></dd></div>
@@ -227,7 +227,7 @@ data-page="regex.html">
 </section>
 <section class="entity" id="make-match">
 <h2><span class="kind kind-make">make</span> <code>Match</code></h2>
-<p>NOTE: the accessor is <code>get</code>, not <code>get</code>. A <code>make</code> block on a user type that defines a method name the prelude also uses breaks that name's dispatch for every OTHER type on the BEAM backend — with <code>get</code> here, merely saying <code>using Regex</code> made a plain <code>someMap.get(k)</code> fail with function_clause. <code>get</code> also matches Python's <code>m.get(1)</code> and Java's <code>matcher.get(1)</code>. A plain Map's <code>get</code> is unaffected: resolution picks a local method by receiver type, name and arity.</p>
+<p>NOTE: the accessor is <code>get</code>, not <code>get</code>. A <code>make</code> block on a user type that defines a method name the prelude also uses breaks that name's dispatch for every OTHER type on the BEAM backend: with <code>get</code> here, merely saying <code>using Regex</code> made a plain <code>someMap.get(k)</code> fail with function_clause. <code>get</code> also matches Python's <code>m.get(1)</code> and Java's <code>matcher.get(1)</code>. A plain Map's <code>get</code> is unaffected: resolution picks a local method by receiver type, name and arity.</p>
 
 <div class="functions">
 <div class="fn" id="fn-get">
@@ -292,7 +292,7 @@ found<span class="tok-op">.</span><span class="tok-method">flatMap</span> <span 
 <section class="entity" id="function-scan">
 <h2><span class="kind kind-function">function</span> <code>scan</code></h2>
 <p>Returns every match of <code>re</code> in <code>s</code>, left to right.</p>
-<p>Always answers <code>[Match]</code>, whether or not the pattern has capture groups — adding a group to a pattern must not change the type flowing out of <code>scan</code>. An empty list means nothing matched.</p>
+<p>Always answers <code>[Match]</code>, whether or not the pattern has capture groups: adding a group to a pattern must not change the type flowing out of <code>scan</code>. An empty list means nothing matched.</p>
 <pre class="code"><code><span class="tok-fn">scan</span><span class="tok-punct">(</span>s<span class="tok-punct">,</span> re<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Regex</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">Match</span><span class="tok-punct">]</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -311,7 +311,7 @@ found<span class="tok-op">.</span><span class="tok-method">flatMap</span> <span 
 </section>
 <section class="entity" id="function-replace">
 <h2><span class="kind kind-function">function</span> <code>replace</code></h2>
-<p>Replaces EVERY match of <code>re</code> in <code>s</code> — this is <code>gsub</code>, not <code>sub</code>.</p>
+<p>Replaces EVERY match of <code>re</code> in <code>s</code>: this is <code>gsub</code>, not <code>sub</code>.</p>
 <p>The replacement is either a literal <code>String</code>, inserted verbatim with no <code>$1</code> / <code>\1</code> backreference syntax, or a block receiving the <code>Match</code>, which is how a replacement built from what was captured is written.</p>
 <pre class="code"><code>replace <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Regex</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">|</span> <span class="tok-punct">(</span><span class="tok-type">Match</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span></code></pre>
 <h5>Parameters</h5>
@@ -337,8 +337,8 @@ found<span class="tok-op">.</span><span class="tok-method">flatMap</span> <span 
 <h2><span class="kind kind-function">function</span> <code>splitLimit</code></h2>
 <p>Splits <code>s</code> on <code>re</code>, capping the number of fields.</p>
 <p>A positive <code>limit</code> caps the field count, leaving the remainder unsplit in the last field; a negative <code>limit</code> keeps trailing empty fields instead of dropping them.</p>
-<p>Plain <code>s.split(re)</code> needs no function here at all: it resolves to <code>String.split</code>, which dispatches to this engine when handed a Regex (in both backends), and follows Ruby's semantics — trailing empty fields are dropped, leading ones are kept, and capture groups are interleaved into the result.</p>
-<p>Only the limit form needs a name, and it deliberately is NOT <code>split</code> — this module must not export that name. On BEAM, a module in scope via <code>using</code> captures a method name for EVERY receiver, so exporting <code>split</code> here would route <code>&quot;a,b&quot;.split(&quot;,&quot;)</code> and even the no-argument <code>&quot;hi&quot;.split</code> through this module and break them.</p>
+<p>Plain <code>s.split(re)</code> needs no function here at all: it resolves to <code>String.split</code>, which dispatches to this engine when handed a Regex (in both backends), and follows Ruby's semantics: trailing empty fields are dropped, leading ones are kept, and capture groups are interleaved into the result.</p>
+<p>Only the limit form needs a name, and it deliberately is NOT <code>split</code>: this module must not export that name. On BEAM, a module in scope via <code>using</code> captures a method name for EVERY receiver, so exporting <code>split</code> here would route <code>&quot;a,b&quot;.split(&quot;,&quot;)</code> and even the no-argument <code>&quot;hi&quot;.split</code> through this module and break them.</p>
 <pre class="code"><code>splitLimit <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Regex</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -361,7 +361,7 @@ found<span class="tok-op">.</span><span class="tok-method">flatMap</span> <span 
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T19:07:27.076569085Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-31T00:21:50.485524575Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

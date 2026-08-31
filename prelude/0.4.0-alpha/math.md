@@ -13,9 +13,9 @@ entities:
 
 Mathematical constants and functions.
 
-All trigonometric functions work in radians. Every function here accepts a `Number` — an `Integer` or a `Float` — and the transcendental ones answer with a `Float`.
+All trigonometric functions work in radians. Every function here accepts a `Number` (an `Integer` or a `Float`) and the transcendental ones answer with a `Float`.
 
-A Kex `Float` is always finite, so a domain error (`Math.sqrt(-1.0)`) or an overflow (`Math.exp(1000.0)`) raises rather than producing `NaN` or `Infinity` — the same rule the BEAM enforces, where those two values cannot exist at all. There is no non-finite float to test for afterwards.
+A Kex `Float` is always finite, so a domain error (`Math.sqrt(-1.0)`) or an overflow (`Math.exp(1000.0)`) raises rather than producing `NaN` or `Infinity`: the same rule the BEAM enforces, where those two values cannot exist at all. There is no non-finite float to test for afterwards.
 
 ```kex
 Math.sqrt(2.0)              # => 1.4142135623730951
@@ -23,7 +23,7 @@ Math.hypot(3.0, 4.0)        # => 5.0
 Math.sin(Math.PI / 2.0)     # => 1.0
 ```
 
-The everyday operations on a single number — `abs`, `floor`, `ceil`, `round`, `sqrt` — are also methods on `Integer` and `Float`, which usually reads better in a chain: `x.abs` over `Math.abs(x)`.
+The everyday operations on a single number: `abs`, `floor`, `ceil`, `round`, `sqrt`: are also methods on `Integer` and `Float`, which usually reads better in a chain: `x.abs` over `Math.abs(x)`.
 
 ## constant `PI`
 
@@ -49,7 +49,7 @@ sqrt(x) : Number -> Float
 
 ## function `cbrt`
 
-Returns the cube root of `x`. Unlike `sqrt`, negative input is fine — a negative number has a real cube root.
+Returns the cube root of `x`. Unlike `sqrt`, negative input is fine: a negative number has a real cube root.
 
 
 ```kex
@@ -111,7 +111,7 @@ acos(x) : Number -> Float
 
 Returns the arc tangent of `x` in radians, in the range -π/2 to π/2.
 
-Use `atan2` when you have both coordinates of a vector — it can tell the quadrant apart, and this cannot.
+Use `atan2` when you have both coordinates of a vector: it can tell the quadrant apart, and this cannot.
 
 
 ```kex
@@ -123,7 +123,7 @@ atan(x) : Number -> Float
 
 Returns the angle of the vector `(x, y)` in radians, from -π to π.
 
-Both signs are taken into account, so the result lands in the correct quadrant — which is why this, not `atan`, is what you want for converting a vector to an angle. Note the argument order: `y` first.
+Both signs are taken into account, so the result lands in the correct quadrant, which is why this, not `atan`, is what you want for converting a vector to an angle. Note the argument order: `y` first.
 
 
 ```kex
@@ -163,7 +163,7 @@ tanh(x) : Number -> Float
 
 ## function `log`
 
-Returns the natural logarithm of `x` — its logarithm to base `e`. With a second argument, returns the logarithm to that base instead.
+Returns the natural logarithm of `x`: its logarithm to base `e`. With a second argument, returns the logarithm to that base instead.
 
 Raises for `x` of zero or less, which has no real logarithm.
 
@@ -196,7 +196,7 @@ log10(x) : Number -> Float
 
 ## function `exp`
 
-Returns `e` raised to the power `x` — the inverse of `Math.log`.
+Returns `e` raised to the power `x`: the inverse of `Math.log`.
 
 Raises on overflow, which for a double happens a little past `x` of 709.
 
@@ -232,7 +232,7 @@ abs(x) : Number -> Number
 
 ## function `floor`
 
-Returns the largest integer that is not greater than `x` — rounding toward negative infinity.
+Returns the largest integer that is not greater than `x`: rounding toward negative infinity.
 
 
 ```kex
@@ -242,7 +242,7 @@ floor(x) : Number -> Integer
 
 ## function `ceil`
 
-Returns the smallest integer that is not less than `x` — rounding toward positive infinity.
+Returns the smallest integer that is not less than `x`: rounding toward positive infinity.
 
 
 ```kex

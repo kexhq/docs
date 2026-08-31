@@ -94,8 +94,8 @@ data-page="kex/ast.html">
 <section class="entity" id="module-kex-ast">
 <h2><span class="kind kind-module">module</span> <code>Kex.AST</code></h2>
 <p>Parses Kex source code into a structured AST, at run time.</p>
-<p>Opt-in — nothing here is in scope until <code>using Kex.AST</code>.</p>
-<p>This is the entry point for tools that read Kex source: linters, formatters, documentation generators, code search. The AST includes module definitions, function signatures, type/record definitions, traits, make blocks, and the doc-comments extracted from <code>#</code> lines — which is how the standard library's own documentation is generated.</p>
+<p>Opt-in: nothing here is in scope until <code>using Kex.AST</code>.</p>
+<p>This is the entry point for tools that read Kex source: linters, formatters, documentation generators, code search. The AST includes module definitions, function signatures, type/record definitions, traits, make blocks, and the doc-comments extracted from <code>#</code> lines, which is how the standard library's own documentation is generated.</p>
 <pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span>
 
 <span class="tok-keyword">main</span> <span class="tok-keyword">do</span>
@@ -139,7 +139,7 @@ data-page="kex/ast.html">
 <section class="entity" id="function-parse">
 <h2><span class="kind kind-function">function</span> <code>parse</code></h2>
 <p>Parses Kex source text into a structured AST.</p>
-<p>Pass <code>filename</code> when you have one — it is what appears in every <code>Location</code> and in the error message, so diagnostics can point at a real file.</p>
+<p>Pass <code>filename</code> when you have one: it is what appears in every <code>Location</code> and in the error message, so diagnostics can point at a real file.</p>
 <pre class="code"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Program</span><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span>
 <span class="tok-fn">parse</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Program</span><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span></code></pre>
 <h5>Parameters</h5>
@@ -181,7 +181,7 @@ data-page="kex/ast.html">
 <section class="entity" id="function-parsetype">
 <h2><span class="kind kind-function">function</span> <code>parseType</code></h2>
 <p>Parses a type expression on its own, without a surrounding program.</p>
-<p>Use it to read a type written in data — a signature in a config file, a type named on a command line. <code>typeRefText</code> renders the result back.</p>
+<p>Use it to read a type written in data: a signature in a config file, a type named on a command line. <code>typeRefText</code> renders the result back.</p>
 <pre class="code"><code><span class="tok-fn">parseType</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">TypeRef</span><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -236,7 +236,7 @@ data-page="kex/ast.html">
 <section class="entity" id="function-typereftext">
 <h2><span class="kind kind-function">function</span> <code>typeRefText</code></h2>
 <p>Renders a <code>TypeRef</code> back to the way it is written in source.</p>
-<p>A list reads as <code>[Integer]</code>, a map as <code>{String: Integer}</code>, an optional as <code>String?</code> — the spelling a reader would recognise, not the constructor tree behind it.</p>
+<p>A list reads as <code>[Integer]</code>, a map as <code>{String: Integer}</code>, an optional as <code>String?</code>: the spelling a reader would recognise, not the constructor tree behind it.</p>
 <pre class="code"><code><span class="tok-fn">typeRefText</span><span class="tok-punct">(</span><span class="tok-type">NamedType</span><span class="tok-punct">(</span>name<span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -253,6 +253,7 @@ data-page="kex/ast.html">
 <section class="entity" id="type-patternref">
 <h2><span class="kind kind-type">type</span> <code>PatternRef</code></h2>
 <p>Structured representation of patterns.</p>
+<p>Pattern nodes describe what a declaration or match arm accepts; they do not contain runtime values. A linter can distinguish a wildcard from a binding, for example, without reparsing source text.</p>
 <h3>Variants</h3>
 <ul class="variants">
 <li><code>BindPattern(String)</code></li>
@@ -268,6 +269,8 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-patternfield">
 <h2><span class="kind kind-record">record</span> <code>PatternField</code></h2>
+<p>One field inside a record or map-shaped pattern.</p>
+<p><code>pattern</code> is <code>None</code> for shorthand such as <code>{ name }</code>. <code>stringKey</code> keeps <code>{&quot;name&quot;: value}</code> distinct from the atom-key spelling <code>{ name: value }</code>.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
@@ -297,7 +300,7 @@ data-page="kex/ast.html">
 <section class="entity" id="function-referencetext">
 <h2><span class="kind kind-function">function</span> <code>referenceText</code></h2>
 <p>Renders either a type or a pattern back to source.</p>
-<p>The one call to reach for when a node may carry either — it dispatches to <code>typeRefText</code> or <code>patternRefText</code> as appropriate.</p>
+<p>The one call to reach for when a node may carry either: it dispatches to <code>typeRefText</code> or <code>patternRefText</code> as appropriate.</p>
 <pre class="code"><code><span class="tok-fn">referenceText</span><span class="tok-punct">(</span><span class="tok-type">NamedType</span><span class="tok-punct">(</span>name<span class="tok-punct">,</span> args<span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -312,6 +315,7 @@ data-page="kex/ast.html">
 <section class="entity" id="type-expression">
 <h2><span class="kind kind-type">type</span> <code>Expression</code></h2>
 <p>Structured representation of expression AST nodes.</p>
+<p>Expressions retain syntax-level distinctions that matter to tools: a method call is not flattened into a generic call, <code>var</code> is distinct from <code>let</code>, and a trailing <code>if</code> remains recognizable. Walk these constructors when writing a linter or code search; use <code>Evaluator</code> when the goal is to execute an expression rather than inspect it.</p>
 <h3>Variants</h3>
 <ul class="variants">
 <li><code>LitInt(Int)</code></li>
@@ -364,6 +368,7 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-namedargument">
 <h2><span class="kind kind-record">record</span> <code>NamedArgument</code></h2>
+<p>One <code>name: value</code> argument at a call site.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
@@ -372,6 +377,8 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-matcharm">
 <h2><span class="kind kind-record">record</span> <code>MatchArm</code></h2>
+<p>One arm of <code>match</code>, <code>receive</code>, or <code>rescue</code>.</p>
+<p>Multiple <code>patterns</code> are the comma-separated alternatives on the left of the arrow. <code>guard</code> is absent when the arm has no <code>when</code> condition.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>patterns</code></dt><dd><code>[<a class="xref" href="#type-patternref">PatternRef</a>]</code></dd></div>
@@ -381,6 +388,7 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-lambdaparam">
 <h2><span class="kind kind-record">record</span> <code>LambdaParam</code></h2>
+<p>One lambda parameter and its optional source annotation.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
@@ -389,6 +397,8 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-rescueinfo">
 <h2><span class="kind kind-record">record</span> <code>RescueInfo</code></h2>
+<p>The structured recovery clauses attached to a function or expression.</p>
+<p>Named rescue arms live in <code>arms</code>; a catch-all rescue keeps its optional binding and body separately. <code>inlineReturn</code> represents the compact rescue form rather than inventing a synthetic block.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>arms</code></dt><dd><code>[<a class="xref" href="#record-matcharm">MatchArm</a>]</code></dd></div>
@@ -399,6 +409,7 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-elseif">
 <h2><span class="kind kind-record">record</span> <code>ElseIf</code></h2>
+<p>One <code>elif</code> branch, in source order.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>condition</code></dt><dd><code><a class="xref" href="#type-expression">Expression</a></code></dd></div>
@@ -407,6 +418,7 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="type-mapitem">
 <h2><span class="kind kind-type">type</span> <code>MapItem</code></h2>
+<p>One entry in a map literal: either a key/value pair or <code>...spread</code>.</p>
 <h3>Variants</h3>
 <ul class="variants">
 <li><code>MapEntry(Expression, Expression)</code></li>
@@ -415,6 +427,7 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-recordfield">
 <h2><span class="kind kind-record">record</span> <code>RecordField</code></h2>
+<p>One explicitly initialized field in a record literal.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
@@ -424,6 +437,7 @@ data-page="kex/ast.html">
 <section class="entity" id="type-generatedtemplate">
 <h2><span class="kind kind-type">type</span> <code>GeneratedTemplate</code></h2>
 <p>A declaration template whose name (and, for a make block, target) is computed by a <code>compiled do</code> expression.</p>
+<p>Tools normally encounter this only while inspecting metaprogramming code. After expansion, generated declarations appear as ordinary <code>Node</code>s.</p>
 <h3>Variants</h3>
 <ul class="variants">
 <li><code>GeneratedNode(Node)</code></li>
@@ -432,6 +446,7 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-generatedmakeinfo">
 <h2><span class="kind kind-record">record</span> <code>GeneratedMakeInfo</code></h2>
+<p>The fixed portion of a generated <code>make</code> declaration.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>isFinal</code></dt><dd><code>Bool</code></dd></div>
@@ -442,6 +457,7 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-maininfo">
 <h2><span class="kind kind-record">record</span> <code>MainInfo</code></h2>
+<p>The program entry point, including documentation and recovery clauses.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>doc</code></dt><dd><code>String?</code></dd></div>
@@ -453,6 +469,8 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-paraminfo">
 <h2><span class="kind kind-record">record</span> <code>ParamInfo</code></h2>
+<p>One declared function parameter.</p>
+<p><code>name</code> is absent for a destructuring parameter; <code>pattern</code> preserves that destructuring shape. <code>hasDefault</code> records whether an initializer appeared.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>name</code></dt><dd><code>String?</code></dd></div>
@@ -463,6 +481,8 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-clauseinfo">
 <h2><span class="kind kind-record">record</span> <code>ClauseInfo</code></h2>
+<p>One clause of a function, including its patterns and body.</p>
+<p>Multi-clause functions place all clauses in one <code>FunctionInfo</code>, preserving source order so tooling can reason about which pattern is tried first.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>params</code></dt><dd><code>[<a class="xref" href="#record-paraminfo">ParamInfo</a>]</code></dd></div>
@@ -474,6 +494,8 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-functioninfo">
 <h2><span class="kind kind-record">record</span> <code>FunctionInfo</code></h2>
+<p>A named function and all of its pattern-matching clauses.</p>
+<p><code>doc</code> contains the normalized <code>#</code> comment immediately attached to the declaration. Documentation generators can therefore share the same parsed structure as linters instead of scanning comments independently.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
@@ -486,6 +508,8 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-annotationinfo">
 <h2><span class="kind kind-record">record</span> <code>AnnotationInfo</code></h2>
+<p>A standalone function or method type signature.</p>
+<p><code>implicitThis</code> distinguishes <code>:&gt;</code> methods from module-level <code>:</code> functions without making a tool inspect punctuation in the original source.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
@@ -497,6 +521,7 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-variantinfo">
 <h2><span class="kind kind-record">record</span> <code>VariantInfo</code></h2>
+<p>One constructor of an algebraic data type.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
@@ -505,6 +530,8 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-typeinfo">
 <h2><span class="kind kind-record">record</span> <code>TypeInfo</code></h2>
+<p>A type alias or algebraic data type declaration.</p>
+<p><code>variants</code> is present for an ADT and absent for an alias or abstract type. <code>parents</code> preserves declared bounds and inherited type relationships.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
@@ -517,6 +544,7 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-fieldinfo">
 <h2><span class="kind kind-record">record</span> <code>FieldInfo</code></h2>
+<p>One field declared by a record type.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
@@ -526,6 +554,7 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-recordinfo">
 <h2><span class="kind kind-record">record</span> <code>RecordInfo</code></h2>
+<p>A record declaration with fields in source order.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
@@ -537,6 +566,7 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-traitinfo">
 <h2><span class="kind kind-record">record</span> <code>TraitInfo</code></h2>
+<p>A trait declaration and the signatures or default methods in its body.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
@@ -548,6 +578,8 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-makeinfo">
 <h2><span class="kind kind-record">record</span> <code>MakeInfo</code></h2>
+<p>A <code>make</code> implementation block.</p>
+<p><code>target</code> is the receiver type, <code>implements</code> lists explicit traits, and <code>body</code> retains methods and visibility sections in declaration order.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>target</code></dt><dd><code><a class="xref" href="#type-typeref">TypeRef</a></code></dd></div>
@@ -560,6 +592,7 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-pragmainfo">
 <h2><span class="kind kind-record">record</span> <code>PragmaInfo</code></h2>
+<p>A compiler pragma and its optional value.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
@@ -569,6 +602,7 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-moduleinfo">
 <h2><span class="kind kind-record">record</span> <code>ModuleInfo</code></h2>
+<p>A module and its declarations in source order.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
@@ -579,6 +613,7 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-constantinfo">
 <h2><span class="kind kind-record">record</span> <code>ConstantInfo</code></h2>
+<p>A named constant declaration. The AST reader never evaluates its value.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
@@ -589,6 +624,7 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-visibilityinfo">
 <h2><span class="kind kind-record">record</span> <code>VisibilityInfo</code></h2>
+<p>A <code>public</code> or <code>private</code> section and the declarations it contains.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>isPublic</code></dt><dd><code>Bool</code></dd></div>
@@ -598,6 +634,7 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-usinginfo">
 <h2><span class="kind kind-record">record</span> <code>UsingInfo</code></h2>
+<p>A <code>using</code> import, including aliasing, filters, and an optional scoped body.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>moduleName</code></dt><dd><code>String</code></dd></div>
@@ -610,6 +647,7 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-exportinfo">
 <h2><span class="kind kind-record">record</span> <code>ExportInfo</code></h2>
+<p>An <code>export</code> declaration and its public-name filters.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>moduleName</code></dt><dd><code>String</code></dd></div>
@@ -621,6 +659,7 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="type-compileditem">
 <h2><span class="kind kind-type">type</span> <code>CompiledItem</code></h2>
+<p>One item inside a <code>compiled do</code> block before expansion.</p>
 <h3>Variants</h3>
 <ul class="variants">
 <li><code>CompiledNode(Node)</code></li>
@@ -629,6 +668,7 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="record-compiledinfo">
 <h2><span class="kind kind-record">record</span> <code>CompiledInfo</code></h2>
+<p>A compile-time block and its declarations or expressions in source order.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>items</code></dt><dd><code>[<a class="xref" href="#type-compileditem">CompiledItem</a>]</code></dd></div>
@@ -637,6 +677,8 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="type-node">
 <h2><span class="kind kind-type">type</span> <code>Node</code></h2>
+<p>Any top-level or declaration-level AST node.</p>
+<p>A source tool can match only the declarations it understands and leave the rest alone. The program's <code>schemaVersion</code> lets persisted consumers reject a tree whose possible node shapes have changed.</p>
 <h3>Variants</h3>
 <ul class="variants">
 <li><code>ModuleDef(ModuleInfo)</code></li>
@@ -657,7 +699,8 @@ data-page="kex/ast.html">
 </section>
 <section class="entity" id="make-typeref-|-patternref">
 <h2><span class="kind kind-make">make</span> <code>TypeRef | PatternRef</code></h2>
-<p>Source-like conversion through the standard <code>.to(String)</code> spelling.</p>
+<p>Source-like conversion through the standard <code>to(String)</code> spelling.</p>
+<p>Useful in diagnostics: a tool can interpolate the type or pattern it found without manually dispatching between the two reference families.</p>
 
 <div class="functions">
 <div class="fn" id="fn-to">
@@ -672,7 +715,7 @@ data-page="kex/ast.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T19:07:27.076569085Z · <a href="../../../llms.txt">llms.txt</a> · <a href="../../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-31T00:21:50.485524575Z · <a href="../../../llms.txt">llms.txt</a> · <a href="../../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

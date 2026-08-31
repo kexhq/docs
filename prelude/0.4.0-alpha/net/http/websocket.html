@@ -94,6 +94,7 @@ data-page="net/http/websocket.html">
 <section class="entity" id="module-net-http-websocket">
 <h2><span class="kind kind-module">module</span> <code>Net.HTTP.WebSocket</code></h2>
 <p>High-level RFC 6455 client messages. The runtime handles fragmentation and ping/pong frames; reconnect and heartbeat policies remain application-owned.</p>
+<p>A <code>Connection</code> delivers complete messages rather than wire frames. Your code never has to assemble fragments or answer a protocol ping, but it does decide what a dropped connection means: reconnecting may require resubscribing or replaying an application cursor, so the library cannot do that safely for you.</p>
 <pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Net</span><span class="tok-op">.</span><span class="tok-type">HTTP</span><span class="tok-op">.</span><span class="tok-type">WebSocket</span>
 
 <span class="tok-keyword">let</span> socket <span class="tok-op">=</span> <span class="tok-type">WebSocket</span><span class="tok-op">.</span><span class="tok-method">connect</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">wss://example.test/events</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
@@ -103,6 +104,7 @@ socket<span class="tok-op">.</span><span class="tok-method">close</span></code><
 <section class="entity" id="type-message">
 <h2><span class="kind kind-type">type</span> <code>Message</code></h2>
 <p>A complete high-level WebSocket message. Fragmentation and ping/pong control frames are handled by the connection runtime.</p>
+<p><code>CloseMessage</code> carries the peer's status code and reason. Treat it as the end of the message stream even when the code describes a normal shutdown.</p>
 <h3>Variants</h3>
 <ul class="variants">
 <li><code>Text(String)</code></li>
@@ -113,6 +115,7 @@ socket<span class="tok-op">.</span><span class="tok-method">close</span></code><
 <section class="entity" id="record-clientoptions">
 <h2><span class="kind kind-record">record</span> <code>ClientOptions</code></h2>
 <p>Client handshake policy and the maximum reassembled message size.</p>
+<p>Subprotocols are offered in preference order. The byte limit applies after fragments are reassembled, preventing a peer from bypassing the bound with many individually small frames.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>subprotocols</code></dt><dd><code>[String]</code> <span class="opt">optional</span></dd></div>
@@ -134,6 +137,7 @@ socket<span class="tok-op">.</span><span class="tok-method">close</span></code><
 </section>
 <section class="entity" id="module-net-http-websocket-websocket">
 <h2><span class="kind kind-module">module</span> <code>Net.HTTP.WebSocket.WebSocket</code></h2>
+<p>Constructors for high-level WebSocket client connections.</p>
 <section class="entity" id="function-connect">
 <h2><span class="kind kind-function">function</span> <code>connect</code></h2>
 <p>Opens a <code>ws:</code> or verified <code>wss:</code> connection with default options.</p>
@@ -144,8 +148,12 @@ socket<span class="tok-op">.</span><span class="tok-method">close</span></code><
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;Connection, <a class="xref" href="../../net.html#record-neterror">NetError</a>&gt;</code> — a connection or typed handshake error</p>
 <h5>Examples</h5>
-<p class="caption"><em><code>WebSocket.connect(&quot;wss://example.test/events&quot;).try</code>.</em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>Following a live event feed</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> socket <span class="tok-op">=</span> <span class="tok-type">WebSocket</span><span class="tok-op">.</span><span class="tok-method">connect</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">wss://events.example.com/orders</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">match</span> socket<span class="tok-op">.</span><span class="tok-method">receiveMessage</span><span class="tok-op">.</span><span class="tok-method">try</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">Text</span><span class="tok-punct">(</span>json<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>json<span class="tok-punct">)</span>
+  _          <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">warn</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">unexpected non-text event</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 
 </section>
 </section>
@@ -159,29 +167,41 @@ socket<span class="tok-op">.</span><span class="tok-method">close</span></code><
 <pre class="code"><code><span class="tok-fn">send</span><span class="tok-punct">(</span>message<span class="tok-punct">)</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;Void, <a class="xref" href="../../net.html#record-neterror">NetError</a>&gt;</code> — success or <code>Protocol</code>/<code>Limit</code>/<code>Closed</code></p>
 <h5>Examples</h5>
-<p class="caption"><em><code>connection.send(Text(&quot;hello&quot;)).try</code></em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>Subscribing after connecting</em></p>
+<pre class="code"><code>connection<span class="tok-op">.</span><span class="tok-method">send</span><span class="tok-punct">(</span><span class="tok-type">Text</span><span class="tok-punct">(</span><span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span><span class="tok-punct">{</span> action<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">subscribe</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> topic<span class="tok-op">:</span> topic <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </div>
 <div class="fn" id="fn-receivemessage">
 <h4><code>receiveMessage</code></h4>
 <p><code>receive</code> is a Kex process keyword, so the public method spells out the operation while preserving the plan's high-level message semantics. Reassembles fragments, validates UTF-8, and automatically answers pings.</p>
+<p>A <code>CloseMessage</code> is returned once so the application can inspect the peer's reason. Subsequent reads fail with <code>Closed</code>.</p>
 <pre class="code"><code><span class="tok-fn">receiveMessage</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;<a class="xref" href="#type-message">Message</a>, <a class="xref" href="../../net.html#record-neterror">NetError</a>&gt;</code> — the next data or close message</p>
 <h5>Examples</h5>
-<p class="caption"><em><code>connection.receiveMessage.try</code></em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>Processing messages until the server closes the session</em></p>
+<pre class="code"><code><span class="tok-keyword">loop</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">match</span> connection<span class="tok-op">.</span><span class="tok-method">receiveMessage</span><span class="tok-op">.</span><span class="tok-method">try</span> <span class="tok-keyword">do</span>
+    <span class="tok-type">Text</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span>                  <span class="tok-op">=&gt;</span> <span class="tok-fn">handleEvent</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span>
+    <span class="tok-type">BinaryMessage</span><span class="tok-punct">(</span>data<span class="tok-punct">)</span>         <span class="tok-op">=&gt;</span> <span class="tok-fn">saveSnapshot</span><span class="tok-punct">(</span>data<span class="tok-punct">)</span>
+    <span class="tok-type">CloseMessage</span><span class="tok-punct">(</span>code<span class="tok-punct">,</span> reason<span class="tok-punct">)</span>  <span class="tok-op">=&gt;</span> <span class="tok-keyword">break</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span></code></pre>
 
 </div>
 <div class="fn" id="fn-session">
 <h4><code>session</code></h4>
+<p>Returns handshake details negotiated with the server.</p>
 <pre class="code"><code><span class="tok-fn">session</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code><a class="xref" href="#record-session">Session</a></code> — the selected subprotocol, if any</p>
+<h5>Examples</h5>
+<p class="caption"><em>Verifying which compatible event format was selected</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> protocol <span class="tok-op">=</span> connection<span class="tok-op">.</span><span class="tok-method">session</span><span class="tok-op">.</span><span class="tok-method">subprotocol</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">default</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-close">
 <h4><code>close</code></h4>
 <p>Sends a normal close frame and idempotently releases the transport.</p>
+<p>Use an explicit <code>CloseMessage</code> with <code>send</code> first when the peer needs an application-specific code or reason.</p>
 <pre class="code"><code><span class="tok-fn">close</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 
@@ -199,7 +219,7 @@ socket<span class="tok-op">.</span><span class="tok-method">close</span></code><
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T19:07:27.076569085Z · <a href="../../../../llms.txt">llms.txt</a> · <a href="../../../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-31T00:21:50.485524575Z · <a href="../../../../llms.txt">llms.txt</a> · <a href="../../../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

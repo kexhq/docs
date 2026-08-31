@@ -13,14 +13,14 @@ entities:
 
 Cryptographic content digests.
 
-Digests are returned as lowercase hex strings, so a Kex program never has to handle backend-specific binary values — they compare with `==`, print directly, and go into a map key unchanged.
+Digests are returned as lowercase hex strings, so a Kex program never has to handle backend-specific binary values: they compare with `==`, print directly, and go into a map key unchanged.
 
 ```kex
 Digest.sha256("hello")
 # => "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
 ```
 
-SHA-256 is a content fingerprint: use it to tell whether two things are the same, to key a cache, or to check that a download arrived intact. It is not a password hash — a purpose-built password KDF is what that needs.
+SHA-256 is a content fingerprint: use it to tell whether two things are the same, to key a cache, or to check that a download arrived intact. It is not a password hash: a purpose-built password KDF is what that needs.
 
 ## function `sha256`
 

@@ -26,7 +26,7 @@ naturals.filter { |n| n.even? }.take(3)       # => [0, 2, 4]
 
 `map`, `filter` and `drop` all answer with another stream, so a pipeline stays lazy end to end; `take` is what turns it into a list.
 
-`FS.File.feed+ hands back a stream of a file's lines, which is how to walk a file too large to hold in memory.
+Streams are best for generated sequences you may revisit. A file or socket is different: it can only be consumed once, so those APIs return a `Feed`. Convert a small feed with `toStream+ only when replaying it is worth keeping every value already read.
 
 
 
@@ -38,7 +38,7 @@ Constructors for `Stream`.
 
 Builds an infinite stream from a first element and a step function.
 
-The stream is `from`, then `step(from)`, then `step(step(from))`, and so on — nothing is computed until you take from it.
+The stream is `from`, then `step(from)`, then `step(step(from))`, and so on: nothing is computed until you take from it.
 
 
 ```kex
@@ -48,7 +48,7 @@ Sequence(from, step)
 
 ## function `Iterate`
 
-Builds an infinite stream from a seed and a step function. The same thing as `Sequence` — use whichever reads better where you are.
+Builds an infinite stream from a seed and a step function. The same thing as `Sequence`: use whichever reads better where you are.
 
 
 ```kex
@@ -89,12 +89,18 @@ Stream.Sequence(from: 1) { |n| n ` 1 }
   .map { |n| n * n }
   .take(10)
 ```
+_Generating retry delays without building an unbounded list_
+
+```kex
+let delays = Stream.Sequence(from: 1.seconds) { |d| d * 2 }
+delays.take(4)   # => [1 second, 2 seconds, 4 seconds, 8 seconds]
+```
 
 #### `drop`
 
 Returns a new stream that skips the first `n` elements.
 
-Still a stream, so the result stays lazy — pair it with `take` to get a window out of the middle.
+Still a stream, so the result stays lazy: pair it with `take` to get a window out of the middle.
 
 ```kex
 drop(n) : Integer -> Stream<A>
@@ -144,7 +150,7 @@ Stream.Sequence(from: 1) { |n| n ` 1 }
 
 Returns a new stream with only the elements `pred` accepts.
 
-Producing `n` filtered elements may require walking many more upstream ones, so a predicate that almost never holds makes `take` run for a long time — and one that never holds makes it run forever.
+Producing `n` filtered elements may require walking many more upstream ones, so a predicate that almost never holds makes `take` run for a long time, and one that never holds makes it run forever.
 
 ```kex
 filter(pred) : (A -> Bool) -> Stream<A>
@@ -172,7 +178,7 @@ Stream.Sequence(from: 1) { |n| n ` 1 }
 
 Applies `f` to every element.
 
-Only ever finishes on a stream that ends — a file's lines converted with `Feed.toStream`, or anything `take` has bounded. On `Stream.Sequence` this runs forever, exactly as writing the same loop by hand would.
+Only ever finishes on a stream that ends: a file's lines converted with `Feed.toStream`, or anything `take` has bounded. On `Stream.Sequence` this runs forever, exactly as writing the same loop by hand would.
 
 ```kex
 each(f) : (A -> Void) -> Void

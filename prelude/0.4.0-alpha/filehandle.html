@@ -100,7 +100,7 @@ data-page="filehandle.html">
 <section class="entity" id="type-readerror">
 <h2><span class="kind kind-type">type</span> <code>ReadError</code></h2>
 <p>Why a read failed.</p>
-<p><code>ReadFailed</code> means the source refused the read. <code>InvalidUtf8</code> means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U<code>FFFD — use </code>readBytes+ to recover the payload verbatim.</p>
+<p><code>ReadFailed</code> means the source refused the read. <code>InvalidUtf8</code> means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U<code>FFFD: use </code>readBytes+ to recover the payload verbatim.</p>
 <h3>Variants</h3>
 <ul class="variants">
 <li><code>ReadFailed</code></li>
@@ -109,7 +109,7 @@ data-page="filehandle.html">
 </section>
 <section class="entity" id="trait-readable">
 <h2><span class="kind kind-trait">trait</span> <code>Readable</code></h2>
-<p><code>Readable</code> — a source that yields text.</p>
+<p><code>Readable</code>: a source that yields text.</p>
 <p>Named so that anything can be one, not just a file: the vocabulary <code>FileHandle&lt;CanRead, W&gt;</code> already carried was an abstraction without a name, so nothing else could implement it and <code>IO</code> did not go through it (kexhq/kex#139). <code>IO.in</code> is a <code>Readable</code>; so is any handle opened for reading.</p>
 <pre class="code"><code><span class="tok-keyword">foul</span> <span class="tok-fn">firstLine</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <span class="tok-type">Readable</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-keyword">do</span>
   source<span class="tok-op">.</span><span class="tok-method">getLine</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">(empty)</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
@@ -152,7 +152,7 @@ data-page="filehandle.html">
 <div class="fn" id="fn-readbytes">
 <h4><code>readBytes</code></h4>
 <p>Reads everything remaining as raw bytes, without decoding it as text.</p>
-<p>The byte counterpart of <code>read</code>: it never validates UTF-8, so it recovers the payload of a source that is not text — or one <code>read</code> has just rejected. Draining an exhausted source answers <code>Ok(Binary.fromBytes([]))</code>.</p>
+<p>The byte counterpart of <code>read</code>: it never validates UTF-8, so it recovers the payload of a source that is not text, or one <code>read</code> has just rejected. Draining an exhausted source answers <code>Ok(Binary.fromBytes([]))</code>.</p>
 <pre class="code"><code>readBytes <span class="tok-op">:</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Binary</span><span class="tok-punct">,</span> <span class="tok-type">ReadError</span><span class="tok-op">&gt;</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;Binary, <a class="xref" href="#type-readerror">ReadError</a>&gt;</code> — the remaining bytes, or the failure</p>
 
@@ -175,7 +175,7 @@ data-page="filehandle.html">
 </section>
 <section class="entity" id="trait-writable">
 <h2><span class="kind kind-trait">trait</span> <code>Writable</code></h2>
-<p><code>Writable</code> — a sink that accepts text.</p>
+<p><code>Writable</code>: a sink that accepts text.</p>
 <p>The payoff of naming it is that a sink becomes a VALUE a library can accept, rather than a global switch it can only sit underneath: output from one library can go to a buffer while another's goes to the terminal (kexhq/kex#139).</p>
 <pre class="code"><code><span class="tok-keyword">foul</span> <span class="tok-fn">report</span><span class="tok-punct">(</span>out<span class="tok-op">:</span> <span class="tok-type">Writable</span><span class="tok-punct">,</span> lines<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span> <span class="tok-keyword">do</span>
   lines<span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> out<span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>line<span class="tok-punct">)</span> <span class="tok-punct">}</span>
@@ -324,7 +324,13 @@ data-page="filehandle.html">
 </div>
 <div class="fn" id="fn-readbytes">
 <h4><code>readBytes</code></h4>
+<p>Reads all remaining bytes from the handle without decoding them.</p>
+<p>Unlike <code>read</code>, this accepts arbitrary binary data and cannot fail because the input is not valid UTF-8. It starts at the handle's current position.</p>
 <pre class="code"><code><span class="tok-fn">readBytes</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Binary</span><span class="tok-punct">,</span> <span class="tok-type">ReadError</span><span class="tok-op">&gt;</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Binary</code> — the remaining bytes</p>
+<h5>Examples</h5>
+<p class="caption"><em>Reading a file with an unknown encoding</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> payload <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">readBytes</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </div>
 <div class="fn" id="fn-eof?">
@@ -370,7 +376,16 @@ data-page="filehandle.html">
 <div class="functions">
 <div class="fn" id="fn-writebytes">
 <h4><code>writeBytes</code></h4>
+<p>Writes <code>content</code> verbatim, without text encoding or a trailing newline.</p>
 <pre class="code"><code><span class="tok-fn">writeBytes</span><span class="tok-punct">(</span>content<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Binary</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>content</code> <code>Binary</code></dt><dd>the bytes to write</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
+<h5>Examples</h5>
+<p class="caption"><em>Copying an opaque payload</em></p>
+<pre class="code"><code>destination<span class="tok-op">.</span><span class="tok-method">writeBytes</span><span class="tok-punct">(</span>source<span class="tok-op">.</span><span class="tok-method">readBytes</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-printline">
@@ -458,7 +473,7 @@ handle<span class="tok-op">.</span><span class="tok-method">printLine</span><spa
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T19:07:27.076569085Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-31T00:21:50.485524575Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

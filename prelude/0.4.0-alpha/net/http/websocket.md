@@ -13,6 +13,8 @@ entities:
 
 High-level RFC 6455 client messages. The runtime handles fragmentation and ping/pong frames; reconnect and heartbeat policies remain application-owned.
 
+A `Connection` delivers complete messages rather than wire frames. Your code never has to assemble fragments or answer a protocol ping, but it does decide what a dropped connection means: reconnecting may require resubscribing or replaying an application cursor, so the library cannot do that safely for you.
+
 ```kex
 using Net.HTTP.WebSocket
 
@@ -26,6 +28,8 @@ socket.close
 
 A complete high-level WebSocket message. Fragmentation and ping/pong control frames are handled by the connection runtime.
 
+`CloseMessage` carries the peer's status code and reason. Treat it as the end of the message stream even when the code describes a normal shutdown.
+
 
 
 **Variants**
@@ -37,6 +41,8 @@ A complete high-level WebSocket message. Fragmentation and ping/pong control fra
 ## record `ClientOptions`
 
 Client handshake policy and the maximum reassembled message size.
+
+Subprotocols are offered in preference order. The byte limit applies after fragments are reassembled, preventing a peer from bypassing the bound with many individually small frames.
 
 **Fields**
 
@@ -58,6 +64,8 @@ An opaque RFC 6455 client connection. It does not reconnect automatically.
 
 
 ## module `Net.HTTP.WebSocket.WebSocket`
+
+Constructors for high-level WebSocket client connections.
 
 ## function `connect`
 
@@ -84,15 +92,17 @@ send(message)
 
 **Examples**
 
-_`connection.send(Text("hello")).try`_
+_Subscribing after connecting_
 
 ```kex
-
+connection.send(Text(JSON.stringify({ action: "subscribe", topic: topic }))).try
 ```
 
 #### `receiveMessage`
 
 `receive` is a Kex process keyword, so the public method spells out the operation while preserving the plan's high-level message semantics. Reassembles fragments, validates UTF-8, and automatically answers pings.
+
+A `CloseMessage` is returned once so the application can inspect the peer's reason. Subsequent reads fail with `Closed`.
 
 ```kex
 receiveMessage()
@@ -102,13 +112,21 @@ receiveMessage()
 
 **Examples**
 
-_`connection.receiveMessage.try`_
+_Processing messages until the server closes the session_
 
 ```kex
-
+loop do
+  match connection.receiveMessage.try do
+    Text(text)                  => handleEvent(text)
+    BinaryMessage(data)         => saveSnapshot(data)
+    CloseMessage(code, reason)  => break
+  end
+end
 ```
 
 #### `session`
+
+Returns handshake details negotiated with the server.
 
 ```kex
 session()
@@ -116,9 +134,19 @@ session()
 
 **Returns**: `Session` — the selected subprotocol, if any
 
+**Examples**
+
+_Verifying which compatible event format was selected_
+
+```kex
+let protocol = connection.session.subprotocol.or("default")
+```
+
 #### `close`
 
 Sends a normal close frame and idempotently releases the transport.
+
+Use an explicit `CloseMessage` with `send` first when the peer needs an application-specific code or reason.
 
 ```kex
 close()

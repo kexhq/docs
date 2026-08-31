@@ -13,7 +13,7 @@ entities:
 
 Diagnostics returned by compile-time validators for tagged literals.
 
-A tagged literal — `` re`\d`` ``, `` sql`SELECT ...` `` — can be checked while your program is compiled rather than when it runs. The compiler finds the checker by name: a tag `foo` is validated by a function named `validateFoo` taking the literal's text and returning a list of `Issue` values. An empty list means the literal is fine.
+A tagged literal (`` re`\d`` ``, `` sql`SELECT ...` ``) can be checked while your program is compiled rather than when it runs. The compiler finds the checker by name: a tag `foo` is validated by a function named `validateFoo` taking the literal's text and returning a list of `Issue` values. An empty list means the literal is fine.
 
 ```kex
 let validateHex(source: String) -> [TaggedValidation.Issue] do
@@ -45,7 +45,7 @@ Both are byte offsets into the literal body, counted from zero.
 
 One diagnostic about a tagged literal.
 
-`Fatal` stops the build; `Warn` reports and lets it continue. The span is optional — an issue about the literal as a whole carries `None`.
+`Fatal` stops the build; `Warn` reports and lets it continue. The span is optional: an issue about the literal as a whole carries `None`.
 
 
 

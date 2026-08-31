@@ -107,19 +107,19 @@ data-page="units.html">
 <section class="entity" id="trait-unit">
 <h2><span class="kind kind-trait">trait</span> <code>Unit</code></h2>
 <p>Numbers that carry a unit.</p>
-<p>Writing <code>5.sec</code> or <code>90.minute</code> gives you a <code>Measure</code>: a number, the unit it was written in, and the same quantity in that dimension's base unit. Adding, subtracting and converting all go through the canonical value, so the arithmetic is right regardless of which units the operands were written in — and mixing dimensions is an <code>Error</code> rather than a silently wrong number.</p>
+<p>Writing <code>5.sec</code> or <code>90.minute</code> gives you a <code>Measure</code>: a number, the unit it was written in, and the same quantity in that dimension's base unit. Adding, subtracting and converting all go through the canonical value, so the arithmetic is right regardless of which units the operands were written in, and mixing dimensions is an <code>Error</code> rather than a silently wrong number.</p>
 <pre class="code"><code><span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">sec</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>                     <span class="tok-comment"># =&gt; &quot;5.0 s&quot;</span>
 <span class="tok-number">1.5</span><span class="tok-op">.</span><span class="tok-method">hour</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>                  <span class="tok-comment"># =&gt; &quot;1.5 h&quot;</span>
 <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">hour</span> ` <span class="tok-number">30</span><span class="tok-op">.</span><span class="tok-method">minute</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span><span class="tok-punct">(</span><span class="tok-op">~</span><span class="tok-fn">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; Ok(&quot;1.5 h&quot;)</span>
 <span class="tok-number">90</span><span class="tok-op">.</span><span class="tok-method">minute</span><span class="tok-op">.</span><span class="tok-method">convert</span><span class="tok-punct">(</span><span class="tok-type">Hour</span><span class="tok-punct">)</span>              <span class="tok-comment"># =&gt; Ok(1.5 h)</span></code></pre>
-<p>The time units — <code>nanosecond</code> through <code>week</code> — are in the prelude. Other dimensions live in opt-in modules under <code>Units</code>, and every one of them measures against the same machinery here.</p>
+<p>The time units (<code>nanosecond</code> through <code>week</code>) are in the prelude. Other dimensions live in opt-in modules under <code>Units</code>, and every one of them measures against the same machinery here.</p>
 <p>A `Measure` is a measurement, not an elapsed span: `5.sec` describes a quantity, while `Duration` is what `Time` and `Date+ use for a span between two moments.</p>
 <p>The trait a unit implements: how it converts to its dimension's base unit, which dimension that is, and how it is written.</p>
 
 <div class="functions">
 <div class="fn" id="fn-factor">
 <h4><code>factor</code></h4>
-<p>How many base units one of this unit is — <code>60.0</code> for a minute, whose base unit is the second.</p>
+<p>How many base units one of this unit is: <code>60.0</code> for a minute, whose base unit is the second.</p>
 <pre class="code"><code>factor <span class="tok-op">:</span> <span class="tok-type">Float</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>Float</code> — the conversion factor</p>
 <h5>Examples</h5>
@@ -188,7 +188,7 @@ data-page="units.html">
 <section class="entity" id="record-unitdefinition">
 <h2><span class="kind kind-record">record</span> <code>UnitDefinition</code></h2>
 <p>A unit described at run time rather than by a constructor.</p>
-<p>Runtime-defined units are used for prefixes and units derived by arithmetic — <code>s^2</code> from squaring a duration, a kilo- prefix applied to a base unit.</p>
+<p>Runtime-defined units are used for prefixes and units derived by arithmetic: <code>s^2</code> from squaring a duration, a kilo- prefix applied to a base unit.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>conversionFactor</code></dt><dd><code>Float</code></dd></div>
@@ -287,7 +287,7 @@ data-page="units.html">
 </div>
 <div class="fn" id="fn-scale">
 <h4><code>scale</code></h4>
-<p>Formatting into a target display unit deliberately has NO prelude clause. A unit module (Units.SI, Units.Data, ...) supplies <code>to(String, in:)</code> for the units it owns, and reaching one requires importing it. A catch-all here would answer <code>None</code> for an un-imported module instead — a silently empty Optional in place of &quot;you need <code>using Units.SI</code>&quot;.</p>
+<p>Formatting into a target display unit deliberately has NO prelude clause. A unit module (Units.SI, Units.Data, ...) supplies <code>to(String, in:)</code> for the units it owns, and reaching one requires importing it. A catch-all here would answer <code>None</code> for an un-imported module instead: a silently empty Optional in place of &quot;you need <code>using Units.SI</code>&quot;.</p>
 <p>Multiplies the measure by a plain number, keeping its unit.</p>
 <p>The unit is unchanged, so this scales a quantity rather than converting it: three of a two-second interval is six seconds.</p>
 <pre class="code"><code><span class="tok-fn">scale</span><span class="tok-punct">(</span>multiplier<span class="tok-punct">)</span></code></pre>
@@ -318,7 +318,7 @@ data-page="units.html">
 <div class="fn" id="fn-convertto">
 <h4><code>convertTo</code></h4>
 <p>Converts the measure to another unit of the same dimension.</p>
-<p>Answers <code>Error</code> when the dimensions differ — you cannot express seconds in bytes, and this says so rather than producing a wrong number.</p>
+<p>Answers <code>Error</code> when the dimensions differ: you cannot express seconds in bytes, and this says so rather than producing a wrong number.</p>
 <p>Convert through the Unit trait so units from opt-in modules (SI, Data, and future domains) remain interchangeable with prelude time units.</p>
 <pre class="code"><code><span class="tok-fn">convertTo</span><span class="tok-punct">(</span>unit<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
@@ -347,7 +347,7 @@ data-page="units.html">
 <div class="fn" id="fn-+">
 <h4><code>+</code></h4>
 <p>Adds two measures of the same dimension.</p>
-<p>The units need not match — the sum goes through the canonical values, and comes back displayed in the LEFT operand's unit. Adding measures of different dimensions is an <code>Error</code>.</p>
+<p>The units need not match: the sum goes through the canonical values, and comes back displayed in the LEFT operand's unit. Adding measures of different dimensions is an <code>Error</code>.</p>
 <pre class="code"><code><span class="tok-op">+</span><span class="tok-punct">(</span>other<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -377,7 +377,7 @@ data-page="units.html">
 </section>
 <section class="entity" id="module-units">
 <h2><span class="kind kind-module">module</span> <code>Units</code></h2>
-<p>The time units are prelude-global, because every unit module measures against the same dimensions — <code>Units.SI</code> defines <code>Watt * Hour</code> with the <code>Hour</code> declared above, and future domains do the same. That makes <code>Hour</code> correct but not obviously located, so the same constructors are reachable under <code>Units</code> too, for call sites that would rather name where a unit comes from. These are aliases, not copies: each binds the identical constructor, so <code>Units.Hour</code> and <code>Hour</code> match the same patterns and compare equal.</p>
+<p>The time units are prelude-global, because every unit module measures against the same dimensions: <code>Units.SI</code> defines <code>Watt * Hour</code> with the <code>Hour</code> declared above, and future domains do the same. That makes <code>Hour</code> correct but not obviously located, so the same constructors are reachable under <code>Units</code> too, for call sites that would rather name where a unit comes from. These are aliases, not copies: each binds the identical constructor, so <code>Units.Hour</code> and <code>Hour</code> match the same patterns and compare equal.</p>
 <section class="entity" id="constant-nanosecond">
 <h2><span class="kind kind-constant">constant</span> <code>Nanosecond</code> <code>?</code></h2>
 
@@ -420,7 +420,7 @@ data-page="units.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T19:07:27.076569085Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-31T00:21:50.485524575Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

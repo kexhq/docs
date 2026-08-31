@@ -55,6 +55,10 @@ A host name or numeric address paired with a validated port.
 
 ## record `ConnectOptions`
 
+Connection deadlines and operating-system socket policy.
+
+Buffer values of zero leave sizing to the operating system. `noDelay?` disables Nagle's algorithm, which is usually right for request/response traffic; bulk-transfer protocols may prefer fewer, larger packets.
+
 **Fields**
 
   - `connectTimeout` : Duration (optional)
@@ -64,6 +68,10 @@ A host name or numeric address paired with a validated port.
   - `receiveBuffer` : Integer (optional)
 
 ## record `ListenOptions`
+
+Listener queue and policy inherited by accepted connections.
+
+`backlog` bounds connections waiting for `accept`. Buffer values of zero keep the platform defaults rather than requesting a particular byte size.
 
 **Fields**
 
@@ -78,6 +86,10 @@ A host name or numeric address paired with a validated port.
 
 ## function `host`
 
+Pairs a hostname or numeric address with a port.
+
+Resolution happens when connecting, so this preserves `name` exactly as supplied rather than validating it as an `IP.Address`.
+
 
 ```kex
 host(name, port) : String -> Net.Port -> Endpoint
@@ -86,6 +98,10 @@ host(name, port) : String -> Net.Port -> Endpoint
 
 ## function `any`
 
+Builds an IPv4 wildcard endpoint for listening on every local interface.
+
+Be deliberate with this in development: unlike `loopback`, it may expose the service to other machines on the network.
+
 
 ```kex
 any(port) : Net.Port -> Endpoint
@@ -93,6 +109,10 @@ any(port) : Net.Port -> Endpoint
 
 
 ## function `loopback`
+
+Builds an IPv4 loopback endpoint reachable only from this machine.
+
+Port zero lets the operating system choose a free port, which is useful for tests; ask `localAddress` which port was assigned after listening.
 
 
 ```kex
@@ -124,7 +144,9 @@ listen(endpoint) : Endpoint -> ListenOptions -> Result<TCPListener, NetError>
 
 ## function `sendAll`
 
-Sends every byte or reports the failure and transfer progress.
+Sends every byte, retrying partial operating-system writes internally.
+
+On failure, `NetError.progress` records how many bytes were accepted before the error. Do not blindly retry the whole payload when progress is present.
 
 
 ```kex
@@ -134,7 +156,9 @@ sendAll(connection, data)
 
 ## function `receiveChunk`
 
-Receives one bounded chunk; EOF is reported as `Closed`.
+Receives up to `limit` bytes; EOF is reported as `Closed`.
+
+A successful result is one available chunk, not necessarily a complete application message. Use `receiveExactly`, `receiveUntil`, or `receiveLine` when the protocol supplies a boundary.
 
 
 ```kex
@@ -145,6 +169,8 @@ receiveChunk(connection, limit)
 ## function `receiveExactly`
 
 Receives exactly `count` bytes or returns a typed EOF/timeout failure.
+
+Useful after a protocol header has declared the payload length.
 
 
 ```kex
@@ -168,6 +194,8 @@ receiveUntil(connection, delimiter, limit)
 
 Receives through a newline without exceeding `limit` bytes.
 
+The newline remains in the returned binary. Decode and trim only after a complete bounded line has been received.
+
 
 ```kex
 receiveLine(connection, limit)
@@ -186,7 +214,9 @@ shutdownWrite(connection)
 
 ## function `accept`
 
-Waits for and returns the next connection.
+Waits for and returns the next connection accepted by the listener.
+
+A timeout applies to this wait only; it does not become a read timeout on the returned connection.
 
 
 ```kex
@@ -263,6 +293,8 @@ A datagram address paired with a validated port.
 
 A received datagram and its source endpoint.
 
+Reply to `source` rather than the socket's local address: UDP has no connection that remembers which peer sent the packet.
+
 **Fields**
 
   - `source` : [Endpoint](#record-endpoint)
@@ -283,6 +315,8 @@ Curated socket policy. Broadcast is opt-in. The receive timeout applies to each 
 
 ## function `host`
 
+Pairs a hostname or numeric address with a UDP port.
+
 
 ```kex
 host(name, port) : String -> Net.Port -> Endpoint
@@ -291,6 +325,8 @@ host(name, port) : String -> Net.Port -> Endpoint
 
 ## function `any`
 
+Builds an IPv4 wildcard endpoint for receiving on every local interface.
+
 
 ```kex
 any(port) : Net.Port -> Endpoint
@@ -298,6 +334,8 @@ any(port) : Net.Port -> Endpoint
 
 
 ## function `loopback`
+
+Builds an IPv4 loopback endpoint reachable only from this machine.
 
 
 ```kex
@@ -320,6 +358,8 @@ bind(endpoint) : Endpoint -> BindOptions -> Result<Socket, NetError>
 
 Sends one complete datagram and returns its byte count.
 
+Datagram boundaries are preserved: one `sendTo` corresponds to one `receiveFrom`, unless the packet is lost by the network.
+
 
 ```kex
 sendTo(socket, endpoint, data)
@@ -329,6 +369,8 @@ sendTo(socket, endpoint, data)
 ## function `receiveFrom`
 
 Receives one datagram no larger than `limit` bytes.
+
+Oversized packets fail with `Limit` instead of being silently truncated, so a caller never mistakes a prefix for a complete message.
 
 
 ```kex
@@ -417,12 +459,18 @@ A validated absolute filesystem socket path.
 
 ## record `ConnectOptions`
 
+Connection and read deadlines for a local IPC client.
+
 **Fields**
 
   - `connectTimeout` : Duration (optional)
   - `receiveTimeout` : Duration (optional)
 
 ## record `ListenOptions`
+
+Listener queue, stale-socket policy, and per-operation deadlines.
+
+`removeStale?` removes only a filesystem socket, never a regular file or directory that happens to occupy the requested path.
 
 **Fields**
 
@@ -437,6 +485,8 @@ A validated absolute filesystem socket path.
 
 Validates a nonempty absolute Unix-domain socket path.
 
+Relative paths are rejected so ownership and cleanup always refer to one unambiguous filesystem entry.
+
 
 ```kex
 path(value) : String -> Result<Address, NetError>
@@ -446,6 +496,8 @@ path(value) : String -> Result<Address, NetError>
 ## function `connect`
 
 Connects to a filesystem-domain listener.
+
+Unix sockets avoid opening a network port and are a good fit for two processes on the same machine, such as a CLI and its background daemon.
 
 
 ```kex
@@ -457,6 +509,8 @@ connect(address) : Address -> ConnectOptions -> Result<UnixConnection, NetError>
 ## function `listen`
 
 Binds a new path; an existing filesystem entry is never removed implicitly.
+
+This conservative default protects regular files and also avoids taking over a socket that may still belong to a running service.
 
 
 ```kex
@@ -584,6 +638,8 @@ Client handshake policy. TLS 1.2/1.3 are enabled; verification defaults on.
 ## function `connect`
 
 Opens a direct TLS connection with a bounded handshake deadline.
+
+`serverName` drives both certificate hostname verification and SNI. Pass the DNS name from the URL, not an address it happened to resolve to.
 
 
 ```kex

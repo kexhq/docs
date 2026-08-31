@@ -103,7 +103,7 @@ data-page="kex.html">
 <section class="entity" id="trait-inspectable">
 <h2><span class="kind kind-trait">trait</span> <code>Inspectable</code></h2>
 <p>Types that can be rendered structurally, for a person reading output.</p>
-<p>The rendering shows the value's STRUCTURE — quotes on strings, <code>Just(...)</code> around an optional — which is what makes it right for debugging and wrong for user-facing text. <code>Showable</code> is the other half of that pair.</p>
+<p>The rendering shows the value's STRUCTURE: quotes on strings, <code>Just(...)</code> around an optional, which is what makes it right for debugging and wrong for user-facing text. <code>Showable</code> is the other half of that pair.</p>
 <p>Every type is inspectable through a structural fallback, so <code>inspected</code> and <code>IO.inspect</code> work on anything; a type that wants a different rendering overrides <code>inspectValue</code>.</p>
 <pre class="code"><code><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">inspected</span>       <span class="tok-comment"># =&gt; &quot;[1, 2]&quot;</span>
 <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">inspected</span>   <span class="tok-comment"># =&gt; &quot;Just(\&quot;hi\&quot;)&quot;</span></code></pre>
@@ -112,7 +112,7 @@ data-page="kex.html">
 <div class="fn" id="fn-inspectvalue">
 <h4><code>inspectValue</code></h4>
 <p>Renders the value structurally, with ANSI colors when <code>colors</code> is true.</p>
-<p><code>inspected</code> and <code>IO.inspect</code> call this for you, passing the console's own color setting — call it directly only when you need to force one.</p>
+<p><code>inspected</code> and <code>IO.inspect</code> call this for you, passing the console's own color setting: call it directly only when you need to force one.</p>
 <pre class="code"><code>inspectValue <span class="tok-op">:</span> <span class="tok-type">Bool</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -127,11 +127,19 @@ data-page="kex.html">
 </section>
 <section class="entity" id="trait-showable">
 <h2><span class="kind kind-trait">trait</span> <code>Showable</code></h2>
+<p>Types that have a concise, user-facing text representation.</p>
+<p><code>Showable</code> is used by interpolation, printing, and <code>to(String)</code>. Its output should describe the value itself rather than its implementation structure: a string is shown without quotes, <code>Just(x)</code> is shown as <code>x</code>, and <code>None</code> is shown as an empty string. Use <code>Inspectable</code> when debugging structure matters.</p>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">showValue</span>          <span class="tok-comment"># =&gt; &quot;hello&quot;</span>
+<span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">showValue</span>    <span class="tok-comment"># =&gt; &quot;hello&quot;</span>
+<span class="tok-bool">None</span><span class="tok-op">.</span><span class="tok-method">showValue</span>             <span class="tok-comment"># =&gt; &quot;&quot;</span></code></pre>
 
 <div class="functions">
 <div class="fn" id="fn-showvalue">
 <h4><code>showValue</code></h4>
+<p>Returns the value's user-facing text representation.</p>
+<p>Implement this for domain types whose useful presentation differs from their structural rendering. Keep the result free of ANSI styling so it is safe in files, logs, and interpolation as well as on a terminal.</p>
 <pre class="code"><code>showValue <span class="tok-op">:</span> <span class="tok-type">String</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the display text</p>
 
 </div>
 </div>
@@ -173,8 +181,8 @@ data-page="kex.html">
 </section>
 <section class="entity" id="make-result<x,-e>">
 <h2><span class="kind kind-make">make</span> <code>Result&lt;X, E&gt;</code> implements Showable</h2>
-<p>The same for Result, with one deliberate asymmetry: SHOWING a result shows what it carries, so <code>Ok(42)</code> reads as <code>42</code> rather than leaking the wrapper into text — but an <code>Error</code> keeps its marker. Dropping it made a failure and a success print identically, and unlike <code>None</code> (which shows as &quot;&quot;, visibly not a value) there would be nothing left to tell them apart.</p>
-<p>The marker is spelled <code>Error(...)</code>, matching how the same value renders as an ELEMENT of a collection — <code>[1, Error(Bad(no))]</code>. Elements render structurally rather than through showValue (as in Ruby, where <code>nil.to_s</code> is &quot;&quot; but <code>[nil].to_s</code> is &quot;[nil]&quot;), so this is the one spelling that reads the same at both levels.</p>
+<p>The same for Result, with one deliberate asymmetry: SHOWING a result shows what it carries, so <code>Ok(42)</code> reads as <code>42</code> rather than leaking the wrapper into text, but an <code>Error</code> keeps its marker. Dropping it made a failure and a success print identically, and unlike <code>None</code> (which shows as &quot;&quot;, visibly not a value) there would be nothing left to tell them apart.</p>
+<p>The marker is spelled <code>Error(...)</code>, matching how the same value renders as an ELEMENT of a collection: <code>[1, Error(Bad(no))]</code>. Elements render structurally rather than through showValue (as in Ruby, where <code>nil.to_s</code> is &quot;&quot; but <code>[nil].to_s</code> is &quot;[nil]&quot;), so this is the one spelling that reads the same at both levels.</p>
 <p>What functions RETURN is unchanged: <code>Integer.parse</code> still answers with a Result, <code>IO.inspect</code> still shows <code>Ok(42)</code>, and both arms are still matchable.</p>
 
 <div class="functions">
@@ -187,7 +195,7 @@ data-page="kex.html">
 </section>
 <section class="entity" id="module-kex">
 <h2><span class="kind kind-module">module</span> <code>Kex</code></h2>
-<p>The running toolchain: which backend, which version, which features.</p>
+<p>The running toolchain, which backend, which version, which features.</p>
 <pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">BACKEND</span>                  <span class="tok-comment"># =&gt; Interpreter</span>
 <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Kernel</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">release</span>   <span class="tok-comment"># =&gt; &quot;0.4.0&quot;</span>
 <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Feature</span><span class="tok-op">.</span><span class="tok-method">has?</span><span class="tok-punct">(</span><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; true</span></code></pre>
@@ -223,15 +231,17 @@ data-page="kex.html">
 <section class="entity" id="constant-underbeam?">
 <h2><span class="kind kind-constant">constant</span> <code>underBeam?</code> <code>?</code></h2>
 <p>Returns <code>true</code> when running on the BEAM.</p>
-<p>The backend a program is on decides what is available — processes and the web server need the BEAM (<code>kex -R file.kex</code>).</p>
+<p>The backend a program is on decides what is available: processes and the web server need the BEAM (<code>kex -R file.kex</code>).</p>
 
 </section>
 <section class="entity" id="module-kex-kernel">
 <h2><span class="kind kind-module">module</span> <code>Kex.Kernel</code></h2>
+<p>Build identity for the compiler and runtime executing this program.</p>
+<p>Useful in bug reports, generated artifacts, and compatibility checks where <code>Kex.BACKEND</code> alone is not enough to identify the toolchain.</p>
 <section class="entity" id="record-version">
 <h2><span class="kind kind-record">record</span> <code>Version</code></h2>
 <p>The toolchain a program is running on. <code>kex --version</code> and the REPL banner report the same numbers.</p>
-<p><code>revision</code> is the git commit the compiler was built from — <code>None</code> when it was built from a source archive rather than a checkout, which is why it is an Optional rather than a String.</p>
+<p><code>revision</code> is the git commit the compiler was built from: <code>None</code> when it was built from a source archive rather than a checkout, which is why it is an Optional rather than a String.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>major</code></dt><dd><code>Integer</code></dd></div>
@@ -280,7 +290,7 @@ data-page="kex.html">
 <p>Reading the typed public surface of a compiled Kex module.</p>
 <section class="entity" id="function-read">
 <h2><span class="kind kind-function">function</span> <code>read</code></h2>
-<p>Reads the KexI interface chunk of a compiled Kex module — its typed public surface — and answers the decoded term, or None when the file has no such chunk, does not exist, or is not a BEAM artifact.</p>
+<p>Reads the KexI interface chunk of a compiled Kex module: its typed public surface, and answers the decoded term, or None when the file has no such chunk, does not exist, or is not a BEAM artifact.</p>
 <p>The term is an ordinary tree of tuples, lists, atoms, integers and strings, so it is walked with normal pattern matching and <code>Tuple.items</code>. This exists so that reading it needs no <code>Erlang.*</code> interop: it is the one intentional entry point rather than a general term decoder.</p>
 <pre class="code"><code><span class="tok-fn">read</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">FilePath</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Any?</span></code></pre>
 <h5>Parameters</h5>
@@ -295,8 +305,8 @@ data-page="kex.html">
 </section>
 <section class="entity" id="function-inspected">
 <h2><span class="kind kind-function">function</span> <code>inspected</code></h2>
-<p>Returns the pretty-printed representation of any value as a STRING — the same form the REPL echoes. Universal: reachable on every type through UFCS.</p>
-<p>Named apart from <code>inspect</code>, which prints and returns its INPUT so it can be dropped into a pipeline. Both spellings used to be called <code>inspect</code>, and which one a call reached depended on whether it was written <code>x.inspect</code> or <code>IO.inspect(x)</code> — so <code>[1, 2].inspect.count</code> answered 24, the length of the rendered string, rather than 2.</p>
+<p>Returns the pretty-printed representation of any value as a STRING: the same form the REPL echoes. Universal: reachable on every type through UFCS.</p>
+<p>Named apart from <code>inspect</code>, which prints and returns its INPUT so it can be dropped into a pipeline. Both spellings used to be called <code>inspect</code>, and which one a call reached depended on whether it was written <code>x.inspect</code> or <code>IO.inspect(x)</code>, so <code>[1, 2].inspect.count</code> answered 24, the length of the rendered string, rather than 2.</p>
 <pre class="code"><code><span class="tok-fn">inspected</span><span class="tok-punct">(</span>value<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -335,7 +345,7 @@ data-page="kex.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T19:07:27.076569085Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-31T00:21:50.485524575Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

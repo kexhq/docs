@@ -95,16 +95,16 @@ data-page="binary.html">
 <h1>Binary<span class="tag-prelude" title="In the prelude: no import needed">prelude</span></h1>
 <section class="entity" id="type-binary">
 <h2><span class="kind kind-type">type</span> <code>Binary</code></h2>
-<p>An opaque, immutable sequence of bytes. Binary never implicitly becomes text.</p>
-<p><code>[Byte]</code> is the materialized list of bytes; <code>Binary</code> is the storage form. A file, an HTTP body, or a digest is a <code>Binary</code> — on the BEAM it is a native binary, so slicing it shares storage instead of copying, and none of the operations here ever walks a character list.</p>
+<p>An opaque, immutable sequence of bytes. A <code>Binary</code> never implicitly becomes text.</p>
+<p><code>[Byte]</code> is the materialized list of bytes, while <code>Binary</code> is the storage form. A file, an HTTP body, or a digest is a <code>Binary</code>. On the BEAM it is a native binary, so slicing shares storage instead of copying. None of the operations here walks a character list.</p>
 <pre class="code"><code><span class="tok-keyword">let</span> data <span class="tok-op">=</span> <span class="tok-type">Binary</span><span class="tok-op">.</span><span class="tok-method">fromHex</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">00686900</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
 data<span class="tok-op">.</span><span class="tok-method">length</span>            <span class="tok-comment"># =&gt; 4</span>
 data<span class="tok-op">.</span><span class="tok-method">at</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span>             <span class="tok-comment"># =&gt; Just(104)</span>
 data<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">hex</span>       <span class="tok-comment"># =&gt; &quot;0068&quot;</span>
 data<span class="tok-op">.</span><span class="tok-method">showValue</span>         <span class="tok-comment"># =&gt; &quot;#Binary&lt;4 bytes&gt;&quot;</span></code></pre>
-<p>The type is opaque on purpose: there is no field to reach through, so text operations cannot be run on bytes by accident. Crossing the boundary is always explicit, in both directions, and both directions can fail — text is only some of the byte sequences there are:</p>
-<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">héllo</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Binary</span><span class="tok-punct">)</span>               <span class="tok-comment"># =&gt; Just(#Binary&lt;6 bytes&gt;)</span>
-<span class="tok-type">Binary</span><span class="tok-op">.</span><span class="tok-method">fromBytes</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">255</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; None</span></code></pre>
+<p>The type is opaque on purpose: there is no field to reach through, so text operations cannot be run on bytes by accident. Conversions are always explicit in both directions, and both directions can fail. Runtime conversions through <code>to</code> always return an <code>Optional&lt;T&gt;</code>:</p>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">árvíz</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Binary</span><span class="tok-punct">)</span>                  <span class="tok-comment">#  =&gt; Just(#Binary&lt;7 bytes&gt;) : Binary?</span>
+<span class="tok-type">Binary</span><span class="tok-op">.</span><span class="tok-method">fromBytes</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">255</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; None</span></code></pre>
 <p><code>Showable</code> and <code>Inspectable</code> deliberately render the length alone. Neither ever decodes or interpolates the payload, so printing a binary cannot leak its contents or fail on bytes that are not text. Use <code>hex</code>, <code>base64</code>, or <code>to(String)</code> when you actually want to see it.</p>
 
 </section>
@@ -113,7 +113,7 @@ data<span class="tok-op">.</span><span class="tok-method">showValue</span>      
 <section class="entity" id="constant-empty">
 <h2><span class="kind kind-constant">constant</span> <code>empty</code> <code>Binary</code></h2>
 <p>The binary holding no bytes.</p>
-<p>The same value <code>Binary.fromBytes([])</code> builds, under the name the rest of the library uses for a neutral starting value (<code>Headers.empty</code>).</p>
+<p>Backed by <code>Binary.fromBytes([])</code>, this is the natural starting value this library uses, just like (<code>Headers.empty</code>).</p>
 
 </section>
 <section class="entity" id="function-frombytes">
@@ -146,6 +146,9 @@ data<span class="tok-op">.</span><span class="tok-method">showValue</span>      
 <span class="tok-type">Binary</span><span class="tok-op">.</span><span class="tok-method">fromHex</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">0x68</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; None</span>
 <span class="tok-type">Binary</span><span class="tok-op">.</span><span class="tok-method">fromHex</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">AB</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; None</span>
 <span class="tok-type">Binary</span><span class="tok-op">.</span><span class="tok-method">fromHex</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; None</span></code></pre>
+<p class="caption"><em>Reading a compact identifier from configuration</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> key <span class="tok-op">=</span> env<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">CACHE_KEY</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">flatMap</span><span class="tok-punct">(</span><span class="tok-op">~</span><span class="tok-type">Binary</span><span class="tok-op">.</span><span class="tok-method">fromHex</span><span class="tok-punct">)</span>
+<span class="tok-keyword">let</span> cacheEnabled? <span class="tok-op">=</span> key<span class="tok-op">.</span><span class="tok-method">present?</span></code></pre>
 
 </section>
 <section class="entity" id="function-frombase64">
@@ -162,6 +165,8 @@ data<span class="tok-op">.</span><span class="tok-method">showValue</span>      
 <pre class="code"><code><span class="tok-type">Binary</span><span class="tok-op">.</span><span class="tok-method">fromBase64</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">AGhp/w==</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(#Binary&lt;4 bytes&gt;)</span>
 <span class="tok-type">Binary</span><span class="tok-op">.</span><span class="tok-method">fromBase64</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">AGhp_w==</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; None</span>
 <span class="tok-type">Binary</span><span class="tok-op">.</span><span class="tok-method">fromBase64</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">AGhp/w</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; None</span></code></pre>
+<p class="caption"><em>Loading binary key material from an environment variable</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> signingKey <span class="tok-op">=</span> <span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">SIGNING_KEY</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">flatMap</span><span class="tok-punct">(</span><span class="tok-op">~</span><span class="tok-type">Binary</span><span class="tok-op">.</span><span class="tok-method">fromBase64</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 </section>
@@ -234,15 +239,23 @@ data<span class="tok-op">.</span><span class="tok-method">drop</span><span class
 </div>
 <div class="fn" id="fn-inspectvalue">
 <h4><code>inspectValue</code></h4>
-<p>The length-only rendering — never the payload. The same as <code>showValue</code>.</p>
+<p>The length-only rendering: never the payload. The same as <code>showValue</code>.</p>
 <pre class="code"><code><span class="tok-fn">inspectValue</span><span class="tok-punct">(</span>_<span class="tok-punct">)</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>String</code> — <code>#Binary&lt;N bytes&gt;</code></p>
 
 </div>
 <div class="fn" id="fn-to">
 <h4><code>to</code></h4>
-<p>Binary's String conversion decodes its payload; it must not inherit the Showable fallback, which would convert the safe length-only rendering.</p>
+<p>Decodes the payload as UTF-8, or answers <code>None</code> when the bytes are not valid text.</p>
+<p>This deliberately differs from <code>showValue</code>, which reveals only the byte count. Converting asks to inspect the actual payload and therefore makes the possibility of invalid text explicit.</p>
 <pre class="code"><code><span class="tok-fn">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>String?</code> — the decoded text, or <code>None</code> for invalid UTF-8</p>
+<h5>Examples</h5>
+<p class="caption"><em>Decoding a text response while handling a binary one</em></p>
+<pre class="code"><code><span class="tok-keyword">match</span> response<span class="tok-op">.</span><span class="tok-method">body</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Just</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span>
+  <span class="tok-bool">None</span>       <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">received </span><span class="tok-string">${</span>response<span class="tok-op">.</span><span class="tok-method">body</span><span class="tok-op">.</span><span class="tok-method">length</span><span class="tok-string">}</span><span class="tok-string"> bytes</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 
 </div>
 </div>
@@ -251,7 +264,7 @@ data<span class="tok-op">.</span><span class="tok-method">drop</span><span class
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T19:07:27.076569085Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-31T00:21:50.485524575Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

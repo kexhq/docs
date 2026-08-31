@@ -93,6 +93,15 @@ data-page="control/retry.html">
 <h1>Control.Retry</h1>
 <section class="entity" id="module-control-retry">
 <h2><span class="kind kind-module">module</span> <code>Control.Retry</code></h2>
+<p>Bounded retries for operations whose failures can be classified by the application.</p>
+<p>A retry is never automatically safe just because an error was temporary. The caller owns the operation and, where necessary, a predicate that excludes permanent failures and non-idempotent work. Policies bound attempts, delay, and optionally total sleep so a dependency cannot stall the program forever.</p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Control</span><span class="tok-op">.</span><span class="tok-type">Retry</span>
+
+<span class="tok-keyword">let</span> policy <span class="tok-op">=</span> <span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">exponential</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">,</span> <span class="tok-number">100</span><span class="tok-op">.</span><span class="tok-method">milliseconds</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">seconds</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">withJitter</span><span class="tok-punct">(</span><span class="tok-number">0.2</span><span class="tok-punct">)</span>
+<span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span>policy<span class="tok-punct">,</span> <span class="tok-op">~</span>retryable?<span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  client<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://api.example.com/inventory</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 <section class="entity" id="record-policy">
 <h2><span class="kind kind-record">record</span> <code>Policy</code></h2>
 <p>A bounded retry schedule. Attempts includes the initial call. Delays are immutable <code>Duration</code> values and never exceed <code>maximumDelay</code>.</p>
@@ -125,6 +134,7 @@ data-page="control/retry.html">
 <section class="entity" id="function-fixed">
 <h2><span class="kind kind-function">function</span> <code>fixed</code></h2>
 <p>Builds a constant-delay retry policy.</p>
+<p>Fixed delays are predictable and useful for a local resource expected to become ready shortly. For many clients sharing a remote dependency, prefer exponential backoff with jitter to avoid synchronized retry bursts.</p>
 <pre class="code"><code><span class="tok-fn">fixed</span><span class="tok-punct">(</span>maximumAttempts<span class="tok-punct">,</span> delay<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Duration</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Policy</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -133,13 +143,14 @@ data-page="control/retry.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Policy</code> — the retry schedule</p>
 <h5>Examples</h5>
-<p class="caption"><em><code>Retry.fixed(3, 100.milliseconds)</code>.</em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>Waiting briefly for a local test server to start</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> policy <span class="tok-op">=</span> <span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">fixed</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-punct">,</span> <span class="tok-number">50</span><span class="tok-op">.</span><span class="tok-method">milliseconds</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-exponential">
 <h2><span class="kind kind-function">function</span> <code>exponential</code></h2>
 <p>Builds a doubling backoff capped at <code>maximumDelay</code>.</p>
+<p>The first retry waits <code>initialDelay</code>; later delays double until they reach the cap. Add jitter for production network traffic.</p>
 <pre class="code"><code>exponential <span class="tok-op">:</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Duration</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Duration</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Policy</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -148,6 +159,9 @@ data-page="control/retry.html">
 <div class="param"><dt><code>maximumDelay</code> <code>Duration</code></dt><dd>upper bound for each delay</dd></div>
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Policy</code> — the retry schedule</p>
+<h5>Examples</h5>
+<p class="caption"><em>Backing off calls to a busy upstream service</em></p>
+<pre class="code"><code><span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">exponential</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-punct">,</span> <span class="tok-number">200</span><span class="tok-op">.</span><span class="tok-method">milliseconds</span><span class="tok-punct">,</span> <span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">seconds</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">withJitter</span><span class="tok-punct">(</span><span class="tok-number">0.25</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="make-policy">
@@ -172,7 +186,16 @@ data-page="control/retry.html">
 <div class="fn" id="fn-withjitter">
 <h4><code>withJitter</code></h4>
 <p>Returns the same schedule with symmetric bounded jitter. A fraction of <code>0.25</code> selects each actual delay from 75% through 125% of its scheduled value. Fractions are clamped to <code>0.0..1.0</code>.</p>
+<p>Jitter prevents many workers that failed together from retrying together. It changes delay timing, never the number of attempts or the backoff cap.</p>
 <pre class="code"><code><span class="tok-fn">withJitter</span><span class="tok-punct">(</span>fraction<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>fraction</code> <code>Float</code></dt><dd>maximum proportional variation on either side</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Policy</code> — a copied policy with bounded jitter</p>
+<h5>Examples</h5>
+<p class="caption"><em>Spreading retries by up to 20 percent</em></p>
+<pre class="code"><code><span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">exponential</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">seconds</span><span class="tok-punct">,</span> <span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-method">seconds</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">withJitter</span><span class="tok-punct">(</span><span class="tok-number">0.2</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 </div>
@@ -189,6 +212,11 @@ data-page="control/retry.html">
 <div class="param"><dt><code>operation</code> <code>Block&lt;Result&lt;X,<a class="xref" href="../math.html#constant-e">E</a>&gt;&gt;</code></dt><dd>a fresh attempt</dd></div>
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;X,<a class="xref" href="../math.html#constant-e">E</a>&gt;</code> — the first success or final failure</p>
+<h5>Examples</h5>
+<p class="caption"><em>Retrying an idempotent health check</em></p>
+<pre class="code"><code><span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span><span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">fixed</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">250</span><span class="tok-op">.</span><span class="tok-method">milliseconds</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">HTTP</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://service.example.com/health</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 
 </section>
 <section class="entity" id="function-runwith">
@@ -257,7 +285,7 @@ data-page="control/retry.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T19:07:27.076569085Z · <a href="../../../llms.txt">llms.txt</a> · <a href="../../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-31T00:21:50.485524575Z · <a href="../../../llms.txt">llms.txt</a> · <a href="../../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

@@ -163,7 +163,7 @@ Spawning servers, running external commands, and the ambient process operations.
 
 Starts a process running the `serving` implementation attached to `state`'s type, and returns a handle on it.
 
-The state you pass is the server's initial state. Every `slot` in the `serving` block becomes a method on the returned `Server`, and each answers a `Result` — a call can time out or find the process gone.
+The state you pass is the server's initial state. Every `slot` in the `serving` block becomes a method on the returned `Server`, and each answers a `Result`: a call can time out or find the process gone.
 
 
 ```kex
@@ -177,7 +177,7 @@ Runs an executable with an argument vector and captures its output.
 
 No shell is involved, so nothing is glob-expanded or word-split and arguments containing spaces need no quoting. Output is captured as UTF-8 strings.
 
-A non-zero exit status is still `Ok` — the program ran and said something, which is information, not a failure to run it. `Error` means the child could not be started at all.
+A non-zero exit status is still `Ok`: the program ran and said something, which is information, not a failure to run it. `Error` means the child could not be started at all.
 
 
 ```kex
@@ -189,7 +189,7 @@ run(command, args) : String -> [String] -> Result<ProcessResult, String>
 
 Runs an executable with the CALLER's stdout and stderr, so its output appears as it is produced rather than in one block when it exits.
 
-Answers the exit code; nothing is captured — that is the trade, and it is what a long-running child a person is watching needs (kexhq/kex#187).
+Answers the exit code; nothing is captured: that is the trade, and it is what a long-running child a person is watching needs (kexhq/kex#187).
 
 `run` remains the one to use when the output is data to be READ.
 
@@ -272,7 +272,7 @@ Returned inside `Ok` by `Process.run`, whatever the exit status.
 
 Sends `msg` to the process, unchanged, as a raw BEAM term.
 
-Sending never blocks and never fails, even when the process is gone — that is the BEAM's model, not an oversight. Monitor the process when delivery matters.
+Sending never blocks and never fails, even when the process is gone: that is the BEAM's model, not an oversight. Monitor the process when delivery matters.
 
 ```kex
 send(msg) : X -> Void
@@ -335,7 +335,7 @@ sendFrom(msg) : X -> Void
 
 Returns the same server with a different default call timeout, in milliseconds.
 
-The server is untouched — this is a new view of it, so one slow call can be given more room without changing anything for other callers.
+The server is untouched: this is a new view of it, so one slow call can be given more room without changing anything for other callers.
 
 ```kex
 within(timeout) : Integer -> Server<X>
@@ -358,7 +358,7 @@ api.within(30000).rebuildIndex()
 
 Answers the pending call this value identifies.
 
-A slot that cannot answer immediately — because it is waiting on something else — omits `reply` from its transition and calls this later instead.
+A slot that cannot answer immediately, because it is waiting on something else: omits `reply` from its transition and calls this later instead.
 
 ```kex
 reply(value) : X -> Void

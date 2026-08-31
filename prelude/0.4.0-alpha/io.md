@@ -27,7 +27,7 @@ end
 
 Writes `msg` to stdout followed by a newline.
 
-Any `Showable` value is accepted, not just strings — numbers, lists, maps and records print through their own `show` implementation. Called with no argument it prints an empty line.
+Any `Showable` value is accepted, not just strings: numbers, lists, maps and records print through their own `show` implementation. Called with no argument it prints an empty line.
 
 
 ```kex
@@ -89,7 +89,7 @@ get() : String?
 
 Writes `msg` to stderr followed by a newline.
 
-Diagnostics belong on stderr so that a program's real output can be piped or redirected on its own. Unlike a raised error, this only prints — it does not stop the program.
+Diagnostics belong on stderr so that a program's real output can be piped or redirected on its own. Unlike a raised error, this only prints: it does not stop the program.
 
 
 ```kex
@@ -121,11 +121,11 @@ warning(msg) : Showable -> Void
 
 The three standard streams, as ordinary handle VALUES.
 
-`IO.printLine(x)` and `IO.out.printLine(x)` are the same call: the convenience spelling stays, and the handle behind it is now something a program can name, pass and substitute. That is what `Mock.IO` cannot do — it is one global switch, so output from one library cannot go to a buffer while another's goes to the terminal, and a library cannot ACCEPT a sink (kexhq/kex#139).
+`IO.printLine(x)` and `IO.out.printLine(x)` are the same call: the convenience spelling stays, and the handle behind it is now something a program can name, pass and substitute. That is what `Mock.IO` cannot do: it is one global switch, so output from one library cannot go to a buffer while another's goes to the terminal, and a library cannot ACCEPT a sink (kexhq/kex#139).
 
 Typestate says what each one permits: writing to `IO.in`, or reading from `IO.out`, is a compile error, exactly as it is for a file opened `Read`.
 
-These three are PURE, so they are not part of the capability interface a stand-in must implement — naming a device performs no effect, writing THROUGH it does, and the handle methods are the `foul` ones. That also draws the seam between the two ways to redirect output: `with IO = ...` replaces the CALLS, so it does not touch a handle obtained here, while `Mock.IO` replaces the DEVICE (a group leader, kexhq/kex#141) and so captures `IO.out.printLine(x)` and `IO.printLine(x)` alike.
+These three are PURE, so they are not part of the capability interface a stand-in must implement: naming a device performs no effect, writing THROUGH it does, and the handle methods are the `foul` ones. That also draws the seam between the two ways to redirect output: `with IO = ...` replaces the CALLS, so it does not touch a handle obtained here, while `Mock.IO` replaces the DEVICE (a group leader, kexhq/kex#141) and so captures `IO.out.printLine(x)` and `IO.printLine(x)` alike.
 
 
 

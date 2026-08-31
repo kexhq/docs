@@ -13,9 +13,9 @@ entities:
 
 ## type `Binary`
 
-An opaque, immutable sequence of bytes. Binary never implicitly becomes text.
+An opaque, immutable sequence of bytes. A `Binary` never implicitly becomes text.
 
-`[Byte]` is the materialized list of bytes; `Binary` is the storage form. A file, an HTTP body, or a digest is a `Binary` — on the BEAM it is a native binary, so slicing it shares storage instead of copying, and none of the operations here ever walks a character list.
+`[Byte]` is the materialized list of bytes, while `Binary` is the storage form. A file, an HTTP body, or a digest is a `Binary`. On the BEAM it is a native binary, so slicing shares storage instead of copying. None of the operations here walks a character list.
 
 ```kex
 let data = Binary.fromHex("00686900").try
@@ -25,11 +25,11 @@ data.take(2).hex       # => "0068"
 data.showValue         # => "#Binary<4 bytes>"
 ```
 
-The type is opaque on purpose: there is no field to reach through, so text operations cannot be run on bytes by accident. Crossing the boundary is always explicit, in both directions, and both directions can fail — text is only some of the byte sequences there are:
+The type is opaque on purpose: there is no field to reach through, so text operations cannot be run on bytes by accident. Conversions are always explicit in both directions, and both directions can fail. Runtime conversions through `to` always return an `Optional<T>`:
 
 ```kex
-"héllo".to(Binary)               # => Just(#Binary<6 bytes>)
-Binary.fromBytes([255]).to(String)   # => None
+"árvíz".to(Binary)                  #  => Just(#Binary<7 bytes>) : Binary?
+Binary.fromBytes([255]).to(String)  # => None
 ```
 
 `Showable` and `Inspectable` deliberately render the length alone. Neither ever decodes or interpolates the payload, so printing a binary cannot leak its contents or fail on bytes that are not text. Use `hex`, `base64`, or `to(String)` when you actually want to see it.
@@ -42,7 +42,7 @@ Binary.fromBytes([255]).to(String)   # => None
 
 The binary holding no bytes.
 
-The same value `Binary.fromBytes([])` builds, under the name the rest of the library uses for a neutral starting value (`Headers.empty`).
+Backed by `Binary.fromBytes([])`, this is the natural starting value this library uses, just like (`Headers.empty`).
 
 
 
@@ -165,7 +165,7 @@ Binary.fromBytes([104]) + Binary.fromBytes([105])   # => #Binary<2 bytes>
 
 #### `inspectValue`
 
-The length-only rendering — never the payload. The same as `showValue`.
+The length-only rendering: never the payload. The same as `showValue`.
 
 ```kex
 inspectValue(_)
@@ -175,8 +175,23 @@ inspectValue(_)
 
 #### `to`
 
-Binary's String conversion decodes its payload; it must not inherit the Showable fallback, which would convert the safe length-only rendering.
+Decodes the payload as UTF-8, or answers `None` when the bytes are not valid text.
+
+This deliberately differs from `showValue`, which reveals only the byte count. Converting asks to inspect the actual payload and therefore makes the possibility of invalid text explicit.
 
 ```kex
 to(String)
+```
+
+**Returns**: `String?` — the decoded text, or `None` for invalid UTF-8
+
+**Examples**
+
+_Decoding a text response while handling a binary one_
+
+```kex
+match response.body.to(String) do
+  Just(text) => IO.printLine(text)
+  None       => IO.printLine("received ${response.body.length} bytes")
+end
 ```

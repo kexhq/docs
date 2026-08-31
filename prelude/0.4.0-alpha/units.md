@@ -26,7 +26,7 @@ entities:
 
 Numbers that carry a unit.
 
-Writing `5.sec` or `90.minute` gives you a `Measure`: a number, the unit it was written in, and the same quantity in that dimension's base unit. Adding, subtracting and converting all go through the canonical value, so the arithmetic is right regardless of which units the operands were written in — and mixing dimensions is an `Error` rather than a silently wrong number.
+Writing `5.sec` or `90.minute` gives you a `Measure`: a number, the unit it was written in, and the same quantity in that dimension's base unit. Adding, subtracting and converting all go through the canonical value, so the arithmetic is right regardless of which units the operands were written in, and mixing dimensions is an `Error` rather than a silently wrong number.
 
 ```kex
 5.sec.to(String)                     # => "5.0 s"
@@ -35,7 +35,7 @@ Writing `5.sec` or `90.minute` gives you a `Measure`: a number, the unit it was 
 90.minute.convert(Hour)              # => Ok(1.5 h)
 ```
 
-The time units — `nanosecond` through `week` — are in the prelude. Other dimensions live in opt-in modules under `Units`, and every one of them measures against the same machinery here.
+The time units (`nanosecond` through `week`) are in the prelude. Other dimensions live in opt-in modules under `Units`, and every one of them measures against the same machinery here.
 
 A `Measure` is a measurement, not an elapsed span: `5.sec` describes a quantity, while `Duration` is what `Time` and `Date+ use for a span between two moments.
 
@@ -44,7 +44,7 @@ The trait a unit implements: how it converts to its dimension's base unit, which
 
 #### `factor`
 
-How many base units one of this unit is — `60.0` for a minute, whose base unit is the second.
+How many base units one of this unit is: `60.0` for a minute, whose base unit is the second.
 
 ```kex
 factor : Float
@@ -124,7 +124,7 @@ measureFactor(measure)
 
 A unit described at run time rather than by a constructor.
 
-Runtime-defined units are used for prefixes and units derived by arithmetic — `s^2` from squaring a duration, a kilo- prefix applied to a base unit.
+Runtime-defined units are used for prefixes and units derived by arithmetic: `s^2` from squaring a duration, a kilo- prefix applied to a base unit.
 
 **Fields**
 
@@ -225,7 +225,7 @@ to(String)
 
 #### `scale`
 
-Formatting into a target display unit deliberately has NO prelude clause. A unit module (Units.SI, Units.Data, ...) supplies `to(String, in:)` for the units it owns, and reaching one requires importing it. A catch-all here would answer `None` for an un-imported module instead — a silently empty Optional in place of "you need `using Units.SI`".
+Formatting into a target display unit deliberately has NO prelude clause. A unit module (Units.SI, Units.Data, ...) supplies `to(String, in:)` for the units it owns, and reaching one requires importing it. A catch-all here would answer `None` for an un-imported module instead: a silently empty Optional in place of "you need `using Units.SI`".
 
 Multiplies the measure by a plain number, keeping its unit.
 
@@ -266,7 +266,7 @@ Raising a measure preserves its display unit while applying the power to its can
 
 Converts the measure to another unit of the same dimension.
 
-Answers `Error` when the dimensions differ — you cannot express seconds in bytes, and this says so rather than producing a wrong number.
+Answers `Error` when the dimensions differ: you cannot express seconds in bytes, and this says so rather than producing a wrong number.
 
 Convert through the Unit trait so units from opt-in modules (SI, Data, and future domains) remain interchangeable with prelude time units.
 
@@ -303,7 +303,7 @@ convert(unit)
 
 Adds two measures of the same dimension.
 
-The units need not match — the sum goes through the canonical values, and comes back displayed in the LEFT operand's unit. Adding measures of different dimensions is an `Error`.
+The units need not match: the sum goes through the canonical values, and comes back displayed in the LEFT operand's unit. Adding measures of different dimensions is an `Error`.
 
 ```kex
 +(other)
@@ -338,7 +338,7 @@ Like ```, the result is displayed in the left operand's unit, and mixing dimensi
 
 ## module `Units`
 
-The time units are prelude-global, because every unit module measures against the same dimensions — `Units.SI` defines `Watt * Hour` with the `Hour` declared above, and future domains do the same. That makes `Hour` correct but not obviously located, so the same constructors are reachable under `Units` too, for call sites that would rather name where a unit comes from. These are aliases, not copies: each binds the identical constructor, so `Units.Hour` and `Hour` match the same patterns and compare equal.
+The time units are prelude-global, because every unit module measures against the same dimensions: `Units.SI` defines `Watt * Hour` with the `Hour` declared above, and future domains do the same. That makes `Hour` correct but not obviously located, so the same constructors are reachable under `Units` too, for call sites that would rather name where a unit comes from. These are aliases, not copies: each binds the identical constructor, so `Units.Hour` and `Hour` match the same patterns and compare equal.
 
 ## constant `Nanosecond`
 

@@ -13,9 +13,9 @@ entities:
 
 Parses Kex source code into a structured AST, at run time.
 
-Opt-in — nothing here is in scope until `using Kex.AST`.
+Opt-in: nothing here is in scope until `using Kex.AST`.
 
-This is the entry point for tools that read Kex source: linters, formatters, documentation generators, code search. The AST includes module definitions, function signatures, type/record definitions, traits, make blocks, and the doc-comments extracted from `#` lines — which is how the standard library's own documentation is generated.
+This is the entry point for tools that read Kex source: linters, formatters, documentation generators, code search. The AST includes module definitions, function signatures, type/record definitions, traits, make blocks, and the doc-comments extracted from `#` lines, which is how the standard library's own documentation is generated.
 
 ```kex
 using Kex.AST
@@ -66,7 +66,7 @@ Why a source file could not be parsed.
 
 Parses Kex source text into a structured AST.
 
-Pass `filename` when you have one — it is what appears in every `Location` and in the error message, so diagnostics can point at a real file.
+Pass `filename` when you have one: it is what appears in every `Location` and in the error message, so diagnostics can point at a real file.
 
 
 ```kex
@@ -91,7 +91,7 @@ parseFile(path) : FS.FilePath -> Result<Program, ParseError>
 
 Parses a type expression on its own, without a surrounding program.
 
-Use it to read a type written in data — a signature in a config file, a type named on a command line. `typeRefText` renders the result back.
+Use it to read a type written in data: a signature in a config file, a type named on a command line. `typeRefText` renders the result back.
 
 
 ```kex
@@ -141,7 +141,7 @@ A type as it was written in source.
 
 Renders a `TypeRef` back to the way it is written in source.
 
-A list reads as `[Integer]`, a map as `{String: Integer}`, an optional as `String?` — the spelling a reader would recognise, not the constructor tree behind it.
+A list reads as `[Integer]`, a map as `{String: Integer}`, an optional as `String?`: the spelling a reader would recognise, not the constructor tree behind it.
 
 
 ```kex
@@ -152,6 +152,8 @@ typeRefText(NamedType(name, []))
 ## type `PatternRef`
 
 Structured representation of patterns.
+
+Pattern nodes describe what a declaration or match arm accepts; they do not contain runtime values. A linter can distinguish a wildcard from a binding, for example, without reparsing source text.
 
 
 
@@ -168,6 +170,10 @@ Structured representation of patterns.
   - `WildcardPattern`
 
 ## record `PatternField`
+
+One field inside a record or map-shaped pattern.
+
+`pattern` is `None` for shorthand such as `{ name }`. `stringKey` keeps `{"name": value}` distinct from the atom-key spelling `{ name: value }`.
 
 **Fields**
 
@@ -197,7 +203,7 @@ patternFieldText(PatternField { name, pattern, stringKey })
 
 Renders either a type or a pattern back to source.
 
-The one call to reach for when a node may carry either — it dispatches to `typeRefText` or `patternRefText` as appropriate.
+The one call to reach for when a node may carry either: it dispatches to `typeRefText` or `patternRefText` as appropriate.
 
 
 ```kex
@@ -208,6 +214,8 @@ referenceText(NamedType(name, args))
 ## type `Expression`
 
 Structured representation of expression AST nodes.
+
+Expressions retain syntax-level distinctions that matter to tools: a method call is not flattened into a generic call, `var` is distinct from `let`, and a trailing `if` remains recognizable. Walk these constructors when writing a linter or code search; use `Evaluator` when the goal is to execute an expression rather than inspect it.
 
 
 
@@ -262,12 +270,18 @@ Structured representation of expression AST nodes.
 
 ## record `NamedArgument`
 
+One `name: value` argument at a call site.
+
 **Fields**
 
   - `name` : String
   - `value` : [Expression](#type-expression)
 
 ## record `MatchArm`
+
+One arm of `match`, `receive`, or `rescue`.
+
+Multiple `patterns` are the comma-separated alternatives on the left of the arrow. `guard` is absent when the arm has no `when` condition.
 
 **Fields**
 
@@ -277,12 +291,18 @@ Structured representation of expression AST nodes.
 
 ## record `LambdaParam`
 
+One lambda parameter and its optional source annotation.
+
 **Fields**
 
   - `name` : String
   - `type` : [TypeRef](#type-typeref)?
 
 ## record `RescueInfo`
+
+The structured recovery clauses attached to a function or expression.
+
+Named rescue arms live in `arms`; a catch-all rescue keeps its optional binding and body separately. `inlineReturn` represents the compact rescue form rather than inventing a synthetic block.
 
 **Fields**
 
@@ -293,12 +313,16 @@ Structured representation of expression AST nodes.
 
 ## record `ElseIf`
 
+One `elif` branch, in source order.
+
 **Fields**
 
   - `condition` : [Expression](#type-expression)
   - `body` : [[Expression](#type-expression)]
 
 ## type `MapItem`
+
+One entry in a map literal: either a key/value pair or `...spread`.
 
 
 
@@ -309,6 +333,8 @@ Structured representation of expression AST nodes.
 
 ## record `RecordField`
 
+One explicitly initialized field in a record literal.
+
 **Fields**
 
   - `name` : String
@@ -317,6 +343,8 @@ Structured representation of expression AST nodes.
 ## type `GeneratedTemplate`
 
 A declaration template whose name (and, for a make block, target) is computed by a `compiled do` expression.
+
+Tools normally encounter this only while inspecting metaprogramming code. After expansion, generated declarations appear as ordinary `Node`s.
 
 
 
@@ -327,6 +355,8 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `GeneratedMakeInfo`
 
+The fixed portion of a generated `make` declaration.
+
 **Fields**
 
   - `isFinal` : Bool
@@ -335,6 +365,8 @@ A declaration template whose name (and, for a make block, target) is computed by
   - `location` : [Location](#record-location)
 
 ## record `MainInfo`
+
+The program entry point, including documentation and recovery clauses.
 
 **Fields**
 
@@ -346,6 +378,10 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `ParamInfo`
 
+One declared function parameter.
+
+`name` is absent for a destructuring parameter; `pattern` preserves that destructuring shape. `hasDefault` records whether an initializer appeared.
+
 **Fields**
 
   - `name` : String?
@@ -354,6 +390,10 @@ A declaration template whose name (and, for a make block, target) is computed by
   - `hasDefault` : Bool
 
 ## record `ClauseInfo`
+
+One clause of a function, including its patterns and body.
+
+Multi-clause functions place all clauses in one `FunctionInfo`, preserving source order so tooling can reason about which pattern is tried first.
 
 **Fields**
 
@@ -364,6 +404,10 @@ A declaration template whose name (and, for a make block, target) is computed by
   - `hasParamList` : Bool
 
 ## record `FunctionInfo`
+
+A named function and all of its pattern-matching clauses.
+
+`doc` contains the normalized `#` comment immediately attached to the declaration. Documentation generators can therefore share the same parsed structure as linters instead of scanning comments independently.
 
 **Fields**
 
@@ -376,6 +420,10 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `AnnotationInfo`
 
+A standalone function or method type signature.
+
+`implicitThis` distinguishes `:>` methods from module-level `:` functions without making a tool inspect punctuation in the original source.
+
 **Fields**
 
   - `name` : String
@@ -386,12 +434,18 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `VariantInfo`
 
+One constructor of an algebraic data type.
+
 **Fields**
 
   - `name` : String
   - `fields` : [[TypeRef](#type-typeref)]
 
 ## record `TypeInfo`
+
+A type alias or algebraic data type declaration.
+
+`variants` is present for an ADT and absent for an alias or abstract type. `parents` preserves declared bounds and inherited type relationships.
 
 **Fields**
 
@@ -404,6 +458,8 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `FieldInfo`
 
+One field declared by a record type.
+
 **Fields**
 
   - `name` : String
@@ -411,6 +467,8 @@ A declaration template whose name (and, for a make block, target) is computed by
   - `hasDefault` : Bool
 
 ## record `RecordInfo`
+
+A record declaration with fields in source order.
 
 **Fields**
 
@@ -422,6 +480,8 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `TraitInfo`
 
+A trait declaration and the signatures or default methods in its body.
+
 **Fields**
 
   - `name` : String
@@ -431,6 +491,10 @@ A declaration template whose name (and, for a make block, target) is computed by
   - `location` : [Location](#record-location)
 
 ## record `MakeInfo`
+
+A `make` implementation block.
+
+`target` is the receiver type, `implements` lists explicit traits, and `body` retains methods and visibility sections in declaration order.
 
 **Fields**
 
@@ -443,6 +507,8 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `PragmaInfo`
 
+A compiler pragma and its optional value.
+
 **Fields**
 
   - `name` : String
@@ -450,6 +516,8 @@ A declaration template whose name (and, for a make block, target) is computed by
   - `location` : [Location](#record-location)
 
 ## record `ModuleInfo`
+
+A module and its declarations in source order.
 
 **Fields**
 
@@ -460,6 +528,8 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `ConstantInfo`
 
+A named constant declaration. The AST reader never evaluates its value.
+
 **Fields**
 
   - `name` : String
@@ -469,6 +539,8 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `VisibilityInfo`
 
+A `public` or `private` section and the declarations it contains.
+
 **Fields**
 
   - `isPublic` : Bool
@@ -476,6 +548,8 @@ A declaration template whose name (and, for a make block, target) is computed by
   - `location` : [Location](#record-location)
 
 ## record `UsingInfo`
+
+A `using` import, including aliasing, filters, and an optional scoped body.
 
 **Fields**
 
@@ -488,6 +562,8 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `ExportInfo`
 
+An `export` declaration and its public-name filters.
+
 **Fields**
 
   - `moduleName` : String
@@ -498,6 +574,8 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## type `CompiledItem`
 
+One item inside a `compiled do` block before expansion.
+
 
 
 **Variants**
@@ -507,12 +585,18 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `CompiledInfo`
 
+A compile-time block and its declarations or expressions in source order.
+
 **Fields**
 
   - `items` : [[CompiledItem](#type-compileditem)]
   - `location` : [Location](#record-location)
 
 ## type `Node`
+
+Any top-level or declaration-level AST node.
+
+A source tool can match only the declarations it understands and leave the rest alone. The program's `schemaVersion` lets persisted consumers reject a tree whose possible node shapes have changed.
 
 
 
@@ -535,7 +619,9 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## make `TypeRef | PatternRef`
 
-Source-like conversion through the standard `.to(String)` spelling.
+Source-like conversion through the standard `to(String)` spelling.
+
+Useful in diagnostics: a tool can interpolate the type or pattern it found without manually dispatching between the two reference families.
 
 
 #### `to`

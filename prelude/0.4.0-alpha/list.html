@@ -101,7 +101,7 @@ data-page="list.html">
 scores<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n <span class="tok-op">&gt;</span> <span class="tok-number">3</span> <span class="tok-punct">}</span>      <span class="tok-comment"># =&gt; [7, 9, 4]</span>
 scores<span class="tok-op">.</span><span class="tok-method">sort</span>                      <span class="tok-comment"># =&gt; [2, 4, 7, 9]</span>
 scores<span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n <span class="tok-op">*</span> <span class="tok-number">10</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">sum</span>    <span class="tok-comment"># =&gt; 220</span></code></pre>
-<p>Anything that might not be there — the first element, an element at an index, a search result — answers with an <code>Optional</code>, so an empty list is an ordinary case rather than a crash:</p>
+<p>Anything that might not be there: the first element, an element at an index, a search result: answers with an <code>Optional</code>, so an empty list is an ordinary case rather than a crash:</p>
 <pre class="code"><code><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">first</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; 0</span>
 <span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">at</span><span class="tok-punct">(</span><span class="tok-number">9</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; 0</span></code></pre>
 <p>A list is <code>Enumerable</code> and <code>Foldable</code>, which is where <code>map</code>, <code>filter</code>, <code>find</code>, <code>all?</code> and <code>reduce</code> come from.</p>
@@ -355,7 +355,7 @@ scores<span class="tok-op">.</span><span class="tok-method">map</span> <span cla
 </div>
 <div class="fn" id="fn-takewhile">
 <h4><code>takeWhile</code></h4>
-<p>Returns the longest leading run of elements satisfying <code>pred</code>. Stops at the first element that does not, so it is not <code>filter</code> — later matches are dropped with everything after the first failure.</p>
+<p>Returns the longest leading run of elements satisfying <code>pred</code>. Stops at the first element that does not, so it is not <code>filter</code>: later matches are dropped with everything after the first failure.</p>
 <pre class="code"><code>takeWhile <span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">X</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">X</span><span class="tok-punct">]</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -368,7 +368,7 @@ scores<span class="tok-op">.</span><span class="tok-method">map</span> <span cla
 </div>
 <div class="fn" id="fn-dropwhile">
 <h4><code>dropWhile</code></h4>
-<p>Returns what is left after <code>takeWhile</code> — everything from the first element that does not satisfy <code>pred</code> onwards.</p>
+<p>Returns what is left after <code>takeWhile</code>: everything from the first element that does not satisfy <code>pred</code> onwards.</p>
 <pre class="code"><code>dropWhile <span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">X</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">X</span><span class="tok-punct">]</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -511,17 +511,19 @@ scores<span class="tok-op">.</span><span class="tok-method">map</span> <span cla
 </div>
 <div class="fn" id="fn-join">
 <h4><code>join</code></h4>
-<p>Receiver is <code>[X]</code>, not <code>[String | Char]</code>: the intrinsic renders whatever it is given, so <code>[1, 2].join(&quot;, &quot;)</code> is &quot;1, 2&quot; on both backends. The narrower receiver only ever fired once element types became precise enough to catch it — until then <code>map</code>/<code>filter</code> handed <code>join</code> an unknown element type and the restriction checked nothing. Concatenates all elements, placing <code>sep</code> between each adjacent pair. With no separator the elements are joined directly.</p>
+<p>Renders and concatenates the elements, placing <code>sep</code> between adjacent values. With no separator, the rendered values are joined directly.</p>
+<p>Elements do not have to be strings: each is rendered using the same user-facing conversion used by interpolation and printing.</p>
 <pre class="code"><code><span class="tok-fn">join</span><span class="tok-punct">(</span>sep<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span>
 join <span class="tok-op">:</span> <span class="tok-type">String</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
-<div class="param"><dt><code>sep</code> <code>String</code></dt><dd></dd></div>
+<div class="param"><dt><code>sep</code> <code>String</code></dt><dd>text placed between adjacent elements</dd></div>
 </dl>
-<p class="returns"><strong>Returns:</strong> <code>String</code> — </p>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the concatenated rendering</p>
 <h5>Examples</h5>
 <pre class="code"><code><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">world</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">kex</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">, </span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;hello, world, kex&quot;</span>
-<span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">c</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">join</span>                   <span class="tok-comment"># =&gt; &quot;abc&quot;</span></code></pre>
+<span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">c</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">join</span>                   <span class="tok-comment"># =&gt; &quot;abc&quot;</span>
+<span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string"> ` </span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>                 <span class="tok-comment"># =&gt; &quot;1 ` 2 + 3&quot;</span></code></pre>
 
 </div>
 </div>
@@ -530,7 +532,7 @@ join <span class="tok-op">:</span> <span class="tok-type">String</span></code></
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T19:07:27.076569085Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-31T00:21:50.485524575Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

@@ -13,7 +13,7 @@ entities:
 
 ## record `Regex`
 
-Regular expressions, backed by PCRE2 in the interpreter and Erlang's `re` on BEAM — the same PCRE pattern language on both.
+Regular expressions, backed by PCRE2 in the interpreter and Erlang's `re` on BEAM: the same PCRE pattern language on both.
 
 Opt-in, not prelude: nothing here is in scope until `using Regex`.
 
@@ -52,7 +52,7 @@ A compiled regular expression.
 
 A pattern that failed to compile.
 
-Mirrors `ParseError` — the `position` is a *character* offset into the pattern, not a byte offset, so it agrees across backends on patterns containing non-ASCII.
+Mirrors `ParseError`: the `position` is a *character* offset into the pattern, not a byte offset, so it agrees across backends on patterns containing non-ASCII.
 
 ```kex
 regex("(")
@@ -68,11 +68,11 @@ regex("(")
 
 ## function `regex`
 
-NOTE: deliberately does NOT `implement: Errorable`, even though the trait exists for exactly this shape. Declaring a `message` method alongside the `message` field makes `e.message` dispatch to the method instead of reading the field, which fails with `undef` on the BEAM backend. `ParseError` — the prelude's equivalent error record — carries a bare `message` field for the same reason; nothing in the tree implements Errorable today.
+NOTE: deliberately does NOT `implement: Errorable`, even though the trait exists for exactly this shape. Declaring a `message` method alongside the `message` field makes `e.message` dispatch to the method instead of reading the field, which fails with `undef` on the BEAM backend. `ParseError`: the prelude's equivalent error record: carries a bare `message` field for the same reason; nothing in the tree implements Errorable today.
 
 Compiles `source` into a `Regex`.
 
-Answers a `Result` because an arbitrary string may not be a valid pattern. Use this form when the pattern is built at run time — from a config file, from user input. For a pattern you write yourself, the tag form `` regex`\d`` `` is checked at compile time and hands back a bare `Regex`.
+Answers a `Result` because an arbitrary string may not be a valid pattern. Use this form when the pattern is built at run time: from a config file, from user input. For a pattern you write yourself, the tag form `` regex`\d`` `` is checked at compile time and hands back a bare `Regex`.
 
 
 ```kex
@@ -99,7 +99,7 @@ validateRegex(source)
 
 A short alias for `regex`, in both its forms.
 
-A second name bound to the same two functions, not a lexer synonym, so every property of `regex` — escaping, backend mapping, error shape — applies to it unchanged. Most code uses the tag form, where the shorter name reads better.
+A second name bound to the same two functions, not a lexer synonym, so every property of `regex` (escaping, backend mapping, error shape) applies to it unchanged. Most code uses the tag form, where the shorter name reads better.
 
 
 ```kex
@@ -121,7 +121,7 @@ validateRe(source)
 
 Escapes every regex metacharacter in `s`, so the result matches `s` literally.
 
-This is how to search for text that may itself contain pattern syntax — a search term typed by a user, a filename, a version string. It escapes per character rather than wrapping in `\Q...\E`, which a value containing `\E` would break out of.
+This is how to search for text that may itself contain pattern syntax: a search term typed by a user, a filename, a version string. It escapes per character rather than wrapping in `\Q...\E`, which a value containing `\E` would break out of.
 
 
 ```kex
@@ -135,7 +135,7 @@ A successful match, and the groups it captured.
 
 It behaves like a map keyed by both group number (`0` is the whole match) and group name (`:year`), but is a named type so it can grow spans and surrounding context later without breaking existing `get` call sites.
 
-A group that did not participate is an absent key, so `get` answers `None` — which is different from a group that matched the empty string, and answers `Just("")`.
+A group that did not participate is an absent key, so `get` answers `None`. This differs from a group that matched the empty string, which answers `Just("")`.
 
 **Fields**
 
@@ -143,7 +143,7 @@ A group that did not participate is an absent key, so `get` answers `None` — w
 
 ## make `Match`
 
-NOTE: the accessor is `get`, not `get`. A `make` block on a user type that defines a method name the prelude also uses breaks that name's dispatch for every OTHER type on the BEAM backend — with `get` here, merely saying `using Regex` made a plain `someMap.get(k)` fail with function_clause. `get` also matches Python's `m.get(1)` and Java's `matcher.get(1)`. A plain Map's `get` is unaffected: resolution picks a local method by receiver type, name and arity.
+NOTE: the accessor is `get`, not `get`. A `make` block on a user type that defines a method name the prelude also uses breaks that name's dispatch for every OTHER type on the BEAM backend: with `get` here, merely saying `using Regex` made a plain `someMap.get(k)` fail with function_clause. `get` also matches Python's `m.get(1)` and Java's `matcher.get(1)`. A plain Map's `get` is unaffected: resolution picks a local method by receiver type, name and arity.
 
 
 #### `get`
@@ -202,7 +202,7 @@ matches?(s, re) : String -> Regex -> Bool
 
 Returns every match of `re` in `s`, left to right.
 
-Always answers `[Match]`, whether or not the pattern has capture groups — adding a group to a pattern must not change the type flowing out of `scan`. An empty list means nothing matched.
+Always answers `[Match]`, whether or not the pattern has capture groups: adding a group to a pattern must not change the type flowing out of `scan`. An empty list means nothing matched.
 
 
 ```kex
@@ -212,7 +212,7 @@ scan(s, re) : String -> Regex -> [Match]
 
 ## function `replace`
 
-Replaces EVERY match of `re` in `s` — this is `gsub`, not `sub`.
+Replaces EVERY match of `re` in `s`: this is `gsub`, not `sub`.
 
 The replacement is either a literal `String`, inserted verbatim with no `$1` / `\1` backreference syntax, or a block receiving the `Match`, which is how a replacement built from what was captured is written.
 
@@ -228,9 +228,9 @@ Splits `s` on `re`, capping the number of fields.
 
 A positive `limit` caps the field count, leaving the remainder unsplit in the last field; a negative `limit` keeps trailing empty fields instead of dropping them.
 
-Plain `s.split(re)` needs no function here at all: it resolves to `String.split`, which dispatches to this engine when handed a Regex (in both backends), and follows Ruby's semantics — trailing empty fields are dropped, leading ones are kept, and capture groups are interleaved into the result.
+Plain `s.split(re)` needs no function here at all: it resolves to `String.split`, which dispatches to this engine when handed a Regex (in both backends), and follows Ruby's semantics: trailing empty fields are dropped, leading ones are kept, and capture groups are interleaved into the result.
 
-Only the limit form needs a name, and it deliberately is NOT `split` — this module must not export that name. On BEAM, a module in scope via `using` captures a method name for EVERY receiver, so exporting `split` here would route `"a,b".split(",")` and even the no-argument `"hi".split` through this module and break them.
+Only the limit form needs a name, and it deliberately is NOT `split`: this module must not export that name. On BEAM, a module in scope via `using` captures a method name for EVERY receiver, so exporting `split` here would route `"a,b".split(",")` and even the no-argument `"hi".split` through this module and break them.
 
 
 ```kex

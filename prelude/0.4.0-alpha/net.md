@@ -24,7 +24,7 @@ if Support.current.tls.usable? then https.string else "TLS unavailable" end
 
 A validated TCP or UDP port number in `0..65535`.
 
-Use `Port.from` at input boundaries. Port zero requests an ephemeral port where a listening API permits it.
+Use `Port.from` at input boundaries. Port zero requests an ephemeral port where a listening API permits it; after binding, ask the server or socket for the concrete port the operating system chose.
 
 **Fields**
 
@@ -34,6 +34,8 @@ Use `Port.from` at input boundaries. Port zero requests an ephemeral port where 
 
 Whether a feature was compiled into this backend and is usable now.
 
+`compiled?` describes the build; `usable?` also accounts for the environment it is running in. A browser build may contain an HTTP client, for example, while browser policy still prevents a particular lower-level capability.
+
 **Fields**
 
   - `compiled?` : Bool
@@ -42,6 +44,8 @@ Whether a feature was compiled into this backend and is usable now.
 ## record `SupportReport`
 
 Granular networking capabilities for the current backend and environment.
+
+Read this before choosing a transport dynamically. Applications that require one capability can instead check that single field during startup and fail with a useful message.
 
 **Fields**
 
@@ -57,6 +61,8 @@ Granular networking capabilities for the current backend and environment.
 
 ## module `Net.Port`
 
+Validated `Port` construction.
+
 ## function `from`
 
 Validates a port number.
@@ -68,6 +74,8 @@ from(value) : Integer -> Result<Port, NetError>
 
 
 ## module `Net.Support`
+
+Runtime discovery for optional network transports and protocols.
 
 ## constant `current`
 
@@ -119,7 +127,9 @@ Stable, backend-independent networking failure categories.
 
 ## record `NetError`
 
-A typed networking failure. `phase` adds optional protocol context and `progress` records bytes transferred before a partial-operation failure.
+A typed networking failure shared by every network module.
+
+`kind` is the stable category to branch on. `message` is for a person, while `phase` adds protocol context such as a TLS handshake and `progress` records bytes transferred before a partial-operation failure. Keeping those roles separate lets programs recover without matching backend-specific prose.
 
 **Fields**
 

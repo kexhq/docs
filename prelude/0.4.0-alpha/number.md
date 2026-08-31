@@ -17,7 +17,7 @@ entities:
 
 Whole numbers, of arbitrary size.
 
-`Integer` has no width limit — factorials and cryptographic moduli are ordinary values, not a special big-number type you have to opt into.
+`Integer` has no width limit: factorials and cryptographic moduli are ordinary values, not a special big-number type you have to opt into.
 
 `Integer` and `Float` are one numeric tower: they compare and order across the boundary, so `0 == 0.0` is `true` and `[1, 2.5, 3].sort` works. What differs is the arithmetic. `/` on two integers is integer division, and `sqrt` answers a `Float` because a square root generally is one.
 
@@ -103,7 +103,7 @@ retries.times { |_| attemptConnection }
 
 Double-precision floating-point numbers.
 
-A Kex `Float` is always finite. An operation that would produce `NaN` or `Infinity` raises instead — the same rule the BEAM enforces, where those two values cannot exist at all. So a `Float` you are holding is always a real number, and there is no `nan?` to check for.
+A Kex `Float` is always finite. An operation that would produce `NaN` or `Infinity` raises instead: the same rule the BEAM enforces, where those two values cannot exist at all. So a `Float` you are holding is always a real number, and there is no `nan?` to check for.
 
 `Float` and `Integer` compare and order across the boundary; see `Integer` for the rest of the numeric tower.
 
@@ -137,7 +137,7 @@ ratio >= 0.0 && ratio <= 1.0   # => true
 
 Reading integers out of text.
 
-Use `parse` when a failure needs explaining and `"42".to(Integer)` when it does not — `to` answers a plain `Optional`, `parse` answers a `Result` carrying a `ParseError` that says where it stopped and what it had read so far.
+Use `parse` when a failure needs explaining and `"42".to(Integer)` when it does not: `to` answers a plain `Optional`, `parse` answers a `Result` carrying a `ParseError` that says where it stopped and what it had read so far.
 
 ## function `parse`
 
@@ -198,7 +198,7 @@ Reading a number out of text without deciding in advance which half of the numer
 
 Parses the whole string as an `Integer` or a `Float`, whichever the text describes.
 
-Use it when the input's shape is not known ahead of time — a config value, a CSV column that may hold either.
+Use it when the input's shape is not known ahead of time: a config value, a CSV column that may hold either.
 
 
 ```kex

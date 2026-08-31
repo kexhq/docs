@@ -98,11 +98,11 @@ data-page="system.html">
 <pre class="code"><code><span class="tok-type">System</span><span class="tok-op">.</span><span class="tok-type">OS</span>          <span class="tok-comment"># =&gt; :macos</span>
 <span class="tok-type">System</span><span class="tok-op">.</span><span class="tok-method">posix?</span>      <span class="tok-comment"># =&gt; true</span>
 <span class="tok-type">System</span><span class="tok-op">.</span><span class="tok-method">exit</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span>     <span class="tok-comment"># ends the program with status 1</span></code></pre>
-<p>Deliberately NOT a capability, and <code>OS</code>/<code>BITWIDTH</code> stay pure. Faking the reported OS only exercises a program's branching, not the platform behaviour behind it — the file semantics, path rules and process handling that actually differ are unaffected by the atom. Testing those means running on the platform, which CI does across macOS, Ubuntu and Alpine. <code>Mock.System</code> existed for this and had exactly one caller: the spec that tested it (kexhq/kex#143).</p>
+<p>Deliberately NOT a capability, and <code>OS</code>/<code>BITWIDTH</code> stay pure. Faking the reported OS only exercises a program's branching, not the platform behaviour behind it: the file semantics, path rules and process handling that actually differ are unaffected by the atom. Testing those means running on the platform, which CI does across macOS, Ubuntu and Alpine. <code>Mock.System</code> existed for this and had exactly one caller: the spec that tested it (kexhq/kex#143).</p>
 <section class="entity" id="type-operatingsystem">
 <h2><span class="kind kind-type">type</span> <code>OperatingSystem</code></h2>
 <p>The operating system families a program may be running on.</p>
-<p>A union of atoms rather than an ADT: these are plain tags, and a <code>match</code> over them is still exhaustive. Anything unmodelled is <code>:unknown</code> — the union is closed, so callers can cover it.</p>
+<p>A union of atoms rather than an ADT: these are plain tags, and a <code>match</code> over them is still exhaustive. Anything unmodelled is <code>:unknown</code>: the union is closed, so callers can cover it.</p>
 <h3>Variants</h3>
 <ul class="variants">
 <li class="abstract"><em>abstract</em></li>
@@ -119,7 +119,7 @@ data-page="system.html">
 <h2><span class="kind kind-function">function</span> <code>exit</code></h2>
 <p>Ends the process immediately with exit status <code>code</code>.</p>
 <p>The invoking shell receives the code, so this is how a command-line tool reports success or failure to whatever ran it: 0 means success, anything else means failure.</p>
-<p>Nothing after the call runs, and no cleanup happens — close what needs closing first.</p>
+<p>Nothing after the call runs, and no cleanup happens: close what needs closing first.</p>
 <pre class="code"><code><span class="tok-fn">exit</span><span class="tok-punct">(</span>code<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -142,7 +142,7 @@ data-page="system.html">
 </section>
 <section class="entity" id="constant-bitwidth">
 <h2><span class="kind kind-constant">constant</span> <code>BITWIDTH</code> <code>Integer</code></h2>
-<p>The machine's pointer width in bits — 64 on anything current, 32 on a small target.</p>
+<p>The machine's pointer width in bits: 64 on anything current, 32 on a small target.</p>
 <p>Reported by the emulator on BEAM and by the pointer size in the tree walker, so both agree for one machine.</p>
 
 </section>
@@ -171,7 +171,7 @@ data-page="system.html">
 <section class="entity" id="function-die">
 <h2><span class="kind kind-function">function</span> <code>die</code></h2>
 <p>Ends the program with a fatal error message.</p>
-<p><code>message</code> goes to stderr behind a <code>&quot;fatal: &quot;</code> prefix and the exit status is 1. This is an abort, not an exception — <code>trying</code> / <code>rescue</code> cannot catch it — so use it only where there is no recoverable answer. The prelude uses it for a negative <code>repeat</code> count, for instance.</p>
+<p><code>message</code> goes to stderr behind a <code>&quot;fatal: &quot;</code> prefix and the exit status is 1. This is an abort, not an exception, so <code>trying</code> / <code>rescue</code> cannot catch it. Use it only where there is no recoverable answer. The prelude uses it for a negative <code>repeat</code> count, for instance.</p>
 <p>Its result type is <code>Never</code>, the bottom type: <code>die</code> does not return, so a branch that dies takes the other branch's type, and <code>if b == 0 then die(&quot;divide by zero&quot;) else a end</code> is an <code>Integer</code>.</p>
 <p><code>die</code> is declared bare, like <code>assert</code>, so it is always in scope.</p>
 <pre class="code"><code><span class="tok-fn">die</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Never</span>
@@ -191,7 +191,7 @@ data-page="system.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T19:07:27.076569085Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-31T00:21:50.485524575Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

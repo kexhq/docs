@@ -13,12 +13,7 @@ entities:
 
 ANSI terminal styling: colors, text attributes, and cursor control.
 
-Every constant here becomes an empty string when Kex is started with `--no-colors`, or when output is not going to a terminal. That is the point of the design — you can splice them into a string unconditionally and the result is plain text where color is unwanted, with no branching at the call site.
-
-```kex
-IO.printLine("${Console.GREEN}ok${Console.RESET}")
-IO.printLine(Console.colorize("failed", Console.RED))
-```
+Every constant here becomes an empty string when Kex is started with `--no-colors`, or when output is not going to a terminal. You can splice them into a string unconditionally.
 
 `colorize` is usually what you want, since it applies the reset for you.
 
@@ -66,7 +61,7 @@ Swaps the foreground and background colors of following text.
 
 ## constant `HIDDEN`
 
-Hides following text — it occupies space but is not drawn.
+Hides following text: it occupies space but is not drawn.
 
 
 
@@ -96,25 +91,25 @@ Yellow. Conventionally: warnings.
 
 ## constant `BLUE`
 
-Blue.
+Blue. Useful for informational labels and links.
 
 
 
 ## constant `MAGENTA`
 
-Magenta.
+Magenta. Useful for highlighting a category distinct from status colors.
 
 
 
 ## constant `CYAN`
 
-Cyan.
+Cyan. Useful for identifiers, paths, and other values inside prose.
 
 
 
 ## constant `WHITE`
 
-White.
+White. Useful for primary text on a dark terminal.
 
 
 
@@ -126,7 +121,7 @@ Gray. Conventionally: de-emphasised detail, like `DIM` but as a color.
 
 ## constant `PURPLE`
 
-Purple.
+Purple. An alternative accent when magenta is already in use.
 
 
 
@@ -134,9 +129,7 @@ Purple.
 
 Erases the screen and moves the cursor to the top-left corner.
 
-Use it to start a fresh frame. When you are redrawing repeatedly, `HOME` gives a smoother result — see below.
-
-Cursor and screen control, empty under --no-colors like the styles above. CLEAR erases the screen and homes the cursor; HOME only moves the cursor, so a redraw paints over the previous frame without a blank flash between them; CLEARLINE erases the current line and returns to its start.
+Use it to start a fresh frame. When you are redrawing repeatedly, `HOME` gives a smoother result: see below.
 
 
 
@@ -172,6 +165,6 @@ colorize(text, color) : String -> String -> String
 
 Returns `true` when terminal styling is on for this process.
 
-It is `false` under `--no-colors` and when output is redirected. You rarely need to check it — the constants already collapse to `""` — but it is the right test when the alternative is a different layout rather than a different color.
+It is `false` under `--no-colors` and when output is redirected. You rarely need to check it (the constants already collapse to `""`) but it is the right test when the alternative is a different layout rather than a different color.
 
 

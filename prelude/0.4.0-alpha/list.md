@@ -24,7 +24,7 @@ scores.sort                      # => [2, 4, 7, 9]
 scores.map { |n| n * 10 }.sum    # => 220
 ```
 
-Anything that might not be there — the first element, an element at an index, a search result — answers with an `Optional`, so an empty list is an ordinary case rather than a crash:
+Anything that might not be there: the first element, an element at an index, a search result: answers with an `Optional`, so an empty list is an ordinary case rather than a crash:
 
 ```kex
 [].first.or(0)        # => 0
@@ -337,7 +337,7 @@ findIndex(pred) : (X -> Bool) -> Integer?
 
 #### `takeWhile`
 
-Returns the longest leading run of elements satisfying `pred`. Stops at the first element that does not, so it is not `filter` — later matches are dropped with everything after the first failure.
+Returns the longest leading run of elements satisfying `pred`. Stops at the first element that does not, so it is not `filter`: later matches are dropped with everything after the first failure.
 
 ```kex
 takeWhile : (X -> Bool) -> [X]
@@ -353,7 +353,7 @@ takeWhile : (X -> Bool) -> [X]
 
 #### `dropWhile`
 
-Returns what is left after `takeWhile` — everything from the first element that does not satisfy `pred` onwards.
+Returns what is left after `takeWhile`: everything from the first element that does not satisfy `pred` onwards.
 
 ```kex
 dropWhile : (X -> Bool) -> [X]
@@ -529,18 +529,21 @@ sum(f) : (X -> Number) -> Number
 
 #### `join`
 
-Receiver is `[X]`, not `[String | Char]`: the intrinsic renders whatever it is given, so `[1, 2].join(", ")` is "1, 2" on both backends. The narrower receiver only ever fired once element types became precise enough to catch it — until then `map`/`filter` handed `join` an unknown element type and the restriction checked nothing. Concatenates all elements, placing `sep` between each adjacent pair. With no separator the elements are joined directly.
+Renders and concatenates the elements, placing `sep` between adjacent values. With no separator, the rendered values are joined directly.
+
+Elements do not have to be strings: each is rendered using the same user-facing conversion used by interpolation and printing.
 
 ```kex
 join(sep) : String -> String
 join : String
 ```
 
-**Returns**: `String`
+**Returns**: `String` — the concatenated rendering
 
 **Examples**
 
 ```kex
 ["hello", "world", "kex"].join(", ")   # => "hello, world, kex"
 ["a", "b", "c"].join                   # => "abc"
+[1, 2, 3].join(" ` ")                 # => "1 ` 2 + 3"
 ```

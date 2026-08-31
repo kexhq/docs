@@ -59,9 +59,9 @@ due.weekday.name                             # "Thursday"
 Time.now().iso                               # "2026-07-30T14:03:00`02:00"
 ```
 
-Anything that reads the clock is mockable — see the test clock section in `module Time` for `Time.frozenAt`.
+Anything that reads the clock is mockable: see the test clock section in `module Time` for `Time.frozenAt`.
 
-Zones are fixed offsets — UTC, an explicit `+02:00`, or whatever this machine's zone resolves to at a given instant. Named IANA zones and their DST rules are not modeled: `Time.now()` asks the host for the offset in effect at that moment, so it is right now, but it cannot say what the offset WILL be for some future local time.
+Zones are fixed offsets: UTC, an explicit `+02:00`, or whatever this machine's zone resolves to at a given instant. Named IANA zones and their DST rules are not modeled: `Time.now()` asks the host for the offset in effect at that moment, so it is right now, but it cannot say what the offset WILL be for some future local time.
 
 The records and the two ADTs stay at file level so `make` blocks, callers, and every module here can see them.
 
@@ -139,7 +139,7 @@ m.iso        # => "2026-07-30T14:03:00`02:00"
 m.utc.iso    # => "2026-07-30T12:03:00Z"
 ```
 
-Two `DateTime` values that name the same instant compare equal whatever offsets they are written at — comparison goes through `epochSeconds`.
+Two `DateTime` values that name the same instant compare equal whatever offsets they are written at: comparison goes through `epochSeconds`.
 
 **Fields**
 
@@ -149,7 +149,7 @@ Two `DateTime` values that name the same instant compare equal whatever offsets 
 
 ## record `Period`
 
-A calendar span. Months and years have no fixed length — February is 28 days or 29, a year 365 or 366 — so they cannot live in a `Duration`, which is a count of seconds and nothing else. A Period carries the calendar fields themselves and lets the calendar resolve them:
+A calendar span. Months and years have no fixed length: February is 28 days or 29, a year 365 or 366, so they cannot live in a `Duration`, which is a count of seconds and nothing else. A Period carries the calendar fields themselves and lets the calendar resolve them:
 
 ```kex
 Date.of(2026, 1, 31).try ` 1.months        # 2026-02-28, not 2026-03-03
@@ -194,7 +194,7 @@ midnight()
 
 Builds a time of day from a count of seconds since midnight.
 
-Wraps, so 86400 is midnight again and -1 is 23:59:59 — which is what makes it total where `Time.of` is fallible.
+Wraps, so 86400 is midnight again and -1 is 23:59:59, which is what makes it total where `Time.of` is fallible.
 
 Declared before the two-argument form: the interpreter resolves an overloaded module function to its LAST definition regardless of arity, so a delegating overload has to come first or it recurses into itself.
 
@@ -252,17 +252,17 @@ parseOffset(text)
 
 ## function `nanosOf`
 
-Anything that asks what time it is — `Time.now`, `Date.today`, `DateTime.utcNow` — reads one primitive, so pinning that primitive pins the whole calendar. This is what makes code that calls `Date.today()` testable: freeze the clock, assert against a date you chose.
+Anything that asks what time it is: `Time.now`, `Date.today`, `DateTime.utcNow`: reads one primitive, so pinning that primitive pins the whole calendar. This is what makes code that calls `Date.today()` testable: freeze the clock, assert against a date you chose.
 
 ```kex
 Time.freeze(DateTime.parse("2026-07-30T14:03:00Z").try)
-Date.today().iso                            # "2026-07-30" — always
+Date.today().iso                            # "2026-07-30": always
 Time.release()
 ```
 
-The clock is global, not per-process: a frozen clock stays frozen inside spawned processes, which is the only behavior that matches a real one. `release` is not automatic, so a test that freezes must also release — otherwise every later test in the run inherits the frozen clock.
+The clock is global, not per-process: a frozen clock stays frozen inside spawned processes, which is the only behavior that matches a real one. `release` is not automatic, so a test that freezes must also release: otherwise every later test in the run inherits the frozen clock.
 
-Nanoseconds since the Unix epoch for a civil datetime. A plain function rather than a `DateTime` method: on BEAM a method named `epochNanos` flattens onto the same name as the `DateTime.epochNanos()` module function, and the arity-0 one wins — silently, answering for the host clock instead of for `moment`.
+Nanoseconds since the Unix epoch for a civil datetime. A plain function rather than a `DateTime` method: on BEAM a method named `epochNanos` flattens onto the same name as the `DateTime.epochNanos()` module function, and the arity-0 one wins: silently, answering for the host clock instead of for `moment`.
 
 
 ```kex
@@ -272,7 +272,7 @@ nanosOf(moment)
 
 ## constant `CLOCK_MIN_NANOS`
 
-The clock counts nanoseconds in a 64-bit integer, on both backends and in the host clock they stand in for. That is the whole of the instants it can name: 1677-09-21 to 2262-04-11. A Kex Integer keeps going past that — it promotes to arbitrary precision — so a date outside the range produces a number the clock cannot hold, and the check below is what stops it being truncated into some other instant entirely.
+The clock counts nanoseconds in a 64-bit integer, on both backends and in the host clock they stand in for. That is the whole of the instants it can name: 1677-09-21 to 2262-04-11. A Kex Integer keeps going past that: it promotes to arbitrary precision, so a date outside the range produces a number the clock cannot hold, and the check below is what stops it being truncated into some other instant entirely.
 
 
 
@@ -294,7 +294,7 @@ Pins the clock: every reading returns this exact instant until `release`.
 
 This is what makes code that calls `Date.today()` testable. Returns the moment it pinned, so `Time.freeze(m).try` both sets the clock and fails loudly on an instant the clock cannot represent.
 
-Prefer `Time.frozenAt`, which releases for you — a test that fails between a `freeze` and its `release` leaves the clock frozen for everything after it.
+Prefer `Time.frozenAt`, which releases for you: a test that fails between a `freeze` and its `release` leaves the clock frozen for everything after it.
 
 
 ```kex
@@ -306,7 +306,7 @@ freeze(moment)
 
 Moves the clock to an instant and lets it run from there.
 
-Readings advance normally, they just start somewhere else. Use this over `freeze` when the code under test measures elapsed time — a frozen clock makes every interval zero.
+Readings advance normally, they just start somewhere else. Use this over `freeze` when the code under test measures elapsed time: a frozen clock makes every interval zero.
 
 
 ```kex
@@ -318,7 +318,7 @@ travel(moment)
 
 Freezes the clock for the length of `body`, then releases it.
 
-This is the form to reach for: `freeze` and `release` have to be paired by hand, and a test that returns early — or fails an assertion — between them leaves the clock frozen for every test that runs after it.
+This is the form to reach for: `freeze` and `release` have to be paired by hand, and a test that returns early (or fails an assertion) between them leaves the clock frozen for every test that runs after it.
 
 Result carries whatever `body` returned. An instant the clock cannot represent is an Error, and then the clock is never touched and the body never runs.
 
@@ -366,7 +366,7 @@ controlled?()
 
 ## function `frozen?`
 
-Returns `true` while `freeze` is in effect — not merely `travel`.
+Returns `true` while `freeze` is in effect: not merely `travel`.
 
 
 ```kex
@@ -392,7 +392,7 @@ The number of days in a month.
 
 Year first, matching `Date.of(year, month, day)` and every other date-shaped signature in this file.
 
-A month outside 1..12 has no answer, so this is a Result rather than an Integer: the old version fell through its month tests and returned 28, which quietly turned `Time.daysInMonth(1, 2026)` — the arguments the wrong way round — into a plausible-looking wrong number.
+A month outside 1..12 has no answer, so this is a Result rather than an Integer: the old version fell through its month tests and returned 28, which quietly turned `Time.daysInMonth(1, 2026)`: the arguments the wrong way round: into a plausible-looking wrong number.
 
 
 ```kex
@@ -416,7 +416,7 @@ daysInValidMonth(year, month)
 
 The number of days from 1970-01-01 to a calendar date, negative before it.
 
-Howard Hinnant's civil-calendar algorithms: exact across the whole proleptic Gregorian range, and they need only truncating integer division — the semantics Kex's `/` already has.
+Howard Hinnant's civil-calendar algorithms: exact across the whole proleptic Gregorian range, and they need only truncating integer division: the semantics Kex's `/` already has.
 
 
 ```kex
@@ -510,7 +510,7 @@ formatTime(value)
 
 ## function `formatFraction`
 
-Fractional seconds, in the 3/6/9-digit groupings ISO 8601 output conventionally uses — whichever is the shortest that loses nothing. A whole second renders no fraction at all, so `14:03:00` is unchanged.
+Fractional seconds, in the 3/6/9-digit groupings ISO 8601 output conventionally uses, whichever is the shortest that loses nothing. A whole second renders no fraction at all, so `14:03:00` is unchanged.
 
 Without this the nanosecond field was kept on the value and compared, but never rendered: `Time.parse("14:03:00.5")` and `Time.parse("14:03:00")` produced different values that printed identically, and every parse/format round-trip silently dropped sub-second precision.
 
@@ -566,7 +566,7 @@ pad2(value)
 
 ## function `padTo`
 
-Left-pad with zeros to a fixed width. A value already that wide is left alone rather than truncated — losing digits would be worse than a field one character too long.
+Left-pad with zeros to a fixed width. A value already that wide is left alone rather than truncated: losing digits would be worse than a field one character too long.
 
 
 ```kex
@@ -604,7 +604,7 @@ digitsToInteger(text)
 
 ## function `parseFraction`
 
-".5" is 500000000ns — the digits are padded out to nanosecond scale.
+".5" is 500000000ns: the digits are padded out to nanosecond scale.
 
 
 ```kex
@@ -630,7 +630,7 @@ Building calendar dates, and asking what today is.
 
 Builds a validated calendar date.
 
-The month and the day are both range-checked, and the day is checked against that month's actual length — so February 30th is an `Error`, and a `Date` you hold is always a real day. The record literal `Date { ... }` bypasses this, so prefer it for anything derived from input.
+The month and the day are both range-checked, and the day is checked against that month's actual length, so February 30th is an `Error`, and a `Date` you hold is always a real day. The record literal `Date { ... }` bypasses this, so prefer it for anything derived from input.
 
 
 ```kex
@@ -754,7 +754,7 @@ fromEpochSeconds(count)
 
 Parses an ISO 8601 instant.
 
-Accepts `2026-07-30T14:03:00`02:00`, the same with `Z`, or a bare civil datetime with no zone at all — which is read as UTC.
+Accepts `2026-07-30T14:03:00`02:00`, the same with `Z`, or a bare civil datetime with no zone at all, which is read as UTC.
 
 
 ```kex
@@ -766,7 +766,7 @@ parse(text)
 
 The current instant, in this machine's zone as it stands right now.
 
-The offset is the one in effect at this instant, so it is right today — but named IANA zones are not modeled, so it cannot say what the offset WILL be for some future local time.
+The offset is the one in effect at this instant, so it is right today. Named IANA zones are not modeled, so it cannot say what the offset WILL be for some future local time.
 
 
 ```kex
@@ -778,7 +778,7 @@ now()
 
 The current instant, at UTC.
 
-The form to prefer when the value is stored, compared or transmitted — there is no zone to disagree about.
+The form to prefer when the value is stored, compared or transmitted: there is no zone to disagree about.
 
 
 ```kex
@@ -790,7 +790,7 @@ utcNow()
 
 Nanoseconds since the Unix epoch, straight from the clock.
 
-The rawest reading available, and the right one for measuring a short interval — no calendar work happens on the way.
+The rawest reading available, and the right one for measuring a short interval: no calendar work happens on the way.
 
 
 ```kex
@@ -849,7 +849,7 @@ Subtracts a span. The result may be negative.
 
 Multiplies the span by a plain number.
 
-`3 * 1.days` is not the same call — the receiver has to be the Duration — so it is spelled `1.days * 3`.
+`3 * 1.days` is not the same call because the receiver has to be the Duration, so it is spelled `1.days * 3`.
 
 ```kex
 *(factor)
@@ -1237,7 +1237,7 @@ Date.of(2026, 7, 30).try.addWeeks(2).iso   # => "2026-08-13"
 
 #### `addMonths`
 
-No `date.tomorrow`/`date.yesterday` methods: on BEAM a make-block method flattens onto the same name as the `Date.tomorrow()`/`Date.yesterday()` module functions above and one of the two has to win. The module functions win — `Date.tomorrow()` is the spelling people reach for, and `date.addDays(1)` already says the rest.
+No `date.tomorrow`/`date.yesterday` methods: on BEAM a make-block method flattens onto the same name as the `Date.tomorrow()`/`Date.yesterday()` module functions above and one of the two has to win. The module functions win: `Date.tomorrow()` is the spelling people reach for, and `date.addDays(1)` already says the rest.
 
 The date `count` calendar months later, with the day clamped into the target month.
 
@@ -1258,7 +1258,7 @@ Date.of(2026, 7, 30).try.addMonths(-1).iso   # => "2026-06-30"
 
 #### `addYears`
 
-The date `count` calendar years later, with the day clamped — February 29th plus one year is February 28th.
+The date `count` calendar years later, with the day clamped: February 29th plus one year is February 28th.
 
 ```kex
 addYears(count)
@@ -1470,7 +1470,7 @@ Advances the time of day by a span, wrapping within the day.
 
 A Time has no date to carry into, so 23:00 ` 2.hours is 01:00. Reach for `DateTime` when the day rolling over is something you need to see.
 
-The nanosecond field rides along untouched — `wholeSeconds` truncates the span, so a sub-second Duration shifts nothing.
+The nanosecond field rides along untouched: `wholeSeconds` truncates the span, so a sub-second Duration shifts nothing.
 
 ```kex
 +(span)
@@ -1600,7 +1600,7 @@ inspectValue(colors)
 
 The same instant, rendered at another offset.
 
-Nothing moves — the wall clock changes because the offset does, and `epochSeconds` is unchanged.
+Nothing moves: the wall clock changes because the offset does, and `epochSeconds` is unchanged.
 
 ```kex
 at(offset)
@@ -1776,7 +1776,7 @@ DateTime.utcNow().after?(started)   # => true
 
 #### `compareTo`
 
-Orders this instant against another, by instant rather than by wall clock — so 12:00Z and 14:00`02:00 compare `Equal`.
+Orders this instant against another, by instant rather than by wall clock, so 12:00Z and 14:00`02:00 compare `Equal`.
 
 Named `compareTo` rather than `compare`: a make-block `compare` is shadowed by the builtin comparison dispatch and fails at runtime on both backends.
 

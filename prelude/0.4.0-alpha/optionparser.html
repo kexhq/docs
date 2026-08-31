@@ -131,7 +131,7 @@ hello<span class="tok-punct">,</span> <span class="tok-type">Ada</span></code></
 </section>
 <section class="entity" id="record-optionspec">
 <h2><span class="kind kind-record">record</span> <code>OptionSpec</code></h2>
-<p>One declared option. Built for you by the <code>OptionConfig</code> builders — you rarely construct one by hand.</p>
+<p>One declared option. Built for you by the <code>OptionConfig</code> builders: you rarely construct one by hand.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>long</code></dt><dd><code>String</code></dd></div>
@@ -291,7 +291,7 @@ options<span class="tok-op">.</span><span class="tok-method">value</span><span c
 <h4><code>flag</code></h4>
 <p>Declares an option that takes no value and is either present or not.</p>
 <p>It defaults to <code>&quot;false&quot;</code> and reads as <code>&quot;true&quot;</code> when given. Read it back with <code>ParsedOptions.flagEnabled?</code>. Giving it a value is an error (<code>UnexpectedValue</code>).</p>
-<p>Declare a flag named <code>help</code> if you want <code>--help</code> to print the help text — <code>run</code> looks for exactly that name, and adds nothing on its own.</p>
+<p>Declare a flag named <code>help</code> if you want <code>--help</code> to print the help text: <code>run</code> looks for exactly that name, and adds nothing on its own.</p>
 <pre class="code"><code><span class="tok-fn">flag</span><span class="tok-punct">(</span>long<span class="tok-punct">,</span> short<span class="tok-punct">,</span> description<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -309,7 +309,7 @@ options<span class="tok-op">.</span><span class="tok-method">value</span><span c
 <div class="fn" id="fn-command">
 <h4><code>command</code></h4>
 <p>Declares a command and the function that runs it.</p>
-<p>A command name may be several words — <code>&quot;docs build&quot;</code> — and the longest match wins, so a group and its subcommands can both be declared. The handler receives the parsed options with the command's own words already removed, and returns the process exit code.</p>
+<p>A command name may be several words (<code>&quot;docs build&quot;</code>) and the longest match wins, so a group and its subcommands can both be declared. The handler receives the parsed options with the command's own words already removed, and returns the process exit code.</p>
 <p>Declares a command. <code>usage</code> is what the help line shows after the name (<code>&lt;name&gt;</code>, <code>[args...]</code>); leave it empty for a command that takes none.</p>
 <pre class="code"><code><span class="tok-fn">command</span><span class="tok-punct">(</span>name<span class="tok-punct">,</span> description<span class="tok-punct">,</span> handler<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
@@ -349,7 +349,7 @@ config<span class="tok-op">.</span><span class="tok-method">command</span><span 
 <h4><code>run</code></h4>
 <p>Parses <code>args</code>, runs the command they name, and returns its exit code.</p>
 <p>This is the whole of a tool's <code>main</code>: hand it the argument list and pass the result to <code>System.exit</code>.</p>
-<p>A parse failure, an unknown command, or a line with no command at all reports the problem along with the help text and returns 1 — the one place that policy has to live for every tool to behave the same way. A set <code>help</code> flag prints the help and returns 0.</p>
+<p>A parse failure, an unknown command, or a line with no command at all reports the problem along with the help text and returns 1: the one place that policy has to live for every tool to behave the same way. A set <code>help</code> flag prints the help and returns 0.</p>
 <pre class="code"><code><span class="tok-fn">run</span><span class="tok-punct">(</span>args<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -382,12 +382,25 @@ config<span class="tok-op">.</span><span class="tok-method">command</span><span 
 <h2><span class="kind kind-module">module</span> <code>OptionParser</code></h2>
 <section class="entity" id="function-define">
 <h2><span class="kind kind-function">function</span> <code>define</code></h2>
+<p>Starts an immutable command-line interface definition.</p>
+<p>Chain options and commands onto the returned <code>OptionConfig</code>, then call <code>parse</code> with the process arguments. <code>name</code> appears in usage text and <code>description</code> introduces the generated help page.</p>
 <pre class="code"><code><span class="tok-fn">define</span><span class="tok-punct">(</span>name<span class="tok-punct">,</span> description<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code> <code>String</code></dt><dd>the executable name shown in usage</dd></div>
+<div class="param"><dt><code>description</code> <code>String</code></dt><dd>the one-line purpose of the command</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>OptionConfig</code> — an empty parser configuration</p>
+<h5>Examples</h5>
+<p class="caption"><em>Defining a small file-conversion command</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> cli <span class="tok-op">=</span> <span class="tok-type">OptionParser</span><span class="tok-op">.</span><span class="tok-method">define</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">convert</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">Convert a document to PDF</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">string</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">input</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span>'i'<span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">Source document</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">None</span><span class="tok-punct">,</span> <span class="tok-bool">true</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">flag</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">verbose</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span>'v'<span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">Show conversion details</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-commandlabel">
 <h2><span class="kind kind-function">function</span> <code>commandLabel</code></h2>
-<p>Returns the label a command is listed under in the help text — its name, followed by its usage when it has one.</p>
+<p>Returns the label a command is listed under in the help text: its name, followed by its usage when it has one.</p>
 <pre class="code"><code><span class="tok-fn">commandLabel</span><span class="tok-punct">(</span>command<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -417,7 +430,7 @@ config<span class="tok-op">.</span><span class="tok-method">command</span><span 
 <section class="entity" id="function-openswith?">
 <h2><span class="kind kind-function">function</span> <code>opensWith?</code></h2>
 <p>Returns <code>true</code> when <code>arguments</code> begins with the words of <code>name</code>.</p>
-<p>The word-wise prefix test <code>commandFor</code> matches with — <code>&quot;docs build&quot;</code> opens <code>[&quot;docs&quot;, &quot;build&quot;, &quot;src&quot;]</code> but not <code>[&quot;docs&quot;]</code>.</p>
+<p>The word-wise prefix test <code>commandFor</code> matches with: <code>&quot;docs build&quot;</code> opens <code>[&quot;docs&quot;, &quot;build&quot;, &quot;src&quot;]</code> but not <code>[&quot;docs&quot;]</code>.</p>
 <pre class="code"><code><span class="tok-fn">opensWith?</span><span class="tok-punct">(</span>arguments<span class="tok-punct">,</span> name<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -466,7 +479,7 @@ config<span class="tok-op">.</span><span class="tok-method">command</span><span 
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T19:07:27.076569085Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-31T00:21:50.485524575Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

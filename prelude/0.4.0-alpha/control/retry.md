@@ -11,6 +11,20 @@ entities:
 
 ## module `Control.Retry`
 
+Bounded retries for operations whose failures can be classified by the application.
+
+A retry is never automatically safe just because an error was temporary. The caller owns the operation and, where necessary, a predicate that excludes permanent failures and non-idempotent work. Policies bound attempts, delay, and optionally total sleep so a dependency cannot stall the program forever.
+
+```kex
+using Control.Retry
+
+let policy = Retry.exponential(4, 100.milliseconds, 2.seconds)
+  .withJitter(0.2)
+Retry.run(policy, ~retryable?) do
+  client.get("https://api.example.com/inventory")
+end
+```
+
 ## record `Policy`
 
 A bounded retry schedule. Attempts includes the initial call. Delays are immutable `Duration` values and never exceed `maximumDelay`.
@@ -48,6 +62,8 @@ Performs one scheduled delay. Supplying this callback makes retry tests determin
 
 Builds a constant-delay retry policy.
 
+Fixed delays are predictable and useful for a local resource expected to become ready shortly. For many clients sharing a remote dependency, prefer exponential backoff with jitter to avoid synchronized retry bursts.
+
 
 ```kex
 fixed(maximumAttempts, delay) : Integer -> Duration -> Policy
@@ -57,6 +73,8 @@ fixed(maximumAttempts, delay) : Integer -> Duration -> Policy
 ## function `exponential`
 
 Builds a doubling backoff capped at `maximumDelay`.
+
+The first retry waits `initialDelay`; later delays double until they reach the cap. Add jitter for production network traffic.
 
 
 ```kex
@@ -91,8 +109,20 @@ _`Retry.fixed(5, 1.seconds).withMaximumElapsed(2.seconds)`._
 
 Returns the same schedule with symmetric bounded jitter. A fraction of `0.25` selects each actual delay from 75% through 125% of its scheduled value. Fractions are clamped to `0.0..1.0`.
 
+Jitter prevents many workers that failed together from retrying together. It changes delay timing, never the number of attempts or the backoff cap.
+
 ```kex
 withJitter(fraction)
+```
+
+**Returns**: `Policy` — a copied policy with bounded jitter
+
+**Examples**
+
+_Spreading retries by up to 20 percent_
+
+```kex
+Retry.exponential(4, 1.seconds, 10.seconds).withJitter(0.2)
 ```
 
 ## function `run`

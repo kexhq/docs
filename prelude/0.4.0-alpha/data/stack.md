@@ -13,13 +13,13 @@ entities:
 
 A last-in-first-out stack.
 
-Opt-in — nothing here is in scope until `using Data.Stack`.
+Opt-in: nothing here is in scope until `using Data.Stack`.
 
 ```kex
 using Data.Stack
 ```
 
-Elements are stored top first, so `push`, `pop` and `peek` are all list-head operations — none of them pay for the size of the stack. `items` reverses that internal order, so it reads bottom-to-top, the order you would have pushed them in:
+Elements are stored top first, so `push`, `pop` and `peek` are all list-head operations: none of them pay for the size of the stack. `items` reverses that internal order, so it reads bottom-to-top, the order you would have pushed them in:
 
 ```kex
 let s = Stack.from([1, 2, 3])
@@ -35,7 +35,7 @@ Every method answers with a new stack rather than changing the receiver. `push!`
 
 A stack of elements, held top first.
 
-Build one with `Stack.from` rather than by hand — the record literal takes elements in storage order (top first), which reads backwards from the `items` a caller normally thinks in.
+Build one with `Stack.from` rather than by hand: the record literal takes elements in storage order (top first), which reads backwards from the `items` a caller normally thinks in.
 
 ```kex
 Stack.from([1, 2, 3]).items   # => [1, 2, 3]

@@ -14,7 +14,7 @@ entities:
 
 Traversal operations that every foldable collection gets for free.
 
-A type becomes `Foldable` by implementing one method, `reduce`; the rest — `each`, `all?`, `any?`, `find`, `count` — are derived from it. `List`, `String`, `Map`, `Range` and both flavours of `Set` all implement it, so these methods read the same whatever you point them at.
+A type becomes `Foldable` by implementing one method, `reduce`; the rest: `each`, `all?`, `any?`, `find`, `count`: are derived from it. `List`, `String`, `Map`, `Range` and both flavours of `Set` all implement it, so these methods read the same whatever you point them at.
 
 ```kex
 [1, 2, 3].all? { |n| n > 0 }        # => true
@@ -45,7 +45,7 @@ reduce : A -> (A -> T -> A) -> A
 
 Calls `f` with each item, for its side effects.
 
-The loop of last resort: when what you want is a new collection rather than an effect, `map` or `filter` says so more clearly.
+The loop of last resort, when what you want is a new collection rather than an effect, `map` or `filter` says so more clearly.
 
 ```kex
 each(f)
@@ -183,7 +183,7 @@ text.lines.count { |line| line.trim.startsWith?("#") }
 
 Collection-producing operations that every foldable collection gets for free.
 
-Like `Foldable`, a type joins by implementing `reduce` alone. The defaults here answer with a list, because the block may return anything at all; a type that can do better overrides them — `Map.filter` gives back a map, `Set.map` gives back a set, `String.filter` gives back a string.
+Like `Foldable`, a type joins by implementing `reduce` alone. The defaults here answer with a list, because the block may return anything at all; a type that can do better overrides them: `Map.filter` gives back a map, `Set.map` gives back a set, `String.filter` gives back a string.
 
 ```kex
 [1, 2, 3].map { |n| n * 2 }              # => [2, 4, 6]
@@ -236,7 +236,7 @@ users.map { |u| u.email }
 
 Applies `f` to each item and its 0-based position, and collects the results into a list.
 
-The index is the LAST block parameter — see `eachIndexed`.
+The index is the LAST block parameter: see `eachIndexed`.
 
 ```kex
 mapIndexed(f)
@@ -280,7 +280,7 @@ text.lines.filter { |line| !line.trim.empty? }
 
 Applies `f` to each item, expecting a list back, and concatenates the results into one flat list.
 
-Use it when each item expands into zero or more results — `map` would give you a list of lists.
+Use it when each item expands into zero or more results: `map` would give you a list of lists.
 
 ```kex
 flatMap(f)
@@ -302,7 +302,7 @@ posts.flatMap { |p| p.tags }
 
 #### `collect`
 
-Applies `f` to each item, expecting an `Optional` back, and returns the values that were present — unwrapped.
+Applies `f` to each item, expecting an `Optional` back, and returns the values that were present: unwrapped.
 
 This is filter and map fused into one pass, which is what you want whenever the test and the transformation are the same operation. Parsing is the classic case: an item either yields a value or it does not.
 

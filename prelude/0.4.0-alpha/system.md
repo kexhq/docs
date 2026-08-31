@@ -20,13 +20,13 @@ System.posix?      # => true
 System.exit(1)     # ends the program with status 1
 ```
 
-Deliberately NOT a capability, and `OS`/`BITWIDTH` stay pure. Faking the reported OS only exercises a program's branching, not the platform behaviour behind it — the file semantics, path rules and process handling that actually differ are unaffected by the atom. Testing those means running on the platform, which CI does across macOS, Ubuntu and Alpine. `Mock.System` existed for this and had exactly one caller: the spec that tested it (kexhq/kex#143).
+Deliberately NOT a capability, and `OS`/`BITWIDTH` stay pure. Faking the reported OS only exercises a program's branching, not the platform behaviour behind it: the file semantics, path rules and process handling that actually differ are unaffected by the atom. Testing those means running on the platform, which CI does across macOS, Ubuntu and Alpine. `Mock.System` existed for this and had exactly one caller: the spec that tested it (kexhq/kex#143).
 
 ## type `OperatingSystem`
 
 The operating system families a program may be running on.
 
-A union of atoms rather than an ADT: these are plain tags, and a `match` over them is still exhaustive. Anything unmodelled is `:unknown` — the union is closed, so callers can cover it.
+A union of atoms rather than an ADT: these are plain tags, and a `match` over them is still exhaustive. Anything unmodelled is `:unknown`: the union is closed, so callers can cover it.
 
 
 
@@ -47,7 +47,7 @@ Ends the process immediately with exit status `code`.
 
 The invoking shell receives the code, so this is how a command-line tool reports success or failure to whatever ran it: 0 means success, anything else means failure.
 
-Nothing after the call runs, and no cleanup happens — close what needs closing first.
+Nothing after the call runs, and no cleanup happens: close what needs closing first.
 
 
 ```kex
@@ -65,7 +65,7 @@ Both backends answer with the same atom for the same machine. Prefer the `macOS?
 
 ## constant `BITWIDTH`
 
-The machine's pointer width in bits — 64 on anything current, 32 on a small target.
+The machine's pointer width in bits: 64 on anything current, 32 on a small target.
 
 Reported by the emulator on BEAM and by the pointer size in the tree walker, so both agree for one machine.
 
@@ -101,7 +101,7 @@ Everything the toolchain runs on except Windows behaves POSIX-ly enough for path
 
 Ends the program with a fatal error message.
 
-`message` goes to stderr behind a `"fatal: "` prefix and the exit status is 1. This is an abort, not an exception — `trying` / `rescue` cannot catch it — so use it only where there is no recoverable answer. The prelude uses it for a negative `repeat` count, for instance.
+`message` goes to stderr behind a `"fatal: "` prefix and the exit status is 1. This is an abort, not an exception, so `trying` / `rescue` cannot catch it. Use it only where there is no recoverable answer. The prelude uses it for a negative `repeat` count, for instance.
 
 Its result type is `Never`, the bottom type: `die` does not return, so a branch that dies takes the other branch's type, and `if b == 0 then die("divide by zero") else a end` is an `Integer`.
 

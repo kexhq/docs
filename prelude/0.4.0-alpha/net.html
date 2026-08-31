@@ -101,7 +101,7 @@ data-page="net.html">
 <section class="entity" id="record-port">
 <h2><span class="kind kind-record">record</span> <code>Port</code></h2>
 <p>A validated TCP or UDP port number in <code>0..65535</code>.</p>
-<p>Use <code>Port.from</code> at input boundaries. Port zero requests an ephemeral port where a listening API permits it.</p>
+<p>Use <code>Port.from</code> at input boundaries. Port zero requests an ephemeral port where a listening API permits it; after binding, ask the server or socket for the concrete port the operating system chose.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>value</code></dt><dd><code>Integer</code></dd></div>
@@ -110,6 +110,7 @@ data-page="net.html">
 <section class="entity" id="record-supportvalue">
 <h2><span class="kind kind-record">record</span> <code>SupportValue</code></h2>
 <p>Whether a feature was compiled into this backend and is usable now.</p>
+<p><code>compiled?</code> describes the build; <code>usable?</code> also accounts for the environment it is running in. A browser build may contain an HTTP client, for example, while browser policy still prevents a particular lower-level capability.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>compiled?</code></dt><dd><code>Bool</code></dd></div>
@@ -119,6 +120,7 @@ data-page="net.html">
 <section class="entity" id="record-supportreport">
 <h2><span class="kind kind-record">record</span> <code>SupportReport</code></h2>
 <p>Granular networking capabilities for the current backend and environment.</p>
+<p>Read this before choosing a transport dynamically. Applications that require one capability can instead check that single field during startup and fail with a useful message.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>dns</code></dt><dd><code><a class="xref" href="#record-supportvalue">SupportValue</a></code></dd></div>
@@ -134,6 +136,7 @@ data-page="net.html">
 </section>
 <section class="entity" id="module-net-port">
 <h2><span class="kind kind-module">module</span> <code>Net.Port</code></h2>
+<p>Validated <code>Port</code> construction.</p>
 <section class="entity" id="function-from">
 <h2><span class="kind kind-function">function</span> <code>from</code></h2>
 <p>Validates a port number.</p>
@@ -144,13 +147,15 @@ data-page="net.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;Port, <a class="xref" href="#record-neterror">NetError</a>&gt;</code> — the validated port, or <code>Parse</code></p>
 <h5>Examples</h5>
-<p class="caption"><em><code>Port.from(443).try</code>.</em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>Reading a listen port from the environment</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> number <span class="tok-op">=</span> <span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">PORT</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">flatMap</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>text<span class="tok-op">|</span> text<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Integer</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">8080</span><span class="tok-punct">)</span>
+<span class="tok-keyword">let</span> port <span class="tok-op">=</span> <span class="tok-type">Port</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span>number<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </section>
 </section>
 <section class="entity" id="module-net-support">
 <h2><span class="kind kind-module">module</span> <code>Net.Support</code></h2>
+<p>Runtime discovery for optional network transports and protocols.</p>
 <section class="entity" id="constant-current">
 <h2><span class="kind kind-constant">constant</span> <code>current</code> <code>SupportReport</code></h2>
 <p>Reports compiled and currently usable networking features.</p>
@@ -197,7 +202,8 @@ data-page="net.html">
 </section>
 <section class="entity" id="record-neterror">
 <h2><span class="kind kind-record">record</span> <code>NetError</code></h2>
-<p>A typed networking failure. <code>phase</code> adds optional protocol context and <code>progress</code> records bytes transferred before a partial-operation failure.</p>
+<p>A typed networking failure shared by every network module.</p>
+<p><code>kind</code> is the stable category to branch on. <code>message</code> is for a person, while <code>phase</code> adds protocol context such as a TLS handshake and <code>progress</code> records bytes transferred before a partial-operation failure. Keeping those roles separate lets programs recover without matching backend-specific prose.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>kind</code></dt><dd><code><a class="xref" href="#type-neterrorkind">NetErrorKind</a></code></dd></div>
@@ -224,7 +230,7 @@ data-page="net.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T19:07:27.076569085Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-31T00:21:50.485524575Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

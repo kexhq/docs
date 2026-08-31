@@ -20,13 +20,13 @@ Evaluator.runExpression("1 ` 2")           # => Ok(3)
 Evaluator.runExpression("[3,1,2].sort")    # => Ok([1, 2, 3])
 ```
 
-This is for evaluating expressions your program was given — a formula in a config file, a filter typed by a user. Every result is a `Result+, so a syntax error or a rejected call is a value you handle.
+This is for evaluating expressions your program was given: a formula in a config file, a filter typed by a user. Every result is a `Result+, so a syntax error or a rejected call is a value you handle.
 
 ## function `run`
 
 Evaluates a whole Kex program and returns its result.
 
-The source may declare functions, records and a `main`, exactly as a file would. Anything that goes wrong — a parse error, a call the sandbox does not allow, running past the step limit — comes back as `Error` with a message.
+The source may declare functions, records and a `main`, exactly as a file would. Anything that goes wrong: a parse error, a call the sandbox does not allow, running past the step limit: comes back as `Error` with a message.
 
 
 ```kex
@@ -39,7 +39,7 @@ run(source) : String -> EvaluatorOptions -> Result<Any, String>
 
 Evaluates a single Kex expression and returns its value.
 
-The form to reach for when the input is a formula rather than a program — there is no `main` to write and no declarations to skip past.
+The form to reach for when the input is a formula rather than a program: there is no `main` to write and no declarations to skip past.
 
 
 ```kex
@@ -52,7 +52,7 @@ runExpression(source) : String -> EvaluatorOptions -> Result<Any, String>
 
 What an evaluated program is allowed to reach, and how long it may run.
 
-The defaults are already conservative — pure computation over the common data types, no filesystem, no network, no processes. Narrow `allow` further, or lower the limits, when the source is less trusted still.
+The defaults are already conservative: pure computation over the common data types, no filesystem, no network, no processes. Narrow `allow` further, or lower the limits, when the source is less trusted still.
 
 **Fields**
 

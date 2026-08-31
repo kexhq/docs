@@ -17,9 +17,9 @@ entities:
 
 ## trait `Blankable`
 
-`Blankable` — types that can be asked whether they hold anything meaningful.
+`Blankable`: types that can be asked whether they hold anything meaningful.
 
-A value is blank when it has no meaningful content: `None`, an empty or all-whitespace string, an empty collection, or `false`. The semantics are Rails's, and the point is the same — one question that works across types, so a validation does not need a different test per field.
+A value is blank when it has no meaningful content: `None`, an empty or all-whitespace string, an empty collection, or `false`. The semantics are Rails's, and the point is the same: one question that works across types, so a validation does not need a different test per field.
 
 ```kex
 "".blank?        # => true
@@ -108,7 +108,7 @@ blank? : Bool
 
 #### `blank?`
 
-Returns `true` for `None` and `false` for a `Just` — whatever it wraps.
+Returns `true` for `None` and `false` for a `Just`: whatever it wraps.
 
 Note that `Just("")` is present, not blank: the optional holds a value, even though that value is itself blank.
 

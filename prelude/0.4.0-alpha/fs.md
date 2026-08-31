@@ -13,7 +13,7 @@ entities:
 
 The filesystem: reading and writing files, walking directories, and manipulating paths.
 
-`FS` is not in the prelude — start with `using FS`.
+`FS` is not in the prelude: start with `using FS`.
 
 ```kex
 using FS
@@ -130,7 +130,7 @@ open(path, mode) : FilePath -> ReadWrite -> (FileHandle<CanRead, CanWrite> -> A)
 
 Reads the whole file and decodes it as UTF-8 text.
 
-Answers `Error(ReadFailed(path))` when the file does not exist or cannot be read, and `Error(InvalidUtf8(path, offset))` when the bytes are not valid UTF-8 — so a missing or non-text file is something you handle rather than something that stops the program. Reach for `FS.File.readBytes` when the contents are not text.
+Answers `Error(ReadFailed(path))` when the file does not exist or cannot be read, and `Error(InvalidUtf8(path, offset))` when the bytes are not valid UTF-8, so a missing or non-text file is something you handle rather than something that stops the program. Reach for `FS.File.readBytes` when the contents are not text.
 
 
 ```kex
@@ -166,7 +166,7 @@ writeBytes(path, content) : FilePath -> Binary -> Bool
 
 Writes `content` to `path`, replacing whatever was there.
 
-Creates the file if it does not exist. The containing directory must already exist — see `FS.Directory.create`. Answers `false` when the write fails.
+Creates the file if it does not exist. The containing directory must already exist: see `FS.Directory.create`. Answers `false` when the write fails.
 
 
 ```kex
@@ -188,7 +188,7 @@ append(path, content) : FilePath -> String -> Bool
 
 ## function `exists?`
 
-Returns `true` when something exists at `path` — a file, a directory, or anything else. Use `file?` or `directory?` when the kind matters.
+Returns `true` when something exists at `path`: a file, a directory, or anything else. Use `file?` or `directory?` when the kind matters.
 
 
 ```kex
@@ -198,7 +198,7 @@ exists?(path) : FilePath -> Bool
 
 ## function `file?`
 
-Returns `true` when `path` exists and is a regular file — not a directory.
+Returns `true` when `path` exists and is a regular file: not a directory.
 
 
 ```kex
@@ -240,7 +240,7 @@ copy(src, dst) : FilePath -> FilePath -> Bool
 
 ## function `rename`
 
-Renames — or moves — the file at `src` to `dst`.
+Renames (or moves) the file at `src` to `dst`.
 
 
 ```kex
@@ -254,7 +254,7 @@ Reads the file and returns its lines, without their newlines.
 
 Answers `None` when the file cannot be read. A trailing newline does not produce a final empty line, so the count is the number of lines you would see in an editor.
 
-NOT `lines`: FilePath is an alias for String, so a receiver function named `lines` here is indistinguishable from String's own `lines` at every call site, and merely saying `using FS` made `text.lines` ambiguous. `readLines` also says what it does — it reads the file.
+NOT `lines`: FilePath is an alias for String, so a receiver function named `lines` here is indistinguishable from String's own `lines` at every call site, and merely saying `using FS` made `text.lines` ambiguous. `readLines` also says what it does: it reads the file.
 
 
 ```kex
@@ -266,11 +266,11 @@ readLines(path) : FilePath -> [String]?
 
 Returns a lazy `Feed` of the file's lines, or `None` when it cannot be read.
 
-Unlike `readLines`, the file is read a line at a time off a handle held open for the feed's lifetime, so this is the way to walk a file too large to hold in memory — nothing but the current line is retained.
+Unlike `readLines`, the file is read a line at a time off a handle held open for the feed's lifetime, so this is the way to walk a file too large to hold in memory: nothing but the current line is retained.
 
 A `Feed` rather than a `Stream` because that is what a file honestly is: reading consumes, and there is no rewinding. Taking twice walks forward rather than answering the same lines again. On a file small enough to replay, `toStream` buys that back.
 
-The feed ends at the last line, so asking for more lines than the file has answers just the lines there are — unlike `Stream.Sequence`, which is deliberately infinite.
+The feed ends at the last line, so asking for more lines than the file has answers just the lines there are: unlike `Stream.Sequence`, which is deliberately infinite.
 
 ```kex
 FS.File.feed("two-lines.txt").map { |lines| lines.take(5) }.or([])
@@ -287,7 +287,7 @@ feed(path) : FilePath -> Feed<String>?
 
 Returns the file's size in bytes, or `None` when it cannot be read.
 
-Bytes, not characters — a file of non-ASCII text has more bytes than it has characters.
+Bytes, not characters: a file of non-ASCII text has more bytes than it has characters.
 
 
 ```kex
@@ -301,7 +301,7 @@ Resolves `path` against the process's current directory and returns the absolute
 
 This is the one path operation that is not in `FS.Path`, because it is not lexical: it asks the process where it is.
 
-Path manipulation lives in FS.Path — `basename`, `dirname`, `extension` and `join` used to be here too, but a name cannot sit in both modules: FilePath IS String, so two same-named receiver functions on it are indistinguishable at every call site. `absolute` stays because it is not lexical — it asks the process where it is.
+Path manipulation lives in FS.Path: `basename`, `dirname`, `extension` and `join` used to be here too, but a name cannot sit in both modules: FilePath IS String, so two same-named receiver functions on it are indistinguishable at every call site. `absolute` stays because it is not lexical: it asks the process where it is.
 
 
 ```kex
@@ -313,7 +313,7 @@ absolute(path) : FilePath -> String?
 
 Path arithmetic: joining, splitting, normalising and comparing paths.
 
-Everything here is pure string manipulation with no filesystem access, so the answer is the same whether or not the path exists — which also means these functions can be called from ordinary pure code, unlike `FS.File`. POSIX separators only for now.
+Everything here is pure string manipulation with no filesystem access, so the answer is the same whether or not the path exists, which also means these functions can be called from ordinary pure code, unlike `FS.File`. POSIX separators only for now.
 
 ```kex
 FS.Path.join("src", "main.kex")            # => "src/main.kex"
@@ -331,7 +331,7 @@ The path separator, `"/"`.
 
 Joins two path parts with a single separator and normalises the result.
 
-Repeated separators collapse, so `join("a/", "/b")` is `"a/b"` and not `"a//b"`. An absolute second part does NOT restart the path, the way Ruby's `Pathname#join` would — use that part on its own if that is what you mean.
+Repeated separators collapse, so `join("a/", "/b")` is `"a/b"` and not `"a//b"`. An absolute second part does NOT restart the path, the way Ruby's `Pathname#join` would: use that part on its own if that is what you mean.
 
 
 ```kex
@@ -356,7 +356,7 @@ joinAll(parts) : [FilePath] -> String
 
 Resolves `.` and `..` in a path, lexically.
 
-Because it is lexical it never follows a symlink and never touches the disk. A leading `..` in a RELATIVE path is kept — there is no way to know what it escapes to — while one in an absolute path is dropped, since `/` has no parent.
+Because it is lexical it never follows a symlink and never touches the disk. A leading `..` in a RELATIVE path is kept: there is no way to know what it escapes to, while one in an absolute path is dropped, since `/` has no parent.
 
 
 ```kex
@@ -408,7 +408,7 @@ dirname(path) : FilePath -> String
 
 ## function `basename`
 
-Returns the last segment of the path — the file or directory name.
+Returns the last segment of the path: the file or directory name.
 
 The root itself answers `"/"`, and an empty path answers `"."`.
 
@@ -434,7 +434,7 @@ extension(path) : FilePath -> String
 
 Returns the basename with its extension removed.
 
-A name that IS its extension — `".gitignore"` — keeps it, because it has none to drop.
+A name that IS its extension (`".gitignore"`) keeps it, because it has none to drop.
 
 
 ```kex
@@ -528,7 +528,7 @@ delete(path) : FilePath -> Bool
 
 Removes the directory at `path` and everything inside it, recursively.
 
-This deletes data and cannot be undone — check the path before calling it, particularly when it was computed or came from user input.
+This deletes data and cannot be undone: check the path before calling it, particularly when it was computed or came from user input.
 
 
 ```kex
@@ -538,7 +538,7 @@ deleteAll(path) : FilePath -> Bool
 
 ## function `list`
 
-Lists the names in `path` — both files and directories, one level deep.
+Lists the names in `path`: both files and directories, one level deep.
 
 The results are bare names, not paths; join them with `path` to get something you can open. Answers `None` when the directory cannot be read.
 

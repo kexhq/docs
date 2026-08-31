@@ -94,8 +94,8 @@ data-page="template.html">
 <section class="entity" id="module-template">
 <h2><span class="kind kind-module">module</span> <code>Template</code></h2>
 <p>An ERB-shaped template scanner: template text in, a template AST out.</p>
-<p>Opt-in — nothing here is in scope until <code>using Template</code>.</p>
-<p>This is the scanning stage only (see the Template proposal for the fuller design): it turns template source into a flat list of <code>Node</code>s — plain text, and the four kinds of <code>&lt;% %&gt;</code> region — plus whatever frontmatter tags sit ahead of the body. It does not evaluate anything and does not know Kex syntax; the text inside a hole is kept as-is, for a later stage to parse and lower into real Kex.</p>
+<p>Opt-in: nothing here is in scope until <code>using Template</code>.</p>
+<p>This is the scanning stage only (see the Template proposal for the fuller design): it turns template source into a flat list of <code>Node</code>s: plain text, and the four kinds of <code>&lt;% %&gt;</code> region, plus whatever frontmatter tags sit ahead of the body. It does not evaluate anything and does not know Kex syntax; the text inside a hole is kept as-is, for a later stage to parse and lower into real Kex.</p>
 <pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Template</span>
 
 <span class="tok-keyword">let</span> source <span class="tok-op">=</span> <span class="tok-string">&quot;</span><span class="tok-string">---\nlayout: page\nparams: [name, library: Bool]\n---\nHi &lt;%= name %&gt;!</span><span class="tok-string">&quot;</span>
@@ -114,22 +114,22 @@ parsed<span class="tok-op">.</span><span class="tok-method">nodes</span>        
 <span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">%</span>             a literal `<span class="tok-op">&lt;</span><span class="tok-op">%</span>`<span class="tok-punct">,</span> <span class="tok-keyword">for</span> a template that generates <span class="tok-type">ERB</span><span class="tok-op">-</span>shaped
                 output itself</code></pre>
 <p>## Frontmatter</p>
-<p>A template file may open with a <code>---</code> line, generic <code>key: value</code> tags up to a closing <code>---</code> line, and then the body. This is metadata for whatever reads the template — a title, a layout name, a list of tags — and there is nothing template-specific about it: it is scanned the same generic way whatever key is used.</p>
+<p>A template file may open with a <code>---</code> line, generic <code>key: value</code> tags up to a closing <code>---</code> line, and then the body. This is metadata for whatever reads the template (a title, a layout name, a list of tags) and there is nothing template-specific about it: it is scanned the same generic way whatever key is used.</p>
 <pre class="code"><code><span class="tok-op">-</span><span class="tok-op">-</span><span class="tok-op">-</span>
 title<span class="tok-op">:</span> <span class="tok-type">Release</span> notes
 tags<span class="tok-op">:</span> <span class="tok-punct">[</span>changelog<span class="tok-punct">,</span> public<span class="tok-punct">]</span>
 <span class="tok-op">-</span><span class="tok-op">-</span><span class="tok-op">-</span>
 <span class="tok-comment"># &lt;%= title %&gt;</span></code></pre>
-<p>A template's parameters, when a later stage needs them declared rather than inferred, are just another frontmatter key — conventionally <code>params</code>, a list of names each with an optional <code>: Type</code>:</p>
+<p>A template's parameters, when a later stage needs them declared rather than inferred, are just another frontmatter key: conventionally <code>params</code>, a list of names each with an optional <code>: Type</code>:</p>
 <pre class="code"><code><span class="tok-op">-</span><span class="tok-op">-</span><span class="tok-op">-</span>
 params<span class="tok-op">:</span> <span class="tok-punct">[</span>name<span class="tok-punct">,</span> library<span class="tok-op">:</span> <span class="tok-type">Bool</span><span class="tok-punct">,</span> dependencies<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">Dependency</span><span class="tok-punct">]</span><span class="tok-punct">]</span>
 <span class="tok-op">-</span><span class="tok-op">-</span><span class="tok-op">-</span>
 <span class="tok-comment"># &lt;%= name %&gt;</span></code></pre>
-<p>Nothing in the scanner treats <code>params</code> specially while scanning — it is metadata like any other key, a <code>[a, b, c]</code> list same as <code>tags</code> above. <code>Parsed#parameters</code> is a convenience reader for it: it splits each entry on its first colon into a <code>TemplateParam { name, type }</code> (<code>type</code> is <code>&quot;&quot;</code> for a bare name), so a caller does not need to know the key name, match on <code>Tag</code> itself, or split each entry by hand. <code>type</code> is raw text, same as everywhere else in this module — turning <code>[Dependency]</code> into a real, resolved Kex type is later work, not this module's.</p>
+<p>Nothing in the scanner treats <code>params</code> specially while scanning: it is metadata like any other key, a <code>[a, b, c]</code> list same as <code>tags</code> above. <code>Parsed#parameters</code> is a convenience reader for it: it splits each entry on its first colon into a <code>TemplateParam { name, type }</code> (<code>type</code> is <code>&quot;&quot;</code> for a bare name), so a caller does not need to know the key name, match on <code>Tag</code> itself, or split each entry by hand. <code>type</code> is raw text, same as everywhere else in this module: turning <code>[Dependency]</code> into a real, resolved Kex type is later work, not this module's.</p>
 <section class="entity" id="type-node">
 <h2><span class="kind kind-type">type</span> <code>Node</code></h2>
 <p>One piece of a scanned template.</p>
-<p>Hole and control content is carried as raw text — the Kex source that was between the delimiters, trimmed of surrounding whitespace. Turning that text into real, type-checked Kex expressions is later work; a <code>Node</code> only records what KIND of region it is and what text it held.</p>
+<p>Hole and control content is carried as raw text: the Kex source that was between the delimiters, trimmed of surrounding whitespace. Turning that text into real, type-checked Kex expressions is later work; a <code>Node</code> only records what KIND of region it is and what text it held.</p>
 <h3>Variants</h3>
 <ul class="variants">
 <li><code>Text(String)</code></li>
@@ -160,7 +160,7 @@ params<span class="tok-op">:</span> <span class="tok-punct">[</span>name<span cl
 </section>
 <section class="entity" id="record-templateparam">
 <h2><span class="kind kind-record">record</span> <code>TemplateParam</code></h2>
-<p>One entry from a <code>params: [...]</code> frontmatter list: a name, and its optional <code>: Type</code> annotation. <code>type</code> is raw text — <code>&quot;&quot;</code> for a bare name, never a resolved Kex type — the same way a frontmatter <code>Tag</code> is text and not a parsed value.</p>
+<p>One entry from a <code>params: [...]</code> frontmatter list: a name, and its optional <code>: Type</code> annotation. <code>type</code> is raw text: <code>&quot;&quot;</code> for a bare name, never a resolved Kex type: the same way a frontmatter <code>Tag</code> is text and not a parsed value.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
@@ -169,7 +169,7 @@ params<span class="tok-op">:</span> <span class="tok-punct">[</span>name<span cl
 </section>
 <section class="entity" id="record-tagscan">
 <h2><span class="kind kind-record">record</span> <code>TagScan</code></h2>
-<p>One scanned <code>&lt;% ... %&gt;</code> region: its node, and the whitespace trims its delimiters asked for. Not part of the public API — internal to scanning — but declared at module scope rather than inside <code>private do</code>: nested there, this record's fields lose their names under BEAM codegen and the value round-trips as an untagged tuple (<code>Undefined method: leftTrim for Tuple</code>), even though the same code is fine on the tree-walking interpreter.</p>
+<p>One scanned <code>&lt;% ... %&gt;</code> region: its node, and the whitespace trims its delimiters asked for. It is internal to scanning, not part of the public API, but declared at module scope rather than inside <code>private do</code>. Nested there, this record's fields lose their names under BEAM codegen and the value round-trips as an untagged tuple (<code>Undefined method: leftTrim for Tuple</code>), even though the same code is fine on the tree-walking interpreter.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>node</code></dt><dd><code>Node</code></dd></div>
@@ -209,7 +209,7 @@ params<span class="tok-op">:</span> <span class="tok-punct">[</span>name<span cl
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T19:07:27.076569085Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-31T00:21:50.485524575Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

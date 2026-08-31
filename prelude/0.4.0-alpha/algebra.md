@@ -19,11 +19,11 @@ entities:
 
 ## type `Ordering`
 
-Algebraic structures: ordering, and combining values associatively.
+Algebraic structures, ordering, and combining values associatively.
 
 Kex traits do not inherit from one another, so concrete types explicitly implement every structure whose laws they satisfy.
 
-Two things live here that you will meet in everyday code. `Ordering` is what a comparison answers, and it composes — which is how a multi-key sort is written without nested `if`s:
+The two most important things that you will meet in everyday code. `Ordering` is what a comparison answers, and it composes. This is how a multi-key sort is written without nested `if`s:
 
 ```kex
 a.age.compare(b.age).thenBy { a.score.compare(b.score) }
@@ -39,7 +39,7 @@ a.age.compare(b.age).thenBy { a.score.compare(b.score) }
 
 The result of a comparison: `Less`, `Equal` or `Greater`.
 
-Declared here rather than only inside the interpreter so that `Ordering`, `Less`, `Equal` and `Greater` reach the semantic layer the same way every other stdlib type does — through the collected interfaces — instead of existing solely as native environment bindings the type checker and name resolver cannot see.
+Declared here rather than only inside the interpreter so that `Ordering`, `Less`, `Equal` and `Greater` reach the semantic layer the same way every other stdlib type does (through the collected interfaces) instead of existing solely as native environment bindings the type checker and name resolver cannot see.
 
 
 
@@ -60,9 +60,9 @@ Implemented by `Number`, which covers both `Integer` and `Float`.
 
 Compares this value with `other` and answers `Less`, `Equal` or `Greater`.
 
-`==` stays independent of this — a type may be equatable without being ordered.
+`==` stays independent of this: a type may be equatable without being ordered.
 
-A total order: `compare` answers Less, Equal or Greater. `==` stays independent — a type may be Equatable without being ordered.
+A total order: `compare` answers Less, Equal or Greater. `==` stays independent: a type may be Equatable without being ordered.
 
 ```kex
 compare : This -> Ordering
@@ -163,10 +163,10 @@ parts.reduce(String.identity) { |acc, s| acc.combine(s) }
 
 Combines this value with itself `n` times.
 
-Repeating zero times gives the identity — `""` for a string, `0` for an integer, `[]` for a list. A negative count is invalid and ends the program.
+Repeating zero times gives the identity: `""` for a string, `0` for an integer, `[]` for a list. A negative count is invalid and ends the program.
 
 ```kex
-repeat(n)
+repeat(0)
 ```
 
 **Returns**: `This` — the repeated value
@@ -231,6 +231,8 @@ inverse : This
 
 ## make `Integer` implements [Monoid](#trait-monoid), [Group](#trait-group)
 
+Implements `Monoid`, `Group` over `Integer` for addition.
+
 
 #### `combine`
 
@@ -250,6 +252,8 @@ combine(other)
 
 ## make `String` implements [Monoid](#trait-monoid)
 
+Implements `Monoid` over `String` for concatenation.
+
 
 #### `combine`
 
@@ -268,6 +272,8 @@ combine(other)
 ```
 
 ## make `[A]` implements [Monoid](#trait-monoid)
+
+Implements `Monoid` over `List<A>` for concatenation.
 
 
 #### `combine`
@@ -306,7 +312,7 @@ a.name.compare(b.name).combine(a.age.compare(b.age))
 
 Returns the first decisive ordering: this one if it is not `Equal`, otherwise `other`.
 
-This is what makes multi-key comparison compose. Note that `other` is evaluated eagerly, so the later comparison runs even when the earlier one has already decided — use `thenBy` when that matters.
+This is what makes multi-key comparison compose. Note that `other` is evaluated eagerly, so the later comparison runs even when the earlier one has already decided: use `thenBy` when that matters.
 
 ```kex
 combine(@Equal, other)

@@ -14,7 +14,7 @@ entities:
 
 ## make `String` implements [Enumerable](enumerable.md#trait-enumerable), [Foldable](enumerable.md#trait-foldable)
 
-Text. A `String` is a sequence of Unicode characters, immutable like every other Kex value — every method here answers with a new string rather than changing the receiver.
+Text. A `String` is a sequence of Unicode characters, immutable like every other Kex value: every method here answers with a new string rather than changing the receiver.
 
 A `String` is its own type, not a list of characters. It is `Enumerable`, so `each`, `reduce`, `find` and friends walk it one `Char` at a time, and the sequence operations that could reasonably answer in either currency pick the useful one: `take`, `drop` and `sort` hand back a `String`, while `first` and `last` hand back a `Char`. Use `chars` to cross over to a real list.
 
@@ -179,7 +179,7 @@ flag.startsWith?("--") then flag.drop(2) else flag   # => "verbose"
 
 #### `reject`
 
-Returns the characters that do NOT satisfy `pred` — the complement of `filter`.
+Returns the characters that do NOT satisfy `pred`: the complement of `filter`.
 
 ```kex
 reject(pred) : (Char -> Bool) -> String
@@ -367,7 +367,7 @@ _Empty parts at the edges are kept_
 
 Indents every line but the first by `prefix`.
 
-This is what splicing a multi-line value into an indented `${...}` hole needs: the hole's own indentation already covers line one, and the rest have to catch up. Blank lines stay blank, and — through `lines` — a single trailing newline is dropped, so a block does not push a stray empty line into its slot.
+This is what splicing a multi-line value into an indented `${...}` hole needs: the hole's own indentation already covers line one, and the rest have to catch up. Blank lines stay blank, and (through `lines`) a single trailing newline is dropped, so a block does not push a stray empty line into its slot.
 
 ```kex
 indentRest(prefix) : String -> String
@@ -417,7 +417,7 @@ _Normalising a path separator_
 
 Replaces every key of `replacements` with its value, in one pass over the map.
 
-The keys are the placeholders exactly as written — no syntax is imposed and nothing is reserved — so `$NAME$`, `__NAME__`, `{{name}}` and `%name%` are all equally valid, and a template needs no escaping to be a template. `$NAME$` is the convention to reach for when there is no reason to prefer another.
+The keys are the placeholders exactly as written: no syntax is imposed and nothing is reserved, so `$NAME$`, `__NAME__`, `{{name}}` and `%name%` are all equally valid, and a template needs no escaping to be a template. `$NAME$` is the convention to reach for when there is no reason to prefer another.
 
 Note that a placeholder is NOT `${name}`: that is interpolation, which the compiler resolves before this ever sees the string.
 
@@ -518,7 +518,7 @@ paths.filter { |p| p.endsWith?(".kex") }
 
 A single Unicode character.
 
-Character literals are written with single quotes — `'a'` — and are a different type from the one-character string `"a"`. The classification methods (`digit?`, `alpha?`, `space?` and the rest) are what most character code needs; `codepoint` and `String.fromCodepoint` are the escape hatch to raw Unicode values.
+Character literals are written with single quotes (`'a'`) and are a different type from the one-character string `"a"`. The classification methods (`digit?`, `alpha?`, `space?` and the rest) are what most character code needs; `codepoint` and `String.fromCodepoint` are the escape hatch to raw Unicode values.
 
 ```kex
 "hello world".chars.count(~alpha?)   # => 10
@@ -551,7 +551,7 @@ let hex?(c: Char) -> Bool = c.digit? || c.lowerCase.in?('a'..'f')
 
 ## module `String`
 
-Constructors for `String` values that are built from something other than text — a Unicode codepoint, or raw UTF-8 bytes.
+Constructors for `String` values that are built from something other than text: a Unicode codepoint, or raw UTF-8 bytes.
 
 ## function `fromCodepoint`
 
@@ -567,7 +567,7 @@ fromCodepoint(value) : Integer -> String?
 
 ## function `fromBytes`
 
-Rebuilds a string from its UTF-8 bytes — the inverse of `bytes`.
+Rebuilds a string from its UTF-8 bytes: the inverse of `bytes`.
 
 A `String` is TEXT, so bytes outside 0..255 or a malformed encoding answer `None` rather than a string that would decode to replacement characters. That makes it a decoding step you can check, not a lossy cast.
 
@@ -579,7 +579,7 @@ fromBytes(values) : [Byte] -> String?
 
 ## make `Tuple`
 
-A fixed-size group of values, written `(a, b)`. Unlike a list, a tuple's size and the type of each position are part of its type, so the `List` methods do not apply to it — destructure it, match on it, or convert it with `items`.
+A fixed-size group of values, written `(a, b)`. Unlike a list, a tuple's size and the type of each position are part of its type, so the `List` methods do not apply to it: destructure it, match on it, or convert it with `items`.
 
 ```kex
 let (name, age) = ("Ada", 36)

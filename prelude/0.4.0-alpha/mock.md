@@ -14,13 +14,13 @@ entities:
 
 ## type `Reader`
 
-Mock — deterministic stand-ins for the world outside the program: the filesystem, environment, and console. Networking mocks live under Mock.Net.
+Mock: deterministic stand-ins for the world outside the program: the filesystem, environment, and console. Networking mocks live under Mock.Net.
 
-These are STATEFUL: `Mock.FS.File(path, content)` writes into a store the real `FS.File` then reads back, so a test can write and read again, and `clear()` undoes it. That state is global and lives until cleared, which is what makes hook ordering and write/read round trips testable — and also what makes two tests able to interfere.
+These are STATEFUL: `Mock.FS.File(path, content)` writes into a store the real `FS.File` then reads back, so a test can write and read again, and `clear()` undoes it. That state is global and lives until cleared, which is what makes hook ordering and write/read round trips testable, and also what makes two tests able to interfere.
 
 When a test only needs canned ANSWERS, replacing the capability is the better tool: `with FS.File = MyFake { ... } do ... end` swaps the implementation for one lexical region, holds no global state, needs no clearing, and cannot leak into another test. See spec/capability_stdlib_fs.kex for the shape of a stand-in (kexhq/kex#143).
 
-Opt-in on purpose (issue #144): this module used to ride along inside a prelude networking file, so importing the prelude made every Mock.* reachable from every program without anyone asking for it. Reachable is still not callable — the runtime denies the mock intrinsics outside spec files, the REPL, and --allow-mocks — but it should also not be in scope by accident. A qualified `Mock.FS.File(...)` auto-loads this file like any other opt-in module.
+Opt-in on purpose (issue #144): this module used to ride along inside a prelude networking file, so importing the prelude made every Mock.* reachable from every program without anyone asking for it. Reachable is still not callable: the runtime denies the mock intrinsics outside spec files, the REPL, and --allow-mocks, but it should also not be in scope by accident. A qualified `Mock.FS.File(...)` auto-loads this file like any other opt-in module.
 
 All Mock.* sub-modules live in a single `module Mock` block so merged compilation units never see duplicate top-level `Mock` modules. A stand-in's read hook: a path in, its content or `None` out.
 
@@ -42,7 +42,7 @@ An environment stand-in's lookup hook: a name in, its value or `None` out.
 
 ## type `Writer`
 
-An environment stand-in's WRITE hook: the name and the value a program set. A `Mock.Env` is an immutable record, so a write cannot land in its `vars` — and it must not reach the real environment, or a test would leak a variable into the next one and into anything the suite starts. The hook is how a test observes the write instead: record it, assert on it, or ignore it, which is what `None` does.
+An environment stand-in's WRITE hook: the name and the value a program set. A `Mock.Env` is an immutable record, so a write cannot land in its `vars`, and it must not reach the real environment, or a test would leak a variable into the next one and into anything the suite starts. The hook is how a test observes the write instead: record it, assert on it, or ignore it, which is what `None` does.
 
 
 
@@ -62,7 +62,7 @@ with FS.File = Mock.Files { files: {"kex.toml": "name = \"demo\""} } do
 end
 ```
 
-`onRead` takes over when a test needs an ANSWER rather than a fixture — content derived from the path, a failure on the third call, a record of what was asked for. It is consulted first and its `None` means "no such file", so a callback can model absence too.
+`onRead` takes over when a test needs an ANSWER rather than a fixture: content derived from the path, a failure on the third call, a record of what was asked for. It is consulted first and its `None` means "no such file", so a callback can model absence too.
 
 **Fields**
 
@@ -71,7 +71,7 @@ end
 
 ## record `Env`
 
-A stand-in for the `ENV` capability. A name simply left out of `vars` reads as unset, which is the whole reason `Mock.ENV.unset` exists — absence is an answer programs act on. `onGet` answers instead of the map when a test wants a rule rather than a fixture.
+A stand-in for the `ENV` capability. A name simply left out of `vars` reads as unset, which is the whole reason `Mock.ENV.unset` exists: absence is an answer programs act on. `onGet` answers instead of the map when a test wants a rule rather than a fixture.
 
 ```kex
 with ENV = Mock.Env { vars: {"HOME": "/fake"} } do
@@ -89,7 +89,7 @@ end
 
 A stateful stand-in for the filesystem: files a test declares, that the real `FS.File` then reads back.
 
-The store is global and lives until `clear`, which is what makes a write followed by a read testable — and what makes two tests able to interfere. Clear it in an `after` hook.
+The store is global and lives until `clear`, which is what makes a write followed by a read testable, and what makes two tests able to interfere. Clear it in an `after` hook.
 
 ```kex
 describe "the config loader" do
@@ -131,7 +131,7 @@ Directory(path) : FS.FilePath -> Void
 
 Empties the store, so nothing declared so far is visible any more.
 
-Call it in an `after` hook — the store is global, and what one test leaves behind the next one sees.
+Call it in an `after` hook: the store is global, and what one test leaves behind the next one sees.
 
 
 ```kex
@@ -143,7 +143,7 @@ clear() : Void
 
 Declares the whole fixture in one call.
 
-The same shape `Mock.Files { files: ... }` takes — one line instead of one per file (kexhq/kex#143).
+The same shape `Mock.Files { files: ... }` takes: one line instead of one per file (kexhq/kex#143).
 
 
 ```kex
@@ -167,7 +167,7 @@ onRead(reader) : Reader -> Void
 
 Overlays the process environment, so a test can say what `ENV` holds instead of depending on how it was launched.
 
-The overlay is global and lives until `clear` — clear it in an `after` hook.
+The overlay is global and lives until `clear`: clear it in an `after` hook.
 
 ```kex
 Mock.ENV.vars({ "HOME": "/fake", "LOG_LEVEL": "debug" })
@@ -211,7 +211,7 @@ clear() : Void
 
 Declares the whole overlay in one call.
 
-The same shape `Mock.Env { vars: ... }` takes (kexhq/kex#143). There is no `onGet` here: global `ENV` is a materialised Map, so there is nothing for a callback to intercept — use `with ENV = Mock.Env { onGet: ... }` when a rule is what you want.
+The same shape `Mock.Env { vars: ... }` takes (kexhq/kex#143). There is no `onGet` here: global `ENV` is a materialised Map, so there is nothing for a callback to intercept: use `with ENV = Mock.Env { onGet: ... }` when a rule is what you want.
 
 
 ```kex
@@ -281,7 +281,7 @@ clear()
 
 Queues the lines `IO.getLine` will return, in order.
 
-Takes a list, or up to four lines as separate arguments. Once they run out, `IO.getLine` answers `None` — end of input, exactly as a closed stdin would.
+Takes a list, or up to four lines as separate arguments. Once they run out, `IO.getLine` answers `None`: end of input, exactly as a closed stdin would.
 
 
 ```kex
@@ -453,7 +453,7 @@ entries()
 
 #### `set`
 
-A write goes to `onSet` or nowhere. It must NOT reach the real environment: a substituted ENV is the whole point of the mock, and a test that set a variable would otherwise leak it into the next one and into every process the suite starts. `vars` cannot take it either — a record is immutable — so a test that cares about writes supplies the hook, and one that does not gets a write that goes quietly nowhere.
+A write goes to `onSet` or nowhere. It must NOT reach the real environment: a substituted ENV is the whole point of the mock, and a test that set a variable would otherwise leak it into the next one and into every process the suite starts. `vars` cannot take it either: a record is immutable, so a test that cares about writes supplies the hook, and one that does not gets a write that goes quietly nowhere.
 
 ```kex
 set(name, value)
@@ -471,7 +471,11 @@ Scriptable networking values are namespaced so importing Mock does not recreate 
 
 ## module `Mock.Net.HTTP`
 
+Canned HTTP transport state for networking specifications.
+
 ## record `Transport`
+
+Responses returned in order by a scripted transport.
 
 **Fields**
 
@@ -479,7 +483,11 @@ Scriptable networking values are namespaced so importing Mock does not recreate 
 
 ## module `Mock.Net.DNS`
 
+Canned DNS resolver state for networking specifications.
+
 ## record `ResolverScript`
+
+Hostname-to-address answers supplied without touching the network.
 
 **Fields**
 
@@ -487,7 +495,11 @@ Scriptable networking values are namespaced so importing Mock does not recreate 
 
 ## module `Mock.Net.Socket`
 
+Canned byte-stream state for socket specifications.
+
 ## record `Script`
+
+Binary chunks delivered in order as incoming socket data.
 
 **Fields**
 
@@ -495,7 +507,11 @@ Scriptable networking values are namespaced so importing Mock does not recreate 
 
 ## module `Mock.Net.WebSocket`
 
+Canned message state for WebSocket specifications.
+
 ## record `Script`
+
+High-level messages delivered in order by a scripted connection.
 
 **Fields**
 

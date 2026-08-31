@@ -19,11 +19,11 @@ entities:
 
 ## type `Ordering`
 
-Algebraic structures: ordering, and combining values associatively.
+Algebraic structures, ordering, and combining values associatively.
 
 Kex traits do not inherit from one another, so concrete types explicitly implement every structure whose laws they satisfy.
 
-Two things live here that you will meet in everyday code. `Ordering` is what a comparison answers, and it composes — which is how a multi-key sort is written without nested `if`s:
+The two most important things that you will meet in everyday code. `Ordering` is what a comparison answers, and it composes. This is how a multi-key sort is written without nested `if`s:
 
 ```kex
 a.age.compare(b.age).thenBy { a.score.compare(b.score) }
@@ -39,7 +39,7 @@ a.age.compare(b.age).thenBy { a.score.compare(b.score) }
 
 The result of a comparison: `Less`, `Equal` or `Greater`.
 
-Declared here rather than only inside the interpreter so that `Ordering`, `Less`, `Equal` and `Greater` reach the semantic layer the same way every other stdlib type does — through the collected interfaces — instead of existing solely as native environment bindings the type checker and name resolver cannot see.
+Declared here rather than only inside the interpreter so that `Ordering`, `Less`, `Equal` and `Greater` reach the semantic layer the same way every other stdlib type does (through the collected interfaces) instead of existing solely as native environment bindings the type checker and name resolver cannot see.
 
 
 
@@ -60,9 +60,9 @@ Implemented by `Number`, which covers both `Integer` and `Float`.
 
 Compares this value with `other` and answers `Less`, `Equal` or `Greater`.
 
-`==` stays independent of this — a type may be equatable without being ordered.
+`==` stays independent of this: a type may be equatable without being ordered.
 
-A total order: `compare` answers Less, Equal or Greater. `==` stays independent — a type may be Equatable without being ordered.
+A total order: `compare` answers Less, Equal or Greater. `==` stays independent: a type may be Equatable without being ordered.
 
 ```kex
 compare : This -> Ordering
@@ -163,10 +163,10 @@ parts.reduce(String.identity) { |acc, s| acc.combine(s) }
 
 Combines this value with itself `n` times.
 
-Repeating zero times gives the identity — `""` for a string, `0` for an integer, `[]` for a list. A negative count is invalid and ends the program.
+Repeating zero times gives the identity: `""` for a string, `0` for an integer, `[]` for a list. A negative count is invalid and ends the program.
 
 ```kex
-repeat(n)
+repeat(0)
 ```
 
 **Returns**: `This` — the repeated value
@@ -231,6 +231,8 @@ inverse : This
 
 ## make `Integer` implements [Monoid](#trait-monoid), [Group](#trait-group)
 
+Implements `Monoid`, `Group` over `Integer` for addition.
+
 
 #### `combine`
 
@@ -250,6 +252,8 @@ combine(other)
 
 ## make `String` implements [Monoid](#trait-monoid)
 
+Implements `Monoid` over `String` for concatenation.
+
 
 #### `combine`
 
@@ -268,6 +272,8 @@ combine(other)
 ```
 
 ## make `[A]` implements [Monoid](#trait-monoid)
+
+Implements `Monoid` over `List<A>` for concatenation.
 
 
 #### `combine`
@@ -306,7 +312,7 @@ a.name.compare(b.name).combine(a.age.compare(b.age))
 
 Returns the first decisive ordering: this one if it is not `Equal`, otherwise `other`.
 
-This is what makes multi-key comparison compose. Note that `other` is evaluated eagerly, so the later comparison runs even when the earlier one has already decided — use `thenBy` when that matters.
+This is what makes multi-key comparison compose. Note that `other` is evaluated eagerly, so the later comparison runs even when the earlier one has already decided: use `thenBy` when that matters.
 
 ```kex
 combine(@Equal, other)
@@ -393,9 +399,9 @@ entities:
 
 ## type `Binary`
 
-An opaque, immutable sequence of bytes. Binary never implicitly becomes text.
+An opaque, immutable sequence of bytes. A `Binary` never implicitly becomes text.
 
-`[Byte]` is the materialized list of bytes; `Binary` is the storage form. A file, an HTTP body, or a digest is a `Binary` — on the BEAM it is a native binary, so slicing it shares storage instead of copying, and none of the operations here ever walks a character list.
+`[Byte]` is the materialized list of bytes, while `Binary` is the storage form. A file, an HTTP body, or a digest is a `Binary`. On the BEAM it is a native binary, so slicing shares storage instead of copying. None of the operations here walks a character list.
 
 ```kex
 let data = Binary.fromHex("00686900").try
@@ -405,11 +411,11 @@ data.take(2).hex       # => "0068"
 data.showValue         # => "#Binary<4 bytes>"
 ```
 
-The type is opaque on purpose: there is no field to reach through, so text operations cannot be run on bytes by accident. Crossing the boundary is always explicit, in both directions, and both directions can fail — text is only some of the byte sequences there are:
+The type is opaque on purpose: there is no field to reach through, so text operations cannot be run on bytes by accident. Conversions are always explicit in both directions, and both directions can fail. Runtime conversions through `to` always return an `Optional<T>`:
 
 ```kex
-"héllo".to(Binary)               # => Just(#Binary<6 bytes>)
-Binary.fromBytes([255]).to(String)   # => None
+"árvíz".to(Binary)                  #  => Just(#Binary<7 bytes>) : Binary?
+Binary.fromBytes([255]).to(String)  # => None
 ```
 
 `Showable` and `Inspectable` deliberately render the length alone. Neither ever decodes or interpolates the payload, so printing a binary cannot leak its contents or fail on bytes that are not text. Use `hex`, `base64`, or `to(String)` when you actually want to see it.
@@ -422,7 +428,7 @@ Binary.fromBytes([255]).to(String)   # => None
 
 The binary holding no bytes.
 
-The same value `Binary.fromBytes([])` builds, under the name the rest of the library uses for a neutral starting value (`Headers.empty`).
+Backed by `Binary.fromBytes([])`, this is the natural starting value this library uses, just like (`Headers.empty`).
 
 
 
@@ -545,7 +551,7 @@ Binary.fromBytes([104]) + Binary.fromBytes([105])   # => #Binary<2 bytes>
 
 #### `inspectValue`
 
-The length-only rendering — never the payload. The same as `showValue`.
+The length-only rendering: never the payload. The same as `showValue`.
 
 ```kex
 inspectValue(_)
@@ -555,10 +561,25 @@ inspectValue(_)
 
 #### `to`
 
-Binary's String conversion decodes its payload; it must not inherit the Showable fallback, which would convert the safe length-only rendering.
+Decodes the payload as UTF-8, or answers `None` when the bytes are not valid text.
+
+This deliberately differs from `showValue`, which reveals only the byte count. Converting asks to inspect the actual payload and therefore makes the possibility of invalid text explicit.
 
 ```kex
 to(String)
+```
+
+**Returns**: `String?` — the decoded text, or `None` for invalid UTF-8
+
+**Examples**
+
+_Decoding a text response while handling a binary one_
+
+```kex
+match response.body.to(String) do
+  Just(text) => IO.printLine(text)
+  None       => IO.printLine("received ${response.body.length} bytes")
+end
 ```
 
 
@@ -587,7 +608,7 @@ Bits.test?(0b1010, 1)     # => true
 
 Useful for packing flags into one number, reading a binary format, or working with a protocol that describes its fields in bits.
 
-Integers are arbitrary precision, and a negative one behaves as if it were written in infinite-precision two's complement — so `Bits.not(0)` is `-1` and `Bits.and(-1, 255)` is `255`, with no word size to overflow. Shifts and bit indices count from bit 0 (the least significant bit).
+Integers are arbitrary precision, and a negative one behaves as if it were written in infinite-precision two's complement, so `Bits.not(0)` is `-1` and `Bits.and(-1, 255)` is `255`, with no word size to overflow. Shifts and bit indices count from bit 0 (the least significant bit).
 
 ## function `and`
 
@@ -641,7 +662,7 @@ shiftLeft(n, by) : Integer -> Integer -> Integer
 
 ## function `shiftRight`
 
-Shifts `n` right by `by` bits, propagating the sign — the result of shifting a negative number stays negative. Raises if `by` is negative.
+Shifts `n` right by `by` bits, propagating the sign: the result of shifting a negative number stays negative. Raises if `by` is negative.
 
 
 ```kex
@@ -731,9 +752,9 @@ entities:
 
 ## trait `Blankable`
 
-`Blankable` — types that can be asked whether they hold anything meaningful.
+`Blankable`: types that can be asked whether they hold anything meaningful.
 
-A value is blank when it has no meaningful content: `None`, an empty or all-whitespace string, an empty collection, or `false`. The semantics are Rails's, and the point is the same — one question that works across types, so a validation does not need a different test per field.
+A value is blank when it has no meaningful content: `None`, an empty or all-whitespace string, an empty collection, or `false`. The semantics are Rails's, and the point is the same: one question that works across types, so a validation does not need a different test per field.
 
 ```kex
 "".blank?        # => true
@@ -822,7 +843,7 @@ blank? : Bool
 
 #### `blank?`
 
-Returns `true` for `None` and `false` for a `Just` — whatever it wraps.
+Returns `true` for `None` and `false` for a `Just`: whatever it wraps.
 
 Note that `Just("")` is present, not blank: the optional holds a value, even though that value is itself blank.
 
@@ -885,12 +906,7 @@ entities:
 
 ANSI terminal styling: colors, text attributes, and cursor control.
 
-Every constant here becomes an empty string when Kex is started with `--no-colors`, or when output is not going to a terminal. That is the point of the design — you can splice them into a string unconditionally and the result is plain text where color is unwanted, with no branching at the call site.
-
-```kex
-IO.printLine("${Console.GREEN}ok${Console.RESET}")
-IO.printLine(Console.colorize("failed", Console.RED))
-```
+Every constant here becomes an empty string when Kex is started with `--no-colors`, or when output is not going to a terminal. You can splice them into a string unconditionally.
 
 `colorize` is usually what you want, since it applies the reset for you.
 
@@ -938,7 +954,7 @@ Swaps the foreground and background colors of following text.
 
 ## constant `HIDDEN`
 
-Hides following text — it occupies space but is not drawn.
+Hides following text: it occupies space but is not drawn.
 
 
 
@@ -968,25 +984,25 @@ Yellow. Conventionally: warnings.
 
 ## constant `BLUE`
 
-Blue.
+Blue. Useful for informational labels and links.
 
 
 
 ## constant `MAGENTA`
 
-Magenta.
+Magenta. Useful for highlighting a category distinct from status colors.
 
 
 
 ## constant `CYAN`
 
-Cyan.
+Cyan. Useful for identifiers, paths, and other values inside prose.
 
 
 
 ## constant `WHITE`
 
-White.
+White. Useful for primary text on a dark terminal.
 
 
 
@@ -998,7 +1014,7 @@ Gray. Conventionally: de-emphasised detail, like `DIM` but as a color.
 
 ## constant `PURPLE`
 
-Purple.
+Purple. An alternative accent when magenta is already in use.
 
 
 
@@ -1006,9 +1022,7 @@ Purple.
 
 Erases the screen and moves the cursor to the top-left corner.
 
-Use it to start a fresh frame. When you are redrawing repeatedly, `HOME` gives a smoother result — see below.
-
-Cursor and screen control, empty under --no-colors like the styles above. CLEAR erases the screen and homes the cursor; HOME only moves the cursor, so a redraw paints over the previous frame without a blank flash between them; CLEARLINE erases the current line and returns to its start.
+Use it to start a fresh frame. When you are redrawing repeatedly, `HOME` gives a smoother result: see below.
 
 
 
@@ -1044,7 +1058,7 @@ colorize(text, color) : String -> String -> String
 
 Returns `true` when terminal styling is on for this process.
 
-It is `false` under `--no-colors` and when output is redirected. You rarely need to check it — the constants already collapse to `""` — but it is the right test when the alternative is a different layout rather than a different color.
+It is `false` under `--no-colors` and when output is redirected. You rarely need to check it (the constants already collapse to `""`) but it is the right test when the alternative is a different layout rather than a different color.
 
 
 
@@ -1066,14 +1080,14 @@ entities:
 
 Cryptographic content digests.
 
-Digests are returned as lowercase hex strings, so a Kex program never has to handle backend-specific binary values — they compare with `==`, print directly, and go into a map key unchanged.
+Digests are returned as lowercase hex strings, so a Kex program never has to handle backend-specific binary values: they compare with `==`, print directly, and go into a map key unchanged.
 
 ```kex
 Digest.sha256("hello")
 # => "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
 ```
 
-SHA-256 is a content fingerprint: use it to tell whether two things are the same, to key a cache, or to check that a download arrived intact. It is not a password hash — a purpose-built password KDF is what that needs.
+SHA-256 is a content fingerprint: use it to tell whether two things are the same, to key a cache, or to check that a download arrived intact. It is not a password hash: a purpose-built password KDF is what that needs.
 
 ## function `sha256`
 
@@ -1117,7 +1131,7 @@ entities:
 
 Traversal operations that every foldable collection gets for free.
 
-A type becomes `Foldable` by implementing one method, `reduce`; the rest — `each`, `all?`, `any?`, `find`, `count` — are derived from it. `List`, `String`, `Map`, `Range` and both flavours of `Set` all implement it, so these methods read the same whatever you point them at.
+A type becomes `Foldable` by implementing one method, `reduce`; the rest: `each`, `all?`, `any?`, `find`, `count`: are derived from it. `List`, `String`, `Map`, `Range` and both flavours of `Set` all implement it, so these methods read the same whatever you point them at.
 
 ```kex
 [1, 2, 3].all? { |n| n > 0 }        # => true
@@ -1148,7 +1162,7 @@ reduce : A -> (A -> T -> A) -> A
 
 Calls `f` with each item, for its side effects.
 
-The loop of last resort: when what you want is a new collection rather than an effect, `map` or `filter` says so more clearly.
+The loop of last resort, when what you want is a new collection rather than an effect, `map` or `filter` says so more clearly.
 
 ```kex
 each(f)
@@ -1286,7 +1300,7 @@ text.lines.count { |line| line.trim.startsWith?("#") }
 
 Collection-producing operations that every foldable collection gets for free.
 
-Like `Foldable`, a type joins by implementing `reduce` alone. The defaults here answer with a list, because the block may return anything at all; a type that can do better overrides them — `Map.filter` gives back a map, `Set.map` gives back a set, `String.filter` gives back a string.
+Like `Foldable`, a type joins by implementing `reduce` alone. The defaults here answer with a list, because the block may return anything at all; a type that can do better overrides them: `Map.filter` gives back a map, `Set.map` gives back a set, `String.filter` gives back a string.
 
 ```kex
 [1, 2, 3].map { |n| n * 2 }              # => [2, 4, 6]
@@ -1339,7 +1353,7 @@ users.map { |u| u.email }
 
 Applies `f` to each item and its 0-based position, and collects the results into a list.
 
-The index is the LAST block parameter — see `eachIndexed`.
+The index is the LAST block parameter: see `eachIndexed`.
 
 ```kex
 mapIndexed(f)
@@ -1383,7 +1397,7 @@ text.lines.filter { |line| !line.trim.empty? }
 
 Applies `f` to each item, expecting a list back, and concatenates the results into one flat list.
 
-Use it when each item expands into zero or more results — `map` would give you a list of lists.
+Use it when each item expands into zero or more results: `map` would give you a list of lists.
 
 ```kex
 flatMap(f)
@@ -1405,7 +1419,7 @@ posts.flatMap { |p| p.tags }
 
 #### `collect`
 
-Applies `f` to each item, expecting an `Optional` back, and returns the values that were present — unwrapped.
+Applies `f` to each item, expecting an `Optional` back, and returns the values that were present: unwrapped.
 
 This is filter and map fused into one pass, which is what you want whenever the test and the transformation are the same operation. Parsing is the classic case: an item either yields a value or it does not.
 
@@ -1444,7 +1458,7 @@ entities:
 
 The process environment, as an immutable `Map<String, String>` snapshot taken at startup.
 
-`ENV` supports the whole `Map` API — `get`, `has?`, `keys`, `values`, `count`, `each`, `entries` — so reading a variable looks like any other map lookup:
+`ENV` supports the whole `Map` API: `get`, `has?`, `keys`, `values`, `count`, `each`, `entries`, so reading a variable looks like any other map lookup:
 
 ```kex
 ENV.get("HOME")                  # => Just("/home/ada")
@@ -1454,7 +1468,7 @@ ENV.has?("PATH")                 # => true
 
 The snapshot itself is immutable, but the global `ENV` namespace is an ambient input: the same call can answer differently between runs without anything appearing in a function's arguments. That is why reading it is `foul`.
 
-When you would rather the dependency be visible, take it as a parameter — `main` receives the same snapshot as its second argument, and reading a parameter is pure:
+When you would rather the dependency be visible, take it as a parameter: `main` receives the same snapshot as its second argument, and reading a parameter is pure:
 
 ```kex
 main(args, env) do
@@ -1529,7 +1543,7 @@ each(f)
 
 Returns the environment as a list of `(name, value)` pairs.
 
-The bridge to the `List` operations — sorting, grouping, taking a slice.
+The bridge to the `List` operations, sorting, grouping, taking a slice.
 
 
 ```kex
@@ -1541,11 +1555,11 @@ entries()
 
 Sets an environment variable for this process and every child it starts.
 
-`ENV` is a snapshot, and the write rebuilds it — a later `ENV.get` answers what was set, not what the process started with.
+`ENV` is a snapshot, and the write rebuilds it: a later `ENV.get` answers what was set, not what the process started with.
 
 This is how a program decides what a child sees. `Kex.AST`, for instance, shells out to the compiler named by `$KEX`, so a tool that knows which compiler it means says so here rather than hoping `PATH` agrees.
 
-Sets a variable for THIS process and every child it starts. `ENV` is a snapshot, so it is rebuilt by the write — a later `ENV.get` answers what was set, not what the process started with.
+Sets a variable for THIS process and every child it starts. `ENV` is a snapshot, so it is rebuilt by the write: a later `ENV.get` answers what was set, not what the process started with.
 
 This is how a program decides what a child sees: `Kex.AST` shells out to the compiler named by `$KEX`, so a tool that knows which compiler it means says so here rather than hoping PATH agrees.
 
@@ -1582,7 +1596,7 @@ entities:
 
 ## trait `Errorable`
 
-`Errorable` — the trait for values that describe a failure.
+`Errorable`: the trait for values that describe a failure.
 
 Implemented by error types that carry a human-readable message, so a generic handler can display or log any error without knowing its concrete type or its structured fields.
 
@@ -1597,7 +1611,7 @@ end
 
 A human-readable description of what went wrong.
 
-Written for a person reading output, not for a program to match on — branch on the error's own type or fields for that.
+Written for a person reading output, not for a program to match on: branch on the error's own type or fields for that.
 
 ```kex
 message : String
@@ -1659,13 +1673,13 @@ Evaluator.runExpression("1 ` 2")           # => Ok(3)
 Evaluator.runExpression("[3,1,2].sort")    # => Ok([1, 2, 3])
 ```
 
-This is for evaluating expressions your program was given — a formula in a config file, a filter typed by a user. Every result is a `Result+, so a syntax error or a rejected call is a value you handle.
+This is for evaluating expressions your program was given: a formula in a config file, a filter typed by a user. Every result is a `Result+, so a syntax error or a rejected call is a value you handle.
 
 ## function `run`
 
 Evaluates a whole Kex program and returns its result.
 
-The source may declare functions, records and a `main`, exactly as a file would. Anything that goes wrong — a parse error, a call the sandbox does not allow, running past the step limit — comes back as `Error` with a message.
+The source may declare functions, records and a `main`, exactly as a file would. Anything that goes wrong: a parse error, a call the sandbox does not allow, running past the step limit: comes back as `Error` with a message.
 
 
 ```kex
@@ -1678,7 +1692,7 @@ run(source) : String -> EvaluatorOptions -> Result<Any, String>
 
 Evaluates a single Kex expression and returns its value.
 
-The form to reach for when the input is a formula rather than a program — there is no `main` to write and no declarations to skip past.
+The form to reach for when the input is a formula rather than a program: there is no `main` to write and no declarations to skip past.
 
 
 ```kex
@@ -1691,7 +1705,7 @@ runExpression(source) : String -> EvaluatorOptions -> Result<Any, String>
 
 What an evaluated program is allowed to reach, and how long it may run.
 
-The defaults are already conservative — pure computation over the common data types, no filesystem, no network, no processes. Narrow `allow` further, or lower the limits, when the source is less trusted still.
+The defaults are already conservative: pure computation over the common data types, no filesystem, no network, no processes. Narrow `allow` further, or lower the limits, when the source is less trusted still.
 
 **Fields**
 
@@ -1720,7 +1734,7 @@ entities:
 
 A one-shot sequence over a source that can only be read once.
 
-A feed is what `Stream` is not: reading it CONSUMES it. Where a stream remembers its elements so it can be walked again, a feed keeps nothing, and that is the point — it is how to walk a file, a socket or a device larger than memory, which a stream cannot do while anything still holds its start.
+A feed is what `Stream` is not: reading it CONSUMES it. Where a stream remembers its elements so it can be walked again, a feed keeps nothing, and that is the point: it is how to walk a file, a socket or a device larger than memory, which a stream cannot do while anything still holds its start.
 
 ```kex
 foul lines = FS.File.feed("huge.log").or(Feed.empty)
@@ -1735,7 +1749,7 @@ FS.File.feed("app.log").or(Feed.empty)
   .take(10)
 ```
 
-Taking twice answers two different windows — the first ten, then the ten after them. That is the whole difference from `Stream`, where taking twice answers the same ten. When you want the stream behaviour on a small source, `toStream` asks for it explicitly, at the cost of holding what it reads.
+Taking twice answers two different windows: the first ten, then the ten after them. That is the whole difference from `Stream`, where taking twice answers the same ten. When you want the stream behaviour on a small source, `toStream` asks for it explicitly, at the cost of holding what it reads.
 
 
 
@@ -1755,7 +1769,7 @@ Mostly the `or` half of a failed open: `FS.File.feed(path).or(Feed.empty)` reads
 
 A feed over a list that is already in hand.
 
-The elements are there, so nothing is saved by feeding them — this is for standing in for a real source, in a test, with something that consumes the way the real one does.
+The elements are there, so nothing is saved by feeding them: this is for standing in for a real source, in a test, with something that consumes the way the real one does.
 
 
 ```kex
@@ -1769,7 +1783,7 @@ Every method below is `let`, not `foul`, though reading a feed plainly is an eff
 
 The effect is already tracked where it enters: a feed over anything outside the program comes from `FS.File.feed` or `handle.feed`, both foul, so a pure function cannot obtain one. What `Feed.Elements` and `Stream.toFeed` build from data in hand mutates only a cursor the caller just made.
 
-And a foul method takes the hidden capability context, which puts it one BEAM arity above the pure `take`/`map`/`filter` every other receiver has. A feed usually arrives with no static type — `FS.File.feed(p).or(Feed.empty)`, or a `Just(f) =>` binding — and such a call has to go through the runtime dispatcher, which is built per arity and so could never reach a method one arity up. Marking these foul made every dynamically-typed feed call fail with "Undefined method: take for Tuple".
+And a foul method takes the hidden capability context, which puts it one BEAM arity above the pure `take`/`map`/`filter` every other receiver has. A feed usually arrives with no static type: `FS.File.feed(p).or(Feed.empty)`, or a `Just(f) =>` binding, and such a call has to go through the runtime dispatcher, which is built per arity and so could never reach a method one arity up. Marking these foul made every dynamically-typed feed call fail with "Undefined method: take for Tuple".
 
 
 #### `take`
@@ -1892,7 +1906,7 @@ entities:
 
 Why a read failed.
 
-`ReadFailed` means the source refused the read. `InvalidUtf8` means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U`FFFD — use `readBytes+ to recover the payload verbatim.
+`ReadFailed` means the source refused the read. `InvalidUtf8` means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U`FFFD: use `readBytes+ to recover the payload verbatim.
 
 
 
@@ -1903,7 +1917,7 @@ Why a read failed.
 
 ## trait `Readable`
 
-`Readable` — a source that yields text.
+`Readable`: a source that yields text.
 
 Named so that anything can be one, not just a file: the vocabulary `FileHandle<CanRead, W>` already carried was an abstraction without a name, so nothing else could implement it and `IO` did not go through it (kexhq/kex#139). `IO.in` is a `Readable`; so is any handle opened for reading.
 
@@ -1965,7 +1979,7 @@ read : Result<String, ReadError>
 
 Reads everything remaining as raw bytes, without decoding it as text.
 
-The byte counterpart of `read`: it never validates UTF-8, so it recovers the payload of a source that is not text — or one `read` has just rejected. Draining an exhausted source answers `Ok(Binary.fromBytes([]))`.
+The byte counterpart of `read`: it never validates UTF-8, so it recovers the payload of a source that is not text, or one `read` has just rejected. Draining an exhausted source answers `Ok(Binary.fromBytes([]))`.
 
 ```kex
 readBytes : Result<Binary, ReadError>
@@ -1995,7 +2009,7 @@ atEnd? : Bool
 
 ## trait `Writable`
 
-`Writable` — a sink that accepts text.
+`Writable`: a sink that accepts text.
 
 The payoff of naming it is that a sink becomes a VALUE a library can accept, rather than a global switch it can only sit underneath: output from one library can go to a buffer while another's goes to the terminal (kexhq/kex#139).
 
@@ -2188,8 +2202,22 @@ let body = handle.read.or("")
 
 #### `readBytes`
 
+Reads all remaining bytes from the handle without decoding them.
+
+Unlike `read`, this accepts arbitrary binary data and cannot fail because the input is not valid UTF-8. It starts at the handle's current position.
+
 ```kex
 readBytes() : Result<Binary, ReadError>
+```
+
+**Returns**: `Binary` — the remaining bytes
+
+**Examples**
+
+_Reading a file with an unknown encoding_
+
+```kex
+let payload = handle.readBytes.try
 ```
 
 #### `eof?`
@@ -2257,8 +2285,20 @@ handle.feed
 
 #### `writeBytes`
 
+Writes `content` verbatim, without text encoding or a trailing newline.
+
 ```kex
 writeBytes(content) : Binary -> Void
+```
+
+**Returns**: `Void`
+
+**Examples**
+
+_Copying an opaque payload_
+
+```kex
+destination.writeBytes(source.readBytes.try)
 ```
 
 #### `printLine`
@@ -2378,7 +2418,7 @@ entities:
 
 The filesystem: reading and writing files, walking directories, and manipulating paths.
 
-`FS` is not in the prelude — start with `using FS`.
+`FS` is not in the prelude: start with `using FS`.
 
 ```kex
 using FS
@@ -2495,7 +2535,7 @@ open(path, mode) : FilePath -> ReadWrite -> (FileHandle<CanRead, CanWrite> -> A)
 
 Reads the whole file and decodes it as UTF-8 text.
 
-Answers `Error(ReadFailed(path))` when the file does not exist or cannot be read, and `Error(InvalidUtf8(path, offset))` when the bytes are not valid UTF-8 — so a missing or non-text file is something you handle rather than something that stops the program. Reach for `FS.File.readBytes` when the contents are not text.
+Answers `Error(ReadFailed(path))` when the file does not exist or cannot be read, and `Error(InvalidUtf8(path, offset))` when the bytes are not valid UTF-8, so a missing or non-text file is something you handle rather than something that stops the program. Reach for `FS.File.readBytes` when the contents are not text.
 
 
 ```kex
@@ -2531,7 +2571,7 @@ writeBytes(path, content) : FilePath -> Binary -> Bool
 
 Writes `content` to `path`, replacing whatever was there.
 
-Creates the file if it does not exist. The containing directory must already exist — see `FS.Directory.create`. Answers `false` when the write fails.
+Creates the file if it does not exist. The containing directory must already exist: see `FS.Directory.create`. Answers `false` when the write fails.
 
 
 ```kex
@@ -2553,7 +2593,7 @@ append(path, content) : FilePath -> String -> Bool
 
 ## function `exists?`
 
-Returns `true` when something exists at `path` — a file, a directory, or anything else. Use `file?` or `directory?` when the kind matters.
+Returns `true` when something exists at `path`: a file, a directory, or anything else. Use `file?` or `directory?` when the kind matters.
 
 
 ```kex
@@ -2563,7 +2603,7 @@ exists?(path) : FilePath -> Bool
 
 ## function `file?`
 
-Returns `true` when `path` exists and is a regular file — not a directory.
+Returns `true` when `path` exists and is a regular file: not a directory.
 
 
 ```kex
@@ -2605,7 +2645,7 @@ copy(src, dst) : FilePath -> FilePath -> Bool
 
 ## function `rename`
 
-Renames — or moves — the file at `src` to `dst`.
+Renames (or moves) the file at `src` to `dst`.
 
 
 ```kex
@@ -2619,7 +2659,7 @@ Reads the file and returns its lines, without their newlines.
 
 Answers `None` when the file cannot be read. A trailing newline does not produce a final empty line, so the count is the number of lines you would see in an editor.
 
-NOT `lines`: FilePath is an alias for String, so a receiver function named `lines` here is indistinguishable from String's own `lines` at every call site, and merely saying `using FS` made `text.lines` ambiguous. `readLines` also says what it does — it reads the file.
+NOT `lines`: FilePath is an alias for String, so a receiver function named `lines` here is indistinguishable from String's own `lines` at every call site, and merely saying `using FS` made `text.lines` ambiguous. `readLines` also says what it does: it reads the file.
 
 
 ```kex
@@ -2631,11 +2671,11 @@ readLines(path) : FilePath -> [String]?
 
 Returns a lazy `Feed` of the file's lines, or `None` when it cannot be read.
 
-Unlike `readLines`, the file is read a line at a time off a handle held open for the feed's lifetime, so this is the way to walk a file too large to hold in memory — nothing but the current line is retained.
+Unlike `readLines`, the file is read a line at a time off a handle held open for the feed's lifetime, so this is the way to walk a file too large to hold in memory: nothing but the current line is retained.
 
 A `Feed` rather than a `Stream` because that is what a file honestly is: reading consumes, and there is no rewinding. Taking twice walks forward rather than answering the same lines again. On a file small enough to replay, `toStream` buys that back.
 
-The feed ends at the last line, so asking for more lines than the file has answers just the lines there are — unlike `Stream.Sequence`, which is deliberately infinite.
+The feed ends at the last line, so asking for more lines than the file has answers just the lines there are: unlike `Stream.Sequence`, which is deliberately infinite.
 
 ```kex
 FS.File.feed("two-lines.txt").map { |lines| lines.take(5) }.or([])
@@ -2652,7 +2692,7 @@ feed(path) : FilePath -> Feed<String>?
 
 Returns the file's size in bytes, or `None` when it cannot be read.
 
-Bytes, not characters — a file of non-ASCII text has more bytes than it has characters.
+Bytes, not characters: a file of non-ASCII text has more bytes than it has characters.
 
 
 ```kex
@@ -2666,7 +2706,7 @@ Resolves `path` against the process's current directory and returns the absolute
 
 This is the one path operation that is not in `FS.Path`, because it is not lexical: it asks the process where it is.
 
-Path manipulation lives in FS.Path — `basename`, `dirname`, `extension` and `join` used to be here too, but a name cannot sit in both modules: FilePath IS String, so two same-named receiver functions on it are indistinguishable at every call site. `absolute` stays because it is not lexical — it asks the process where it is.
+Path manipulation lives in FS.Path: `basename`, `dirname`, `extension` and `join` used to be here too, but a name cannot sit in both modules: FilePath IS String, so two same-named receiver functions on it are indistinguishable at every call site. `absolute` stays because it is not lexical: it asks the process where it is.
 
 
 ```kex
@@ -2678,7 +2718,7 @@ absolute(path) : FilePath -> String?
 
 Path arithmetic: joining, splitting, normalising and comparing paths.
 
-Everything here is pure string manipulation with no filesystem access, so the answer is the same whether or not the path exists — which also means these functions can be called from ordinary pure code, unlike `FS.File`. POSIX separators only for now.
+Everything here is pure string manipulation with no filesystem access, so the answer is the same whether or not the path exists, which also means these functions can be called from ordinary pure code, unlike `FS.File`. POSIX separators only for now.
 
 ```kex
 FS.Path.join("src", "main.kex")            # => "src/main.kex"
@@ -2696,7 +2736,7 @@ The path separator, `"/"`.
 
 Joins two path parts with a single separator and normalises the result.
 
-Repeated separators collapse, so `join("a/", "/b")` is `"a/b"` and not `"a//b"`. An absolute second part does NOT restart the path, the way Ruby's `Pathname#join` would — use that part on its own if that is what you mean.
+Repeated separators collapse, so `join("a/", "/b")` is `"a/b"` and not `"a//b"`. An absolute second part does NOT restart the path, the way Ruby's `Pathname#join` would: use that part on its own if that is what you mean.
 
 
 ```kex
@@ -2721,7 +2761,7 @@ joinAll(parts) : [FilePath] -> String
 
 Resolves `.` and `..` in a path, lexically.
 
-Because it is lexical it never follows a symlink and never touches the disk. A leading `..` in a RELATIVE path is kept — there is no way to know what it escapes to — while one in an absolute path is dropped, since `/` has no parent.
+Because it is lexical it never follows a symlink and never touches the disk. A leading `..` in a RELATIVE path is kept: there is no way to know what it escapes to, while one in an absolute path is dropped, since `/` has no parent.
 
 
 ```kex
@@ -2773,7 +2813,7 @@ dirname(path) : FilePath -> String
 
 ## function `basename`
 
-Returns the last segment of the path — the file or directory name.
+Returns the last segment of the path: the file or directory name.
 
 The root itself answers `"/"`, and an empty path answers `"."`.
 
@@ -2799,7 +2839,7 @@ extension(path) : FilePath -> String
 
 Returns the basename with its extension removed.
 
-A name that IS its extension — `".gitignore"` — keeps it, because it has none to drop.
+A name that IS its extension (`".gitignore"`) keeps it, because it has none to drop.
 
 
 ```kex
@@ -2893,7 +2933,7 @@ delete(path) : FilePath -> Bool
 
 Removes the directory at `path` and everything inside it, recursively.
 
-This deletes data and cannot be undone — check the path before calling it, particularly when it was computed or came from user input.
+This deletes data and cannot be undone: check the path before calling it, particularly when it was computed or came from user input.
 
 
 ```kex
@@ -2903,7 +2943,7 @@ deleteAll(path) : FilePath -> Bool
 
 ## function `list`
 
-Lists the names in `path` — both files and directories, one level deep.
+Lists the names in `path`: both files and directories, one level deep.
 
 The results are bare names, not paths; join them with `path` to get something you can open. Answers `None` when the directory cannot be read.
 
@@ -2999,7 +3039,7 @@ end
 
 Writes `msg` to stdout followed by a newline.
 
-Any `Showable` value is accepted, not just strings — numbers, lists, maps and records print through their own `show` implementation. Called with no argument it prints an empty line.
+Any `Showable` value is accepted, not just strings: numbers, lists, maps and records print through their own `show` implementation. Called with no argument it prints an empty line.
 
 
 ```kex
@@ -3061,7 +3101,7 @@ get() : String?
 
 Writes `msg` to stderr followed by a newline.
 
-Diagnostics belong on stderr so that a program's real output can be piped or redirected on its own. Unlike a raised error, this only prints — it does not stop the program.
+Diagnostics belong on stderr so that a program's real output can be piped or redirected on its own. Unlike a raised error, this only prints: it does not stop the program.
 
 
 ```kex
@@ -3093,11 +3133,11 @@ warning(msg) : Showable -> Void
 
 The three standard streams, as ordinary handle VALUES.
 
-`IO.printLine(x)` and `IO.out.printLine(x)` are the same call: the convenience spelling stays, and the handle behind it is now something a program can name, pass and substitute. That is what `Mock.IO` cannot do — it is one global switch, so output from one library cannot go to a buffer while another's goes to the terminal, and a library cannot ACCEPT a sink (kexhq/kex#139).
+`IO.printLine(x)` and `IO.out.printLine(x)` are the same call: the convenience spelling stays, and the handle behind it is now something a program can name, pass and substitute. That is what `Mock.IO` cannot do: it is one global switch, so output from one library cannot go to a buffer while another's goes to the terminal, and a library cannot ACCEPT a sink (kexhq/kex#139).
 
 Typestate says what each one permits: writing to `IO.in`, or reading from `IO.out`, is a compile error, exactly as it is for a file opened `Read`.
 
-These three are PURE, so they are not part of the capability interface a stand-in must implement — naming a device performs no effect, writing THROUGH it does, and the handle methods are the `foul` ones. That also draws the seam between the two ways to redirect output: `with IO = ...` replaces the CALLS, so it does not touch a handle obtained here, while `Mock.IO` replaces the DEVICE (a group leader, kexhq/kex#141) and so captures `IO.out.printLine(x)` and `IO.printLine(x)` alike.
+These three are PURE, so they are not part of the capability interface a stand-in must implement: naming a device performs no effect, writing THROUGH it does, and the handle methods are the `foul` ones. That also draws the seam between the two ways to redirect output: `with IO = ...` replaces the CALLS, so it does not touch a handle obtained here, while `Mock.IO` replaces the DEVICE (a group leader, kexhq/kex#141) and so captures `IO.out.printLine(x)` and `IO.printLine(x)` alike.
 
 
 
@@ -3156,7 +3196,7 @@ JSON.parse("// c\n1")  # => Error(UnexpectedCharacter("/", 0))
 
 Parses a JSON document, strictly.
 
-The whole text must be one JSON value with nothing after it — trailing input is `TrailingInput`, not a silently ignored tail. Objects come back as maps with atom keys, arrays as lists, `null` as `None`.
+The whole text must be one JSON value with nothing after it: trailing input is `TrailingInput`, not a silently ignored tail. Objects come back as maps with atom keys, arrays as lists, `null` as `None`.
 
 
 ```kex
@@ -3169,7 +3209,7 @@ parse(text) : String -> {Atom: Bool} -> Result<Any, Error>
 
 Renders a Kex value as strict JSON text.
 
-Maps become objects, lists become arrays, `None` becomes `null`, and strings are escaped. A map written with atom keys — the usual Kex spelling — renders with those names as strings, so `{ name: "Ada" }` becomes `{"name":"Ada"}`. Object keys come out in canonical key order.
+Maps become objects, lists become arrays, `None` becomes `null`, and strings are escaped. A map written with atom keys (the usual Kex spelling) renders with those names as strings, so `{ name: "Ada" }` becomes `{"name":"Ada"}`. Object keys come out in canonical key order.
 
 Anything the encoder does not recognise renders as `null` rather than failing, so this never raises.
 
@@ -3206,7 +3246,7 @@ entities:
 
 Types that can be rendered structurally, for a person reading output.
 
-The rendering shows the value's STRUCTURE — quotes on strings, `Just(...)` around an optional — which is what makes it right for debugging and wrong for user-facing text. `Showable` is the other half of that pair.
+The rendering shows the value's STRUCTURE: quotes on strings, `Just(...)` around an optional, which is what makes it right for debugging and wrong for user-facing text. `Showable` is the other half of that pair.
 
 Every type is inspectable through a structural fallback, so `inspected` and `IO.inspect` work on anything; a type that wants a different rendering overrides `inspectValue`.
 
@@ -3220,7 +3260,7 @@ Just("hi").inspected   # => "Just(\"hi\")"
 
 Renders the value structurally, with ANSI colors when `colors` is true.
 
-`inspected` and `IO.inspect` call this for you, passing the console's own color setting — call it directly only when you need to force one.
+`inspected` and `IO.inspect` call this for you, passing the console's own color setting: call it directly only when you need to force one.
 
 ```kex
 inspectValue : Bool -> String
@@ -3236,12 +3276,28 @@ inspectValue : Bool -> String
 
 ## trait `Showable`
 
+Types that have a concise, user-facing text representation.
+
+`Showable` is used by interpolation, printing, and `to(String)`. Its output should describe the value itself rather than its implementation structure: a string is shown without quotes, `Just(x)` is shown as `x`, and `None` is shown as an empty string. Use `Inspectable` when debugging structure matters.
+
+```kex
+"hello".showValue          # => "hello"
+Just("hello").showValue    # => "hello"
+None.showValue             # => ""
+```
+
 
 #### `showValue`
+
+Returns the value's user-facing text representation.
+
+Implement this for domain types whose useful presentation differs from their structural rendering. Keep the result free of ANSI styling so it is safe in files, logs, and interpolation as well as on a terminal.
 
 ```kex
 showValue : String
 ```
+
+**Returns**: `String` — the display text
 
 ## make `Inspectable`
 
@@ -3276,9 +3332,9 @@ showValue(@Just(x))
 
 ## make `Result<X, E>` implements Showable
 
-The same for Result, with one deliberate asymmetry: SHOWING a result shows what it carries, so `Ok(42)` reads as `42` rather than leaking the wrapper into text — but an `Error` keeps its marker. Dropping it made a failure and a success print identically, and unlike `None` (which shows as "", visibly not a value) there would be nothing left to tell them apart.
+The same for Result, with one deliberate asymmetry: SHOWING a result shows what it carries, so `Ok(42)` reads as `42` rather than leaking the wrapper into text, but an `Error` keeps its marker. Dropping it made a failure and a success print identically, and unlike `None` (which shows as "", visibly not a value) there would be nothing left to tell them apart.
 
-The marker is spelled `Error(...)`, matching how the same value renders as an ELEMENT of a collection — `[1, Error(Bad(no))]`. Elements render structurally rather than through showValue (as in Ruby, where `nil.to_s` is "" but `[nil].to_s` is "[nil]"), so this is the one spelling that reads the same at both levels.
+The marker is spelled `Error(...)`, matching how the same value renders as an ELEMENT of a collection: `[1, Error(Bad(no))]`. Elements render structurally rather than through showValue (as in Ruby, where `nil.to_s` is "" but `[nil].to_s` is "[nil]"), so this is the one spelling that reads the same at both levels.
 
 What functions RETURN is unchanged: `Integer.parse` still answers with a Result, `IO.inspect` still shows `Ok(42)`, and both arms are still matchable.
 
@@ -3291,7 +3347,7 @@ showValue(@Ok(x))
 
 ## module `Kex`
 
-The running toolchain: which backend, which version, which features.
+The running toolchain, which backend, which version, which features.
 
 ```kex
 Kex.BACKEND                  # => Interpreter
@@ -3339,17 +3395,21 @@ Returns `true` when running on the tree-walking interpreter.
 
 Returns `true` when running on the BEAM.
 
-The backend a program is on decides what is available — processes and the web server need the BEAM (`kex -R file.kex`).
+The backend a program is on decides what is available: processes and the web server need the BEAM (`kex -R file.kex`).
 
 
 
 ## module `Kex.Kernel`
 
+Build identity for the compiler and runtime executing this program.
+
+Useful in bug reports, generated artifacts, and compatibility checks where `Kex.BACKEND` alone is not enough to identify the toolchain.
+
 ## record `Version`
 
 The toolchain a program is running on. `kex --version` and the REPL banner report the same numbers.
 
-`revision` is the git commit the compiler was built from — `None` when it was built from a source archive rather than a checkout, which is why it is an Optional rather than a String.
+`revision` is the git commit the compiler was built from: `None` when it was built from a source archive rather than a checkout, which is why it is an Optional rather than a String.
 
 **Fields**
 
@@ -3397,7 +3457,7 @@ Reading the typed public surface of a compiled Kex module.
 
 ## function `read`
 
-Reads the KexI interface chunk of a compiled Kex module — its typed public surface — and answers the decoded term, or None when the file has no such chunk, does not exist, or is not a BEAM artifact.
+Reads the KexI interface chunk of a compiled Kex module: its typed public surface, and answers the decoded term, or None when the file has no such chunk, does not exist, or is not a BEAM artifact.
 
 The term is an ordinary tree of tuples, lists, atoms, integers and strings, so it is walked with normal pattern matching and `Tuple.items`. This exists so that reading it needs no `Erlang.*` interop: it is the one intentional entry point rather than a general term decoder.
 
@@ -3409,9 +3469,9 @@ read(path) : FS.FilePath -> Any?
 
 ## function `inspected`
 
-Returns the pretty-printed representation of any value as a STRING — the same form the REPL echoes. Universal: reachable on every type through UFCS.
+Returns the pretty-printed representation of any value as a STRING: the same form the REPL echoes. Universal: reachable on every type through UFCS.
 
-Named apart from `inspect`, which prints and returns its INPUT so it can be dropped into a pipeline. Both spellings used to be called `inspect`, and which one a call reached depended on whether it was written `x.inspect` or `IO.inspect(x)` — so `[1, 2].inspect.count` answered 24, the length of the rendered string, rather than 2.
+Named apart from `inspect`, which prints and returns its INPUT so it can be dropped into a pipeline. Both spellings used to be called `inspect`, and which one a call reached depended on whether it was written `x.inspect` or `IO.inspect(x)`, so `[1, 2].inspect.count` answered 24, the length of the rendered string, rather than 2.
 
 
 ```kex
@@ -3458,7 +3518,7 @@ scores.sort                      # => [2, 4, 7, 9]
 scores.map { |n| n * 10 }.sum    # => 220
 ```
 
-Anything that might not be there — the first element, an element at an index, a search result — answers with an `Optional`, so an empty list is an ordinary case rather than a crash:
+Anything that might not be there: the first element, an element at an index, a search result: answers with an `Optional`, so an empty list is an ordinary case rather than a crash:
 
 ```kex
 [].first.or(0)        # => 0
@@ -3771,7 +3831,7 @@ findIndex(pred) : (X -> Bool) -> Integer?
 
 #### `takeWhile`
 
-Returns the longest leading run of elements satisfying `pred`. Stops at the first element that does not, so it is not `filter` — later matches are dropped with everything after the first failure.
+Returns the longest leading run of elements satisfying `pred`. Stops at the first element that does not, so it is not `filter`: later matches are dropped with everything after the first failure.
 
 ```kex
 takeWhile : (X -> Bool) -> [X]
@@ -3787,7 +3847,7 @@ takeWhile : (X -> Bool) -> [X]
 
 #### `dropWhile`
 
-Returns what is left after `takeWhile` — everything from the first element that does not satisfy `pred` onwards.
+Returns what is left after `takeWhile`: everything from the first element that does not satisfy `pred` onwards.
 
 ```kex
 dropWhile : (X -> Bool) -> [X]
@@ -3963,20 +4023,23 @@ sum(f) : (X -> Number) -> Number
 
 #### `join`
 
-Receiver is `[X]`, not `[String | Char]`: the intrinsic renders whatever it is given, so `[1, 2].join(", ")` is "1, 2" on both backends. The narrower receiver only ever fired once element types became precise enough to catch it — until then `map`/`filter` handed `join` an unknown element type and the restriction checked nothing. Concatenates all elements, placing `sep` between each adjacent pair. With no separator the elements are joined directly.
+Renders and concatenates the elements, placing `sep` between adjacent values. With no separator, the rendered values are joined directly.
+
+Elements do not have to be strings: each is rendered using the same user-facing conversion used by interpolation and printing.
 
 ```kex
 join(sep) : String -> String
 join : String
 ```
 
-**Returns**: `String`
+**Returns**: `String` — the concatenated rendering
 
 **Examples**
 
 ```kex
 ["hello", "world", "kex"].join(", ")   # => "hello, world, kex"
 ["a", "b", "c"].join                   # => "abc"
+[1, 2, 3].join(" ` ")                 # => "1 ` 2 + 3"
 ```
 
 
@@ -3999,7 +4062,7 @@ entities:
 
 An immutable key-value store, written `{key: value}`.
 
-Keys are compared by structural equality and may be of any type; atom keys get the shorthand `{name: "Ada"}`, string keys are written out in full as `{"name": "Ada"}`. Every method answers with a new map — the `!` forms (`put!`, `delete!`) build a new map and rebind the receiver variable, they do not modify anything in place.
+Keys are compared by structural equality and may be of any type; atom keys get the shorthand `{name: "Ada"}`, string keys are written out in full as `{"name": "Ada"}`. Every method answers with a new map: the `!` forms (`put!`, `delete!`) build a new map and rebind the receiver variable, they do not modify anything in place.
 
 Entries come back in canonical key order, not insertion order, so `keys`, `values`, `entries` and any traversal are stable and comparable across equal maps.
 
@@ -4133,7 +4196,7 @@ totals                     # => { :visits: 1 }
 
 #### `delete`
 
-Returns a new map without `key`. A key that is not present is not an error — the map comes back unchanged.
+Returns a new map without `key`. A key that is not present is not an error: the map comes back unchanged.
 
 Use `delete!` to rebind the receiver variable.
 
@@ -4266,7 +4329,7 @@ raw.mapValues { |s| s.trim.lowerCase }
 
 Returns a new map with every key replaced by `f(key)`. The values are left alone.
 
-If `f` maps two keys onto the same result, one entry wins — the map cannot hold both.
+If `f` maps two keys onto the same result, one entry wins: the map cannot hold both.
 
 ```kex
 mapKeys(f) : (K -> J) -> Map<J, V>
@@ -4437,9 +4500,9 @@ entities:
 
 Mathematical constants and functions.
 
-All trigonometric functions work in radians. Every function here accepts a `Number` — an `Integer` or a `Float` — and the transcendental ones answer with a `Float`.
+All trigonometric functions work in radians. Every function here accepts a `Number` (an `Integer` or a `Float`) and the transcendental ones answer with a `Float`.
 
-A Kex `Float` is always finite, so a domain error (`Math.sqrt(-1.0)`) or an overflow (`Math.exp(1000.0)`) raises rather than producing `NaN` or `Infinity` — the same rule the BEAM enforces, where those two values cannot exist at all. There is no non-finite float to test for afterwards.
+A Kex `Float` is always finite, so a domain error (`Math.sqrt(-1.0)`) or an overflow (`Math.exp(1000.0)`) raises rather than producing `NaN` or `Infinity`: the same rule the BEAM enforces, where those two values cannot exist at all. There is no non-finite float to test for afterwards.
 
 ```kex
 Math.sqrt(2.0)              # => 1.4142135623730951
@@ -4447,7 +4510,7 @@ Math.hypot(3.0, 4.0)        # => 5.0
 Math.sin(Math.PI / 2.0)     # => 1.0
 ```
 
-The everyday operations on a single number — `abs`, `floor`, `ceil`, `round`, `sqrt` — are also methods on `Integer` and `Float`, which usually reads better in a chain: `x.abs` over `Math.abs(x)`.
+The everyday operations on a single number: `abs`, `floor`, `ceil`, `round`, `sqrt`: are also methods on `Integer` and `Float`, which usually reads better in a chain: `x.abs` over `Math.abs(x)`.
 
 ## constant `PI`
 
@@ -4473,7 +4536,7 @@ sqrt(x) : Number -> Float
 
 ## function `cbrt`
 
-Returns the cube root of `x`. Unlike `sqrt`, negative input is fine — a negative number has a real cube root.
+Returns the cube root of `x`. Unlike `sqrt`, negative input is fine: a negative number has a real cube root.
 
 
 ```kex
@@ -4535,7 +4598,7 @@ acos(x) : Number -> Float
 
 Returns the arc tangent of `x` in radians, in the range -π/2 to π/2.
 
-Use `atan2` when you have both coordinates of a vector — it can tell the quadrant apart, and this cannot.
+Use `atan2` when you have both coordinates of a vector: it can tell the quadrant apart, and this cannot.
 
 
 ```kex
@@ -4547,7 +4610,7 @@ atan(x) : Number -> Float
 
 Returns the angle of the vector `(x, y)` in radians, from -π to π.
 
-Both signs are taken into account, so the result lands in the correct quadrant — which is why this, not `atan`, is what you want for converting a vector to an angle. Note the argument order: `y` first.
+Both signs are taken into account, so the result lands in the correct quadrant, which is why this, not `atan`, is what you want for converting a vector to an angle. Note the argument order: `y` first.
 
 
 ```kex
@@ -4587,7 +4650,7 @@ tanh(x) : Number -> Float
 
 ## function `log`
 
-Returns the natural logarithm of `x` — its logarithm to base `e`. With a second argument, returns the logarithm to that base instead.
+Returns the natural logarithm of `x`: its logarithm to base `e`. With a second argument, returns the logarithm to that base instead.
 
 Raises for `x` of zero or less, which has no real logarithm.
 
@@ -4620,7 +4683,7 @@ log10(x) : Number -> Float
 
 ## function `exp`
 
-Returns `e` raised to the power `x` — the inverse of `Math.log`.
+Returns `e` raised to the power `x`: the inverse of `Math.log`.
 
 Raises on overflow, which for a double happens a little past `x` of 709.
 
@@ -4656,7 +4719,7 @@ abs(x) : Number -> Number
 
 ## function `floor`
 
-Returns the largest integer that is not greater than `x` — rounding toward negative infinity.
+Returns the largest integer that is not greater than `x`: rounding toward negative infinity.
 
 
 ```kex
@@ -4666,7 +4729,7 @@ floor(x) : Number -> Integer
 
 ## function `ceil`
 
-Returns the smallest integer that is not less than `x` — rounding toward positive infinity.
+Returns the smallest integer that is not less than `x`: rounding toward positive infinity.
 
 
 ```kex
@@ -4703,13 +4766,13 @@ entities:
 
 ## type `Reader`
 
-Mock — deterministic stand-ins for the world outside the program: the filesystem, environment, and console. Networking mocks live under Mock.Net.
+Mock: deterministic stand-ins for the world outside the program: the filesystem, environment, and console. Networking mocks live under Mock.Net.
 
-These are STATEFUL: `Mock.FS.File(path, content)` writes into a store the real `FS.File` then reads back, so a test can write and read again, and `clear()` undoes it. That state is global and lives until cleared, which is what makes hook ordering and write/read round trips testable — and also what makes two tests able to interfere.
+These are STATEFUL: `Mock.FS.File(path, content)` writes into a store the real `FS.File` then reads back, so a test can write and read again, and `clear()` undoes it. That state is global and lives until cleared, which is what makes hook ordering and write/read round trips testable, and also what makes two tests able to interfere.
 
 When a test only needs canned ANSWERS, replacing the capability is the better tool: `with FS.File = MyFake { ... } do ... end` swaps the implementation for one lexical region, holds no global state, needs no clearing, and cannot leak into another test. See spec/capability_stdlib_fs.kex for the shape of a stand-in (kexhq/kex#143).
 
-Opt-in on purpose (issue #144): this module used to ride along inside a prelude networking file, so importing the prelude made every Mock.* reachable from every program without anyone asking for it. Reachable is still not callable — the runtime denies the mock intrinsics outside spec files, the REPL, and --allow-mocks — but it should also not be in scope by accident. A qualified `Mock.FS.File(...)` auto-loads this file like any other opt-in module.
+Opt-in on purpose (issue #144): this module used to ride along inside a prelude networking file, so importing the prelude made every Mock.* reachable from every program without anyone asking for it. Reachable is still not callable: the runtime denies the mock intrinsics outside spec files, the REPL, and --allow-mocks, but it should also not be in scope by accident. A qualified `Mock.FS.File(...)` auto-loads this file like any other opt-in module.
 
 All Mock.* sub-modules live in a single `module Mock` block so merged compilation units never see duplicate top-level `Mock` modules. A stand-in's read hook: a path in, its content or `None` out.
 
@@ -4731,7 +4794,7 @@ An environment stand-in's lookup hook: a name in, its value or `None` out.
 
 ## type `Writer`
 
-An environment stand-in's WRITE hook: the name and the value a program set. A `Mock.Env` is an immutable record, so a write cannot land in its `vars` — and it must not reach the real environment, or a test would leak a variable into the next one and into anything the suite starts. The hook is how a test observes the write instead: record it, assert on it, or ignore it, which is what `None` does.
+An environment stand-in's WRITE hook: the name and the value a program set. A `Mock.Env` is an immutable record, so a write cannot land in its `vars`, and it must not reach the real environment, or a test would leak a variable into the next one and into anything the suite starts. The hook is how a test observes the write instead: record it, assert on it, or ignore it, which is what `None` does.
 
 
 
@@ -4751,7 +4814,7 @@ with FS.File = Mock.Files { files: {"kex.toml": "name = \"demo\""} } do
 end
 ```
 
-`onRead` takes over when a test needs an ANSWER rather than a fixture — content derived from the path, a failure on the third call, a record of what was asked for. It is consulted first and its `None` means "no such file", so a callback can model absence too.
+`onRead` takes over when a test needs an ANSWER rather than a fixture: content derived from the path, a failure on the third call, a record of what was asked for. It is consulted first and its `None` means "no such file", so a callback can model absence too.
 
 **Fields**
 
@@ -4760,7 +4823,7 @@ end
 
 ## record `Env`
 
-A stand-in for the `ENV` capability. A name simply left out of `vars` reads as unset, which is the whole reason `Mock.ENV.unset` exists — absence is an answer programs act on. `onGet` answers instead of the map when a test wants a rule rather than a fixture.
+A stand-in for the `ENV` capability. A name simply left out of `vars` reads as unset, which is the whole reason `Mock.ENV.unset` exists: absence is an answer programs act on. `onGet` answers instead of the map when a test wants a rule rather than a fixture.
 
 ```kex
 with ENV = Mock.Env { vars: {"HOME": "/fake"} } do
@@ -4778,7 +4841,7 @@ end
 
 A stateful stand-in for the filesystem: files a test declares, that the real `FS.File` then reads back.
 
-The store is global and lives until `clear`, which is what makes a write followed by a read testable — and what makes two tests able to interfere. Clear it in an `after` hook.
+The store is global and lives until `clear`, which is what makes a write followed by a read testable, and what makes two tests able to interfere. Clear it in an `after` hook.
 
 ```kex
 describe "the config loader" do
@@ -4820,7 +4883,7 @@ Directory(path) : FS.FilePath -> Void
 
 Empties the store, so nothing declared so far is visible any more.
 
-Call it in an `after` hook — the store is global, and what one test leaves behind the next one sees.
+Call it in an `after` hook: the store is global, and what one test leaves behind the next one sees.
 
 
 ```kex
@@ -4832,7 +4895,7 @@ clear() : Void
 
 Declares the whole fixture in one call.
 
-The same shape `Mock.Files { files: ... }` takes — one line instead of one per file (kexhq/kex#143).
+The same shape `Mock.Files { files: ... }` takes: one line instead of one per file (kexhq/kex#143).
 
 
 ```kex
@@ -4856,7 +4919,7 @@ onRead(reader) : Reader -> Void
 
 Overlays the process environment, so a test can say what `ENV` holds instead of depending on how it was launched.
 
-The overlay is global and lives until `clear` — clear it in an `after` hook.
+The overlay is global and lives until `clear`: clear it in an `after` hook.
 
 ```kex
 Mock.ENV.vars({ "HOME": "/fake", "LOG_LEVEL": "debug" })
@@ -4900,7 +4963,7 @@ clear() : Void
 
 Declares the whole overlay in one call.
 
-The same shape `Mock.Env { vars: ... }` takes (kexhq/kex#143). There is no `onGet` here: global `ENV` is a materialised Map, so there is nothing for a callback to intercept — use `with ENV = Mock.Env { onGet: ... }` when a rule is what you want.
+The same shape `Mock.Env { vars: ... }` takes (kexhq/kex#143). There is no `onGet` here: global `ENV` is a materialised Map, so there is nothing for a callback to intercept: use `with ENV = Mock.Env { onGet: ... }` when a rule is what you want.
 
 
 ```kex
@@ -4970,7 +5033,7 @@ clear()
 
 Queues the lines `IO.getLine` will return, in order.
 
-Takes a list, or up to four lines as separate arguments. Once they run out, `IO.getLine` answers `None` — end of input, exactly as a closed stdin would.
+Takes a list, or up to four lines as separate arguments. Once they run out, `IO.getLine` answers `None`: end of input, exactly as a closed stdin would.
 
 
 ```kex
@@ -5142,7 +5205,7 @@ entries()
 
 #### `set`
 
-A write goes to `onSet` or nowhere. It must NOT reach the real environment: a substituted ENV is the whole point of the mock, and a test that set a variable would otherwise leak it into the next one and into every process the suite starts. `vars` cannot take it either — a record is immutable — so a test that cares about writes supplies the hook, and one that does not gets a write that goes quietly nowhere.
+A write goes to `onSet` or nowhere. It must NOT reach the real environment: a substituted ENV is the whole point of the mock, and a test that set a variable would otherwise leak it into the next one and into every process the suite starts. `vars` cannot take it either: a record is immutable, so a test that cares about writes supplies the hook, and one that does not gets a write that goes quietly nowhere.
 
 ```kex
 set(name, value)
@@ -5160,7 +5223,11 @@ Scriptable networking values are namespaced so importing Mock does not recreate 
 
 ## module `Mock.Net.HTTP`
 
+Canned HTTP transport state for networking specifications.
+
 ## record `Transport`
+
+Responses returned in order by a scripted transport.
 
 **Fields**
 
@@ -5168,7 +5235,11 @@ Scriptable networking values are namespaced so importing Mock does not recreate 
 
 ## module `Mock.Net.DNS`
 
+Canned DNS resolver state for networking specifications.
+
 ## record `ResolverScript`
+
+Hostname-to-address answers supplied without touching the network.
 
 **Fields**
 
@@ -5176,7 +5247,11 @@ Scriptable networking values are namespaced so importing Mock does not recreate 
 
 ## module `Mock.Net.Socket`
 
+Canned byte-stream state for socket specifications.
+
 ## record `Script`
+
+Binary chunks delivered in order as incoming socket data.
 
 **Fields**
 
@@ -5184,7 +5259,11 @@ Scriptable networking values are namespaced so importing Mock does not recreate 
 
 ## module `Mock.Net.WebSocket`
 
+Canned message state for WebSocket specifications.
+
 ## record `Script`
+
+High-level messages delivered in order by a scripted connection.
 
 **Fields**
 
@@ -5219,7 +5298,7 @@ if Support.current.tls.usable? then https.string else "TLS unavailable" end
 
 A validated TCP or UDP port number in `0..65535`.
 
-Use `Port.from` at input boundaries. Port zero requests an ephemeral port where a listening API permits it.
+Use `Port.from` at input boundaries. Port zero requests an ephemeral port where a listening API permits it; after binding, ask the server or socket for the concrete port the operating system chose.
 
 **Fields**
 
@@ -5229,6 +5308,8 @@ Use `Port.from` at input boundaries. Port zero requests an ephemeral port where 
 
 Whether a feature was compiled into this backend and is usable now.
 
+`compiled?` describes the build; `usable?` also accounts for the environment it is running in. A browser build may contain an HTTP client, for example, while browser policy still prevents a particular lower-level capability.
+
 **Fields**
 
   - `compiled?` : Bool
@@ -5237,6 +5318,8 @@ Whether a feature was compiled into this backend and is usable now.
 ## record `SupportReport`
 
 Granular networking capabilities for the current backend and environment.
+
+Read this before choosing a transport dynamically. Applications that require one capability can instead check that single field during startup and fail with a useful message.
 
 **Fields**
 
@@ -5252,6 +5335,8 @@ Granular networking capabilities for the current backend and environment.
 
 ## module `Net.Port`
 
+Validated `Port` construction.
+
 ## function `from`
 
 Validates a port number.
@@ -5263,6 +5348,8 @@ from(value) : Integer -> Result<Port, NetError>
 
 
 ## module `Net.Support`
+
+Runtime discovery for optional network transports and protocols.
 
 ## constant `current`
 
@@ -5314,7 +5401,9 @@ Stable, backend-independent networking failure categories.
 
 ## record `NetError`
 
-A typed networking failure. `phase` adds optional protocol context and `progress` records bytes transferred before a partial-operation failure.
+A typed networking failure shared by every network module.
+
+`kind` is the stable category to branch on. `message` is for a person, while `phase` adds protocol context such as a TLS handshake and `progress` records bytes transferred before a partial-operation failure. Keeping those roles separate lets programs recover without matching backend-specific prose.
 
 **Fields**
 
@@ -5350,7 +5439,7 @@ entities:
 
 Whole numbers, of arbitrary size.
 
-`Integer` has no width limit — factorials and cryptographic moduli are ordinary values, not a special big-number type you have to opt into.
+`Integer` has no width limit: factorials and cryptographic moduli are ordinary values, not a special big-number type you have to opt into.
 
 `Integer` and `Float` are one numeric tower: they compare and order across the boundary, so `0 == 0.0` is `true` and `[1, 2.5, 3].sort` works. What differs is the arithmetic. `/` on two integers is integer division, and `sqrt` answers a `Float` because a square root generally is one.
 
@@ -5436,7 +5525,7 @@ retries.times { |_| attemptConnection }
 
 Double-precision floating-point numbers.
 
-A Kex `Float` is always finite. An operation that would produce `NaN` or `Infinity` raises instead — the same rule the BEAM enforces, where those two values cannot exist at all. So a `Float` you are holding is always a real number, and there is no `nan?` to check for.
+A Kex `Float` is always finite. An operation that would produce `NaN` or `Infinity` raises instead: the same rule the BEAM enforces, where those two values cannot exist at all. So a `Float` you are holding is always a real number, and there is no `nan?` to check for.
 
 `Float` and `Integer` compare and order across the boundary; see `Integer` for the rest of the numeric tower.
 
@@ -5470,7 +5559,7 @@ ratio >= 0.0 && ratio <= 1.0   # => true
 
 Reading integers out of text.
 
-Use `parse` when a failure needs explaining and `"42".to(Integer)` when it does not — `to` answers a plain `Optional`, `parse` answers a `Result` carrying a `ParseError` that says where it stopped and what it had read so far.
+Use `parse` when a failure needs explaining and `"42".to(Integer)` when it does not: `to` answers a plain `Optional`, `parse` answers a `Result` carrying a `ParseError` that says where it stopped and what it had read so far.
 
 ## function `parse`
 
@@ -5531,7 +5620,7 @@ Reading a number out of text without deciding in advance which half of the numer
 
 Parses the whole string as an `Integer` or a `Float`, whichever the text describes.
 
-Use it when the input's shape is not known ahead of time — a config value, a CSV column that may hold either.
+Use it when the input's shape is not known ahead of time: a config value, a CSV column that may hold either.
 
 
 ```kex
@@ -5567,7 +5656,7 @@ entities:
 
 An optional value: `Just(x)` carries a value, `None` says there is none.
 
-`X?` is shorthand for `Optional<X>`, and is the spelling you will normally write. Kex has no `null` — anything that might not produce a value returns an `Optional` instead, so the compiler makes you say what happens when it is empty. Most of the time that is a single `.or(default)` at the end of a chain.
+`X?` is shorthand for `Optional<X>`, and is the spelling you will normally write. Kex has no `null`: anything that might not produce a value returns an `Optional` instead, so the compiler makes you say what happens when it is empty. Most of the time that is a single `.or(default)` at the end of a chain.
 
 ```kex
 let names = ["ada", "grace"]
@@ -5619,7 +5708,7 @@ end
 
 One of two values, of possibly different types: `Left(l)` or `Right(r)`.
 
-Unlike `Result`, neither side means failure — `Either` is for a value that is legitimately one of two shapes.
+Unlike `Result`, neither side means failure: `Either` is for a value that is legitimately one of two shapes.
 
 ```kex
 type Id = Either<Integer, String>
@@ -5762,7 +5851,7 @@ _Transforming before supplying a default_
 
 Applies `f`, which itself returns an optional, and flattens the result.
 
-Use it instead of `map` when the step can also fail — `map` would give you a doubly wrapped `Just(Just(x))`, `flatMap` gives a single layer. A `None` anywhere in the chain short-circuits the rest.
+Use it instead of `map` when the step can also fail: `map` would give you a doubly wrapped `Just(Just(x))`, `flatMap` gives a single layer. A `None` anywhere in the chain short-circuits the rest.
 
 ```kex
 flatMap : (X -> Y?) -> Y?
@@ -5943,9 +6032,9 @@ or(value, _)
 
 Converts `value` to the type `t`, or `None` if it cannot be represented.
 
-`t` is a runtime type value — write the type name itself: `String`, `Integer`, `Float`, `List`. Conversion to `String` goes through the `Showable` protocol, so it works for every value.
+`t` is a runtime type value: write the type name itself: `String`, `Integer`, `Float`, `List`. Conversion to `String` goes through the `Showable` protocol, so it works for every value.
 
-The result is an `Optional`, not a `Result`, and deliberately so: the reason a conversion failed is usually implied by the types alone. When the reason carries information — where a parse gave up and on what — reach for `Integer.parse` or `Float.parse`, which answer with `Result<_, ParseError>`. So: `to` for every day, `parse` when the failure needs handling.
+The result is an `Optional`, not a `Result`, and deliberately so: the reason a conversion failed is usually implied by the types alone. When the reason carries information (where a parse gave up and on what) reach for `Integer.parse` or `Float.parse`, which answer with `Result<_, ParseError>`. So: `to` for every day, `parse` when the failure needs handling.
 
 
 ```kex
@@ -6020,7 +6109,7 @@ What kind of value an option carries: `StringValue` takes any text, `IntegerValu
 
 ## record `OptionSpec`
 
-One declared option. Built for you by the `OptionConfig` builders — you rarely construct one by hand.
+One declared option. Built for you by the `OptionConfig` builders: you rarely construct one by hand.
 
 **Fields**
 
@@ -6196,7 +6285,7 @@ Declares an option that takes no value and is either present or not.
 
 It defaults to `"false"` and reads as `"true"` when given. Read it back with `ParsedOptions.flagEnabled?`. Giving it a value is an error (`UnexpectedValue`).
 
-Declare a flag named `help` if you want `--help` to print the help text — `run` looks for exactly that name, and adds nothing on its own.
+Declare a flag named `help` if you want `--help` to print the help text: `run` looks for exactly that name, and adds nothing on its own.
 
 ```kex
 flag(long, short, description)
@@ -6216,7 +6305,7 @@ config
 
 Declares a command and the function that runs it.
 
-A command name may be several words — `"docs build"` — and the longest match wins, so a group and its subcommands can both be declared. The handler receives the parsed options with the command's own words already removed, and returns the process exit code.
+A command name may be several words (`"docs build"`) and the longest match wins, so a group and its subcommands can both be declared. The handler receives the parsed options with the command's own words already removed, and returns the process exit code.
 
 Declares a command. `usage` is what the help line shows after the name (`<name>`, `[args...]`); leave it empty for a command that takes none.
 
@@ -6264,7 +6353,7 @@ Parses `args`, runs the command they name, and returns its exit code.
 
 This is the whole of a tool's `main`: hand it the argument list and pass the result to `System.exit`.
 
-A parse failure, an unknown command, or a line with no command at all reports the problem along with the help text and returns 1 — the one place that policy has to live for every tool to behave the same way. A set `help` flag prints the help and returns 0.
+A parse failure, an unknown command, or a line with no command at all reports the problem along with the help text and returns 1: the one place that policy has to live for every tool to behave the same way. A set `help` flag prints the help and returns 0.
 
 ```kex
 run(args)
@@ -6307,6 +6396,10 @@ args.empty? then cli.printHelp else cli.run(args)
 
 ## function `define`
 
+Starts an immutable command-line interface definition.
+
+Chain options and commands onto the returned `OptionConfig`, then call `parse` with the process arguments. `name` appears in usage text and `description` introduces the generated help page.
+
 
 ```kex
 define(name, description)
@@ -6315,7 +6408,7 @@ define(name, description)
 
 ## function `commandLabel`
 
-Returns the label a command is listed under in the help text — its name, followed by its usage when it has one.
+Returns the label a command is listed under in the help text: its name, followed by its usage when it has one.
 
 
 ```kex
@@ -6339,7 +6432,7 @@ commandFor(commands, arguments)
 
 Returns `true` when `arguments` begins with the words of `name`.
 
-The word-wise prefix test `commandFor` matches with — `"docs build"` opens `["docs", "build", "src"]` but not `["docs"]`.
+The word-wise prefix test `commandFor` matches with: `"docs build"` opens `["docs", "build", "src"]` but not `["docs"]`.
 
 
 ```kex
@@ -6389,7 +6482,7 @@ entities:
 
 Parser combinators, for reading a text format you define yourself.
 
-Opt-in — nothing here is in scope until `using Parsing`.
+Opt-in: nothing here is in scope until `using Parsing`.
 
 An `Input` is an immutable cursor over a string. A parser takes one and answers either the value it read together with an advanced cursor, or a `ParseError` saying where it gave up. Because the cursor is immutable, a failed attempt costs nothing: the caller still holds the position it started from and can try something else.
 
@@ -6411,7 +6504,7 @@ The building blocks are `char` and `charWhen` for one character, `string` for a 
 
 Why a parser gave up, and at which position.
 
-`Expected` carries what the grammar WANTED rather than what it found — the difference between "unexpected `d`" and "expected `version(`". It is what `label` and `string` report.
+`Expected` carries what the grammar WANTED rather than what it found: the difference between "unexpected `d`" and "expected `version(`". It is what `label` and `string` report.
 
 ```kex
 Input { input: "abc" }.char('z')      # => Error(Unexpected("a", 0))
@@ -6479,7 +6572,7 @@ Input { input: "abc 123" }.advanceBy(4).peek   # => Just('1')
 
 Reads one character, if it satisfies `pred`.
 
-Answers the character and the advanced cursor, or an `Unexpected` error naming what was there instead — `"EOF"` at the end of the input.
+Answers the character and the advanced cursor, or an `Unexpected` error naming what was there instead: `"EOF"` at the end of the input.
 
 ```kex
 charWhen(pred)
@@ -6571,7 +6664,7 @@ Input { input: "123" }.some { |p| p.charWhen(~alpha?) }
 
 Reads an exact literal.
 
-A keyword grammar is mostly literals — `version(` is one token to a reader and eight calls to `char` — and matching it here reports the failure at the START of the literal, which is where a person looking at the error expects the caret.
+A keyword grammar is mostly literals: `version(` is one token to a reader and eight calls to `char`, and matching it here reports the failure at the START of the literal, which is where a person looking at the error expects the caret.
 
 ```kex
 string(expected)
@@ -6820,7 +6913,7 @@ Spawning servers, running external commands, and the ambient process operations.
 
 Starts a process running the `serving` implementation attached to `state`'s type, and returns a handle on it.
 
-The state you pass is the server's initial state. Every `slot` in the `serving` block becomes a method on the returned `Server`, and each answers a `Result` — a call can time out or find the process gone.
+The state you pass is the server's initial state. Every `slot` in the `serving` block becomes a method on the returned `Server`, and each answers a `Result`: a call can time out or find the process gone.
 
 
 ```kex
@@ -6834,7 +6927,7 @@ Runs an executable with an argument vector and captures its output.
 
 No shell is involved, so nothing is glob-expanded or word-split and arguments containing spaces need no quoting. Output is captured as UTF-8 strings.
 
-A non-zero exit status is still `Ok` — the program ran and said something, which is information, not a failure to run it. `Error` means the child could not be started at all.
+A non-zero exit status is still `Ok`: the program ran and said something, which is information, not a failure to run it. `Error` means the child could not be started at all.
 
 
 ```kex
@@ -6846,7 +6939,7 @@ run(command, args) : String -> [String] -> Result<ProcessResult, String>
 
 Runs an executable with the CALLER's stdout and stderr, so its output appears as it is produced rather than in one block when it exits.
 
-Answers the exit code; nothing is captured — that is the trade, and it is what a long-running child a person is watching needs (kexhq/kex#187).
+Answers the exit code; nothing is captured: that is the trade, and it is what a long-running child a person is watching needs (kexhq/kex#187).
 
 `run` remains the one to use when the output is data to be READ.
 
@@ -6929,7 +7022,7 @@ Returned inside `Ok` by `Process.run`, whatever the exit status.
 
 Sends `msg` to the process, unchanged, as a raw BEAM term.
 
-Sending never blocks and never fails, even when the process is gone — that is the BEAM's model, not an oversight. Monitor the process when delivery matters.
+Sending never blocks and never fails, even when the process is gone: that is the BEAM's model, not an oversight. Monitor the process when delivery matters.
 
 ```kex
 send(msg) : X -> Void
@@ -6992,7 +7085,7 @@ sendFrom(msg) : X -> Void
 
 Returns the same server with a different default call timeout, in milliseconds.
 
-The server is untouched — this is a new view of it, so one slow call can be given more room without changing anything for other callers.
+The server is untouched: this is a new view of it, so one slow call can be given more room without changing anything for other callers.
 
 ```kex
 within(timeout) : Integer -> Server<X>
@@ -7015,7 +7108,7 @@ api.within(30000).rebuildIndex()
 
 Answers the pending call this value identifies.
 
-A slot that cannot answer immediately — because it is waiting on something else — omits `reply` from its transition and calls this later instead.
+A slot that cannot answer immediately, because it is waiting on something else: omits `reply` from its transition and calls this later instead.
 
 ```kex
 reply(value) : X -> Void
@@ -7394,7 +7487,7 @@ entities:
 
 ## record `Regex`
 
-Regular expressions, backed by PCRE2 in the interpreter and Erlang's `re` on BEAM — the same PCRE pattern language on both.
+Regular expressions, backed by PCRE2 in the interpreter and Erlang's `re` on BEAM: the same PCRE pattern language on both.
 
 Opt-in, not prelude: nothing here is in scope until `using Regex`.
 
@@ -7433,7 +7526,7 @@ A compiled regular expression.
 
 A pattern that failed to compile.
 
-Mirrors `ParseError` — the `position` is a *character* offset into the pattern, not a byte offset, so it agrees across backends on patterns containing non-ASCII.
+Mirrors `ParseError`: the `position` is a *character* offset into the pattern, not a byte offset, so it agrees across backends on patterns containing non-ASCII.
 
 ```kex
 regex("(")
@@ -7449,11 +7542,11 @@ regex("(")
 
 ## function `regex`
 
-NOTE: deliberately does NOT `implement: Errorable`, even though the trait exists for exactly this shape. Declaring a `message` method alongside the `message` field makes `e.message` dispatch to the method instead of reading the field, which fails with `undef` on the BEAM backend. `ParseError` — the prelude's equivalent error record — carries a bare `message` field for the same reason; nothing in the tree implements Errorable today.
+NOTE: deliberately does NOT `implement: Errorable`, even though the trait exists for exactly this shape. Declaring a `message` method alongside the `message` field makes `e.message` dispatch to the method instead of reading the field, which fails with `undef` on the BEAM backend. `ParseError`: the prelude's equivalent error record: carries a bare `message` field for the same reason; nothing in the tree implements Errorable today.
 
 Compiles `source` into a `Regex`.
 
-Answers a `Result` because an arbitrary string may not be a valid pattern. Use this form when the pattern is built at run time — from a config file, from user input. For a pattern you write yourself, the tag form `` regex`\d`` `` is checked at compile time and hands back a bare `Regex`.
+Answers a `Result` because an arbitrary string may not be a valid pattern. Use this form when the pattern is built at run time: from a config file, from user input. For a pattern you write yourself, the tag form `` regex`\d`` `` is checked at compile time and hands back a bare `Regex`.
 
 
 ```kex
@@ -7480,7 +7573,7 @@ validateRegex(source)
 
 A short alias for `regex`, in both its forms.
 
-A second name bound to the same two functions, not a lexer synonym, so every property of `regex` — escaping, backend mapping, error shape — applies to it unchanged. Most code uses the tag form, where the shorter name reads better.
+A second name bound to the same two functions, not a lexer synonym, so every property of `regex` (escaping, backend mapping, error shape) applies to it unchanged. Most code uses the tag form, where the shorter name reads better.
 
 
 ```kex
@@ -7502,7 +7595,7 @@ validateRe(source)
 
 Escapes every regex metacharacter in `s`, so the result matches `s` literally.
 
-This is how to search for text that may itself contain pattern syntax — a search term typed by a user, a filename, a version string. It escapes per character rather than wrapping in `\Q...\E`, which a value containing `\E` would break out of.
+This is how to search for text that may itself contain pattern syntax: a search term typed by a user, a filename, a version string. It escapes per character rather than wrapping in `\Q...\E`, which a value containing `\E` would break out of.
 
 
 ```kex
@@ -7516,7 +7609,7 @@ A successful match, and the groups it captured.
 
 It behaves like a map keyed by both group number (`0` is the whole match) and group name (`:year`), but is a named type so it can grow spans and surrounding context later without breaking existing `get` call sites.
 
-A group that did not participate is an absent key, so `get` answers `None` — which is different from a group that matched the empty string, and answers `Just("")`.
+A group that did not participate is an absent key, so `get` answers `None`. This differs from a group that matched the empty string, which answers `Just("")`.
 
 **Fields**
 
@@ -7524,7 +7617,7 @@ A group that did not participate is an absent key, so `get` answers `None` — w
 
 ## make `Match`
 
-NOTE: the accessor is `get`, not `get`. A `make` block on a user type that defines a method name the prelude also uses breaks that name's dispatch for every OTHER type on the BEAM backend — with `get` here, merely saying `using Regex` made a plain `someMap.get(k)` fail with function_clause. `get` also matches Python's `m.get(1)` and Java's `matcher.get(1)`. A plain Map's `get` is unaffected: resolution picks a local method by receiver type, name and arity.
+NOTE: the accessor is `get`, not `get`. A `make` block on a user type that defines a method name the prelude also uses breaks that name's dispatch for every OTHER type on the BEAM backend: with `get` here, merely saying `using Regex` made a plain `someMap.get(k)` fail with function_clause. `get` also matches Python's `m.get(1)` and Java's `matcher.get(1)`. A plain Map's `get` is unaffected: resolution picks a local method by receiver type, name and arity.
 
 
 #### `get`
@@ -7583,7 +7676,7 @@ matches?(s, re) : String -> Regex -> Bool
 
 Returns every match of `re` in `s`, left to right.
 
-Always answers `[Match]`, whether or not the pattern has capture groups — adding a group to a pattern must not change the type flowing out of `scan`. An empty list means nothing matched.
+Always answers `[Match]`, whether or not the pattern has capture groups: adding a group to a pattern must not change the type flowing out of `scan`. An empty list means nothing matched.
 
 
 ```kex
@@ -7593,7 +7686,7 @@ scan(s, re) : String -> Regex -> [Match]
 
 ## function `replace`
 
-Replaces EVERY match of `re` in `s` — this is `gsub`, not `sub`.
+Replaces EVERY match of `re` in `s`: this is `gsub`, not `sub`.
 
 The replacement is either a literal `String`, inserted verbatim with no `$1` / `\1` backreference syntax, or a block receiving the `Match`, which is how a replacement built from what was captured is written.
 
@@ -7609,9 +7702,9 @@ Splits `s` on `re`, capping the number of fields.
 
 A positive `limit` caps the field count, leaving the remainder unsplit in the last field; a negative `limit` keeps trailing empty fields instead of dropping them.
 
-Plain `s.split(re)` needs no function here at all: it resolves to `String.split`, which dispatches to this engine when handed a Regex (in both backends), and follows Ruby's semantics — trailing empty fields are dropped, leading ones are kept, and capture groups are interleaved into the result.
+Plain `s.split(re)` needs no function here at all: it resolves to `String.split`, which dispatches to this engine when handed a Regex (in both backends), and follows Ruby's semantics: trailing empty fields are dropped, leading ones are kept, and capture groups are interleaved into the result.
 
-Only the limit form needs a name, and it deliberately is NOT `split` — this module must not export that name. On BEAM, a module in scope via `using` captures a method name for EVERY receiver, so exporting `split` here would route `"a,b".split(",")` and even the no-argument `"hi".split` through this module and break them.
+Only the limit form needs a name, and it deliberately is NOT `split`: this module must not export that name. On BEAM, a module in scope via `using` captures a method name for EVERY receiver, so exporting `split` here would route `"a,b".split(",")` and even the no-argument `"hi".split` through this module and break them.
 
 
 ```kex
@@ -7650,7 +7743,7 @@ naturals.filter { |n| n.even? }.take(3)       # => [0, 2, 4]
 
 `map`, `filter` and `drop` all answer with another stream, so a pipeline stays lazy end to end; `take` is what turns it into a list.
 
-`FS.File.feed+ hands back a stream of a file's lines, which is how to walk a file too large to hold in memory.
+Streams are best for generated sequences you may revisit. A file or socket is different: it can only be consumed once, so those APIs return a `Feed`. Convert a small feed with `toStream+ only when replaying it is worth keeping every value already read.
 
 
 
@@ -7662,7 +7755,7 @@ Constructors for `Stream`.
 
 Builds an infinite stream from a first element and a step function.
 
-The stream is `from`, then `step(from)`, then `step(step(from))`, and so on — nothing is computed until you take from it.
+The stream is `from`, then `step(from)`, then `step(step(from))`, and so on: nothing is computed until you take from it.
 
 
 ```kex
@@ -7672,7 +7765,7 @@ Sequence(from, step)
 
 ## function `Iterate`
 
-Builds an infinite stream from a seed and a step function. The same thing as `Sequence` — use whichever reads better where you are.
+Builds an infinite stream from a seed and a step function. The same thing as `Sequence`: use whichever reads better where you are.
 
 
 ```kex
@@ -7713,12 +7806,18 @@ Stream.Sequence(from: 1) { |n| n ` 1 }
   .map { |n| n * n }
   .take(10)
 ```
+_Generating retry delays without building an unbounded list_
+
+```kex
+let delays = Stream.Sequence(from: 1.seconds) { |d| d * 2 }
+delays.take(4)   # => [1 second, 2 seconds, 4 seconds, 8 seconds]
+```
 
 #### `drop`
 
 Returns a new stream that skips the first `n` elements.
 
-Still a stream, so the result stays lazy — pair it with `take` to get a window out of the middle.
+Still a stream, so the result stays lazy: pair it with `take` to get a window out of the middle.
 
 ```kex
 drop(n) : Integer -> Stream<A>
@@ -7768,7 +7867,7 @@ Stream.Sequence(from: 1) { |n| n ` 1 }
 
 Returns a new stream with only the elements `pred` accepts.
 
-Producing `n` filtered elements may require walking many more upstream ones, so a predicate that almost never holds makes `take` run for a long time — and one that never holds makes it run forever.
+Producing `n` filtered elements may require walking many more upstream ones, so a predicate that almost never holds makes `take` run for a long time, and one that never holds makes it run forever.
 
 ```kex
 filter(pred) : (A -> Bool) -> Stream<A>
@@ -7796,7 +7895,7 @@ Stream.Sequence(from: 1) { |n| n ` 1 }
 
 Applies `f` to every element.
 
-Only ever finishes on a stream that ends — a file's lines converted with `Feed.toStream`, or anything `take` has bounded. On `Stream.Sequence` this runs forever, exactly as writing the same loop by hand would.
+Only ever finishes on a stream that ends: a file's lines converted with `Feed.toStream`, or anything `take` has bounded. On `Stream.Sequence` this runs forever, exactly as writing the same loop by hand would.
 
 ```kex
 each(f) : (A -> Void) -> Void
@@ -7833,7 +7932,7 @@ entities:
 
 ## make `String` implements [Enumerable](enumerable.md#trait-enumerable), [Foldable](enumerable.md#trait-foldable)
 
-Text. A `String` is a sequence of Unicode characters, immutable like every other Kex value — every method here answers with a new string rather than changing the receiver.
+Text. A `String` is a sequence of Unicode characters, immutable like every other Kex value: every method here answers with a new string rather than changing the receiver.
 
 A `String` is its own type, not a list of characters. It is `Enumerable`, so `each`, `reduce`, `find` and friends walk it one `Char` at a time, and the sequence operations that could reasonably answer in either currency pick the useful one: `take`, `drop` and `sort` hand back a `String`, while `first` and `last` hand back a `Char`. Use `chars` to cross over to a real list.
 
@@ -7998,7 +8097,7 @@ flag.startsWith?("--") then flag.drop(2) else flag   # => "verbose"
 
 #### `reject`
 
-Returns the characters that do NOT satisfy `pred` — the complement of `filter`.
+Returns the characters that do NOT satisfy `pred`: the complement of `filter`.
 
 ```kex
 reject(pred) : (Char -> Bool) -> String
@@ -8186,7 +8285,7 @@ _Empty parts at the edges are kept_
 
 Indents every line but the first by `prefix`.
 
-This is what splicing a multi-line value into an indented `${...}` hole needs: the hole's own indentation already covers line one, and the rest have to catch up. Blank lines stay blank, and — through `lines` — a single trailing newline is dropped, so a block does not push a stray empty line into its slot.
+This is what splicing a multi-line value into an indented `${...}` hole needs: the hole's own indentation already covers line one, and the rest have to catch up. Blank lines stay blank, and (through `lines`) a single trailing newline is dropped, so a block does not push a stray empty line into its slot.
 
 ```kex
 indentRest(prefix) : String -> String
@@ -8236,7 +8335,7 @@ _Normalising a path separator_
 
 Replaces every key of `replacements` with its value, in one pass over the map.
 
-The keys are the placeholders exactly as written — no syntax is imposed and nothing is reserved — so `$NAME$`, `__NAME__`, `{{name}}` and `%name%` are all equally valid, and a template needs no escaping to be a template. `$NAME$` is the convention to reach for when there is no reason to prefer another.
+The keys are the placeholders exactly as written: no syntax is imposed and nothing is reserved, so `$NAME$`, `__NAME__`, `{{name}}` and `%name%` are all equally valid, and a template needs no escaping to be a template. `$NAME$` is the convention to reach for when there is no reason to prefer another.
 
 Note that a placeholder is NOT `${name}`: that is interpolation, which the compiler resolves before this ever sees the string.
 
@@ -8337,7 +8436,7 @@ paths.filter { |p| p.endsWith?(".kex") }
 
 A single Unicode character.
 
-Character literals are written with single quotes — `'a'` — and are a different type from the one-character string `"a"`. The classification methods (`digit?`, `alpha?`, `space?` and the rest) are what most character code needs; `codepoint` and `String.fromCodepoint` are the escape hatch to raw Unicode values.
+Character literals are written with single quotes (`'a'`) and are a different type from the one-character string `"a"`. The classification methods (`digit?`, `alpha?`, `space?` and the rest) are what most character code needs; `codepoint` and `String.fromCodepoint` are the escape hatch to raw Unicode values.
 
 ```kex
 "hello world".chars.count(~alpha?)   # => 10
@@ -8370,7 +8469,7 @@ let hex?(c: Char) -> Bool = c.digit? || c.lowerCase.in?('a'..'f')
 
 ## module `String`
 
-Constructors for `String` values that are built from something other than text — a Unicode codepoint, or raw UTF-8 bytes.
+Constructors for `String` values that are built from something other than text: a Unicode codepoint, or raw UTF-8 bytes.
 
 ## function `fromCodepoint`
 
@@ -8386,7 +8485,7 @@ fromCodepoint(value) : Integer -> String?
 
 ## function `fromBytes`
 
-Rebuilds a string from its UTF-8 bytes — the inverse of `bytes`.
+Rebuilds a string from its UTF-8 bytes: the inverse of `bytes`.
 
 A `String` is TEXT, so bytes outside 0..255 or a malformed encoding answer `None` rather than a string that would decode to replacement characters. That makes it a decoding step you can check, not a lossy cast.
 
@@ -8398,7 +8497,7 @@ fromBytes(values) : [Byte] -> String?
 
 ## make `Tuple`
 
-A fixed-size group of values, written `(a, b)`. Unlike a list, a tuple's size and the type of each position are part of its type, so the `List` methods do not apply to it — destructure it, match on it, or convert it with `items`.
+A fixed-size group of values, written `(a, b)`. Unlike a list, a tuple's size and the type of each position are part of its type, so the `List` methods do not apply to it: destructure it, match on it, or convert it with `items`.
 
 ```kex
 let (name, age) = ("Ada", 36)
@@ -8432,13 +8531,13 @@ System.posix?      # => true
 System.exit(1)     # ends the program with status 1
 ```
 
-Deliberately NOT a capability, and `OS`/`BITWIDTH` stay pure. Faking the reported OS only exercises a program's branching, not the platform behaviour behind it — the file semantics, path rules and process handling that actually differ are unaffected by the atom. Testing those means running on the platform, which CI does across macOS, Ubuntu and Alpine. `Mock.System` existed for this and had exactly one caller: the spec that tested it (kexhq/kex#143).
+Deliberately NOT a capability, and `OS`/`BITWIDTH` stay pure. Faking the reported OS only exercises a program's branching, not the platform behaviour behind it: the file semantics, path rules and process handling that actually differ are unaffected by the atom. Testing those means running on the platform, which CI does across macOS, Ubuntu and Alpine. `Mock.System` existed for this and had exactly one caller: the spec that tested it (kexhq/kex#143).
 
 ## type `OperatingSystem`
 
 The operating system families a program may be running on.
 
-A union of atoms rather than an ADT: these are plain tags, and a `match` over them is still exhaustive. Anything unmodelled is `:unknown` — the union is closed, so callers can cover it.
+A union of atoms rather than an ADT: these are plain tags, and a `match` over them is still exhaustive. Anything unmodelled is `:unknown`: the union is closed, so callers can cover it.
 
 
 
@@ -8459,7 +8558,7 @@ Ends the process immediately with exit status `code`.
 
 The invoking shell receives the code, so this is how a command-line tool reports success or failure to whatever ran it: 0 means success, anything else means failure.
 
-Nothing after the call runs, and no cleanup happens — close what needs closing first.
+Nothing after the call runs, and no cleanup happens: close what needs closing first.
 
 
 ```kex
@@ -8477,7 +8576,7 @@ Both backends answer with the same atom for the same machine. Prefer the `macOS?
 
 ## constant `BITWIDTH`
 
-The machine's pointer width in bits — 64 on anything current, 32 on a small target.
+The machine's pointer width in bits: 64 on anything current, 32 on a small target.
 
 Reported by the emulator on BEAM and by the pointer size in the tree walker, so both agree for one machine.
 
@@ -8513,7 +8612,7 @@ Everything the toolchain runs on except Windows behaves POSIX-ly enough for path
 
 Ends the program with a fatal error message.
 
-`message` goes to stderr behind a `"fatal: "` prefix and the exit status is 1. This is an abort, not an exception — `trying` / `rescue` cannot catch it — so use it only where there is no recoverable answer. The prelude uses it for a negative `repeat` count, for instance.
+`message` goes to stderr behind a `"fatal: "` prefix and the exit status is 1. This is an abort, not an exception, so `trying` / `rescue` cannot catch it. Use it only where there is no recoverable answer. The prelude uses it for a negative `repeat` count, for instance.
 
 Its result type is `Never`, the bottom type: `die` does not return, so a branch that dies takes the other branch's type, and `if b == 0 then die("divide by zero") else a end` is an `Integer`.
 
@@ -8544,7 +8643,7 @@ entities:
 
 Diagnostics returned by compile-time validators for tagged literals.
 
-A tagged literal — `` re`\d`` ``, `` sql`SELECT ...` `` — can be checked while your program is compiled rather than when it runs. The compiler finds the checker by name: a tag `foo` is validated by a function named `validateFoo` taking the literal's text and returning a list of `Issue` values. An empty list means the literal is fine.
+A tagged literal (`` re`\d`` ``, `` sql`SELECT ...` ``) can be checked while your program is compiled rather than when it runs. The compiler finds the checker by name: a tag `foo` is validated by a function named `validateFoo` taking the literal's text and returning a list of `Issue` values. An empty list means the literal is fine.
 
 ```kex
 let validateHex(source: String) -> [TaggedValidation.Issue] do
@@ -8576,7 +8675,7 @@ Both are byte offsets into the literal body, counted from zero.
 
 One diagnostic about a tagged literal.
 
-`Fatal` stops the build; `Warn` reports and lets it continue. The span is optional — an issue about the literal as a whole carries `None`.
+`Fatal` stops the build; `Warn` reports and lets it continue. The span is optional: an issue about the literal as a whole carries `None`.
 
 
 
@@ -8665,9 +8764,9 @@ entities:
 
 An ERB-shaped template scanner: template text in, a template AST out.
 
-Opt-in — nothing here is in scope until `using Template`.
+Opt-in: nothing here is in scope until `using Template`.
 
-This is the scanning stage only (see the Template proposal for the fuller design): it turns template source into a flat list of `Node`s — plain text, and the four kinds of `<% %>` region — plus whatever frontmatter tags sit ahead of the body. It does not evaluate anything and does not know Kex syntax; the text inside a hole is kept as-is, for a later stage to parse and lower into real Kex.
+This is the scanning stage only (see the Template proposal for the fuller design): it turns template source into a flat list of `Node`s: plain text, and the four kinds of `<% %>` region, plus whatever frontmatter tags sit ahead of the body. It does not evaluate anything and does not know Kex syntax; the text inside a hole is kept as-is, for a later stage to parse and lower into real Kex.
 
 ```kex
 using Template
@@ -8695,7 +8794,7 @@ parsed.nodes                       # => [Text("Hi "), Interpolate("name"), Text(
 
 ## Frontmatter
 
-A template file may open with a `---` line, generic `key: value` tags up to a closing `---` line, and then the body. This is metadata for whatever reads the template — a title, a layout name, a list of tags — and there is nothing template-specific about it: it is scanned the same generic way whatever key is used.
+A template file may open with a `---` line, generic `key: value` tags up to a closing `---` line, and then the body. This is metadata for whatever reads the template (a title, a layout name, a list of tags) and there is nothing template-specific about it: it is scanned the same generic way whatever key is used.
 
 ```kex
 ---
@@ -8705,7 +8804,7 @@ tags: [changelog, public]
 # <%= title %>
 ```
 
-A template's parameters, when a later stage needs them declared rather than inferred, are just another frontmatter key — conventionally `params`, a list of names each with an optional `: Type`:
+A template's parameters, when a later stage needs them declared rather than inferred, are just another frontmatter key: conventionally `params`, a list of names each with an optional `: Type`:
 
 ```kex
 ---
@@ -8714,13 +8813,13 @@ params: [name, library: Bool, dependencies: [Dependency]]
 # <%= name %>
 ```
 
-Nothing in the scanner treats `params` specially while scanning — it is metadata like any other key, a `[a, b, c]` list same as `tags` above. `Parsed#parameters` is a convenience reader for it: it splits each entry on its first colon into a `TemplateParam { name, type }` (`type` is `""` for a bare name), so a caller does not need to know the key name, match on `Tag` itself, or split each entry by hand. `type` is raw text, same as everywhere else in this module — turning `[Dependency]` into a real, resolved Kex type is later work, not this module's.
+Nothing in the scanner treats `params` specially while scanning: it is metadata like any other key, a `[a, b, c]` list same as `tags` above. `Parsed#parameters` is a convenience reader for it: it splits each entry on its first colon into a `TemplateParam { name, type }` (`type` is `""` for a bare name), so a caller does not need to know the key name, match on `Tag` itself, or split each entry by hand. `type` is raw text, same as everywhere else in this module: turning `[Dependency]` into a real, resolved Kex type is later work, not this module's.
 
 ## type `Node`
 
 One piece of a scanned template.
 
-Hole and control content is carried as raw text — the Kex source that was between the delimiters, trimmed of surrounding whitespace. Turning that text into real, type-checked Kex expressions is later work; a `Node` only records what KIND of region it is and what text it held.
+Hole and control content is carried as raw text: the Kex source that was between the delimiters, trimmed of surrounding whitespace. Turning that text into real, type-checked Kex expressions is later work; a `Node` only records what KIND of region it is and what text it held.
 
 
 
@@ -8757,7 +8856,7 @@ Why a template's text could not be scanned, and where.
 
 ## record `TemplateParam`
 
-One entry from a `params: [...]` frontmatter list: a name, and its optional `: Type` annotation. `type` is raw text — `""` for a bare name, never a resolved Kex type — the same way a frontmatter `Tag` is text and not a parsed value.
+One entry from a `params: [...]` frontmatter list: a name, and its optional `: Type` annotation. `type` is raw text: `""` for a bare name, never a resolved Kex type: the same way a frontmatter `Tag` is text and not a parsed value.
 
 **Fields**
 
@@ -8766,7 +8865,7 @@ One entry from a `params: [...]` frontmatter list: a name, and its optional `: T
 
 ## record `TagScan`
 
-One scanned `<% ... %>` region: its node, and the whitespace trims its delimiters asked for. Not part of the public API — internal to scanning — but declared at module scope rather than inside `private do`: nested there, this record's fields lose their names under BEAM codegen and the value round-trips as an untagged tuple (`Undefined method: leftTrim for Tuple`), even though the same code is fine on the tree-walking interpreter.
+One scanned `<% ... %>` region: its node, and the whitespace trims its delimiters asked for. It is internal to scanning, not part of the public API, but declared at module scope rather than inside `private do`. Nested there, this record's fields lose their names under BEAM codegen and the value round-trips as an untagged tuple (`Undefined method: leftTrim for Tuple`), even though the same code is fine on the tree-walking interpreter.
 
 **Fields**
 
@@ -8820,7 +8919,7 @@ entities:
 
 The built-in testing DSL: `describe`, `it`, `before`, `after`, and assertion helpers.
 
-Everything here is always in scope — no import, and no separate test runner. Write a test file and run it with `kex`:
+Everything here is always in scope: no import, and no separate test runner. Write a test file and run it with `kex`:
 
 ```kex
 describe "arithmetic" do
@@ -8845,7 +8944,7 @@ A file named `<name>.spec.kex` automatically loads the declarations of `<name>.k
 
 Groups related test cases under a label, and runs them.
 
-The block is called immediately. `describe+ blocks nest, and the output is indented to match. This is a foul function — it prints.
+The block is called immediately. `describe+ blocks nest, and the output is indented to match. This is a foul function: it prints.
 
 
 ```kex
@@ -8857,7 +8956,7 @@ describe : String -> Block<Void> -> Void
 
 Defines a single test case, and runs it.
 
-The block runs, and anything thrown inside it — typically a failed `assert` — marks the test failed without aborting the rest of the suite. This is a foul function — it prints.
+The block runs, and anything thrown inside it: typically a failed `assert`: marks the test failed without aborting the rest of the suite. This is a foul function: it prints.
 
 
 ```kex
@@ -8882,7 +8981,7 @@ before : Atom -> Block<Void> -> Void
 
 Registers cleanup to run after the current group's tests.
 
-Defaults to `:each`. Cleanup is unconditional — it runs whether the test passed or failed — and inner per-test hooks run before outer hooks.
+Defaults to `:each`. Cleanup is unconditional: it runs whether the test passed or failed, and inner per-test hooks run before outer hooks.
 
 
 ```kex
@@ -8895,7 +8994,7 @@ after : Atom -> Block<Void> -> Void
 
 Fails the enclosing `it` when `value` is falsy.
 
-The primitive every other assertion is built on. Prefer the `Assert` helpers where one fits — they report what was expected and what arrived, which a bare `assert` cannot.
+The primitive every other assertion is built on. Prefer the `Assert` helpers where one fits: they report what was expected and what arrived, which a bare `assert` cannot.
 
 
 ```kex
@@ -8940,7 +9039,7 @@ notEqual(actual, expected)
 
 ## function `truthy`
 
-Fails unless `value` is truthy — anything except `false`, `None` and `()`.
+Fails unless `value` is truthy: anything except `false`, `None` and `()`.
 
 
 ```kex
@@ -8950,7 +9049,7 @@ truthy(value)
 
 ## function `falsy`
 
-Fails unless `value` is falsy — `false`, `None` or `()`.
+Fails unless `value` is falsy: `false`, `None` or `()`.
 
 
 ```kex
@@ -9062,9 +9161,9 @@ due.weekday.name                             # "Thursday"
 Time.now().iso                               # "2026-07-30T14:03:00`02:00"
 ```
 
-Anything that reads the clock is mockable — see the test clock section in `module Time` for `Time.frozenAt`.
+Anything that reads the clock is mockable: see the test clock section in `module Time` for `Time.frozenAt`.
 
-Zones are fixed offsets — UTC, an explicit `+02:00`, or whatever this machine's zone resolves to at a given instant. Named IANA zones and their DST rules are not modeled: `Time.now()` asks the host for the offset in effect at that moment, so it is right now, but it cannot say what the offset WILL be for some future local time.
+Zones are fixed offsets: UTC, an explicit `+02:00`, or whatever this machine's zone resolves to at a given instant. Named IANA zones and their DST rules are not modeled: `Time.now()` asks the host for the offset in effect at that moment, so it is right now, but it cannot say what the offset WILL be for some future local time.
 
 The records and the two ADTs stay at file level so `make` blocks, callers, and every module here can see them.
 
@@ -9142,7 +9241,7 @@ m.iso        # => "2026-07-30T14:03:00`02:00"
 m.utc.iso    # => "2026-07-30T12:03:00Z"
 ```
 
-Two `DateTime` values that name the same instant compare equal whatever offsets they are written at — comparison goes through `epochSeconds`.
+Two `DateTime` values that name the same instant compare equal whatever offsets they are written at: comparison goes through `epochSeconds`.
 
 **Fields**
 
@@ -9152,7 +9251,7 @@ Two `DateTime` values that name the same instant compare equal whatever offsets 
 
 ## record `Period`
 
-A calendar span. Months and years have no fixed length — February is 28 days or 29, a year 365 or 366 — so they cannot live in a `Duration`, which is a count of seconds and nothing else. A Period carries the calendar fields themselves and lets the calendar resolve them:
+A calendar span. Months and years have no fixed length: February is 28 days or 29, a year 365 or 366, so they cannot live in a `Duration`, which is a count of seconds and nothing else. A Period carries the calendar fields themselves and lets the calendar resolve them:
 
 ```kex
 Date.of(2026, 1, 31).try ` 1.months        # 2026-02-28, not 2026-03-03
@@ -9197,7 +9296,7 @@ midnight()
 
 Builds a time of day from a count of seconds since midnight.
 
-Wraps, so 86400 is midnight again and -1 is 23:59:59 — which is what makes it total where `Time.of` is fallible.
+Wraps, so 86400 is midnight again and -1 is 23:59:59, which is what makes it total where `Time.of` is fallible.
 
 Declared before the two-argument form: the interpreter resolves an overloaded module function to its LAST definition regardless of arity, so a delegating overload has to come first or it recurses into itself.
 
@@ -9255,17 +9354,17 @@ parseOffset(text)
 
 ## function `nanosOf`
 
-Anything that asks what time it is — `Time.now`, `Date.today`, `DateTime.utcNow` — reads one primitive, so pinning that primitive pins the whole calendar. This is what makes code that calls `Date.today()` testable: freeze the clock, assert against a date you chose.
+Anything that asks what time it is: `Time.now`, `Date.today`, `DateTime.utcNow`: reads one primitive, so pinning that primitive pins the whole calendar. This is what makes code that calls `Date.today()` testable: freeze the clock, assert against a date you chose.
 
 ```kex
 Time.freeze(DateTime.parse("2026-07-30T14:03:00Z").try)
-Date.today().iso                            # "2026-07-30" — always
+Date.today().iso                            # "2026-07-30": always
 Time.release()
 ```
 
-The clock is global, not per-process: a frozen clock stays frozen inside spawned processes, which is the only behavior that matches a real one. `release` is not automatic, so a test that freezes must also release — otherwise every later test in the run inherits the frozen clock.
+The clock is global, not per-process: a frozen clock stays frozen inside spawned processes, which is the only behavior that matches a real one. `release` is not automatic, so a test that freezes must also release: otherwise every later test in the run inherits the frozen clock.
 
-Nanoseconds since the Unix epoch for a civil datetime. A plain function rather than a `DateTime` method: on BEAM a method named `epochNanos` flattens onto the same name as the `DateTime.epochNanos()` module function, and the arity-0 one wins — silently, answering for the host clock instead of for `moment`.
+Nanoseconds since the Unix epoch for a civil datetime. A plain function rather than a `DateTime` method: on BEAM a method named `epochNanos` flattens onto the same name as the `DateTime.epochNanos()` module function, and the arity-0 one wins: silently, answering for the host clock instead of for `moment`.
 
 
 ```kex
@@ -9275,7 +9374,7 @@ nanosOf(moment)
 
 ## constant `CLOCK_MIN_NANOS`
 
-The clock counts nanoseconds in a 64-bit integer, on both backends and in the host clock they stand in for. That is the whole of the instants it can name: 1677-09-21 to 2262-04-11. A Kex Integer keeps going past that — it promotes to arbitrary precision — so a date outside the range produces a number the clock cannot hold, and the check below is what stops it being truncated into some other instant entirely.
+The clock counts nanoseconds in a 64-bit integer, on both backends and in the host clock they stand in for. That is the whole of the instants it can name: 1677-09-21 to 2262-04-11. A Kex Integer keeps going past that: it promotes to arbitrary precision, so a date outside the range produces a number the clock cannot hold, and the check below is what stops it being truncated into some other instant entirely.
 
 
 
@@ -9297,7 +9396,7 @@ Pins the clock: every reading returns this exact instant until `release`.
 
 This is what makes code that calls `Date.today()` testable. Returns the moment it pinned, so `Time.freeze(m).try` both sets the clock and fails loudly on an instant the clock cannot represent.
 
-Prefer `Time.frozenAt`, which releases for you — a test that fails between a `freeze` and its `release` leaves the clock frozen for everything after it.
+Prefer `Time.frozenAt`, which releases for you: a test that fails between a `freeze` and its `release` leaves the clock frozen for everything after it.
 
 
 ```kex
@@ -9309,7 +9408,7 @@ freeze(moment)
 
 Moves the clock to an instant and lets it run from there.
 
-Readings advance normally, they just start somewhere else. Use this over `freeze` when the code under test measures elapsed time — a frozen clock makes every interval zero.
+Readings advance normally, they just start somewhere else. Use this over `freeze` when the code under test measures elapsed time: a frozen clock makes every interval zero.
 
 
 ```kex
@@ -9321,7 +9420,7 @@ travel(moment)
 
 Freezes the clock for the length of `body`, then releases it.
 
-This is the form to reach for: `freeze` and `release` have to be paired by hand, and a test that returns early — or fails an assertion — between them leaves the clock frozen for every test that runs after it.
+This is the form to reach for: `freeze` and `release` have to be paired by hand, and a test that returns early (or fails an assertion) between them leaves the clock frozen for every test that runs after it.
 
 Result carries whatever `body` returned. An instant the clock cannot represent is an Error, and then the clock is never touched and the body never runs.
 
@@ -9369,7 +9468,7 @@ controlled?()
 
 ## function `frozen?`
 
-Returns `true` while `freeze` is in effect — not merely `travel`.
+Returns `true` while `freeze` is in effect: not merely `travel`.
 
 
 ```kex
@@ -9395,7 +9494,7 @@ The number of days in a month.
 
 Year first, matching `Date.of(year, month, day)` and every other date-shaped signature in this file.
 
-A month outside 1..12 has no answer, so this is a Result rather than an Integer: the old version fell through its month tests and returned 28, which quietly turned `Time.daysInMonth(1, 2026)` — the arguments the wrong way round — into a plausible-looking wrong number.
+A month outside 1..12 has no answer, so this is a Result rather than an Integer: the old version fell through its month tests and returned 28, which quietly turned `Time.daysInMonth(1, 2026)`: the arguments the wrong way round: into a plausible-looking wrong number.
 
 
 ```kex
@@ -9419,7 +9518,7 @@ daysInValidMonth(year, month)
 
 The number of days from 1970-01-01 to a calendar date, negative before it.
 
-Howard Hinnant's civil-calendar algorithms: exact across the whole proleptic Gregorian range, and they need only truncating integer division — the semantics Kex's `/` already has.
+Howard Hinnant's civil-calendar algorithms: exact across the whole proleptic Gregorian range, and they need only truncating integer division: the semantics Kex's `/` already has.
 
 
 ```kex
@@ -9513,7 +9612,7 @@ formatTime(value)
 
 ## function `formatFraction`
 
-Fractional seconds, in the 3/6/9-digit groupings ISO 8601 output conventionally uses — whichever is the shortest that loses nothing. A whole second renders no fraction at all, so `14:03:00` is unchanged.
+Fractional seconds, in the 3/6/9-digit groupings ISO 8601 output conventionally uses, whichever is the shortest that loses nothing. A whole second renders no fraction at all, so `14:03:00` is unchanged.
 
 Without this the nanosecond field was kept on the value and compared, but never rendered: `Time.parse("14:03:00.5")` and `Time.parse("14:03:00")` produced different values that printed identically, and every parse/format round-trip silently dropped sub-second precision.
 
@@ -9569,7 +9668,7 @@ pad2(value)
 
 ## function `padTo`
 
-Left-pad with zeros to a fixed width. A value already that wide is left alone rather than truncated — losing digits would be worse than a field one character too long.
+Left-pad with zeros to a fixed width. A value already that wide is left alone rather than truncated: losing digits would be worse than a field one character too long.
 
 
 ```kex
@@ -9607,7 +9706,7 @@ digitsToInteger(text)
 
 ## function `parseFraction`
 
-".5" is 500000000ns — the digits are padded out to nanosecond scale.
+".5" is 500000000ns: the digits are padded out to nanosecond scale.
 
 
 ```kex
@@ -9633,7 +9732,7 @@ Building calendar dates, and asking what today is.
 
 Builds a validated calendar date.
 
-The month and the day are both range-checked, and the day is checked against that month's actual length — so February 30th is an `Error`, and a `Date` you hold is always a real day. The record literal `Date { ... }` bypasses this, so prefer it for anything derived from input.
+The month and the day are both range-checked, and the day is checked against that month's actual length, so February 30th is an `Error`, and a `Date` you hold is always a real day. The record literal `Date { ... }` bypasses this, so prefer it for anything derived from input.
 
 
 ```kex
@@ -9757,7 +9856,7 @@ fromEpochSeconds(count)
 
 Parses an ISO 8601 instant.
 
-Accepts `2026-07-30T14:03:00`02:00`, the same with `Z`, or a bare civil datetime with no zone at all — which is read as UTC.
+Accepts `2026-07-30T14:03:00`02:00`, the same with `Z`, or a bare civil datetime with no zone at all, which is read as UTC.
 
 
 ```kex
@@ -9769,7 +9868,7 @@ parse(text)
 
 The current instant, in this machine's zone as it stands right now.
 
-The offset is the one in effect at this instant, so it is right today — but named IANA zones are not modeled, so it cannot say what the offset WILL be for some future local time.
+The offset is the one in effect at this instant, so it is right today. Named IANA zones are not modeled, so it cannot say what the offset WILL be for some future local time.
 
 
 ```kex
@@ -9781,7 +9880,7 @@ now()
 
 The current instant, at UTC.
 
-The form to prefer when the value is stored, compared or transmitted — there is no zone to disagree about.
+The form to prefer when the value is stored, compared or transmitted: there is no zone to disagree about.
 
 
 ```kex
@@ -9793,7 +9892,7 @@ utcNow()
 
 Nanoseconds since the Unix epoch, straight from the clock.
 
-The rawest reading available, and the right one for measuring a short interval — no calendar work happens on the way.
+The rawest reading available, and the right one for measuring a short interval: no calendar work happens on the way.
 
 
 ```kex
@@ -9852,7 +9951,7 @@ Subtracts a span. The result may be negative.
 
 Multiplies the span by a plain number.
 
-`3 * 1.days` is not the same call — the receiver has to be the Duration — so it is spelled `1.days * 3`.
+`3 * 1.days` is not the same call because the receiver has to be the Duration, so it is spelled `1.days * 3`.
 
 ```kex
 *(factor)
@@ -10240,7 +10339,7 @@ Date.of(2026, 7, 30).try.addWeeks(2).iso   # => "2026-08-13"
 
 #### `addMonths`
 
-No `date.tomorrow`/`date.yesterday` methods: on BEAM a make-block method flattens onto the same name as the `Date.tomorrow()`/`Date.yesterday()` module functions above and one of the two has to win. The module functions win — `Date.tomorrow()` is the spelling people reach for, and `date.addDays(1)` already says the rest.
+No `date.tomorrow`/`date.yesterday` methods: on BEAM a make-block method flattens onto the same name as the `Date.tomorrow()`/`Date.yesterday()` module functions above and one of the two has to win. The module functions win: `Date.tomorrow()` is the spelling people reach for, and `date.addDays(1)` already says the rest.
 
 The date `count` calendar months later, with the day clamped into the target month.
 
@@ -10261,7 +10360,7 @@ Date.of(2026, 7, 30).try.addMonths(-1).iso   # => "2026-06-30"
 
 #### `addYears`
 
-The date `count` calendar years later, with the day clamped — February 29th plus one year is February 28th.
+The date `count` calendar years later, with the day clamped: February 29th plus one year is February 28th.
 
 ```kex
 addYears(count)
@@ -10473,7 +10572,7 @@ Advances the time of day by a span, wrapping within the day.
 
 A Time has no date to carry into, so 23:00 ` 2.hours is 01:00. Reach for `DateTime` when the day rolling over is something you need to see.
 
-The nanosecond field rides along untouched — `wholeSeconds` truncates the span, so a sub-second Duration shifts nothing.
+The nanosecond field rides along untouched: `wholeSeconds` truncates the span, so a sub-second Duration shifts nothing.
 
 ```kex
 +(span)
@@ -10603,7 +10702,7 @@ inspectValue(colors)
 
 The same instant, rendered at another offset.
 
-Nothing moves — the wall clock changes because the offset does, and `epochSeconds` is unchanged.
+Nothing moves: the wall clock changes because the offset does, and `epochSeconds` is unchanged.
 
 ```kex
 at(offset)
@@ -10779,7 +10878,7 @@ DateTime.utcNow().after?(started)   # => true
 
 #### `compareTo`
 
-Orders this instant against another, by instant rather than by wall clock — so 12:00Z and 14:00`02:00 compare `Equal`.
+Orders this instant against another, by instant rather than by wall clock, so 12:00Z and 14:00`02:00 compare `Equal`.
 
 Named `compareTo` rather than `compare`: a make-block `compare` is shadowed by the builtin comparison dispatch and fails at runtime on both backends.
 
@@ -10825,9 +10924,9 @@ entities:
 
 ## trait `Truthyable`
 
-`Truthyable` — what counts as true when a value is used as a condition.
+`Truthyable`: what counts as true when a value is used as a condition.
 
-The rule is Crystal's, and it is short: only `false`, `None` and `()` are falsy. Everything else is truthy — including `0`, `""` and `[]`, which some languages treat as false and Kex deliberately does not.
+The rule is Crystal's, and it is short: only `false`, `None` and `()` are falsy. Everything else is truthy, including `0`, `""` and `[]`, which some languages treat as false and Kex deliberately does not.
 
 ```kex
 0.truthy?       # => true
@@ -10868,7 +10967,7 @@ None.truthy?     # => false
 
 #### `truthy?`
 
-Always `true` — including for zero.
+Always `true`, including for zero.
 
 Zero is a number, not an absence. Compare it explicitly when zero means something: `count == 0`.
 
@@ -10890,7 +10989,7 @@ truthy? : Bool
 
 #### `truthy?`
 
-Always `true` — including for zero.
+Always `true`, including for zero.
 
 ```kex
 truthy? : Bool
@@ -10909,7 +11008,7 @@ truthy? : Bool
 
 #### `truthy?`
 
-Always `true` — including for the empty string.
+Always `true`, including for the empty string.
 
 Use `blank?` from `Blankable` when an empty or whitespace-only string should count as nothing.
 
@@ -10953,7 +11052,7 @@ None.truthy?       # => false
 
 #### `truthy?`
 
-Always `true` — including for the empty list.
+Always `true`, including for the empty list.
 
 Use `empty?` or `blank?` when an empty list should count as nothing.
 
@@ -10975,7 +11074,7 @@ truthy? : Bool
 
 #### `truthy?`
 
-Always `true` — including for the empty map.
+Always `true`, including for the empty map.
 
 ```kex
 truthy? : Bool
@@ -11014,12 +11113,12 @@ Types as values.
 
 ```kex
 Type.of(42)                     # Type { name: "Integer", args: [] }
-Type.of([1, 2]).toString        # "[Integer]"
+Type.of([1, 2]).to(String)        # "[Integer]"
 Type.of(x) == Type.of(y)        # structural equality, like any record
 Type.of(due).fields             # ["year", "month", "day"]
 ```
 
-The answer comes from the compiler where it can: a checked expression knows things a value cannot carry, such as the unused half of a `Result` or the element type of an empty list. Where the checker has no concrete answer — gradual code, `--no-check`, a value arriving from another process — the value itself is asked instead. That fallback is honest but lossy: an empty list has no element to inspect, and a `Result` only ever holds one side.
+The answer comes from the compiler where it can: a checked expression knows things a value cannot carry, such as the unused half of a `Result` or the element type of an empty list. Where the checker has no concrete answer: gradual code, `--no-check`, a value arriving from another process: the value itself is asked instead. That fallback is honest but lossy: an empty list has no element to inspect, and a `Result` only ever holds one side.
 
 **Fields**
 
@@ -11067,7 +11166,7 @@ generic(name, args)
 
 ## function `function`
 
-Builds a function type from its parameter types and its result type — in the order a signature is written.
+Builds a function type from its parameter types and its result type: in the order a signature is written.
 
 
 ```kex
@@ -11079,7 +11178,7 @@ function(params, result)
 
 Returns the type a named function returns, as answered by the compiler.
 
-Named functions only. A lambda or a function VALUE carries no signature at runtime, and an overloaded name has no single answer — both are compile errors rather than a guess.
+Named functions only. A lambda or a function VALUE carries no signature at runtime, and an overloaded name has no single answer: both are compile errors rather than a guess.
 
 
 ```kex
@@ -11092,6 +11191,31 @@ returnedBy(function)
 Everything else is a METHOD, not a module function: a module function is only reachable through UFCS in the interpreter, so `Type.of(x).fields` worked there and raised on BEAM.
 
 
+#### `to`
+
+Renders the type the way it is written in SOURCE, not the way it is stored.
+
+A list reads as `[Integer]`, a tuple as `(Integer, String)`, an optional as `String?`, a map as `{String: Integer}`, and a function as its signature.
+
+```kex
+to(String)
+```
+
+**Returns**: `String` — the type, as source
+
+**Examples**
+
+```kex
+Type.of([1, 2]).to(String)      # => "[Integer]"
+Type.of((1, "a")).to(String)    # => "(Integer, String)"
+Type.of(Just(1)).to(String)     # => "Integer?"
+Type.of("hi").to(String)        # => "String"
+```
+_An error message that names the type_
+
+```kex
+die("cannot serialise a ${Type.of(value).to(String)}")
+```
 
 
 ---
@@ -11124,7 +11248,7 @@ entities:
 
 Numbers that carry a unit.
 
-Writing `5.sec` or `90.minute` gives you a `Measure`: a number, the unit it was written in, and the same quantity in that dimension's base unit. Adding, subtracting and converting all go through the canonical value, so the arithmetic is right regardless of which units the operands were written in — and mixing dimensions is an `Error` rather than a silently wrong number.
+Writing `5.sec` or `90.minute` gives you a `Measure`: a number, the unit it was written in, and the same quantity in that dimension's base unit. Adding, subtracting and converting all go through the canonical value, so the arithmetic is right regardless of which units the operands were written in, and mixing dimensions is an `Error` rather than a silently wrong number.
 
 ```kex
 5.sec.to(String)                     # => "5.0 s"
@@ -11133,7 +11257,7 @@ Writing `5.sec` or `90.minute` gives you a `Measure`: a number, the unit it was 
 90.minute.convert(Hour)              # => Ok(1.5 h)
 ```
 
-The time units — `nanosecond` through `week` — are in the prelude. Other dimensions live in opt-in modules under `Units`, and every one of them measures against the same machinery here.
+The time units (`nanosecond` through `week`) are in the prelude. Other dimensions live in opt-in modules under `Units`, and every one of them measures against the same machinery here.
 
 A `Measure` is a measurement, not an elapsed span: `5.sec` describes a quantity, while `Duration` is what `Time` and `Date+ use for a span between two moments.
 
@@ -11142,7 +11266,7 @@ The trait a unit implements: how it converts to its dimension's base unit, which
 
 #### `factor`
 
-How many base units one of this unit is — `60.0` for a minute, whose base unit is the second.
+How many base units one of this unit is: `60.0` for a minute, whose base unit is the second.
 
 ```kex
 factor : Float
@@ -11222,7 +11346,7 @@ measureFactor(measure)
 
 A unit described at run time rather than by a constructor.
 
-Runtime-defined units are used for prefixes and units derived by arithmetic — `s^2` from squaring a duration, a kilo- prefix applied to a base unit.
+Runtime-defined units are used for prefixes and units derived by arithmetic: `s^2` from squaring a duration, a kilo- prefix applied to a base unit.
 
 **Fields**
 
@@ -11323,7 +11447,7 @@ to(String)
 
 #### `scale`
 
-Formatting into a target display unit deliberately has NO prelude clause. A unit module (Units.SI, Units.Data, ...) supplies `to(String, in:)` for the units it owns, and reaching one requires importing it. A catch-all here would answer `None` for an un-imported module instead — a silently empty Optional in place of "you need `using Units.SI`".
+Formatting into a target display unit deliberately has NO prelude clause. A unit module (Units.SI, Units.Data, ...) supplies `to(String, in:)` for the units it owns, and reaching one requires importing it. A catch-all here would answer `None` for an un-imported module instead: a silently empty Optional in place of "you need `using Units.SI`".
 
 Multiplies the measure by a plain number, keeping its unit.
 
@@ -11364,7 +11488,7 @@ Raising a measure preserves its display unit while applying the power to its can
 
 Converts the measure to another unit of the same dimension.
 
-Answers `Error` when the dimensions differ — you cannot express seconds in bytes, and this says so rather than producing a wrong number.
+Answers `Error` when the dimensions differ: you cannot express seconds in bytes, and this says so rather than producing a wrong number.
 
 Convert through the Unit trait so units from opt-in modules (SI, Data, and future domains) remain interchangeable with prelude time units.
 
@@ -11401,7 +11525,7 @@ convert(unit)
 
 Adds two measures of the same dimension.
 
-The units need not match — the sum goes through the canonical values, and comes back displayed in the LEFT operand's unit. Adding measures of different dimensions is an `Error`.
+The units need not match: the sum goes through the canonical values, and comes back displayed in the LEFT operand's unit. Adding measures of different dimensions is an `Error`.
 
 ```kex
 +(other)
@@ -11436,7 +11560,7 @@ Like ```, the result is displayed in the left operand's unit, and mixing dimensi
 
 ## module `Units`
 
-The time units are prelude-global, because every unit module measures against the same dimensions — `Units.SI` defines `Watt * Hour` with the `Hour` declared above, and future domains do the same. That makes `Hour` correct but not obviously located, so the same constructors are reachable under `Units` too, for call sites that would rather name where a unit comes from. These are aliases, not copies: each binds the identical constructor, so `Units.Hour` and `Hour` match the same patterns and compare equal.
+The time units are prelude-global, because every unit module measures against the same dimensions: `Units.SI` defines `Watt * Hour` with the `Hour` declared above, and future domains do the same. That makes `Hour` correct but not obviously located, so the same constructors are reachable under `Units` too, for call sites that would rather name where a unit comes from. These are aliases, not copies: each binds the identical constructor, so `Units.Hour` and `Hour` match the same patterns and compare equal.
 
 ## constant `Nanosecond`
 
@@ -11506,7 +11630,7 @@ A parsed RFC 3986 URI reference. Construction is strict; use `parse` rather than
 
 ## record `URL`
 
-An absolute hierarchical URI with an authority component.
+An absolute hierarchical URI with an authority component, such as an HTTP URL. Unlike a general `URI`, a `URL` always has a scheme and host, which makes accessors such as `scheme` and `host` total.
 
 **Fields**
 
@@ -11525,6 +11649,8 @@ A host's display spelling and normalized ASCII/IDNA spelling.
 
 Ordered URI query entries. `None` distinguishes a bare key from `key=`.
 
+Order and duplicates matter in real APIs: `tag=kex&tag=beam` must not become a map with one value silently discarded.
+
 **Fields**
 
   - `entries` : [(String, String?)]
@@ -11532,6 +11658,8 @@ Ordered URI query entries. `None` distinguishes a bare key from `key=`.
 ## record `Form`
 
 Ordered `application/x-www-form-urlencoded` entries.
+
+This is deliberately separate from `Query`: HTML forms encode spaces as plus signs, while a generic URI query treats a plus as an ordinary ``+.
 
 **Fields**
 
@@ -11569,6 +11697,8 @@ Stable URI failure categories.
 
 Strictly parses an ASCII RFC 3986 URI reference.
 
+Relative references are valid here. Use `URL.parse` when the input must be a complete hierarchical URL with a scheme and authority.
+
 
 ```kex
 parse(text) : String -> Result<URI, URIError>
@@ -11578,6 +11708,8 @@ parse(text) : String -> Result<URI, URIError>
 ## function `fromIRI`
 
 Converts a Unicode IRI to an ASCII URI using IDNA and UTF-8 percent encoding.
+
+Use this for human-entered international addresses. `parse` is intentionally stricter and accepts only an already encoded ASCII URI.
 
 
 ```kex
@@ -11591,6 +11723,8 @@ fromIRI(text) : String -> Result<URI, URIError>
 
 Parses an absolute hierarchical URL with an authority.
 
+Rejects relative references, opaque URIs, and values without a host, so a caller can use `scheme` and `host` without handling absence.
+
 
 ```kex
 parse(text) : String -> Result<URL, URIError>
@@ -11600,6 +11734,8 @@ parse(text) : String -> Result<URL, URIError>
 ## function `build`
 
 Builds and validates a URL from decoded path segments and a query value.
+
+Pass decoded values, not pre-escaped text. The builder escapes each path segment independently, so a slash inside one value cannot accidentally become another level of the path.
 
 
 ```kex
@@ -11612,6 +11748,8 @@ build : String -> String -> [String] -> Query -> Result<URL, URIError>
 ## function `from`
 
 Builds a query while preserving order, duplicates, and bare keys.
+
+A `None` value encodes as a bare key; `Just("")` encodes with an equals sign. This preserves the difference between `?debug` and `?debug=`.
 
 
 ```kex
@@ -11656,11 +11794,22 @@ parse(text) : String -> Result<Form, URIError>
 
 #### `equivalent?`
 
+Compares normalized representations rather than original spellings.
+
 ```kex
 equivalent?(other)
 ```
 
-**Returns**: `Bool` — whether normalized representations are equal
+**Returns**: `Bool` — whether the URIs identify the same normalized reference
+
+**Examples**
+
+_Deduplicating differently spelled links_
+
+```kex
+URI.parse("HTTP://example.com/%7Eada").try
+  .equivalent?(URI.parse("http://example.com/~ada").try)
+```
 
 #### `resolve`
 
@@ -11668,6 +11817,18 @@ Resolves a URI reference against this absolute base.
 
 ```kex
 resolve(reference)
+```
+
+**Returns**: `Result<URI, URIError>` — the resolved URI, or `NotAbsolute` when
+
+**Examples**
+
+_Following a relative link_
+
+```kex
+let base = URI.parse("https://example.com/docs/start").try
+base.resolve(URI.parse("../api").try).try.string
+# => "https://example.com/api"
 ```
 
 #### `inspectValue`
@@ -11683,11 +11844,13 @@ inspectValue(colors)
 
 #### `equivalent?`
 
+Compares normalized representations rather than original spellings.
+
 ```kex
 equivalent?(other)
 ```
 
-**Returns**: `Bool` — whether normalized representations are equal
+**Returns**: `Bool` — whether the URLs normalize to the same value
 
 #### `resolve`
 
@@ -11695,6 +11858,18 @@ Resolves a URI reference while preserving the URL invariant.
 
 ```kex
 resolve(reference)
+```
+
+**Returns**: `Result<URL, URIError>` — the resolved absolute URL
+
+**Examples**
+
+_Resolving an API pagination link_
+
+```kex
+let next = URL.parse("https://api.example.com/v1/items").try
+  .resolve(URI.parse("?page=2").try)
+  .try
 ```
 
 #### `inspectValue`
@@ -11728,6 +11903,20 @@ entities:
 # Control.Retry
 
 ## module `Control.Retry`
+
+Bounded retries for operations whose failures can be classified by the application.
+
+A retry is never automatically safe just because an error was temporary. The caller owns the operation and, where necessary, a predicate that excludes permanent failures and non-idempotent work. Policies bound attempts, delay, and optionally total sleep so a dependency cannot stall the program forever.
+
+```kex
+using Control.Retry
+
+let policy = Retry.exponential(4, 100.milliseconds, 2.seconds)
+  .withJitter(0.2)
+Retry.run(policy, ~retryable?) do
+  client.get("https://api.example.com/inventory")
+end
+```
 
 ## record `Policy`
 
@@ -11766,6 +11955,8 @@ Performs one scheduled delay. Supplying this callback makes retry tests determin
 
 Builds a constant-delay retry policy.
 
+Fixed delays are predictable and useful for a local resource expected to become ready shortly. For many clients sharing a remote dependency, prefer exponential backoff with jitter to avoid synchronized retry bursts.
+
 
 ```kex
 fixed(maximumAttempts, delay) : Integer -> Duration -> Policy
@@ -11775,6 +11966,8 @@ fixed(maximumAttempts, delay) : Integer -> Duration -> Policy
 ## function `exponential`
 
 Builds a doubling backoff capped at `maximumDelay`.
+
+The first retry waits `initialDelay`; later delays double until they reach the cap. Add jitter for production network traffic.
 
 
 ```kex
@@ -11809,8 +12002,20 @@ _`Retry.fixed(5, 1.seconds).withMaximumElapsed(2.seconds)`._
 
 Returns the same schedule with symmetric bounded jitter. A fraction of `0.25` selects each actual delay from 75% through 125% of its scheduled value. Fractions are clamped to `0.0..1.0`.
 
+Jitter prevents many workers that failed together from retrying together. It changes delay timing, never the number of attempts or the backoff cap.
+
 ```kex
 withJitter(fraction)
+```
+
+**Returns**: `Policy` — a copied policy with bounded jitter
+
+**Examples**
+
+_Spreading retries by up to 20 percent_
+
+```kex
+Retry.exponential(4, 1.seconds, 10.seconds).withJitter(0.2)
 ```
 
 ## function `run`
@@ -11929,7 +12134,7 @@ entities:
 
 A first-in-first-out queue.
 
-Opt-in — nothing here is in scope until `using Data.Queue`.
+Opt-in: nothing here is in scope until `using Data.Queue`.
 
 ```kex
 using Data.Queue
@@ -11944,9 +12149,9 @@ q.dequeue             # => Just((1, Queue(2, 3)))
 q.peek                # => Just(1)
 ```
 
-`items` is `@front ` @back.reverse`, so the queue is not opaque — it is always a real list you can hand to anything, the same promise `Data.Set` makes.
+`items` is `@front ` @back.reverse`, so the queue is not opaque: it is always a real list you can hand to anything, the same promise `Data.Set` makes.
 
-Unlike a set, a queue's representation is NOT canonical: `Queue.from([1,2])` and `Queue.from([1]).enqueue(2)` hold the same elements in different `front`/`back` splits, so they are structurally unequal even though they answer the same to every method. `==` is therefore overloaded to compare `items` rather than the record fields directly — but that overload only reaches ordinary `==` calls. Two such queues used as map keys, or matched against each other as record patterns, still compare structurally on both backends, and can disagree with `==`.
+Unlike a set, a queue's representation is NOT canonical: `Queue.from([1,2])` and `Queue.from([1]).enqueue(2)` hold the same elements in different `front`/`back` splits, so they are structurally unequal even though they answer the same to every method. `==` is therefore overloaded to compare `items` rather than the record fields directly, but that overload only reaches ordinary `==` calls. Two such queues used as map keys, or matched against each other as record patterns, still compare structurally on both backends, and can disagree with `==`.
 
 Every method answers with a new queue rather than changing the receiver. `enqueue!` and `dequeue!` come free from the `!+ rebinding form.
 
@@ -12040,7 +12245,7 @@ Queue.from([1, 2]).enqueue(3).items   # => [1, 2, 3]
 
 Returns the front element and the queue without it, wrapped in `Just`, or `None` for an empty queue.
 
-Rotates `back` into `front` (reversing it) when `front` has run out — the one case that is not O(1), and only amortized so because each element is reversed at most once over the queue's lifetime.
+Rotates `back` into `front` (reversing it) when `front` has run out: the one case that is not O(1), and only amortized so because each element is reversed at most once over the queue's lifetime.
 
 Use `dequeue!` to rebind the receiver variable.
 
@@ -12076,7 +12281,7 @@ Queue.empty.peek          # => None
 
 #### `==`
 
-Compares two queues by their elements, front to back — NOT by their `front`/`back` split, which is not canonical. See the file header.
+Compares two queues by their elements, front to back: NOT by their `front`/`back` split, which is not canonical. See the file header.
 
 ```kex
 ==(other) : Queue<A> -> Bool
@@ -12130,13 +12335,13 @@ entities:
 
 Immutable collections of distinct elements.
 
-Opt-in — nothing here is in scope until `using Data.Set`, which brings both flavours below into scope at once.
+Opt-in: nothing here is in scope until `using Data.Set`, which brings both flavours below into scope at once.
 
 ```kex
 using Data.Set
 ```
 
-Membership is decided by structural equality — the same equality `==` and map keys use — so records and tuples are compared by value, not identity. Every method answers with a new set; the `!` forms (`add!`, `delete!`) build a new set and rebind the receiver variable rather than modifying anything in place.
+Membership is decided by structural equality: the same equality `==` and map keys use, so records and tuples are compared by value, not identity. Every method answers with a new set; the `!` forms (`add!`, `delete!`) build a new set and rebind the receiver variable rather than modifying anything in place.
 
 ```kex
 let tags = Set.from(["kex", "beam", "kex"])
@@ -12152,22 +12357,22 @@ Set           sorted, so iteration is in ascending element order and the
               elements must be Orderable.
 UnorderedSet  hash-backed, so membership does not pay for ordering and
               the elements need only be comparable. Iteration order is
-              unspecified — never write a test against it.
+              unspecified: never write a test against it.
 ```
 
 Reach for `Set` when you will read the elements back out, and for `UnorderedSet` when the set exists to answer `contains?` quickly.
 
-`==` between two sets needs no overload of its own: each flavour keeps its backing canonical — sorted and duplicate free, or a map — so comparing the records structurally already IS set equality.
+`==` between two sets needs no overload of its own: each flavour keeps its backing canonical (sorted and duplicate free, or a map) so comparing the records structurally already IS set equality.
 
 Both wrap structures the runtime already has (a list and a map), so no set is opaque: `.items` is always a real list you can hand to anything.
 
-Those two backings are also the ones the BEAM's own set libraries use — a `Set` is laid out exactly like an `ordsets` term and an `UnorderedSet` exactly like a `sets` v2 term — so the operations here can be routed to the native BIFs later without changing what a set IS. What rules out adopting `gb_sets` instead is the other backend: a tree-walk interpreter cannot produce an opaque BEAM term, and a set that only one backend can build is not a set the prelude can offer.
+Those two backings are also the ones the BEAM's own set libraries use: a `Set` is laid out exactly like an `ordsets` term and an `UnorderedSet` exactly like a `sets` v2 term, so the operations here can be routed to the native BIFs later without changing what a set IS. What rules out adopting `gb_sets` instead is the other backend: a tree-walk interpreter cannot produce an opaque BEAM term, and a set that only one backend can build is not a set the prelude can offer.
 
 ## record `Set<A>`
 
 A set whose elements are kept sorted and duplicate free.
 
-Build one with `Set.from` rather than by hand — the record literal does no deduplication and no sorting, and every method here relies on both. Reading `items` back is the field itself, so handing a set's elements to list code costs nothing.
+Build one with `Set.from` rather than by hand: the record literal does no deduplication and no sorting, and every method here relies on both. Reading `items` back is the field itself, so handing a set's elements to list code costs nothing.
 
 ```kex
 Set.from([3, 1, 2]).items   # => [1, 2, 3]
@@ -12301,7 +12506,7 @@ methods.filter { |m| allowed.contains?(m.lowerCase) }
 
 #### `add`
 
-Returns a new set with `value` added. Adding an element that is already a member changes nothing — that is what makes a set a set.
+Returns a new set with `value` added. Adding an element that is already a member changes nothing: that is what makes a set a set.
 
 Use `add!` to rebind the receiver variable.
 
@@ -12411,7 +12616,7 @@ required.difference(Set.from(form.keys))
 
 #### `symmetricDifference`
 
-Returns the elements in exactly one of the two sets — everything they do not agree on.
+Returns the elements in exactly one of the two sets: everything they do not agree on.
 
 ```kex
 symmetricDifference(other) : Set<A> -> Set<A>
@@ -12533,7 +12738,7 @@ Set.from([1, 2, 3]) - Set.from([2, 3])   # => Set(1)
 
 Applies `f` to every element and returns a set of the results.
 
-Mapping a set may collapse elements: if `f` sends two members to the same value, the result has one. That is not a loss of information so much as the point of a set — `Set.from([1, -1]).map(~abs)` has one member.
+Mapping a set may collapse elements: if `f` sends two members to the same value, the result has one. That is not a loss of information so much as the point of a set: `Set.from([1, -1]).map(~abs)` has one member.
 
 ```kex
 map(f) : (A -> B) -> Set<B>
@@ -12596,7 +12801,7 @@ Set.from([1, 2, 3]).reject { |x| x > 1 }   # => Set(1)
 
 Folds over the elements.
 
-The order is whatever the underlying map hands back — unspecified, and not to be relied on. Use a `Set` when the order of the fold matters.
+The order is whatever the underlying map hands back: unspecified, and not to be relied on. Use a `Set` when the order of the fold matters.
 
 ```kex
 reduce(acc, f) : B -> (B -> A -> B) -> B
@@ -12895,13 +13100,13 @@ entities:
 
 A last-in-first-out stack.
 
-Opt-in — nothing here is in scope until `using Data.Stack`.
+Opt-in: nothing here is in scope until `using Data.Stack`.
 
 ```kex
 using Data.Stack
 ```
 
-Elements are stored top first, so `push`, `pop` and `peek` are all list-head operations — none of them pay for the size of the stack. `items` reverses that internal order, so it reads bottom-to-top, the order you would have pushed them in:
+Elements are stored top first, so `push`, `pop` and `peek` are all list-head operations: none of them pay for the size of the stack. `items` reverses that internal order, so it reads bottom-to-top, the order you would have pushed them in:
 
 ```kex
 let s = Stack.from([1, 2, 3])
@@ -12917,7 +13122,7 @@ Every method answers with a new stack rather than changing the receiver. `push!`
 
 A stack of elements, held top first.
 
-Build one with `Stack.from` rather than by hand — the record literal takes elements in storage order (top first), which reads backwards from the `items` a caller normally thinks in.
+Build one with `Stack.from` rather than by hand: the record literal takes elements in storage order (top first), which reads backwards from the `items` a caller normally thinks in.
 
 ```kex
 Stack.from([1, 2, 3]).items   # => [1, 2, 3]
@@ -13080,9 +13285,9 @@ entities:
 
 Parses Kex source code into a structured AST, at run time.
 
-Opt-in — nothing here is in scope until `using Kex.AST`.
+Opt-in: nothing here is in scope until `using Kex.AST`.
 
-This is the entry point for tools that read Kex source: linters, formatters, documentation generators, code search. The AST includes module definitions, function signatures, type/record definitions, traits, make blocks, and the doc-comments extracted from `#` lines — which is how the standard library's own documentation is generated.
+This is the entry point for tools that read Kex source: linters, formatters, documentation generators, code search. The AST includes module definitions, function signatures, type/record definitions, traits, make blocks, and the doc-comments extracted from `#` lines, which is how the standard library's own documentation is generated.
 
 ```kex
 using Kex.AST
@@ -13133,7 +13338,7 @@ Why a source file could not be parsed.
 
 Parses Kex source text into a structured AST.
 
-Pass `filename` when you have one — it is what appears in every `Location` and in the error message, so diagnostics can point at a real file.
+Pass `filename` when you have one: it is what appears in every `Location` and in the error message, so diagnostics can point at a real file.
 
 
 ```kex
@@ -13158,7 +13363,7 @@ parseFile(path) : FS.FilePath -> Result<Program, ParseError>
 
 Parses a type expression on its own, without a surrounding program.
 
-Use it to read a type written in data — a signature in a config file, a type named on a command line. `typeRefText` renders the result back.
+Use it to read a type written in data: a signature in a config file, a type named on a command line. `typeRefText` renders the result back.
 
 
 ```kex
@@ -13208,7 +13413,7 @@ A type as it was written in source.
 
 Renders a `TypeRef` back to the way it is written in source.
 
-A list reads as `[Integer]`, a map as `{String: Integer}`, an optional as `String?` — the spelling a reader would recognise, not the constructor tree behind it.
+A list reads as `[Integer]`, a map as `{String: Integer}`, an optional as `String?`: the spelling a reader would recognise, not the constructor tree behind it.
 
 
 ```kex
@@ -13219,6 +13424,8 @@ typeRefText(NamedType(name, []))
 ## type `PatternRef`
 
 Structured representation of patterns.
+
+Pattern nodes describe what a declaration or match arm accepts; they do not contain runtime values. A linter can distinguish a wildcard from a binding, for example, without reparsing source text.
 
 
 
@@ -13235,6 +13442,10 @@ Structured representation of patterns.
   - `WildcardPattern`
 
 ## record `PatternField`
+
+One field inside a record or map-shaped pattern.
+
+`pattern` is `None` for shorthand such as `{ name }`. `stringKey` keeps `{"name": value}` distinct from the atom-key spelling `{ name: value }`.
 
 **Fields**
 
@@ -13264,7 +13475,7 @@ patternFieldText(PatternField { name, pattern, stringKey })
 
 Renders either a type or a pattern back to source.
 
-The one call to reach for when a node may carry either — it dispatches to `typeRefText` or `patternRefText` as appropriate.
+The one call to reach for when a node may carry either: it dispatches to `typeRefText` or `patternRefText` as appropriate.
 
 
 ```kex
@@ -13275,6 +13486,8 @@ referenceText(NamedType(name, args))
 ## type `Expression`
 
 Structured representation of expression AST nodes.
+
+Expressions retain syntax-level distinctions that matter to tools: a method call is not flattened into a generic call, `var` is distinct from `let`, and a trailing `if` remains recognizable. Walk these constructors when writing a linter or code search; use `Evaluator` when the goal is to execute an expression rather than inspect it.
 
 
 
@@ -13329,12 +13542,18 @@ Structured representation of expression AST nodes.
 
 ## record `NamedArgument`
 
+One `name: value` argument at a call site.
+
 **Fields**
 
   - `name` : String
   - `value` : [Expression](#type-expression)
 
 ## record `MatchArm`
+
+One arm of `match`, `receive`, or `rescue`.
+
+Multiple `patterns` are the comma-separated alternatives on the left of the arrow. `guard` is absent when the arm has no `when` condition.
 
 **Fields**
 
@@ -13344,12 +13563,18 @@ Structured representation of expression AST nodes.
 
 ## record `LambdaParam`
 
+One lambda parameter and its optional source annotation.
+
 **Fields**
 
   - `name` : String
   - `type` : [TypeRef](#type-typeref)?
 
 ## record `RescueInfo`
+
+The structured recovery clauses attached to a function or expression.
+
+Named rescue arms live in `arms`; a catch-all rescue keeps its optional binding and body separately. `inlineReturn` represents the compact rescue form rather than inventing a synthetic block.
 
 **Fields**
 
@@ -13360,12 +13585,16 @@ Structured representation of expression AST nodes.
 
 ## record `ElseIf`
 
+One `elif` branch, in source order.
+
 **Fields**
 
   - `condition` : [Expression](#type-expression)
   - `body` : [[Expression](#type-expression)]
 
 ## type `MapItem`
+
+One entry in a map literal: either a key/value pair or `...spread`.
 
 
 
@@ -13376,6 +13605,8 @@ Structured representation of expression AST nodes.
 
 ## record `RecordField`
 
+One explicitly initialized field in a record literal.
+
 **Fields**
 
   - `name` : String
@@ -13384,6 +13615,8 @@ Structured representation of expression AST nodes.
 ## type `GeneratedTemplate`
 
 A declaration template whose name (and, for a make block, target) is computed by a `compiled do` expression.
+
+Tools normally encounter this only while inspecting metaprogramming code. After expansion, generated declarations appear as ordinary `Node`s.
 
 
 
@@ -13394,6 +13627,8 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `GeneratedMakeInfo`
 
+The fixed portion of a generated `make` declaration.
+
 **Fields**
 
   - `isFinal` : Bool
@@ -13402,6 +13637,8 @@ A declaration template whose name (and, for a make block, target) is computed by
   - `location` : [Location](#record-location)
 
 ## record `MainInfo`
+
+The program entry point, including documentation and recovery clauses.
 
 **Fields**
 
@@ -13413,6 +13650,10 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `ParamInfo`
 
+One declared function parameter.
+
+`name` is absent for a destructuring parameter; `pattern` preserves that destructuring shape. `hasDefault` records whether an initializer appeared.
+
 **Fields**
 
   - `name` : String?
@@ -13421,6 +13662,10 @@ A declaration template whose name (and, for a make block, target) is computed by
   - `hasDefault` : Bool
 
 ## record `ClauseInfo`
+
+One clause of a function, including its patterns and body.
+
+Multi-clause functions place all clauses in one `FunctionInfo`, preserving source order so tooling can reason about which pattern is tried first.
 
 **Fields**
 
@@ -13431,6 +13676,10 @@ A declaration template whose name (and, for a make block, target) is computed by
   - `hasParamList` : Bool
 
 ## record `FunctionInfo`
+
+A named function and all of its pattern-matching clauses.
+
+`doc` contains the normalized `#` comment immediately attached to the declaration. Documentation generators can therefore share the same parsed structure as linters instead of scanning comments independently.
 
 **Fields**
 
@@ -13443,6 +13692,10 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `AnnotationInfo`
 
+A standalone function or method type signature.
+
+`implicitThis` distinguishes `:>` methods from module-level `:` functions without making a tool inspect punctuation in the original source.
+
 **Fields**
 
   - `name` : String
@@ -13453,12 +13706,18 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `VariantInfo`
 
+One constructor of an algebraic data type.
+
 **Fields**
 
   - `name` : String
   - `fields` : [[TypeRef](#type-typeref)]
 
 ## record `TypeInfo`
+
+A type alias or algebraic data type declaration.
+
+`variants` is present for an ADT and absent for an alias or abstract type. `parents` preserves declared bounds and inherited type relationships.
 
 **Fields**
 
@@ -13471,6 +13730,8 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `FieldInfo`
 
+One field declared by a record type.
+
 **Fields**
 
   - `name` : String
@@ -13478,6 +13739,8 @@ A declaration template whose name (and, for a make block, target) is computed by
   - `hasDefault` : Bool
 
 ## record `RecordInfo`
+
+A record declaration with fields in source order.
 
 **Fields**
 
@@ -13489,6 +13752,8 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `TraitInfo`
 
+A trait declaration and the signatures or default methods in its body.
+
 **Fields**
 
   - `name` : String
@@ -13498,6 +13763,10 @@ A declaration template whose name (and, for a make block, target) is computed by
   - `location` : [Location](#record-location)
 
 ## record `MakeInfo`
+
+A `make` implementation block.
+
+`target` is the receiver type, `implements` lists explicit traits, and `body` retains methods and visibility sections in declaration order.
 
 **Fields**
 
@@ -13510,6 +13779,8 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `PragmaInfo`
 
+A compiler pragma and its optional value.
+
 **Fields**
 
   - `name` : String
@@ -13517,6 +13788,8 @@ A declaration template whose name (and, for a make block, target) is computed by
   - `location` : [Location](#record-location)
 
 ## record `ModuleInfo`
+
+A module and its declarations in source order.
 
 **Fields**
 
@@ -13527,6 +13800,8 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `ConstantInfo`
 
+A named constant declaration. The AST reader never evaluates its value.
+
 **Fields**
 
   - `name` : String
@@ -13536,6 +13811,8 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `VisibilityInfo`
 
+A `public` or `private` section and the declarations it contains.
+
 **Fields**
 
   - `isPublic` : Bool
@@ -13543,6 +13820,8 @@ A declaration template whose name (and, for a make block, target) is computed by
   - `location` : [Location](#record-location)
 
 ## record `UsingInfo`
+
+A `using` import, including aliasing, filters, and an optional scoped body.
 
 **Fields**
 
@@ -13555,6 +13834,8 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `ExportInfo`
 
+An `export` declaration and its public-name filters.
+
 **Fields**
 
   - `moduleName` : String
@@ -13565,6 +13846,8 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## type `CompiledItem`
 
+One item inside a `compiled do` block before expansion.
+
 
 
 **Variants**
@@ -13574,12 +13857,18 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## record `CompiledInfo`
 
+A compile-time block and its declarations or expressions in source order.
+
 **Fields**
 
   - `items` : [[CompiledItem](#type-compileditem)]
   - `location` : [Location](#record-location)
 
 ## type `Node`
+
+Any top-level or declaration-level AST node.
+
+A source tool can match only the declarations it understands and leave the rest alone. The program's `schemaVersion` lets persisted consumers reject a tree whose possible node shapes have changed.
 
 
 
@@ -13602,7 +13891,9 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 ## make `TypeRef | PatternRef`
 
-Source-like conversion through the standard `.to(String)` spelling.
+Source-like conversion through the standard `to(String)` spelling.
+
+Useful in diagnostics: a tool can interpolate the type or pattern it found without manually dispatching between the two reference families.
 
 
 #### `to`
@@ -13629,6 +13920,8 @@ entities:
 
 Typed DNS lookup with explicit resolver ownership and bounded caching.
 
+Use `DNS.addresses` for an occasional hostname lookup. Own a `Resolver` when a service performs repeated lookups, needs cache statistics, or must query a particular nameserver. Resolver ownership makes both caching and cleanup visible instead of hiding process-wide state behind every lookup.
+
 ```kex
 using Net.DNS
 
@@ -13641,6 +13934,8 @@ resolver.close
 ## record `Name`
 
 A validated DNS name with caller-facing and IDNA ASCII spellings.
+
+`display` keeps the readable form supplied by the caller; `ascii` is the wire-safe IDNA form used in DNS queries. Keeping both lets an error message say what the user typed without sending noncanonical labels to a resolver.
 
 **Fields**
 
@@ -13704,6 +13999,8 @@ Records and the reported DNSSEC state from one lookup.
 
 Bounds for a resolver-owned positive and negative cache.
 
+Positive answers honor their DNS TTL up to `maximumTtl`. Failed lookups are cached for `negativeTtl`, preventing a missing hostname from hammering the configured nameserver on every request.
+
 **Fields**
 
   - `entries` : Integer (optional)
@@ -13735,6 +14032,8 @@ Isolated resolver configuration. An empty search list only queries the name as w
 
 Lifetime cache counters. `clear` empties entries but keeps these counters.
 
+Compare `hits` with `misses` when tuning `entries` or TTL bounds. A rising `evictions` count means the resolver is seeing more distinct names than its cache can retain.
+
 **Fields**
 
   - `entries` : Integer
@@ -13751,6 +14050,8 @@ An opaque, process-safe resolver that owns its cache.
 
 ## module `Net.DNS.Name`
 
+Validation and IDNA conversion for DNS names.
+
 ## function `parse`
 
 Validates a name and converts Unicode labels to IDNA ASCII.
@@ -13763,9 +14064,13 @@ parse(text) : String -> Result<Name, NetError>
 
 ## module `Net.DNS.Resolver`
 
+Constructors for long-lived, cache-owning resolvers.
+
 ## function `system`
 
 Opens a resolver using system configuration and default cache bounds.
+
+Reuse the returned resolver for the lifetime of a service so repeated names benefit from its bounded cache, then close it during shutdown.
 
 
 ```kex
@@ -13776,6 +14081,8 @@ system()
 ## function `custom`
 
 Opens an isolated resolver with typed nameservers and query bounds.
+
+This does not inherit the machine's search domains or nameservers. It is useful for tests, service discovery, and applications with their own DNS policy.
 
 
 ```kex
@@ -13790,6 +14097,8 @@ custom(options)
 
 Resolves AAAA and A records, returning IPv6 addresses first.
 
+This is the convenient operation for connecting to a host. Use `lookup` when record type, TTL-related behavior, or DNSSEC status matters.
+
 ```kex
 addresses(name)
 ```
@@ -13798,10 +14107,11 @@ addresses(name)
 
 **Examples**
 
-_`resolver.addresses(Name.parse("example.test").try).try`_
+_Resolving an application upstream_
 
 ```kex
-
+let host = Name.parse("api.example.com").try
+let addresses = resolver.addresses(host).try
 ```
 
 #### `lookup`
@@ -13814,9 +14124,20 @@ lookup(kind, name)
 
 **Returns**: `Result<LookupResponse, NetError>` — typed records or `Resolve`
 
+**Examples**
+
+_Discovering a domain's mail exchangers_
+
+```kex
+let response = resolver.lookup(MX, Name.parse("example.com").try).try
+response.records.each { |record| IO.inspect(record) }
+```
+
 #### `clear`
 
 Empties cached entries without resetting lifetime counters.
+
+Existing statistics remain meaningful across a manual refresh, while the next lookup is forced back to DNS.
 
 ```kex
 clear()
@@ -13824,7 +14145,17 @@ clear()
 
 **Returns**: `Void`
 
+**Examples**
+
+_Refreshing service discovery after configuration changes_
+
+```kex
+resolver.clear
+```
+
 #### `statistics`
+
+Reports current occupancy and lifetime cache counters.
 
 ```kex
 statistics()
@@ -13832,9 +14163,20 @@ statistics()
 
 **Returns**: `CacheStatistics` — current entries and lifetime counters
 
+**Examples**
+
+_Reporting whether the cache is doing useful work_
+
+```kex
+let stats = resolver.statistics
+IO.printLine("DNS cache: ${stats.hits} hits, ${stats.misses} misses")
+```
+
 #### `close`
 
 Idempotently closes the resolver.
+
+Calls after closing fail with `Closed`; closing again is harmless.
 
 ```kex
 close()
@@ -13844,9 +14186,13 @@ close()
 
 ## module `Net.DNS.DNS`
 
+Convenience lookup operations for callers that do not need resolver ownership or cache reuse.
+
 ## function `addresses`
 
 Resolves a name once with a short-lived system resolver.
+
+Prefer this for command-line tools and one-off checks. A server that looks up names repeatedly should own a `Resolver` so it can reuse cached answers.
 
 
 ```kex
@@ -14034,13 +14380,19 @@ The pooled HTTP client. An opaque handle over the connection pool that owns it; 
 
 ## module `Net.HTTP.Headers`
 
+Construction and parsing of validated HTTP header collections.
+
 ## constant `empty`
+
+Returns a field collection with no entries.
 
 
 
 ## function `from`
 
 Validates header names and values without folding duplicates.
+
+Duplicate fields stay in their original order. Invalid names and values containing line breaks are rejected instead of creating a malformed or injectable HTTP message.
 
 
 ```kex
@@ -14052,6 +14404,8 @@ from(entries) : [(String, String)] -> Result<Headers, NetError>
 
 Parses CRLF- or LF-separated header fields.
 
+Use this at a protocol boundary when headers arrive as text. Application code normally builds them with `from`, `add`, and `set`.
+
 
 ```kex
 parse(text) : String -> Result<Headers, NetError>
@@ -14060,7 +14414,11 @@ parse(text) : String -> Result<Headers, NetError>
 
 ## module `Net.HTTP.Status`
 
+Validation for numeric HTTP status codes.
+
 ## function `from`
+
+Validates an HTTP status code.
 
 
 ```kex
@@ -14069,6 +14427,8 @@ from(code) : Integer -> Result<Status, NetError>
 
 
 ## module `Net.HTTP.Response`
+
+Buffered response constructors for route handlers.
 
 ## function `binary`
 
@@ -14102,6 +14462,8 @@ empty(status)
 
 ## module `Net.HTTP.Router`
 
+The empty starting point for an immutable route declaration chain.
+
 ## constant `build`
 
 
@@ -14113,8 +14475,18 @@ empty(status)
 
 Appends a route; earlier matching declarations win.
 
+Use this for a method without a convenience function. Paths may include named or wildcard captures, which the handler reads from `RouteContext`.
+
 ```kex
 route(method, path, handler)
+```
+
+**Examples**
+
+_Adding a custom method_
+
+```kex
+router.route("PURGE", "/cache/:key", ~purge)
 ```
 
 #### `get`
@@ -14175,6 +14547,8 @@ delete(path, handler)
 
 ## module `Net.HTTP.Server`
 
+Starting, observing, and gracefully stopping HTTP servers.
+
 ## type `Running`
 
 An opaque asynchronous HTTP server handle.
@@ -14184,6 +14558,8 @@ An opaque asynchronous HTTP server handle.
 ## function `start`
 
 Starts a server with conservative defaults and returns immediately.
+
+The returned handle owns the listener and active handlers. Use `start` when the process has other work to do; use `serve` for a foreground server whose main job is handling HTTP.
 
 
 ```kex
@@ -14204,6 +14580,8 @@ serve(endpoint, router)
 ## function `stop`
 
 Gracefully stops using the duration captured at start.
+
+New requests stop being accepted while in-flight handlers get their grace period to finish. The report says how much work completed or was forced down during shutdown.
 
 
 ```kex
@@ -14231,6 +14609,8 @@ running?(server)
 
 ## function `localAddress`
 
+Returns the bound address, including an operating-system-assigned port.
+
 
 ```kex
 localAddress(server)
@@ -14239,9 +14619,13 @@ localAddress(server)
 
 ## module `Net.HTTP.Client`
 
+Constructors for explicitly owned, connection-pooling HTTP clients.
+
 ## function `open`
 
 Opens an explicit pooled client with conservative defaults.
+
+Reuse one client for related requests so keep-alive connections and DNS work can be reused. Close it when the owning service shuts down.
 
 
 ```kex
@@ -14257,8 +14641,21 @@ open(options) : ClientOptions -> Result<Client, NetError>
 
 Sends a buffered request. Redirects and generic retries are not implicit.
 
+This keeps policy with the caller: inspect a redirect before following it, and retry only methods and failures your application knows are safe.
+
 ```kex
 request(method, url, headers, body)
+```
+
+**Examples**
+
+_Sending JSON with an idempotency key_
+
+```kex
+let headers = Headers.empty
+  .set("Content-Type", "application/json")
+  .set("Idempotency-Key", requestId)
+client.request("POST", url, headers, JSON.stringify(order).to(Binary).try)
 ```
 
 #### `get`
@@ -14319,15 +14716,28 @@ options(url)
 
 #### `statistics`
 
+Reports current pool occupancy and lifetime request counters.
+
 ```kex
 statistics()
 ```
 
 **Returns**: `ClientStatistics` — current pool and lifetime request counters
 
+**Examples**
+
+_Emitting client-pool diagnostics_
+
+```kex
+let stats = client.statistics
+IO.printLine("HTTP reuse: ${stats.reusedConnections}/${stats.requests}")
+```
+
 #### `close`
 
 Idempotently closes the client and every idle pooled connection.
+
+Further requests fail with `Closed`; a second close is harmless.
 
 ```kex
 close()
@@ -14376,6 +14786,14 @@ Removes every field matching `name` case-insensitively.
 remove(name)
 ```
 
+**Examples**
+
+_Stripping hop-by-hop state before forwarding_
+
+```kex
+let forwarded = incoming.remove("Connection")
+```
+
 #### `get`
 
 Returns the first matching field value.
@@ -14384,12 +14802,28 @@ Returns the first matching field value.
 get(name)
 ```
 
+**Examples**
+
+_Selecting a response decoder_
+
+```kex
+let contentType = response.headers.get("Content-Type").or("application/octet-stream")
+```
+
 #### `getAll`
 
 Returns every matching value in insertion order.
 
 ```kex
 getAll(name)
+```
+
+**Examples**
+
+_Preserving every Set-Cookie field_
+
+```kex
+let cookies = response.headers.getAll("Set-Cookie")
 ```
 
 #### `inspectValue`
@@ -14417,11 +14851,23 @@ parameter(name)
 
 **Returns**: `Result<String, NetError>` — the capture, or `Parse` when absent
 
+**Examples**
+
+_Reading `:id` from a `/users/:id` route_
+
+```kex
+let id = context.parameter("id").try
+```
+
 ## module `Net.HTTP.HTTP`
+
+Stateless HTTP convenience calls for scripts and occasional requests.
 
 ## function `request`
 
 Sends one stateless buffered request with no redirect or hidden retry.
+
+Each call owns a short-lived client. This is convenient for scripts and occasional requests; use `Client` for a service making repeated calls.
 
 
 ```kex
@@ -14527,7 +14973,9 @@ network.contains(address)   # => true
 
 ## record `Address`
 
-A canonical IPv4 or IPv6 address. Zone identifiers belong to endpoints.
+A canonical IPv4 or IPv6 address.
+
+The stored spelling is normalized, so addresses that arrived in different forms compare and print consistently. Zone identifiers such as `%en0` are properties of socket endpoints and do not belong here.
 
 **Fields**
 
@@ -14537,11 +14985,15 @@ A canonical IPv4 or IPv6 address. Zone identifiers belong to endpoints.
 
 A canonical CIDR network with host bits cleared.
 
+Parsing `192.0.2.9/24` therefore produces `192.0.2.0/24`. This makes a `Network` suitable for access-control rules and routing tables: its identity is the range, not whichever host address happened to describe it.
+
 **Fields**
 
   - `source` : String
 
 ## module `Net.IP.Address`
+
+Strict parsing and canonicalization of individual IP addresses.
 
 ## function `parse`
 
@@ -14554,6 +15006,8 @@ parse(text) : String -> Result<Address, NetError>
 
 
 ## module `Net.IP.Network`
+
+Strict parsing and canonicalization of CIDR networks.
 
 ## function `parse`
 
@@ -14574,8 +15028,23 @@ parse(text) : String -> Result<Network, NetError>
 
 #### `contains`
 
+Returns `true` when `address` falls within this network.
+
+An address from the other family is simply outside the network; callers do not need to compare `version` first.
+
 ```kex
 contains(address) : Address -> Bool
+```
+
+**Returns**: `Bool` — whether `address` belongs to this network
+
+**Examples**
+
+_Checking an application allowlist_
+
+```kex
+let office = Network.parse("198.51.100.0/24").try
+let allowed? = office.contains(requestAddress)
 ```
 
 
@@ -14638,6 +15107,10 @@ A host name or numeric address paired with a validated port.
 
 ## record `ConnectOptions`
 
+Connection deadlines and operating-system socket policy.
+
+Buffer values of zero leave sizing to the operating system. `noDelay?` disables Nagle's algorithm, which is usually right for request/response traffic; bulk-transfer protocols may prefer fewer, larger packets.
+
 **Fields**
 
   - `connectTimeout` : Duration (optional)
@@ -14647,6 +15120,10 @@ A host name or numeric address paired with a validated port.
   - `receiveBuffer` : Integer (optional)
 
 ## record `ListenOptions`
+
+Listener queue and policy inherited by accepted connections.
+
+`backlog` bounds connections waiting for `accept`. Buffer values of zero keep the platform defaults rather than requesting a particular byte size.
 
 **Fields**
 
@@ -14661,6 +15138,10 @@ A host name or numeric address paired with a validated port.
 
 ## function `host`
 
+Pairs a hostname or numeric address with a port.
+
+Resolution happens when connecting, so this preserves `name` exactly as supplied rather than validating it as an `IP.Address`.
+
 
 ```kex
 host(name, port) : String -> Net.Port -> Endpoint
@@ -14669,6 +15150,10 @@ host(name, port) : String -> Net.Port -> Endpoint
 
 ## function `any`
 
+Builds an IPv4 wildcard endpoint for listening on every local interface.
+
+Be deliberate with this in development: unlike `loopback`, it may expose the service to other machines on the network.
+
 
 ```kex
 any(port) : Net.Port -> Endpoint
@@ -14676,6 +15161,10 @@ any(port) : Net.Port -> Endpoint
 
 
 ## function `loopback`
+
+Builds an IPv4 loopback endpoint reachable only from this machine.
+
+Port zero lets the operating system choose a free port, which is useful for tests; ask `localAddress` which port was assigned after listening.
 
 
 ```kex
@@ -14707,7 +15196,9 @@ listen(endpoint) : Endpoint -> ListenOptions -> Result<TCPListener, NetError>
 
 ## function `sendAll`
 
-Sends every byte or reports the failure and transfer progress.
+Sends every byte, retrying partial operating-system writes internally.
+
+On failure, `NetError.progress` records how many bytes were accepted before the error. Do not blindly retry the whole payload when progress is present.
 
 
 ```kex
@@ -14717,7 +15208,9 @@ sendAll(connection, data)
 
 ## function `receiveChunk`
 
-Receives one bounded chunk; EOF is reported as `Closed`.
+Receives up to `limit` bytes; EOF is reported as `Closed`.
+
+A successful result is one available chunk, not necessarily a complete application message. Use `receiveExactly`, `receiveUntil`, or `receiveLine` when the protocol supplies a boundary.
 
 
 ```kex
@@ -14728,6 +15221,8 @@ receiveChunk(connection, limit)
 ## function `receiveExactly`
 
 Receives exactly `count` bytes or returns a typed EOF/timeout failure.
+
+Useful after a protocol header has declared the payload length.
 
 
 ```kex
@@ -14751,6 +15246,8 @@ receiveUntil(connection, delimiter, limit)
 
 Receives through a newline without exceeding `limit` bytes.
 
+The newline remains in the returned binary. Decode and trim only after a complete bounded line has been received.
+
 
 ```kex
 receiveLine(connection, limit)
@@ -14769,7 +15266,9 @@ shutdownWrite(connection)
 
 ## function `accept`
 
-Waits for and returns the next connection.
+Waits for and returns the next connection accepted by the listener.
+
+A timeout applies to this wait only; it does not become a read timeout on the returned connection.
 
 
 ```kex
@@ -14846,6 +15345,8 @@ A datagram address paired with a validated port.
 
 A received datagram and its source endpoint.
 
+Reply to `source` rather than the socket's local address: UDP has no connection that remembers which peer sent the packet.
+
 **Fields**
 
   - `source` : [Endpoint](#record-endpoint)
@@ -14866,6 +15367,8 @@ Curated socket policy. Broadcast is opt-in. The receive timeout applies to each 
 
 ## function `host`
 
+Pairs a hostname or numeric address with a UDP port.
+
 
 ```kex
 host(name, port) : String -> Net.Port -> Endpoint
@@ -14874,6 +15377,8 @@ host(name, port) : String -> Net.Port -> Endpoint
 
 ## function `any`
 
+Builds an IPv4 wildcard endpoint for receiving on every local interface.
+
 
 ```kex
 any(port) : Net.Port -> Endpoint
@@ -14881,6 +15386,8 @@ any(port) : Net.Port -> Endpoint
 
 
 ## function `loopback`
+
+Builds an IPv4 loopback endpoint reachable only from this machine.
 
 
 ```kex
@@ -14903,6 +15410,8 @@ bind(endpoint) : Endpoint -> BindOptions -> Result<Socket, NetError>
 
 Sends one complete datagram and returns its byte count.
 
+Datagram boundaries are preserved: one `sendTo` corresponds to one `receiveFrom`, unless the packet is lost by the network.
+
 
 ```kex
 sendTo(socket, endpoint, data)
@@ -14912,6 +15421,8 @@ sendTo(socket, endpoint, data)
 ## function `receiveFrom`
 
 Receives one datagram no larger than `limit` bytes.
+
+Oversized packets fail with `Limit` instead of being silently truncated, so a caller never mistakes a prefix for a complete message.
 
 
 ```kex
@@ -15000,12 +15511,18 @@ A validated absolute filesystem socket path.
 
 ## record `ConnectOptions`
 
+Connection and read deadlines for a local IPC client.
+
 **Fields**
 
   - `connectTimeout` : Duration (optional)
   - `receiveTimeout` : Duration (optional)
 
 ## record `ListenOptions`
+
+Listener queue, stale-socket policy, and per-operation deadlines.
+
+`removeStale?` removes only a filesystem socket, never a regular file or directory that happens to occupy the requested path.
 
 **Fields**
 
@@ -15020,6 +15537,8 @@ A validated absolute filesystem socket path.
 
 Validates a nonempty absolute Unix-domain socket path.
 
+Relative paths are rejected so ownership and cleanup always refer to one unambiguous filesystem entry.
+
 
 ```kex
 path(value) : String -> Result<Address, NetError>
@@ -15029,6 +15548,8 @@ path(value) : String -> Result<Address, NetError>
 ## function `connect`
 
 Connects to a filesystem-domain listener.
+
+Unix sockets avoid opening a network port and are a good fit for two processes on the same machine, such as a CLI and its background daemon.
 
 
 ```kex
@@ -15040,6 +15561,8 @@ connect(address) : Address -> ConnectOptions -> Result<UnixConnection, NetError>
 ## function `listen`
 
 Binds a new path; an existing filesystem entry is never removed implicitly.
+
+This conservative default protects regular files and also avoids taking over a socket that may still belong to a running service.
 
 
 ```kex
@@ -15168,6 +15691,8 @@ Client handshake policy. TLS 1.2/1.3 are enabled; verification defaults on.
 
 Opens a direct TLS connection with a bounded handshake deadline.
 
+`serverName` drives both certificate hostname verification and SNI. Pass the DNS name from the URL, not an address it happened to resolve to.
+
 
 ```kex
 connect(endpoint, config) : Net.Socket.TCP.Endpoint -> ClientConfig -> Result<TLSConnection, NetError>
@@ -15230,6 +15755,8 @@ entities:
 
 High-level RFC 6455 client messages. The runtime handles fragmentation and ping/pong frames; reconnect and heartbeat policies remain application-owned.
 
+A `Connection` delivers complete messages rather than wire frames. Your code never has to assemble fragments or answer a protocol ping, but it does decide what a dropped connection means: reconnecting may require resubscribing or replaying an application cursor, so the library cannot do that safely for you.
+
 ```kex
 using Net.HTTP.WebSocket
 
@@ -15243,6 +15770,8 @@ socket.close
 
 A complete high-level WebSocket message. Fragmentation and ping/pong control frames are handled by the connection runtime.
 
+`CloseMessage` carries the peer's status code and reason. Treat it as the end of the message stream even when the code describes a normal shutdown.
+
 
 
 **Variants**
@@ -15254,6 +15783,8 @@ A complete high-level WebSocket message. Fragmentation and ping/pong control fra
 ## record `ClientOptions`
 
 Client handshake policy and the maximum reassembled message size.
+
+Subprotocols are offered in preference order. The byte limit applies after fragments are reassembled, preventing a peer from bypassing the bound with many individually small frames.
 
 **Fields**
 
@@ -15275,6 +15806,8 @@ An opaque RFC 6455 client connection. It does not reconnect automatically.
 
 
 ## module `Net.HTTP.WebSocket.WebSocket`
+
+Constructors for high-level WebSocket client connections.
 
 ## function `connect`
 
@@ -15301,15 +15834,17 @@ send(message)
 
 **Examples**
 
-_`connection.send(Text("hello")).try`_
+_Subscribing after connecting_
 
 ```kex
-
+connection.send(Text(JSON.stringify({ action: "subscribe", topic: topic }))).try
 ```
 
 #### `receiveMessage`
 
 `receive` is a Kex process keyword, so the public method spells out the operation while preserving the plan's high-level message semantics. Reassembles fragments, validates UTF-8, and automatically answers pings.
+
+A `CloseMessage` is returned once so the application can inspect the peer's reason. Subsequent reads fail with `Closed`.
 
 ```kex
 receiveMessage()
@@ -15319,13 +15854,21 @@ receiveMessage()
 
 **Examples**
 
-_`connection.receiveMessage.try`_
+_Processing messages until the server closes the session_
 
 ```kex
-
+loop do
+  match connection.receiveMessage.try do
+    Text(text)                  => handleEvent(text)
+    BinaryMessage(data)         => saveSnapshot(data)
+    CloseMessage(code, reason)  => break
+  end
+end
 ```
 
 #### `session`
+
+Returns handshake details negotiated with the server.
 
 ```kex
 session()
@@ -15333,9 +15876,19 @@ session()
 
 **Returns**: `Session` — the selected subprotocol, if any
 
+**Examples**
+
+_Verifying which compatible event format was selected_
+
+```kex
+let protocol = connection.session.subprotocol.or("default")
+```
+
 #### `close`
 
 Sends a normal close frame and idempotently releases the transport.
+
+Use an explicit `CloseMessage` with `send` first when the peer needs an application-specific code or reason.
 
 ```kex
 close()
@@ -15369,7 +15922,7 @@ entities:
 
 Data sizes: bytes, kilobytes, and their binary counterparts.
 
-Opt-in — nothing here is in scope until `using Units.Data`.
+Opt-in: nothing here is in scope until `using Units.Data`.
 
 ```kex
 using Units.Data
@@ -15380,7 +15933,7 @@ main do
 end
 ```
 
-Both families are here and they are not the same: `KB` is 1000 bytes, `KiB` is 1024. Values built from either convert freely, because both are counted in bytes underneath — so `1.gibibytes.convertTo(MiB)` answers 1024 MiB.
+Both families are here and they are not the same: `KB` is 1000 bytes, `KiB` is 1024. Values built from either convert freely, because both are counted in bytes underneath, so `1.gibibytes.convertTo(MiB)` answers 1024 MiB.
 
 Every value is a `Measure` from the prelude, so its arithmetic, comparison and `to(String)` apply unchanged.
 
@@ -15590,7 +16143,7 @@ entities:
 
 SI units: metres, grams, watts, volts and the rest, with prefixes and dimensional arithmetic.
 
-Opt-in — nothing here is in scope until `using Units.SI`.
+Opt-in: nothing here is in scope until `using Units.SI`.
 
 ```kex
 using Units.SI
@@ -15602,7 +16155,7 @@ main do
 end
 ```
 
-Every value is a `Measure` from the prelude, so the arithmetic, conversion and comparison described there apply unchanged. What this module adds is the SI vocabulary, the prefixes, and a table of which dimension results from multiplying or dividing two others — so `2.newton * 3.meter` answers in joules and `100.meter / 10.sec` in metres per second.
+Every value is a `Measure` from the prelude, so the arithmetic, conversion and comparison described there apply unchanged. What this module adds is the SI vocabulary, the prefixes, and a table of which dimension results from multiplying or dividing two others, so `2.newton * 3.meter` answers in joules and `100.meter / 10.sec` in metres per second.
 
 ## type `SIUnit`
 
@@ -15885,7 +16438,7 @@ nano(measure)
 
 Divides one measure by another, naming the resulting dimension.
 
-The spelled-out form of `/`: `100.meter.per(10.sec)` and `100.meter / 10.sec` are the same call. Metres over seconds is speed, energy over time is power, force over area is pressure — the dimension table decides, and the symbol follows it.
+The spelled-out form of `/`: `100.meter.per(10.sec)` and `100.meter / 10.sec` are the same call. Metres over seconds is speed, energy over time is power, force over area is pressure: the dimension table decides, and the symbol follows it.
 
 
 ```kex

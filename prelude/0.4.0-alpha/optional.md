@@ -23,7 +23,7 @@ entities:
 
 An optional value: `Just(x)` carries a value, `None` says there is none.
 
-`X?` is shorthand for `Optional<X>`, and is the spelling you will normally write. Kex has no `null` — anything that might not produce a value returns an `Optional` instead, so the compiler makes you say what happens when it is empty. Most of the time that is a single `.or(default)` at the end of a chain.
+`X?` is shorthand for `Optional<X>`, and is the spelling you will normally write. Kex has no `null`: anything that might not produce a value returns an `Optional` instead, so the compiler makes you say what happens when it is empty. Most of the time that is a single `.or(default)` at the end of a chain.
 
 ```kex
 let names = ["ada", "grace"]
@@ -75,7 +75,7 @@ end
 
 One of two values, of possibly different types: `Left(l)` or `Right(r)`.
 
-Unlike `Result`, neither side means failure — `Either` is for a value that is legitimately one of two shapes.
+Unlike `Result`, neither side means failure: `Either` is for a value that is legitimately one of two shapes.
 
 ```kex
 type Id = Either<Integer, String>
@@ -218,7 +218,7 @@ _Transforming before supplying a default_
 
 Applies `f`, which itself returns an optional, and flattens the result.
 
-Use it instead of `map` when the step can also fail — `map` would give you a doubly wrapped `Just(Just(x))`, `flatMap` gives a single layer. A `None` anywhere in the chain short-circuits the rest.
+Use it instead of `map` when the step can also fail: `map` would give you a doubly wrapped `Just(Just(x))`, `flatMap` gives a single layer. A `None` anywhere in the chain short-circuits the rest.
 
 ```kex
 flatMap : (X -> Y?) -> Y?
@@ -399,9 +399,9 @@ or(value, _)
 
 Converts `value` to the type `t`, or `None` if it cannot be represented.
 
-`t` is a runtime type value — write the type name itself: `String`, `Integer`, `Float`, `List`. Conversion to `String` goes through the `Showable` protocol, so it works for every value.
+`t` is a runtime type value: write the type name itself: `String`, `Integer`, `Float`, `List`. Conversion to `String` goes through the `Showable` protocol, so it works for every value.
 
-The result is an `Optional`, not a `Result`, and deliberately so: the reason a conversion failed is usually implied by the types alone. When the reason carries information — where a parse gave up and on what — reach for `Integer.parse` or `Float.parse`, which answer with `Result<_, ParseError>`. So: `to` for every day, `parse` when the failure needs handling.
+The result is an `Optional`, not a `Result`, and deliberately so: the reason a conversion failed is usually implied by the types alone. When the reason carries information (where a parse gave up and on what) reach for `Integer.parse` or `Float.parse`, which answer with `Result<_, ParseError>`. So: `to` for every day, `parse` when the failure needs handling.
 
 
 ```kex

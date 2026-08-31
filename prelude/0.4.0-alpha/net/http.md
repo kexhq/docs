@@ -175,13 +175,19 @@ The pooled HTTP client. An opaque handle over the connection pool that owns it; 
 
 ## module `Net.HTTP.Headers`
 
+Construction and parsing of validated HTTP header collections.
+
 ## constant `empty`
+
+Returns a field collection with no entries.
 
 
 
 ## function `from`
 
 Validates header names and values without folding duplicates.
+
+Duplicate fields stay in their original order. Invalid names and values containing line breaks are rejected instead of creating a malformed or injectable HTTP message.
 
 
 ```kex
@@ -193,6 +199,8 @@ from(entries) : [(String, String)] -> Result<Headers, NetError>
 
 Parses CRLF- or LF-separated header fields.
 
+Use this at a protocol boundary when headers arrive as text. Application code normally builds them with `from`, `add`, and `set`.
+
 
 ```kex
 parse(text) : String -> Result<Headers, NetError>
@@ -201,7 +209,11 @@ parse(text) : String -> Result<Headers, NetError>
 
 ## module `Net.HTTP.Status`
 
+Validation for numeric HTTP status codes.
+
 ## function `from`
+
+Validates an HTTP status code.
 
 
 ```kex
@@ -210,6 +222,8 @@ from(code) : Integer -> Result<Status, NetError>
 
 
 ## module `Net.HTTP.Response`
+
+Buffered response constructors for route handlers.
 
 ## function `binary`
 
@@ -243,6 +257,8 @@ empty(status)
 
 ## module `Net.HTTP.Router`
 
+The empty starting point for an immutable route declaration chain.
+
 ## constant `build`
 
 
@@ -254,8 +270,18 @@ empty(status)
 
 Appends a route; earlier matching declarations win.
 
+Use this for a method without a convenience function. Paths may include named or wildcard captures, which the handler reads from `RouteContext`.
+
 ```kex
 route(method, path, handler)
+```
+
+**Examples**
+
+_Adding a custom method_
+
+```kex
+router.route("PURGE", "/cache/:key", ~purge)
 ```
 
 #### `get`
@@ -316,6 +342,8 @@ delete(path, handler)
 
 ## module `Net.HTTP.Server`
 
+Starting, observing, and gracefully stopping HTTP servers.
+
 ## type `Running`
 
 An opaque asynchronous HTTP server handle.
@@ -325,6 +353,8 @@ An opaque asynchronous HTTP server handle.
 ## function `start`
 
 Starts a server with conservative defaults and returns immediately.
+
+The returned handle owns the listener and active handlers. Use `start` when the process has other work to do; use `serve` for a foreground server whose main job is handling HTTP.
 
 
 ```kex
@@ -345,6 +375,8 @@ serve(endpoint, router)
 ## function `stop`
 
 Gracefully stops using the duration captured at start.
+
+New requests stop being accepted while in-flight handlers get their grace period to finish. The report says how much work completed or was forced down during shutdown.
 
 
 ```kex
@@ -372,6 +404,8 @@ running?(server)
 
 ## function `localAddress`
 
+Returns the bound address, including an operating-system-assigned port.
+
 
 ```kex
 localAddress(server)
@@ -380,9 +414,13 @@ localAddress(server)
 
 ## module `Net.HTTP.Client`
 
+Constructors for explicitly owned, connection-pooling HTTP clients.
+
 ## function `open`
 
 Opens an explicit pooled client with conservative defaults.
+
+Reuse one client for related requests so keep-alive connections and DNS work can be reused. Close it when the owning service shuts down.
 
 
 ```kex
@@ -398,8 +436,21 @@ open(options) : ClientOptions -> Result<Client, NetError>
 
 Sends a buffered request. Redirects and generic retries are not implicit.
 
+This keeps policy with the caller: inspect a redirect before following it, and retry only methods and failures your application knows are safe.
+
 ```kex
 request(method, url, headers, body)
+```
+
+**Examples**
+
+_Sending JSON with an idempotency key_
+
+```kex
+let headers = Headers.empty
+  .set("Content-Type", "application/json")
+  .set("Idempotency-Key", requestId)
+client.request("POST", url, headers, JSON.stringify(order).to(Binary).try)
 ```
 
 #### `get`
@@ -460,15 +511,28 @@ options(url)
 
 #### `statistics`
 
+Reports current pool occupancy and lifetime request counters.
+
 ```kex
 statistics()
 ```
 
 **Returns**: `ClientStatistics` — current pool and lifetime request counters
 
+**Examples**
+
+_Emitting client-pool diagnostics_
+
+```kex
+let stats = client.statistics
+IO.printLine("HTTP reuse: ${stats.reusedConnections}/${stats.requests}")
+```
+
 #### `close`
 
 Idempotently closes the client and every idle pooled connection.
+
+Further requests fail with `Closed`; a second close is harmless.
 
 ```kex
 close()
@@ -517,6 +581,14 @@ Removes every field matching `name` case-insensitively.
 remove(name)
 ```
 
+**Examples**
+
+_Stripping hop-by-hop state before forwarding_
+
+```kex
+let forwarded = incoming.remove("Connection")
+```
+
 #### `get`
 
 Returns the first matching field value.
@@ -525,12 +597,28 @@ Returns the first matching field value.
 get(name)
 ```
 
+**Examples**
+
+_Selecting a response decoder_
+
+```kex
+let contentType = response.headers.get("Content-Type").or("application/octet-stream")
+```
+
 #### `getAll`
 
 Returns every matching value in insertion order.
 
 ```kex
 getAll(name)
+```
+
+**Examples**
+
+_Preserving every Set-Cookie field_
+
+```kex
+let cookies = response.headers.getAll("Set-Cookie")
 ```
 
 #### `inspectValue`
@@ -558,11 +646,23 @@ parameter(name)
 
 **Returns**: `Result<String, NetError>` — the capture, or `Parse` when absent
 
+**Examples**
+
+_Reading `:id` from a `/users/:id` route_
+
+```kex
+let id = context.parameter("id").try
+```
+
 ## module `Net.HTTP.HTTP`
+
+Stateless HTTP convenience calls for scripts and occasional requests.
 
 ## function `request`
 
 Sends one stateless buffered request with no redirect or hidden retry.
+
+Each call owns a short-lived client. This is convenient for scripts and occasional requests; use `Client` for a service making repeated calls.
 
 
 ```kex

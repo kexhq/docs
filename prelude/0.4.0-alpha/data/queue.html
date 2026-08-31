@@ -94,15 +94,15 @@ data-page="data/queue.html">
 <section class="entity" id="module-data">
 <h2><span class="kind kind-module">module</span> <code>Data</code></h2>
 <p>A first-in-first-out queue.</p>
-<p>Opt-in — nothing here is in scope until <code>using Data.Queue</code>.</p>
+<p>Opt-in: nothing here is in scope until <code>using Data.Queue</code>.</p>
 <pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Data</span><span class="tok-op">.</span><span class="tok-type">Queue</span></code></pre>
 <p>A banker's queue: <code>front</code> holds the elements ready to leave, <code>back</code> holds what was most recently added, reversed. <code>enqueue</code> conses onto <code>back</code>; <code>dequeue</code> takes <code>front</code>'s head, and only rotates <code>back</code> (reversing it into <code>front</code>) when <code>front</code> runs out. Both operations are amortized O(1), versus the O(n) <code>enqueue</code> a single-list queue would pay for.</p>
 <pre class="code"><code><span class="tok-keyword">let</span> q <span class="tok-op">=</span> <span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
 q<span class="tok-op">.</span><span class="tok-method">enqueue</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>    <span class="tok-comment"># =&gt; [1, 2, 3, 4]</span>
 q<span class="tok-op">.</span><span class="tok-method">dequeue</span>             <span class="tok-comment"># =&gt; Just((1, Queue(2, 3)))</span>
 q<span class="tok-op">.</span><span class="tok-method">peek</span>                <span class="tok-comment"># =&gt; Just(1)</span></code></pre>
-<p>`items` is `@front ` @back.reverse`, so the queue is not opaque — it is always a real list you can hand to anything, the same promise `Data.Set` makes.</p>
-<p>Unlike a set, a queue's representation is NOT canonical: <code>Queue.from([1,2])</code> and <code>Queue.from([1]).enqueue(2)</code> hold the same elements in different <code>front</code>/<code>back</code> splits, so they are structurally unequal even though they answer the same to every method. <code>==</code> is therefore overloaded to compare <code>items</code> rather than the record fields directly — but that overload only reaches ordinary <code>==</code> calls. Two such queues used as map keys, or matched against each other as record patterns, still compare structurally on both backends, and can disagree with <code>==</code>.</p>
+<p>`items` is `@front ` @back.reverse`, so the queue is not opaque: it is always a real list you can hand to anything, the same promise `Data.Set` makes.</p>
+<p>Unlike a set, a queue's representation is NOT canonical: <code>Queue.from([1,2])</code> and <code>Queue.from([1]).enqueue(2)</code> hold the same elements in different <code>front</code>/<code>back</code> splits, so they are structurally unequal even though they answer the same to every method. <code>==</code> is therefore overloaded to compare <code>items</code> rather than the record fields directly, but that overload only reaches ordinary <code>==</code> calls. Two such queues used as map keys, or matched against each other as record patterns, still compare structurally on both backends, and can disagree with <code>==</code>.</p>
 <p>Every method answers with a new queue rather than changing the receiver. `enqueue!` and `dequeue!` come free from the `!+ rebinding form.</p>
 <section class="entity" id="record-queue">
 <h2><span class="kind kind-record">record</span> <code>Queue&lt;A&gt;</code></h2>
@@ -185,7 +185,7 @@ q<span class="tok-op">.</span><span class="tok-method">peek</span>              
 <div class="fn" id="fn-dequeue">
 <h4><code>dequeue</code></h4>
 <p>Returns the front element and the queue without it, wrapped in <code>Just</code>, or <code>None</code> for an empty queue.</p>
-<p>Rotates <code>back</code> into <code>front</code> (reversing it) when <code>front</code> has run out — the one case that is not O(1), and only amortized so because each element is reversed at most once over the queue's lifetime.</p>
+<p>Rotates <code>back</code> into <code>front</code> (reversing it) when <code>front</code> has run out: the one case that is not O(1), and only amortized so because each element is reversed at most once over the queue's lifetime.</p>
 <p>Use <code>dequeue!</code> to rebind the receiver variable.</p>
 <pre class="code"><code>dequeue <span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span><span class="tok-punct">,</span> <span class="tok-type">Queue</span><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span><span class="tok-op">?</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>(A, Queue&lt;A&gt;)?</code> — the front element and the rest, or <code>None</code></p>
@@ -206,7 +206,7 @@ q<span class="tok-op">.</span><span class="tok-method">peek</span>              
 </div>
 <div class="fn" id="fn-==">
 <h4><code>==</code></h4>
-<p>Compares two queues by their elements, front to back — NOT by their <code>front</code>/<code>back</code> split, which is not canonical. See the file header.</p>
+<p>Compares two queues by their elements, front to back: NOT by their <code>front</code>/<code>back</code> split, which is not canonical. See the file header.</p>
 <pre class="code"><code><span class="tok-op">==</span><span class="tok-punct">(</span>other<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Queue</span><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -243,7 +243,7 @@ q<span class="tok-op">.</span><span class="tok-method">peek</span>              
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T19:07:27.076569085Z · <a href="../../../llms.txt">llms.txt</a> · <a href="../../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-31T00:21:50.485524575Z · <a href="../../../llms.txt">llms.txt</a> · <a href="../../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

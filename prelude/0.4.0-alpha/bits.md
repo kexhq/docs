@@ -21,7 +21,7 @@ Bits.test?(0b1010, 1)     # => true
 
 Useful for packing flags into one number, reading a binary format, or working with a protocol that describes its fields in bits.
 
-Integers are arbitrary precision, and a negative one behaves as if it were written in infinite-precision two's complement — so `Bits.not(0)` is `-1` and `Bits.and(-1, 255)` is `255`, with no word size to overflow. Shifts and bit indices count from bit 0 (the least significant bit).
+Integers are arbitrary precision, and a negative one behaves as if it were written in infinite-precision two's complement, so `Bits.not(0)` is `-1` and `Bits.and(-1, 255)` is `255`, with no word size to overflow. Shifts and bit indices count from bit 0 (the least significant bit).
 
 ## function `and`
 
@@ -75,7 +75,7 @@ shiftLeft(n, by) : Integer -> Integer -> Integer
 
 ## function `shiftRight`
 
-Shifts `n` right by `by` bits, propagating the sign — the result of shifting a negative number stays negative. Raises if `by` is negative.
+Shifts `n` right by `by` bits, propagating the sign: the result of shifting a negative number stays negative. Raises if `by` is negative.
 
 
 ```kex

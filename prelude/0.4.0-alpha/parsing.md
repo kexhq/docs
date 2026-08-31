@@ -13,7 +13,7 @@ entities:
 
 Parser combinators, for reading a text format you define yourself.
 
-Opt-in — nothing here is in scope until `using Parsing`.
+Opt-in: nothing here is in scope until `using Parsing`.
 
 An `Input` is an immutable cursor over a string. A parser takes one and answers either the value it read together with an advanced cursor, or a `ParseError` saying where it gave up. Because the cursor is immutable, a failed attempt costs nothing: the caller still holds the position it started from and can try something else.
 
@@ -35,7 +35,7 @@ The building blocks are `char` and `charWhen` for one character, `string` for a 
 
 Why a parser gave up, and at which position.
 
-`Expected` carries what the grammar WANTED rather than what it found — the difference between "unexpected `d`" and "expected `version(`". It is what `label` and `string` report.
+`Expected` carries what the grammar WANTED rather than what it found: the difference between "unexpected `d`" and "expected `version(`". It is what `label` and `string` report.
 
 ```kex
 Input { input: "abc" }.char('z')      # => Error(Unexpected("a", 0))
@@ -103,7 +103,7 @@ Input { input: "abc 123" }.advanceBy(4).peek   # => Just('1')
 
 Reads one character, if it satisfies `pred`.
 
-Answers the character and the advanced cursor, or an `Unexpected` error naming what was there instead — `"EOF"` at the end of the input.
+Answers the character and the advanced cursor, or an `Unexpected` error naming what was there instead: `"EOF"` at the end of the input.
 
 ```kex
 charWhen(pred)
@@ -195,7 +195,7 @@ Input { input: "123" }.some { |p| p.charWhen(~alpha?) }
 
 Reads an exact literal.
 
-A keyword grammar is mostly literals — `version(` is one token to a reader and eight calls to `char` — and matching it here reports the failure at the START of the literal, which is where a person looking at the error expects the caret.
+A keyword grammar is mostly literals: `version(` is one token to a reader and eight calls to `char`, and matching it here reports the failure at the START of the literal, which is where a person looking at the error expects the caret.
 
 ```kex
 string(expected)

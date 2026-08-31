@@ -15,7 +15,7 @@ entities:
 
 A one-shot sequence over a source that can only be read once.
 
-A feed is what `Stream` is not: reading it CONSUMES it. Where a stream remembers its elements so it can be walked again, a feed keeps nothing, and that is the point — it is how to walk a file, a socket or a device larger than memory, which a stream cannot do while anything still holds its start.
+A feed is what `Stream` is not: reading it CONSUMES it. Where a stream remembers its elements so it can be walked again, a feed keeps nothing, and that is the point: it is how to walk a file, a socket or a device larger than memory, which a stream cannot do while anything still holds its start.
 
 ```kex
 foul lines = FS.File.feed("huge.log").or(Feed.empty)
@@ -30,7 +30,7 @@ FS.File.feed("app.log").or(Feed.empty)
   .take(10)
 ```
 
-Taking twice answers two different windows — the first ten, then the ten after them. That is the whole difference from `Stream`, where taking twice answers the same ten. When you want the stream behaviour on a small source, `toStream` asks for it explicitly, at the cost of holding what it reads.
+Taking twice answers two different windows: the first ten, then the ten after them. That is the whole difference from `Stream`, where taking twice answers the same ten. When you want the stream behaviour on a small source, `toStream` asks for it explicitly, at the cost of holding what it reads.
 
 
 
@@ -50,7 +50,7 @@ Mostly the `or` half of a failed open: `FS.File.feed(path).or(Feed.empty)` reads
 
 A feed over a list that is already in hand.
 
-The elements are there, so nothing is saved by feeding them — this is for standing in for a real source, in a test, with something that consumes the way the real one does.
+The elements are there, so nothing is saved by feeding them: this is for standing in for a real source, in a test, with something that consumes the way the real one does.
 
 
 ```kex
@@ -64,7 +64,7 @@ Every method below is `let`, not `foul`, though reading a feed plainly is an eff
 
 The effect is already tracked where it enters: a feed over anything outside the program comes from `FS.File.feed` or `handle.feed`, both foul, so a pure function cannot obtain one. What `Feed.Elements` and `Stream.toFeed` build from data in hand mutates only a cursor the caller just made.
 
-And a foul method takes the hidden capability context, which puts it one BEAM arity above the pure `take`/`map`/`filter` every other receiver has. A feed usually arrives with no static type — `FS.File.feed(p).or(Feed.empty)`, or a `Just(f) =>` binding — and such a call has to go through the runtime dispatcher, which is built per arity and so could never reach a method one arity up. Marking these foul made every dynamically-typed feed call fail with "Undefined method: take for Tuple".
+And a foul method takes the hidden capability context, which puts it one BEAM arity above the pure `take`/`map`/`filter` every other receiver has. A feed usually arrives with no static type: `FS.File.feed(p).or(Feed.empty)`, or a `Just(f) =>` binding, and such a call has to go through the runtime dispatcher, which is built per arity and so could never reach a method one arity up. Marking these foul made every dynamically-typed feed call fail with "Undefined method: take for Tuple".
 
 
 #### `take`

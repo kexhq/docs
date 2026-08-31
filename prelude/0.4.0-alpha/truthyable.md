@@ -18,9 +18,9 @@ entities:
 
 ## trait `Truthyable`
 
-`Truthyable` — what counts as true when a value is used as a condition.
+`Truthyable`: what counts as true when a value is used as a condition.
 
-The rule is Crystal's, and it is short: only `false`, `None` and `()` are falsy. Everything else is truthy — including `0`, `""` and `[]`, which some languages treat as false and Kex deliberately does not.
+The rule is Crystal's, and it is short: only `false`, `None` and `()` are falsy. Everything else is truthy, including `0`, `""` and `[]`, which some languages treat as false and Kex deliberately does not.
 
 ```kex
 0.truthy?       # => true
@@ -61,7 +61,7 @@ None.truthy?     # => false
 
 #### `truthy?`
 
-Always `true` — including for zero.
+Always `true`, including for zero.
 
 Zero is a number, not an absence. Compare it explicitly when zero means something: `count == 0`.
 
@@ -83,7 +83,7 @@ truthy? : Bool
 
 #### `truthy?`
 
-Always `true` — including for zero.
+Always `true`, including for zero.
 
 ```kex
 truthy? : Bool
@@ -102,7 +102,7 @@ truthy? : Bool
 
 #### `truthy?`
 
-Always `true` — including for the empty string.
+Always `true`, including for the empty string.
 
 Use `blank?` from `Blankable` when an empty or whitespace-only string should count as nothing.
 
@@ -146,7 +146,7 @@ None.truthy?       # => false
 
 #### `truthy?`
 
-Always `true` — including for the empty list.
+Always `true`, including for the empty list.
 
 Use `empty?` or `blank?` when an empty list should count as nothing.
 
@@ -168,7 +168,7 @@ truthy? : Bool
 
 #### `truthy?`
 
-Always `true` — including for the empty map.
+Always `true`, including for the empty map.
 
 ```kex
 truthy? : Bool

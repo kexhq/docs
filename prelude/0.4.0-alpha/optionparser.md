@@ -58,7 +58,7 @@ What kind of value an option carries: `StringValue` takes any text, `IntegerValu
 
 ## record `OptionSpec`
 
-One declared option. Built for you by the `OptionConfig` builders — you rarely construct one by hand.
+One declared option. Built for you by the `OptionConfig` builders: you rarely construct one by hand.
 
 **Fields**
 
@@ -234,7 +234,7 @@ Declares an option that takes no value and is either present or not.
 
 It defaults to `"false"` and reads as `"true"` when given. Read it back with `ParsedOptions.flagEnabled?`. Giving it a value is an error (`UnexpectedValue`).
 
-Declare a flag named `help` if you want `--help` to print the help text — `run` looks for exactly that name, and adds nothing on its own.
+Declare a flag named `help` if you want `--help` to print the help text: `run` looks for exactly that name, and adds nothing on its own.
 
 ```kex
 flag(long, short, description)
@@ -254,7 +254,7 @@ config
 
 Declares a command and the function that runs it.
 
-A command name may be several words — `"docs build"` — and the longest match wins, so a group and its subcommands can both be declared. The handler receives the parsed options with the command's own words already removed, and returns the process exit code.
+A command name may be several words (`"docs build"`) and the longest match wins, so a group and its subcommands can both be declared. The handler receives the parsed options with the command's own words already removed, and returns the process exit code.
 
 Declares a command. `usage` is what the help line shows after the name (`<name>`, `[args...]`); leave it empty for a command that takes none.
 
@@ -302,7 +302,7 @@ Parses `args`, runs the command they name, and returns its exit code.
 
 This is the whole of a tool's `main`: hand it the argument list and pass the result to `System.exit`.
 
-A parse failure, an unknown command, or a line with no command at all reports the problem along with the help text and returns 1 — the one place that policy has to live for every tool to behave the same way. A set `help` flag prints the help and returns 0.
+A parse failure, an unknown command, or a line with no command at all reports the problem along with the help text and returns 1: the one place that policy has to live for every tool to behave the same way. A set `help` flag prints the help and returns 0.
 
 ```kex
 run(args)
@@ -345,6 +345,10 @@ args.empty? then cli.printHelp else cli.run(args)
 
 ## function `define`
 
+Starts an immutable command-line interface definition.
+
+Chain options and commands onto the returned `OptionConfig`, then call `parse` with the process arguments. `name` appears in usage text and `description` introduces the generated help page.
+
 
 ```kex
 define(name, description)
@@ -353,7 +357,7 @@ define(name, description)
 
 ## function `commandLabel`
 
-Returns the label a command is listed under in the help text — its name, followed by its usage when it has one.
+Returns the label a command is listed under in the help text: its name, followed by its usage when it has one.
 
 
 ```kex
@@ -377,7 +381,7 @@ commandFor(commands, arguments)
 
 Returns `true` when `arguments` begins with the words of `name`.
 
-The word-wise prefix test `commandFor` matches with — `"docs build"` opens `["docs", "build", "src"]` but not `["docs"]`.
+The word-wise prefix test `commandFor` matches with: `"docs build"` opens `["docs", "build", "src"]` but not `["docs"]`.
 
 
 ```kex

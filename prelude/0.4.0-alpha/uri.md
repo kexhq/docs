@@ -31,7 +31,7 @@ A parsed RFC 3986 URI reference. Construction is strict; use `parse` rather than
 
 ## record `URL`
 
-An absolute hierarchical URI with an authority component.
+An absolute hierarchical URI with an authority component, such as an HTTP URL. Unlike a general `URI`, a `URL` always has a scheme and host, which makes accessors such as `scheme` and `host` total.
 
 **Fields**
 
@@ -50,6 +50,8 @@ A host's display spelling and normalized ASCII/IDNA spelling.
 
 Ordered URI query entries. `None` distinguishes a bare key from `key=`.
 
+Order and duplicates matter in real APIs: `tag=kex&tag=beam` must not become a map with one value silently discarded.
+
 **Fields**
 
   - `entries` : [(String, String?)]
@@ -57,6 +59,8 @@ Ordered URI query entries. `None` distinguishes a bare key from `key=`.
 ## record `Form`
 
 Ordered `application/x-www-form-urlencoded` entries.
+
+This is deliberately separate from `Query`: HTML forms encode spaces as plus signs, while a generic URI query treats a plus as an ordinary ``+.
 
 **Fields**
 
@@ -94,6 +98,8 @@ Stable URI failure categories.
 
 Strictly parses an ASCII RFC 3986 URI reference.
 
+Relative references are valid here. Use `URL.parse` when the input must be a complete hierarchical URL with a scheme and authority.
+
 
 ```kex
 parse(text) : String -> Result<URI, URIError>
@@ -103,6 +109,8 @@ parse(text) : String -> Result<URI, URIError>
 ## function `fromIRI`
 
 Converts a Unicode IRI to an ASCII URI using IDNA and UTF-8 percent encoding.
+
+Use this for human-entered international addresses. `parse` is intentionally stricter and accepts only an already encoded ASCII URI.
 
 
 ```kex
@@ -116,6 +124,8 @@ fromIRI(text) : String -> Result<URI, URIError>
 
 Parses an absolute hierarchical URL with an authority.
 
+Rejects relative references, opaque URIs, and values without a host, so a caller can use `scheme` and `host` without handling absence.
+
 
 ```kex
 parse(text) : String -> Result<URL, URIError>
@@ -125,6 +135,8 @@ parse(text) : String -> Result<URL, URIError>
 ## function `build`
 
 Builds and validates a URL from decoded path segments and a query value.
+
+Pass decoded values, not pre-escaped text. The builder escapes each path segment independently, so a slash inside one value cannot accidentally become another level of the path.
 
 
 ```kex
@@ -137,6 +149,8 @@ build : String -> String -> [String] -> Query -> Result<URL, URIError>
 ## function `from`
 
 Builds a query while preserving order, duplicates, and bare keys.
+
+A `None` value encodes as a bare key; `Just("")` encodes with an equals sign. This preserves the difference between `?debug` and `?debug=`.
 
 
 ```kex
@@ -181,11 +195,22 @@ parse(text) : String -> Result<Form, URIError>
 
 #### `equivalent?`
 
+Compares normalized representations rather than original spellings.
+
 ```kex
 equivalent?(other)
 ```
 
-**Returns**: `Bool` — whether normalized representations are equal
+**Returns**: `Bool` — whether the URIs identify the same normalized reference
+
+**Examples**
+
+_Deduplicating differently spelled links_
+
+```kex
+URI.parse("HTTP://example.com/%7Eada").try
+  .equivalent?(URI.parse("http://example.com/~ada").try)
+```
 
 #### `resolve`
 
@@ -193,6 +218,18 @@ Resolves a URI reference against this absolute base.
 
 ```kex
 resolve(reference)
+```
+
+**Returns**: `Result<URI, URIError>` — the resolved URI, or `NotAbsolute` when
+
+**Examples**
+
+_Following a relative link_
+
+```kex
+let base = URI.parse("https://example.com/docs/start").try
+base.resolve(URI.parse("../api").try).try.string
+# => "https://example.com/api"
 ```
 
 #### `inspectValue`
@@ -208,11 +245,13 @@ inspectValue(colors)
 
 #### `equivalent?`
 
+Compares normalized representations rather than original spellings.
+
 ```kex
 equivalent?(other)
 ```
 
-**Returns**: `Bool` — whether normalized representations are equal
+**Returns**: `Bool` — whether the URLs normalize to the same value
 
 #### `resolve`
 
@@ -220,6 +259,18 @@ Resolves a URI reference while preserving the URL invariant.
 
 ```kex
 resolve(reference)
+```
+
+**Returns**: `Result<URL, URIError>` — the resolved absolute URL
+
+**Examples**
+
+_Resolving an API pagination link_
+
+```kex
+let next = URL.parse("https://api.example.com/v1/items").try
+  .resolve(URI.parse("?page=2").try)
+  .try
 ```
 
 #### `inspectValue`

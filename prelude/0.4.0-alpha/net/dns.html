@@ -94,6 +94,7 @@ data-page="net/dns.html">
 <section class="entity" id="module-net-dns">
 <h2><span class="kind kind-module">module</span> <code>Net.DNS</code></h2>
 <p>Typed DNS lookup with explicit resolver ownership and bounded caching.</p>
+<p>Use <code>DNS.addresses</code> for an occasional hostname lookup. Own a <code>Resolver</code> when a service performs repeated lookups, needs cache statistics, or must query a particular nameserver. Resolver ownership makes both caching and cleanup visible instead of hiding process-wide state behind every lookup.</p>
 <pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Net</span><span class="tok-op">.</span><span class="tok-type">DNS</span>
 
 <span class="tok-keyword">let</span> resolver <span class="tok-op">=</span> <span class="tok-type">Resolver</span><span class="tok-op">.</span><span class="tok-method">system</span><span class="tok-op">.</span><span class="tok-method">try</span>
@@ -103,6 +104,7 @@ resolver<span class="tok-op">.</span><span class="tok-method">close</span></code
 <section class="entity" id="record-name">
 <h2><span class="kind kind-record">record</span> <code>Name</code></h2>
 <p>A validated DNS name with caller-facing and IDNA ASCII spellings.</p>
+<p><code>display</code> keeps the readable form supplied by the caller; <code>ascii</code> is the wire-safe IDNA form used in DNS queries. Keeping both lets an error message say what the user typed without sending noncanonical labels to a resolver.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>display</code></dt><dd><code>String</code></dd></div>
@@ -159,6 +161,7 @@ resolver<span class="tok-op">.</span><span class="tok-method">close</span></code
 <section class="entity" id="record-cacheoptions">
 <h2><span class="kind kind-record">record</span> <code>CacheOptions</code></h2>
 <p>Bounds for a resolver-owned positive and negative cache.</p>
+<p>Positive answers honor their DNS TTL up to <code>maximumTtl</code>. Failed lookups are cached for <code>negativeTtl</code>, preventing a missing hostname from hammering the configured nameserver on every request.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>entries</code></dt><dd><code>Integer</code> <span class="opt">optional</span></dd></div>
@@ -190,6 +193,7 @@ resolver<span class="tok-op">.</span><span class="tok-method">close</span></code
 <section class="entity" id="record-cachestatistics">
 <h2><span class="kind kind-record">record</span> <code>CacheStatistics</code></h2>
 <p>Lifetime cache counters. <code>clear</code> empties entries but keeps these counters.</p>
+<p>Compare <code>hits</code> with <code>misses</code> when tuning <code>entries</code> or TTL bounds. A rising <code>evictions</code> count means the resolver is seeing more distinct names than its cache can retain.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>entries</code></dt><dd><code>Integer</code></dd></div>
@@ -206,6 +210,7 @@ resolver<span class="tok-op">.</span><span class="tok-method">close</span></code
 </section>
 <section class="entity" id="module-net-dns-name">
 <h2><span class="kind kind-module">module</span> <code>Net.DNS.Name</code></h2>
+<p>Validation and IDNA conversion for DNS names.</p>
 <section class="entity" id="function-parse">
 <h2><span class="kind kind-function">function</span> <code>parse</code></h2>
 <p>Validates a name and converts Unicode labels to IDNA ASCII.</p>
@@ -216,26 +221,33 @@ resolver<span class="tok-op">.</span><span class="tok-method">close</span></code
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;<a class="xref" href="#record-name">Name</a>, <a class="xref" href="../net.html#record-neterror">NetError</a>&gt;</code> — the name, or <code>Parse</code></p>
 <h5>Examples</h5>
-<p class="caption"><em><code>Name.parse(&quot;münich.example&quot;).try.ascii</code>.</em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>Preparing a user-supplied hostname for lookup</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> name <span class="tok-op">=</span> <span class="tok-type">Name</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">münich.example</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>name<span class="tok-op">.</span><span class="tok-method">display</span><span class="tok-punct">)</span>
+resolver<span class="tok-op">.</span><span class="tok-method">addresses</span><span class="tok-punct">(</span>name<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </section>
 </section>
 <section class="entity" id="module-net-dns-resolver">
 <h2><span class="kind kind-module">module</span> <code>Net.DNS.Resolver</code></h2>
+<p>Constructors for long-lived, cache-owning resolvers.</p>
 <section class="entity" id="function-system">
 <h2><span class="kind kind-function">function</span> <code>system</code></h2>
 <p>Opens a resolver using system configuration and default cache bounds.</p>
+<p>Reuse the returned resolver for the lifetime of a service so repeated names benefit from its bounded cache, then close it during shutdown.</p>
 <pre class="code"><code><span class="tok-fn">system</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;Resolver, <a class="xref" href="../net.html#record-neterror">NetError</a>&gt;</code> — a resolver handle</p>
 <h5>Examples</h5>
-<p class="caption"><em><code>Resolver.system.try</code></em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>A service-owned resolver</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> resolver <span class="tok-op">=</span> <span class="tok-type">Resolver</span><span class="tok-op">.</span><span class="tok-method">system</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> upstream <span class="tok-op">=</span> resolver<span class="tok-op">.</span><span class="tok-method">addresses</span><span class="tok-punct">(</span><span class="tok-type">Name</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">api.example.com</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+resolver<span class="tok-op">.</span><span class="tok-method">close</span></code></pre>
 
 </section>
 <section class="entity" id="function-custom">
 <h2><span class="kind kind-function">function</span> <code>custom</code></h2>
 <p>Opens an isolated resolver with typed nameservers and query bounds.</p>
+<p>This does not inherit the machine's search domains or nameservers. It is useful for tests, service discovery, and applications with their own DNS policy.</p>
 <pre class="code"><code><span class="tok-fn">custom</span><span class="tok-punct">(</span>options<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -243,8 +255,15 @@ resolver<span class="tok-op">.</span><span class="tok-method">close</span></code
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;Resolver, <a class="xref" href="../net.html#record-neterror">NetError</a>&gt;</code> — a resolver, or <code>Parse</code></p>
 <h5>Examples</h5>
-<p class="caption"><em><code>Resolver.custom(ResolverOptions { nameservers: [Nameserver { address: Net.IP.Address.parse(&quot;127.0.0.1&quot;).try, port: Net.Port.from(53).try }], timeout: 100.milliseconds }).try</code></em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>Querying a DNS server used by a local integration test</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> nameserver <span class="tok-op">=</span> <span class="tok-type">Nameserver</span> <span class="tok-punct">{</span>
+  address<span class="tok-op">:</span> <span class="tok-type">Net</span><span class="tok-op">.</span><span class="tok-type">IP</span><span class="tok-op">.</span><span class="tok-type">Address</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">127.0.0.1</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">,</span>
+  port<span class="tok-op">:</span> <span class="tok-type">Net</span><span class="tok-op">.</span><span class="tok-type">Port</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-number">5353</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-punct">}</span>
+<span class="tok-type">Resolver</span><span class="tok-op">.</span><span class="tok-method">custom</span><span class="tok-punct">(</span><span class="tok-type">ResolverOptions</span> <span class="tok-punct">{</span>
+  nameservers<span class="tok-op">:</span> <span class="tok-punct">[</span>nameserver<span class="tok-punct">]</span><span class="tok-punct">,</span>
+  timeout<span class="tok-op">:</span> <span class="tok-number">100</span><span class="tok-op">.</span><span class="tok-method">milliseconds</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </section>
 </section>
@@ -255,6 +274,7 @@ resolver<span class="tok-op">.</span><span class="tok-method">close</span></code
 <div class="fn" id="fn-addresses">
 <h4><code>addresses</code></h4>
 <p>Resolves AAAA and A records, returning IPv6 addresses first.</p>
+<p>This is the convenient operation for connecting to a host. Use <code>lookup</code> when record type, TTL-related behavior, or DNSSEC status matters.</p>
 <pre class="code"><code><span class="tok-fn">addresses</span><span class="tok-punct">(</span>name<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -262,8 +282,9 @@ resolver<span class="tok-op">.</span><span class="tok-method">close</span></code
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;[Net.IP.Address], <a class="xref" href="../net.html#record-neterror">NetError</a>&gt;</code> — addresses or <code>Resolve</code></p>
 <h5>Examples</h5>
-<p class="caption"><em><code>resolver.addresses(Name.parse(&quot;example.test&quot;).try).try</code></em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>Resolving an application upstream</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> host <span class="tok-op">=</span> <span class="tok-type">Name</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">api.example.com</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> addresses <span class="tok-op">=</span> resolver<span class="tok-op">.</span><span class="tok-method">addresses</span><span class="tok-punct">(</span>host<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </div>
 <div class="fn" id="fn-lookup">
@@ -276,24 +297,38 @@ resolver<span class="tok-op">.</span><span class="tok-method">close</span></code
 <div class="param"><dt><code>name</code> <code><a class="xref" href="#record-name">Name</a></code></dt><dd>the validated owner name</dd></div>
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;<a class="xref" href="#record-lookupresponse">LookupResponse</a>, <a class="xref" href="../net.html#record-neterror">NetError</a>&gt;</code> — typed records or <code>Resolve</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Discovering a domain's mail exchangers</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> response <span class="tok-op">=</span> resolver<span class="tok-op">.</span><span class="tok-method">lookup</span><span class="tok-punct">(</span><span class="tok-type">MX</span><span class="tok-punct">,</span> <span class="tok-type">Name</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">example.com</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+response<span class="tok-op">.</span><span class="tok-method">records</span><span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span><span class="tok-keyword">record</span><span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">inspect</span><span class="tok-punct">(</span><span class="tok-keyword">record</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
 
 </div>
 <div class="fn" id="fn-clear">
 <h4><code>clear</code></h4>
 <p>Empties cached entries without resetting lifetime counters.</p>
+<p>Existing statistics remain meaningful across a manual refresh, while the next lookup is forced back to DNS.</p>
 <pre class="code"><code><span class="tok-fn">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
+<h5>Examples</h5>
+<p class="caption"><em>Refreshing service discovery after configuration changes</em></p>
+<pre class="code"><code>resolver<span class="tok-op">.</span><span class="tok-method">clear</span></code></pre>
 
 </div>
 <div class="fn" id="fn-statistics">
 <h4><code>statistics</code></h4>
+<p>Reports current occupancy and lifetime cache counters.</p>
 <pre class="code"><code><span class="tok-fn">statistics</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code><a class="xref" href="#record-cachestatistics">CacheStatistics</a></code> — current entries and lifetime counters</p>
+<h5>Examples</h5>
+<p class="caption"><em>Reporting whether the cache is doing useful work</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> stats <span class="tok-op">=</span> resolver<span class="tok-op">.</span><span class="tok-method">statistics</span>
+<span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">DNS cache: </span><span class="tok-string">${</span>stats<span class="tok-op">.</span><span class="tok-method">hits</span><span class="tok-string">}</span><span class="tok-string"> hits, </span><span class="tok-string">${</span>stats<span class="tok-op">.</span><span class="tok-method">misses</span><span class="tok-string">}</span><span class="tok-string"> misses</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-close">
 <h4><code>close</code></h4>
 <p>Idempotently closes the resolver.</p>
+<p>Calls after closing fail with <code>Closed</code>; closing again is harmless.</p>
 <pre class="code"><code><span class="tok-fn">close</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 
@@ -302,15 +337,20 @@ resolver<span class="tok-op">.</span><span class="tok-method">close</span></code
 </section>
 <section class="entity" id="module-net-dns-dns">
 <h2><span class="kind kind-module">module</span> <code>Net.DNS.DNS</code></h2>
+<p>Convenience lookup operations for callers that do not need resolver ownership or cache reuse.</p>
 <section class="entity" id="function-addresses">
 <h2><span class="kind kind-function">function</span> <code>addresses</code></h2>
 <p>Resolves a name once with a short-lived system resolver.</p>
+<p>Prefer this for command-line tools and one-off checks. A server that looks up names repeatedly should own a <code>Resolver</code> so it can reuse cached answers.</p>
 <pre class="code"><code><span class="tok-fn">addresses</span><span class="tok-punct">(</span>name<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Name</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-punct">[</span><span class="tok-type">Net</span><span class="tok-op">.</span><span class="tok-type">IP</span><span class="tok-op">.</span><span class="tok-type">Address</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-type">NetError</span><span class="tok-op">&gt;</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>name</code> <code><a class="xref" href="#record-name">Name</a></code></dt><dd>the validated hostname</dd></div>
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;[Net.IP.Address], <a class="xref" href="../net.html#record-neterror">NetError</a>&gt;</code> — addresses or <code>Resolve</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Resolving one host in a short-lived command</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> addresses <span class="tok-op">=</span> <span class="tok-type">DNS</span><span class="tok-op">.</span><span class="tok-method">addresses</span><span class="tok-punct">(</span><span class="tok-type">Name</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">example.com</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </section>
 </section>
@@ -319,7 +359,7 @@ resolver<span class="tok-op">.</span><span class="tok-method">close</span></code
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T19:07:27.076569085Z · <a href="../../../llms.txt">llms.txt</a> · <a href="../../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-31T00:21:50.485524575Z · <a href="../../../llms.txt">llms.txt</a> · <a href="../../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

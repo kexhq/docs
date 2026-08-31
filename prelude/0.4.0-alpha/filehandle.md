@@ -19,7 +19,7 @@ entities:
 
 Why a read failed.
 
-`ReadFailed` means the source refused the read. `InvalidUtf8` means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U`FFFD — use `readBytes+ to recover the payload verbatim.
+`ReadFailed` means the source refused the read. `InvalidUtf8` means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U`FFFD: use `readBytes+ to recover the payload verbatim.
 
 
 
@@ -30,7 +30,7 @@ Why a read failed.
 
 ## trait `Readable`
 
-`Readable` — a source that yields text.
+`Readable`: a source that yields text.
 
 Named so that anything can be one, not just a file: the vocabulary `FileHandle<CanRead, W>` already carried was an abstraction without a name, so nothing else could implement it and `IO` did not go through it (kexhq/kex#139). `IO.in` is a `Readable`; so is any handle opened for reading.
 
@@ -92,7 +92,7 @@ read : Result<String, ReadError>
 
 Reads everything remaining as raw bytes, without decoding it as text.
 
-The byte counterpart of `read`: it never validates UTF-8, so it recovers the payload of a source that is not text — or one `read` has just rejected. Draining an exhausted source answers `Ok(Binary.fromBytes([]))`.
+The byte counterpart of `read`: it never validates UTF-8, so it recovers the payload of a source that is not text, or one `read` has just rejected. Draining an exhausted source answers `Ok(Binary.fromBytes([]))`.
 
 ```kex
 readBytes : Result<Binary, ReadError>
@@ -122,7 +122,7 @@ atEnd? : Bool
 
 ## trait `Writable`
 
-`Writable` — a sink that accepts text.
+`Writable`: a sink that accepts text.
 
 The payoff of naming it is that a sink becomes a VALUE a library can accept, rather than a global switch it can only sit underneath: output from one library can go to a buffer while another's goes to the terminal (kexhq/kex#139).
 
@@ -315,8 +315,22 @@ let body = handle.read.or("")
 
 #### `readBytes`
 
+Reads all remaining bytes from the handle without decoding them.
+
+Unlike `read`, this accepts arbitrary binary data and cannot fail because the input is not valid UTF-8. It starts at the handle's current position.
+
 ```kex
 readBytes() : Result<Binary, ReadError>
+```
+
+**Returns**: `Binary` — the remaining bytes
+
+**Examples**
+
+_Reading a file with an unknown encoding_
+
+```kex
+let payload = handle.readBytes.try
 ```
 
 #### `eof?`
@@ -384,8 +398,20 @@ handle.feed
 
 #### `writeBytes`
 
+Writes `content` verbatim, without text encoding or a trailing newline.
+
 ```kex
 writeBytes(content) : Binary -> Void
+```
+
+**Returns**: `Void`
+
+**Examples**
+
+_Copying an opaque payload_
+
+```kex
+destination.writeBytes(source.readBytes.try)
 ```
 
 #### `printLine`

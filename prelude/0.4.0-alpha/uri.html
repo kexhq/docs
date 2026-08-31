@@ -109,7 +109,7 @@ base<span class="tok-op">.</span><span class="tok-method">resolve</span><span cl
 </section>
 <section class="entity" id="record-url">
 <h2><span class="kind kind-record">record</span> <code>URL</code></h2>
-<p>An absolute hierarchical URI with an authority component.</p>
+<p>An absolute hierarchical URI with an authority component, such as an HTTP URL. Unlike a general <code>URI</code>, a <code>URL</code> always has a scheme and host, which makes accessors such as <code>scheme</code> and <code>host</code> total.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>source</code></dt><dd><code>String</code></dd></div>
@@ -127,6 +127,7 @@ base<span class="tok-op">.</span><span class="tok-method">resolve</span><span cl
 <section class="entity" id="record-query">
 <h2><span class="kind kind-record">record</span> <code>Query</code></h2>
 <p>Ordered URI query entries. <code>None</code> distinguishes a bare key from <code>key=</code>.</p>
+<p>Order and duplicates matter in real APIs: <code>tag=kex&amp;tag=beam</code> must not become a map with one value silently discarded.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>entries</code></dt><dd><code>[(String, String?)]</code></dd></div>
@@ -135,6 +136,7 @@ base<span class="tok-op">.</span><span class="tok-method">resolve</span><span cl
 <section class="entity" id="record-form">
 <h2><span class="kind kind-record">record</span> <code>Form</code></h2>
 <p>Ordered <code>application/x-www-form-urlencoded</code> entries.</p>
+<p>This is deliberately separate from <code>Query</code>: HTML forms encode spaces as plus signs, while a generic URI query treats a plus as an ordinary <code></code>+.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>entries</code></dt><dd><code>[(String, String?)]</code></dd></div>
@@ -169,21 +171,33 @@ base<span class="tok-op">.</span><span class="tok-method">resolve</span><span cl
 <section class="entity" id="function-parse">
 <h2><span class="kind kind-function">function</span> <code>parse</code></h2>
 <p>Strictly parses an ASCII RFC 3986 URI reference.</p>
+<p>Relative references are valid here. Use <code>URL.parse</code> when the input must be a complete hierarchical URL with a scheme and authority.</p>
 <pre class="code"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">URI</span><span class="tok-punct">,</span> <span class="tok-type">URIError</span><span class="tok-op">&gt;</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code> <code>String</code></dt><dd>an absolute URI or relative reference</dd></div>
+</dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;URI, <a class="xref" href="#record-urierror">URIError</a>&gt;</code> — the reference or a precise syntax error</p>
 <h5>Examples</h5>
-<p class="caption"><em><code>URI.parse(&quot;../images/logo.svg&quot;).try</code></em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>Resolving an image link found in a document</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> reference <span class="tok-op">=</span> <span class="tok-type">URI</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">../images/logo.svg</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> absolute <span class="tok-op">=</span> base<span class="tok-op">.</span><span class="tok-method">resolve</span><span class="tok-punct">(</span>reference<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </section>
 <section class="entity" id="function-fromiri">
 <h2><span class="kind kind-function">function</span> <code>fromIRI</code></h2>
 <p>Converts a Unicode IRI to an ASCII URI using IDNA and UTF-8 percent encoding.</p>
+<p>Use this for human-entered international addresses. <code>parse</code> is intentionally stricter and accepts only an already encoded ASCII URI.</p>
 <pre class="code"><code><span class="tok-fn">fromIRI</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">URI</span><span class="tok-punct">,</span> <span class="tok-type">URIError</span><span class="tok-op">&gt;</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code> <code>String</code></dt><dd>a Unicode internationalized resource identifier</dd></div>
+</dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;URI, <a class="xref" href="#record-urierror">URIError</a>&gt;</code> — the converted URI or a conversion error</p>
 <h5>Examples</h5>
-<p class="caption"><em><code>URI.fromIRI(&quot;https://münich.example/straße&quot;).try</code></em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>Turning a pasted international address into a request URI</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> target <span class="tok-op">=</span> <span class="tok-type">URI</span><span class="tok-op">.</span><span class="tok-method">fromIRI</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://münich.example/straße</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-type">HTTP</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span>target<span class="tok-op">.</span><span class="tok-method">string</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="module-uri-url">
@@ -191,16 +205,39 @@ base<span class="tok-op">.</span><span class="tok-method">resolve</span><span cl
 <section class="entity" id="function-parse">
 <h2><span class="kind kind-function">function</span> <code>parse</code></h2>
 <p>Parses an absolute hierarchical URL with an authority.</p>
+<p>Rejects relative references, opaque URIs, and values without a host, so a caller can use <code>scheme</code> and <code>host</code> without handling absence.</p>
 <pre class="code"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">URL</span><span class="tok-punct">,</span> <span class="tok-type">URIError</span><span class="tok-op">&gt;</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code> <code>String</code></dt><dd>the complete URL</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;URL, <a class="xref" href="#record-urierror">URIError</a>&gt;</code> — the URL or a precise syntax error</p>
 <h5>Examples</h5>
-<p class="caption"><em><code>URL.parse(&quot;https://example.test/path?q=1&quot;).try</code></em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>Validating a webhook target at configuration time</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> webhook <span class="tok-op">=</span> <span class="tok-type">URL</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">WEBHOOK_URL</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </section>
 <section class="entity" id="function-build">
 <h2><span class="kind kind-function">function</span> <code>build</code></h2>
 <p>Builds and validates a URL from decoded path segments and a query value.</p>
+<p>Pass decoded values, not pre-escaped text. The builder escapes each path segment independently, so a slash inside one value cannot accidentally become another level of the path.</p>
 <pre class="code"><code>build <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Query</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">URL</span><span class="tok-punct">,</span> <span class="tok-type">URIError</span><span class="tok-op">&gt;</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>scheme</code> <code>String</code></dt><dd>the URL scheme, such as <code>https</code></dd></div>
+<div class="param"><dt><code>host</code> <code>String</code></dt><dd>the Unicode or ASCII hostname</dd></div>
+<div class="param"><dt><code>path</code> <code>[String]</code></dt><dd>decoded path segments</dd></div>
+<div class="param"><dt><code>query</code> <code>Query</code></dt><dd>ordered decoded query entries</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;URL, <a class="xref" href="#record-urierror">URIError</a>&gt;</code> — the encoded, validated URL</p>
+<h5>Examples</h5>
+<p class="caption"><em>Building an API URL from an identifier supplied by a user</em></p>
+<pre class="code"><code><span class="tok-type">URL</span><span class="tok-op">.</span><span class="tok-method">build</span><span class="tok-punct">(</span>
+  <span class="tok-string">&quot;</span><span class="tok-string">https</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span>
+  <span class="tok-string">&quot;</span><span class="tok-string">api.example.com</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span>
+  <span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">users</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> userName<span class="tok-punct">]</span><span class="tok-punct">,</span>
+  <span class="tok-type">Query</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">include</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">profile</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </section>
 </section>
@@ -209,16 +246,34 @@ base<span class="tok-op">.</span><span class="tok-method">resolve</span><span cl
 <section class="entity" id="function-from">
 <h2><span class="kind kind-function">function</span> <code>from</code></h2>
 <p>Builds a query while preserving order, duplicates, and bare keys.</p>
+<p>A <code>None</code> value encodes as a bare key; <code>Just(&quot;&quot;)</code> encodes with an equals sign. This preserves the difference between <code>?debug</code> and <code>?debug=</code>.</p>
 <pre class="code"><code><span class="tok-keyword">from</span><span class="tok-punct">(</span>entries<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">String?</span><span class="tok-punct">)</span><span class="tok-punct">]</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Query</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>entries</code> <code>[(String, String?)]</code></dt><dd>decoded key/value pairs</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Query</code> — the ordered query</p>
+<h5>Examples</h5>
+<p class="caption"><em>Adding repeated filters and a bare feature flag</em></p>
+<pre class="code"><code><span class="tok-type">Query</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span>
+  <span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">tag</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">kex</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+  <span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">tag</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">beam</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+  <span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">debug</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">None</span><span class="tok-punct">)</span>
+<span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-parse">
 <h2><span class="kind kind-function">function</span> <code>parse</code></h2>
 <p>Parses generic URI query encoding; <code></code> remains a literal plus.</p>
 <pre class="code"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Query</span><span class="tok-punct">,</span> <span class="tok-type">URIError</span><span class="tok-op">&gt;</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code> <code>String</code></dt><dd>encoded query text without the leading question mark</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;Query, <a class="xref" href="#record-urierror">URIError</a>&gt;</code> — decoded entries or an invalid escape</p>
 <h5>Examples</h5>
-<p class="caption"><em><code>Query.parse(&quot;tag=kex&amp;tag=beam&amp;flag&quot;).try</code></em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>Reading repeated filters without losing their order</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> filters <span class="tok-op">=</span> <span class="tok-type">Query</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">tag=kex&amp;tag=beam&amp;debug</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-op">.</span><span class="tok-method">entries</span></code></pre>
 
 </section>
 </section>
@@ -228,15 +283,28 @@ base<span class="tok-op">.</span><span class="tok-method">resolve</span><span cl
 <h2><span class="kind kind-function">function</span> <code>from</code></h2>
 <p>Builds a form value while preserving order and duplicates.</p>
 <pre class="code"><code><span class="tok-keyword">from</span><span class="tok-punct">(</span>entries<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">]</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Form</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>entries</code> <code>[(String, String)]</code></dt><dd>decoded form fields</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Form</code> — the ordered form</p>
+<h5>Examples</h5>
+<p class="caption"><em>Preparing a login request body</em></p>
+<pre class="code"><code><span class="tok-type">Form</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">email</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> email<span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">password</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> password<span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">encode</span></code></pre>
 
 </section>
 <section class="entity" id="function-parse">
 <h2><span class="kind kind-function">function</span> <code>parse</code></h2>
 <p>Parses form encoding where <code></code> represents a space.</p>
 <pre class="code"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Form</span><span class="tok-punct">,</span> <span class="tok-type">URIError</span><span class="tok-op">&gt;</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code> <code>String</code></dt><dd>an <code>application/x-www-form-urlencoded</code> body</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;Form, <a class="xref" href="#record-urierror">URIError</a>&gt;</code> — decoded fields or an invalid escape</p>
 <h5>Examples</h5>
-<p class="caption"><em><code>Form.parse(&quot;query=hello</code>world&quot;).try+</em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>Reading a search field submitted by a browser</em></p>
+<pre class="code"><code><span class="tok-type">Form</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">query=hello+world</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-op">.</span><span class="tok-method">entries</span></code></pre>
 
 </section>
 </section>
@@ -246,14 +314,33 @@ base<span class="tok-op">.</span><span class="tok-method">resolve</span><span cl
 <div class="functions">
 <div class="fn" id="fn-equivalent?">
 <h4><code>equivalent?</code></h4>
+<p>Compares normalized representations rather than original spellings.</p>
 <pre class="code"><code><span class="tok-fn">equivalent?</span><span class="tok-punct">(</span>other<span class="tok-punct">)</span></code></pre>
-<p class="returns"><strong>Returns:</strong> <code>Bool</code> — whether normalized representations are equal</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code> <code>URI</code></dt><dd>the URI to compare</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — whether the URIs identify the same normalized reference</p>
+<h5>Examples</h5>
+<p class="caption"><em>Deduplicating differently spelled links</em></p>
+<pre class="code"><code><span class="tok-type">URI</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">HTTP://example.com/%7Eada</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+  <span class="tok-op">.</span><span class="tok-method">equivalent?</span><span class="tok-punct">(</span><span class="tok-type">URI</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">http://example.com/~ada</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-resolve">
 <h4><code>resolve</code></h4>
 <p>Resolves a URI reference against this absolute base.</p>
 <pre class="code"><code><span class="tok-fn">resolve</span><span class="tok-punct">(</span>reference<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>reference</code> <code>URI</code></dt><dd>the relative or absolute reference</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;URI, <a class="xref" href="#record-urierror">URIError</a>&gt;</code> — the resolved URI, or <code>NotAbsolute</code> when</p>
+<h5>Examples</h5>
+<p class="caption"><em>Following a relative link</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> base <span class="tok-op">=</span> <span class="tok-type">URI</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://example.com/docs/start</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+base<span class="tok-op">.</span><span class="tok-method">resolve</span><span class="tok-punct">(</span><span class="tok-type">URI</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">../api</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-op">.</span><span class="tok-method">string</span>
+<span class="tok-comment"># =&gt; &quot;https://example.com/api&quot;</span></code></pre>
 
 </div>
 <div class="fn" id="fn-inspectvalue">
@@ -270,14 +357,29 @@ base<span class="tok-op">.</span><span class="tok-method">resolve</span><span cl
 <div class="functions">
 <div class="fn" id="fn-equivalent?">
 <h4><code>equivalent?</code></h4>
+<p>Compares normalized representations rather than original spellings.</p>
 <pre class="code"><code><span class="tok-fn">equivalent?</span><span class="tok-punct">(</span>other<span class="tok-punct">)</span></code></pre>
-<p class="returns"><strong>Returns:</strong> <code>Bool</code> — whether normalized representations are equal</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code> <code>URL</code></dt><dd>the URL to compare</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — whether the URLs normalize to the same value</p>
 
 </div>
 <div class="fn" id="fn-resolve">
 <h4><code>resolve</code></h4>
 <p>Resolves a URI reference while preserving the URL invariant.</p>
 <pre class="code"><code><span class="tok-fn">resolve</span><span class="tok-punct">(</span>reference<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>reference</code> <code>URI</code></dt><dd>the relative or absolute reference</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;URL, <a class="xref" href="#record-urierror">URIError</a>&gt;</code> — the resolved absolute URL</p>
+<h5>Examples</h5>
+<p class="caption"><em>Resolving an API pagination link</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> <span class="tok-keyword">next</span> <span class="tok-op">=</span> <span class="tok-type">URL</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://api.example.com/v1/items</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+  <span class="tok-op">.</span><span class="tok-method">resolve</span><span class="tok-punct">(</span><span class="tok-type">URI</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">?page=2</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </div>
 <div class="fn" id="fn-inspectvalue">
@@ -301,7 +403,7 @@ base<span class="tok-op">.</span><span class="tok-method">resolve</span><span cl
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T19:07:27.076569085Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-31T00:21:50.485524575Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

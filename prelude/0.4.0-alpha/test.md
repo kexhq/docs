@@ -18,7 +18,7 @@ entities:
 
 The built-in testing DSL: `describe`, `it`, `before`, `after`, and assertion helpers.
 
-Everything here is always in scope — no import, and no separate test runner. Write a test file and run it with `kex`:
+Everything here is always in scope: no import, and no separate test runner. Write a test file and run it with `kex`:
 
 ```kex
 describe "arithmetic" do
@@ -43,7 +43,7 @@ A file named `<name>.spec.kex` automatically loads the declarations of `<name>.k
 
 Groups related test cases under a label, and runs them.
 
-The block is called immediately. `describe+ blocks nest, and the output is indented to match. This is a foul function — it prints.
+The block is called immediately. `describe+ blocks nest, and the output is indented to match. This is a foul function: it prints.
 
 
 ```kex
@@ -55,7 +55,7 @@ describe : String -> Block<Void> -> Void
 
 Defines a single test case, and runs it.
 
-The block runs, and anything thrown inside it — typically a failed `assert` — marks the test failed without aborting the rest of the suite. This is a foul function — it prints.
+The block runs, and anything thrown inside it: typically a failed `assert`: marks the test failed without aborting the rest of the suite. This is a foul function: it prints.
 
 
 ```kex
@@ -80,7 +80,7 @@ before : Atom -> Block<Void> -> Void
 
 Registers cleanup to run after the current group's tests.
 
-Defaults to `:each`. Cleanup is unconditional — it runs whether the test passed or failed — and inner per-test hooks run before outer hooks.
+Defaults to `:each`. Cleanup is unconditional: it runs whether the test passed or failed, and inner per-test hooks run before outer hooks.
 
 
 ```kex
@@ -93,7 +93,7 @@ after : Atom -> Block<Void> -> Void
 
 Fails the enclosing `it` when `value` is falsy.
 
-The primitive every other assertion is built on. Prefer the `Assert` helpers where one fits — they report what was expected and what arrived, which a bare `assert` cannot.
+The primitive every other assertion is built on. Prefer the `Assert` helpers where one fits: they report what was expected and what arrived, which a bare `assert` cannot.
 
 
 ```kex
@@ -138,7 +138,7 @@ notEqual(actual, expected)
 
 ## function `truthy`
 
-Fails unless `value` is truthy — anything except `false`, `None` and `()`.
+Fails unless `value` is truthy: anything except `false`, `None` and `()`.
 
 
 ```kex
@@ -148,7 +148,7 @@ truthy(value)
 
 ## function `falsy`
 
-Fails unless `value` is falsy — `false`, `None` or `()`.
+Fails unless `value` is falsy: `false`, `None` or `()`.
 
 
 ```kex

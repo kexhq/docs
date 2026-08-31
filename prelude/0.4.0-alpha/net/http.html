@@ -246,45 +246,67 @@ client<span class="tok-op">.</span><span class="tok-method">close</span><span cl
 </section>
 <section class="entity" id="module-net-http-headers">
 <h2><span class="kind kind-module">module</span> <code>Net.HTTP.Headers</code></h2>
+<p>Construction and parsing of validated HTTP header collections.</p>
 <section class="entity" id="constant-empty">
 <h2><span class="kind kind-constant">constant</span> <code>empty</code> <code>Headers</code></h2>
+<p>Returns a field collection with no entries.</p>
 
 </section>
 <section class="entity" id="function-from">
 <h2><span class="kind kind-function">function</span> <code>from</code></h2>
 <p>Validates header names and values without folding duplicates.</p>
+<p>Duplicate fields stay in their original order. Invalid names and values containing line breaks are rejected instead of creating a malformed or injectable HTTP message.</p>
 <pre class="code"><code><span class="tok-keyword">from</span><span class="tok-punct">(</span>entries<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-punct">]</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Headers</span><span class="tok-punct">,</span> <span class="tok-type">NetError</span><span class="tok-op">&gt;</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;Headers, <a class="xref" href="../net.html#record-neterror">NetError</a>&gt;</code> — validated fields, or <code>Parse</code></p>
 <h5>Examples</h5>
-<p class="caption"><em><code>Headers.from([(&quot;Accept&quot;, &quot;application/json&quot;)]).try</code></em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>Forwarding an explicitly selected set of request headers</em></p>
+<pre class="code"><code><span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span>
+  <span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Accept</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+  <span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">X-Request-ID</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> requestId<span class="tok-punct">)</span>
+<span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </section>
 <section class="entity" id="function-parse">
 <h2><span class="kind kind-function">function</span> <code>parse</code></h2>
 <p>Parses CRLF- or LF-separated header fields.</p>
+<p>Use this at a protocol boundary when headers arrive as text. Application code normally builds them with <code>from</code>, <code>add</code>, and <code>set</code>.</p>
 <pre class="code"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Headers</span><span class="tok-punct">,</span> <span class="tok-type">NetError</span><span class="tok-op">&gt;</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;Headers, <a class="xref" href="../net.html#record-neterror">NetError</a>&gt;</code> — fields in source order, or <code>Parse</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Parsing headers captured from a diagnostic fixture</em></p>
+<pre class="code"><code><span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type: text/plain\r\nX-Trace: abc\r\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </section>
 </section>
 <section class="entity" id="module-net-http-status">
 <h2><span class="kind kind-module">module</span> <code>Net.HTTP.Status</code></h2>
+<p>Validation for numeric HTTP status codes.</p>
 <section class="entity" id="function-from">
 <h2><span class="kind kind-function">function</span> <code>from</code></h2>
+<p>Validates an HTTP status code.</p>
 <pre class="code"><code><span class="tok-keyword">from</span><span class="tok-punct">(</span>code<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Status</span><span class="tok-punct">,</span> <span class="tok-type">NetError</span><span class="tok-op">&gt;</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>code</code> <code>Integer</code></dt><dd>a status in <code>100..599</code></dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;Status, <a class="xref" href="../net.html#record-neterror">NetError</a>&gt;</code> — the status, or <code>Parse</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Validating a configurable health-check success code</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> code <span class="tok-op">=</span> <span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">HEALTH_STATUS</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">flatMap</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>text<span class="tok-op">|</span> text<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Integer</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">204</span><span class="tok-punct">)</span>
+<span class="tok-keyword">let</span> expected <span class="tok-op">=</span> <span class="tok-type">Status</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span>code<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </section>
 </section>
 <section class="entity" id="module-net-http-response">
 <h2><span class="kind kind-module">module</span> <code>Net.HTTP.Response</code></h2>
+<p>Buffered response constructors for route handlers.</p>
 <section class="entity" id="function-binary">
 <h2><span class="kind kind-function">function</span> <code>binary</code></h2>
 <p>Builds a buffered binary response with validated headers.</p>
 <pre class="code"><code><span class="tok-fn">binary</span><span class="tok-punct">(</span>status<span class="tok-punct">,</span> body<span class="tok-punct">,</span> headers<span class="tok-punct">)</span></code></pre>
 <h5>Examples</h5>
-<p class="caption"><em><code>Response.binary(200, Binary.empty, Headers.empty)</code></em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>Returning a downloaded file without decoding it as text</em></p>
+<pre class="code"><code><span class="tok-type">Response</span><span class="tok-op">.</span><span class="tok-method">binary</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">,</span> archive<span class="tok-punct">,</span> <span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">set</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">application/zip</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-text">
@@ -292,19 +314,23 @@ client<span class="tok-op">.</span><span class="tok-method">close</span><span cl
 <p>Builds a UTF-8 text response with an explicit text/plain content type.</p>
 <pre class="code"><code><span class="tok-fn">text</span><span class="tok-punct">(</span>status<span class="tok-punct">,</span> body<span class="tok-punct">)</span></code></pre>
 <h5>Examples</h5>
-<p class="caption"><em><code>Response.text(200, &quot;hello&quot;)</code></em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>A small health endpoint</em></p>
+<pre class="code"><code><span class="tok-type">Response</span><span class="tok-op">.</span><span class="tok-method">text</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">ok</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-empty">
 <h2><span class="kind kind-function">function</span> <code>empty</code></h2>
 <p>Builds a response with an empty body.</p>
 <pre class="code"><code><span class="tok-fn">empty</span><span class="tok-punct">(</span>status<span class="tok-punct">)</span></code></pre>
+<h5>Examples</h5>
+<p class="caption"><em>A successful DELETE endpoint</em></p>
+<pre class="code"><code><span class="tok-type">Response</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-punct">(</span><span class="tok-number">204</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 </section>
 <section class="entity" id="module-net-http-router">
 <h2><span class="kind kind-module">module</span> <code>Net.HTTP.Router</code></h2>
+<p>The empty starting point for an immutable route declaration chain.</p>
 <section class="entity" id="constant-build">
 <h2><span class="kind kind-constant">constant</span> <code>build</code> <code>?</code></h2>
 
@@ -317,7 +343,11 @@ client<span class="tok-op">.</span><span class="tok-method">close</span><span cl
 <div class="fn" id="fn-route">
 <h4><code>route</code></h4>
 <p>Appends a route; earlier matching declarations win.</p>
+<p>Use this for a method without a convenience function. Paths may include named or wildcard captures, which the handler reads from <code>RouteContext</code>.</p>
 <pre class="code"><code><span class="tok-fn">route</span><span class="tok-punct">(</span>method<span class="tok-punct">,</span> path<span class="tok-punct">,</span> handler<span class="tok-punct">)</span></code></pre>
+<h5>Examples</h5>
+<p class="caption"><em>Adding a custom method</em></p>
+<pre class="code"><code>router<span class="tok-op">.</span><span class="tok-method">route</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">PURGE</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">/cache/:key</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-op">~</span>purge<span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-get">
@@ -366,6 +396,7 @@ client<span class="tok-op">.</span><span class="tok-method">close</span><span cl
 </section>
 <section class="entity" id="module-net-http-server">
 <h2><span class="kind kind-module">module</span> <code>Net.HTTP.Server</code></h2>
+<p>Starting, observing, and gracefully stopping HTTP servers.</p>
 <section class="entity" id="type-running">
 <h2><span class="kind kind-type">type</span> <code>Running</code></h2>
 <p>An opaque asynchronous HTTP server handle.</p>
@@ -374,6 +405,7 @@ client<span class="tok-op">.</span><span class="tok-method">close</span><span cl
 <section class="entity" id="function-start">
 <h2><span class="kind kind-function">function</span> <code>start</code></h2>
 <p>Starts a server with conservative defaults and returns immediately.</p>
+<p>The returned handle owns the listener and active handlers. Use <code>start</code> when the process has other work to do; use <code>serve</code> for a foreground server whose main job is handling HTTP.</p>
 <pre class="code"><code><span class="tok-fn">start</span><span class="tok-punct">(</span>endpoint<span class="tok-punct">,</span> router<span class="tok-punct">)</span></code></pre>
 <h5>Examples</h5>
 <pre class="code"><code><span class="tok-keyword">let</span> router <span class="tok-op">=</span> <span class="tok-type">Router</span><span class="tok-op">.</span><span class="tok-method">build</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/health</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>request<span class="tok-punct">,</span> context<span class="tok-op">|</span>
@@ -393,7 +425,12 @@ client<span class="tok-op">.</span><span class="tok-method">close</span><span cl
 <section class="entity" id="function-stop">
 <h2><span class="kind kind-function">function</span> <code>stop</code></h2>
 <p>Gracefully stops using the duration captured at start.</p>
+<p>New requests stop being accepted while in-flight handlers get their grace period to finish. The report says how much work completed or was forced down during shutdown.</p>
 <pre class="code"><code><span class="tok-fn">stop</span><span class="tok-punct">(</span>server<span class="tok-punct">)</span></code></pre>
+<h5>Examples</h5>
+<p class="caption"><em>Shutting down from an application lifecycle hook</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> report <span class="tok-op">=</span> <span class="tok-type">Server</span><span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span>server<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">closed after </span><span class="tok-string">${</span>report<span class="tok-op">.</span><span class="tok-method">completed</span><span class="tok-string">}</span><span class="tok-string"> requests</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-join">
@@ -410,21 +447,31 @@ client<span class="tok-op">.</span><span class="tok-method">close</span><span cl
 </section>
 <section class="entity" id="function-localaddress">
 <h2><span class="kind kind-function">function</span> <code>localAddress</code></h2>
+<p>Returns the bound address, including an operating-system-assigned port.</p>
 <pre class="code"><code><span class="tok-fn">localAddress</span><span class="tok-punct">(</span>server<span class="tok-punct">)</span></code></pre>
-<p class="returns"><strong>Returns:</strong> <code>Net.Socket.TCP.Endpoint</code> — the bound address, including ephemeral port</p>
+<p class="returns"><strong>Returns:</strong> <code>Net.Socket.TCP.Endpoint</code> — the bound address</p>
+<h5>Examples</h5>
+<p class="caption"><em>Publishing the actual address of a test server</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> endpoint <span class="tok-op">=</span> <span class="tok-type">Server</span><span class="tok-op">.</span><span class="tok-method">localAddress</span><span class="tok-punct">(</span>server<span class="tok-punct">)</span>
+<span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">test server: http://</span><span class="tok-string">${</span>endpoint<span class="tok-op">.</span><span class="tok-method">host</span><span class="tok-string">}</span><span class="tok-string">:</span><span class="tok-string">${</span>endpoint<span class="tok-op">.</span><span class="tok-method">port</span><span class="tok-op">.</span><span class="tok-method">string</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 </section>
 <section class="entity" id="module-net-http-client">
 <h2><span class="kind kind-module">module</span> <code>Net.HTTP.Client</code></h2>
+<p>Constructors for explicitly owned, connection-pooling HTTP clients.</p>
 <section class="entity" id="function-open">
 <h2><span class="kind kind-function">function</span> <code>open</code></h2>
 <p>Opens an explicit pooled client with conservative defaults.</p>
+<p>Reuse one client for related requests so keep-alive connections and DNS work can be reused. Close it when the owning service shuts down.</p>
 <pre class="code"><code><span class="tok-fn">open</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Client</span><span class="tok-punct">,</span> <span class="tok-type">NetError</span><span class="tok-op">&gt;</span>
 <span class="tok-fn">open</span><span class="tok-punct">(</span>options<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">ClientOptions</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Client</span><span class="tok-punct">,</span> <span class="tok-type">NetError</span><span class="tok-op">&gt;</span></code></pre>
 <h5>Examples</h5>
-<p class="caption"><em><code>Client.open.try</code></em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>Fetching several pages through one connection pool</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> client <span class="tok-op">=</span> <span class="tok-type">Client</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> first <span class="tok-op">=</span> client<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://api.example.com/items?page=1</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> second <span class="tok-op">=</span> client<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://api.example.com/items?page=2</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+client<span class="tok-op">.</span><span class="tok-method">close</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </section>
 </section>
@@ -435,7 +482,14 @@ client<span class="tok-op">.</span><span class="tok-method">close</span><span cl
 <div class="fn" id="fn-request">
 <h4><code>request</code></h4>
 <p>Sends a buffered request. Redirects and generic retries are not implicit.</p>
+<p>This keeps policy with the caller: inspect a redirect before following it, and retry only methods and failures your application knows are safe.</p>
 <pre class="code"><code><span class="tok-fn">request</span><span class="tok-punct">(</span>method<span class="tok-punct">,</span> url<span class="tok-punct">,</span> headers<span class="tok-punct">,</span> body<span class="tok-punct">)</span></code></pre>
+<h5>Examples</h5>
+<p class="caption"><em>Sending JSON with an idempotency key</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> headers <span class="tok-op">=</span> <span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span>
+  <span class="tok-op">.</span><span class="tok-method">set</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">set</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Idempotency-Key</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> requestId<span class="tok-punct">)</span>
+client<span class="tok-op">.</span><span class="tok-method">request</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">POST</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> url<span class="tok-punct">,</span> headers<span class="tok-punct">,</span> <span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span>order<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Binary</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-get">
@@ -482,13 +536,19 @@ client<span class="tok-op">.</span><span class="tok-method">close</span><span cl
 </div>
 <div class="fn" id="fn-statistics">
 <h4><code>statistics</code></h4>
+<p>Reports current pool occupancy and lifetime request counters.</p>
 <pre class="code"><code><span class="tok-fn">statistics</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code><a class="xref" href="#record-clientstatistics">ClientStatistics</a></code> — current pool and lifetime request counters</p>
+<h5>Examples</h5>
+<p class="caption"><em>Emitting client-pool diagnostics</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> stats <span class="tok-op">=</span> client<span class="tok-op">.</span><span class="tok-method">statistics</span>
+<span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">HTTP reuse: </span><span class="tok-string">${</span>stats<span class="tok-op">.</span><span class="tok-method">reusedConnections</span><span class="tok-string">}</span><span class="tok-string">/</span><span class="tok-string">${</span>stats<span class="tok-op">.</span><span class="tok-method">requests</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-close">
 <h4><code>close</code></h4>
 <p>Idempotently closes the client and every idle pooled connection.</p>
+<p>Further requests fail with <code>Closed</code>; a second close is harmless.</p>
 <pre class="code"><code><span class="tok-fn">close</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
 
 </div>
@@ -520,18 +580,27 @@ client<span class="tok-op">.</span><span class="tok-method">close</span><span cl
 <h4><code>remove</code></h4>
 <p>Removes every field matching <code>name</code> case-insensitively.</p>
 <pre class="code"><code><span class="tok-fn">remove</span><span class="tok-punct">(</span>name<span class="tok-punct">)</span></code></pre>
+<h5>Examples</h5>
+<p class="caption"><em>Stripping hop-by-hop state before forwarding</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> forwarded <span class="tok-op">=</span> incoming<span class="tok-op">.</span><span class="tok-method">remove</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Connection</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-get">
 <h4><code>get</code></h4>
 <p>Returns the first matching field value.</p>
 <pre class="code"><code><span class="tok-fn">get</span><span class="tok-punct">(</span>name<span class="tok-punct">)</span></code></pre>
+<h5>Examples</h5>
+<p class="caption"><em>Selecting a response decoder</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> contentType <span class="tok-op">=</span> response<span class="tok-op">.</span><span class="tok-method">headers</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">application/octet-stream</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-getall">
 <h4><code>getAll</code></h4>
 <p>Returns every matching value in insertion order.</p>
 <pre class="code"><code><span class="tok-fn">getAll</span><span class="tok-punct">(</span>name<span class="tok-punct">)</span></code></pre>
+<h5>Examples</h5>
+<p class="caption"><em>Preserving every Set-Cookie field</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> cookies <span class="tok-op">=</span> response<span class="tok-op">.</span><span class="tok-method">headers</span><span class="tok-op">.</span><span class="tok-method">getAll</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Set-Cookie</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="fn-inspectvalue">
@@ -554,20 +623,30 @@ client<span class="tok-op">.</span><span class="tok-method">close</span><span cl
 <h4><code>parameter</code></h4>
 <p>Returns one decoded named or wildcard route capture.</p>
 <pre class="code"><code><span class="tok-fn">parameter</span><span class="tok-punct">(</span>name<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code> <code>String</code></dt><dd>the capture name declared in the route</dd></div>
+</dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;String, <a class="xref" href="../net.html#record-neterror">NetError</a>&gt;</code> — the capture, or <code>Parse</code> when absent</p>
+<h5>Examples</h5>
+<p class="caption"><em>Reading <code>:id</code> from a <code>/users/:id</code> route</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> id <span class="tok-op">=</span> context<span class="tok-op">.</span><span class="tok-method">parameter</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">id</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </div>
 </div>
 </section>
 <section class="entity" id="module-net-http-http">
 <h2><span class="kind kind-module">module</span> <code>Net.HTTP.HTTP</code></h2>
+<p>Stateless HTTP convenience calls for scripts and occasional requests.</p>
 <section class="entity" id="function-request">
 <h2><span class="kind kind-function">function</span> <code>request</code></h2>
 <p>Sends one stateless buffered request with no redirect or hidden retry.</p>
+<p>Each call owns a short-lived client. This is convenient for scripts and occasional requests; use <code>Client</code> for a service making repeated calls.</p>
 <pre class="code"><code>request <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Headers</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Binary</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Response</span><span class="tok-op">&lt;</span><span class="tok-type">Binary</span><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <span class="tok-type">NetError</span><span class="tok-op">&gt;</span></code></pre>
 <h5>Examples</h5>
-<p class="caption"><em><code>HTTP.request(&quot;GET&quot;, &quot;https://example.test/&quot;).try</code></em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>A one-off authenticated request in a command-line tool</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> headers <span class="tok-op">=</span> <span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">set</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Authorization</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">Bearer </span><span class="tok-string">${</span>token<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">HTTP</span><span class="tok-op">.</span><span class="tok-method">request</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">GET</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> url<span class="tok-punct">,</span> headers<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </section>
 <section class="entity" id="function-get">
@@ -625,7 +704,7 @@ client<span class="tok-op">.</span><span class="tok-method">close</span><span cl
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T19:07:27.076569085Z · <a href="../../../llms.txt">llms.txt</a> · <a href="../../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-31T00:21:50.485524575Z · <a href="../../../llms.txt">llms.txt</a> · <a href="../../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

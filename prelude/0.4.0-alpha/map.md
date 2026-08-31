@@ -15,7 +15,7 @@ entities:
 
 An immutable key-value store, written `{key: value}`.
 
-Keys are compared by structural equality and may be of any type; atom keys get the shorthand `{name: "Ada"}`, string keys are written out in full as `{"name": "Ada"}`. Every method answers with a new map — the `!` forms (`put!`, `delete!`) build a new map and rebind the receiver variable, they do not modify anything in place.
+Keys are compared by structural equality and may be of any type; atom keys get the shorthand `{name: "Ada"}`, string keys are written out in full as `{"name": "Ada"}`. Every method answers with a new map: the `!` forms (`put!`, `delete!`) build a new map and rebind the receiver variable, they do not modify anything in place.
 
 Entries come back in canonical key order, not insertion order, so `keys`, `values`, `entries` and any traversal are stable and comparable across equal maps.
 
@@ -149,7 +149,7 @@ totals                     # => { :visits: 1 }
 
 #### `delete`
 
-Returns a new map without `key`. A key that is not present is not an error — the map comes back unchanged.
+Returns a new map without `key`. A key that is not present is not an error: the map comes back unchanged.
 
 Use `delete!` to rebind the receiver variable.
 
@@ -282,7 +282,7 @@ raw.mapValues { |s| s.trim.lowerCase }
 
 Returns a new map with every key replaced by `f(key)`. The values are left alone.
 
-If `f` maps two keys onto the same result, one entry wins — the map cannot hold both.
+If `f` maps two keys onto the same result, one entry wins: the map cannot hold both.
 
 ```kex
 mapKeys(f) : (K -> J) -> Map<J, V>

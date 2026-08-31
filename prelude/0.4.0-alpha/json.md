@@ -38,7 +38,7 @@ JSON.parse("// c\n1")  # => Error(UnexpectedCharacter("/", 0))
 
 Parses a JSON document, strictly.
 
-The whole text must be one JSON value with nothing after it — trailing input is `TrailingInput`, not a silently ignored tail. Objects come back as maps with atom keys, arrays as lists, `null` as `None`.
+The whole text must be one JSON value with nothing after it: trailing input is `TrailingInput`, not a silently ignored tail. Objects come back as maps with atom keys, arrays as lists, `null` as `None`.
 
 
 ```kex
@@ -51,7 +51,7 @@ parse(text) : String -> {Atom: Bool} -> Result<Any, Error>
 
 Renders a Kex value as strict JSON text.
 
-Maps become objects, lists become arrays, `None` becomes `null`, and strings are escaped. A map written with atom keys — the usual Kex spelling — renders with those names as strings, so `{ name: "Ada" }` becomes `{"name":"Ada"}`. Object keys come out in canonical key order.
+Maps become objects, lists become arrays, `None` becomes `null`, and strings are escaped. A map written with atom keys (the usual Kex spelling) renders with those names as strings, so `{ name: "Ada" }` becomes `{"name":"Ada"}`. Object keys come out in canonical key order.
 
 Anything the encoder does not recognise renders as `null` rather than failing, so this never raises.
 

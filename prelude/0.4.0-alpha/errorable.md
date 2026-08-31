@@ -12,7 +12,7 @@ entities:
 
 ## trait `Errorable`
 
-`Errorable` — the trait for values that describe a failure.
+`Errorable`: the trait for values that describe a failure.
 
 Implemented by error types that carry a human-readable message, so a generic handler can display or log any error without knowing its concrete type or its structured fields.
 
@@ -27,7 +27,7 @@ end
 
 A human-readable description of what went wrong.
 
-Written for a person reading output, not for a program to match on — branch on the error's own type or fields for that.
+Written for a person reading output, not for a program to match on: branch on the error's own type or fields for that.
 
 ```kex
 message : String

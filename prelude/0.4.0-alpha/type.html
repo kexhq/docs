@@ -98,10 +98,10 @@ data-page="type.html">
 <p>Types as values.</p>
 <p><code>Type.of(x)</code> answers what a value IS, as something you can hold, print, compare, and take apart:</p>
 <pre class="code"><code><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">42</span><span class="tok-punct">)</span>                     <span class="tok-comment"># Type { name: &quot;Integer&quot;, args: [] }</span>
-<span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">toString</span>        <span class="tok-comment"># &quot;[Integer]&quot;</span>
+<span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>        <span class="tok-comment"># &quot;[Integer]&quot;</span>
 <span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span>x<span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span>y<span class="tok-punct">)</span>        <span class="tok-comment"># structural equality, like any record</span>
 <span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span>due<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">fields</span>             <span class="tok-comment"># [&quot;year&quot;, &quot;month&quot;, &quot;day&quot;]</span></code></pre>
-<p>The answer comes from the compiler where it can: a checked expression knows things a value cannot carry, such as the unused half of a <code>Result</code> or the element type of an empty list. Where the checker has no concrete answer — gradual code, <code>--no-check</code>, a value arriving from another process — the value itself is asked instead. That fallback is honest but lossy: an empty list has no element to inspect, and a <code>Result</code> only ever holds one side.</p>
+<p>The answer comes from the compiler where it can: a checked expression knows things a value cannot carry, such as the unused half of a <code>Result</code> or the element type of an empty list. Where the checker has no concrete answer: gradual code, <code>--no-check</code>, a value arriving from another process: the value itself is asked instead. That fallback is honest but lossy: an empty list has no element to inspect, and a <code>Result</code> only ever holds one side.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>name</code></dt><dd><code>String</code></dd></div>
@@ -124,10 +124,10 @@ data-page="type.html">
 <p class="returns"><strong>Returns:</strong> <code>Type</code> — its type</p>
 <h5>Examples</h5>
 <pre class="code"><code><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">42</span><span class="tok-punct">)</span>                <span class="tok-comment"># =&gt; Type { name: &quot;Integer&quot;, args: [] }</span>
-<span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">toString</span>   <span class="tok-comment"># =&gt; &quot;[Integer]&quot;</span>
-<span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">toString</span>     <span class="tok-comment"># =&gt; &quot;String&quot;</span></code></pre>
+<span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;[Integer]&quot;</span>
+<span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; &quot;String&quot;</span></code></pre>
 <p class="caption"><em>Reporting an unexpected value</em></p>
-<pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">expected a list, got </span><span class="tok-string">${</span><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span>value<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">toString</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">expected a list, got </span><span class="tok-string">${</span><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span>value<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-named">
@@ -162,7 +162,7 @@ data-page="type.html">
 </section>
 <section class="entity" id="function-function">
 <h2><span class="kind kind-function">function</span> <code>function</code></h2>
-<p>Builds a function type from its parameter types and its result type — in the order a signature is written.</p>
+<p>Builds a function type from its parameter types and its result type: in the order a signature is written.</p>
 <pre class="code"><code><span class="tok-fn">function</span><span class="tok-punct">(</span>params<span class="tok-punct">,</span> result<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -171,14 +171,14 @@ data-page="type.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Type</code> — the function type</p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">function</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">named</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">String</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">named</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">String</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">toString</span>
+<pre class="code"><code><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">function</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">named</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">String</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">named</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">String</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>
 <span class="tok-comment"># =&gt; &quot;String -&gt; String&quot;</span></code></pre>
 
 </section>
 <section class="entity" id="function-returnedby">
 <h2><span class="kind kind-function">function</span> <code>returnedBy</code></h2>
 <p>Returns the type a named function returns, as answered by the compiler.</p>
-<p>Named functions only. A lambda or a function VALUE carries no signature at runtime, and an overloaded name has no single answer — both are compile errors rather than a guess.</p>
+<p>Named functions only. A lambda or a function VALUE carries no signature at runtime, and an overloaded name has no single answer: both are compile errors rather than a guess.</p>
 <pre class="code"><code><span class="tok-fn">returnedBy</span><span class="tok-punct">(</span>function<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -186,7 +186,7 @@ data-page="type.html">
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Type</code> — its return type</p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">returnedBy</span><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">toString</span>   <span class="tok-comment"># =&gt; &quot;Result&lt;Date, TimeError&gt;&quot;</span></code></pre>
+<pre class="code"><code><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">returnedBy</span><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;Result&lt;Date, TimeError&gt;&quot;</span></code></pre>
 
 </section>
 </section>
@@ -194,12 +194,29 @@ data-page="type.html">
 <h2><span class="kind kind-make">make</span> <code>Type</code></h2>
 <p>Everything else is a METHOD, not a module function: a module function is only reachable through UFCS in the interpreter, so <code>Type.of(x).fields</code> worked there and raised on BEAM.</p>
 
+<div class="functions">
+<div class="fn" id="fn-to">
+<h4><code>to</code></h4>
+<p>Renders the type the way it is written in SOURCE, not the way it is stored.</p>
+<p>A list reads as <code>[Integer]</code>, a tuple as <code>(Integer, String)</code>, an optional as <code>String?</code>, a map as <code>{String: Integer}</code>, and a function as its signature.</p>
+<pre class="code"><code><span class="tok-fn">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the type, as source</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; &quot;[Integer]&quot;</span>
+<span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; &quot;(Integer, String)&quot;</span>
+<span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; &quot;Integer?&quot;</span>
+<span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; &quot;String&quot;</span></code></pre>
+<p class="caption"><em>An error message that names the type</em></p>
+<pre class="code"><code><span class="tok-fn">die</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cannot serialise a </span><span class="tok-string">${</span><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span>value<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
 </section>
 </article>
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-08-30T19:07:27.076569085Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-08-31T00:21:50.485524575Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

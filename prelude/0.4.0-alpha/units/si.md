@@ -13,7 +13,7 @@ entities:
 
 SI units: metres, grams, watts, volts and the rest, with prefixes and dimensional arithmetic.
 
-Opt-in — nothing here is in scope until `using Units.SI`.
+Opt-in: nothing here is in scope until `using Units.SI`.
 
 ```kex
 using Units.SI
@@ -25,7 +25,7 @@ main do
 end
 ```
 
-Every value is a `Measure` from the prelude, so the arithmetic, conversion and comparison described there apply unchanged. What this module adds is the SI vocabulary, the prefixes, and a table of which dimension results from multiplying or dividing two others — so `2.newton * 3.meter` answers in joules and `100.meter / 10.sec` in metres per second.
+Every value is a `Measure` from the prelude, so the arithmetic, conversion and comparison described there apply unchanged. What this module adds is the SI vocabulary, the prefixes, and a table of which dimension results from multiplying or dividing two others, so `2.newton * 3.meter` answers in joules and `100.meter / 10.sec` in metres per second.
 
 ## type `SIUnit`
 
@@ -308,7 +308,7 @@ nano(measure)
 
 Divides one measure by another, naming the resulting dimension.
 
-The spelled-out form of `/`: `100.meter.per(10.sec)` and `100.meter / 10.sec` are the same call. Metres over seconds is speed, energy over time is power, force over area is pressure — the dimension table decides, and the symbol follows it.
+The spelled-out form of `/`: `100.meter.per(10.sec)` and `100.meter / 10.sec` are the same call. Metres over seconds is speed, energy over time is power, force over area is pressure: the dimension table decides, and the symbol follows it.
 
 
 ```kex

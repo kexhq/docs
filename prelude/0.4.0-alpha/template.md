@@ -13,9 +13,9 @@ entities:
 
 An ERB-shaped template scanner: template text in, a template AST out.
 
-Opt-in — nothing here is in scope until `using Template`.
+Opt-in: nothing here is in scope until `using Template`.
 
-This is the scanning stage only (see the Template proposal for the fuller design): it turns template source into a flat list of `Node`s — plain text, and the four kinds of `<% %>` region — plus whatever frontmatter tags sit ahead of the body. It does not evaluate anything and does not know Kex syntax; the text inside a hole is kept as-is, for a later stage to parse and lower into real Kex.
+This is the scanning stage only (see the Template proposal for the fuller design): it turns template source into a flat list of `Node`s: plain text, and the four kinds of `<% %>` region, plus whatever frontmatter tags sit ahead of the body. It does not evaluate anything and does not know Kex syntax; the text inside a hole is kept as-is, for a later stage to parse and lower into real Kex.
 
 ```kex
 using Template
@@ -43,7 +43,7 @@ parsed.nodes                       # => [Text("Hi "), Interpolate("name"), Text(
 
 ## Frontmatter
 
-A template file may open with a `---` line, generic `key: value` tags up to a closing `---` line, and then the body. This is metadata for whatever reads the template — a title, a layout name, a list of tags — and there is nothing template-specific about it: it is scanned the same generic way whatever key is used.
+A template file may open with a `---` line, generic `key: value` tags up to a closing `---` line, and then the body. This is metadata for whatever reads the template (a title, a layout name, a list of tags) and there is nothing template-specific about it: it is scanned the same generic way whatever key is used.
 
 ```kex
 ---
@@ -53,7 +53,7 @@ tags: [changelog, public]
 # <%= title %>
 ```
 
-A template's parameters, when a later stage needs them declared rather than inferred, are just another frontmatter key — conventionally `params`, a list of names each with an optional `: Type`:
+A template's parameters, when a later stage needs them declared rather than inferred, are just another frontmatter key: conventionally `params`, a list of names each with an optional `: Type`:
 
 ```kex
 ---
@@ -62,13 +62,13 @@ params: [name, library: Bool, dependencies: [Dependency]]
 # <%= name %>
 ```
 
-Nothing in the scanner treats `params` specially while scanning — it is metadata like any other key, a `[a, b, c]` list same as `tags` above. `Parsed#parameters` is a convenience reader for it: it splits each entry on its first colon into a `TemplateParam { name, type }` (`type` is `""` for a bare name), so a caller does not need to know the key name, match on `Tag` itself, or split each entry by hand. `type` is raw text, same as everywhere else in this module — turning `[Dependency]` into a real, resolved Kex type is later work, not this module's.
+Nothing in the scanner treats `params` specially while scanning: it is metadata like any other key, a `[a, b, c]` list same as `tags` above. `Parsed#parameters` is a convenience reader for it: it splits each entry on its first colon into a `TemplateParam { name, type }` (`type` is `""` for a bare name), so a caller does not need to know the key name, match on `Tag` itself, or split each entry by hand. `type` is raw text, same as everywhere else in this module: turning `[Dependency]` into a real, resolved Kex type is later work, not this module's.
 
 ## type `Node`
 
 One piece of a scanned template.
 
-Hole and control content is carried as raw text — the Kex source that was between the delimiters, trimmed of surrounding whitespace. Turning that text into real, type-checked Kex expressions is later work; a `Node` only records what KIND of region it is and what text it held.
+Hole and control content is carried as raw text: the Kex source that was between the delimiters, trimmed of surrounding whitespace. Turning that text into real, type-checked Kex expressions is later work; a `Node` only records what KIND of region it is and what text it held.
 
 
 
@@ -105,7 +105,7 @@ Why a template's text could not be scanned, and where.
 
 ## record `TemplateParam`
 
-One entry from a `params: [...]` frontmatter list: a name, and its optional `: Type` annotation. `type` is raw text — `""` for a bare name, never a resolved Kex type — the same way a frontmatter `Tag` is text and not a parsed value.
+One entry from a `params: [...]` frontmatter list: a name, and its optional `: Type` annotation. `type` is raw text: `""` for a bare name, never a resolved Kex type: the same way a frontmatter `Tag` is text and not a parsed value.
 
 **Fields**
 
@@ -114,7 +114,7 @@ One entry from a `params: [...]` frontmatter list: a name, and its optional `: T
 
 ## record `TagScan`
 
-One scanned `<% ... %>` region: its node, and the whitespace trims its delimiters asked for. Not part of the public API — internal to scanning — but declared at module scope rather than inside `private do`: nested there, this record's fields lose their names under BEAM codegen and the value round-trips as an untagged tuple (`Undefined method: leftTrim for Tuple`), even though the same code is fine on the tree-walking interpreter.
+One scanned `<% ... %>` region: its node, and the whitespace trims its delimiters asked for. It is internal to scanning, not part of the public API, but declared at module scope rather than inside `private do`. Nested there, this record's fields lose their names under BEAM codegen and the value round-trips as an untagged tuple (`Undefined method: leftTrim for Tuple`), even though the same code is fine on the tree-walking interpreter.
 
 **Fields**
 
