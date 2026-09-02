@@ -105,6 +105,8 @@ client<span class="tok-op">.</span><span class="tok-method">close</span><span cl
 <section class="entity" id="record-headers">
 <h2><span class="kind kind-record">record</span> <code>Headers</code></h2>
 <p>An insertion-ordered HTTP field collection. Names compare case-insensitively and duplicate fields are preserved.</p>
+<p>A list of pairs rather than a <code>{String: String}</code> map, and deliberately so. A map cannot hold the same name twice, and <code>Set-Cookie</code> needs exactly that: RFC 6265 does not define it as a comma-separated list, so two cookies must travel as two fields and cannot be joined into one. A map interface would read as the obvious one right up to the first response that sets two cookies, then silently keep one — the same class of quiet data loss this module's <code>Result</code>-returning builders exist to avoid.</p>
+<p>Order is kept for the same reason. RFC 9110 makes order insignificant BETWEEN different names but significant between fields sharing a name, and a map has no order to keep.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>entries</code></dt><dd><code>[(String, String)]</code></dd></div>
@@ -306,7 +308,7 @@ client<span class="tok-op">.</span><span class="tok-method">close</span><span cl
 <pre class="code"><code><span class="tok-fn">binary</span><span class="tok-punct">(</span>status<span class="tok-punct">,</span> body<span class="tok-punct">,</span> headers<span class="tok-punct">)</span></code></pre>
 <h5>Examples</h5>
 <p class="caption"><em>Returning a downloaded file without decoding it as text</em></p>
-<pre class="code"><code><span class="tok-type">Response</span><span class="tok-op">.</span><span class="tok-method">binary</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">,</span> archive<span class="tok-punct">,</span> <span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">set</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">application/zip</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">Response</span><span class="tok-op">.</span><span class="tok-method">binary</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">,</span> archive<span class="tok-punct">,</span> <span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">application/zip</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span></code></pre>
 
 </section>
 <section class="entity" id="function-text">
@@ -487,8 +489,8 @@ client<span class="tok-op">.</span><span class="tok-method">close</span><span cl
 <h5>Examples</h5>
 <p class="caption"><em>Sending JSON with an idempotency key</em></p>
 <pre class="code"><code><span class="tok-keyword">let</span> headers <span class="tok-op">=</span> <span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span>
-  <span class="tok-op">.</span><span class="tok-method">set</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-  <span class="tok-op">.</span><span class="tok-method">set</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Idempotency-Key</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> requestId<span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+  <span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Idempotency-Key</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> requestId<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
 client<span class="tok-op">.</span><span class="tok-method">request</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">POST</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> url<span class="tok-punct">,</span> headers<span class="tok-punct">,</span> <span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span>order<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Binary</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span></code></pre>
 
 </div>
@@ -560,20 +562,18 @@ client<span class="tok-op">.</span><span class="tok-method">request</span><span 
 <div class="functions">
 <div class="fn" id="fn-add">
 <h4><code>add</code></h4>
-<p>Appends a field without replacing existing fields of the same name.</p>
+<p>Appends a field, keeping existing fields of the same name.</p>
+<p>Repeats are how <code>Set-Cookie</code> works: it is not a comma-separated list, so two cookies must be two fields. For replace-semantics, <code>remove</code> first.</p>
+<p>An invalid name or value is an <code>Error</code>, not a silent drop. Rejecting <code>&quot;a\r\nX: y&quot;</code> is what stops response splitting, but dropping it quietly left the caller holding a valid <code>Headers</code> that simply lacked the field it asked for, and a response with no <code>Content-Type</code> invites MIME sniffing. <code>from</code> and <code>parse</code> already answer with a <code>Result</code> for this same input.</p>
 <pre class="code"><code><span class="tok-fn">add</span><span class="tok-punct">(</span>name<span class="tok-punct">,</span> value<span class="tok-punct">)</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;Headers, <a class="xref" href="../net.html#record-neterror">NetError</a>&gt;</code> — the extended fields, or <code>Parse</code></p>
 <h5>Examples</h5>
-<p class="caption"><em><code>Headers.empty.add(&quot;Accept&quot;, &quot;text/plain&quot;)</code></em></p>
-<pre class="code"><code></code></pre>
-
-</div>
-<div class="fn" id="fn-set">
-<h4><code>set</code></h4>
-<p>Replaces all fields of <code>name</code> with one value.</p>
-<pre class="code"><code><span class="tok-fn">set</span><span class="tok-punct">(</span>name<span class="tok-punct">,</span> value<span class="tok-punct">)</span></code></pre>
-<h5>Examples</h5>
-<p class="caption"><em><code>headers.set(&quot;Content-Type&quot;, &quot;application/json&quot;)</code></em></p>
-<pre class="code"><code></code></pre>
+<p class="caption"><em>Two cookies on one response</em></p>
+<pre class="code"><code><span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span>
+  <span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Set-Cookie</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">session=abc; HttpOnly</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+  <span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Set-Cookie</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">theme=dark</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+<p class="caption"><em>Replacing a field</em></p>
+<pre class="code"><code>headers<span class="tok-op">.</span><span class="tok-method">remove</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </div>
 <div class="fn" id="fn-remove">
@@ -645,7 +645,7 @@ client<span class="tok-op">.</span><span class="tok-method">request</span><span 
 <pre class="code"><code>request <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Headers</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Binary</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">Response</span><span class="tok-op">&lt;</span><span class="tok-type">Binary</span><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <span class="tok-type">NetError</span><span class="tok-op">&gt;</span></code></pre>
 <h5>Examples</h5>
 <p class="caption"><em>A one-off authenticated request in a command-line tool</em></p>
-<pre class="code"><code><span class="tok-keyword">let</span> headers <span class="tok-op">=</span> <span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">set</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Authorization</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">Bearer </span><span class="tok-string">${</span>token<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<pre class="code"><code><span class="tok-keyword">let</span> headers <span class="tok-op">=</span> <span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Authorization</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">Bearer </span><span class="tok-string">${</span>token<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
 <span class="tok-type">HTTP</span><span class="tok-op">.</span><span class="tok-method">request</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">GET</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> url<span class="tok-punct">,</span> headers<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </section>
@@ -704,7 +704,7 @@ client<span class="tok-op">.</span><span class="tok-method">request</span><span 
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-09-02T20:47:31.923601901Z · <a href="../../../llms.txt">llms.txt</a> · <a href="../../../search.json">search.json</a></div>
+<div class="wrap">Generated by kex docgen at 2026-09-02T23:24:03.444113344Z · <a href="../../../llms.txt">llms.txt</a> · <a href="../../../search.json">search.json</a></div>
 </footer>
 </body>
 </html>

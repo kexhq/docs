@@ -331,6 +331,48 @@ at(i) : Integer -> Char?
 "hello".at(9)   # => None
 ```
 
+#### `byteAt`
+
+One byte of the storage view, or `None` when the index is out of range.
+
+This indexes the ENCODING, not the text: `byteAt` on a multi-byte character returns one of its bytes, never the character. Use `at` or `chars` for the text view.
+
+```kex
+byteAt(index) : Integer -> Byte?
+```
+
+**Returns**: `Byte?` — the byte, or `None` past the end
+
+**Examples**
+
+_The two views of the same string_
+
+```kex
+"héllo".byteAt(1)   # => Just(195)
+"héllo".at(1)       # => Just("é")
+"héllo".byteAt(99)  # => None
+```
+
+#### `bytePart`
+
+A slice of the storage view, by byte offset and byte count.
+
+The range is clamped rather than refused, the way `take` and `drop` already behave. Slicing mid-character yields a string holding partial UTF-8 — legal storage, but not text: decode it only at a boundary you know is a character boundary.
+
+```kex
+bytePart(offset, count) : Integer -> Integer -> String
+```
+
+**Returns**: `String` — the bytes in that range
+
+**Examples**
+
+_Reading a length-prefixed field out of a payload_
+
+```kex
+payload.bytePart(4, payload.byteSize - 4)
+```
+
 #### `split`
 
 Splits the string on every occurrence of `sep`, which may be a literal string or a `Regex`.

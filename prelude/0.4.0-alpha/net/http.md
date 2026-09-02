@@ -32,6 +32,10 @@ client.close.try
 
 An insertion-ordered HTTP field collection. Names compare case-insensitively and duplicate fields are preserved.
 
+A list of pairs rather than a `{String: String}` map, and deliberately so. A map cannot hold the same name twice, and `Set-Cookie` needs exactly that: RFC 6265 does not define it as a comma-separated list, so two cookies must travel as two fields and cannot be joined into one. A map interface would read as the obvious one right up to the first response that sets two cookies, then silently keep one — the same class of quiet data loss this module's `Result`-returning builders exist to avoid.
+
+Order is kept for the same reason. RFC 9110 makes order insignificant BETWEEN different names but significant between fields sharing a name, and a map has no order to keep.
+
 **Fields**
 
   - `entries` : [(String, String)]
@@ -448,8 +452,8 @@ _Sending JSON with an idempotency key_
 
 ```kex
 let headers = Headers.empty
-  .set("Content-Type", "application/json")
-  .set("Idempotency-Key", requestId)
+  .add("Content-Type", "application/json").try
+  .add("Idempotency-Key", requestId).try
 client.request("POST", url, headers, JSON.stringify(order).to(Binary).try)
 ```
 
@@ -543,34 +547,31 @@ close()
 
 #### `add`
 
-Appends a field without replacing existing fields of the same name.
+Appends a field, keeping existing fields of the same name.
+
+Repeats are how `Set-Cookie` works: it is not a comma-separated list, so two cookies must be two fields. For replace-semantics, `remove` first.
+
+An invalid name or value is an `Error`, not a silent drop. Rejecting `"a\r\nX: y"` is what stops response splitting, but dropping it quietly left the caller holding a valid `Headers` that simply lacked the field it asked for, and a response with no `Content-Type` invites MIME sniffing. `from` and `parse` already answer with a `Result` for this same input.
 
 ```kex
 add(name, value)
 ```
 
-**Examples**
-
-_`Headers.empty.add("Accept", "text/plain")`_
-
-```kex
-
-```
-
-#### `set`
-
-Replaces all fields of `name` with one value.
-
-```kex
-set(name, value)
-```
+**Returns**: `Result<Headers, NetError>` — the extended fields, or `Parse`
 
 **Examples**
 
-_`headers.set("Content-Type", "application/json")`_
+_Two cookies on one response_
 
 ```kex
+Headers.empty
+  .add("Set-Cookie", "session=abc; HttpOnly").try
+  .add("Set-Cookie", "theme=dark").try
+```
+_Replacing a field_
 
+```kex
+headers.remove("Content-Type").add("Content-Type", "application/json").try
 ```
 
 #### `remove`
