@@ -27,13 +27,15 @@ proseCommand(parsed)
 
 ## record `ProsePage`
 
-A page and the two things only its frontmatter knows: where it sorts, and the HTML its Markdown became.
+A page and the things only its frontmatter knows: where it sorts, the HTML its Markdown became, the description its index entry shows, and the Markdown (minus frontmatter) its raw `.md` rendering serves.
 
 **Fields**
 
   - `page` : [SourcePage](../../tey/docgen/model.md#record-sourcepage)
   - `order` : Integer
   - `body` : String
+  - `description` : String
+  - `markdown` : String
 
 ## function `readPages`
 
@@ -61,10 +63,70 @@ stripSuffix(name, suffix)
 
 ## function `writeProse`
 
-Both renderings, from the same parsed page: HTML for readers, Markdown for the crawlers and LLMs that `build` also writes .md for. The Markdown written back out is the source as authored, minus its frontmatter.
+Both renderings, from the same parsed page: HTML for readers, Markdown for crawlers, LLMs, and the "Markdown" link every page carries — the same `.md`-next-to-`.html` pairing reference builds write.
 
 
 ```kex
 writeProse(pages, versionDir, out, model)
+```
+
+
+## function `writeProseLoop`
+
+
+```kex
+writeProseLoop(pages, index, versionDir, model)
+```
+
+
+## function `proseIndexHtml`
+
+The book's own spine: chapters in author order with their descriptions, not the module grid reference builds get. Deliberately separate from `versionIndexHtml` — `tey docs build` keeps documenting any package, and nothing about a book leaks into it.
+
+
+```kex
+proseIndexHtml(pages, model)
+```
+
+
+## function `chapterItem`
+
+
+```kex
+chapterItem(prose)
+```
+
+
+## function `prevNextHtml`
+
+Chapter footer: the siblings around this one, so the book reads forward as well as sideways. First and last chapters link one way only.
+
+
+```kex
+prevNextHtml(pages, index)
+```
+
+
+## function `prevLink`
+
+
+```kex
+prevLink(pages, index, up)
+```
+
+
+## function `nextLink`
+
+
+```kex
+nextLink(pages, index, up)
+```
+
+
+## function `chapterNav`
+
+
+```kex
+chapterNav(prev, nextHtml)
 ```
 

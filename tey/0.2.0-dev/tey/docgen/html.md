@@ -505,6 +505,16 @@ pageTarget(current)
 ```
 
 
+## function `markdownLink`
+
+Every page's raw Markdown, next to its HTML: the footer link humans see, and the address llms.txt tells models about. Index pages have none. The target is a bare sibling filename — the page already stands in the directory its `.md` was written to, so no prefix climbing is wanted.
+
+
+```kex
+markdownLink(current)
+```
+
+
 ## function `slug`
 
 
