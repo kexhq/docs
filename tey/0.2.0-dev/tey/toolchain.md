@@ -364,3 +364,65 @@ uninstall(version)
 use(version)
 ```
 
+
+## function `download`
+
+The archive download/verify/hash/tag/publish helpers below are public because `Tey.SelfUpdate` (`tey upgrade`) reuses the exact same release mechanics for Tey's own archives that Kex toolchains already trust — same URLs, same checksums, same staged swaps. No behavior change; only visibility.
+
+curl, then wget: one of the two is on essentially every machine that can reach a release, and this way Tey needs neither an HTTP library nor a compiler to fetch one.
+
+
+```kex
+download(url, path)
+```
+
+
+## function `verifyArchive`
+
+The published `.sha256` is `<hash>  <filename>`, the format both sha256sum and shasum write and read.
+
+
+```kex
+verifyArchive(archive, checksumUrl)
+```
+
+
+## function `checksumOf`
+
+Hashed with an external tool rather than read in: the archive is tens of megabytes of binary, and this keeps all of it out of the process.
+
+
+```kex
+checksumOf(path)
+```
+
+
+## function `releaseTag`
+
+The tag naming this version in the repository — `0.3.0` or `v0.3.0`.
+
+
+```kex
+releaseTag(version)
+```
+
+
+## function `versionOf`
+
+`v0.3.0` → Just("0.3.0"). A tag that is not a version is None, which `collect` drops: a toolchain is named by its version, not by a label.
+
+
+```kex
+versionOf(tag)
+```
+
+
+## function `publish`
+
+Swaps a finished staging tree in for `prefix`. A reinstall keeps the old tree until the new one is in place and puts it back if the move fails, so a failed upgrade leaves the previous toolchain working rather than none.
+
+
+```kex
+publish(staging, prefix)
+```
+
