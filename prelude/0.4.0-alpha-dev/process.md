@@ -182,6 +182,7 @@ A non-zero exit status is still `Ok`: the program ran and said something, which 
 
 ```kex
 run(command, args) : String -> [String] -> Result<ProcessResult, String>
+run(command, args) : String -> [String] -> Integer -> Result<ProcessResult, String>
 ```
 
 
