@@ -105,15 +105,47 @@ parsed<span class="tok-op">.</span><span class="tok-method">frontmatter</span><s
 parsed<span class="tok-op">.</span><span class="tok-method">parameters</span>                  <span class="tok-comment"># =&gt; [TemplateParam { name: &quot;name&quot;, type: &quot;&quot; },</span>
                                     <span class="tok-comment">#     TemplateParam { name: &quot;library&quot;, type: &quot;Bool&quot; }]</span>
 parsed<span class="tok-op">.</span><span class="tok-method">nodes</span>                       <span class="tok-comment"># =&gt; [Text(&quot;Hi &quot;), Interpolate(&quot;name&quot;), Text(&quot;!&quot;)]</span></code></pre>
+<p>A template file carries its host's extension ahead of <code>.ket</code>, so an editor can highlight it as what it is — <code>README.md.ket</code>, <code>profile.html.ket</code>:</p>
+<pre class="code"><code><span class="tok-op">-</span><span class="tok-op">-</span><span class="tok-op">-</span>
+params<span class="tok-op">:</span> <span class="tok-punct">[</span>name<span class="tok-punct">,</span> library<span class="tok-op">:</span> <span class="tok-type">Bool</span><span class="tok-punct">,</span> dependencies<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">Dependency</span><span class="tok-punct">]</span><span class="tok-punct">]</span>
+<span class="tok-op">-</span><span class="tok-op">-</span><span class="tok-op">-</span>
+<span class="tok-comment"># &lt;%= name %&gt;</span>
+
+<span class="tok-op">&lt;</span><span class="tok-op">%</span> <span class="tok-keyword">if</span> library <span class="tok-op">%</span><span class="tok-op">&gt;</span>
+<span class="tok-type">A</span> <span class="tok-type">Kex</span> library<span class="tok-op">.</span>
+<span class="tok-op">&lt;</span><span class="tok-op">%</span> <span class="tok-keyword">else</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span>
+<span class="tok-type">A</span> <span class="tok-type">Kex</span> application<span class="tok-op">.</span>
+<span class="tok-op">&lt;</span><span class="tok-op">%</span> <span class="tok-keyword">end</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span>
+
+<span class="tok-op">&lt;</span><span class="tok-op">%</span> dependencies<span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>dep<span class="tok-op">|</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span>
+<span class="tok-op">-</span> `<span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">=</span> dep<span class="tok-op">.</span><span class="tok-method">name</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span>` <span class="tok-op">~</span><span class="tok-op">&gt;</span> <span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">=</span> dep<span class="tok-op">.</span><span class="tok-method">version</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span>
+<span class="tok-op">&lt;</span><span class="tok-op">%</span> <span class="tok-keyword">end</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span></code></pre>
 <p>## Syntax</p>
 <pre class="code"><code><span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">=</span> expr <span class="tok-op">%</span><span class="tok-op">&gt;</span>     <span class="tok-fn">interpolate</span> <span class="tok-punct">(</span>escaping <span class="tok-keyword">is</span> a later stage's job<span class="tok-punct">)</span>
 <span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">==</span> expr <span class="tok-op">%</span><span class="tok-op">&gt;</span>    interpolate raw<span class="tok-punct">,</span> no escaping
 <span class="tok-op">&lt;</span><span class="tok-op">%</span> <span class="tok-op">...</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span>       a <span class="tok-type">Kex</span> control region<span class="tok-op">:</span> `<span class="tok-keyword">if</span>`<span class="tok-op">/</span>`<span class="tok-keyword">match</span>` arms<span class="tok-punct">,</span> block bodies<span class="tok-punct">,</span> `<span class="tok-keyword">let</span>`
 <span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-comment"># ... %&gt;      comment, emits nothing</span>
 <span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">-</span> <span class="tok-op">...</span> <span class="tok-op">-</span><span class="tok-op">%</span><span class="tok-op">&gt;</span>     whitespace control<span class="tok-op">:</span> trims the line's leading indent before
-                the tag<span class="tok-punct">,</span> <span class="tok-keyword">and</span> the newline right after it
+                the tag<span class="tok-punct">,</span> <span class="tok-keyword">and</span> the newline right after it<span class="tok-op">.</span> <span class="tok-type">A</span> `<span class="tok-op">&lt;</span><span class="tok-op">%</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span>` <span class="tok-keyword">or</span>
+                `<span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-comment"># %&gt;` tag standing alone on its line does this on its</span>
+                own<span class="tok-punct">,</span> so the markers are <span class="tok-keyword">for</span> a tag sharing its line <span class="tok-keyword">with</span>
+                real content
 <span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">%</span>             a literal `<span class="tok-op">&lt;</span><span class="tok-op">%</span>`<span class="tok-punct">,</span> <span class="tok-keyword">for</span> a template that generates <span class="tok-type">ERB</span><span class="tok-op">-</span>shaped
                 output itself</code></pre>
+<p>## Whitespace</p>
+<p>A tag that emits nothing — <code>&lt;% %&gt;</code> and <code>&lt;%# %&gt;</code> — and stands alone on its line takes that line with it. Only whitespace may share the line with it: the indent before it and the newline after it are scaffolding, never content, so a template reads the way its output does:</p>
+<pre class="code"><code><span class="tok-op">&lt;</span><span class="tok-op">%</span> <span class="tok-keyword">if</span> dependencies<span class="tok-op">.</span><span class="tok-method">count</span> <span class="tok-op">&gt;</span> <span class="tok-number">0</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span>
+<span class="tok-comment">## Dependencies</span>
+<span class="tok-op">&lt;</span><span class="tok-op">%</span> <span class="tok-keyword">end</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span>
+
+<span class="tok-comment"># =&gt; &quot;## Dependencies\n&quot;   — no blank line where the tags were</span></code></pre>
+<p>The <code>&lt;%- -%&gt;</code> markers are for the case this does not cover: a tag sharing its line with real content, where what to trim is a judgement call rather than obvious.</p>
+<pre class="code"><code><span class="tok-type">Total</span><span class="tok-op">:</span> <span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">=</span> total <span class="tok-op">%</span><span class="tok-op">&gt;</span> <span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">-</span> <span class="tok-keyword">if</span> pending <span class="tok-op">&gt;</span> <span class="tok-number">0</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span><span class="tok-punct">(</span><span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">=</span> pending <span class="tok-op">%</span><span class="tok-op">&gt;</span> pending<span class="tok-punct">)</span><span class="tok-op">&lt;</span><span class="tok-op">%</span> <span class="tok-keyword">end</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span></code></pre>
+<p>An interpolation is never trimmed, on its own line or not. It stands in for content, so the whitespace around it is content too:</p>
+<pre class="code"><code><span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">=</span> greeting <span class="tok-op">%</span><span class="tok-op">&gt;</span>
+<span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">=</span> name <span class="tok-op">%</span><span class="tok-op">&gt;</span>
+
+<span class="tok-comment"># =&gt; &quot;Hi\nAda\n&quot;          — both newlines survive</span></code></pre>
 <p>## Frontmatter</p>
 <p>A template file may open with a <code>---</code> line, generic <code>key: value</code> tags up to a closing <code>---</code> line, and then the body. This is metadata for whatever reads the template (a title, a layout name, a list of tags) and there is nothing template-specific about it: it is scanned the same generic way whatever key is used.</p>
 <pre class="code"><code><span class="tok-op">-</span><span class="tok-op">-</span><span class="tok-op">-</span>
@@ -203,6 +235,12 @@ params<span class="tok-op">:</span> <span class="tok-punct">[</span>name<span cl
 <h5>Examples</h5>
 <pre class="code"><code><span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">scan</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Hi &lt;%= name %&gt;!</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span><span class="tok-punct">(</span><span class="tok-op">~</span>nodes<span class="tok-punct">)</span>
 <span class="tok-comment"># =&gt; Ok([Text(&quot;Hi &quot;), Interpolate(&quot;name&quot;), Text(&quot;!&quot;)])</span></code></pre>
+<p class="caption"><em>A control tag on a line of its own leaves no blank line behind</em></p>
+<pre class="code"><code><span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">scan</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&lt;% if admin %&gt;\nWelcome back.\n&lt;% end %&gt;\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-op">.</span><span class="tok-method">nodes</span>
+<span class="tok-comment"># =&gt; [Control(&quot;if admin&quot;), Text(&quot;Welcome back.\n&quot;), Control(&quot;end&quot;)]</span></code></pre>
+<p class="caption"><em>Where the template broke, as a position in the source</em></p>
+<pre class="code"><code><span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">scan</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Hi &lt;%= name</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; Error(UnterminatedTag(6))</span></code></pre>
 
 </section>
 <section class="entity" id="function-escapehtml">
@@ -225,7 +263,7 @@ params<span class="tok-op">:</span> <span class="tok-punct">[</span>name<span cl
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-09-10T23:12:06.917272087Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="template.md">Markdown</a></div>
+<div class="wrap">Generated by kex docgen at 2026-09-11T17:01:49.205313589Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="template.md">Markdown</a></div>
 </footer>
 </body>
 </html>

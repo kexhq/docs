@@ -28,6 +28,25 @@ parsed.parameters                  # => [TemplateParam { name: "name", type: "" 
 parsed.nodes                       # => [Text("Hi "), Interpolate("name"), Text("!")]
 ```
 
+A template file carries its host's extension ahead of `.ket`, so an editor can highlight it as what it is — `README.md.ket`, `profile.html.ket`:
+
+```kex
+---
+params: [name, library: Bool, dependencies: [Dependency]]
+---
+# <%= name %>
+
+<% if library %>
+A Kex library.
+<% else %>
+A Kex application.
+<% end %>
+
+<% dependencies.map do |dep| %>
+- `<%= dep.name %>` ~> <%= dep.version %>
+<% end %>
+```
+
 ## Syntax
 
 ```kex
@@ -36,9 +55,39 @@ parsed.nodes                       # => [Text("Hi "), Interpolate("name"), Text(
 <% ... %>       a Kex control region: `if`/`match` arms, block bodies, `let`
 <%# ... %>      comment, emits nothing
 <%- ... -%>     whitespace control: trims the line's leading indent before
-                the tag, and the newline right after it
+                the tag, and the newline right after it. A `<% %>` or
+                `<%# %>` tag standing alone on its line does this on its
+                own, so the markers are for a tag sharing its line with
+                real content
 <%%             a literal `<%`, for a template that generates ERB-shaped
                 output itself
+```
+
+## Whitespace
+
+A tag that emits nothing — `<% %>` and `<%# %>` — and stands alone on its line takes that line with it. Only whitespace may share the line with it: the indent before it and the newline after it are scaffolding, never content, so a template reads the way its output does:
+
+```kex
+<% if dependencies.count > 0 %>
+## Dependencies
+<% end %>
+
+# => "## Dependencies\n"   — no blank line where the tags were
+```
+
+The `<%- -%>` markers are for the case this does not cover: a tag sharing its line with real content, where what to trim is a judgement call rather than obvious.
+
+```kex
+Total: <%= total %> <%- if pending > 0 %>(<%= pending %> pending)<% end %>
+```
+
+An interpolation is never trimmed, on its own line or not. It stands in for content, so the whitespace around it is content too:
+
+```kex
+<%= greeting %>
+<%= name %>
+
+# => "Hi\nAda\n"          — both newlines survive
 ```
 
 ## Frontmatter
