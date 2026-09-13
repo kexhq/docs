@@ -512,3 +512,43 @@ match FS.File.open("out.txt", Write) do
   Error(_) => IO.printError("cannot open out.txt")
 end
 ```
+
+#### `seek`
+
+Moves the handle's cursor to an absolute byte offset from the start of the file. Read and write share one cursor, so this repositions both — a `readLine` right after `seek(0)` starts over from the top, and a `write` right after does too, overwriting from that point.
+
+```kex
+seek(offset) : Integer -> Result<Void, ReadError>
+```
+
+**Returns**: `Result<Void, ReadError>` — `Ok` on success, or why the seek
+
+**Examples**
+
+_Reading a length-prefixed record, then rewinding past it_
+
+```kex
+let length = handle.readLine.or("0").to(Integer).or(0)
+let record = handle.readBytes.try
+handle.seek(0)
+```
+
+#### `reset`
+
+Moves the handle's cursor back to the start of the file — the same as `seek(0)`, for the common case of re-reading a handle from the top.
+
+```kex
+reset() : Result<Void, ReadError>
+```
+
+**Returns**: `Result<Void, ReadError>` — `Ok` on success, or why the reset
+
+**Examples**
+
+_Reading a file twice_
+
+```kex
+let firstPass = handle.read.or("")
+handle.reset
+let secondPass = handle.read.or("")
+```
