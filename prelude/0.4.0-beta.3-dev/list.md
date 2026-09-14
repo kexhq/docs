@@ -6,6 +6,7 @@ title: List
 entities:
   - { kind: type, name: "List" }
   - { kind: make, name: "[Number]" }
+  - { kind: make, name: "[[Y]]" }
   - { kind: make, name: "[X]" }
 ---
 
@@ -57,6 +58,10 @@ product(f) : (X -> Number) -> Number
 ```kex
 [[1,2],[3,4]].product { |pair| pair.first.or(1) }   # => 3
 ```
+
+## make `[[Y]]`
+
+
 
 ## make `[X]` implements [Enumerable](enumerable.md#trait-enumerable), [Foldable](enumerable.md#trait-foldable)
 

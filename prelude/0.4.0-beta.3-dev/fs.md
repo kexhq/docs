@@ -309,6 +309,28 @@ absolute(path) : FilePath -> String?
 ```
 
 
+## function `canonical`
+
+The canonical form of `path`: absolute, with every `.`, `..` and symlink resolved, like `realpath(3)`.
+
+Unlike `absolute` this reads the filesystem, so a path that does not exist (or a symlink loop) is an error. Use it to keep reads and writes inside a directory: compare the real path's prefix, and neither `../` nor a symlink can escape.
+
+
+```kex
+canonical(path) : FilePath -> Result<String, FileError>
+```
+
+
+## function `symlink?`
+
+Whether `path` is itself a symlink, without following it. A dangling link is still a symlink.
+
+
+```kex
+symlink?(path) : FilePath -> Bool
+```
+
+
 ## module `FS.Path`
 
 Path arithmetic: joining, splitting, normalising and comparing paths.

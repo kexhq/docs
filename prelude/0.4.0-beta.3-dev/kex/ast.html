@@ -211,6 +211,122 @@ data-page="kex/ast.html">
 <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseExpression</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">1 `</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">ok?</span>     <span class="tok-comment"># =&gt; false</span></code></pre>
 
 </section>
+<section class="entity" id="record-syntaxtoken">
+<h2><span class="kind kind-record">record</span> <code>SyntaxToken</code></h2>
+<p>One token of a lossless syntax tree, exactly as written.</p>
+<p>Where <code>parse</code> gives a program's meaning, <code>parseSyntax</code> gives its text: nothing is normalised or dropped, so <code>toSource</code> reprints the file byte for byte. It is the tree a formatter or a linter works on (kexhq/kex#136).</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>kind</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>text</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>trivia</code></dt><dd><code>String</code></dd></div>
+</dl>
+</section>
+<section class="entity" id="type-syntaxelement">
+<h2><span class="kind kind-type">type</span> <code>SyntaxElement</code></h2>
+<p>One child of a <code>SyntaxNode</code>: a token, or a nested node.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>TokenElement(SyntaxToken)</code></li>
+<li><code>NodeElement(SyntaxNode)</code></li>
+</ul>
+</section>
+<section class="entity" id="record-syntaxnode">
+<h2><span class="kind kind-record">record</span> <code>SyntaxNode</code></h2>
+<p>A declaration, expression, pattern or type, holding its own tokens and nested nodes in source order.</p>
+<pre class="code"><code><span class="tok-keyword">let</span> tree <span class="tok-op">=</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseSyntax</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string"># the answer\nlet x = 42\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+tree<span class="tok-op">.</span><span class="tok-method">kind</span>                  <span class="tok-comment"># =&gt; &quot;Program&quot;</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">toSource</span><span class="tok-punct">(</span>tree<span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; &quot;# the answer\nlet x = 42\n&quot;</span></code></pre>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>kind</code></dt><dd><code>String</code></dd></div>
+<div class="field"><dt><code>children</code></dt><dd><code>[<a class="xref" href="#type-syntaxelement">SyntaxElement</a>]</code></dd></div>
+</dl>
+</section>
+<section class="entity" id="function-parsesyntax">
+<h2><span class="kind kind-function">function</span> <code>parseSyntax</code></h2>
+<p>Parses Kex source into its lossless syntax tree.</p>
+<pre class="code"><code><span class="tok-fn">parseSyntax</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">SyntaxNode</span><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>source</code> <code>String</code></dt><dd>the Kex source text</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;<a class="xref" href="#record-syntaxnode">SyntaxNode</a>, ParseError&gt;</code> — the tree rooted at <code>Program</code>, or why it failed</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseSyntax</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">let x = 1\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>tree<span class="tok-op">|</span> tree<span class="tok-op">.</span><span class="tok-method">kind</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(&quot;Program&quot;)</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseSyntax</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">let x =</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">error?</span>                         <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</section>
+<section class="entity" id="function-tosource">
+<h2><span class="kind kind-function">function</span> <code>toSource</code></h2>
+<p>Reprints a syntax tree as the source it was parsed from, byte for byte.</p>
+<p>Every node prints its own tokens and its nested nodes in order, never a slice of the original text, so a rearranged tree prints the rearranged program, its comments moving with it.</p>
+<pre class="code"><code><span class="tok-fn">toSource</span><span class="tok-punct">(</span>node<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">SyntaxNode</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>node</code> <code><a class="xref" href="#record-syntaxnode">SyntaxNode</a></code></dt><dd>a tree, or any node in one</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the source the node covers, trivia included</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> source <span class="tok-op">=</span> <span class="tok-string">&quot;</span><span class="tok-string">let x = 1   # one\n</span><span class="tok-string">&quot;</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseSyntax</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>tree<span class="tok-op">|</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">toSource</span><span class="tok-punct">(</span>tree<span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(source)</span></code></pre>
+
+</section>
+<section class="entity" id="function-elementsource">
+<h2><span class="kind kind-function">function</span> <code>elementSource</code></h2>
+<p>The source of one child of a node: a token's trivia and text, or a nested node reprinted.</p>
+<pre class="code"><code><span class="tok-fn">elementSource</span><span class="tok-punct">(</span>element<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">SyntaxElement</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>element</code> <code><a class="xref" href="#type-syntaxelement">SyntaxElement</a></code></dt><dd>the child</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — its source text</p>
+
+</section>
+<section class="entity" id="function-commentsbefore">
+<h2><span class="kind kind-function">function</span> <code>commentsBefore</code></h2>
+<p>The comments written on their own lines directly above the child at <code>index</code>: the ones that belong to it, move with it when a formatter moves it, and hold a <code># kex:disable-next-line</code> meant for it.</p>
+<p>A comment at the end of the previous line trails that line instead, and is not included.</p>
+<pre class="code"><code><span class="tok-fn">commentsBefore</span><span class="tok-punct">(</span>parent<span class="tok-punct">,</span> index<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">SyntaxNode</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>parent</code> <code><a class="xref" href="#record-syntaxnode">SyntaxNode</a></code></dt><dd>the node holding the child</dd></div>
+<div class="param"><dt><code>index</code> <code>Integer</code></dt><dd>the child's position in <code>parent.children</code></dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>[String]</code> — the comment lines, top to bottom, each starting with <code>#</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> tree <span class="tok-op">=</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseSyntax</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">let x = 1  # x\n# about y\nlet y = 2\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">commentsBefore</span><span class="tok-punct">(</span>tree<span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [&quot;# about y&quot;]</span></code></pre>
+
+</section>
+<section class="entity" id="function-blanklinesbefore">
+<h2><span class="kind kind-function">function</span> <code>blankLinesBefore</code></h2>
+<p>How many blank lines separate the child at <code>index</code> from what precedes it.</p>
+<p>Kept as a count, not a flag: a formatter preserves one blank line between declarations and collapses longer runs, which needs to know how many there were.</p>
+<pre class="code"><code><span class="tok-fn">blankLinesBefore</span><span class="tok-punct">(</span>parent<span class="tok-punct">,</span> index<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">SyntaxNode</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>parent</code> <code><a class="xref" href="#record-syntaxnode">SyntaxNode</a></code></dt><dd>the node holding the child</dd></div>
+<div class="param"><dt><code>index</code> <code>Integer</code></dt><dd>the child's position in <code>parent.children</code></dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Integer</code> — the number of blank lines directly above the child</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> tree <span class="tok-op">=</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseSyntax</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">let x = 1\n\n\nlet y = 2\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">blankLinesBefore</span><span class="tok-punct">(</span>tree<span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 2</span></code></pre>
+
+</section>
+<section class="entity" id="function-linesbefore">
+<h2><span class="kind kind-function">function</span> <code>linesBefore</code></h2>
+<p>The whole lines between the child at <code>index</code> and the code before it, as the trivia of the <code>Newline</code> tokens that end them. The newline that ends the previous line of code is not one of them: what sits in front of it trails that code.</p>
+<pre class="code"><code><span class="tok-fn">linesBefore</span><span class="tok-punct">(</span>parent<span class="tok-punct">,</span> index<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">SyntaxNode</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>parent</code> <code><a class="xref" href="#record-syntaxnode">SyntaxNode</a></code></dt><dd>the node holding the child</dd></div>
+<div class="param"><dt><code>index</code> <code>Integer</code></dt><dd>the child's position in <code>parent.children</code></dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>[String]</code> — the lines, top to bottom, without their newlines</p>
+
+</section>
 <section class="entity" id="type-typeref">
 <h2><span class="kind kind-type">type</span> <code>TypeRef</code></h2>
 <p>A type as it was written in source.</p>
@@ -716,7 +832,7 @@ data-page="kex/ast.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-09-14T17:17:01.781256713Z · <a href="../../../llms.txt">llms.txt</a> · <a href="../../../search.json">search.json</a> · <a href="ast.md">Markdown</a></div>
+<div class="wrap">Generated by kex docgen at 2026-09-14T21:55:08.899173409Z · <a href="../../../llms.txt">llms.txt</a> · <a href="../../../search.json">search.json</a> · <a href="ast.md">Markdown</a></div>
 </footer>
 </body>
 </html>

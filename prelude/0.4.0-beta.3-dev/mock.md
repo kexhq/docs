@@ -354,6 +354,18 @@ directory?(path)
 absolute(path)
 ```
 
+#### `canonical`
+
+```kex
+canonical(path)
+```
+
+#### `symlink?`
+
+```kex
+symlink?(path)
+```
+
 #### `open`
 
 A fake is a value, so there is nowhere for a write to go. Refusing is the honest answer and the useful one: a test that did not expect a write sees it fail rather than silently succeed.

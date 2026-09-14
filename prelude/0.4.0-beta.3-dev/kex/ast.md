@@ -111,6 +111,110 @@ parseExpression(source) : String -> Result<Expression, ParseError>
 ```
 
 
+## record `SyntaxToken`
+
+One token of a lossless syntax tree, exactly as written.
+
+Where `parse` gives a program's meaning, `parseSyntax` gives its text: nothing is normalised or dropped, so `toSource` reprints the file byte for byte. It is the tree a formatter or a linter works on (kexhq/kex#136).
+
+**Fields**
+
+  - `kind` : String
+  - `text` : String
+  - `trivia` : String
+
+## type `SyntaxElement`
+
+One child of a `SyntaxNode`: a token, or a nested node.
+
+
+
+**Variants**
+
+  - `TokenElement(SyntaxToken)`
+  - `NodeElement(SyntaxNode)`
+
+## record `SyntaxNode`
+
+A declaration, expression, pattern or type, holding its own tokens and nested nodes in source order.
+
+```kex
+let tree = Kex.AST.parseSyntax("# the answer\nlet x = 42\n").try
+tree.kind                  # => "Program"
+Kex.AST.toSource(tree)     # => "# the answer\nlet x = 42\n"
+```
+
+**Fields**
+
+  - `kind` : String
+  - `children` : [[SyntaxElement](#type-syntaxelement)]
+
+## function `parseSyntax`
+
+Parses Kex source into its lossless syntax tree.
+
+
+```kex
+parseSyntax(source) : String -> Result<SyntaxNode, ParseError>
+```
+
+
+## function `toSource`
+
+Reprints a syntax tree as the source it was parsed from, byte for byte.
+
+Every node prints its own tokens and its nested nodes in order, never a slice of the original text, so a rearranged tree prints the rearranged program, its comments moving with it.
+
+
+```kex
+toSource(node) : SyntaxNode -> String
+```
+
+
+## function `elementSource`
+
+The source of one child of a node: a token's trivia and text, or a nested node reprinted.
+
+
+```kex
+elementSource(element) : SyntaxElement -> String
+```
+
+
+## function `commentsBefore`
+
+The comments written on their own lines directly above the child at `index`: the ones that belong to it, move with it when a formatter moves it, and hold a `# kex:disable-next-line` meant for it.
+
+A comment at the end of the previous line trails that line instead, and is not included.
+
+
+```kex
+commentsBefore(parent, index) : SyntaxNode -> Integer -> [String]
+```
+
+
+## function `blankLinesBefore`
+
+How many blank lines separate the child at `index` from what precedes it.
+
+Kept as a count, not a flag: a formatter preserves one blank line between declarations and collapses longer runs, which needs to know how many there were.
+
+
+```kex
+blankLinesBefore(parent, index) : SyntaxNode -> Integer -> Integer
+```
+
+
+## function `linesBefore`
+
+The whole lines between the child at `index` and the code before it, as the trivia of the `Newline` tokens that end them. The newline that ends the previous line of code is not one of them: what sits in front of it trails that code.
+
+
+```kex
+linesBefore(parent, index) : SyntaxNode -> Integer -> [String]
+```
+
+
 ## type `TypeRef`
 
 A type as it was written in source.
