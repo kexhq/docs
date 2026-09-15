@@ -183,12 +183,14 @@ params<span class="tok-op">:</span> <span class="tok-punct">[</span>name<span cl
 </section>
 <section class="entity" id="type-templateerror">
 <h2><span class="kind kind-type">type</span> <code>TemplateError</code></h2>
-<p>Why a template's text could not be scanned, and where.</p>
+<p>Why a template's text could not be scanned or rendered, and where (or, for <code>render</code>/<code>renderParsed</code>, what stopped it).</p>
 <h3>Variants</h3>
 <ul class="variants">
 <li><code>UnterminatedTag(Integer)</code></li>
 <li><code>UnterminatedFrontmatter</code></li>
 <li><code>MalformedFrontmatterLine(String)</code></li>
+<li><code>UndefinedVariable(String)</code></li>
+<li><code>UnsupportedControl(String)</code></li>
 </ul>
 </section>
 <section class="entity" id="record-templateparam">
@@ -258,12 +260,51 @@ params<span class="tok-op">:</span> <span class="tok-punct">[</span>name<span cl
 <span class="tok-comment"># =&gt; &quot;&amp;lt;b&amp;gt;Tom &amp;amp; Jerry&amp;lt;/b&amp;gt;&quot;</span></code></pre>
 
 </section>
+<section class="entity" id="function-renderparsed">
+<h2><span class="kind kind-function">function</span> <code>renderParsed</code></h2>
+<p>Renders an already-scanned template's holes from a runtime <code>context</code>, <code>&lt;%= %&gt;</code> HTML-escaped and <code>&lt;%== %&gt;</code> raw, same as <code>Template.html</code>/ <code>Template.text</code> do at compile time — but there is no runtime evaluator for <code>&lt;% ... %&gt;</code> CONTROL regions here. Evaluating a <code>&lt;% if … %&gt;</code>/<code>&lt;% match … %&gt;</code>/ a block loop chosen at run time means evaluating arbitrary Kex source picked at run time, which is its own design decision (kexhq/kex#335) and not what this covers: a template using one reports <code>UnsupportedControl</code> with the region's text rather than silently doing nothing with it, so the gap is loud, not a template that quietly renders wrong.</p>
+<p>This is for what <code>Template.html(Kex.embed(path))</code> cannot do at all — a template file chosen while the program is running, not baked in at compile time — for the shape of template that does not need control flow: a subject line, a notification body, a plain-text substitution. A template with real control flow still needs compiling in (<code>Kex.embed</code>), or a hole it does not have: turning <code>Parsed#nodes</code> into a fuller runtime evaluator is further work this only lays the groundwork for.</p>
+<p><code>&lt;%= %&gt;</code>/<code>&lt;%== %&gt;</code> names are looked up VERBATIM (trimmed of surrounding whitespace) in <code>context</code> — <code>dep.name</code> in a template needs a <code>&quot;dep.name&quot;</code> key, not field access into a <code>dep</code> key's value. Splitting a dotted hole into a real field path is, again, further work.</p>
+<pre class="code"><code><span class="tok-fn">renderParsed</span><span class="tok-punct">(</span>parsed<span class="tok-punct">,</span> context<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>parsed</code> <code>Parsed</code></dt><dd>a template already scanned by <code>Template.scan</code></dd></div>
+<div class="param"><dt><code>context</code> <code>{String: String}</code></dt><dd>a value for every <code>&lt;%= %&gt;</code>/<code>&lt;%== %&gt;</code></dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;String, <a class="xref" href="#type-templateerror">TemplateError</a>&gt;</code> — the rendered text, or why not</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> parsed <span class="tok-op">=</span> <span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">scan</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Hi &lt;%= name %&gt;!</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">renderParsed</span><span class="tok-punct">(</span>parsed<span class="tok-punct">,</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">name</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">&lt;Ada&gt;</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; Ok(&quot;Hi &amp;lt;Ada&amp;gt;!&quot;)</span></code></pre>
+<p class="caption"><em>A hole <code>context</code> does not cover</em></p>
+<pre class="code"><code><span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">renderParsed</span><span class="tok-punct">(</span><span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">scan</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&lt;%= missing %&gt;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">,</span> <span class="tok-punct">{</span><span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; Error(UndefinedVariable(&quot;missing&quot;))</span></code></pre>
+<p class="caption"><em>Control flow is refused, not silently skipped</em></p>
+<pre class="code"><code><span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">renderParsed</span><span class="tok-punct">(</span><span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">scan</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&lt;% if x %&gt;y&lt;% end %&gt;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">,</span> <span class="tok-punct">{</span><span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; Error(UnsupportedControl(&quot;if x&quot;))</span></code></pre>
+
+</section>
+<section class="entity" id="function-render">
+<h2><span class="kind kind-function">function</span> <code>render</code></h2>
+<p><code>Template.scan(source).try</code> then <code>renderParsed</code> — see its doc comment for what this does and, as importantly, what it refuses to do.</p>
+<pre class="code"><code><span class="tok-fn">render</span><span class="tok-punct">(</span>source<span class="tok-punct">,</span> context<span class="tok-punct">)</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>source</code> <code>String</code></dt><dd>the template's full text, scanned fresh</dd></div>
+<div class="param"><dt><code>context</code> <code>{String: String}</code></dt><dd>see <code>renderParsed</code></dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>Result&lt;String, <a class="xref" href="#type-templateerror">TemplateError</a>&gt;</code> — the rendered text, or why not</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">render</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Hi &lt;%= name %&gt;!</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">name</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">Ada</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; Ok(&quot;Hi Ada!&quot;)</span></code></pre>
+
+</section>
 </section>
 </article>
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-09-14T21:55:08.899173409Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="template.md">Markdown</a></div>
+<div class="wrap">Generated by kex docgen at 2026-09-15T20:01:59.526548397Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="template.md">Markdown</a></div>
 </footer>
 </body>
 </html>

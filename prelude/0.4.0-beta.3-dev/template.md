@@ -142,7 +142,7 @@ A frontmatter value: a plain scalar, or a `[a, b, c]` list.
 
 ## type `TemplateError`
 
-Why a template's text could not be scanned, and where.
+Why a template's text could not be scanned or rendered, and where (or, for `render`/`renderParsed`, what stopped it).
 
 
 
@@ -151,6 +151,8 @@ Why a template's text could not be scanned, and where.
   - `UnterminatedTag(Integer)`
   - `UnterminatedFrontmatter`
   - `MalformedFrontmatterLine(String)`
+  - `UndefinedVariable(String)`
+  - `UnsupportedControl(String)`
 
 ## record `TemplateParam`
 
@@ -203,5 +205,29 @@ Escapes the five characters HTML gives special meaning: what `Template.html` (ke
 
 ```kex
 escapeHtml(text)
+```
+
+
+## function `renderParsed`
+
+Renders an already-scanned template's holes from a runtime `context`, `<%= %>` HTML-escaped and `<%== %>` raw, same as `Template.html`/ `Template.text` do at compile time — but there is no runtime evaluator for `<% ... %>` CONTROL regions here. Evaluating a `<% if … %>`/`<% match … %>`/ a block loop chosen at run time means evaluating arbitrary Kex source picked at run time, which is its own design decision (kexhq/kex#335) and not what this covers: a template using one reports `UnsupportedControl` with the region's text rather than silently doing nothing with it, so the gap is loud, not a template that quietly renders wrong.
+
+This is for what `Template.html(Kex.embed(path))` cannot do at all — a template file chosen while the program is running, not baked in at compile time — for the shape of template that does not need control flow: a subject line, a notification body, a plain-text substitution. A template with real control flow still needs compiling in (`Kex.embed`), or a hole it does not have: turning `Parsed#nodes` into a fuller runtime evaluator is further work this only lays the groundwork for.
+
+`<%= %>`/`<%== %>` names are looked up VERBATIM (trimmed of surrounding whitespace) in `context` — `dep.name` in a template needs a `"dep.name"` key, not field access into a `dep` key's value. Splitting a dotted hole into a real field path is, again, further work.
+
+
+```kex
+renderParsed(parsed, context)
+```
+
+
+## function `render`
+
+`Template.scan(source).try` then `renderParsed` — see its doc comment for what this does and, as importantly, what it refuses to do.
+
+
+```kex
+render(source, context)
 ```
 
