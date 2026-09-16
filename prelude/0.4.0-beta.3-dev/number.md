@@ -84,6 +84,7 @@ This is the counting loop. When you want the numbers themselves rather than a co
 
 ```kex
 times(block) : (Integer -> Void) -> Void
+times(block) : Block<Void> -> Void
 ```
 
 **Returns**: `Void`
@@ -97,6 +98,13 @@ _Repeating an action_
 
 ```kex
 retries.times { |_| attemptConnection }
+```
+_Repeating an action that needs no index_
+
+```kex
+3.times do
+  IO.printLine("hi")
+end
 ```
 
 ## make `Float`
