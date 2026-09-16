@@ -59,13 +59,36 @@ Negotiated handshake information. The subprotocol is `None` when the server sele
 
 ## type `Connection`
 
-An opaque RFC 6455 client connection. It does not reconnect automatically.
+An opaque RFC 6455 connection, client- or server-side. It does not reconnect automatically.
 
 
+
+## record `Handshake`
+
+Subprotocols offered by an incoming upgrade request, in the order the peer listed them.
+
+**Fields**
+
+  - `subprotocols` : [String] (optional)
+
+## type `Upgrade`
+
+A server's decision after inspecting a `Handshake`.
+
+`Accept` takes over the connection once the 101 response is sent: `handler` runs with the negotiated server `Connection`, and its return value is discarded. `headers` are added to the 101 response; a name that manages the handshake itself (`Upgrade`, `Connection`, `Sec-WebSocket-Accept`, `Sec-WebSocket-Protocol`) is dropped rather than overridden. `subprotocol` must be one `handshake.subprotocols` actually offered, or `None`.
+
+`Reject` answers with an ordinary buffered response instead, leaving the connection as plain HTTP — a client requesting an unsupported subprotocol might get `Response.text(426, "chat.v2 required")`, for instance.
+
+
+
+**Variants**
+
+  - `Accept((Connection) -> Void, Headers, String?)`
+  - `Reject(Response<Binary>)`
 
 ## module `Net.HTTP.WebSocket.WebSocket`
 
-Constructors for high-level WebSocket client connections.
+Constructors for high-level WebSocket connections, client- and server-side.
 
 ## function `connect`
 
@@ -74,6 +97,18 @@ Opens a `ws:` or verified `wss:` connection with default options.
 
 ```kex
 connect(url)
+```
+
+
+## function `upgrade`
+
+Decides whether to accept an incoming `Net.HTTP.Server` upgrade request.
+
+Call from a route handler and return the result directly — it types as an ordinary `Response<Binary>`, and `Net.HTTP.Server` recognizes what it actually is: a request that isn't a syntactically valid WebSocket handshake at all (wrong method, missing `Sec-WebSocket-Key`, unsupported `Sec-WebSocket-Version`) is answered automatically without calling `decide`; a valid one reaches `decide` for an application decision.
+
+
+```kex
+upgrade(request, decide)
 ```
 
 
