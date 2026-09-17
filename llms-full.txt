@@ -12448,215 +12448,99 @@ entities:
 
 ## module `Control.Retry`
 
-Bounded retries for operations whose failures can be classified by the application.
+Runs bounded retries with a reusable schedule.
 
-A retry is never automatically safe just because an error was temporary. The caller owns the operation and, where necessary, a predicate that excludes permanent failures and non-idempotent work. Policies bound attempts, delay, and optionally total sleep so a dependency cannot stall the program forever.
+`Retry.run` executes the block immediately. An `Ok` stops the run; an `Error` schedules another attempt. When attempts or total sleep run out, the last error is returned unchanged. Runtime faults are not caught.
 
-```kex
-using Control.Retry
-
-let policy = Retry.exponential(4, 100.milliseconds, 2.seconds)
-  .withJitter(0.2)
-Retry.run(policy, ~retryable?) do
-  client.get("https://api.example.com/inventory")
-end
-```
-
-## record `Policy`
-
-A bounded retry schedule. Attempts includes the initial call. Delays are immutable `Duration` values and never exceed `maximumDelay`.
-
-**Fields**
-
-  - `maximumAttempts` : Integer
-  - `initialDelay` : Duration
-  - `multiplier` : Float
-  - `maximumDelay` : Duration
-  - `maximumElapsed` : Duration? (optional)
-  - `jitterFraction` : Float (optional)
-
-## type `Predicate<E>`
-
-Decides whether an application error is eligible for another attempt.
-
-
-
-**Variants**
-
-  - _(abstract)_
-
-## type `Sleeper`
-
-Performs one scheduled delay. Supplying this callback makes retry tests deterministic without sleeping.
-
-
-
-**Variants**
-
-  - _(abstract)_
-
-## function `fixed`
-
-Builds a constant-delay retry policy.
-
-Fixed delays are predictable and useful for a local resource expected to become ready shortly. For many clients sharing a remote dependency, prefer exponential backoff with jitter to avoid synchronized retry bursts.
-
-
-```kex
-fixed(maximumAttempts, delay) : Integer -> Duration -> Policy
-```
-
-
-## function `exponential`
-
-Builds a doubling backoff capped at `maximumDelay`.
-
-The first retry waits `initialDelay`; later delays double until they reach the cap. Add jitter for production network traffic.
-
-
-```kex
-exponential : Integer -> Duration -> Duration -> Policy
-```
-
-
-## make `Policy`
-
-
-#### `withMaximumElapsed`
-
-Returns the same schedule with a bound on total scheduled sleep time.
-
-The operation's own execution time is not counted; use operation-specific deadlines for that. A retry whose next delay would exceed this bound is not started.
-
-```kex
-withMaximumElapsed(maximumElapsed)
-```
-
-**Returns**: `Policy` — a copied policy with the elapsed bound
-
-**Examples**
-
-_`Retry.fixed(5, 1.seconds).withMaximumElapsed(2.seconds)`._
-
-```kex
-
-```
-
-#### `withJitter`
-
-Returns the same schedule with symmetric bounded jitter. A fraction of `0.25` selects each actual delay from 75% through 125% of its scheduled value. Fractions are clamped to `0.0..1.0`.
-
-Jitter prevents many workers that failed together from retrying together. It changes delay timing, never the number of attempts or the backoff cap.
-
-```kex
-withJitter(fraction)
-```
-
-**Returns**: `Policy` — a copied policy with bounded jitter
-
-**Examples**
-
-_Spreading retries by up to 20 percent_
-
-```kex
-Retry.exponential(4, 1.seconds, 10.seconds).withJitter(0.2)
-```
-
-## function `run`
-
-Runs `operation` until it succeeds or exhausts the policy.
-
-The last application error is returned unchanged. This helper performs no network-specific classification: callers decide what operation to wrap.
-
-
-```kex
-run(policy, operation) : Policy -> Block<Result<X, E>> -> Result<X, E>
-run(policy, operation) : Policy -> Predicate<E> -> Block<Result<X, E>> -> Result<X, E>
-```
-
-
-## function `runWith`
-
-Runs with injected error classification and sleeping.
-
-This is the deterministic testing seam: a fake sleeper can record durations or advance a virtual clock. Production callers normally use `Retry.run`.
-
-
-```kex
-runWith : Policy -> Predicate<E> -> Sleeper -> Block<Result<X, E>> -> Result<X, E>
-```
-
-
-## function `runWithRandom`
-
-Runs with injected sleeping and a random source returning a value in `0.0..1.0`. Out-of-range test values are clamped. Production `run` uses a cryptographically secure backend source; this overload makes jitter specs deterministic.
-
-
-```kex
-runWithRandom : Policy -> Predicate<E> -> Sleeper -> Block<Float> -> Block<Result<X, E>> -> Result<X, E>
-```
-
-
-## function `attempt`
-
-
-```kex
-attempt(policy, predicate, sleeper, random, operation, number, delay, elapsed)
-```
-
+HTTP responses, including 429 and 503, are `Ok(response)`. Automatic retries handle request failures, not response statuses. Use `again` and `done` to classify responses or stop on permanent errors. Repeat writes only when the application makes them safe, for example with idempotency keys. A schedule bounds retry sleep, not the operation's execution time; configure request timeouts separately.
 
 ## module `Control.Retry.Retry`
 
-The imported public namespace: `using Control.Retry` then `Retry.run(...)`.
+Provides automatic error retries and explicit retry decisions.
 
-## function `fixed`
+## record `Schedule`
 
-Public imported alias of `Control.Retry.fixed`.
+Describes the timing and limits of one execution of `run`.
+
+All fields are optional. Defaults allow three attempts with exponential backoff from 100 milliseconds, capped at 5 seconds, with 20% jitter. Creating a schedule performs no work. It is immutable configuration: each run starts a fresh attempt count and delay sequence.
+
+* `attempts`: maximum executions, including the first; default 3. * `delay`: initial base wait; default 100 milliseconds. * `backoff`: base-delay multiplier; default 2.0, or 1.0 for fixed waits. * `maximumDelay`: cap on each actual wait, including jitter; default 5 seconds. * `jitter`: symmetric proportional variation; default 0.2, or 0.0 to disable. * `maximumTotalDelay`: cumulative sleep allowance; default `None`.   Operation execution time is excluded. A wait that exceeds the remaining   allowance ends the run without sleeping or calling the operation again.
+
+**Fields**
+
+  - `attempts` : Integer (optional)
+  - `delay` : Duration (optional)
+  - `backoff` : Float (optional)
+  - `maximumDelay` : Duration (optional)
+  - `jitter` : Float (optional)
+  - `maximumTotalDelay` : Duration? (optional)
+
+## type `Decision<X>`
+
+Carries an explicit decision and the last application value. `Done(value)` means the block stopped deliberately. `Again(value)` returned by `run` means the schedule was exhausted before completion. Neither form wraps the application value in an additional `Result`.
+
+
+
+**Variants**
+
+  - `Again(X)`
+  - `Done(X)`
+
+## function `again`
+
+Requests another attempt if the schedule allows it.
 
 
 ```kex
-fixed(maximumAttempts, delay) : Integer -> Duration -> Policy
+again(value) : X -> Decision<X>
 ```
 
 
-## function `exponential`
+## function `done`
 
-Public imported alias of `Control.Retry.exponential`.
+Stops immediately, even when the application value represents failure.
 
 
 ```kex
-exponential : Integer -> Duration -> Duration -> Policy
+done(value) : X -> Decision<X>
 ```
 
+
+## record `Info<X>`
+
+Describes a retry that is about to wait and then execute another attempt.
+
+Passed to `onRetry` only after the last outcome requests a retry and the schedule permits it. There is no notification for the initial call, success, explicit completion, or exhaustion. Reporting does not consume attempts. Durations describe scheduled sleep, not wall-clock elapsed time.
+
+* `attempt`: the just-completed attempt, starting at 1. * `nextAttempt`: the attempt that follows the upcoming wait. * `maximumAttempts`: total permitted executions, including the first. * `remainingAttempts`: executions remaining, including the upcoming one. * `delay`: actual upcoming wait, after jitter and the delay cap. * `totalDelay`: sleep already performed, excluding the upcoming wait. * `result`: the last `Error` or `Again`, including its application payload.
+
+**Fields**
+
+  - `attempt` : Integer
+  - `nextAttempt` : Integer
+  - `maximumAttempts` : Integer
+  - `remainingAttempts` : Integer
+  - `delay` : Duration
+  - `totalDelay` : Duration
+  - `result` : X
 
 ## function `run`
 
-Public imported alias of `Control.Retry.run`.
+Runs a fresh operation until it succeeds, stops, or exhausts its schedule.
+
+The first attempt is immediate. Every later attempt follows one sleep. There is no sleep after success or the final error. Named timing options override the corresponding schedule field for this execution only.
+
+An ordinary block returns `Result<X, E>`: `Ok` stops, `Error` retries, and exhaustion returns the last `Error` unchanged. An explicit block returns `Decision<X>`: `Done` stops, `Again` retries, and exhaustion returns the last `Again`. Match the returned decision to distinguish completion from exhaustion. Use one form consistently within a block.
+
+Finite settings are normalized: attempts below one become one, negative durations become zero, backoff below one becomes one, jitter and random samples are clamped to 0..1. Non-finite Float settings are unsupported.
+
+`Done(Error(...))` means the application stopped on a permanent error. `Again(Ok(response))` means an unacceptable HTTP status persisted until exhaustion. HTTP status classification and Retry-After handling are the application's responsibility; `run` has no HTTP-specific behavior.
+
+The testing hooks are independent: replacing sleep keeps normal random sampling, and replacing randomness keeps real sleep. A random sample of 0 selects the lower jitter bound, 0.5 the base, and 1 the upper bound. With zero jitter no random sample is needed. lint:allow parameter-count — named options make each setting independent
 
 
 ```kex
-run(policy, operation) : Policy -> Block<Result<X, E>> -> Result<X, E>
-run(policy, operation) : Policy -> Predicate<E> -> Block<Result<X, E>> -> Result<X, E>
-```
-
-
-## function `runWith`
-
-Deterministic seam with an injected sleeper, primarily for specifications.
-
-
-```kex
-runWith : Policy -> Predicate<E> -> Sleeper -> Block<Result<X, E>> -> Result<X, E>
-```
-
-
-## function `runWithRandom`
-
-Deterministic seam with injected sleeping and random sampling.
-
-
-```kex
-runWithRandom : Policy -> Predicate<E> -> Sleeper -> Block<Float> -> Block<Result<X, E>> -> Result<X, E>
+run : Block<X> -> Schedule -> Integer -> Duration -> Float -> Duration -> Float -> Duration? -> (Duration -> Void) -> Block<Float> -> (Info<X> -> Void) -> X
 ```
 
 

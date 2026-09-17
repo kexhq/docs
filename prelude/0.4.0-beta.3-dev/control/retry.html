@@ -95,190 +95,158 @@ data-page="control/retry.html">
 <h1>Control.Retry</h1>
 <section class="entity" id="module-control-retry">
 <h2><span class="kind kind-module">module</span> <code>Control.Retry</code></h2>
-<p>Bounded retries for operations whose failures can be classified by the application.</p>
-<p>A retry is never automatically safe just because an error was temporary. The caller owns the operation and, where necessary, a predicate that excludes permanent failures and non-idempotent work. Policies bound attempts, delay, and optionally total sleep so a dependency cannot stall the program forever.</p>
-<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Control</span><span class="tok-op">.</span><span class="tok-type">Retry</span>
-
-<span class="tok-keyword">let</span> policy <span class="tok-op">=</span> <span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">exponential</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">,</span> <span class="tok-number">100</span><span class="tok-op">.</span><span class="tok-method">milliseconds</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">seconds</span><span class="tok-punct">)</span>
-  <span class="tok-op">.</span><span class="tok-method">withJitter</span><span class="tok-punct">(</span><span class="tok-number">0.2</span><span class="tok-punct">)</span>
-<span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span>policy<span class="tok-punct">,</span> <span class="tok-op">~</span>retryable?<span class="tok-punct">)</span> <span class="tok-keyword">do</span>
-  client<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://api.example.com/inventory</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-<span class="tok-keyword">end</span></code></pre>
-<section class="entity" id="record-policy">
-<h2><span class="kind kind-record">record</span> <code>Policy</code></h2>
-<p>A bounded retry schedule. Attempts includes the initial call. Delays are immutable <code>Duration</code> values and never exceed <code>maximumDelay</code>.</p>
-<h3>Fields</h3>
-<dl class="fields">
-<div class="field"><dt><code>maximumAttempts</code></dt><dd><code>Integer</code></dd></div>
-<div class="field"><dt><code>initialDelay</code></dt><dd><code>Duration</code></dd></div>
-<div class="field"><dt><code>multiplier</code></dt><dd><code>Float</code></dd></div>
-<div class="field"><dt><code>maximumDelay</code></dt><dd><code>Duration</code></dd></div>
-<div class="field"><dt><code>maximumElapsed</code></dt><dd><code>Duration?</code> <span class="opt">optional</span></dd></div>
-<div class="field"><dt><code>jitterFraction</code></dt><dd><code>Float</code> <span class="opt">optional</span></dd></div>
-</dl>
-</section>
-<section class="entity" id="type-predicate">
-<h2><span class="kind kind-type">type</span> <code>Predicate&lt;E&gt;</code></h2>
-<p>Decides whether an application error is eligible for another attempt.</p>
-<h3>Variants</h3>
-<ul class="variants">
-<li class="abstract"><em>abstract</em></li>
-</ul>
-</section>
-<section class="entity" id="type-sleeper">
-<h2><span class="kind kind-type">type</span> <code>Sleeper</code></h2>
-<p>Performs one scheduled delay. Supplying this callback makes retry tests deterministic without sleeping.</p>
-<h3>Variants</h3>
-<ul class="variants">
-<li class="abstract"><em>abstract</em></li>
-</ul>
-</section>
-<section class="entity" id="function-fixed">
-<h2><span class="kind kind-function">function</span> <code>fixed</code></h2>
-<p>Builds a constant-delay retry policy.</p>
-<p>Fixed delays are predictable and useful for a local resource expected to become ready shortly. For many clients sharing a remote dependency, prefer exponential backoff with jitter to avoid synchronized retry bursts.</p>
-<pre class="code"><code><span class="tok-fn">fixed</span><span class="tok-punct">(</span>maximumAttempts<span class="tok-punct">,</span> delay<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Duration</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Policy</span></code></pre>
-<h5>Parameters</h5>
-<dl class="params">
-<div class="param"><dt><code>maximumAttempts</code> <code>Integer</code></dt><dd>total calls including the first</dd></div>
-<div class="param"><dt><code>delay</code> <code>Duration</code></dt><dd>delay before each subsequent call</dd></div>
-</dl>
-<p class="returns"><strong>Returns:</strong> <code>Policy</code> — the retry schedule</p>
-<h5>Examples</h5>
-<p class="caption"><em>Waiting briefly for a local test server to start</em></p>
-<pre class="code"><code><span class="tok-keyword">let</span> policy <span class="tok-op">=</span> <span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">fixed</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-punct">,</span> <span class="tok-number">50</span><span class="tok-op">.</span><span class="tok-method">milliseconds</span><span class="tok-punct">)</span></code></pre>
-
-</section>
-<section class="entity" id="function-exponential">
-<h2><span class="kind kind-function">function</span> <code>exponential</code></h2>
-<p>Builds a doubling backoff capped at <code>maximumDelay</code>.</p>
-<p>The first retry waits <code>initialDelay</code>; later delays double until they reach the cap. Add jitter for production network traffic.</p>
-<pre class="code"><code>exponential <span class="tok-op">:</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Duration</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Duration</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Policy</span></code></pre>
-<h5>Parameters</h5>
-<dl class="params">
-<div class="param"><dt><code>maximumAttempts</code> <code>Integer</code></dt><dd>total calls including the first</dd></div>
-<div class="param"><dt><code>initialDelay</code> <code>Duration</code></dt><dd>delay after the first failure</dd></div>
-<div class="param"><dt><code>maximumDelay</code> <code>Duration</code></dt><dd>upper bound for each delay</dd></div>
-</dl>
-<p class="returns"><strong>Returns:</strong> <code>Policy</code> — the retry schedule</p>
-<h5>Examples</h5>
-<p class="caption"><em>Backing off calls to a busy upstream service</em></p>
-<pre class="code"><code><span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">exponential</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-punct">,</span> <span class="tok-number">200</span><span class="tok-op">.</span><span class="tok-method">milliseconds</span><span class="tok-punct">,</span> <span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">seconds</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">withJitter</span><span class="tok-punct">(</span><span class="tok-number">0.25</span><span class="tok-punct">)</span></code></pre>
-
-</section>
-<section class="entity" id="make-policy">
-<h2><span class="kind kind-make">make</span> <code>Policy</code></h2>
-
-<div class="functions">
-<div class="fn" id="fn-withmaximumelapsed">
-<h4><code>withMaximumElapsed</code></h4>
-<p>Returns the same schedule with a bound on total scheduled sleep time.</p>
-<p>The operation's own execution time is not counted; use operation-specific deadlines for that. A retry whose next delay would exceed this bound is not started.</p>
-<pre class="code"><code><span class="tok-fn">withMaximumElapsed</span><span class="tok-punct">(</span>maximumElapsed<span class="tok-punct">)</span></code></pre>
-<h5>Parameters</h5>
-<dl class="params">
-<div class="param"><dt><code>maximumElapsed</code> <code>Duration</code></dt><dd>maximum cumulative scheduled delay</dd></div>
-</dl>
-<p class="returns"><strong>Returns:</strong> <code>Policy</code> — a copied policy with the elapsed bound</p>
-<h5>Examples</h5>
-<p class="caption"><em><code>Retry.fixed(5, 1.seconds).withMaximumElapsed(2.seconds)</code>.</em></p>
-<pre class="code"><code></code></pre>
-
-</div>
-<div class="fn" id="fn-withjitter">
-<h4><code>withJitter</code></h4>
-<p>Returns the same schedule with symmetric bounded jitter. A fraction of <code>0.25</code> selects each actual delay from 75% through 125% of its scheduled value. Fractions are clamped to <code>0.0..1.0</code>.</p>
-<p>Jitter prevents many workers that failed together from retrying together. It changes delay timing, never the number of attempts or the backoff cap.</p>
-<pre class="code"><code><span class="tok-fn">withJitter</span><span class="tok-punct">(</span>fraction<span class="tok-punct">)</span></code></pre>
-<h5>Parameters</h5>
-<dl class="params">
-<div class="param"><dt><code>fraction</code> <code>Float</code></dt><dd>maximum proportional variation on either side</dd></div>
-</dl>
-<p class="returns"><strong>Returns:</strong> <code>Policy</code> — a copied policy with bounded jitter</p>
-<h5>Examples</h5>
-<p class="caption"><em>Spreading retries by up to 20 percent</em></p>
-<pre class="code"><code><span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">exponential</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">seconds</span><span class="tok-punct">,</span> <span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-method">seconds</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">withJitter</span><span class="tok-punct">(</span><span class="tok-number">0.2</span><span class="tok-punct">)</span></code></pre>
-
-</div>
-</div>
-</section>
-<section class="entity" id="function-run">
-<h2><span class="kind kind-function">function</span> <code>run</code></h2>
-<p>Runs <code>operation</code> until it succeeds or exhausts the policy.</p>
-<p>The last application error is returned unchanged. This helper performs no network-specific classification: callers decide what operation to wrap.</p>
-<pre class="code"><code><span class="tok-fn">run</span><span class="tok-punct">(</span>policy<span class="tok-punct">,</span> operation<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Policy</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span>
-<span class="tok-fn">run</span><span class="tok-punct">(</span>policy<span class="tok-punct">,</span> operation<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Policy</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Predicate</span><span class="tok-op">&lt;</span><span class="tok-type">E</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span></code></pre>
-<h5>Parameters</h5>
-<dl class="params">
-<div class="param"><dt><code>policy</code> <code>Policy</code></dt><dd>the bounded schedule</dd></div>
-<div class="param"><dt><code>operation</code> <code>Block&lt;Result&lt;X,<a class="xref" href="../math.html#constant-e">E</a>&gt;&gt;</code></dt><dd>a fresh attempt</dd></div>
-</dl>
-<p class="returns"><strong>Returns:</strong> <code>Result&lt;X,<a class="xref" href="../math.html#constant-e">E</a>&gt;</code> — the first success or final failure</p>
-<h5>Examples</h5>
-<p class="caption"><em>Retrying an idempotent health check</em></p>
-<pre class="code"><code><span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span><span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">fixed</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">250</span><span class="tok-op">.</span><span class="tok-method">milliseconds</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
-  <span class="tok-type">HTTP</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://service.example.com/health</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-<span class="tok-keyword">end</span></code></pre>
-
-</section>
-<section class="entity" id="function-runwith">
-<h2><span class="kind kind-function">function</span> <code>runWith</code></h2>
-<p>Runs with injected error classification and sleeping.</p>
-<p>This is the deterministic testing seam: a fake sleeper can record durations or advance a virtual clock. Production callers normally use <code>Retry.run</code>.</p>
-<pre class="code"><code>runWith <span class="tok-op">:</span> <span class="tok-type">Policy</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Predicate</span><span class="tok-op">&lt;</span><span class="tok-type">E</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Sleeper</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span></code></pre>
-<h5>Parameters</h5>
-<dl class="params">
-<div class="param"><dt><code>policy</code> <code>Policy</code></dt><dd>the bounded schedule</dd></div>
-<div class="param"><dt><code>predicate</code> <code><a class="xref" href="#type-predicate">Predicate</a>&lt;<a class="xref" href="../math.html#constant-e">E</a>&gt;</code></dt><dd>whether an error may be retried</dd></div>
-<div class="param"><dt><code>sleeper</code> <code><a class="xref" href="#type-sleeper">Sleeper</a></code></dt><dd>performs or records each scheduled delay</dd></div>
-<div class="param"><dt><code>operation</code> <code>Block&lt;Result&lt;X,<a class="xref" href="../math.html#constant-e">E</a>&gt;&gt;</code></dt><dd>a fresh attempt</dd></div>
-</dl>
-<p class="returns"><strong>Returns:</strong> <code>Result&lt;X,<a class="xref" href="../math.html#constant-e">E</a>&gt;</code> — the first success or final failure</p>
-
-</section>
-<section class="entity" id="function-runwithrandom">
-<h2><span class="kind kind-function">function</span> <code>runWithRandom</code></h2>
-<p>Runs with injected sleeping and a random source returning a value in <code>0.0..1.0</code>. Out-of-range test values are clamped. Production <code>run</code> uses a cryptographically secure backend source; this overload makes jitter specs deterministic.</p>
-<pre class="code"><code>runWithRandom <span class="tok-op">:</span> <span class="tok-type">Policy</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Predicate</span><span class="tok-op">&lt;</span><span class="tok-type">E</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Sleeper</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Float</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span></code></pre>
-
-</section>
-<section class="entity" id="function-attempt">
-<h2><span class="kind kind-function">function</span> <code>attempt</code></h2>
-<pre class="code"><code><span class="tok-fn">attempt</span><span class="tok-punct">(</span>policy<span class="tok-punct">,</span> predicate<span class="tok-punct">,</span> sleeper<span class="tok-punct">,</span> random<span class="tok-punct">,</span> operation<span class="tok-punct">,</span> number<span class="tok-punct">,</span> delay<span class="tok-punct">,</span> elapsed<span class="tok-punct">)</span></code></pre>
-
-</section>
+<p>Runs bounded retries with a reusable schedule.</p>
+<p><code>Retry.run</code> executes the block immediately. An <code>Ok</code> stops the run; an <code>Error</code> schedules another attempt. When attempts or total sleep run out, the last error is returned unchanged. Runtime faults are not caught.</p>
+<p>HTTP responses, including 429 and 503, are <code>Ok(response)</code>. Automatic retries handle request failures, not response statuses. Use <code>again</code> and <code>done</code> to classify responses or stop on permanent errors. Repeat writes only when the application makes them safe, for example with idempotency keys. A schedule bounds retry sleep, not the operation's execution time; configure request timeouts separately.</p>
 <section class="entity" id="module-control-retry-retry">
 <h2><span class="kind kind-module">module</span> <code>Control.Retry.Retry</code></h2>
-<p>The imported public namespace: <code>using Control.Retry</code> then <code>Retry.run(...)</code>.</p>
-<section class="entity" id="function-fixed">
-<h2><span class="kind kind-function">function</span> <code>fixed</code></h2>
-<p>Public imported alias of <code>Control.Retry.fixed</code>.</p>
-<pre class="code"><code><span class="tok-fn">fixed</span><span class="tok-punct">(</span>maximumAttempts<span class="tok-punct">,</span> delay<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Duration</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Policy</span></code></pre>
+<p>Provides automatic error retries and explicit retry decisions.</p>
+<section class="entity" id="record-schedule">
+<h2><span class="kind kind-record">record</span> <code>Schedule</code></h2>
+<p>Describes the timing and limits of one execution of <code>run</code>.</p>
+<p>All fields are optional. Defaults allow three attempts with exponential backoff from 100 milliseconds, capped at 5 seconds, with 20% jitter. Creating a schedule performs no work. It is immutable configuration: each run starts a fresh attempt count and delay sequence.</p>
+<p>* <code>attempts</code>: maximum executions, including the first; default 3. * <code>delay</code>: initial base wait; default 100 milliseconds. * <code>backoff</code>: base-delay multiplier; default 2.0, or 1.0 for fixed waits. * <code>maximumDelay</code>: cap on each actual wait, including jitter; default 5 seconds. * <code>jitter</code>: symmetric proportional variation; default 0.2, or 0.0 to disable. * <code>maximumTotalDelay</code>: cumulative sleep allowance; default <code>None</code>.   Operation execution time is excluded. A wait that exceeds the remaining   allowance ends the run without sleeping or calling the operation again.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>attempts</code></dt><dd><code>Integer</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>delay</code></dt><dd><code>Duration</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>backoff</code></dt><dd><code>Float</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>maximumDelay</code></dt><dd><code>Duration</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>jitter</code></dt><dd><code>Float</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>maximumTotalDelay</code></dt><dd><code>Duration?</code> <span class="opt">optional</span></dd></div>
+</dl>
+</section>
+<section class="entity" id="type-decision">
+<h2><span class="kind kind-type">type</span> <code>Decision&lt;X&gt;</code></h2>
+<p>Carries an explicit decision and the last application value. <code>Done(value)</code> means the block stopped deliberately. <code>Again(value)</code> returned by <code>run</code> means the schedule was exhausted before completion. Neither form wraps the application value in an additional <code>Result</code>.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>Again(X)</code></li>
+<li><code>Done(X)</code></li>
+</ul>
+</section>
+<section class="entity" id="function-again">
+<h2><span class="kind kind-function">function</span> <code>again</code></h2>
+<p>Requests another attempt if the schedule allows it.</p>
+<pre class="code"><code><span class="tok-fn">again</span><span class="tok-punct">(</span>value<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">X</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Decision</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-op">&gt;</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code> <code>X</code></dt><dd>the last outcome, retained if the schedule is exhausted</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code><a class="xref" href="#type-decision">Decision</a>&lt;X&gt;</code> — <code>Again(value)</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Polling an application job</em></p>
+<pre class="code"><code><span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">again</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">pending</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </section>
-<section class="entity" id="function-exponential">
-<h2><span class="kind kind-function">function</span> <code>exponential</code></h2>
-<p>Public imported alias of <code>Control.Retry.exponential</code>.</p>
-<pre class="code"><code>exponential <span class="tok-op">:</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Duration</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Duration</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Policy</span></code></pre>
+<section class="entity" id="function-done">
+<h2><span class="kind kind-function">function</span> <code>done</code></h2>
+<p>Stops immediately, even when the application value represents failure.</p>
+<pre class="code"><code><span class="tok-fn">done</span><span class="tok-punct">(</span>value<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">X</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Decision</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-op">&gt;</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code> <code>X</code></dt><dd>the final application outcome</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code><a class="xref" href="#type-decision">Decision</a>&lt;X&gt;</code> — <code>Done(value)</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Stop on invalid credentials without retrying</em></p>
+<pre class="code"><code><span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">done</span><span class="tok-punct">(</span><span class="tok-bool">Error</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">invalid credentials</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
 
+</section>
+<section class="entity" id="record-info">
+<h2><span class="kind kind-record">record</span> <code>Info&lt;X&gt;</code></h2>
+<p>Describes a retry that is about to wait and then execute another attempt.</p>
+<p>Passed to <code>onRetry</code> only after the last outcome requests a retry and the schedule permits it. There is no notification for the initial call, success, explicit completion, or exhaustion. Reporting does not consume attempts. Durations describe scheduled sleep, not wall-clock elapsed time.</p>
+<p>* <code>attempt</code>: the just-completed attempt, starting at 1. * <code>nextAttempt</code>: the attempt that follows the upcoming wait. * <code>maximumAttempts</code>: total permitted executions, including the first. * <code>remainingAttempts</code>: executions remaining, including the upcoming one. * <code>delay</code>: actual upcoming wait, after jitter and the delay cap. * <code>totalDelay</code>: sleep already performed, excluding the upcoming wait. * <code>result</code>: the last <code>Error</code> or <code>Again</code>, including its application payload.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>attempt</code></dt><dd><code>Integer</code></dd></div>
+<div class="field"><dt><code>nextAttempt</code></dt><dd><code>Integer</code></dd></div>
+<div class="field"><dt><code>maximumAttempts</code></dt><dd><code>Integer</code></dd></div>
+<div class="field"><dt><code>remainingAttempts</code></dt><dd><code>Integer</code></dd></div>
+<div class="field"><dt><code>delay</code></dt><dd><code>Duration</code></dd></div>
+<div class="field"><dt><code>totalDelay</code></dt><dd><code>Duration</code></dd></div>
+<div class="field"><dt><code>result</code></dt><dd><code>X</code></dd></div>
+</dl>
 </section>
 <section class="entity" id="function-run">
 <h2><span class="kind kind-function">function</span> <code>run</code></h2>
-<p>Public imported alias of <code>Control.Retry.run</code>.</p>
-<pre class="code"><code><span class="tok-fn">run</span><span class="tok-punct">(</span>policy<span class="tok-punct">,</span> operation<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Policy</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span>
-<span class="tok-fn">run</span><span class="tok-punct">(</span>policy<span class="tok-punct">,</span> operation<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Policy</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Predicate</span><span class="tok-op">&lt;</span><span class="tok-type">E</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span></code></pre>
-
-</section>
-<section class="entity" id="function-runwith">
-<h2><span class="kind kind-function">function</span> <code>runWith</code></h2>
-<p>Deterministic seam with an injected sleeper, primarily for specifications.</p>
-<pre class="code"><code>runWith <span class="tok-op">:</span> <span class="tok-type">Policy</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Predicate</span><span class="tok-op">&lt;</span><span class="tok-type">E</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Sleeper</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span></code></pre>
-
-</section>
-<section class="entity" id="function-runwithrandom">
-<h2><span class="kind kind-function">function</span> <code>runWithRandom</code></h2>
-<p>Deterministic seam with injected sleeping and random sampling.</p>
-<pre class="code"><code>runWithRandom <span class="tok-op">:</span> <span class="tok-type">Policy</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Predicate</span><span class="tok-op">&lt;</span><span class="tok-type">E</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Sleeper</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Float</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Result</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-punct">,</span> <span class="tok-type">E</span><span class="tok-op">&gt;</span></code></pre>
+<p>Runs a fresh operation until it succeeds, stops, or exhausts its schedule.</p>
+<p>The first attempt is immediate. Every later attempt follows one sleep. There is no sleep after success or the final error. Named timing options override the corresponding schedule field for this execution only.</p>
+<p>An ordinary block returns <code>Result&lt;X, E&gt;</code>: <code>Ok</code> stops, <code>Error</code> retries, and exhaustion returns the last <code>Error</code> unchanged. An explicit block returns <code>Decision&lt;X&gt;</code>: <code>Done</code> stops, <code>Again</code> retries, and exhaustion returns the last <code>Again</code>. Match the returned decision to distinguish completion from exhaustion. Use one form consistently within a block.</p>
+<p>Finite settings are normalized: attempts below one become one, negative durations become zero, backoff below one becomes one, jitter and random samples are clamped to 0..1. Non-finite Float settings are unsupported.</p>
+<p><code>Done(Error(...))</code> means the application stopped on a permanent error. <code>Again(Ok(response))</code> means an unacceptable HTTP status persisted until exhaustion. HTTP status classification and Retry-After handling are the application's responsibility; <code>run</code> has no HTTP-specific behavior.</p>
+<p>The testing hooks are independent: replacing sleep keeps normal random sampling, and replacing randomness keeps real sleep. A random sample of 0 selects the lower jitter bound, 0.5 the base, and 1 the upper bound. With zero jitter no random sample is needed. lint:allow parameter-count — named options make each setting independent</p>
+<pre class="code"><code>run <span class="tok-op">:</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Schedule</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Duration</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Float</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Duration</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Float</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Duration?</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-type">Duration</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Float</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-type">Info</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">X</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>operation</code> <code>Block&lt;X&gt;</code></dt><dd>fresh Result or Decision on each attempt</dd></div>
+<div class="param"><dt><code>schedule</code> <code><a class="xref" href="#record-schedule">Schedule</a></code></dt><dd>reusable settings; defaults to <code>Schedule {}</code></dd></div>
+<div class="param"><dt><code>attempts</code> <code>Integer</code></dt><dd>total attempts; defaults to the schedule field</dd></div>
+<div class="param"><dt><code>delay</code> <code>Duration</code></dt><dd>initial wait; defaults to the schedule field</dd></div>
+<div class="param"><dt><code>backoff</code> <code>Float</code></dt><dd>delay multiplier; defaults to the schedule field</dd></div>
+<div class="param"><dt><code>maximumDelay</code> <code>Duration</code></dt><dd>sleep cap; defaults to the schedule field</dd></div>
+<div class="param"><dt><code>jitter</code> <code>Float</code></dt><dd>variation fraction; defaults to the schedule field</dd></div>
+<div class="param"><dt><code>maximumTotalDelay</code> <code>Duration?</code></dt><dd>sleep budget; defaults to the field</dd></div>
+<div class="param"><dt><code>sleeper</code> <code>Duration -&gt; Void</code></dt><dd>defaults to real <code>Task.sleep</code></dd></div>
+<div class="param"><dt><code>random</code> <code>Block&lt;Float&gt;</code></dt><dd>defaults to secure backend sampling in 0..1</dd></div>
+<div class="param"><dt><code>onRetry</code> <code><a class="xref" href="#record-info">Info</a>&lt;X&gt; -&gt; Void</code></dt><dd>reports an allowed retry; defaults to no action</dd></div>
+</dl>
+<p class="returns"><strong>Returns:</strong> <code>X</code> — first Ok/Done or last Error/Again, without extra wrapping</p>
+<h5>Examples</h5>
+<p class="caption"><em>Named options without constructing a schedule</em></p>
+<pre class="code"><code><span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span>attempts<span class="tok-op">:</span> <span class="tok-number">5</span><span class="tok-punct">,</span> delay<span class="tok-op">:</span> <span class="tok-number">200</span><span class="tok-op">.</span><span class="tok-method">milliseconds</span><span class="tok-punct">,</span> jitter<span class="tok-op">:</span> <span class="tok-number">0.0</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">ready</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span>
+<span class="tok-comment"># =&gt; Ok(&quot;ready&quot;)</span></code></pre>
+<p class="caption"><em>Stop before a wait exceeds the total sleep budget</em></p>
+<pre class="code"><code><span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span>
+  attempts<span class="tok-op">:</span> <span class="tok-number">5</span><span class="tok-punct">,</span> delay<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">seconds</span><span class="tok-punct">,</span> backoff<span class="tok-op">:</span> <span class="tok-number">2.0</span><span class="tok-punct">,</span>
+  jitter<span class="tok-op">:</span> <span class="tok-number">0.0</span><span class="tok-punct">,</span> maximumTotalDelay<span class="tok-op">:</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">seconds</span><span class="tok-punct">)</span>
+<span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">busy</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span>
+<span class="tok-comment"># =&gt; Error(&quot;busy&quot;), two calls and one second of sleep</span></code></pre>
+<p class="caption"><em>Test jitter without waiting</em></p>
+<pre class="code"><code><span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span>
+  attempts<span class="tok-op">:</span> <span class="tok-number">2</span><span class="tok-punct">,</span> delay<span class="tok-op">:</span> <span class="tok-number">4</span><span class="tok-op">.</span><span class="tok-method">seconds</span><span class="tok-punct">,</span> jitter<span class="tok-op">:</span> <span class="tok-number">0.25</span><span class="tok-punct">,</span>
+  sleeper<span class="tok-op">:</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>wait<span class="tok-op">|</span> <span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span>wait<span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-method">seconds</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">,</span>
+  random<span class="tok-op">:</span> <span class="tok-punct">{</span> <span class="tok-number">0.0</span> <span class="tok-punct">}</span>
+<span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">temporary</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span>
+<span class="tok-comment"># =&gt; Error(&quot;temporary&quot;), two calls and one fake sleep</span></code></pre>
+<p class="caption"><em>Report progress to a user or log</em></p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Net</span><span class="tok-op">.</span><span class="tok-type">HTTP</span>
+<span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span>attempts<span class="tok-op">:</span> <span class="tok-number">5</span><span class="tok-punct">,</span> onRetry<span class="tok-op">:</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>info<span class="tok-op">|</span>
+  <span class="tok-keyword">let</span> progress <span class="tok-op">=</span> <span class="tok-string">&quot;</span><span class="tok-string">retrying </span><span class="tok-string">${</span>info<span class="tok-op">.</span><span class="tok-method">nextAttempt</span><span class="tok-string">}</span><span class="tok-string">/</span><span class="tok-string">${</span>info<span class="tok-op">.</span><span class="tok-method">maximumAttempts</span><span class="tok-string">}</span><span class="tok-string">&quot;</span>
+  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>progress<span class="tok-string">}</span><span class="tok-string"> in </span><span class="tok-string">${</span>info<span class="tok-op">.</span><span class="tok-method">delay</span><span class="tok-op">.</span><span class="tok-method">seconds</span><span class="tok-string">}</span><span class="tok-string"> seconds</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">HTTP</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://api.example.com/inventory</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+<p class="caption"><em>Retry temporary HTTP failures and selected statuses</em></p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Net</span>
+<span class="tok-keyword">using</span> <span class="tok-type">Net</span><span class="tok-op">.</span><span class="tok-type">HTTP</span>
+<span class="tok-keyword">let</span> schedule <span class="tok-op">=</span> <span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-type">Schedule</span> <span class="tok-punct">{</span> attempts<span class="tok-op">:</span> <span class="tok-number">5</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">let</span> outcome <span class="tok-op">=</span> <span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span>schedule<span class="tok-op">:</span> schedule<span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">let</span> result <span class="tok-op">=</span> <span class="tok-type">HTTP</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://api.example.com/inventory</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">match</span> result <span class="tok-keyword">do</span>
+    <span class="tok-bool">Error</span><span class="tok-punct">(</span>error<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">if</span> error<span class="tok-op">.</span><span class="tok-method">kind</span> <span class="tok-op">==</span> <span class="tok-type">Timeout</span> <span class="tok-op">||</span> error<span class="tok-op">.</span><span class="tok-method">kind</span> <span class="tok-op">==</span> <span class="tok-type">Connect</span>
+      <span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">again</span><span class="tok-punct">(</span>result<span class="tok-punct">)</span>
+    <span class="tok-keyword">else</span>
+      <span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">done</span><span class="tok-punct">(</span>result<span class="tok-punct">)</span>
+    <span class="tok-keyword">end</span>
+    <span class="tok-bool">Ok</span><span class="tok-punct">(</span>response<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">if</span> <span class="tok-punct">[</span><span class="tok-number">429</span><span class="tok-punct">,</span> <span class="tok-number">502</span><span class="tok-punct">,</span> <span class="tok-number">503</span><span class="tok-punct">,</span> <span class="tok-number">504</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span>response<span class="tok-op">.</span><span class="tok-method">status</span><span class="tok-op">.</span><span class="tok-method">code</span><span class="tok-punct">)</span>
+      <span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">again</span><span class="tok-punct">(</span>result<span class="tok-punct">)</span>
+    <span class="tok-keyword">else</span>
+      <span class="tok-type">Retry</span><span class="tok-op">.</span><span class="tok-method">done</span><span class="tok-punct">(</span>result<span class="tok-punct">)</span>
+    <span class="tok-keyword">end</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span>
+<span class="tok-keyword">match</span> outcome <span class="tok-keyword">do</span>
+  <span class="tok-type">Done</span><span class="tok-punct">(</span>result<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>result<span class="tok-punct">)</span>
+  <span class="tok-type">Again</span><span class="tok-punct">(</span>last<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">retry budget exhausted: </span><span class="tok-string">${</span>last<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 
 </section>
 </section>
@@ -287,7 +255,7 @@ data-page="control/retry.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-09-17T19:44:48.740856027Z · <a href="../../../llms.txt">llms.txt</a> · <a href="../../../search.json">search.json</a> · <a href="retry.md">Markdown</a></div>
+<div class="wrap">Generated by kex docgen at 2026-09-17T19:51:39.168760878Z · <a href="../../../llms.txt">llms.txt</a> · <a href="../../../search.json">search.json</a> · <a href="retry.md">Markdown</a></div>
 </footer>
 </body>
 </html>
