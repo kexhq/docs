@@ -155,6 +155,7 @@ A `None` value encodes as a bare key; `Just("")` encodes with an equals sign. Th
 
 ```kex
 from(entries) : [(String, String?)] -> Query
+from(entries) : Map<String, String?> -> Query
 ```
 
 
@@ -177,6 +178,7 @@ Builds a form value while preserving order and duplicates.
 
 ```kex
 from(entries) : [(String, String)] -> Form
+from(entries) : Map<String, String> -> Form
 ```
 
 

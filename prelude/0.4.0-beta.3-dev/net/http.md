@@ -196,6 +196,7 @@ Duplicate fields stay in their original order. Invalid names and values containi
 
 ```kex
 from(entries) : [(String, String)] -> Result<Headers, NetError>
+from(entries) : Map<String, String> -> Result<Headers, NetError>
 ```
 
 
