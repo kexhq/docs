@@ -23,7 +23,7 @@ Everything here is always in scope: no import, and no separate test runner. Writ
 ```kex
 describe "arithmetic" do
   it "adds numbers" do
-    assert(1 ` 1 == 2)
+    assert(1 + 1 == 2)
   end
 
   it "multiplies numbers" do
@@ -43,7 +43,7 @@ A file named `<name>.spec.kex` automatically loads the declarations of `<name>.k
 
 Groups related test cases under a label, and runs them.
 
-The block is called immediately. `describe+ blocks nest, and the output is indented to match. This is a foul function: it prints.
+The block is called immediately. `describe` blocks nest, and the output is indented to match. This is a foul function: it prints.
 
 
 ```kex

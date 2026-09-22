@@ -24,8 +24,8 @@ using Regex
 
 main do
   let line = "order #4271 shipped"
-  IO.printLine(line.matches?(re`#\d``))                     # => true
-  IO.printLine(line.matches(re`#(\d`)`).map { |m| m.get(1) })  # => 4271
+  IO.printLine(line.matches?(re`#\d+`))                     # => true
+  IO.printLine(line.matches(re`#(\d+)`).map { |m| m.get(1) })  # => 4271
 end
 ```
 
@@ -72,7 +72,7 @@ NOTE: deliberately does NOT `implement: Errorable`, even though the trait exists
 
 Compiles `source` into a `Regex`.
 
-Answers a `Result` because an arbitrary string may not be a valid pattern. Use this form when the pattern is built at run time: from a config file, from user input. For a pattern you write yourself, the tag form `` regex`\d`` `` is checked at compile time and hands back a bare `Regex`.
+Answers a `Result` because an arbitrary string may not be a valid pattern. Use this form when the pattern is built at run time: from a config file, from user input. For a pattern you write yourself, the tag form `` regex`\d+` `` is checked at compile time and hands back a bare `Regex`.
 
 
 ```kex

@@ -16,7 +16,7 @@ RDoc-style doc-comment text → structured documentation (typed).
 A doc comment is free prose followed by directive paragraphs:
 
 ```kex
-# Sums all elements. Returns `0` for an empty list.
+# Sums all elements. Returns +0+ for an empty list.
 #
 # @param f [X -> Number] maps each element
 # @return [Number]
@@ -49,11 +49,55 @@ parseOrEmpty(text)
 ```
 
 
+## function `rewriteProseBlocks`
+
+``code`` is prose markup, so it is rewritten per prose block — after the split, not before it. Rewriting the whole comment at once paired a `+` operator inside an indented code sample (say `1 + 1`) with the next prose pair (``describe``), turning the operator into a stray backtick and eating the markup. Verbatim blocks and `@example` code are Kex source and are left alone; `@param`/`@return` descriptions are prose and still rewrite. Pairing never crosses a block: each block is rewritten on its own.
+
+
+```kex
+rewriteProseBlocks(blocks)
+```
+
+
+## function `rewriteProseBlock`
+
+
+```kex
+rewriteProseBlock(block)
+```
+
+
 ## function `rewritePlusPairs`
 
 
 ```kex
 rewritePlusPairs(s, accum)
+```
+
+
+## function `plusPair?`
+
+A ``...`` pair is markup only when it reads as one: content with no space against either delimiter (so `1 + 1` stays an addition), no backtick inside (so converted spans never nest), and a non-identifier character on both sides (so `a+b` stays put even if it ever reaches here).
+
+
+```kex
+plusPair?(head, inner, tail)
+```
+
+
+## function `boundaryBefore?`
+
+
+```kex
+boundaryBefore?(head)
+```
+
+
+## function `boundaryAfter?`
+
+
+```kex
+boundaryAfter?(tail)
 ```
 
 

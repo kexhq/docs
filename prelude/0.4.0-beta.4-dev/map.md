@@ -139,7 +139,7 @@ put(k, v) : K -> V -> Map<K, V>
 {}.put(:x, 1)              # => { :x: 1 }
 { x: 1 }.put(:x, 2)        # => { :x: 2 }
 ```
-_Rebinding with the `!` form_
+_Rebinding with the +!+ form_
 
 ```kex
 var totals = {}

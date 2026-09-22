@@ -15,7 +15,7 @@ An ERB-shaped template scanner: template text in, a template AST out.
 
 Opt-in: nothing here is in scope until `using Template`.
 
-This is the scanning stage only (see the Template proposal for the fuller design): it turns template source into a flat list of `Node`s: plain text, and the four kinds of `<% %>` region, plus whatever frontmatter tags sit ahead of the body. It does not evaluate anything and does not know Kex syntax; the text inside a hole is kept as-is, for a later stage to parse and lower into real Kex.
+This is the scanning stage only (see the Template proposal for the fuller design): it turns template source into a flat list of +Node+s: plain text, and the four kinds of `<% %>` region, plus whatever frontmatter tags sit ahead of the body. It does not evaluate anything and does not know Kex syntax; the text inside a hole is kept as-is, for a later stage to parse and lower into real Kex.
 
 ```kex
 using Template

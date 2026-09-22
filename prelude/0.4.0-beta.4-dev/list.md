@@ -550,5 +550,5 @@ join : String
 ```kex
 ["hello", "world", "kex"].join(", ")   # => "hello, world, kex"
 ["a", "b", "c"].join                   # => "abc"
-[1, 2, 3].join(" ` ")                 # => "1 ` 2 + 3"
+[1, 2, 3].join(" + ")                 # => "1 + 2 + 3"
 ```

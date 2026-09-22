@@ -19,7 +19,7 @@ entities:
 
 Why a read failed.
 
-`ReadFailed` means the source refused the read. `InvalidUtf8` means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U`FFFD: use `readBytes+ to recover the payload verbatim.
+`ReadFailed` means the source refused the read. `InvalidUtf8` means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U+FFFD: use `readBytes` to recover the payload verbatim.
 
 
 

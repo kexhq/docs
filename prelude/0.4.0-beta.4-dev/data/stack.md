@@ -172,8 +172,8 @@ The list form reads bottom-to-top, the same as `Stack.from`: the last element of
 **Examples**
 
 ```kex
-Stack.from([1, 2]) ` [3, 4]             # => Stack(1, 2, 3, 4)
-Stack.from([1, 2]) ` Stack.from([3])    # => Stack(1, 2, 3)
+Stack.from([1, 2]) + [3, 4]             # => Stack(1, 2, 3, 4)
+Stack.from([1, 2]) + Stack.from([3])    # => Stack(1, 2, 3)
 ```
 
 ## make `Stack<A>` implements [Blankable](../blankable.md#trait-blankable)

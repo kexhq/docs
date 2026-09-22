@@ -18,7 +18,7 @@ A lazy, potentially infinite sequence.
 A stream describes how to produce its elements rather than holding them, so an infinite one is an ordinary value. Nothing is computed until you ask for elements with `take`.
 
 ```kex
-let naturals = Stream.Sequence(from: 0) { |n| n ` 1 }
+let naturals = Stream.Sequence(from: 0) { |n| n + 1 }
 naturals.take(5)                              # => [0, 1, 2, 3, 4]
 naturals.map { |n| n * n }.take(4)            # => [0, 1, 4, 9]
 naturals.filter { |n| n.even? }.take(3)       # => [0, 2, 4]
@@ -26,7 +26,7 @@ naturals.filter { |n| n.even? }.take(3)       # => [0, 2, 4]
 
 `map`, `filter` and `drop` all answer with another stream, so a pipeline stays lazy end to end; `take` is what turns it into a list.
 
-Streams are best for generated sequences you may revisit. A file or socket is different: it can only be consumed once, so those APIs return a `Feed`. Convert a small feed with `toStream+ only when replaying it is worth keeping every value already read.
+Streams are best for generated sequences you may revisit. A file or socket is different: it can only be consumed once, so those APIs return a `Feed`. Convert a small feed with `toStream` only when replaying it is worth keeping every value already read.
 
 
 
@@ -80,12 +80,12 @@ take(n) : Integer -> [A]
 **Examples**
 
 ```kex
-Stream.Sequence(from: 1) { |n| n ` 1 }.take(3)   # => [1, 2, 3]
+Stream.Sequence(from: 1) { |n| n + 1 }.take(3)   # => [1, 2, 3]
 ```
 _The first ten squares_
 
 ```kex
-Stream.Sequence(from: 1) { |n| n ` 1 }
+Stream.Sequence(from: 1) { |n| n + 1 }
   .map { |n| n * n }
   .take(10)
 ```
@@ -134,13 +134,13 @@ map(f) : (A -> B) -> Stream<B>
 **Examples**
 
 ```kex
-Stream.Sequence(from: 1) { |n| n ` 1 }.map { |n| n * n }.take(4)
+Stream.Sequence(from: 1) { |n| n + 1 }.map { |n| n * n }.take(4)
 # => [1, 4, 9, 16]
 ```
 _Formatting as it goes_
 
 ```kex
-Stream.Sequence(from: 1) { |n| n ` 1 }
+Stream.Sequence(from: 1) { |n| n + 1 }
   .map { |n| "item ${n}" }
   .take(3)
 # => ["item 1", "item 2", "item 3"]
@@ -161,13 +161,13 @@ filter(pred) : (A -> Bool) -> Stream<A>
 **Examples**
 
 ```kex
-let evens = Stream.Sequence(from: 0) { |n| n ` 1 }.filter { |n| n.even? }
+let evens = Stream.Sequence(from: 0) { |n| n + 1 }.filter { |n| n.even? }
 evens.take(4)   # => [0, 2, 4, 6]
 ```
 _Multiples of three, formatted_
 
 ```kex
-Stream.Sequence(from: 1) { |n| n ` 1 }
+Stream.Sequence(from: 1) { |n| n + 1 }
   .filter { |n| n.modulo(3) == 0 }
   .map { |n| "#${n}" }
   .take(3)

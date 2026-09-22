@@ -378,7 +378,7 @@ allowList.disjoint?(denyList)
 
 Unions with another set, or with a plain list.
 
-The list form is the everyday way to add one element without naming a method: `s ` [x]`.
+The list form is the everyday way to add one element without naming a method: +s + [x]+.
 
 ```kex
 +(other) : Set<A> -> Set<A>
@@ -390,7 +390,7 @@ The list form is the everyday way to add one element without naming a method: `s
 **Examples**
 
 ```kex
-Set.from([1, 2]) ` [3]           # => Set(1, 2, 3)
+Set.from([1, 2]) + [3]           # => Set(1, 2, 3)
 Set.from([1]) + Set.from([2])    # => Set(1, 2)
 ```
 

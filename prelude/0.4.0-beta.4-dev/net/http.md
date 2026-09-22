@@ -650,7 +650,7 @@ parameter(name)
 
 **Examples**
 
-_Reading `:id` from a `/users/:id` route_
+_Reading +:id+ from a +/users/:id+ route_
 
 ```kex
 let id = context.parameter("id").try

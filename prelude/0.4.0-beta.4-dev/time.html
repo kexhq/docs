@@ -117,18 +117,18 @@ data-page="time.html">
 <p>Three civil types, each a plain record:</p>
 <pre class="code"><code><span class="tok-type">Date</span>      a calendar day<span class="tok-punct">,</span> no time <span class="tok-keyword">and</span> no <span class="tok-fn">zone</span>       <span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-op">-</span><span class="tok-number">07</span><span class="tok-op">-</span><span class="tok-number">30</span><span class="tok-punct">)</span>
 <span class="tok-type">Time</span>      a time of day<span class="tok-punct">,</span> no date <span class="tok-keyword">and</span> no <span class="tok-fn">zone</span>        <span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-op">:</span><span class="tok-number">03</span><span class="tok-op">:</span><span class="tok-number">00</span><span class="tok-punct">)</span>
-<span class="tok-type">DateTime</span>  both<span class="tok-punct">,</span> plus a fixed offset <span class="tok-keyword">from</span> <span class="tok-type">UTC</span>        <span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-op">-</span><span class="tok-number">07</span><span class="tok-op">-</span><span class="tok-number">30</span><span class="tok-type">T14</span><span class="tok-op">:</span><span class="tok-number">03</span><span class="tok-op">:</span><span class="tok-number">00</span>`<span class="tok-number">02</span><span class="tok-op">:</span><span class="tok-number">00</span><span class="tok-punct">)</span></code></pre>
+<span class="tok-type">DateTime</span>  both<span class="tok-punct">,</span> plus a fixed offset <span class="tok-keyword">from</span> <span class="tok-type">UTC</span>        <span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-op">-</span><span class="tok-number">07</span><span class="tok-op">-</span><span class="tok-number">30</span><span class="tok-type">T14</span><span class="tok-op">:</span><span class="tok-number">03</span><span class="tok-op">:</span><span class="tok-number">00</span><span class="tok-op">+</span><span class="tok-number">02</span><span class="tok-op">:</span><span class="tok-number">00</span><span class="tok-punct">)</span></code></pre>
 <p>Two span types connect them, and which one you want depends on whether the calendar gets a say:</p>
 <pre class="code"><code><span class="tok-type">Duration</span>  fixed elapsed time<span class="tok-punct">,</span> a count of <span class="tok-fn">seconds</span>   <span class="tok-punct">(</span><span class="tok-number">36</span><span class="tok-op">.</span><span class="tok-method">hours</span><span class="tok-punct">,</span> <span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-method">days</span><span class="tok-punct">)</span>
 <span class="tok-type">Period</span>    a calendar step<span class="tok-punct">,</span> resolved by the <span class="tok-fn">calendar</span> <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">months</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">years</span><span class="tok-punct">)</span></code></pre>
-<p><code>36.hours</code> is always 129600 seconds; <code>1.months</code> is however long that particular month turns out to be. So <code>date </code> 1.months<code> clamps January 31st to the last day of February, while </code>date <code> 30.days</code> counts thirty days.</p>
+<p><code>36.hours</code> is always 129600 seconds; <code>1.months</code> is however long that particular month turns out to be. So <code>date + 1.months</code> clamps January 31st to the last day of February, while <code>date + 30.days</code> counts thirty days.</p>
 <p>A time <code>Measure</code> such as <code>5.sec</code> is a third thing and deliberately NOT a Duration: a Measure describes a measurement, a Duration describes elapsed time. The plural <code>5.seconds</code> builds the Duration.</p>
 <p>Values are built through their own module and used through methods:</p>
 <pre class="code"><code><span class="tok-keyword">let</span> due <span class="tok-op">=</span> <span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>           <span class="tok-comment"># Result&lt;Date, TimeError&gt;</span>
 due<span class="tok-op">.</span><span class="tok-method">weekday</span><span class="tok-op">.</span><span class="tok-method">name</span>                             <span class="tok-comment"># &quot;Thursday&quot;</span>
-<span class="tok-punct">(</span>due ` <span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-method">days</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>                          <span class="tok-comment"># &quot;2026-08-09&quot;</span>
-<span class="tok-punct">(</span>due ` <span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">months</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>                         <span class="tok-comment"># &quot;2026-08-30&quot;</span>
-<span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">now</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>                               <span class="tok-comment"># &quot;2026-07-30T14:03:00`02:00&quot;</span></code></pre>
+<span class="tok-punct">(</span>due <span class="tok-op">+</span> <span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-method">days</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>                          <span class="tok-comment"># &quot;2026-08-09&quot;</span>
+<span class="tok-punct">(</span>due <span class="tok-op">+</span> <span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">months</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>                         <span class="tok-comment"># &quot;2026-08-30&quot;</span>
+<span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">now</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>                               <span class="tok-comment"># &quot;2026-07-30T14:03:00+02:00&quot;</span></code></pre>
 <p>Anything that reads the clock is mockable: see the test clock section in <code>module Time</code> for <code>Time.frozenAt</code>.</p>
 <p>Zones are fixed offsets: UTC, an explicit <code>+02:00</code>, or whatever this machine's zone resolves to at a given instant. Named IANA zones and their DST rules are not modeled: <code>Time.now()</code> asks the host for the offset in effect at that moment, so it is right now, but it cannot say what the offset WILL be for some future local time.</p>
 <p>The records and the two ADTs stay at file level so <code>make</code> blocks, callers, and every module here can see them.</p>
@@ -160,8 +160,8 @@ due<span class="tok-op">.</span><span class="tok-method">weekday</span><span cla
 <pre class="code"><code><span class="tok-keyword">let</span> due <span class="tok-op">=</span> <span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
 due<span class="tok-op">.</span><span class="tok-method">iso</span>              <span class="tok-comment"># =&gt; &quot;2026-07-30&quot;</span>
 due<span class="tok-op">.</span><span class="tok-method">weekday</span><span class="tok-op">.</span><span class="tok-method">name</span>     <span class="tok-comment"># =&gt; &quot;Thursday&quot;</span>
-<span class="tok-punct">(</span>due ` <span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-method">days</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>  <span class="tok-comment"># =&gt; &quot;2026-08-09&quot;</span></code></pre>
-<p>Build one with `Date.of+, which validates, rather than with the record literal, which does not.</p>
+<span class="tok-punct">(</span>due <span class="tok-op">+</span> <span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-method">days</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>  <span class="tok-comment"># =&gt; &quot;2026-08-09&quot;</span></code></pre>
+<p>Build one with <code>Date.of</code>, which validates, rather than with the record literal, which does not.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>year</code></dt><dd><code>Integer</code></dd></div>
@@ -174,8 +174,8 @@ due<span class="tok-op">.</span><span class="tok-method">weekday</span><span cla
 <p>A time of day, with no date and no zone.</p>
 <pre class="code"><code><span class="tok-keyword">let</span> t <span class="tok-op">=</span> <span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
 t<span class="tok-op">.</span><span class="tok-method">iso</span>                  <span class="tok-comment"># =&gt; &quot;14:03:00&quot;</span>
-<span class="tok-punct">(</span>t ` <span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">hours</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>      <span class="tok-comment"># =&gt; &quot;16:03:00&quot;</span></code></pre>
-<p>Arithmetic wraps within the day: there is no date to carry into. Reach for `DateTime+ when the day rolling over matters.</p>
+<span class="tok-punct">(</span>t <span class="tok-op">+</span> <span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">hours</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>      <span class="tok-comment"># =&gt; &quot;16:03:00&quot;</span></code></pre>
+<p>Arithmetic wraps within the day: there is no date to carry into. Reach for <code>DateTime</code> when the day rolling over matters.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>hour</code></dt><dd><code>Integer</code></dd></div>
@@ -187,8 +187,8 @@ t<span class="tok-op">.</span><span class="tok-method">iso</span>               
 <section class="entity" id="record-datetime">
 <h2><span class="kind kind-record">record</span> <code>DateTime</code></h2>
 <p>An instant: a calendar date, a time of day, and a fixed offset from UTC.</p>
-<pre class="code"><code><span class="tok-keyword">let</span> m <span class="tok-op">=</span> <span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30T14:03:00`02:00</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
-m<span class="tok-op">.</span><span class="tok-method">iso</span>        <span class="tok-comment"># =&gt; &quot;2026-07-30T14:03:00`02:00&quot;</span>
+<pre class="code"><code><span class="tok-keyword">let</span> m <span class="tok-op">=</span> <span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30T14:03:00+02:00</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+m<span class="tok-op">.</span><span class="tok-method">iso</span>        <span class="tok-comment"># =&gt; &quot;2026-07-30T14:03:00+02:00&quot;</span>
 m<span class="tok-op">.</span><span class="tok-method">utc</span><span class="tok-op">.</span><span class="tok-method">iso</span>    <span class="tok-comment"># =&gt; &quot;2026-07-30T12:03:00Z&quot;</span></code></pre>
 <p>Two <code>DateTime</code> values that name the same instant compare equal whatever offsets they are written at: comparison goes through <code>epochSeconds</code>.</p>
 <h3>Fields</h3>
@@ -201,8 +201,8 @@ m<span class="tok-op">.</span><span class="tok-method">utc</span><span class="to
 <section class="entity" id="record-period">
 <h2><span class="kind kind-record">record</span> <code>Period</code></h2>
 <p>A calendar span. Months and years have no fixed length: February is 28 days or 29, a year 365 or 366, so they cannot live in a <code>Duration</code>, which is a count of seconds and nothing else. A Period carries the calendar fields themselves and lets the calendar resolve them:</p>
-<pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">31</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span> ` <span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">months</span>        <span class="tok-comment"># 2026-02-28, not 2026-03-03</span>
-<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2024</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">29</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span> ` <span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">years</span>         <span class="tok-comment"># 2025-02-28</span></code></pre>
+<pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">31</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span> <span class="tok-op">+</span> <span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">months</span>        <span class="tok-comment"># 2026-02-28, not 2026-03-03</span>
+<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2024</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">29</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span> <span class="tok-op">+</span> <span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">years</span>         <span class="tok-comment"># 2025-02-28</span></code></pre>
 <p>Use a Duration for elapsed time (<code>36.hours</code> is always 129600 seconds) and a Period for calendar steps (<code>1.months</code> is however long that month is).</p>
 <h3>Fields</h3>
 <dl class="fields">
@@ -300,7 +300,7 @@ m<span class="tok-op">.</span><span class="tok-method">utc</span><span class="to
 <section class="entity" id="function-parseoffset">
 <h2><span class="kind kind-function">function</span> <code>parseOffset</code></h2>
 <p>Parses an ISO 8601 zone designator into an offset.</p>
-<p>Accepts `Z`, ``02:00`, `-05:30`, or the empty string (all meaning UTC for the first and last).</p>
+<p>Accepts <code>Z</code>, +<code>02:00</code>, <code>-05:30</code>, or the empty string (all meaning UTC for the first and last).</p>
 <pre class="code"><code><span class="tok-fn">parseOffset</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -308,7 +308,7 @@ m<span class="tok-op">.</span><span class="tok-method">utc</span><span class="to
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;Duration, <a class="xref" href="#type-timeerror">TimeError</a>&gt;</code> — the offset, or why it could not be read</p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">parseOffset</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">`02:00</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>d<span class="tok-op">|</span> d<span class="tok-op">.</span><span class="tok-method">wholeSeconds</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(7200)</span>
+<pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">parseOffset</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">+02:00</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>d<span class="tok-op">|</span> d<span class="tok-op">.</span><span class="tok-method">wholeSeconds</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(7200)</span>
 <span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">parseOffset</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Z</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>d<span class="tok-op">|</span> d<span class="tok-op">.</span><span class="tok-method">wholeSeconds</span> <span class="tok-punct">}</span>        <span class="tok-comment"># =&gt; Ok(0)</span></code></pre>
 
 </section>
@@ -820,7 +820,7 @@ m<span class="tok-op">.</span><span class="tok-method">utc</span><span class="to
 <section class="entity" id="function-parse">
 <h2><span class="kind kind-function">function</span> <code>parse</code></h2>
 <p>Parses an ISO 8601 instant.</p>
-<p>Accepts `2026-07-30T14:03:00`02:00`, the same with `Z`, or a bare civil datetime with no zone at all, which is read as UTC.</p>
+<p>Accepts +2026-07-30T14:03:00+02:00+, the same with <code>Z</code>, or a bare civil datetime with no zone at all, which is read as UTC.</p>
 <pre class="code"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -828,7 +828,7 @@ m<span class="tok-op">.</span><span class="tok-method">utc</span><span class="to
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Result&lt;DateTime, <a class="xref" href="#type-timeerror">TimeError</a>&gt;</code> — the instant, or why it could not be read</p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30T14:03:00`02:00</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">utc</span><span class="tok-op">.</span><span class="tok-method">iso</span> <span class="tok-punct">}</span>
+<pre class="code"><code><span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30T14:03:00+02:00</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">utc</span><span class="tok-op">.</span><span class="tok-method">iso</span> <span class="tok-punct">}</span>
 <span class="tok-comment"># =&gt; Ok(&quot;2026-07-30T12:03:00Z&quot;)</span>
 <span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">nope</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Error(InvalidFormat(&quot;nope&quot;))</span></code></pre>
 <p class="caption"><em>Reading a timestamp out of a log line</em></p>
@@ -1250,7 +1250,7 @@ date<span class="tok-op">.</span><span class="tok-method">at</span><span class="
 <div class="fn" id="fn-+">
 <h4><code>+</code></h4>
 <p>Advances the date by a fixed span, whole days only.</p>
-<p>A Duration with a sub-day remainder truncates toward zero, so `date ` 36.hours` advances exactly one day. Use a `Period` when the calendar should get a say.</p>
+<p>A Duration with a sub-day remainder truncates toward zero, so +date + 36.hours+ advances exactly one day. Use a <code>Period</code> when the calendar should get a say.</p>
 <pre class="code"><code><span class="tok-op">+</span><span class="tok-punct">(</span>span<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -1258,7 +1258,7 @@ date<span class="tok-op">.</span><span class="tok-method">at</span><span class="
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Date</code> — the later date</p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span> ` <span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-method">days</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-08-09&quot;</span>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span> <span class="tok-op">+</span> <span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-method">days</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-08-09&quot;</span>
 <span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span> <span class="tok-op">+</span> <span class="tok-number">36</span><span class="tok-op">.</span><span class="tok-method">hours</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>  <span class="tok-comment"># =&gt; &quot;2026-07-31&quot;</span></code></pre>
 
 </div>
@@ -1492,7 +1492,7 @@ date<span class="tok-op">.</span><span class="tok-method">at</span><span class="
 <div class="fn" id="fn-+">
 <h4><code>+</code></h4>
 <p>Advances the time of day by a span, wrapping within the day.</p>
-<p>A Time has no date to carry into, so 23:00 ` 2.hours is 01:00. Reach for `DateTime` when the day rolling over is something you need to see.</p>
+<p>A Time has no date to carry into, so 23:00 + 2.hours is 01:00. Reach for <code>DateTime</code> when the day rolling over is something you need to see.</p>
 <p>The nanosecond field rides along untouched: <code>wholeSeconds</code> truncates the span, so a sub-second Duration shifts nothing.</p>
 <pre class="code"><code><span class="tok-op">+</span><span class="tok-punct">(</span>span<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
@@ -1501,7 +1501,7 @@ date<span class="tok-op">.</span><span class="tok-method">at</span><span class="
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Time</code> — the later time of day</p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-punct">(</span><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span> ` <span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">hours</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>    <span class="tok-comment"># =&gt; &quot;16:03:00&quot;</span>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span> <span class="tok-op">+</span> <span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">hours</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>    <span class="tok-comment"># =&gt; &quot;16:03:00&quot;</span>
 <span class="tok-punct">(</span><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">23</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span> <span class="tok-op">+</span> <span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">hours</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>    <span class="tok-comment"># =&gt; &quot;01:00:00&quot;</span></code></pre>
 
 </div>
@@ -1747,7 +1747,7 @@ date<span class="tok-op">.</span><span class="tok-method">at</span><span class="
 </div>
 <div class="fn" id="fn-compareto">
 <h4><code>compareTo</code></h4>
-<p>Orders this instant against another, by instant rather than by wall clock, so 12:00Z and 14:00`02:00 compare `Equal`.</p>
+<p>Orders this instant against another, by instant rather than by wall clock, so 12:00Z and 14:00+02:00 compare <code>Equal</code>.</p>
 <p>Named <code>compareTo</code> rather than <code>compare</code>: a make-block <code>compare</code> is shadowed by the builtin comparison dispatch and fails at runtime on both backends.</p>
 <pre class="code"><code><span class="tok-fn">compareTo</span><span class="tok-punct">(</span>other<span class="tok-punct">)</span></code></pre>
 <h5>Parameters</h5>
@@ -1757,7 +1757,7 @@ date<span class="tok-op">.</span><span class="tok-method">at</span><span class="
 <p class="returns"><strong>Returns:</strong> <code>Ordering</code> — <code>Less</code>, <code>Equal</code> or <code>Greater</code></p>
 <h5>Examples</h5>
 <pre class="code"><code><span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30T12:00:00Z</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
-  <span class="tok-op">.</span><span class="tok-method">compareTo</span><span class="tok-punct">(</span><span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30T14:00:00`02:00</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">compareTo</span><span class="tok-punct">(</span><span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30T14:00:00+02:00</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span>
 <span class="tok-comment"># =&gt; Equal</span></code></pre>
 <p class="caption"><em>Sorting events by when they happened</em></p>
 <pre class="code"><code>events<span class="tok-op">.</span><span class="tok-method">sort</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>a<span class="tok-punct">,</span> b<span class="tok-op">|</span> a<span class="tok-op">.</span><span class="tok-method">at</span><span class="tok-op">.</span><span class="tok-method">compareTo</span><span class="tok-punct">(</span>b<span class="tok-op">.</span><span class="tok-method">at</span><span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-bool">Less</span> <span class="tok-punct">}</span></code></pre>
@@ -1769,7 +1769,7 @@ date<span class="tok-op">.</span><span class="tok-method">at</span><span class="
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-09-21T01:10:34.445722704Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="time.md">Markdown</a></div>
+<div class="wrap">Generated by kex docgen at 2026-09-22T17:25:42.440421435Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="time.md">Markdown</a></div>
 </footer>
 </body>
 </html>

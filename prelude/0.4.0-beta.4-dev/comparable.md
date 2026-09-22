@@ -19,7 +19,7 @@ Ordering and comparison: what a comparison answers, and the types that have a to
 
 Kex traits do not inherit from one another, so concrete types explicitly implement every structure whose laws they satisfy.
 
-The two things you meet in everyday code here. `Ordering` is what a comparison answers, and it composes. This is how a multi-key sort is written without nested `if`s:
+The two things you meet in everyday code here. `Ordering` is what a comparison answers, and it composes. This is how a multi-key sort is written without nested +if+s:
 
 ```kex
 a.age.compare(b.age).thenBy { a.score.compare(b.score) }

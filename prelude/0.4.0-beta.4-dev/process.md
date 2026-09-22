@@ -38,7 +38,7 @@ Kex's concurrency is the BEAM's: lightweight processes that share nothing and co
 ```kex
 let a = Task.start do expensiveThing(1) end
 let b = Task.start do expensiveThing(2) end
-a.await ` b.await
+a.await + b.await
 ```
 
 `serving` plus `Process.spawn` gives a piece of state its own process, with typed calls into it:
@@ -70,7 +70,7 @@ Backed by Kex.Intrinsic.Process and the BEAM runtime.
 
 An opaque BEAM process identifier.
 
-Obtained from `Process.self` or `Process.whereis+. Send it messages, link to it, monitor it, or ask whether it is still alive.
+Obtained from `Process.self` or `Process.whereis`. Send it messages, link to it, monitor it, or ask whether it is still alive.
 
 
 

@@ -35,7 +35,7 @@ Three civil types, each a plain record:
 ```kex
 Date      a calendar day, no time and no zone       (2026-07-30)
 Time      a time of day, no date and no zone        (14:03:00)
-DateTime  both, plus a fixed offset from UTC        (2026-07-30T14:03:00`02:00)
+DateTime  both, plus a fixed offset from UTC        (2026-07-30T14:03:00+02:00)
 ```
 
 Two span types connect them, and which one you want depends on whether the calendar gets a say:
@@ -45,7 +45,7 @@ Duration  fixed elapsed time, a count of seconds   (36.hours, 10.days)
 Period    a calendar step, resolved by the calendar (1.months, 2.years)
 ```
 
-`36.hours` is always 129600 seconds; `1.months` is however long that particular month turns out to be. So `date ` 1.months` clamps January 31st to the last day of February, while `date ` 30.days` counts thirty days.
+`36.hours` is always 129600 seconds; `1.months` is however long that particular month turns out to be. So `date + 1.months` clamps January 31st to the last day of February, while `date + 30.days` counts thirty days.
 
 A time `Measure` such as `5.sec` is a third thing and deliberately NOT a Duration: a Measure describes a measurement, a Duration describes elapsed time. The plural `5.seconds` builds the Duration.
 
@@ -54,9 +54,9 @@ Values are built through their own module and used through methods:
 ```kex
 let due = Date.of(2026, 7, 30).try           # Result<Date, TimeError>
 due.weekday.name                             # "Thursday"
-(due ` 10.days).iso                          # "2026-08-09"
-(due ` 1.months).iso                         # "2026-08-30"
-Time.now().iso                               # "2026-07-30T14:03:00`02:00"
+(due + 10.days).iso                          # "2026-08-09"
+(due + 1.months).iso                         # "2026-08-30"
+Time.now().iso                               # "2026-07-30T14:03:00+02:00"
 ```
 
 Anything that reads the clock is mockable: see the test clock section in `module Time` for `Time.frozenAt`.
@@ -99,10 +99,10 @@ A calendar day: a year, a month and a day, with no time and no zone.
 let due = Date.of(2026, 7, 30).try
 due.iso              # => "2026-07-30"
 due.weekday.name     # => "Thursday"
-(due ` 10.days).iso  # => "2026-08-09"
+(due + 10.days).iso  # => "2026-08-09"
 ```
 
-Build one with `Date.of+, which validates, rather than with the record literal, which does not.
+Build one with `Date.of`, which validates, rather than with the record literal, which does not.
 
 **Fields**
 
@@ -117,10 +117,10 @@ A time of day, with no date and no zone.
 ```kex
 let t = Time.of(14, 3, 0).try
 t.iso                  # => "14:03:00"
-(t ` 2.hours).iso      # => "16:03:00"
+(t + 2.hours).iso      # => "16:03:00"
 ```
 
-Arithmetic wraps within the day: there is no date to carry into. Reach for `DateTime+ when the day rolling over matters.
+Arithmetic wraps within the day: there is no date to carry into. Reach for `DateTime` when the day rolling over matters.
 
 **Fields**
 
@@ -134,8 +134,8 @@ Arithmetic wraps within the day: there is no date to carry into. Reach for `Date
 An instant: a calendar date, a time of day, and a fixed offset from UTC.
 
 ```kex
-let m = DateTime.parse("2026-07-30T14:03:00`02:00").try
-m.iso        # => "2026-07-30T14:03:00`02:00"
+let m = DateTime.parse("2026-07-30T14:03:00+02:00").try
+m.iso        # => "2026-07-30T14:03:00+02:00"
 m.utc.iso    # => "2026-07-30T12:03:00Z"
 ```
 
@@ -152,8 +152,8 @@ Two `DateTime` values that name the same instant compare equal whatever offsets 
 A calendar span. Months and years have no fixed length: February is 28 days or 29, a year 365 or 366, so they cannot live in a `Duration`, which is a count of seconds and nothing else. A Period carries the calendar fields themselves and lets the calendar resolve them:
 
 ```kex
-Date.of(2026, 1, 31).try ` 1.months        # 2026-02-28, not 2026-03-03
-Date.of(2024, 2, 29).try ` 1.years         # 2025-02-28
+Date.of(2026, 1, 31).try + 1.months        # 2026-02-28, not 2026-03-03
+Date.of(2024, 2, 29).try + 1.years         # 2025-02-28
 ```
 
 Use a Duration for elapsed time (`36.hours` is always 129600 seconds) and a Period for calendar steps (`1.months` is however long that month is).
@@ -242,7 +242,7 @@ utcNow()
 
 Parses an ISO 8601 zone designator into an offset.
 
-Accepts `Z`, ``02:00`, `-05:30`, or the empty string (all meaning UTC for the first and last).
+Accepts `Z`, +`02:00`, `-05:30`, or the empty string (all meaning UTC for the first and last).
 
 
 ```kex
@@ -754,7 +754,7 @@ fromEpochSeconds(count)
 
 Parses an ISO 8601 instant.
 
-Accepts `2026-07-30T14:03:00`02:00`, the same with `Z`, or a bare civil datetime with no zone at all, which is read as UTC.
+Accepts +2026-07-30T14:03:00+02:00+, the same with `Z`, or a bare civil datetime with no zone at all, which is read as UTC.
 
 
 ```kex
@@ -1171,7 +1171,7 @@ inspectValue(colors)
 
 Advances the date by a fixed span, whole days only.
 
-A Duration with a sub-day remainder truncates toward zero, so `date ` 36.hours` advances exactly one day. Use a `Period` when the calendar should get a say.
+A Duration with a sub-day remainder truncates toward zero, so +date + 36.hours+ advances exactly one day. Use a `Period` when the calendar should get a say.
 
 ```kex
 +(span)
@@ -1182,7 +1182,7 @@ A Duration with a sub-day remainder truncates toward zero, so `date ` 36.hours` 
 **Examples**
 
 ```kex
-(Date.of(2026, 7, 30).try ` 10.days).iso   # => "2026-08-09"
+(Date.of(2026, 7, 30).try + 10.days).iso   # => "2026-08-09"
 (Date.of(2026, 7, 30).try + 36.hours).iso  # => "2026-07-31"
 ```
 
@@ -1468,7 +1468,7 @@ Time.of(15, 0, 0).try.after?(Time.of(14, 3, 0).try)   # => true
 
 Advances the time of day by a span, wrapping within the day.
 
-A Time has no date to carry into, so 23:00 ` 2.hours is 01:00. Reach for `DateTime` when the day rolling over is something you need to see.
+A Time has no date to carry into, so 23:00 + 2.hours is 01:00. Reach for `DateTime` when the day rolling over is something you need to see.
 
 The nanosecond field rides along untouched: `wholeSeconds` truncates the span, so a sub-second Duration shifts nothing.
 
@@ -1481,7 +1481,7 @@ The nanosecond field rides along untouched: `wholeSeconds` truncates the span, s
 **Examples**
 
 ```kex
-(Time.of(14, 3, 0).try ` 2.hours).iso    # => "16:03:00"
+(Time.of(14, 3, 0).try + 2.hours).iso    # => "16:03:00"
 (Time.of(23, 0, 0).try + 2.hours).iso    # => "01:00:00"
 ```
 
@@ -1776,7 +1776,7 @@ DateTime.utcNow().after?(started)   # => true
 
 #### `compareTo`
 
-Orders this instant against another, by instant rather than by wall clock, so 12:00Z and 14:00`02:00 compare `Equal`.
+Orders this instant against another, by instant rather than by wall clock, so 12:00Z and 14:00+02:00 compare `Equal`.
 
 Named `compareTo` rather than `compare`: a make-block `compare` is shadowed by the builtin comparison dispatch and fails at runtime on both backends.
 
@@ -1790,7 +1790,7 @@ compareTo(other)
 
 ```kex
 DateTime.parse("2026-07-30T12:00:00Z").try
-  .compareTo(DateTime.parse("2026-07-30T14:00:00`02:00").try)
+  .compareTo(DateTime.parse("2026-07-30T14:00:00+02:00").try)
 # => Equal
 ```
 _Sorting events by when they happened_

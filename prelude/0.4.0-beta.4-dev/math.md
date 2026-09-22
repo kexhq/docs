@@ -252,7 +252,7 @@ ceil(x) : Number -> Integer
 
 ## function `hypot`
 
-Returns the Euclidean distance `sqrt(x*x ` y*y)+, computed so that large values do not overflow on the way.
+Returns the Euclidean distance +sqrt(x*x + y*y)+, computed so that large values do not overflow on the way.
 
 
 ```kex

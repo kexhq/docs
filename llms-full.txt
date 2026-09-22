@@ -523,7 +523,7 @@ xor(a, b) : Integer -> Integer -> Integer
 
 ## function `not`
 
-Bitwise complement of `a`. Every integer is signed and unbounded, so this is always `-(a ` 1)+ rather than a width-dependent mask.
+Bitwise complement of `a`. Every integer is signed and unbounded, so this is always +-(a + 1)+ rather than a width-dependent mask.
 
 
 ```kex
@@ -793,7 +793,7 @@ Ordering and comparison: what a comparison answers, and the types that have a to
 
 Kex traits do not inherit from one another, so concrete types explicitly implement every structure whose laws they satisfy.
 
-The two things you meet in everyday code here. `Ordering` is what a comparison answers, and it composes. This is how a multi-key sort is written without nested `if`s:
+The two things you meet in everyday code here. `Ordering` is what a comparison answers, and it composes. This is how a multi-key sort is written without nested +if+s:
 
 ```kex
 a.age.compare(b.age).thenBy { a.score.compare(b.score) }
@@ -1861,11 +1861,11 @@ Running Kex source code at run time, in a sandbox.
 Each call builds a fresh, isolated evaluator: the caller's environment is never shared, and the evaluated code sees only what `EvaluatorOptions` allows. Step and depth limits make a runaway program stop rather than hang.
 
 ```kex
-Evaluator.runExpression("1 ` 2")           # => Ok(3)
+Evaluator.runExpression("1 + 2")           # => Ok(3)
 Evaluator.runExpression("[3,1,2].sort")    # => Ok([1, 2, 3])
 ```
 
-This is for evaluating expressions your program was given: a formula in a config file, a filter typed by a user. Every result is a `Result+, so a syntax error or a rejected call is a value you handle.
+This is for evaluating expressions your program was given: a formula in a config file, a filter typed by a user. Every result is a `Result`, so a syntax error or a rejected call is a value you handle.
 
 ## function `run`
 
@@ -2098,7 +2098,7 @@ entities:
 
 Why a read failed.
 
-`ReadFailed` means the source refused the read. `InvalidUtf8` means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U`FFFD: use `readBytes+ to recover the payload verbatim.
+`ReadFailed` means the source refused the read. `InvalidUtf8` means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U+FFFD: use `readBytes` to recover the payload verbatim.
 
 
 
@@ -4298,7 +4298,7 @@ join : String
 ```kex
 ["hello", "world", "kex"].join(", ")   # => "hello, world, kex"
 ["a", "b", "c"].join                   # => "abc"
-[1, 2, 3].join(" ` ")                 # => "1 ` 2 + 3"
+[1, 2, 3].join(" + ")                 # => "1 + 2 + 3"
 ```
 
 
@@ -4445,7 +4445,7 @@ put(k, v) : K -> V -> Map<K, V>
 {}.put(:x, 1)              # => { :x: 1 }
 { x: 1 }.put(:x, 2)        # => { :x: 2 }
 ```
-_Rebinding with the `!` form_
+_Rebinding with the +!+ form_
 
 ```kex
 var totals = {}
@@ -4998,7 +4998,7 @@ ceil(x) : Number -> Integer
 
 ## function `hypot`
 
-Returns the Euclidean distance `sqrt(x*x ` y*y)+, computed so that large values do not overflow on the way.
+Returns the Euclidean distance +sqrt(x*x + y*y)+, computed so that large values do not overflow on the way.
 
 
 ```kex
@@ -7202,7 +7202,7 @@ Kex's concurrency is the BEAM's: lightweight processes that share nothing and co
 ```kex
 let a = Task.start do expensiveThing(1) end
 let b = Task.start do expensiveThing(2) end
-a.await ` b.await
+a.await + b.await
 ```
 
 `serving` plus `Process.spawn` gives a piece of state its own process, with typed calls into it:
@@ -7234,7 +7234,7 @@ Backed by Kex.Intrinsic.Process and the BEAM runtime.
 
 An opaque BEAM process identifier.
 
-Obtained from `Process.self` or `Process.whereis+. Send it messages, link to it, monitor it, or ask whether it is still alive.
+Obtained from `Process.self` or `Process.whereis`. Send it messages, link to it, monitor it, or ask whether it is still alive.
 
 
 
@@ -8207,8 +8207,8 @@ using Regex
 
 main do
   let line = "order #4271 shipped"
-  IO.printLine(line.matches?(re`#\d``))                     # => true
-  IO.printLine(line.matches(re`#(\d`)`).map { |m| m.get(1) })  # => 4271
+  IO.printLine(line.matches?(re`#\d+`))                     # => true
+  IO.printLine(line.matches(re`#(\d+)`).map { |m| m.get(1) })  # => 4271
 end
 ```
 
@@ -8255,7 +8255,7 @@ NOTE: deliberately does NOT `implement: Errorable`, even though the trait exists
 
 Compiles `source` into a `Regex`.
 
-Answers a `Result` because an arbitrary string may not be a valid pattern. Use this form when the pattern is built at run time: from a config file, from user input. For a pattern you write yourself, the tag form `` regex`\d`` `` is checked at compile time and hands back a bare `Regex`.
+Answers a `Result` because an arbitrary string may not be a valid pattern. Use this form when the pattern is built at run time: from a config file, from user input. For a pattern you write yourself, the tag form `` regex`\d+` `` is checked at compile time and hands back a bare `Regex`.
 
 
 ```kex
@@ -8444,7 +8444,7 @@ A lazy, potentially infinite sequence.
 A stream describes how to produce its elements rather than holding them, so an infinite one is an ordinary value. Nothing is computed until you ask for elements with `take`.
 
 ```kex
-let naturals = Stream.Sequence(from: 0) { |n| n ` 1 }
+let naturals = Stream.Sequence(from: 0) { |n| n + 1 }
 naturals.take(5)                              # => [0, 1, 2, 3, 4]
 naturals.map { |n| n * n }.take(4)            # => [0, 1, 4, 9]
 naturals.filter { |n| n.even? }.take(3)       # => [0, 2, 4]
@@ -8452,7 +8452,7 @@ naturals.filter { |n| n.even? }.take(3)       # => [0, 2, 4]
 
 `map`, `filter` and `drop` all answer with another stream, so a pipeline stays lazy end to end; `take` is what turns it into a list.
 
-Streams are best for generated sequences you may revisit. A file or socket is different: it can only be consumed once, so those APIs return a `Feed`. Convert a small feed with `toStream+ only when replaying it is worth keeping every value already read.
+Streams are best for generated sequences you may revisit. A file or socket is different: it can only be consumed once, so those APIs return a `Feed`. Convert a small feed with `toStream` only when replaying it is worth keeping every value already read.
 
 
 
@@ -8506,12 +8506,12 @@ take(n) : Integer -> [A]
 **Examples**
 
 ```kex
-Stream.Sequence(from: 1) { |n| n ` 1 }.take(3)   # => [1, 2, 3]
+Stream.Sequence(from: 1) { |n| n + 1 }.take(3)   # => [1, 2, 3]
 ```
 _The first ten squares_
 
 ```kex
-Stream.Sequence(from: 1) { |n| n ` 1 }
+Stream.Sequence(from: 1) { |n| n + 1 }
   .map { |n| n * n }
   .take(10)
 ```
@@ -8560,13 +8560,13 @@ map(f) : (A -> B) -> Stream<B>
 **Examples**
 
 ```kex
-Stream.Sequence(from: 1) { |n| n ` 1 }.map { |n| n * n }.take(4)
+Stream.Sequence(from: 1) { |n| n + 1 }.map { |n| n * n }.take(4)
 # => [1, 4, 9, 16]
 ```
 _Formatting as it goes_
 
 ```kex
-Stream.Sequence(from: 1) { |n| n ` 1 }
+Stream.Sequence(from: 1) { |n| n + 1 }
   .map { |n| "item ${n}" }
   .take(3)
 # => ["item 1", "item 2", "item 3"]
@@ -8587,13 +8587,13 @@ filter(pred) : (A -> Bool) -> Stream<A>
 **Examples**
 
 ```kex
-let evens = Stream.Sequence(from: 0) { |n| n ` 1 }.filter { |n| n.even? }
+let evens = Stream.Sequence(from: 0) { |n| n + 1 }.filter { |n| n.even? }
 evens.take(4)   # => [0, 2, 4, 6]
 ```
 _Multiples of three, formatted_
 
 ```kex
-Stream.Sequence(from: 1) { |n| n ` 1 }
+Stream.Sequence(from: 1) { |n| n + 1 }
   .filter { |n| n.modulo(3) == 0 }
   .map { |n| "#${n}" }
   .take(3)
@@ -8677,13 +8677,13 @@ reduce(acc, f) : A -> (A -> Char -> A) -> A
 _Summing digit values_
 
 ```kex
-"12345".reduce(0) { |sum, c| sum ` c.codepoint - 48 }   # => 15
+"12345".reduce(0) { |sum, c| sum + c.codepoint - 48 }   # => 15
 ```
 _Building a character histogram_
 
 ```kex
 "banana".reduce({}) do |counts, c|
-  counts.put(c.string, counts.get(c.string).or(0) ` 1)
+  counts.put(c.string, counts.get(c.string).or(0) + 1)
 end
 # => {"a": 3, "b": 1, "n": 2}
 ```
@@ -8783,7 +8783,7 @@ let preview = title.take(30) + (title.count > 30 then "…" else "")
 
 #### `drop`
 
-Returns everything after the first `n` characters. The complement of `take`: `s.take(n) ` s.drop(n)` is `s+.
+Returns everything after the first `n` characters. The complement of `take`: +s.take(n) + s.drop(n)+ is `s`.
 
 ```kex
 drop(n) : Integer -> String
@@ -8841,7 +8841,7 @@ indexOf(c) : Char -> Integer?
 "hello".indexOf('l')   # => Just(2)
 "hello".indexOf('z')   # => None
 ```
-_Splitting a `key=value` pair at the first `=`_
+_Splitting a +key=value+ pair at the first +=+_
 
 ```kex
 let pair = "host=localhost"
@@ -9073,7 +9073,7 @@ replace(pattern, replacement) : String -> String -> String
 **Examples**
 
 ```kex
-"a-b-c".replace("-", "`")   # => "a`b+c"
+"a-b-c".replace("-", "+")   # => "a+b+c"
 "abc".replace("", "-")      # => "-a-b-c-"
 ```
 _Normalising a path separator_
@@ -9394,7 +9394,7 @@ entities:
 
 Diagnostics returned by compile-time validators for tagged literals.
 
-A tagged literal (`` re`\d`` ``, `` sql`SELECT ...` ``) can be checked while your program is compiled rather than when it runs. The compiler finds the checker by name: a tag `foo` is validated by a function named `validateFoo` taking the literal's text and returning a list of `Issue` values. An empty list means the literal is fine.
+A tagged literal (`` re`\d+` ``, `` sql`SELECT ...` ``) can be checked while your program is compiled rather than when it runs. The compiler finds the checker by name: a tag `foo` is validated by a function named `validateFoo` taking the literal's text and returning a list of `Issue` values. An empty list means the literal is fine.
 
 ```kex
 let validateHex(source: String) -> [TaggedValidation.Issue] do
@@ -9405,7 +9405,7 @@ let validateHex(source: String) -> [TaggedValidation.Issue] do
 end
 ```
 
-A `Fatal` issue stops the build with the message, pointing the caret at the offset; a `Warn+ reports without stopping.
+A `Fatal` issue stops the build with the message, pointing the caret at the offset; a `Warn` reports without stopping.
 
 Byte offsets are zero-based and relative to the cooked literal body.
 
@@ -9517,7 +9517,7 @@ An ERB-shaped template scanner: template text in, a template AST out.
 
 Opt-in: nothing here is in scope until `using Template`.
 
-This is the scanning stage only (see the Template proposal for the fuller design): it turns template source into a flat list of `Node`s: plain text, and the four kinds of `<% %>` region, plus whatever frontmatter tags sit ahead of the body. It does not evaluate anything and does not know Kex syntax; the text inside a hole is kept as-is, for a later stage to parse and lower into real Kex.
+This is the scanning stage only (see the Template proposal for the fuller design): it turns template source into a flat list of +Node+s: plain text, and the four kinds of `<% %>` region, plus whatever frontmatter tags sit ahead of the body. It does not evaluate anything and does not know Kex syntax; the text inside a hole is kept as-is, for a later stage to parse and lower into real Kex.
 
 ```kex
 using Template
@@ -9762,7 +9762,7 @@ Everything here is always in scope: no import, and no separate test runner. Writ
 ```kex
 describe "arithmetic" do
   it "adds numbers" do
-    assert(1 ` 1 == 2)
+    assert(1 + 1 == 2)
   end
 
   it "multiplies numbers" do
@@ -9782,7 +9782,7 @@ A file named `<name>.spec.kex` automatically loads the declarations of `<name>.k
 
 Groups related test cases under a label, and runs them.
 
-The block is called immediately. `describe+ blocks nest, and the output is indented to match. This is a foul function: it prints.
+The block is called immediately. `describe` blocks nest, and the output is indented to match. This is a foul function: it prints.
 
 
 ```kex
@@ -9975,7 +9975,7 @@ Three civil types, each a plain record:
 ```kex
 Date      a calendar day, no time and no zone       (2026-07-30)
 Time      a time of day, no date and no zone        (14:03:00)
-DateTime  both, plus a fixed offset from UTC        (2026-07-30T14:03:00`02:00)
+DateTime  both, plus a fixed offset from UTC        (2026-07-30T14:03:00+02:00)
 ```
 
 Two span types connect them, and which one you want depends on whether the calendar gets a say:
@@ -9985,7 +9985,7 @@ Duration  fixed elapsed time, a count of seconds   (36.hours, 10.days)
 Period    a calendar step, resolved by the calendar (1.months, 2.years)
 ```
 
-`36.hours` is always 129600 seconds; `1.months` is however long that particular month turns out to be. So `date ` 1.months` clamps January 31st to the last day of February, while `date ` 30.days` counts thirty days.
+`36.hours` is always 129600 seconds; `1.months` is however long that particular month turns out to be. So `date + 1.months` clamps January 31st to the last day of February, while `date + 30.days` counts thirty days.
 
 A time `Measure` such as `5.sec` is a third thing and deliberately NOT a Duration: a Measure describes a measurement, a Duration describes elapsed time. The plural `5.seconds` builds the Duration.
 
@@ -9994,9 +9994,9 @@ Values are built through their own module and used through methods:
 ```kex
 let due = Date.of(2026, 7, 30).try           # Result<Date, TimeError>
 due.weekday.name                             # "Thursday"
-(due ` 10.days).iso                          # "2026-08-09"
-(due ` 1.months).iso                         # "2026-08-30"
-Time.now().iso                               # "2026-07-30T14:03:00`02:00"
+(due + 10.days).iso                          # "2026-08-09"
+(due + 1.months).iso                         # "2026-08-30"
+Time.now().iso                               # "2026-07-30T14:03:00+02:00"
 ```
 
 Anything that reads the clock is mockable: see the test clock section in `module Time` for `Time.frozenAt`.
@@ -10039,10 +10039,10 @@ A calendar day: a year, a month and a day, with no time and no zone.
 let due = Date.of(2026, 7, 30).try
 due.iso              # => "2026-07-30"
 due.weekday.name     # => "Thursday"
-(due ` 10.days).iso  # => "2026-08-09"
+(due + 10.days).iso  # => "2026-08-09"
 ```
 
-Build one with `Date.of+, which validates, rather than with the record literal, which does not.
+Build one with `Date.of`, which validates, rather than with the record literal, which does not.
 
 **Fields**
 
@@ -10057,10 +10057,10 @@ A time of day, with no date and no zone.
 ```kex
 let t = Time.of(14, 3, 0).try
 t.iso                  # => "14:03:00"
-(t ` 2.hours).iso      # => "16:03:00"
+(t + 2.hours).iso      # => "16:03:00"
 ```
 
-Arithmetic wraps within the day: there is no date to carry into. Reach for `DateTime+ when the day rolling over matters.
+Arithmetic wraps within the day: there is no date to carry into. Reach for `DateTime` when the day rolling over matters.
 
 **Fields**
 
@@ -10074,8 +10074,8 @@ Arithmetic wraps within the day: there is no date to carry into. Reach for `Date
 An instant: a calendar date, a time of day, and a fixed offset from UTC.
 
 ```kex
-let m = DateTime.parse("2026-07-30T14:03:00`02:00").try
-m.iso        # => "2026-07-30T14:03:00`02:00"
+let m = DateTime.parse("2026-07-30T14:03:00+02:00").try
+m.iso        # => "2026-07-30T14:03:00+02:00"
 m.utc.iso    # => "2026-07-30T12:03:00Z"
 ```
 
@@ -10092,8 +10092,8 @@ Two `DateTime` values that name the same instant compare equal whatever offsets 
 A calendar span. Months and years have no fixed length: February is 28 days or 29, a year 365 or 366, so they cannot live in a `Duration`, which is a count of seconds and nothing else. A Period carries the calendar fields themselves and lets the calendar resolve them:
 
 ```kex
-Date.of(2026, 1, 31).try ` 1.months        # 2026-02-28, not 2026-03-03
-Date.of(2024, 2, 29).try ` 1.years         # 2025-02-28
+Date.of(2026, 1, 31).try + 1.months        # 2026-02-28, not 2026-03-03
+Date.of(2024, 2, 29).try + 1.years         # 2025-02-28
 ```
 
 Use a Duration for elapsed time (`36.hours` is always 129600 seconds) and a Period for calendar steps (`1.months` is however long that month is).
@@ -10182,7 +10182,7 @@ utcNow()
 
 Parses an ISO 8601 zone designator into an offset.
 
-Accepts `Z`, ``02:00`, `-05:30`, or the empty string (all meaning UTC for the first and last).
+Accepts `Z`, +`02:00`, `-05:30`, or the empty string (all meaning UTC for the first and last).
 
 
 ```kex
@@ -10694,7 +10694,7 @@ fromEpochSeconds(count)
 
 Parses an ISO 8601 instant.
 
-Accepts `2026-07-30T14:03:00`02:00`, the same with `Z`, or a bare civil datetime with no zone at all, which is read as UTC.
+Accepts +2026-07-30T14:03:00+02:00+, the same with `Z`, or a bare civil datetime with no zone at all, which is read as UTC.
 
 
 ```kex
@@ -11111,7 +11111,7 @@ inspectValue(colors)
 
 Advances the date by a fixed span, whole days only.
 
-A Duration with a sub-day remainder truncates toward zero, so `date ` 36.hours` advances exactly one day. Use a `Period` when the calendar should get a say.
+A Duration with a sub-day remainder truncates toward zero, so +date + 36.hours+ advances exactly one day. Use a `Period` when the calendar should get a say.
 
 ```kex
 +(span)
@@ -11122,7 +11122,7 @@ A Duration with a sub-day remainder truncates toward zero, so `date ` 36.hours` 
 **Examples**
 
 ```kex
-(Date.of(2026, 7, 30).try ` 10.days).iso   # => "2026-08-09"
+(Date.of(2026, 7, 30).try + 10.days).iso   # => "2026-08-09"
 (Date.of(2026, 7, 30).try + 36.hours).iso  # => "2026-07-31"
 ```
 
@@ -11408,7 +11408,7 @@ Time.of(15, 0, 0).try.after?(Time.of(14, 3, 0).try)   # => true
 
 Advances the time of day by a span, wrapping within the day.
 
-A Time has no date to carry into, so 23:00 ` 2.hours is 01:00. Reach for `DateTime` when the day rolling over is something you need to see.
+A Time has no date to carry into, so 23:00 + 2.hours is 01:00. Reach for `DateTime` when the day rolling over is something you need to see.
 
 The nanosecond field rides along untouched: `wholeSeconds` truncates the span, so a sub-second Duration shifts nothing.
 
@@ -11421,7 +11421,7 @@ The nanosecond field rides along untouched: `wholeSeconds` truncates the span, s
 **Examples**
 
 ```kex
-(Time.of(14, 3, 0).try ` 2.hours).iso    # => "16:03:00"
+(Time.of(14, 3, 0).try + 2.hours).iso    # => "16:03:00"
 (Time.of(23, 0, 0).try + 2.hours).iso    # => "01:00:00"
 ```
 
@@ -11716,7 +11716,7 @@ DateTime.utcNow().after?(started)   # => true
 
 #### `compareTo`
 
-Orders this instant against another, by instant rather than by wall clock, so 12:00Z and 14:00`02:00 compare `Equal`.
+Orders this instant against another, by instant rather than by wall clock, so 12:00Z and 14:00+02:00 compare `Equal`.
 
 Named `compareTo` rather than `compare`: a make-block `compare` is shadowed by the builtin comparison dispatch and fails at runtime on both backends.
 
@@ -11730,7 +11730,7 @@ compareTo(other)
 
 ```kex
 DateTime.parse("2026-07-30T12:00:00Z").try
-  .compareTo(DateTime.parse("2026-07-30T14:00:00`02:00").try)
+  .compareTo(DateTime.parse("2026-07-30T14:00:00+02:00").try)
 # => Equal
 ```
 _Sorting events by when they happened_
@@ -12091,13 +12091,13 @@ Writing `5.sec` or `90.minute` gives you a `Measure`: a number, the unit it was 
 ```kex
 5.sec.to(String)                     # => "5.0 s"
 1.5.hour.to(String)                  # => "1.5 h"
-(1.hour ` 30.minute).map(~to(String))  # => Ok("1.5 h")
+(1.hour + 30.minute).map(~to(String))  # => Ok("1.5 h")
 90.minute.convert(Hour)              # => Ok(1.5 h)
 ```
 
 The time units (`nanosecond` through `week`) are in the prelude. Other dimensions live in opt-in modules under `Units`, and every one of them measures against the same machinery here.
 
-A `Measure` is a measurement, not an elapsed span: `5.sec` describes a quantity, while `Duration` is what `Time` and `Date+ use for a span between two moments.
+A `Measure` is a measurement, not an elapsed span: `5.sec` describes a quantity, while `Duration` is what `Time` and `Date` use for a span between two moments.
 
 The trait a unit implements: how it converts to its dimension's base unit, which dimension that is, and how it is written.
 
@@ -12200,7 +12200,7 @@ Runtime-defined units are used for prefixes and units derived by arithmetic: `s^
 
 A quantity with a unit.
 
-A Measure is shared by every unit module. `canonical` stores the value in that dimension's base unit; its Unit controls its display. That split is what makes `1.hour ` 30.minute+ correct and still print in hours.
+A Measure is shared by every unit module. `canonical` stores the value in that dimension's base unit; its Unit controls its display. That split is what makes +1.hour + 30.minute+ correct and still print in hours.
 
 **Fields**
 
@@ -12374,15 +12374,15 @@ The units need not match: the sum goes through the canonical values, and comes b
 **Examples**
 
 ```kex
-(1.hour ` 30.minute).map { |m| m.to(String) }   # => Ok("1.5 h")
-(30.minute ` 1.hour).map { |m| m.to(String) }   # => Ok("90.0 min")
+(1.hour + 30.minute).map { |m| m.to(String) }   # => Ok("1.5 h")
+(30.minute + 1.hour).map { |m| m.to(String) }   # => Ok("90.0 min")
 ```
 
 #### `-`
 
 Subtracts a measure of the same dimension.
 
-Like ```, the result is displayed in the left operand's unit, and mixing dimensions is an `Error+.
+Like +++, the result is displayed in the left operand's unit, and mixing dimensions is an `Error`.
 
 ```kex
 -(other)
@@ -12497,7 +12497,7 @@ Order and duplicates matter in real APIs: `tag=kex&tag=beam` must not become a m
 
 Ordered `application/x-www-form-urlencoded` entries.
 
-This is deliberately separate from `Query`: HTML forms encode spaces as plus signs, while a generic URI query treats a plus as an ordinary ``+.
+This is deliberately separate from `Query`: HTML forms encode spaces as plus signs, while a generic URI query treats a plus as an ordinary +++.
 
 **Fields**
 
@@ -12598,7 +12598,7 @@ from(entries) : Map<String, String?> -> Query
 
 ## function `parse`
 
-Parses generic URI query encoding; `` remains a literal plus.
+Parses generic URI query encoding; ++ remains a literal plus.
 
 
 ```kex
@@ -12621,7 +12621,7 @@ from(entries) : Map<String, String> -> Form
 
 ## function `parse`
 
-Parses form encoding where `` represents a space.
+Parses form encoding where ++ represents a space.
 
 
 ```kex
@@ -12873,11 +12873,11 @@ q.dequeue             # => Just((1, Queue(2, 3)))
 q.peek                # => Just(1)
 ```
 
-`items` is `@front ` @back.reverse`, so the queue is not opaque: it is always a real list you can hand to anything, the same promise `Data.Set` makes.
+`items` is +@front + @back.reverse+, so the queue is not opaque: it is always a real list you can hand to anything, the same promise `Data.Set` makes.
 
 Unlike a set, a queue's representation is NOT canonical: `Queue.from([1,2])` and `Queue.from([1]).enqueue(2)` hold the same elements in different `front`/`back` splits, so they are structurally unequal even though they answer the same to every method. `==` is therefore overloaded to compare `items` rather than the record fields directly, but that overload only reaches ordinary `==` calls. Two such queues used as map keys, or matched against each other as record patterns, still compare structurally on both backends, and can disagree with `==`.
 
-Every method answers with a new queue rather than changing the receiver. `enqueue!` and `dequeue!` come free from the `!+ rebinding form.
+Every method answers with a new queue rather than changing the receiver. `enqueue!` and `dequeue!` come free from the `!` rebinding form.
 
 ## record `Queue<A>`
 
@@ -13033,8 +13033,8 @@ Appends another queue's elements, or a plain list's.
 **Examples**
 
 ```kex
-Queue.from([1, 2]) ` [3, 4]            # => Queue(1, 2, 3, 4)
-Queue.from([1, 2]) ` Queue.from([3])   # => Queue(1, 2, 3)
+Queue.from([1, 2]) + [3, 4]            # => Queue(1, 2, 3, 4)
+Queue.from([1, 2]) + Queue.from([3])   # => Queue(1, 2, 3)
 ```
 
 ## make `Queue<A>` implements [Blankable](../blankable.md#trait-blankable)
@@ -13424,7 +13424,7 @@ allowList.disjoint?(denyList)
 
 Unions with another set, or with a plain list.
 
-The list form is the everyday way to add one element without naming a method: `s ` [x]`.
+The list form is the everyday way to add one element without naming a method: +s + [x]+.
 
 ```kex
 +(other) : Set<A> -> Set<A>
@@ -13436,7 +13436,7 @@ The list form is the everyday way to add one element without naming a method: `s
 **Examples**
 
 ```kex
-Set.from([1, 2]) ` [3]           # => Set(1, 2, 3)
+Set.from([1, 2]) + [3]           # => Set(1, 2, 3)
 Set.from([1]) + Set.from([2])    # => Set(1, 2)
 ```
 
@@ -13983,8 +13983,8 @@ The list form reads bottom-to-top, the same as `Stack.from`: the last element of
 **Examples**
 
 ```kex
-Stack.from([1, 2]) ` [3, 4]             # => Stack(1, 2, 3, 4)
-Stack.from([1, 2]) ` Stack.from([3])    # => Stack(1, 2, 3)
+Stack.from([1, 2]) + [3, 4]             # => Stack(1, 2, 3, 4)
+Stack.from([1, 2]) + Stack.from([3])    # => Stack(1, 2, 3)
 ```
 
 ## make `Stack<A>` implements [Blankable](../blankable.md#trait-blankable)
@@ -14444,7 +14444,7 @@ One explicitly initialized field in a record literal.
 
 A declaration template whose name (and, for a make block, target) is computed by a `compiled do` expression.
 
-Tools normally encounter this only while inspecting metaprogramming code. After expansion, generated declarations appear as ordinary `Node`s.
+Tools normally encounter this only while inspecting metaprogramming code. After expansion, generated declarations appear as ordinary +Node+s.
 
 
 
@@ -15683,7 +15683,7 @@ parameter(name)
 
 **Examples**
 
-_Reading `:id` from a `/users/:id` route_
+_Reading +:id+ from a +/users/:id+ route_
 
 ```kex
 let id = context.parameter("id").try
@@ -22835,7 +22835,7 @@ RDoc-style doc-comment text → structured documentation (typed).
 A doc comment is free prose followed by directive paragraphs:
 
 ```kex
-# Sums all elements. Returns `0` for an empty list.
+# Sums all elements. Returns +0+ for an empty list.
 #
 # @param f [X -> Number] maps each element
 # @return [Number]
@@ -22868,11 +22868,55 @@ parseOrEmpty(text)
 ```
 
 
+## function `rewriteProseBlocks`
+
+``code`` is prose markup, so it is rewritten per prose block — after the split, not before it. Rewriting the whole comment at once paired a `+` operator inside an indented code sample (say `1 + 1`) with the next prose pair (``describe``), turning the operator into a stray backtick and eating the markup. Verbatim blocks and `@example` code are Kex source and are left alone; `@param`/`@return` descriptions are prose and still rewrite. Pairing never crosses a block: each block is rewritten on its own.
+
+
+```kex
+rewriteProseBlocks(blocks)
+```
+
+
+## function `rewriteProseBlock`
+
+
+```kex
+rewriteProseBlock(block)
+```
+
+
 ## function `rewritePlusPairs`
 
 
 ```kex
 rewritePlusPairs(s, accum)
+```
+
+
+## function `plusPair?`
+
+A ``...`` pair is markup only when it reads as one: content with no space against either delimiter (so `1 + 1` stays an addition), no backtick inside (so converted spans never nest), and a non-identifier character on both sides (so `a+b` stays put even if it ever reaches here).
+
+
+```kex
+plusPair?(head, inner, tail)
+```
+
+
+## function `boundaryBefore?`
+
+
+```kex
+boundaryBefore?(head)
+```
+
+
+## function `boundaryAfter?`
+
+
+```kex
+boundaryAfter?(tail)
 ```
 
 

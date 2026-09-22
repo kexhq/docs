@@ -50,13 +50,13 @@ reduce(acc, f) : A -> (A -> Char -> A) -> A
 _Summing digit values_
 
 ```kex
-"12345".reduce(0) { |sum, c| sum ` c.codepoint - 48 }   # => 15
+"12345".reduce(0) { |sum, c| sum + c.codepoint - 48 }   # => 15
 ```
 _Building a character histogram_
 
 ```kex
 "banana".reduce({}) do |counts, c|
-  counts.put(c.string, counts.get(c.string).or(0) ` 1)
+  counts.put(c.string, counts.get(c.string).or(0) + 1)
 end
 # => {"a": 3, "b": 1, "n": 2}
 ```
@@ -156,7 +156,7 @@ let preview = title.take(30) + (title.count > 30 then "…" else "")
 
 #### `drop`
 
-Returns everything after the first `n` characters. The complement of `take`: `s.take(n) ` s.drop(n)` is `s+.
+Returns everything after the first `n` characters. The complement of `take`: +s.take(n) + s.drop(n)+ is `s`.
 
 ```kex
 drop(n) : Integer -> String
@@ -214,7 +214,7 @@ indexOf(c) : Char -> Integer?
 "hello".indexOf('l')   # => Just(2)
 "hello".indexOf('z')   # => None
 ```
-_Splitting a `key=value` pair at the first `=`_
+_Splitting a +key=value+ pair at the first +=+_
 
 ```kex
 let pair = "host=localhost"
@@ -446,7 +446,7 @@ replace(pattern, replacement) : String -> String -> String
 **Examples**
 
 ```kex
-"a-b-c".replace("-", "`")   # => "a`b+c"
+"a-b-c".replace("-", "+")   # => "a+b+c"
 "abc".replace("", "-")      # => "-a-b-c-"
 ```
 _Normalising a path separator_

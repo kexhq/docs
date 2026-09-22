@@ -55,7 +55,7 @@ xor(a, b) : Integer -> Integer -> Integer
 
 ## function `not`
 
-Bitwise complement of `a`. Every integer is signed and unbounded, so this is always `-(a ` 1)+ rather than a width-dependent mask.
+Bitwise complement of `a`. Every integer is signed and unbounded, so this is always +-(a + 1)+ rather than a width-dependent mask.
 
 
 ```kex

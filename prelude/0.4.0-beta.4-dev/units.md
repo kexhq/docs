@@ -31,13 +31,13 @@ Writing `5.sec` or `90.minute` gives you a `Measure`: a number, the unit it was 
 ```kex
 5.sec.to(String)                     # => "5.0 s"
 1.5.hour.to(String)                  # => "1.5 h"
-(1.hour ` 30.minute).map(~to(String))  # => Ok("1.5 h")
+(1.hour + 30.minute).map(~to(String))  # => Ok("1.5 h")
 90.minute.convert(Hour)              # => Ok(1.5 h)
 ```
 
 The time units (`nanosecond` through `week`) are in the prelude. Other dimensions live in opt-in modules under `Units`, and every one of them measures against the same machinery here.
 
-A `Measure` is a measurement, not an elapsed span: `5.sec` describes a quantity, while `Duration` is what `Time` and `Date+ use for a span between two moments.
+A `Measure` is a measurement, not an elapsed span: `5.sec` describes a quantity, while `Duration` is what `Time` and `Date` use for a span between two moments.
 
 The trait a unit implements: how it converts to its dimension's base unit, which dimension that is, and how it is written.
 
@@ -140,7 +140,7 @@ Runtime-defined units are used for prefixes and units derived by arithmetic: `s^
 
 A quantity with a unit.
 
-A Measure is shared by every unit module. `canonical` stores the value in that dimension's base unit; its Unit controls its display. That split is what makes `1.hour ` 30.minute+ correct and still print in hours.
+A Measure is shared by every unit module. `canonical` stores the value in that dimension's base unit; its Unit controls its display. That split is what makes +1.hour + 30.minute+ correct and still print in hours.
 
 **Fields**
 
@@ -314,15 +314,15 @@ The units need not match: the sum goes through the canonical values, and comes b
 **Examples**
 
 ```kex
-(1.hour ` 30.minute).map { |m| m.to(String) }   # => Ok("1.5 h")
-(30.minute ` 1.hour).map { |m| m.to(String) }   # => Ok("90.0 min")
+(1.hour + 30.minute).map { |m| m.to(String) }   # => Ok("1.5 h")
+(30.minute + 1.hour).map { |m| m.to(String) }   # => Ok("90.0 min")
 ```
 
 #### `-`
 
 Subtracts a measure of the same dimension.
 
-Like ```, the result is displayed in the left operand's unit, and mixing dimensions is an `Error+.
+Like +++, the result is displayed in the left operand's unit, and mixing dimensions is an `Error`.
 
 ```kex
 -(other)

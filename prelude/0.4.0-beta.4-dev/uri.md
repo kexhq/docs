@@ -60,7 +60,7 @@ Order and duplicates matter in real APIs: `tag=kex&tag=beam` must not become a m
 
 Ordered `application/x-www-form-urlencoded` entries.
 
-This is deliberately separate from `Query`: HTML forms encode spaces as plus signs, while a generic URI query treats a plus as an ordinary ``+.
+This is deliberately separate from `Query`: HTML forms encode spaces as plus signs, while a generic URI query treats a plus as an ordinary +++.
 
 **Fields**
 
@@ -161,7 +161,7 @@ from(entries) : Map<String, String?> -> Query
 
 ## function `parse`
 
-Parses generic URI query encoding; `` remains a literal plus.
+Parses generic URI query encoding; ++ remains a literal plus.
 
 
 ```kex
@@ -184,7 +184,7 @@ from(entries) : Map<String, String> -> Form
 
 ## function `parse`
 
-Parses form encoding where `` represents a space.
+Parses form encoding where ++ represents a space.
 
 
 ```kex

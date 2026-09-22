@@ -448,7 +448,7 @@ One explicitly initialized field in a record literal.
 
 A declaration template whose name (and, for a make block, target) is computed by a `compiled do` expression.
 
-Tools normally encounter this only while inspecting metaprogramming code. After expansion, generated declarations appear as ordinary `Node`s.
+Tools normally encounter this only while inspecting metaprogramming code. After expansion, generated declarations appear as ordinary +Node+s.
 
 
 
