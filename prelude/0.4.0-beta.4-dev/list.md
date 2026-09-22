@@ -43,6 +43,40 @@ A list is `Enumerable` and `Foldable`, which is where `map`, `filter`, `find`, `
 ## make `[Number]`
 
 
+#### `sum`
+
+Sums all elements. Returns `0` for an empty list.
+
+```kex
+sum : Number
+```
+
+**Returns**: `Number`
+
+**Examples**
+
+```kex
+[1, 2, 3].sum   # => 6
+[].sum          # => 0
+```
+
+#### `product`
+
+Multiplies all elements. Returns `1` for an empty list.
+
+```kex
+product : Number
+```
+
+**Returns**: `Number`
+
+**Examples**
+
+```kex
+[1, 2, 3].product   # => 6
+[].product          # => 1
+```
+
 #### `product`
 
 Maps each element through `f` and multiplies the results.
@@ -59,12 +93,180 @@ product(f) : (X -> Number) -> Number
 [[1,2],[3,4]].product { |pair| pair.first.or(1) }   # => 3
 ```
 
+#### `min`
+
+Returns the smallest element wrapped in `Just`, or `None` for an empty list.
+
+```kex
+min : X?
+```
+
+**Returns**: `Number?`
+
+**Examples**
+
+```kex
+[3, 1, 2].min   # => Just(1)
+[].min          # => None
+```
+
+#### `max`
+
+Returns the largest element wrapped in `Just`, or `None` for an empty list.
+
+```kex
+max : X?
+```
+
+**Returns**: `Number?`
+
+**Examples**
+
+```kex
+[3, 1, 2].max   # => Just(3)
+[].max          # => None
+```
+
 ## make `[[Y]]`
 
 
+#### `flatten`
+
+Flattens exactly one level of nesting.
+
+```kex
+flatten : [Y]
+```
+
+**Returns**: `[Y]`
+
+**Examples**
+
+```kex
+[[1, 2], [3, 4]].flatten   # => [1, 2, 3, 4]
+```
 
 ## make `[X]` implements [Enumerable](enumerable.md#trait-enumerable), [Foldable](enumerable.md#trait-foldable)
 
+
+#### `first`
+
+Returns the first element wrapped in `Just`, or `None` if the list is empty.
+
+```kex
+first : X?
+```
+
+**Returns**: `X?`
+
+**Examples**
+
+```kex
+[1, 2, 3].first   # => Just(1)
+[].first          # => None
+```
+
+#### `second`
+
+Returns the second element wrapped in `Just`, or `None` if the list has fewer than two elements.
+
+```kex
+second : X?
+```
+
+**Returns**: `X?`
+
+**Examples**
+
+```kex
+[1, 2, 3].second   # => Just(2)
+[1].second         # => None
+```
+
+#### `third`
+
+Returns the third element wrapped in `Just`, or `None` if the list has fewer than three elements.
+
+```kex
+third : X?
+```
+
+**Returns**: `X?`
+
+**Examples**
+
+```kex
+[1, 2, 3].third   # => Just(3)
+[1, 2].third      # => None
+```
+
+#### `rest`
+
+Returns all elements after the first. Returns `[]` for an empty or single-element list.
+
+```kex
+rest : [X]
+```
+
+**Returns**: `[X]`
+
+**Examples**
+
+```kex
+[1, 2, 3].rest   # => [2, 3]
+[1].rest         # => []
+[].rest          # => []
+```
+
+#### `last`
+
+Returns the last element wrapped in `Just`, or `None` if the list is empty.
+
+```kex
+last : X?
+```
+
+**Returns**: `X?`
+
+**Examples**
+
+```kex
+[1, 2, 3].last   # => Just(3)
+[].last          # => None
+```
+
+#### `count`
+
+Returns the number of elements. When given a predicate, returns the count of elements for which it holds.
+
+```kex
+count : Integer
+```
+
+**Returns**: `Integer`
+
+**Examples**
+
+```kex
+[1, 2, 3].count              # => 3
+[1, 2, 3, 4].count(~even?)   # => 2
+```
+
+#### `length`
+
+Returns the number of elements. The same as `count`, under the name `String` uses.
+
+```kex
+length : Integer
+```
+
+**Returns**: `Integer` — the number of elements
+
+**Examples**
+
+```kex
+[1, 2, 3].length   # => 3
+```
 
 #### `count`
 
@@ -372,6 +574,22 @@ dropWhile : (X -> Bool) -> [X]
 [1, 2, 9, 1].dropWhile { |n| n < 5 }   # => [9, 1]
 ```
 
+#### `uniq`
+
+Returns a new list with duplicate elements removed, preserving the first occurrence of each element.
+
+```kex
+uniq : [X]
+```
+
+**Returns**: `[X]`
+
+**Examples**
+
+```kex
+[1, 2, 3, 2, 1].uniq   # => [1, 2, 3]
+```
+
 #### `partition`
 
 Splits the list into two lists: those for which `pred` is `true` (first) and those for which it is `false` (second).
@@ -452,6 +670,22 @@ push(x) : X -> [X]
 [1, 2].push(3)   # => [1, 2, 3]
 ```
 
+#### `reverse`
+
+Returns the elements in reverse order.
+
+```kex
+reverse : [X]
+```
+
+**Returns**: `[X]`
+
+**Examples**
+
+```kex
+[1, 2, 3].reverse   # => [3, 2, 1]
+```
+
 #### `zip`
 
 Pairs each element of this list with the corresponding element of `other`. Stops at the end of the shorter list.
@@ -466,6 +700,22 @@ zip(other) : [Y] -> [(X, Y)]
 
 ```kex
 [1, 2, 3].zip(["a", "b", "c"])   # => [(1, "a"), (2, "b"), (3, "c")]
+```
+
+#### `sort`
+
+Returns the elements sorted in ascending natural order.
+
+```kex
+sort : [X]
+```
+
+**Returns**: `[X]`
+
+**Examples**
+
+```kex
+[3, 1, 2].sort   # => [1, 2, 3]
 ```
 
 #### `sort`

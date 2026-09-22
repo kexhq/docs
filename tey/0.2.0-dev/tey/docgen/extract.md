@@ -204,7 +204,7 @@ constantEntity(info, prefix)
 
 
 ```kex
-functionEntries(body, prefix)
+functionEntries(body, prefix, receiverMethods)
 ```
 
 

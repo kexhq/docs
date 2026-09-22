@@ -73,6 +73,22 @@ _Rendering the map as a query string_
 { a: 1, b: 2 }.entries.map { |k, v| "${k}=${v}" }.join("&")
 ```
 
+#### `identity`
+
+The empty map: the identity element of the `Monoid` instance, so `m.combine({})` is `m`.
+
+```kex
+identity : ?
+```
+
+**Returns**: `Map<K, V>` — the empty map
+
+**Examples**
+
+```kex
+Map.identity   # => {}
+```
+
 #### `combine`
 
 Combines two maps by merging them, with `other`'s values winning on a key conflict. The `Monoid` operation, and the same thing `merge` does.
@@ -197,6 +213,40 @@ if !config.has?(:host)
 end
 ```
 
+#### `empty?`
+
+Returns `true` when the map has no entries.
+
+```kex
+empty? : Bool
+```
+
+**Returns**: `Bool` — `true` for the empty map
+
+**Examples**
+
+```kex
+{}.empty?         # => true
+{ a: 1 }.empty?   # => false
+```
+
+#### `count`
+
+Returns the number of entries.
+
+```kex
+count : Integer
+```
+
+**Returns**: `Integer` — the entry count
+
+**Examples**
+
+```kex
+{ a: 1, b: 2 }.count   # => 2
+{}.count               # => 0
+```
+
 #### `count`
 
 Returns the number of entries satisfying `pred`.
@@ -216,6 +266,67 @@ _How many settings are still at their default_
 
 ```kex
 config.count { |k, v| v == defaults.get(k, v) }
+```
+
+#### `keys`
+
+Returns the map's keys as a list, in canonical key order.
+
+```kex
+keys : [K]
+```
+
+**Returns**: `[K]` — the keys
+
+**Examples**
+
+```kex
+{ b: 1, a: 2 }.keys   # => [:a, :b]
+```
+_Reporting unrecognised options_
+
+```kex
+params.keys.reject { |k| known.contains?(k) }
+```
+
+#### `values`
+
+Returns the map's values as a list, ordered by their keys.
+
+```kex
+values : [V]
+```
+
+**Returns**: `[V]` — the values
+
+**Examples**
+
+```kex
+{ a: 1, b: 2 }.values       # => [1, 2]
+{ a: 1, b: 2 }.values.sum   # => 3
+```
+
+#### `entries`
+
+Returns the map's entries as a list of `(key, value)` tuples, in canonical key order.
+
+This is the bridge to the `List` methods a map does not have of its own, and the form the two-parameter blocks elsewhere are splatting from.
+
+```kex
+entries : [(K, V)]
+```
+
+**Returns**: `[(K, V)]` — the entries
+
+**Examples**
+
+```kex
+{ a: 1, b: 2 }.entries   # => [(:a, 1), (:b, 2)]
+```
+_Sorting entries by value_
+
+```kex
+scores.entries.sort { |x, y| x.items.last.or(0) > y.items.last.or(0) }
 ```
 
 #### `each`
@@ -434,3 +545,19 @@ users.find { |id, user| user.email == target }
 ## make `Map<K, V>` implements [Blankable](blankable.md#trait-blankable)
 
 
+#### `blank?`
+
+Returns `true` when the map has no entries. The `Blankable` view of `empty?`, so a map can be tested by the same generic code that tests strings and lists.
+
+```kex
+blank? : Bool
+```
+
+**Returns**: `Bool` — `true` for the empty map
+
+**Examples**
+
+```kex
+{}.blank?         # => true
+{ a: 1 }.blank?   # => false
+```

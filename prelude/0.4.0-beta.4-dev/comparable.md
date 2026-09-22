@@ -132,6 +132,16 @@ a.name.compare(b.name).combine(a.age.compare(b.age))
 `combine` evaluates its argument eagerly, so the later comparison runs even when the earlier one already decided. Use `thenBy` when that matters.
 
 
+#### `identity`
+
+`Equal` is the neutral element, since an undecided comparison lets the next one decide.
+
+```kex
+identity : ?
+```
+
+**Returns**: `Ordering` — `Equal`
+
 #### `combine`
 
 Returns the first decisive ordering: this one if it is not `Equal`, otherwise `other`.

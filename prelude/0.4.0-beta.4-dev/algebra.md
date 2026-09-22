@@ -153,6 +153,22 @@ inverse : This
 Implements `Monoid`, `Group` over `Integer` for addition.
 
 
+#### `identity`
+
+`0`: the neutral element for addition.
+
+```kex
+identity : ?
+```
+
+**Returns**: `Integer` — zero
+
+**Examples**
+
+```kex
+Integer.identity   # => 0
+```
+
 #### `combine`
 
 Adds `other` to this integer. Addition is the monoid operation for `Integer`.
@@ -169,10 +185,43 @@ combine(other)
 5.combine(3)   # => 8
 ```
 
+#### `inverse`
+
+The additive inverse: this integer negated.
+
+```kex
+inverse : This
+```
+
+**Returns**: `This` — the negation
+
+**Examples**
+
+```kex
+5.inverse    # => -5
+(-5).inverse # => 5
+```
+
 ## make `String` implements [Monoid](#trait-monoid)
 
 Implements `Monoid` over `String` for concatenation.
 
+
+#### `identity`
+
+`""`: the neutral element for concatenation.
+
+```kex
+identity : ?
+```
+
+**Returns**: `String` — the empty string
+
+**Examples**
+
+```kex
+String.identity   # => ""
+```
 
 #### `combine`
 
@@ -194,6 +243,22 @@ combine(other)
 
 Implements `Monoid` over `List<A>` for concatenation.
 
+
+#### `identity`
+
+`[]`: the neutral element for concatenation.
+
+```kex
+identity : ?
+```
+
+**Returns**: `[A]` — the empty list
+
+**Examples**
+
+```kex
+[1].combine(List.identity)   # => [1]
+```
 
 #### `combine`
 

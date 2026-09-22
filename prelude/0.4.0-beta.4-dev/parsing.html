@@ -73,9 +73,9 @@ data-page="parsing.html">
 </ul></li>
 <li><a href="prelude.html">Prelude</a></li>
 <li><a href="process.html">Process</a></li>
+<li><a href="random.html">Random</a></li>
 <li><a href="range.html">Range</a></li>
 <li><a href="regex.html">Regex</a></li>
-<li><a href="random.html">Rng</a></li>
 <li><a href="stream.html">Stream</a></li>
 <li><a href="string.html">String</a></li>
 <li><a href="system.html">System</a></li>
@@ -136,6 +136,17 @@ data-page="parsing.html">
 <h2><span class="kind kind-make">make</span> <code>Input</code></h2>
 
 <div class="functions">
+<div class="fn" id="fn-peek">
+<h4><code>peek</code></h4>
+<p>The character at the cursor, or <code>None</code> at the end of the input.</p>
+<p>Looking does not consume: the cursor is unchanged.</p>
+<pre class="code"><code>peek <span class="tok-op">:</span> <span class="tok-op">?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code><a class="xref" href="string.html#make-char">Char</a>?</code> — the current character, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">peek</span>           <span class="tok-comment"># =&gt; Just('a')</span>
+<span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> pos<span class="tok-op">:</span> <span class="tok-number">3</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">peek</span>   <span class="tok-comment"># =&gt; None</span></code></pre>
+
+</div>
 <div class="fn" id="fn-peekat">
 <h4><code>peekAt</code></h4>
 <p>The character <code>offset</code> positions ahead of the cursor, or <code>None</code> when that is outside the input.</p>
@@ -151,6 +162,26 @@ data-page="parsing.html">
 <span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">peekAt</span><span class="tok-punct">(</span><span class="tok-number">9</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; None</span></code></pre>
 
 </div>
+<div class="fn" id="fn-atend?">
+<h4><code>atEnd?</code></h4>
+<p>Returns <code>true</code> when the cursor has consumed the whole input.</p>
+<p>The check a top-level parser makes at the end, to be sure nothing was left over.</p>
+<pre class="code"><code>atEnd? <span class="tok-op">:</span> <span class="tok-op">?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> at the end of the input</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">atEnd?</span>           <span class="tok-comment"># =&gt; false</span>
+<span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> pos<span class="tok-op">:</span> <span class="tok-number">3</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">atEnd?</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+<div class="fn" id="fn-advance">
+<h4><code>advance</code></h4>
+<p>A cursor one character further on.</p>
+<pre class="code"><code>advance <span class="tok-op">:</span> <span class="tok-op">?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Input</code> — the advanced cursor</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">advance</span><span class="tok-op">.</span><span class="tok-method">peek</span>   <span class="tok-comment"># =&gt; Just('b')</span></code></pre>
+
+</div>
 <div class="fn" id="fn-advanceby">
 <h4><code>advanceBy</code></h4>
 <p>A cursor <code>count</code> characters further on.</p>
@@ -162,6 +193,16 @@ data-page="parsing.html">
 <p class="returns"><strong>Returns:</strong> <code>Input</code> — the advanced cursor</p>
 <h5>Examples</h5>
 <pre class="code"><code><span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc 123</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">advanceBy</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">peek</span>   <span class="tok-comment"># =&gt; Just('1')</span></code></pre>
+
+</div>
+<div class="fn" id="fn-remaining">
+<h4><code>remaining</code></h4>
+<p>Everything from the cursor to the end of the input, as a <code>String</code>.</p>
+<p>Useful for reporting an error, or for handing the tail to something that does not speak <code>Input</code>.</p>
+<pre class="code"><code>remaining <span class="tok-op">:</span> <span class="tok-op">?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the unconsumed remainder</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc 123</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> pos<span class="tok-op">:</span> <span class="tok-number">4</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">remaining</span>   <span class="tok-comment"># =&gt; &quot;123&quot;</span></code></pre>
 
 </div>
 <div class="fn" id="fn-charwhen">
@@ -195,6 +236,18 @@ data-page="parsing.html">
 <span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">char</span><span class="tok-punct">(</span>'z'<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Error(Unexpected(&quot;a&quot;, 0))</span></code></pre>
 <p class="caption"><em>Consuming a separator</em></p>
 <pre class="code"><code><span class="tok-keyword">let</span> <span class="tok-punct">(</span>_<span class="tok-punct">,</span> afterComma<span class="tok-punct">)</span> <span class="tok-op">=</span> cursor<span class="tok-op">.</span><span class="tok-method">char</span><span class="tok-punct">(</span>'<span class="tok-punct">,</span>'<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="fn-whitespaces">
+<h4><code>whiteSpaces</code></h4>
+<p>A cursor advanced past any run of whitespace.</p>
+<p>Cannot fail: no whitespace at all leaves the cursor where it was, which is what makes it safe to call between every token of a grammar.</p>
+<pre class="code"><code>whiteSpaces <span class="tok-op">:</span> <span class="tok-type">Input</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Input</code> — the cursor, past the whitespace</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Input</span> <span class="tok-punct">{</span> input<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">abc 123</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> pos<span class="tok-op">:</span> <span class="tok-number">3</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">whiteSpaces</span><span class="tok-op">.</span><span class="tok-method">peek</span>   <span class="tok-comment"># =&gt; Just('1')</span></code></pre>
+<p class="caption"><em>Skipping space between tokens</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> <span class="tok-punct">(</span>value<span class="tok-punct">,</span> rest<span class="tok-punct">)</span> <span class="tok-op">=</span> <span class="tok-fn">parseValue</span><span class="tok-punct">(</span>cursor<span class="tok-op">.</span><span class="tok-method">whiteSpaces</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </div>
 <div class="fn" id="fn-many">
@@ -290,7 +343,7 @@ data-page="parsing.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-09-22T17:25:42.440421435Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="parsing.md">Markdown</a></div>
+<div class="wrap">Generated by kex docgen at 2026-09-22T17:34:47.099663570Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="parsing.md">Markdown</a></div>
 </footer>
 </body>
 </html>

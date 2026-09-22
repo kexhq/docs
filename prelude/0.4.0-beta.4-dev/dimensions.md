@@ -56,6 +56,16 @@ fromPowers(powers)
 ## make `Dimension`
 
 
+#### `dimensionless?`
+
+Whether every base factor has cancelled.
+
+```kex
+dimensionless? : Bool
+```
+
+**Returns**: `Bool` — true for a dimensionless quantity
+
 #### `exponentOf`
 
 The exponent of the supplied marker's dimension, or zero if absent.

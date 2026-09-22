@@ -64,6 +64,25 @@ Create one with `Input { input: text }` and pass it to a parser. Every operation
 ## make `Input`
 
 
+#### `peek`
+
+The character at the cursor, or `None` at the end of the input.
+
+Looking does not consume: the cursor is unchanged.
+
+```kex
+peek : ?
+```
+
+**Returns**: `Char?` — the current character, or `None`
+
+**Examples**
+
+```kex
+Input { input: "abc" }.peek           # => Just('a')
+Input { input: "abc", pos: 3 }.peek   # => None
+```
+
 #### `peekAt`
 
 The character `offset` positions ahead of the cursor, or `None` when that is outside the input.
@@ -83,6 +102,41 @@ Input { input: "abc" }.peekAt(1)   # => Just('b')
 Input { input: "abc" }.peekAt(9)   # => None
 ```
 
+#### `atEnd?`
+
+Returns `true` when the cursor has consumed the whole input.
+
+The check a top-level parser makes at the end, to be sure nothing was left over.
+
+```kex
+atEnd? : ?
+```
+
+**Returns**: `Bool` — `true` at the end of the input
+
+**Examples**
+
+```kex
+Input { input: "abc" }.atEnd?           # => false
+Input { input: "abc", pos: 3 }.atEnd?   # => true
+```
+
+#### `advance`
+
+A cursor one character further on.
+
+```kex
+advance : ?
+```
+
+**Returns**: `Input` — the advanced cursor
+
+**Examples**
+
+```kex
+Input { input: "abc" }.advance.peek   # => Just('b')
+```
+
 #### `advanceBy`
 
 A cursor `count` characters further on.
@@ -97,6 +151,24 @@ advanceBy(count)
 
 ```kex
 Input { input: "abc 123" }.advanceBy(4).peek   # => Just('1')
+```
+
+#### `remaining`
+
+Everything from the cursor to the end of the input, as a `String`.
+
+Useful for reporting an error, or for handing the tail to something that does not speak `Input`.
+
+```kex
+remaining : ?
+```
+
+**Returns**: `String` — the unconsumed remainder
+
+**Examples**
+
+```kex
+Input { input: "abc 123", pos: 4 }.remaining   # => "123"
 ```
 
 #### `charWhen`
@@ -143,6 +215,29 @@ _Consuming a separator_
 
 ```kex
 let (_, afterComma) = cursor.char(',').try
+```
+
+#### `whiteSpaces`
+
+A cursor advanced past any run of whitespace.
+
+Cannot fail: no whitespace at all leaves the cursor where it was, which is what makes it safe to call between every token of a grammar.
+
+```kex
+whiteSpaces : Input
+```
+
+**Returns**: `Input` — the cursor, past the whitespace
+
+**Examples**
+
+```kex
+Input { input: "abc 123", pos: 3 }.whiteSpaces.peek   # => Just('1')
+```
+_Skipping space between tokens_
+
+```kex
+let (value, rest) = parseValue(cursor.whiteSpaces).try
 ```
 
 #### `many`

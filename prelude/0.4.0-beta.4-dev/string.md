@@ -111,6 +111,64 @@ _Stripping punctuation before comparing_
 "Hello, World!".filter(~alpha?).lowerCase   # => "helloworld"
 ```
 
+#### `uniq`
+
+Returns the string with repeated characters removed, keeping the first occurrence of each.
+
+```kex
+uniq : String
+```
+
+**Returns**: `String` — the distinct characters, in first-seen order
+
+**Examples**
+
+```kex
+"banana".uniq   # => "ban"
+"hello".uniq    # => "helo"
+```
+
+#### `first`
+
+A String is its OWN type, not a [Char]: `chars` converts between them. So the sequence operations below are declared here rather than inherited from List, and they answer in String's terms: `take`/`drop`/`sort` hand back a String, while `first`/`last` hand back a Char. The List intrinsics they delegate to already understand the String representation, so there is one implementation for both backends.
+
+Returns the first character, or `None` when the string is empty.
+
+```kex
+first : Char?
+```
+
+**Returns**: `Char?` — the first character, or `None`
+
+**Examples**
+
+```kex
+"hi".first   # => Just('h')
+"".first     # => None
+```
+_Testing an initial without risking an empty string_
+
+```kex
+"hello".first.map(~upper?).or(false)   # => false
+```
+
+#### `last`
+
+Returns the last character, or `None` when the string is empty.
+
+```kex
+last : Char?
+```
+
+**Returns**: `Char?` — the last character, or `None`
+
+**Examples**
+
+```kex
+"hi".last   # => Just('i')
+"".last     # => None
+```
+
 #### `get`
 
 Returns the character at index `i`, counting from 0.
@@ -196,6 +254,27 @@ _Removing whitespace_
 
 ```kex
 "1 234 567".reject(~space?)   # => "1234567"
+```
+
+#### `sort`
+
+Returns the characters in ascending codepoint order.
+
+```kex
+sort : String
+```
+
+**Returns**: `String` — the sorted characters
+
+**Examples**
+
+```kex
+"hello".sort   # => "ehllo"
+```
+_An anagram check_
+
+```kex
+"listen".sort == "silent".sort   # => true
 ```
 
 #### `indexOf`
@@ -291,6 +370,87 @@ digits   # => "12"
 other    # => "ab"
 ```
 
+#### `count`
+
+Returns the number of characters: characters, not bytes. See `bytes` for the storage-level length.
+
+```kex
+count : Integer
+```
+
+**Returns**: `Integer` — the character count
+
+**Examples**
+
+```kex
+"hello".count   # => 5
+"".count        # => 0
+"é".count       # => 1   (but "é".bytes.count is 2)
+```
+
+#### `length`
+
+Returns the number of characters. The same as `count`, under the name familiar from other languages.
+
+```kex
+length : Integer
+```
+
+**Returns**: `Integer` — the character count
+
+**Examples**
+
+```kex
+"hello".length   # => 5
+```
+
+#### `graphemeCount`
+
+Returns the number of user-perceived characters: extended grapheme clusters (Unicode UAX #29), which is not always `count`.
+
+`count` answers the codepoint count, and most text is one codepoint per grapheme cluster, so the two usually agree. They part ways for a base character combined with a following mark, an emoji built from more than one codepoint, and `"\r\n"`, which is one grapheme cluster over two codepoints: reach for `graphemeCount` over `count` wherever "how many characters does a person see" is the question, such as sizing text for display or truncating it at a boundary a reader would recognize.
+
+```kex
+graphemeCount : Integer
+```
+
+**Returns**: `Integer` — the grapheme cluster count
+
+**Examples**
+
+```kex
+"hello".graphemeCount   # => 5, same as count
+"\r\n".graphemeCount    # => 1 ("\r\n".count is 2: a CR codepoint and an LF codepoint)
+```
+_A base character plus a combining mark_
+
+```kex
+let acute = String.fromCodepoint(0x301).or("")     # combining acute accent
+let e = "e" + acute
+e.count           # => 2 (two codepoints: 'e' and the combining mark)
+e.graphemeCount   # => 1 (one character on screen)
+```
+
+#### `empty?`
+
+Returns `true` when the string has no characters.
+
+Note that a string of spaces is not empty: use `blank?` from the `Blankable` trait when whitespace should not count.
+
+```kex
+empty? : Bool
+```
+
+**Returns**: `Bool` — `true` for the empty string
+
+**Examples**
+
+```kex
+"".empty?      # => true
+"hi".empty?    # => false
+"  ".empty?    # => false
+```
+
 #### `enclose`
 
 Returns the string with `wrapper` added at both ends.
@@ -329,6 +489,129 @@ at(i) : Integer -> Char?
 ```kex
 "hello".at(1)   # => Just('e')
 "hello".at(9)   # => None
+```
+
+#### `second`
+
+Returns the second character, or `None` when the string is shorter than two characters.
+
+```kex
+second : Char?
+```
+
+**Returns**: `Char?` — the second character, or `None`
+
+**Examples**
+
+```kex
+"hi".second   # => Just('i')
+"h".second    # => None
+```
+
+#### `third`
+
+Returns the third character, or `None` when the string is shorter than three characters.
+
+```kex
+third : Char?
+```
+
+**Returns**: `Char?` — the third character, or `None`
+
+**Examples**
+
+```kex
+"hip".third   # => Just('p')
+"hi".third    # => None
+```
+
+#### `rest`
+
+Returns everything after the first character. The empty string has no rest, and answers with itself.
+
+```kex
+rest : String
+```
+
+**Returns**: `String` — the string without its first character
+
+**Examples**
+
+```kex
+"hello".rest   # => "ello"
+"h".rest       # => ""
+```
+
+#### `chars`
+
+Returns the string's characters as a list.
+
+The bridge from `String` to the `List` methods that a string does not have of its own. Join back with `.join("")`.
+
+```kex
+chars : [Char]
+```
+
+**Returns**: `[Char]` — the characters, in order
+
+**Examples**
+
+```kex
+"hi".chars   # => ['h', 'i']
+```
+_Going out to List and back_
+
+```kex
+"hello".chars.reverse.join("")   # => "olleh"
+```
+
+#### `bytes`
+
+Returns the string's UTF-8 encoding, one `Byte` per byte.
+
+`chars` is the TEXT view of a string and `bytes` is the STORAGE view, so they differ for anything outside ASCII: `"é"` is one `Char` and two +Byte+s. Use `bytes` when the length that matters is the encoded one: a network frame, a file offset, a size limit.
+
+`String.fromBytes` is the inverse.
+
+```kex
+bytes : [Byte]
+```
+
+**Returns**: `[Byte]` — the UTF-8 bytes
+
+**Examples**
+
+```kex
+"hi".bytes    # => [104, 105]
+"é".bytes     # => [195, 169]
+"é".chars     # => ['é']
+```
+_Measuring the encoded size_
+
+```kex
+"héllo".count         # => 5
+"héllo".bytes.count   # => 6
+```
+
+#### `byteSize`
+
+The storage size in bytes, without building the byte list.
+
+`bytes.count` answers the same number by materialising every byte first, which on a megabyte payload means a million values to count them. This reads the encoded length directly.
+
+```kex
+byteSize : Integer
+```
+
+**Returns**: `Integer` — the length of the UTF-8 encoding
+
+**Examples**
+
+_Text length and storage length differ_
+
+```kex
+"héllo".count      # => 5
+"héllo".byteSize   # => 6
 ```
 
 #### `byteAt`
@@ -375,6 +658,26 @@ payload.bytePart(4, payload.byteSize - 4)
 
 #### `split`
 
+Splits the string into its individual characters, as one-character strings.
+
+Use `chars` instead when you want `Char` values rather than strings.
+
+Separator-less: one part per character, as the example above shows. Only the intrinsic had this form, so the walker answered `"hi".split` with "'this' used outside of a method context" while BEAM returned the parts. Declared BEFORE the separator form, as `sort` is in list.kex: the walker resolves a no-argument call against the first clause of that name.
+
+```kex
+split : [String]
+```
+
+**Returns**: `[String]` — one string per character
+
+**Examples**
+
+```kex
+"hi".split   # => ["h", "i"]
+```
+
+#### `split`
+
 Splits the string on every occurrence of `sep`, which may be a literal string or a `Regex`.
 
 Separators at the ends produce empty parts, so splitting `",a,"` on `","` gives three parts. Filter or trim afterwards when that is not wanted.
@@ -403,6 +706,34 @@ _Empty parts at the edges are kept_
 
 ```kex
 ",a,".split(",")   # => ["", "a", ""]
+```
+
+#### `lines`
+
+Splits the string into lines on `\n`.
+
+A single trailing newline is dropped, so a file that ends in one does not produce a final empty line. Windows line endings are not stripped: split on `\r\n` explicitly, or `trim` each line, when that matters.
+
+```kex
+lines : [String]
+```
+
+**Returns**: `[String]` — the lines, without their newlines
+
+**Examples**
+
+```kex
+"a\nb".lines      # => ["a", "b"]
+"a\nb\n".lines    # => ["a", "b"]
+"".lines          # => []
+```
+_Numbering the lines of a file_
+
+```kex
+text.lines.zip((1..text.lines.count).items).each do |pair|
+  let (line, n) = pair
+  IO.printLine("${n}: ${line}")
+end
 ```
 
 #### `indentRest`
@@ -487,6 +818,123 @@ let greeting = "Dear $NAME$,\n\nYour order $ID$ has shipped."
 greeting.substitute({"$NAME$": "Ada", "$ID$": "A-1701"})
 ```
 
+#### `trim`
+
+Removes leading and trailing whitespace. Whitespace inside the string is left alone.
+
+```kex
+trim : String
+```
+
+**Returns**: `String` — the trimmed string
+
+**Examples**
+
+```kex
+"  hello  ".trim     # => "hello"
+"\n hi \t".trim      # => "hi"
+"a  b".trim          # => "a  b"
+```
+_Cleaning up user input_
+
+```kex
+let name = IO.getLine.or("").trim
+```
+
+#### `upperCase`
+
+Returns the string with every character converted to upper case.
+
+```kex
+upperCase : String
+```
+
+**Returns**: `String` — the upper-cased string
+
+**Examples**
+
+```kex
+"hello".upperCase       # => "HELLO"
+"Hello, ada".upperCase  # => "HELLO, ADA"
+```
+_Case-insensitive comparison_
+
+```kex
+input.lowerCase == "yes"
+```
+
+#### `lowerCase`
+
+Returns the string with every character converted to lower case.
+
+```kex
+lowerCase : String
+```
+
+**Returns**: `String` — the lower-cased string
+
+**Examples**
+
+```kex
+"HELLO".lowerCase   # => "hello"
+```
+_Normalising a lookup key_
+
+```kex
+settings.get(key.trim.lowerCase)
+```
+
+#### `capitalize`
+
+Returns the string with its first character upper-cased and the rest LOWER-cased.
+
+This matches Ruby's `String#capitalize`, so `"hELLO"` becomes `"Hello"`, not `"HELLO"`. Use `upperCase` when the whole string should shout.
+
+It is also what building a type name from data needs: a generated `type %name = ...` inside a `compiled do` block requires an upper-case identifier, so a list of lower-case words has to be capitalized first.
+
+```kex
+capitalize : String
+```
+
+**Returns**: `String` — the capitalized string
+
+**Examples**
+
+```kex
+"hello".capitalize           # => "Hello"
+"hELLO".capitalize           # => "Hello"   (tail is lower-cased)
+"already Capital".capitalize # => "Already capital"
+"".capitalize                # => ""
+```
+_Title-casing a sentence_
+
+```kex
+"the quick brown fox".split(" ").map(~capitalize).join(" ")
+# => "The Quick Brown Fox"
+```
+
+#### `reverse`
+
+Returns the string with its characters in reverse order.
+
+```kex
+reverse : String
+```
+
+**Returns**: `String` — the reversed string
+
+**Examples**
+
+```kex
+"hello".reverse   # => "olleh"
+```
+_A palindrome check_
+
+```kex
+let cleaned = "A man, a plan, a canal: Panama".filter(~alpha?).lowerCase
+cleaned == cleaned.reverse   # => true
+```
+
 #### `contains?`
 
 Returns `true` when `sub` appears anywhere in the string.
@@ -569,6 +1017,215 @@ Character literals are written with single quotes (`'a'`) and are a different ty
 ```
 
 
+#### `string`
+
+Returns this character as a one-character `String`.
+
+A `Char` and a `String` are distinct types, so converting between them is explicit. `to(String)` is the fallible conversion protocol and answers `String?` like every other conversion; `string` is the total one, because a character is always one character of text and has no failure case to report. It is the single-character counterpart of `String.chars` and `[Char].join("")`.
+
+```kex
+string : String
+```
+
+**Returns**: `String` — the character as text
+
+**Examples**
+
+```kex
+'a'.string                 # => "a"
+'a'.to(String)             # => Just("a")
+"hi".chars.map(&.string)   # => ["h", "i"]
+```
+
+#### `upperCase`
+
+Returns the upper-case form of this character, still as a `Char`.
+
+Characters with no upper-case form (digits, punctuation) are returned unchanged.
+
+```kex
+upperCase : Char
+```
+
+**Returns**: `Char` — the upper-case character
+
+**Examples**
+
+```kex
+'a'.upperCase   # => 'A'
+'1'.upperCase   # => '1'
+```
+
+#### `lowerCase`
+
+Returns the lower-case form of this character, still as a `Char`.
+
+Characters with no lower-case form are returned unchanged.
+
+```kex
+lowerCase : Char
+```
+
+**Returns**: `Char` — the lower-case character
+
+**Examples**
+
+```kex
+'A'.lowerCase   # => 'a'
+'!'.lowerCase   # => '!'
+```
+
+#### `digit?`
+
+Returns `true` when the character is a decimal digit, `'0'` through `'9'`.
+
+```kex
+digit? : Bool
+```
+
+**Returns**: `Bool` — `true` for a decimal digit
+
+**Examples**
+
+```kex
+'3'.digit?   # => true
+'a'.digit?   # => false
+```
+_Validating that a field is all digits_
+
+```kex
+"12345".chars.all?(~digit?)   # => true
+```
+
+#### `alpha?`
+
+Returns `true` when the character is alphabetic.
+
+```kex
+alpha? : Bool
+```
+
+**Returns**: `Bool` — `true` for a letter
+
+**Examples**
+
+```kex
+'a'.alpha?   # => true
+'1'.alpha?   # => false
+' '.alpha?   # => false
+```
+_Keeping only letters_
+
+```kex
+"Hello, World!".filter(~alpha?)   # => "HelloWorld"
+```
+
+#### `letter?`
+
+Returns `true` when the character is a letter. The Unicode-letter spelling of `alpha?`.
+
+```kex
+letter? : Bool
+```
+
+**Returns**: `Bool` — `true` for a letter
+
+**Examples**
+
+```kex
+'z'.letter?   # => true
+'-'.letter?   # => false
+```
+
+#### `upper?`
+
+Returns `true` when the character is upper case.
+
+Characters without case (digits, punctuation) answer `false`.
+
+```kex
+upper? : Bool
+```
+
+**Returns**: `Bool` — `true` for an upper-case letter
+
+**Examples**
+
+```kex
+'A'.upper?   # => true
+'a'.upper?   # => false
+'1'.upper?   # => false
+```
+_Splitting a camelCase name_
+
+```kex
+"camelCaseName".findIndex(~upper?)   # => Just(5)
+```
+
+#### `lower?`
+
+Returns `true` when the character is lower case.
+
+```kex
+lower? : Bool
+```
+
+**Returns**: `Bool` — `true` for a lower-case letter
+
+**Examples**
+
+```kex
+'a'.lower?   # => true
+'A'.lower?   # => false
+```
+
+#### `space?`
+
+Returns `true` when the character is whitespace: a space, tab, newline or carriage return.
+
+```kex
+space? : Bool
+```
+
+**Returns**: `Bool` — `true` for whitespace
+
+**Examples**
+
+```kex
+' '.space?    # => true
+'\t'.space?   # => true
+'a'.space?    # => false
+```
+_Counting the words on a line_
+
+```kex
+"one two  three".split(" ").reject(~empty?).count   # => 3
+```
+
+#### `codepoint`
+
+Returns the character's Unicode codepoint.
+
+`String.fromCodepoint` is the inverse.
+
+```kex
+codepoint : Integer
+```
+
+**Returns**: `Integer` — the codepoint
+
+**Examples**
+
+```kex
+'A'.codepoint   # => 65
+'é'.codepoint   # => 233
+```
+_Converting a digit character to its value_
+
+```kex
+'7'.codepoint - '0'.codepoint   # => 7
+```
+
 #### `in?`
 
 Returns `true` when the character falls inside `range`, endpoints included.
@@ -629,3 +1286,27 @@ let (name, age) = ("Ada", 36)
 ```
 
 
+#### `items`
+
+Returns the tuple's elements as a list.
+
+A tuple is not a list (its arity is part of its type) so the `List` methods do not apply to it. This is the explicit conversion, and it loses the per-position typing in exchange.
+
+Destructuring is usually clearer when you know the shape: `let (a, b) = pair`.
+
+```kex
+items : [Any]
+```
+
+**Returns**: `[Any]` — the elements, in order
+
+**Examples**
+
+```kex
+(1, "a").items   # => [1, "a"]
+```
+_Iterating over a pair_
+
+```kex
+("host", "port").items.each { |s| IO.printLine(s) }
+```

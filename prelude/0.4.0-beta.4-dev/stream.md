@@ -195,3 +195,26 @@ Stream.Sequence(from: 1) { |n| n + 1 }
   .take(3)
   .each { |n| IO.printLine(n) }
 ```
+
+#### `toFeed`
+
+Returns a `Feed` that walks this stream once.
+
+A stream remembers every element forced through it, so walking a long one holds all of it for as long as the stream is in scope. A feed drawn from it walks without holding the start, letting each element go as it passes: the way to consume a long stream in constant space.
+
+```kex
+toFeed : Feed<A>
+```
+
+**Returns**: `Feed<A>` — a one-shot cursor over the stream
+
+**Examples**
+
+_Summing a long generated sequence without holding it_
+
+```kex
+let total = Stream.Sequence(from: 1) { |n| n + 1 }
+  .toFeed
+  .take(1000000)
+  .sum
+```

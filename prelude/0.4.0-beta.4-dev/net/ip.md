@@ -72,9 +72,138 @@ parse(text) : String -> Result<Network, NetError>
 ## make `Address`
 
 
+#### `string`
+
+Returns the canonical text form of the address.
+
+```kex
+string : String
+```
+
+**Returns**: `String` — canonical address text
+
+**Examples**
+
+_Normalizing an IPv6 address for a log or cache key_
+
+```kex
+Address.parse("2001:0db8:0:0::42").try.string   # => "2001:db8::42"
+```
+
+#### `version`
+
+Returns the address family as `4` or `6`.
+
+```kex
+version : Integer
+```
+
+**Returns**: `Integer` — `4` for IPv4 or `6` for IPv6
+
+**Examples**
+
+_Selecting a family-specific socket policy_
+
+```kex
+let family = address.version == 6 then :ipv6 else :ipv4
+```
+
+#### `loopback?`
+
+Returns `true` for an address that routes back to this host.
+
+This covers the IPv4 `127.0.0.0/8` block as well as IPv6 `::1`; it is not limited to the familiar `127.0.0.1` spelling.
+
+```kex
+loopback? : Bool
+```
+
+**Returns**: `Bool` — whether this is a loopback address
+
+**Examples**
+
+_Refusing to expose a development service beyond this machine_
+
+```kex
+die("development server must use loopback") if !address.loopback?
+```
+
+#### `private?`
+
+Returns `true` for an address reserved for private networks.
+
+Use this as one signal in a network policy, not as proof that a peer is trusted: private addresses can still belong to another machine.
+
+```kex
+private? : Bool
+```
+
+**Returns**: `Bool` — whether this is a private-use address
+
+**Examples**
+
+_Rejecting a public target in an internal-only configuration_
+
+```kex
+Error("target must be private") if !target.private?
+```
+
+#### `unspecified?`
+
+Returns `true` for the all-zero address: `0.0.0.0` or `::`.
+
+On a listening endpoint this usually means "all local interfaces". It is not a usable remote destination.
+
+```kex
+unspecified? : Bool
+```
+
+**Returns**: `Bool` — whether every address bit is zero
+
+**Examples**
+
+_Warning before binding a service on every interface_
+
+```kex
+IO.warn("service will be publicly reachable") if bind.unspecified?
+```
+
+#### `multicast?`
+
+Returns `true` when the address names a multicast group.
+
+```kex
+multicast? : Bool
+```
+
+**Returns**: `Bool` — whether this is a multicast address
+
+**Examples**
+
+_Choosing multicast-specific socket setup_
+
+```kex
+let mode = destination.multicast? then :group else :unicast
+```
 
 ## make `Network`
 
+
+#### `string`
+
+Returns canonical CIDR text, including the prefix length.
+
+```kex
+string : String
+```
+
+**Returns**: `String` — canonical CIDR text
+
+**Examples**
+
+```kex
+Network.parse("192.0.2.99/24").try.string   # => "192.0.2.0/24"
+```
 
 #### `contains`
 
@@ -95,4 +224,54 @@ _Checking an application allowlist_
 ```kex
 let office = Network.parse("198.51.100.0/24").try
 let allowed? = office.contains(requestAddress)
+```
+
+#### `prefix`
+
+Returns the number of fixed leading address bits.
+
+```kex
+prefix : Integer
+```
+
+**Returns**: `Integer` — the prefix length
+
+**Examples**
+
+```kex
+Network.parse("10.0.0.0/8").try.prefix   # => 8
+```
+
+#### `first`
+
+Returns the first address in the range: the address with all host bits cleared.
+
+```kex
+first : Address
+```
+
+**Returns**: `Address` — the first address in the range
+
+**Examples**
+
+```kex
+Network.parse("192.0.2.9/24").try.first.string   # => "192.0.2.0"
+```
+
+#### `last`
+
+Returns the last address in the range: the address with all host bits set.
+
+This is the IPv4 broadcast-shaped endpoint of the mathematical range; the API does not decide whether a protocol permits assigning it to a host.
+
+```kex
+last : Address
+```
+
+**Returns**: `Address` — the last address in the range
+
+**Examples**
+
+```kex
+Network.parse("192.0.2.9/24").try.last.string   # => "192.0.2.255"
 ```

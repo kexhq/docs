@@ -74,6 +74,12 @@ Data prefixes select their standard decimal byte unit, so `Mega` is MB rather th
 factor(@B)
 ```
 
+#### `kind`
+
+```kex
+kind : ?
+```
+
 #### `symbol`
 
 ```kex
@@ -83,10 +89,44 @@ symbol(@B)
 ## make `UnitDefinition` implements [Unit](../units.md#trait-unit)
 
 
+#### `factor`
+
+```kex
+factor : ?
+```
+
+#### `kind`
+
+```kex
+kind : ?
+```
+
+#### `symbol`
+
+```kex
+symbol : ?
+```
 
 ## make `Measure`
 
 
+#### `factor`
+
+```kex
+factor : Float
+```
+
+#### `kind`
+
+```kex
+kind : Atom
+```
+
+#### `symbol`
+
+```kex
+symbol : String
+```
 
 ## function `size`
 

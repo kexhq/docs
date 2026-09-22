@@ -29,6 +29,88 @@ Whole numbers, of arbitrary size.
 ```
 
 
+#### `even?`
+
+Returns `true` when the integer is divisible by two. Zero is even, and negative numbers follow the same rule.
+
+```kex
+even? : Bool
+```
+
+**Returns**: `Bool` — `true` for an even integer
+
+**Examples**
+
+```kex
+4.even?      # => true
+3.even?      # => false
+(-2).even?   # => true
+```
+_Splitting a list into evens and odds_
+
+```kex
+[1, 2, 3, 4].partition { |n| n.even? }   # => ([2, 4], [1, 3])
+```
+
+#### `odd?`
+
+Returns `true` when the integer is not divisible by two. The opposite of `even?`.
+
+```kex
+odd? : Bool
+```
+
+**Returns**: `Bool` — `true` for an odd integer
+
+**Examples**
+
+```kex
+3.odd?   # => true
+4.odd?   # => false
+```
+
+#### `abs`
+
+Returns the magnitude of the integer, discarding its sign.
+
+```kex
+abs : Integer
+```
+
+**Returns**: `Integer` — the absolute value
+
+**Examples**
+
+```kex
+(-5).abs   # => 5
+5.abs      # => 5
+```
+_Distance between two positions_
+
+```kex
+(a - b).abs
+```
+
+#### `sqrt`
+
+Returns the square root as a `Float`.
+
+The result is a `Float` even when the root is exact, because in general it is not. Round or floor it when you need an integer back.
+
+```kex
+sqrt : Float
+```
+
+**Returns**: `Float` — the square root
+
+**Examples**
+
+```kex
+16.sqrt          # => 4.0
+2.sqrt           # => 1.4142135623730951
+16.sqrt.round    # => 4
+```
+
 #### `modulo`
 
 Returns `this` modulo `n`.
@@ -107,6 +189,54 @@ _Repeating an action that needs no index_
 end
 ```
 
+#### `floor`
+
+Returns the integer unchanged. Present so that code written against `Number` works whichever half of the tower it is handed.
+
+```kex
+floor : Integer
+```
+
+**Returns**: `Integer` — the same integer
+
+**Examples**
+
+```kex
+7.floor   # => 7
+```
+
+#### `ceil`
+
+Returns the integer unchanged. The `Integer` counterpart of `Float.ceil`.
+
+```kex
+ceil : Integer
+```
+
+**Returns**: `Integer` — the same integer
+
+**Examples**
+
+```kex
+7.ceil   # => 7
+```
+
+#### `round`
+
+Returns the integer unchanged. The `Integer` counterpart of `Float.round`.
+
+```kex
+round : Integer
+```
+
+**Returns**: `Integer` — the same integer
+
+**Examples**
+
+```kex
+7.round   # => 7
+```
+
 ## make `Float`
 
 Double-precision floating-point numbers.
@@ -121,6 +251,45 @@ A Kex `Float` is always finite. An operation that would produce `NaN` or `Infini
 (-3.7).toInteger  # => -3   (truncates toward zero)
 ```
 
+
+#### `abs`
+
+Returns the magnitude of the float, discarding its sign.
+
+```kex
+abs : Float
+```
+
+**Returns**: `Float` — the absolute value
+
+**Examples**
+
+```kex
+(-3.14).abs   # => 3.14
+3.14.abs      # => 3.14
+```
+_An approximate-equality test_
+
+```kex
+(a - b).abs < 0.0001
+```
+
+#### `sqrt`
+
+Returns the square root. Raises for a negative receiver, which has no real root.
+
+```kex
+sqrt : Float
+```
+
+**Returns**: `Float` — the square root
+
+**Examples**
+
+```kex
+25.0.sqrt   # => 5.0
+2.0.sqrt    # => 1.4142135623730951
+```
 
 #### `in?`
 
@@ -139,6 +308,82 @@ _Comparing directly is usually clearer for floats_
 ```kex
 let ratio = 0.75
 ratio >= 0.0 && ratio <= 1.0   # => true
+```
+
+#### `floor`
+
+Returns the largest integer that is not greater than the float: it always rounds toward negative infinity, which is what separates it from `toInteger` for negative values.
+
+```kex
+floor : Integer
+```
+
+**Returns**: `Integer` — the floor
+
+**Examples**
+
+```kex
+3.7.floor      # => 3
+3.2.floor      # => 3
+(-3.2).floor   # => -4
+```
+
+#### `ceil`
+
+Returns the smallest integer that is not less than the float: it always rounds toward positive infinity.
+
+```kex
+ceil : Integer
+```
+
+**Returns**: `Integer` — the ceiling
+
+**Examples**
+
+```kex
+3.2.ceil       # => 4
+3.0.ceil       # => 3
+(-3.7).ceil    # => -3
+```
+_How many pages of a fixed size a list needs_
+
+```kex
+(items.count.to(Float).or(0.0) / 20.0).ceil
+```
+
+#### `round`
+
+Returns the nearest integer, with halves rounding away from zero.
+
+```kex
+round : Integer
+```
+
+**Returns**: `Integer` — the rounded value
+
+**Examples**
+
+```kex
+3.2.round    # => 3
+3.5.round    # => 4
+3.7.round    # => 4
+```
+
+#### `toInteger`
+
+Truncates toward zero and returns the result as an `Integer`: it drops the fractional part rather than rounding, so it differs from both `floor` and `round` for negative values.
+
+```kex
+toInteger : Integer
+```
+
+**Returns**: `Integer` — the truncated value
+
+**Examples**
+
+```kex
+3.7.toInteger      # => 3
+(-3.7).toInteger   # => -3   (floor would give -4)
 ```
 
 ## module `Integer`

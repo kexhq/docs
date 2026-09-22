@@ -75,9 +75,9 @@ data-page="feed.html">
 <li><a href="parsing.html">Parsing</a></li>
 <li><a href="prelude.html">Prelude</a></li>
 <li><a href="process.html">Process</a></li>
+<li><a href="random.html">Random</a></li>
 <li><a href="range.html">Range</a></li>
 <li><a href="regex.html">Regex</a></li>
-<li><a href="random.html">Rng</a></li>
 <li><a href="stream.html">Stream</a></li>
 <li><a href="string.html">String</a></li>
 <li><a href="system.html">System</a></li>
@@ -142,6 +142,33 @@ feed<span class="tok-op">.</span><span class="tok-method">take</span><span class
 <p>And a foul method takes the hidden capability context, which puts it one BEAM arity above the pure <code>take</code>/<code>map</code>/<code>filter</code> every other receiver has. A feed usually arrives with no static type: <code>FS.File.feed(p).or(Feed.empty)</code>, or a <code>Just(f) =&gt;</code> binding, and such a call has to go through the runtime dispatcher, which is built per arity and so could never reach a method one arity up. Marking these foul made every dynamically-typed feed call fail with &quot;Undefined method: take for Tuple&quot;.</p>
 
 <div class="functions">
+<div class="fn" id="fn-pull">
+<h4><code>pull</code></h4>
+<p>Answers the next element and consumes it, or <code>None</code> once the source is spent.</p>
+<p>NOT named <code>next</code>: that is the loop-continue keyword, and the lexer reads it as one even after a dot, so a call to it silently swallows the rest of the enclosing block.</p>
+<pre class="code"><code>pull <span class="tok-op">:</span> <span class="tok-type">A?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>A?</code> — the next element, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> feed <span class="tok-op">=</span> <span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-type">Elements</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+feed<span class="tok-op">.</span><span class="tok-method">pull</span>   <span class="tok-comment"># =&gt; Just(1)</span>
+feed<span class="tok-op">.</span><span class="tok-method">pull</span>   <span class="tok-comment"># =&gt; Just(2)</span>
+feed<span class="tok-op">.</span><span class="tok-method">pull</span>   <span class="tok-comment"># =&gt; None</span></code></pre>
+
+</div>
+<div class="fn" id="fn-spent?">
+<h4><code>spent?</code></h4>
+<p>Whether the source has run out.</p>
+<p><code>false</code> does not promise another element: only that the feed has not been told otherwise yet. The source is asked, and may end, on the next read.</p>
+<pre class="code"><code>spent? <span class="tok-op">:</span> <span class="tok-type">Bool</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> once the feed is spent</p>
+<h5>Examples</h5>
+<p class="caption"><em>Draining a feed a piece at a time</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> jobs <span class="tok-op">=</span> <span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-type">Elements</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">resize</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">index</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+jobs<span class="tok-op">.</span><span class="tok-method">spent?</span>   <span class="tok-comment"># =&gt; false</span>
+jobs<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span>
+jobs<span class="tok-op">.</span><span class="tok-method">spent?</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
 <div class="fn" id="fn-take">
 <h4><code>take</code></h4>
 <p>Returns the next <code>n</code> elements as a list, consuming them.</p>
@@ -217,13 +244,41 @@ feed<span class="tok-op">.</span><span class="tok-method">take</span><span class
 <pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">log.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>line<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
 
 </div>
+<div class="fn" id="fn-collect">
+<h4><code>collect</code></h4>
+<p>Drains the feed into a list.</p>
+<p>This is the operation that gives up constant space, which is why it is named rather than implicit: on a source too large to hold, use <code>each</code>.</p>
+<pre class="code"><code>collect <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>[A]</code> — every remaining element</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">short.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">collect</span></code></pre>
+<p class="caption"><em>Loading a small configuration file for repeated passes</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> rules <span class="tok-op">=</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">rules.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">map</span><span class="tok-punct">(</span><span class="tok-op">~</span>trim<span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">filter</span><span class="tok-punct">(</span><span class="tok-op">~</span>present?<span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">collect</span></code></pre>
+
+</div>
+<div class="fn" id="fn-tostream">
+<h4><code>toStream</code></h4>
+<p>Returns a <code>Stream</code> drawn from the feed.</p>
+<p>The stream remembers what it reads, so it can be walked again: at the cost of holding every element forced through it. Worth it for a source small enough to replay; the opposite of what a feed is for otherwise.</p>
+<pre class="code"><code>toStream <span class="tok-op">:</span> <span class="tok-type">Stream</span><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Stream&lt;A&gt;</code> — a replayable view of the remaining elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> lines <span class="tok-op">=</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">small.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">toStream</span>
+lines<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [&quot;one&quot;, &quot;two&quot;]</span>
+lines<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [&quot;one&quot;, &quot;two&quot;] : a stream, so the same two</span></code></pre>
+
+</div>
 </div>
 </section>
 </article>
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-09-22T17:25:42.440421435Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="feed.md">Markdown</a></div>
+<div class="wrap">Generated by kex docgen at 2026-09-22T17:34:47.099663570Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="feed.md">Markdown</a></div>
 </footer>
 </body>
 </html>

@@ -67,6 +67,50 @@ The effect is already tracked where it enters: a feed over anything outside the 
 And a foul method takes the hidden capability context, which puts it one BEAM arity above the pure `take`/`map`/`filter` every other receiver has. A feed usually arrives with no static type: `FS.File.feed(p).or(Feed.empty)`, or a `Just(f) =>` binding, and such a call has to go through the runtime dispatcher, which is built per arity and so could never reach a method one arity up. Marking these foul made every dynamically-typed feed call fail with "Undefined method: take for Tuple".
 
 
+#### `pull`
+
+Answers the next element and consumes it, or `None` once the source is spent.
+
+NOT named `next`: that is the loop-continue keyword, and the lexer reads it as one even after a dot, so a call to it silently swallows the rest of the enclosing block.
+
+```kex
+pull : A?
+```
+
+**Returns**: `A?` — the next element, or `None`
+
+**Examples**
+
+```kex
+let feed = Feed.Elements([1, 2])
+feed.pull   # => Just(1)
+feed.pull   # => Just(2)
+feed.pull   # => None
+```
+
+#### `spent?`
+
+Whether the source has run out.
+
+`false` does not promise another element: only that the feed has not been told otherwise yet. The source is asked, and may end, on the next read.
+
+```kex
+spent? : Bool
+```
+
+**Returns**: `Bool` — `true` once the feed is spent
+
+**Examples**
+
+_Draining a feed a piece at a time_
+
+```kex
+let jobs = Feed.Elements(["resize", "index"])
+jobs.spent?   # => false
+jobs.take(2)
+jobs.spent?   # => true
+```
+
 #### `take`
 
 Returns the next `n` elements as a list, consuming them.
@@ -161,4 +205,51 @@ each(f) : (A -> Void) -> Void
 
 ```kex
 FS.File.feed("log.txt").or(Feed.empty).each { |line| IO.printLine(line) }
+```
+
+#### `collect`
+
+Drains the feed into a list.
+
+This is the operation that gives up constant space, which is why it is named rather than implicit: on a source too large to hold, use `each`.
+
+```kex
+collect : [A]
+```
+
+**Returns**: `[A]` — every remaining element
+
+**Examples**
+
+```kex
+FS.File.feed("short.txt").or(Feed.empty).collect
+```
+_Loading a small configuration file for repeated passes_
+
+```kex
+let rules = FS.File.feed("rules.txt")
+  .or(Feed.empty)
+  .map(~trim)
+  .filter(~present?)
+  .collect
+```
+
+#### `toStream`
+
+Returns a `Stream` drawn from the feed.
+
+The stream remembers what it reads, so it can be walked again: at the cost of holding every element forced through it. Worth it for a source small enough to replay; the opposite of what a feed is for otherwise.
+
+```kex
+toStream : Stream<A>
+```
+
+**Returns**: `Stream<A>` — a replayable view of the remaining elements
+
+**Examples**
+
+```kex
+let lines = FS.File.feed("small.txt").or(Feed.empty).toStream
+lines.take(2)   # => ["one", "two"]
+lines.take(2)   # => ["one", "two"] : a stream, so the same two
 ```

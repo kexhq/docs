@@ -139,6 +139,16 @@ reduce(acc, f) : B -> (B -> A -> B) -> B
 Set.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
 ```
 
+#### `identity`
+
+The empty set: the `Monoid` identity, since union with nothing changes nothing.
+
+```kex
+identity : Set<A>
+```
+
+**Returns**: `Set<A>` — the empty set
+
 #### `combine`
 
 Combines two sets by union. The `Monoid` operation.
@@ -180,6 +190,44 @@ _Filtering a list against an allow-list_
 ```kex
 let allowed = Set.from(["get", "post"])
 methods.filter { |m| allowed.contains?(m.lowerCase) }
+```
+
+#### `count`
+
+Returns the number of distinct elements. Duplicates in the source list were already discarded, so this is the size of the set, not of what it was built from.
+
+```kex
+count : Integer
+```
+
+**Returns**: `Integer` — the number of elements
+
+**Examples**
+
+```kex
+Set.from([1, 1, 2]).count   # => 2
+```
+_Counting distinct words_
+
+```kex
+Set.from(text.split(" ")).count
+```
+
+#### `empty?`
+
+Returns `true` when the set has no elements.
+
+```kex
+empty? : Bool
+```
+
+**Returns**: `Bool` — `true` for the empty set
+
+**Examples**
+
+```kex
+Set.empty.empty?           # => true
+Set.from([1]).empty?       # => false
 ```
 
 #### `add`
@@ -468,9 +516,41 @@ reject(pred) : (A -> Bool) -> Set<A>
 Set.from([1, 2, 3]).reject { |x| x > 1 }   # => Set(1)
 ```
 
+#### `showValue`
+
+Renders the set as `Set(...)` in element order, rather than exposing the record layout behind it.
+
+```kex
+showValue : String
+```
+
+**Returns**: `String` — the rendered set
+
+**Examples**
+
+```kex
+Set.from([2, 1]).showValue   # => "Set(1, 2)"
+```
+
 ## make `Set<A>` implements [Blankable](../blankable.md#trait-blankable)
 
 
+#### `blank?`
+
+Returns `true` when the set has no elements. The `Blankable` view of `empty?`, so generic code can test a set the same way it tests a string.
+
+```kex
+blank? : Bool
+```
+
+**Returns**: `Bool` — `true` for the empty set
+
+**Examples**
+
+```kex
+Set.empty.blank?         # => true
+Set.from([1]).blank?     # => false
+```
 
 ## make `UnorderedSet<A>` implements [Enumerable](../enumerable.md#trait-enumerable), [Foldable](../enumerable.md#trait-foldable), [Monoid](../algebra.md#trait-monoid), Showable
 
@@ -492,6 +572,16 @@ reduce(acc, f) : B -> (B -> A -> B) -> B
 ```kex
 UnorderedSet.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
 ```
+
+#### `identity`
+
+The empty unordered set: the `Monoid` identity.
+
+```kex
+identity : UnorderedSet<A>
+```
+
+**Returns**: `UnorderedSet<A>` — the empty set
 
 #### `combine`
 
@@ -520,6 +610,56 @@ contains?(value) : A -> Bool
 ```kex
 UnorderedSet.from([1, 2, 3]).contains?(2)   # => true
 UnorderedSet.from([1, 2, 3]).contains?(9)   # => false
+```
+
+#### `count`
+
+Returns the number of distinct elements.
+
+```kex
+count : Integer
+```
+
+**Returns**: `Integer` — the number of elements
+
+**Examples**
+
+```kex
+UnorderedSet.from([1, 1, 2]).count   # => 2
+```
+
+#### `empty?`
+
+Returns `true` when the set has no elements.
+
+```kex
+empty? : Bool
+```
+
+**Returns**: `Bool` — `true` for the empty set
+
+**Examples**
+
+```kex
+UnorderedSet.empty.empty?   # => true
+```
+
+#### `items`
+
+Returns the elements as a list, in unspecified order.
+
+Sort the result when the order has to be stable: a test, a rendering, a comparison.
+
+```kex
+items : [A]
+```
+
+**Returns**: `[A]` — the elements
+
+**Examples**
+
+```kex
+UnorderedSet.from([3, 1, 2]).items.sort   # => [1, 2, 3]
 ```
 
 #### `add`
@@ -756,6 +896,39 @@ reject(pred) : (A -> Bool) -> UnorderedSet<A>
 UnorderedSet.from([1, 2, 3]).reject { |x| x > 1 }.items   # => [1]
 ```
 
+#### `showValue`
+
+Renders the set as `UnorderedSet(...)`.
+
+The elements are printed in sorted order where they allow it, so the rendering of a value is not at the mercy of map internals.
+
+```kex
+showValue : String
+```
+
+**Returns**: `String` — the rendered set
+
+**Examples**
+
+```kex
+UnorderedSet.from([2, 1]).showValue   # => "UnorderedSet(1, 2)"
+```
+
 ## make `UnorderedSet<A>` implements [Blankable](../blankable.md#trait-blankable)
 
 
+#### `blank?`
+
+Returns `true` when the set has no elements. The `Blankable` view of `empty?`.
+
+```kex
+blank? : Bool
+```
+
+**Returns**: `Bool` — `true` for the empty set
+
+**Examples**
+
+```kex
+UnorderedSet.empty.blank?   # => true
+```

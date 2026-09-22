@@ -304,6 +304,77 @@ sendFrom(msg) : X -> Void
 server.sendFrom(:status)   # the server receives (senderPid, :status)
 ```
 
+#### `link`
+
+Links the calling process to this one, so that either one exiting abnormally takes the other down.
+
+Linking is bidirectional and is how a group of processes is made to fail together. Use `monitor` when you want to be told about a death without sharing it.
+
+```kex
+link : Void
+```
+
+**Returns**: `Void`
+
+**Examples**
+
+```kex
+worker.link
+```
+
+#### `unlink`
+
+Removes the link between the calling process and this one.
+
+```kex
+unlink : Void
+```
+
+**Returns**: `Void`
+
+**Examples**
+
+```kex
+worker.unlink
+```
+
+#### `monitor`
+
+Starts monitoring this process, and returns the reference that identifies the monitor.
+
+When the monitored process exits, the caller receives a message about it. Unlike `link`, a monitor is one-directional and does not propagate the exit. Pass the reference to `demonitor` to stop.
+
+```kex
+monitor : Reference
+```
+
+**Returns**: `Reference` — the monitor reference
+
+**Examples**
+
+```kex
+let ref = worker.monitor
+ref.demonitor
+```
+
+#### `alive?`
+
+Returns `true` when the process is still running.
+
+Inherently a snapshot: the process may exit immediately after you ask. Monitor it when the answer has to stay true.
+
+```kex
+alive? : Bool
+```
+
+**Returns**: `Bool` — `true` when the process is alive
+
+**Examples**
+
+```kex
+Process.self.alive?   # => true
+```
+
 ## make `Process<X>`
 
 A spawned Process<X> is a typed process handle backed by the same runtime pid. It therefore supports the ordinary pid lifecycle operations without erasing its message type.
@@ -329,6 +400,46 @@ sendFrom(msg) : X -> Void
 
 **Returns**: `Void`
 
+#### `link`
+
+Links the calling process to this one. See `Pid.link`.
+
+```kex
+link : Void
+```
+
+**Returns**: `Void`
+
+#### `unlink`
+
+Removes the link between the calling process and this one.
+
+```kex
+unlink : Void
+```
+
+**Returns**: `Void`
+
+#### `monitor`
+
+Starts monitoring this process. See `Pid.monitor`.
+
+```kex
+monitor : Reference
+```
+
+**Returns**: `Reference` — the monitor reference
+
+#### `alive?`
+
+Returns `true` when the process is still running.
+
+```kex
+alive? : Bool
+```
+
+**Returns**: `Bool` — `true` when the process is alive
+
 ## make `Server<X>`
 
 
@@ -350,6 +461,58 @@ _Giving one call longer to answer_
 
 ```kex
 api.within(30000).rebuildIndex()
+```
+
+#### `link`
+
+Links the calling process to the server. See `Pid.link`.
+
+```kex
+link : Void
+```
+
+**Returns**: `Void`
+
+**Examples**
+
+```kex
+api.link
+```
+
+#### `unlink`
+
+Removes the link between the calling process and the server.
+
+```kex
+unlink : Void
+```
+
+**Returns**: `Void`
+
+#### `monitor`
+
+Starts monitoring the server. See `Pid.monitor`.
+
+```kex
+monitor : Reference
+```
+
+**Returns**: `Reference` — the monitor reference
+
+#### `alive?`
+
+Returns `true` when the server is still running.
+
+```kex
+alive? : Bool
+```
+
+**Returns**: `Bool` — `true` when the server is alive
+
+**Examples**
+
+```kex
+api.alive?   # => true
 ```
 
 ## make `From<X>`
@@ -376,6 +539,16 @@ Task.start do
   from.reply(expensiveThing())
 end
 ```
+
+#### `pid`
+
+Returns the waiting caller's `Pid`.
+
+```kex
+pid : Pid
+```
+
+**Returns**: `Pid` — the caller
 
 ## module `Task`
 
@@ -420,6 +593,22 @@ awaitAll(tasks) : [Task] -> [X]
 
 #### `await`
 
+Waits for the task's result, for as long as it takes.
+
+```kex
+await : X
+```
+
+**Returns**: `X` — the task's result
+
+**Examples**
+
+```kex
+Task.start do 1 + 1 end.await   # => 2
+```
+
+#### `await`
+
 Waits for the task's result, giving up after `timeout` milliseconds.
 
 Answers `None` if the task has not finished in time. The task itself is not stopped.
@@ -450,3 +639,19 @@ worker : Block<Pid> -> (Atom, Block<Pid>)
 ## make `Reference`
 
 
+#### `demonitor`
+
+Stops the monitor this reference identifies.
+
+```kex
+demonitor : Void
+```
+
+**Returns**: `Void`
+
+**Examples**
+
+```kex
+let ref = worker.monitor
+ref.demonitor
+```

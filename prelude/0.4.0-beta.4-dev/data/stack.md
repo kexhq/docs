@@ -86,6 +86,16 @@ reduce(acc, f) : B -> (B -> A -> B) -> B
 Stack.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
 ```
 
+#### `identity`
+
+The empty stack: the `Monoid` identity.
+
+```kex
+identity : Stack<A>
+```
+
+**Returns**: `Stack<A>` — the empty stack
+
 #### `combine`
 
 Combines two stacks by pushing the argument's elements on top of this one, top element last.
@@ -100,6 +110,22 @@ combine(other) : Stack<A> -> Stack<A>
 
 ```kex
 Stack.from([1, 2]).combine(Stack.from([3, 4])).items   # => [1, 2, 3, 4]
+```
+
+#### `items`
+
+Returns the elements bottom-to-top: the order you would have pushed them in.
+
+```kex
+items : [A]
+```
+
+**Returns**: `[A]` — the elements, bottom first
+
+**Examples**
+
+```kex
+Stack.from([1, 2, 3]).items   # => [1, 2, 3]
 ```
 
 #### `push`
@@ -156,6 +182,39 @@ Stack.from([1, 2, 3]).peek   # => Just(3)
 Stack.empty.peek             # => None
 ```
 
+#### `count`
+
+Returns the number of elements.
+
+```kex
+count : Integer
+```
+
+**Returns**: `Integer` — the number of elements
+
+**Examples**
+
+```kex
+Stack.from([1, 2, 3]).count   # => 3
+```
+
+#### `empty?`
+
+Returns `true` when the stack has no elements.
+
+```kex
+empty? : Bool
+```
+
+**Returns**: `Bool` — `true` for the empty stack
+
+**Examples**
+
+```kex
+Stack.empty.empty?         # => true
+Stack.from([1]).empty?     # => false
+```
+
 #### `+`
 
 Pushes another stack's elements, or a plain list's, on top.
@@ -176,6 +235,38 @@ Stack.from([1, 2]) + [3, 4]             # => Stack(1, 2, 3, 4)
 Stack.from([1, 2]) + Stack.from([3])    # => Stack(1, 2, 3)
 ```
 
+#### `showValue`
+
+Renders the stack as `Stack(...)`, bottom-to-top.
+
+```kex
+showValue : String
+```
+
+**Returns**: `String` — the rendered stack
+
+**Examples**
+
+```kex
+Stack.from([1, 2, 3]).showValue   # => "Stack(1, 2, 3)"
+```
+
 ## make `Stack<A>` implements [Blankable](../blankable.md#trait-blankable)
 
 
+#### `blank?`
+
+Returns `true` when the stack has no elements. The `Blankable` view of `empty?`.
+
+```kex
+blank? : Bool
+```
+
+**Returns**: `Bool` — `true` for the empty stack
+
+**Examples**
+
+```kex
+Stack.empty.blank?         # => true
+Stack.from([1]).blank?     # => false
+```

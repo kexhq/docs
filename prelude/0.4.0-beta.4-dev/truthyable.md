@@ -55,6 +55,46 @@ None.truthy?     # => false
 ## make `Bool` implements [Truthyable](#trait-truthyable)
 
 
+#### `truthy?`
+
+Returns the boolean itself.
+
+```kex
+truthy? : Bool
+```
+
+**Returns**: `Bool` — the value
+
+**Examples**
+
+```kex
+true.truthy?    # => true
+false.truthy?   # => false
+```
+
+#### `not`
+
+Returns the negation of this boolean.
+
+`!flag` says the same thing, and is the spelling to reach for when the value is already to hand. This one exists for the position `!` cannot take: the end of a chain, where what is being negated is whatever the chain just produced. `falsy?` answers the same question for any `Truthyable` value; `not` is the one that both takes and answers a `Bool`.
+
+```kex
+not : Bool
+```
+
+**Returns**: `Bool` — `false` for `true`, and `true` for `false`
+
+**Examples**
+
+```kex
+true.not    # => false
+false.not   # => true
+```
+_At the end of a chain_
+
+```kex
+book.borrowed?.not
+```
 
 ## make `Integer` implements [Truthyable](#trait-truthyable)
 

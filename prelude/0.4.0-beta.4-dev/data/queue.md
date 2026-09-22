@@ -86,6 +86,16 @@ reduce(acc, f) : B -> (B -> A -> B) -> B
 Queue.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
 ```
 
+#### `identity`
+
+The empty queue: the `Monoid` identity.
+
+```kex
+identity : Queue<A>
+```
+
+**Returns**: `Queue<A>` — the empty queue
+
 #### `combine`
 
 Combines two queues, this one's elements followed by the argument's.
@@ -100,6 +110,22 @@ combine(other) : Queue<A> -> Queue<A>
 
 ```kex
 Queue.from([1, 2]).combine(Queue.from([3, 4])).items   # => [1, 2, 3, 4]
+```
+
+#### `items`
+
+Returns the elements front to back. Never opaque: this is a real list.
+
+```kex
+items : [A]
+```
+
+**Returns**: `[A]` — the elements, front first
+
+**Examples**
+
+```kex
+Queue.from([1, 2]).enqueue(3).items   # => [1, 2, 3]
 ```
 
 #### `enqueue`
@@ -158,6 +184,39 @@ Queue.from([1, 2]).peek   # => Just(1)
 Queue.empty.peek          # => None
 ```
 
+#### `count`
+
+Returns the number of elements.
+
+```kex
+count : Integer
+```
+
+**Returns**: `Integer` — the number of elements
+
+**Examples**
+
+```kex
+Queue.from([1, 2, 3]).count   # => 3
+```
+
+#### `empty?`
+
+Returns `true` when the queue has no elements.
+
+```kex
+empty? : Bool
+```
+
+**Returns**: `Bool` — `true` for the empty queue
+
+**Examples**
+
+```kex
+Queue.empty.empty?         # => true
+Queue.from([1]).empty?     # => false
+```
+
 #### `==`
 
 Compares two queues by their elements, front to back: NOT by their `front`/`back` split, which is not canonical. See the file header.
@@ -192,6 +251,38 @@ Queue.from([1, 2]) + [3, 4]            # => Queue(1, 2, 3, 4)
 Queue.from([1, 2]) + Queue.from([3])   # => Queue(1, 2, 3)
 ```
 
+#### `showValue`
+
+Renders the queue as `Queue(...)`, front to back.
+
+```kex
+showValue : String
+```
+
+**Returns**: `String` — the rendered queue
+
+**Examples**
+
+```kex
+Queue.from([1, 2, 3]).showValue   # => "Queue(1, 2, 3)"
+```
+
 ## make `Queue<A>` implements [Blankable](../blankable.md#trait-blankable)
 
 
+#### `blank?`
+
+Returns `true` when the queue has no elements. The `Blankable` view of `empty?`.
+
+```kex
+blank? : Bool
+```
+
+**Returns**: `Bool` — `true` for the empty queue
+
+**Examples**
+
+```kex
+Queue.empty.blank?         # => true
+Queue.from([1]).blank?     # => false
+```

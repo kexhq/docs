@@ -361,6 +361,28 @@ _A tool with no arguments shows its help_
 args.empty? then cli.printHelp else cli.run(args)
 ```
 
+#### `help`
+
+Returns the tool's help text: its name and description, its options, and its commands grouped by section.
+
+`run` and `printHelp` print this for you; reach for it directly when the text has to go somewhere other than stdout.
+
+The help text, styled. Every escape comes from `Console`, which the runtime blanks under `--no-colors` and `KEX_COLORS=0`, so the same code produces plain text down a pipe and this needs no second rendering path.
+
+Widths are measured on the UNSTYLED label throughout: an escape sequence has a length that a terminal does not draw, so padding computed from a coloured string lines the columns up on paper and nowhere else.
+
+```kex
+help : String
+```
+
+**Returns**: `String` — the rendered help text
+
+**Examples**
+
+```kex
+IO.printError("${OptionParser.errorMessage(error)}\n\n${cli.help}")
+```
+
 ## module `OptionParser`
 
 ## function `define`

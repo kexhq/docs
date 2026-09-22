@@ -59,6 +59,22 @@ blank? : Bool
 ## make `Bool` implements [Blankable](#trait-blankable)
 
 
+#### `blank?`
+
+Returns `true` for `false`: the only blank boolean.
+
+```kex
+blank? : Bool
+```
+
+**Returns**: `Bool` — `true` when the value is `false`
+
+**Examples**
+
+```kex
+false.blank?   # => true
+true.blank?    # => false
+```
 
 ## make `Integer` implements [Blankable](#trait-blankable)
 
@@ -102,6 +118,34 @@ blank? : Bool
 ## make `String` implements [Blankable](#trait-blankable)
 
 
+#### `blank?`
+
+Returns `true` when the string is empty or contains only whitespace.
+
+This is what separates it from `empty?`: a string of spaces is not empty, but it is blank, and for user input that is usually the question being asked.
+
+```kex
+blank? : Bool
+```
+
+**Returns**: `Bool` — `true` for an empty or whitespace-only string
+
+**Examples**
+
+```kex
+"".blank?        # => true
+"   ".blank?     # => true
+"\n\t".blank?    # => true
+" hi ".blank?    # => false
+```
+_Rejecting an empty answer_
+
+```kex
+let name = IO.getLine.or("")
+if name.blank?
+  IO.printError("a name is required")
+end
+```
 
 ## make `Optional<X>` implements [Blankable](#trait-blankable)
 

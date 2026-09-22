@@ -71,9 +71,9 @@ data-page="uri.html">
 <li><a href="parsing.html">Parsing</a></li>
 <li><a href="prelude.html">Prelude</a></li>
 <li><a href="process.html">Process</a></li>
+<li><a href="random.html">Random</a></li>
 <li><a href="range.html">Range</a></li>
 <li><a href="regex.html">Regex</a></li>
-<li><a href="random.html">Rng</a></li>
 <li><a href="stream.html">Stream</a></li>
 <li><a href="string.html">String</a></li>
 <li><a href="system.html">System</a></li>
@@ -317,6 +317,21 @@ base<span class="tok-op">.</span><span class="tok-method">resolve</span><span cl
 <h2><span class="kind kind-make">make</span> <code>URI</code> implements Showable, Inspectable</h2>
 
 <div class="functions">
+<div class="fn" id="fn-string">
+<h4><code>string</code></h4>
+<p>Returns the caller-supplied URI spelling unchanged.</p>
+<pre class="code"><code>string <span class="tok-op">:</span> <span class="tok-type">String</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the original URI text</p>
+
+</div>
+<div class="fn" id="fn-normalize">
+<h4><code>normalize</code></h4>
+<p>Returns an explicitly normalized RFC 3986 representation.</p>
+<p>Parsing never normalizes implicitly: signatures, cache keys, and logs may depend on the exact text received. Ask for normalization where semantic comparison is what you mean.</p>
+<pre class="code"><code>normalize <span class="tok-op">:</span> <span class="tok-type">URI</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>URI</code> — the normalized URI</p>
+
+</div>
 <div class="fn" id="fn-equivalent?">
 <h4><code>equivalent?</code></h4>
 <p>Compares normalized representations rather than original spellings.</p>
@@ -348,6 +363,34 @@ base<span class="tok-op">.</span><span class="tok-method">resolve</span><span cl
 <span class="tok-comment"># =&gt; &quot;https://example.com/api&quot;</span></code></pre>
 
 </div>
+<div class="fn" id="fn-scheme">
+<h4><code>scheme</code></h4>
+<p>Returns the normalized lowercase scheme, when one is present.</p>
+<pre class="code"><code>scheme <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>String?</code> — the scheme, or <code>None</code> for a relative reference</p>
+
+</div>
+<div class="fn" id="fn-host">
+<h4><code>host</code></h4>
+<p>Returns the parsed authority host, when one is present.</p>
+<pre class="code"><code>host <span class="tok-op">:</span> <span class="tok-type">Host?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code><a class="xref" href="#record-host">Host</a>?</code> — the host, or <code>None</code> for references without an authority</p>
+
+</div>
+<div class="fn" id="fn-query">
+<h4><code>query</code></h4>
+<p>Returns the parsed query when the reference contains <code>?</code>.</p>
+<p><code>Just(Query { entries: [] })</code> represents an explicitly empty query; <code>None</code> means no question mark was present at all.</p>
+<pre class="code"><code>query <span class="tok-op">:</span> <span class="tok-type">Query?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Query?</code> — the query, including an explicitly empty one</p>
+
+</div>
+<div class="fn" id="fn-showvalue">
+<h4><code>showValue</code></h4>
+<p>Renders with any authority password replaced by <code>***</code>.</p>
+<pre class="code"><code>showValue <span class="tok-op">:</span> <span class="tok-type">String</span></code></pre>
+
+</div>
 <div class="fn" id="fn-inspectvalue">
 <h4><code>inspectValue</code></h4>
 <p>Structural inspection is also credential-safe.</p>
@@ -360,6 +403,20 @@ base<span class="tok-op">.</span><span class="tok-method">resolve</span><span cl
 <h2><span class="kind kind-make">make</span> <code>URL</code> implements Showable, Inspectable</h2>
 
 <div class="functions">
+<div class="fn" id="fn-string">
+<h4><code>string</code></h4>
+<p>Returns the caller-supplied URL spelling unchanged.</p>
+<pre class="code"><code>string <span class="tok-op">:</span> <span class="tok-type">String</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the original URL text</p>
+
+</div>
+<div class="fn" id="fn-normalize">
+<h4><code>normalize</code></h4>
+<p>Returns an explicitly normalized URL without changing this value.</p>
+<pre class="code"><code>normalize <span class="tok-op">:</span> <span class="tok-type">URL</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>URL</code> — the normalized URL</p>
+
+</div>
 <div class="fn" id="fn-equivalent?">
 <h4><code>equivalent?</code></h4>
 <p>Compares normalized representations rather than original spellings.</p>
@@ -387,6 +444,33 @@ base<span class="tok-op">.</span><span class="tok-method">resolve</span><span cl
   <span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
 
 </div>
+<div class="fn" id="fn-scheme">
+<h4><code>scheme</code></h4>
+<p>Returns the normalized lowercase scheme.</p>
+<pre class="code"><code>scheme <span class="tok-op">:</span> <span class="tok-type">String</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the scheme</p>
+
+</div>
+<div class="fn" id="fn-host">
+<h4><code>host</code></h4>
+<p>Returns the authority host in display and normalized ASCII forms.</p>
+<pre class="code"><code>host <span class="tok-op">:</span> <span class="tok-type">Host</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code><a class="xref" href="#record-host">Host</a></code> — the host</p>
+
+</div>
+<div class="fn" id="fn-query">
+<h4><code>query</code></h4>
+<p>Returns the parsed query when the URL contains <code>?</code>.</p>
+<pre class="code"><code>query <span class="tok-op">:</span> <span class="tok-type">Query?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Query?</code> — the query, or <code>None</code> when absent</p>
+
+</div>
+<div class="fn" id="fn-showvalue">
+<h4><code>showValue</code></h4>
+<p>Renders with any authority password replaced by <code>***</code>.</p>
+<pre class="code"><code>showValue <span class="tok-op">:</span> <span class="tok-type">String</span></code></pre>
+
+</div>
 <div class="fn" id="fn-inspectvalue">
 <h4><code>inspectValue</code></h4>
 <p>Structural inspection is also credential-safe.</p>
@@ -398,17 +482,40 @@ base<span class="tok-op">.</span><span class="tok-method">resolve</span><span cl
 <section class="entity" id="make-query">
 <h2><span class="kind kind-make">make</span> <code>Query</code></h2>
 
+<div class="functions">
+<div class="fn" id="fn-encode">
+<h4><code>encode</code></h4>
+<p>Encodes according to generic RFC 3986 query rules.</p>
+<pre class="code"><code>encode <span class="tok-op">:</span> <span class="tok-type">String</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — encoded query text without a leading question mark</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Query</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">q</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a+b</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">encode</span>   <span class="tok-comment"># =&gt; &quot;q=a%2Bb&quot;</span></code></pre>
+
+</div>
+</div>
 </section>
 <section class="entity" id="make-form">
 <h2><span class="kind kind-make">make</span> <code>Form</code></h2>
 
+<div class="functions">
+<div class="fn" id="fn-encode">
+<h4><code>encode</code></h4>
+<p>Encodes according to HTML form rules, including space as ++.</p>
+<pre class="code"><code>encode <span class="tok-op">:</span> <span class="tok-type">String</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the <code>application/x-www-form-urlencoded</code> body</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Form</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">query</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">hello world</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">encode</span>
+<span class="tok-comment"># =&gt; &quot;query=hello+world&quot;</span></code></pre>
+
+</div>
+</div>
 </section>
 </section>
 </article>
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-09-22T17:25:42.440421435Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="uri.md">Markdown</a></div>
+<div class="wrap">Generated by kex docgen at 2026-09-22T17:34:47.099663570Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="uri.md">Markdown</a></div>
 </footer>
 </body>
 </html>

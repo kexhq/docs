@@ -71,9 +71,9 @@ data-page="type.html">
 <li><a href="parsing.html">Parsing</a></li>
 <li><a href="prelude.html">Prelude</a></li>
 <li><a href="process.html">Process</a></li>
+<li><a href="random.html">Random</a></li>
 <li><a href="range.html">Range</a></li>
 <li><a href="regex.html">Regex</a></li>
-<li><a href="random.html">Rng</a></li>
 <li><a href="stream.html">Stream</a></li>
 <li><a href="string.html">String</a></li>
 <li><a href="system.html">System</a></li>
@@ -198,6 +198,51 @@ data-page="type.html">
 <p>Everything else is a METHOD, not a module function: a module function is only reachable through UFCS in the interpreter, so <code>Type.of(x).fields</code> worked there and raised on BEAM.</p>
 
 <div class="functions">
+<div class="fn" id="fn-fields">
+<h4><code>fields</code></h4>
+<p>Returns a record type's field names, in declaration order. Anything that is not a record answers with an empty list.</p>
+<p>Reads the layout the compiler already ships to the runtime for display; there is no separate metadata to keep in step.</p>
+<pre class="code"><code>fields <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>[String]</code> — the field names, or <code>[]</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-type">Point</span> <span class="tok-punct">{</span> x<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> y<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">fields</span>   <span class="tok-comment"># =&gt; [&quot;x&quot;, &quot;y&quot;]</span>
+<span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">fields</span>                     <span class="tok-comment"># =&gt; []</span></code></pre>
+<p class="caption"><em>Rendering a record generically</em></p>
+<pre class="code"><code><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span>value<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">fields</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>name<span class="tok-op">|</span> <span class="tok-string">&quot;</span><span class="tok-string">${</span>name<span class="tok-string">}</span><span class="tok-string">: ...</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">, </span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-constructors">
+<h4><code>constructors</code></h4>
+<p>Returns an ADT's constructor names. Anything that is not an ADT answers with an empty list.</p>
+<pre class="code"><code>constructors <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>[String]</code> — the constructor names, or <code>[]</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-type">Circle</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">constructors</span>   <span class="tok-comment"># =&gt; [&quot;Circle&quot;, &quot;Square&quot;]</span>
+<span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">constructors</span>          <span class="tok-comment"># =&gt; []</span></code></pre>
+<p class="caption"><em>Listing what a sum type can be</em></p>
+<pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">one of: </span><span class="tok-string">${</span><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span>shape<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">constructors</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">, </span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-record?">
+<h4><code>record?</code></h4>
+<p>Returns <code>true</code> when the type is a record: that is, when it has fields.</p>
+<pre class="code"><code>record? <span class="tok-op">:</span> <span class="tok-type">Bool</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> for a record type</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-type">Point</span> <span class="tok-punct">{</span> x<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> y<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">record?</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">record?</span>                     <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="fn-adt?">
+<h4><code>adt?</code></h4>
+<p>Returns <code>true</code> when the type is a sum type: that is, when it has constructors.</p>
+<pre class="code"><code>adt? <span class="tok-op">:</span> <span class="tok-type">Bool</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> for an ADT</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-type">Circle</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">adt?</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">adt?</span>          <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
 <div class="fn" id="fn-to">
 <h4><code>to</code></h4>
 <p>Renders the type the way it is written in SOURCE, not the way it is stored.</p>
@@ -219,7 +264,7 @@ data-page="type.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-09-22T17:25:42.440421435Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="type.md">Markdown</a></div>
+<div class="wrap">Generated by kex docgen at 2026-09-22T17:34:47.099663570Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="type.md">Markdown</a></div>
 </footer>
 </body>
 </html>

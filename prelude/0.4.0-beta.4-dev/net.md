@@ -142,3 +142,20 @@ A typed networking failure shared by every network module.
 ## make `Port`
 
 
+#### `string`
+
+Renders the decimal port without a host or scheme.
+
+```kex
+string : String
+```
+
+**Returns**: `String` — decimal port text
+
+**Examples**
+
+_Building an address for display_
+
+```kex
+IO.printLine("listening on 127.0.0.1:${port.string}")
+```

@@ -91,9 +91,9 @@ data-page="process.html">
 <li><a href="#function-worker">worker</a></li>
 <li><a href="#make-reference">Reference</a></li>
 </ul></li>
+<li><a href="random.html">Random</a></li>
 <li><a href="range.html">Range</a></li>
 <li><a href="regex.html">Regex</a></li>
-<li><a href="random.html">Rng</a></li>
 <li><a href="stream.html">Stream</a></li>
 <li><a href="string.html">String</a></li>
 <li><a href="system.html">System</a></li>
@@ -397,6 +397,46 @@ worker<span class="tok-op">.</span><span class="tok-method">send</span><span cla
 <pre class="code"><code>server<span class="tok-op">.</span><span class="tok-method">sendFrom</span><span class="tok-punct">(</span><span class="tok-op">:</span>status<span class="tok-punct">)</span>   <span class="tok-comment"># the server receives (senderPid, :status)</span></code></pre>
 
 </div>
+<div class="fn" id="fn-link">
+<h4><code>link</code></h4>
+<p>Links the calling process to this one, so that either one exiting abnormally takes the other down.</p>
+<p>Linking is bidirectional and is how a group of processes is made to fail together. Use <code>monitor</code> when you want to be told about a death without sharing it.</p>
+<pre class="code"><code>link <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
+<h5>Examples</h5>
+<pre class="code"><code>worker<span class="tok-op">.</span><span class="tok-method">link</span></code></pre>
+
+</div>
+<div class="fn" id="fn-unlink">
+<h4><code>unlink</code></h4>
+<p>Removes the link between the calling process and this one.</p>
+<pre class="code"><code>unlink <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
+<h5>Examples</h5>
+<pre class="code"><code>worker<span class="tok-op">.</span><span class="tok-method">unlink</span></code></pre>
+
+</div>
+<div class="fn" id="fn-monitor">
+<h4><code>monitor</code></h4>
+<p>Starts monitoring this process, and returns the reference that identifies the monitor.</p>
+<p>When the monitored process exits, the caller receives a message about it. Unlike <code>link</code>, a monitor is one-directional and does not propagate the exit. Pass the reference to <code>demonitor</code> to stop.</p>
+<pre class="code"><code>monitor <span class="tok-op">:</span> <span class="tok-type">Reference</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Reference</code> — the monitor reference</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> ref <span class="tok-op">=</span> worker<span class="tok-op">.</span><span class="tok-method">monitor</span>
+ref<span class="tok-op">.</span><span class="tok-method">demonitor</span></code></pre>
+
+</div>
+<div class="fn" id="fn-alive?">
+<h4><code>alive?</code></h4>
+<p>Returns <code>true</code> when the process is still running.</p>
+<p>Inherently a snapshot: the process may exit immediately after you ask. Monitor it when the answer has to stay true.</p>
+<pre class="code"><code>alive? <span class="tok-op">:</span> <span class="tok-type">Bool</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when the process is alive</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">self</span><span class="tok-op">.</span><span class="tok-method">alive?</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
 </div>
 </section>
 <section class="entity" id="make-process<x>">
@@ -426,6 +466,34 @@ worker<span class="tok-op">.</span><span class="tok-method">send</span><span cla
 <p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
 
 </div>
+<div class="fn" id="fn-link">
+<h4><code>link</code></h4>
+<p>Links the calling process to this one. See <code>Pid.link</code>.</p>
+<pre class="code"><code>link <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
+
+</div>
+<div class="fn" id="fn-unlink">
+<h4><code>unlink</code></h4>
+<p>Removes the link between the calling process and this one.</p>
+<pre class="code"><code>unlink <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
+
+</div>
+<div class="fn" id="fn-monitor">
+<h4><code>monitor</code></h4>
+<p>Starts monitoring this process. See <code>Pid.monitor</code>.</p>
+<pre class="code"><code>monitor <span class="tok-op">:</span> <span class="tok-type">Reference</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Reference</code> — the monitor reference</p>
+
+</div>
+<div class="fn" id="fn-alive?">
+<h4><code>alive?</code></h4>
+<p>Returns <code>true</code> when the process is still running.</p>
+<pre class="code"><code>alive? <span class="tok-op">:</span> <span class="tok-type">Bool</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when the process is alive</p>
+
+</div>
 </div>
 </section>
 <section class="entity" id="make-server<x>">
@@ -445,6 +513,38 @@ worker<span class="tok-op">.</span><span class="tok-method">send</span><span cla
 <h5>Examples</h5>
 <p class="caption"><em>Giving one call longer to answer</em></p>
 <pre class="code"><code>api<span class="tok-op">.</span><span class="tok-method">within</span><span class="tok-punct">(</span><span class="tok-number">30000</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">rebuildIndex</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-link">
+<h4><code>link</code></h4>
+<p>Links the calling process to the server. See <code>Pid.link</code>.</p>
+<pre class="code"><code>link <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
+<h5>Examples</h5>
+<pre class="code"><code>api<span class="tok-op">.</span><span class="tok-method">link</span></code></pre>
+
+</div>
+<div class="fn" id="fn-unlink">
+<h4><code>unlink</code></h4>
+<p>Removes the link between the calling process and the server.</p>
+<pre class="code"><code>unlink <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
+
+</div>
+<div class="fn" id="fn-monitor">
+<h4><code>monitor</code></h4>
+<p>Starts monitoring the server. See <code>Pid.monitor</code>.</p>
+<pre class="code"><code>monitor <span class="tok-op">:</span> <span class="tok-type">Reference</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Reference</code> — the monitor reference</p>
+
+</div>
+<div class="fn" id="fn-alive?">
+<h4><code>alive?</code></h4>
+<p>Returns <code>true</code> when the server is still running.</p>
+<pre class="code"><code>alive? <span class="tok-op">:</span> <span class="tok-type">Bool</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when the server is alive</p>
+<h5>Examples</h5>
+<pre class="code"><code>api<span class="tok-op">.</span><span class="tok-method">alive?</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
 
 </div>
 </div>
@@ -468,6 +568,13 @@ worker<span class="tok-op">.</span><span class="tok-method">send</span><span cla
 <pre class="code"><code><span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span>
   <span class="tok-keyword">from</span><span class="tok-op">.</span><span class="tok-method">reply</span><span class="tok-punct">(</span><span class="tok-fn">expensiveThing</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
 <span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="fn-pid">
+<h4><code>pid</code></h4>
+<p>Returns the waiting caller's <code>Pid</code>.</p>
+<pre class="code"><code>pid <span class="tok-op">:</span> <span class="tok-type">Pid</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Pid</code> — the caller</p>
 
 </div>
 </div>
@@ -524,6 +631,15 @@ t<span class="tok-op">.</span><span class="tok-method">await</span>   <span clas
 <div class="functions">
 <div class="fn" id="fn-await">
 <h4><code>await</code></h4>
+<p>Waits for the task's result, for as long as it takes.</p>
+<pre class="code"><code>await <span class="tok-op">:</span> <span class="tok-type">X</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>X</code> — the task's result</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-number">1</span> <span class="tok-op">+</span> <span class="tok-number">1</span> <span class="tok-keyword">end</span><span class="tok-op">.</span><span class="tok-method">await</span>   <span class="tok-comment"># =&gt; 2</span></code></pre>
+
+</div>
+<div class="fn" id="fn-await">
+<h4><code>await</code></h4>
 <p>Waits for the task's result, giving up after <code>timeout</code> milliseconds.</p>
 <p>Answers <code>None</code> if the task has not finished in time. The task itself is not stopped.</p>
 <pre class="code"><code><span class="tok-fn">await</span><span class="tok-punct">(</span>timeout<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">Integer</span> <span class="tok-op">-&gt;</span> <span class="tok-type">X</span></code></pre>
@@ -553,12 +669,24 @@ t<span class="tok-op">.</span><span class="tok-method">await</span><span class="
 <section class="entity" id="make-reference">
 <h2><span class="kind kind-make">make</span> <code>Reference</code></h2>
 
+<div class="functions">
+<div class="fn" id="fn-demonitor">
+<h4><code>demonitor</code></h4>
+<p>Stops the monitor this reference identifies.</p>
+<pre class="code"><code>demonitor <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Void</code> — </p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> ref <span class="tok-op">=</span> worker<span class="tok-op">.</span><span class="tok-method">monitor</span>
+ref<span class="tok-op">.</span><span class="tok-method">demonitor</span></code></pre>
+
+</div>
+</div>
 </section>
 </article>
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-09-22T17:25:42.440421435Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="process.md">Markdown</a></div>
+<div class="wrap">Generated by kex docgen at 2026-09-22T17:34:47.099663570Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="process.md">Markdown</a></div>
 </footer>
 </body>
 </html>

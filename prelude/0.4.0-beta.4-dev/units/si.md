@@ -95,6 +95,12 @@ symbol(@Kilo(unit))
 ## make `SIUnit` implements [Unit](../units.md#trait-unit)
 
 
+#### `factor`
+
+```kex
+factor : ?
+```
+
 #### `kind`
 
 ```kex
@@ -110,10 +116,44 @@ symbol(@Meter)
 ## make `UnitDefinition` implements [Unit](../units.md#trait-unit)
 
 
+#### `factor`
+
+```kex
+factor : ?
+```
+
+#### `kind`
+
+```kex
+kind : ?
+```
+
+#### `symbol`
+
+```kex
+symbol : ?
+```
 
 ## make `Measure`
 
 
+#### `factor`
+
+```kex
+factor : Float
+```
+
+#### `kind`
+
+```kex
+kind : Atom
+```
+
+#### `symbol`
+
+```kex
+symbol : String
+```
 
 ## function `meter`
 
@@ -333,14 +373,39 @@ times(measure, other) : Measure -> Measure -> Measure
 Prefixes work both on an existing measure (`5000.meter.kilo`) and at the beginning of a postfix unit expression (`3.kilo.watt`).
 
 
+#### `kilo`
+
+The same measure, displayed with the kilo- prefix.
+
+```kex
+kilo : Measure
+```
+
+**Returns**: `Measure` — the same quantity, displayed in kilo-units
+
+**Examples**
+
+```kex
+5000.meter.kilo.to(String)   # => "5.0 km"
+```
 
 ## make `Integer`
 
 
+#### `kilo`
+
+```kex
+kilo : Float
+```
 
 ## make `Float`
 
 
+#### `kilo`
+
+```kex
+kilo : Float
+```
 
 ## make `Measure`
 

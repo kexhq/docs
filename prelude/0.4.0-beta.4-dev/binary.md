@@ -85,6 +85,56 @@ fromBase64(text) : String -> Binary?
 ## make `Binary` implements Showable, Inspectable
 
 
+#### `bytes`
+
+The bytes, as a list.
+
+The explicit, allocating conversion out of binary storage. Reach for `length`, `at`, `take`, and `drop` when you do not need the whole list.
+
+```kex
+bytes : [Byte]
+```
+
+**Returns**: `[Byte]` — every byte, in order
+
+**Examples**
+
+```kex
+Binary.fromHex("0068").try.bytes   # => [0, 104]
+```
+
+#### `length`
+
+Number of bytes held.
+
+```kex
+length : Integer
+```
+
+**Returns**: `Integer` — the byte count
+
+**Examples**
+
+```kex
+"héllo".to(Binary).try.length   # => 6
+```
+
+#### `empty?`
+
+Whether it holds no bytes at all.
+
+```kex
+empty? : Bool
+```
+
+**Returns**: `Bool` — `true` when the binary is empty
+
+**Examples**
+
+```kex
+Binary.fromBytes([]).empty?   # => true
+```
+
 #### `at`
 
 The byte at `index`, counting from zero.
@@ -161,6 +211,54 @@ Joins two binaries end to end.
 
 ```kex
 Binary.fromBytes([104]) + Binary.fromBytes([105])   # => #Binary<2 bytes>
+```
+
+#### `hex`
+
+The bytes as lowercase hexadecimal text, two digits per byte.
+
+```kex
+hex : String
+```
+
+**Returns**: `String` — the hexadecimal encoding
+
+**Examples**
+
+```kex
+Binary.fromBytes([0, 104, 255]).hex   # => "0068ff"
+```
+
+#### `base64`
+
+The bytes as standard base64 text (RFC 4648), with canonical padding.
+
+```kex
+base64 : String
+```
+
+**Returns**: `String` — the base64 encoding
+
+**Examples**
+
+```kex
+Binary.fromBytes([0, 104, 105, 255]).base64   # => "AGhp/w=="
+```
+
+#### `showValue`
+
+The length-only rendering: never the payload.
+
+```kex
+showValue : String
+```
+
+**Returns**: `String` — `#Binary<N bytes>`
+
+**Examples**
+
+```kex
+Binary.fromBytes([104, 105]).showValue   # => "#Binary<2 bytes>"
 ```
 
 #### `inspectValue`

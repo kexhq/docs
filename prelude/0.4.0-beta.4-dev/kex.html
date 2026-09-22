@@ -82,9 +82,9 @@ data-page="kex.html">
 <li><a href="parsing.html">Parsing</a></li>
 <li><a href="prelude.html">Prelude</a></li>
 <li><a href="process.html">Process</a></li>
+<li><a href="random.html">Random</a></li>
 <li><a href="range.html">Range</a></li>
 <li><a href="regex.html">Regex</a></li>
-<li><a href="random.html">Rng</a></li>
 <li><a href="stream.html">Stream</a></li>
 <li><a href="string.html">String</a></li>
 <li><a href="system.html">System</a></li>
@@ -164,6 +164,11 @@ data-page="kex.html">
 <p>Current non-colored presentation for the primitive and standard compound types registered as Showable. Domain types can replace this with what their users care about (Time, Date, and DateTime do so in time.kex).</p>
 
 <div class="functions">
+<div class="fn" id="fn-showvalue">
+<h4><code>showValue</code></h4>
+<pre class="code"><code>showValue <span class="tok-op">:</span> <span class="tok-type">String</span></code></pre>
+
+</div>
 <div class="fn" id="fn-to">
 <h4><code>to</code></h4>
 <pre class="code"><code><span class="tok-fn">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span></code></pre>
@@ -257,6 +262,42 @@ data-page="kex.html">
 <section class="entity" id="make-version">
 <h2><span class="kind kind-make">make</span> <code>Version</code></h2>
 
+<div class="functions">
+<div class="fn" id="fn-tuple">
+<h4><code>tuple</code></h4>
+<p>The version's four values as a tuple, for destructuring.</p>
+<p>A tuple cannot carry accessors of its own: there is no named type for a <code>make</code> block to target, so the record is the value and this is the view.</p>
+<pre class="code"><code>tuple <span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">Integer</span><span class="tok-punct">,</span> <span class="tok-type">Integer</span><span class="tok-punct">,</span> <span class="tok-type">Integer</span><span class="tok-punct">,</span> <span class="tok-type">String?</span><span class="tok-punct">)</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>(Integer, Integer, Integer, String?)</code> — major, minor, patch, revision</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> <span class="tok-punct">(</span>major<span class="tok-punct">,</span> minor<span class="tok-punct">,</span> patch<span class="tok-punct">,</span> revision<span class="tok-punct">)</span> <span class="tok-op">=</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Kernel</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">tuple</span>
+major   <span class="tok-comment"># =&gt; 0</span></code></pre>
+
+</div>
+<div class="fn" id="fn-release">
+<h4><code>release</code></h4>
+<p>The three numbers, plus the pre-release channel when there is one.</p>
+<p><code>0.4.0</code>, or <code>0.4.0-rc.1</code> on a pre-release build. What a version RANGE is matched against, so the channel has to be in it.</p>
+<pre class="code"><code>release <span class="tok-op">:</span> <span class="tok-type">String</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the release string</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Kernel</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">release</span>   <span class="tok-comment"># =&gt; &quot;0.4.0-alpha.2&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="fn-number">
+<h4><code>number</code></h4>
+<p>The release string with the build revision after it, when there is one.</p>
+<p>This is what <code>kex --version</code> and the REPL banner print.</p>
+<p><code>to(String)</code>: the language's conversion protocol, and what this should really be: is deliberately NOT defined here: a second <code>to(String)</code> implementation anywhere in the prelude breaks type-directed <code>to</code> dispatch for every prelude type on BEAM, so adding one here silently broke <code>3.kilo.watt.to(String)</code>. Pinned by spec/prelude_to_string_dispatch.kex; restore this as <code>to(String)</code> once that dispatcher is fixed.</p>
+<pre class="code"><code>number <span class="tok-op">:</span> <span class="tok-type">String</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>String</code> — the full version string</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Kernel</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">number</span>   <span class="tok-comment"># =&gt; &quot;0.4.0-alpha.2 (219e625)&quot;</span></code></pre>
+<p class="caption"><em>Reporting the toolchain in a tool's output</em></p>
+<pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">built with Kex </span><span class="tok-string">${</span><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Kernel</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">number</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
 </section>
 <section class="entity" id="constant-version">
 <h2><span class="kind kind-constant">constant</span> <code>VERSION</code> <code>Version</code></h2>
@@ -348,7 +389,7 @@ data-page="kex.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-09-22T17:25:42.440421435Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="kex.md">Markdown</a></div>
+<div class="wrap">Generated by kex docgen at 2026-09-22T17:34:47.099663570Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="kex.md">Markdown</a></div>
 </footer>
 </body>
 </html>

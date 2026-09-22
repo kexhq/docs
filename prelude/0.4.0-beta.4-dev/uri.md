@@ -195,6 +195,28 @@ parse(text) : String -> Result<Form, URIError>
 ## make `URI` implements Showable, Inspectable
 
 
+#### `string`
+
+Returns the caller-supplied URI spelling unchanged.
+
+```kex
+string : String
+```
+
+**Returns**: `String` — the original URI text
+
+#### `normalize`
+
+Returns an explicitly normalized RFC 3986 representation.
+
+Parsing never normalizes implicitly: signatures, cache keys, and logs may depend on the exact text received. Ask for normalization where semantic comparison is what you mean.
+
+```kex
+normalize : URI
+```
+
+**Returns**: `URI` — the normalized URI
+
 #### `equivalent?`
 
 Compares normalized representations rather than original spellings.
@@ -234,6 +256,46 @@ base.resolve(URI.parse("../api").try).try.string
 # => "https://example.com/api"
 ```
 
+#### `scheme`
+
+Returns the normalized lowercase scheme, when one is present.
+
+```kex
+scheme : String?
+```
+
+**Returns**: `String?` — the scheme, or `None` for a relative reference
+
+#### `host`
+
+Returns the parsed authority host, when one is present.
+
+```kex
+host : Host?
+```
+
+**Returns**: `Host?` — the host, or `None` for references without an authority
+
+#### `query`
+
+Returns the parsed query when the reference contains `?`.
+
+`Just(Query { entries: [] })` represents an explicitly empty query; `None` means no question mark was present at all.
+
+```kex
+query : Query?
+```
+
+**Returns**: `Query?` — the query, including an explicitly empty one
+
+#### `showValue`
+
+Renders with any authority password replaced by `***`.
+
+```kex
+showValue : String
+```
+
 #### `inspectValue`
 
 Structural inspection is also credential-safe.
@@ -244,6 +306,26 @@ inspectValue(colors)
 
 ## make `URL` implements Showable, Inspectable
 
+
+#### `string`
+
+Returns the caller-supplied URL spelling unchanged.
+
+```kex
+string : String
+```
+
+**Returns**: `String` — the original URL text
+
+#### `normalize`
+
+Returns an explicitly normalized URL without changing this value.
+
+```kex
+normalize : URL
+```
+
+**Returns**: `URL` — the normalized URL
 
 #### `equivalent?`
 
@@ -275,6 +357,44 @@ let next = URL.parse("https://api.example.com/v1/items").try
   .try
 ```
 
+#### `scheme`
+
+Returns the normalized lowercase scheme.
+
+```kex
+scheme : String
+```
+
+**Returns**: `String` — the scheme
+
+#### `host`
+
+Returns the authority host in display and normalized ASCII forms.
+
+```kex
+host : Host
+```
+
+**Returns**: `Host` — the host
+
+#### `query`
+
+Returns the parsed query when the URL contains `?`.
+
+```kex
+query : Query?
+```
+
+**Returns**: `Query?` — the query, or `None` when absent
+
+#### `showValue`
+
+Renders with any authority password replaced by `***`.
+
+```kex
+showValue : String
+```
+
 #### `inspectValue`
 
 Structural inspection is also credential-safe.
@@ -286,7 +406,38 @@ inspectValue(colors)
 ## make `Query`
 
 
+#### `encode`
+
+Encodes according to generic RFC 3986 query rules.
+
+```kex
+encode : String
+```
+
+**Returns**: `String` — encoded query text without a leading question mark
+
+**Examples**
+
+```kex
+Query.from([("q", Just("a+b"))]).encode   # => "q=a%2Bb"
+```
 
 ## make `Form`
 
 
+#### `encode`
+
+Encodes according to HTML form rules, including space as ++.
+
+```kex
+encode : String
+```
+
+**Returns**: `String` — the `application/x-www-form-urlencoded` body
+
+**Examples**
+
+```kex
+Form.from([("query", "hello world")]).encode
+# => "query=hello+world"
+```

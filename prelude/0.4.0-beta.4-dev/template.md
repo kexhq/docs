@@ -185,6 +185,22 @@ A scanned template: its frontmatter tags, and its body as a node list.
 ## make `Parsed`
 
 
+#### `parameters`
+
+The template's declared parameters, out of a `params: [...]` frontmatter key: `[]` when the template declares none, or when `params` holds a bare scalar rather than a list.
+
+```kex
+parameters : [TemplateParam]
+```
+
+**Returns**: `[TemplateParam]` — the declared parameters, in the order written
+
+**Examples**
+
+```kex
+parsed.parameters
+# => [TemplateParam { name: "name", type: "" }, TemplateParam { name: "library", type: "Bool" }]
+```
 
 ## function `scan`
 

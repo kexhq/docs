@@ -71,12 +71,12 @@ data-page="range.html">
 <li><a href="parsing.html">Parsing</a></li>
 <li><a href="prelude.html">Prelude</a></li>
 <li><a href="process.html">Process</a></li>
+<li><a href="random.html">Random</a></li>
 <li><a class="active" href="range.html">Range</a><ul class="side-sub">
 <li><a href="#type-range">Range</a></li>
 <li><a href="#make-range">Range</a></li>
 </ul></li>
 <li><a href="regex.html">Regex</a></li>
-<li><a href="random.html">Rng</a></li>
 <li><a href="stream.html">Stream</a></li>
 <li><a href="string.html">String</a></li>
 <li><a href="system.html">System</a></li>
@@ -98,7 +98,7 @@ data-page="range.html">
 <section class="entity" id="type-range">
 <h2><span class="kind kind-type">type</span> <code>Range</code></h2>
 <p>A span between two bounds, written <code>(1..10)</code> or <code>('a'..'z')</code>.</p>
-<p>A range stores only its two endpoints and computes everything else from them, so <code>(1..1000000)</code> costs nothing to make. Both ends are included.</p>
+<p>A range stores its endpoints on both backends without building a list. Integer and character ranges can be enumerated with both ends included. Float ranges describe continuous bounds, for example <code>(-1.0..1.0)</code> for random sampling; they cannot be enumerated without an explicit step.</p>
 <pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>          <span class="tok-comment"># =&gt; [1, 2, 3, 4, 5]</span>
 <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">sum</span>            <span class="tok-comment"># =&gt; 15</span>
 <span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">in?</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span>          <span class="tok-comment"># =&gt; true</span>
@@ -127,6 +127,25 @@ data-page="range.html">
 <pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reduce</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>sum<span class="tok-punct">,</span> n<span class="tok-op">|</span> sum <span class="tok-op">+</span> n <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; 10</span></code></pre>
 
 </div>
+<div class="fn" id="fn-sum">
+<h4><code>sum</code></h4>
+<p>Returns the sum of the range's elements.</p>
+<pre class="code"><code>sum <span class="tok-op">:</span> <span class="tok-op">?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Number</code> — the sum</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">sum</span>   <span class="tok-comment"># =&gt; 55</span>
+<span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">sum</span>    <span class="tok-comment"># =&gt; 1</span></code></pre>
+
+</div>
+<div class="fn" id="fn-product">
+<h4><code>product</code></h4>
+<p>Returns the product of the range's elements.</p>
+<pre class="code"><code>product <span class="tok-op">:</span> <span class="tok-op">?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Number</code> — the product</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">product</span>   <span class="tok-comment"># =&gt; 120   (five factorial)</span></code></pre>
+
+</div>
 <div class="fn" id="fn-contains?">
 <h4><code>contains?</code></h4>
 <p>Returns <code>true</code> when <code>value</code> falls inside the range, endpoints included.</p>
@@ -142,6 +161,131 @@ data-page="range.html">
 <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-number">11</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
 
 </div>
+<div class="fn" id="fn-items">
+<h4><code>items</code></h4>
+<p>Returns the range's elements as a list.</p>
+<p>This is where a range stops being two numbers and becomes real data, so it is also where a very large range starts to cost something.</p>
+<pre class="code"><code>items <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>[A]</code> — the elements, in ascending order</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>      <span class="tok-comment"># =&gt; [1, 2, 3]</span>
+<span class="tok-punct">(</span>'a'<span class="tok-op">.</span><span class="tok-op">.</span>'c'<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>  <span class="tok-comment"># =&gt; ['a', 'b', 'c']</span></code></pre>
+<p class="caption"><em>Building a lookup table</em></p>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">12</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> <span class="tok-punct">(</span>m<span class="tok-punct">,</span> <span class="tok-fn">monthName</span><span class="tok-punct">(</span>m<span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="fn-first">
+<h4><code>first</code></h4>
+<p>Returns the first element, or <code>None</code> for an empty range.</p>
+<p>The list operations, over the materialized items. A range is an ordered collection, so <code>(1..5).first</code> and <code>(1..5).length</code> operate on its materialized elements. Floating bounds do not define such a collection.</p>
+<pre class="code"><code>first <span class="tok-op">:</span> <span class="tok-type">A?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>A?</code> — the first element, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">first</span>   <span class="tok-comment"># =&gt; Just(3)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-second">
+<h4><code>second</code></h4>
+<p>Returns the second element, or <code>None</code> when the range is shorter than two.</p>
+<pre class="code"><code>second <span class="tok-op">:</span> <span class="tok-type">A?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>A?</code> — the second element, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">second</span>   <span class="tok-comment"># =&gt; Just(4)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-third">
+<h4><code>third</code></h4>
+<p>Returns the third element, or <code>None</code> when the range is shorter than three.</p>
+<pre class="code"><code>third <span class="tok-op">:</span> <span class="tok-type">A?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>A?</code> — the third element, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">third</span>   <span class="tok-comment"># =&gt; Just(5)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-last">
+<h4><code>last</code></h4>
+<p>Returns the last element, or <code>None</code> for an empty range.</p>
+<pre class="code"><code>last <span class="tok-op">:</span> <span class="tok-type">A?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>A?</code> — the last element, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">last</span>   <span class="tok-comment"># =&gt; Just(7)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-rest">
+<h4><code>rest</code></h4>
+<p>Returns every element after the first, as a list.</p>
+<pre class="code"><code>rest <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>[A]</code> — the remaining elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">rest</span>   <span class="tok-comment"># =&gt; [2, 3, 4]</span></code></pre>
+
+</div>
+<div class="fn" id="fn-length">
+<h4><code>length</code></h4>
+<p>Returns how many elements the range has.</p>
+<pre class="code"><code>length <span class="tok-op">:</span> <span class="tok-type">Integer</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Integer</code> — the number of elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">length</span>   <span class="tok-comment"># =&gt; 10</span>
+<span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">length</span>    <span class="tok-comment"># =&gt; 1</span></code></pre>
+
+</div>
+<div class="fn" id="fn-count">
+<h4><code>count</code></h4>
+<p>Returns how many elements the range has. The same as <code>length</code>.</p>
+<pre class="code"><code>count <span class="tok-op">:</span> <span class="tok-type">Integer</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Integer</code> — the number of elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span>   <span class="tok-comment"># =&gt; 10</span></code></pre>
+
+</div>
+<div class="fn" id="fn-empty?">
+<h4><code>empty?</code></h4>
+<p>Returns <code>true</code> when the range has no elements.</p>
+<pre class="code"><code>empty? <span class="tok-op">:</span> <span class="tok-type">Bool</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> for an empty range</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">empty?</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="fn-max">
+<h4><code>max</code></h4>
+<p>Returns the largest element, or <code>None</code> for an empty range.</p>
+<pre class="code"><code>max <span class="tok-op">:</span> <span class="tok-type">A?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>A?</code> — the largest element, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">max</span>   <span class="tok-comment"># =&gt; Just(10)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-min">
+<h4><code>min</code></h4>
+<p>Returns the smallest element, or <code>None</code> for an empty range.</p>
+<pre class="code"><code>min <span class="tok-op">:</span> <span class="tok-type">A?</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>A?</code> — the smallest element, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">min</span>   <span class="tok-comment"># =&gt; Just(1)</span></code></pre>
+
+</div>
+<div class="fn" id="fn-reverse">
+<h4><code>reverse</code></h4>
+<p>Returns the elements as a list, in descending order.</p>
+<pre class="code"><code>reverse <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>[A]</code> — the elements, reversed</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reverse</span>   <span class="tok-comment"># =&gt; [4, 3, 2, 1]</span></code></pre>
+<p class="caption"><em>Counting down</em></p>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reverse</span><span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>n<span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># prints 3, 2, 1</span></code></pre>
+
+</div>
+<div class="fn" id="fn-sort">
+<h4><code>sort</code></h4>
+<p>Returns the elements as a sorted list. A range is already ascending, so this is the identity: it exists so that generic code can call it.</p>
+<pre class="code"><code>sort <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>[A]</code> — the elements, sorted</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">sort</span>   <span class="tok-comment"># =&gt; [1, 2, 3, 4]</span></code></pre>
+
+</div>
 <div class="fn" id="fn-sort">
 <h4><code>sort</code></h4>
 <p>Returns the elements as a list, ordered by <code>comparator</code>.</p>
@@ -153,6 +297,15 @@ data-page="range.html">
 <p class="returns"><strong>Returns:</strong> <code>[A]</code> — the sorted elements</p>
 <h5>Examples</h5>
 <pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">sort</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>a<span class="tok-punct">,</span> b<span class="tok-op">|</span> a <span class="tok-op">&gt;</span> b <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; [4, 3, 2, 1]</span></code></pre>
+
+</div>
+<div class="fn" id="fn-uniq">
+<h4><code>uniq</code></h4>
+<p>Returns the elements as a list with duplicates removed. A range has none, so this is the identity: it exists so that generic code can call it.</p>
+<pre class="code"><code>uniq <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>[A]</code> — the distinct elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">uniq</span>   <span class="tok-comment"># =&gt; [1, 2, 3]</span></code></pre>
 
 </div>
 <div class="fn" id="fn-join">
@@ -300,7 +453,7 @@ data-page="range.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-09-22T17:25:42.440421435Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="range.md">Markdown</a></div>
+<div class="wrap">Generated by kex docgen at 2026-09-22T17:34:47.099663570Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="range.md">Markdown</a></div>
 </footer>
 </body>
 </html>

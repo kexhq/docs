@@ -623,6 +623,14 @@ _Preserving every Set-Cookie field_
 let cookies = response.headers.getAll("Set-Cookie")
 ```
 
+#### `showValue`
+
+Renders fields while replacing authorization and cookie values with `***`.
+
+```kex
+showValue : String
+```
+
 #### `inspectValue`
 
 Structural inspection uses the same credential-safe rendering.
@@ -634,6 +642,45 @@ inspectValue(colors)
 ## make `Status`
 
 
+#### `informational?`
+
+```kex
+informational? : Bool
+```
+
+**Returns**: `Bool` — whether the status is in `100..199`
+
+#### `success?`
+
+```kex
+success? : Bool
+```
+
+**Returns**: `Bool` — whether the status is in `200..299`
+
+#### `redirect?`
+
+```kex
+redirect? : Bool
+```
+
+**Returns**: `Bool` — whether the status is in `300..399`
+
+#### `clientError?`
+
+```kex
+clientError? : Bool
+```
+
+**Returns**: `Bool` — whether the status is in `400..499`
+
+#### `serverError?`
+
+```kex
+serverError? : Bool
+```
+
+**Returns**: `Bool` — whether the status is in `500..599`
 
 ## make `RouteContext`
 

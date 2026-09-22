@@ -135,6 +135,35 @@ Runtime-defined units are used for prefixes and units derived by arithmetic: `s^
 ## make `UnitDefinition` implements [Unit](#trait-unit)
 
 
+#### `factor`
+
+How many base units one of this unit is.
+
+```kex
+factor : ?
+```
+
+**Returns**: `Float` — the conversion factor
+
+#### `kind`
+
+Which dimension this unit measures.
+
+```kex
+kind : ?
+```
+
+**Returns**: `Atom` — the dimension tag
+
+#### `symbol`
+
+How the unit is written.
+
+```kex
+symbol : ?
+```
+
+**Returns**: `String` — the unit's symbol
 
 ## record `Measure`
 
@@ -184,6 +213,12 @@ The time units, from nanoseconds to weeks. The base unit is the second.
 factor(@Nanosecond)
 ```
 
+#### `kind`
+
+```kex
+kind : ?
+```
+
 #### `symbol`
 
 ```kex
@@ -197,6 +232,134 @@ Time-unit constructors on `Integer`: `5.sec`, `90.minute`, `2.week`.
 Each answers a `Measure` whose display unit is the one you named, so `90.minute` prints as minutes even though it is stored as 5400 seconds.
 
 
+#### `nanosecond`
+
+This many nanoseconds, as a `Measure`.
+
+```kex
+nanosecond : Measure
+```
+
+**Returns**: `Measure` — the quantity, displayed in nanoseconds
+
+**Examples**
+
+```kex
+100.nanosecond.to(String)   # => "100.0 ns"
+```
+
+#### `microsecond`
+
+This many microseconds, as a `Measure`.
+
+```kex
+microsecond : Measure
+```
+
+**Returns**: `Measure` — the quantity, displayed in microseconds
+
+**Examples**
+
+```kex
+250.microsecond.to(String)   # => "250.0 μs"
+```
+
+#### `millisecond`
+
+This many milliseconds, as a `Measure`.
+
+```kex
+millisecond : Measure
+```
+
+**Returns**: `Measure` — the quantity, displayed in milliseconds
+
+**Examples**
+
+```kex
+500.millisecond.to(String)   # => "500.0 ms"
+```
+
+#### `sec`
+
+This many seconds, as a `Measure`. Seconds are the base unit of time, so this is the one everything else converts through.
+
+```kex
+sec : Measure
+```
+
+**Returns**: `Measure` — the quantity, displayed in seconds
+
+**Examples**
+
+```kex
+5.sec.to(String)   # => "5.0 s"
+```
+
+#### `minute`
+
+This many minutes, as a `Measure`.
+
+```kex
+minute : Measure
+```
+
+**Returns**: `Measure` — the quantity, displayed in minutes
+
+**Examples**
+
+```kex
+90.minute.convert(Hour)   # => Ok(1.5 h)
+```
+
+#### `hour`
+
+This many hours, as a `Measure`.
+
+```kex
+hour : Measure
+```
+
+**Returns**: `Measure` — the quantity, displayed in hours
+
+**Examples**
+
+```kex
+(1.hour + 30.minute).map { |m| m.to(String) }   # => Ok("1.5 h")
+```
+
+#### `day`
+
+This many days, as a `Measure`.
+
+```kex
+day : Measure
+```
+
+**Returns**: `Measure` — the quantity, displayed in days
+
+**Examples**
+
+```kex
+1.day.convertTo(Hour).map { |m| m.to(String) }   # => Ok("24.0 h")
+```
+
+#### `week`
+
+This many weeks, as a `Measure`.
+
+```kex
+week : Measure
+```
+
+**Returns**: `Measure` — the quantity, displayed in weeks
+
+**Examples**
+
+```kex
+2.week.to(String)   # => "2.0 wk"
+```
+
 #### `timeMeasure`
 
 ```kex
@@ -208,6 +371,104 @@ timeMeasure(unit)
 The same time-unit constructors on `Float`, for fractional quantities: `1.5.hour`, `0.25.sec`.
 
 
+#### `nanosecond`
+
+This many nanoseconds, as a `Measure`.
+
+```kex
+nanosecond : Measure
+```
+
+**Returns**: `Measure` — the quantity, displayed in nanoseconds
+
+#### `microsecond`
+
+This many microseconds, as a `Measure`.
+
+```kex
+microsecond : Measure
+```
+
+**Returns**: `Measure` — the quantity, displayed in microseconds
+
+#### `millisecond`
+
+This many milliseconds, as a `Measure`.
+
+```kex
+millisecond : Measure
+```
+
+**Returns**: `Measure` — the quantity, displayed in milliseconds
+
+**Examples**
+
+```kex
+2.5.millisecond.to(String)   # => "2.5 ms"
+```
+
+#### `sec`
+
+This many seconds, as a `Measure`.
+
+```kex
+sec : Measure
+```
+
+**Returns**: `Measure` — the quantity, displayed in seconds
+
+**Examples**
+
+```kex
+0.25.sec.to(String)   # => "0.25 s"
+```
+
+#### `minute`
+
+This many minutes, as a `Measure`.
+
+```kex
+minute : Measure
+```
+
+**Returns**: `Measure` — the quantity, displayed in minutes
+
+#### `hour`
+
+This many hours, as a `Measure`.
+
+```kex
+hour : Measure
+```
+
+**Returns**: `Measure` — the quantity, displayed in hours
+
+**Examples**
+
+```kex
+1.5.hour.to(String)   # => "1.5 h"
+```
+
+#### `day`
+
+This many days, as a `Measure`.
+
+```kex
+day : Measure
+```
+
+**Returns**: `Measure` — the quantity, displayed in days
+
+#### `week`
+
+This many weeks, as a `Measure`.
+
+```kex
+week : Measure
+```
+
+**Returns**: `Measure` — the quantity, displayed in weeks
+
 #### `timeMeasure`
 
 ```kex
@@ -216,6 +477,24 @@ timeMeasure(unit)
 
 ## make `Measure`
 
+
+#### `factor`
+
+```kex
+factor : Float
+```
+
+#### `kind`
+
+```kex
+kind : Atom
+```
+
+#### `symbol`
+
+```kex
+symbol : String
+```
 
 #### `to`
 

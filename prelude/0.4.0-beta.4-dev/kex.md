@@ -91,6 +91,12 @@ inspectValue(colors)
 Current non-colored presentation for the primitive and standard compound types registered as Showable. Domain types can replace this with what their users care about (Time, Date, and DateTime do so in time.kex).
 
 
+#### `showValue`
+
+```kex
+showValue : String
+```
+
 #### `to`
 
 ```kex
@@ -198,6 +204,67 @@ The toolchain a program is running on. `kex --version` and the REPL banner repor
 ## make `Version`
 
 
+#### `tuple`
+
+The version's four values as a tuple, for destructuring.
+
+A tuple cannot carry accessors of its own: there is no named type for a `make` block to target, so the record is the value and this is the view.
+
+```kex
+tuple : (Integer, Integer, Integer, String?)
+```
+
+**Returns**: `(Integer, Integer, Integer, String?)` — major, minor, patch, revision
+
+**Examples**
+
+```kex
+let (major, minor, patch, revision) = Kex.Kernel.VERSION.tuple
+major   # => 0
+```
+
+#### `release`
+
+The three numbers, plus the pre-release channel when there is one.
+
+`0.4.0`, or `0.4.0-rc.1` on a pre-release build. What a version RANGE is matched against, so the channel has to be in it.
+
+```kex
+release : String
+```
+
+**Returns**: `String` — the release string
+
+**Examples**
+
+```kex
+Kex.Kernel.VERSION.release   # => "0.4.0-alpha.2"
+```
+
+#### `number`
+
+The release string with the build revision after it, when there is one.
+
+This is what `kex --version` and the REPL banner print.
+
+`to(String)`: the language's conversion protocol, and what this should really be: is deliberately NOT defined here: a second `to(String)` implementation anywhere in the prelude breaks type-directed `to` dispatch for every prelude type on BEAM, so adding one here silently broke `3.kilo.watt.to(String)`. Pinned by spec/prelude_to_string_dispatch.kex; restore this as `to(String)` once that dispatcher is fixed.
+
+```kex
+number : String
+```
+
+**Returns**: `String` — the full version string
+
+**Examples**
+
+```kex
+Kex.Kernel.VERSION.number   # => "0.4.0-alpha.2 (219e625)"
+```
+_Reporting the toolchain in a tool's output_
+
+```kex
+IO.printLine("built with Kex ${Kex.Kernel.VERSION.number}")
+```
 
 ## constant `VERSION`
 

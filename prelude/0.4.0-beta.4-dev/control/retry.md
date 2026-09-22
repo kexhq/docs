@@ -11,21 +11,19 @@ entities:
 
 ## module `Control.Retry`
 
-Runs bounded retries with a reusable schedule.
-
-`Retry.run` executes the block immediately. An `Ok` stops the run; an `Error` schedules another attempt. When attempts or total sleep run out, the last error is returned unchanged. Runtime faults are not caught.
-
-HTTP responses, including 429 and 503, are `Ok(response)`. Automatic retries handle request failures, not response statuses. Use `again` and `done` to classify responses or stop on permanent errors. Repeat writes only when the application makes them safe, for example with idempotency keys. A schedule bounds retry sleep, not the operation's execution time; configure request timeouts separately.
+Retry an operation after it returns an error.
 
 ## module `Control.Retry.Retry`
 
-Provides automatic error retries and explicit retry decisions.
+`run` calls the block immediately. `Ok` stops; `Error` waits and retries. When the schedule runs out, it returns the last error unchanged. Use `again` and `done` when your application needs to choose what to retry.
+
+HTTP 429 and 503 responses are `Ok(response)`, so retrying those statuses requires an explicit decision. For writes, make sure repeating the request is safe, for example by using an idempotency key. Set request timeouts separately: the schedule limits sleep, not time spent inside the operation.
 
 ## record `Schedule`
 
-Describes the timing and limits of one execution of `run`.
+Timing and attempt limits for `run`.
 
-All fields are optional. Defaults allow three attempts with exponential backoff from 100 milliseconds, capped at 5 seconds, with 20% jitter. Creating a schedule performs no work. It is immutable configuration: each run starts a fresh attempt count and delay sequence.
+Defaults: three attempts, starting with a 100 ms wait, doubling up to 5 seconds, with 20% jitter. All fields are optional. A schedule holds settings. Reusing it starts each run from attempt one.
 
 * `attempts`: maximum executions, including the first; default 3. * `delay`: initial base wait; default 100 milliseconds. * `backoff`: base-delay multiplier; default 2.0, or 1.0 for fixed waits. * `maximumDelay`: cap on each actual wait, including jitter; default 5 seconds. * `jitter`: symmetric proportional variation; default 0.2, or 0.0 to disable. * `maximumTotalDelay`: cumulative sleep allowance; default `None`.   Operation execution time is excluded. A wait that exceeds the remaining   allowance ends the run without sleeping or calling the operation again.
 
@@ -40,7 +38,7 @@ All fields are optional. Defaults allow three attempts with exponential backoff 
 
 ## type `Decision<X>`
 
-Carries an explicit decision and the last application value. `Done(value)` means the block stopped deliberately. `Again(value)` returned by `run` means the schedule was exhausted before completion. Neither form wraps the application value in an additional `Result`.
+Whether to retry, together with the last result. `Done(value)` means the block stopped deliberately. `Again(value)` returned by `run` means the schedule was exhausted before completion. The value inside can be any application result, including an `Error`.
 
 
 
@@ -51,7 +49,7 @@ Carries an explicit decision and the last application value. `Done(value)` means
 
 ## function `again`
 
-Requests another attempt if the schedule allows it.
+Retry this operation if the schedule has room for another attempt.
 
 
 ```kex
@@ -61,7 +59,7 @@ again(value) : X -> Decision<X>
 
 ## function `done`
 
-Stops immediately, even when the application value represents failure.
+Stop now. The supplied value may be a success or a permanent failure.
 
 
 ```kex
@@ -71,9 +69,9 @@ done(value) : X -> Decision<X>
 
 ## record `Info<X>`
 
-Describes a retry that is about to wait and then execute another attempt.
+Progress passed to `onRetry` before the next wait.
 
-Passed to `onRetry` only after the last outcome requests a retry and the schedule permits it. There is no notification for the initial call, success, explicit completion, or exhaustion. Reporting does not consume attempts. Durations describe scheduled sleep, not wall-clock elapsed time.
+The callback runs only when another attempt is allowed. It does not run for the first call, a successful result, `done`, or exhaustion. Durations count scheduled sleep; they exclude time spent in the operation.
 
 * `attempt`: the just-completed attempt, starting at 1. * `nextAttempt`: the attempt that follows the upcoming wait. * `maximumAttempts`: total permitted executions, including the first. * `remainingAttempts`: executions remaining, including the upcoming one. * `delay`: actual upcoming wait, after jitter and the delay cap. * `totalDelay`: sleep already performed, excluding the upcoming wait. * `result`: the last `Error` or `Again`, including its application payload.
 
@@ -89,13 +87,15 @@ Passed to `onRetry` only after the last outcome requests a retry and the schedul
 
 ## function `run`
 
-Runs a fresh operation until it succeeds, stops, or exhausts its schedule.
+Call the block until it succeeds, returns `done`, or runs out of attempts or sleep time.
 
 The first attempt is immediate. Every later attempt follows one sleep. There is no sleep after success or the final error. Named timing options override the corresponding schedule field for this execution only.
 
-An ordinary block returns `Result<X, E>`: `Ok` stops, `Error` retries, and exhaustion returns the last `Error` unchanged. An explicit block returns `Decision<X>`: `Done` stops, `Again` retries, and exhaustion returns the last `Again`. Match the returned decision to distinguish completion from exhaustion. Use one form consistently within a block.
+Return a `Result` from the block for automatic retries: `Ok` stops and `Error` retries. If no more retries are allowed, `run` returns the last error.
 
-Finite settings are normalized: attempts below one become one, negative durations become zero, backoff below one becomes one, jitter and random samples are clamped to 0..1. Non-finite Float settings are unsupported.
+Return `done(value)` or `again(value)` to make the decision yourself. The final `Done` means the block chose to stop; `Again` means it wanted another try but the schedule ran out. Use one return form throughout the block. Runtime faults propagate; they are not retried.
+
+Out-of-range settings are adjusted: attempts below one become one, negative durations become zero, backoff below one becomes one, jitter and random samples are clamped to 0..1. Non-finite Float settings are unsupported.
 
 `Done(Error(...))` means the application stopped on a permanent error. `Again(Ok(response))` means an unacceptable HTTP status persisted until exhaustion. HTTP status classification and Retry-After handling are the application's responsibility; `run` has no HTTP-specific behavior.
 
