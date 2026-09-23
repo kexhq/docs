@@ -94,6 +94,16 @@ installed?(version)
 ```
 
 
+## function `pairedTeyEbin`
+
+Where the Tey released with a Kex version lives — `bin/tey` reads the same path. Beside the toolchain rather than inside it: reinstalling a Kex replaces its whole directory, and a Tey running from there would lose its modules mid-run.
+
+
+```kex
+pairedTeyEbin(version)
+```
+
+
 ## function `availableVersions`
 
 Released versions, newest first, read from the repository's tags. Tags that are not versions are skipped rather than reported as junk.

@@ -37,6 +37,16 @@ currentPrefix()
 ```
 
 
+## function `installEbin`
+
+The launcher's own runtime directory. TEY_EBIN can instead name the Tey paired with the selected Kex (see `installPaired`), which is not an install to upgrade — TEY_INSTALL_EBIN always names the launcher's.
+
+
+```kex
+installEbin()
+```
+
+
 ## function `prefixOf`
 
 TEY_EBIN with the trailing `/lib/kex/tey/ebin` stripped. Anything else — unset, empty, a checkout's `tey/ebin` — is None: there is no install prefix to upgrade in place.
@@ -116,5 +126,17 @@ upgradeLatest(includePre)
 
 ```kex
 upgradePinned(version)
+```
+
+
+## function `installPaired`
+
+The Tey a Kex release ships, unpacked beside that toolchain so `bin/tey` runs it whenever that Kex is selected: Kex and Tey are developed and released as a pair, and a pre-release is only tested properly as that pair. Nothing installed is replaced — not even a Homebrew keg — which is what makes this safe to do on every `tey kex install`.
+
+The answer is the Tey version unpacked, or None when it was already there: tags do not move, so neither does what they carry.
+
+
+```kex
+installPaired(kexVersion)
 ```
 
