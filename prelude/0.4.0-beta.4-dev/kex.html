@@ -207,8 +207,9 @@ data-page="kex.html">
 <h2><span class="kind kind-module">module</span> <code>Kex</code></h2>
 <p>The running toolchain, which backend, which version, which features.</p>
 <pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">BACKEND</span>                  <span class="tok-comment"># =&gt; Interpreter</span>
-<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Kernel</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">release</span>   <span class="tok-comment"># =&gt; &quot;0.4.0&quot;</span>
-<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Feature</span><span class="tok-op">.</span><span class="tok-method">has?</span><span class="tok-punct">(</span><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; true</span></code></pre>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">BACKEND</span><span class="tok-op">.</span><span class="tok-method">compiled?</span>        <span class="tok-comment"># =&gt; false</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">release</span>          <span class="tok-comment"># =&gt; &quot;0.4.0&quot;</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Feature</span><span class="tok-op">.</span><span class="tok-method">has?</span><span class="tok-punct">(</span><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">FileSystem</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
 <section class="entity" id="type-backend">
 <h2><span class="kind kind-type">type</span> <code>Backend</code></h2>
 <p>Which backend is executing the program: the tree-walking <code>Interpreter</code>, or the <code>Beam</code> virtual machine.</p>
@@ -218,39 +219,60 @@ data-page="kex.html">
 <li><code>Beam</code></li>
 </ul>
 </section>
+<section class="entity" id="make-backend">
+<h2><span class="kind kind-make">make</span> <code>Backend</code></h2>
+
+<div class="functions">
+<div class="fn" id="fn-interpreted?">
+<h4><code>interpreted?</code></h4>
+<p>Whether this is the tree-walking interpreter.</p>
+<pre class="code"><code>interpreted? <span class="tok-op">:</span> <span class="tok-type">Bool</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> for <code>Interpreter</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">BACKEND</span><span class="tok-op">.</span><span class="tok-method">interpreted?</span>   <span class="tok-comment"># =&gt; true under `kex -R file.kex`</span></code></pre>
+
+</div>
+<div class="fn" id="fn-compiled?">
+<h4><code>compiled?</code></h4>
+<p>Whether this backend runs compiled code: today, the BEAM.</p>
+<pre class="code"><code>compiled? <span class="tok-op">:</span> <span class="tok-type">Bool</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> for every backend but the interpreter</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">BACKEND</span><span class="tok-op">.</span><span class="tok-method">compiled?</span>   <span class="tok-comment"># =&gt; true under `kex file.kex`</span></code></pre>
+
+</div>
+<div class="fn" id="fn-beam?">
+<h4><code>beam?</code></h4>
+<p>Whether this is the BEAM virtual machine. Processes, the web server and clustering need it.</p>
+<pre class="code"><code>beam? <span class="tok-op">:</span> <span class="tok-type">Bool</span></code></pre>
+<p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> for <code>Beam</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">BACKEND</span><span class="tok-op">.</span><span class="tok-method">beam?</span>   <span class="tok-comment"># =&gt; true under `kex file.kex`</span></code></pre>
+
+</div>
+</div>
+</section>
 <section class="entity" id="type-feature">
 <h2><span class="kind kind-type">type</span> <code>Feature</code></h2>
 <p>An optional capability a build may or may not include. Ask about one with <code>Kex.Feature.has?</code> before relying on it.</p>
+<p><code>FileSystem</code>: the program can read and write the host's files (<code>FS</code>). <code>ExternalPrograms</code>: it can run other programs (<code>Process.run</code>, <code>Process.stream</code>), which the browser build cannot.</p>
+<p>Kex's own processes (<code>spawn</code>, <code>receive</code>) are not optional: every backend has them. Networking has its finer-grained report, <code>Net.Support.current</code>.</p>
 <h3>Variants</h3>
 <ul class="variants">
-<li><code>FS</code></li>
-<li><code>Process</code></li>
+<li><code>FileSystem</code></li>
+<li><code>ExternalPrograms</code></li>
 </ul>
 </section>
 <section class="entity" id="constant-backend">
 <h2><span class="kind kind-constant">constant</span> <code>BACKEND</code> <code>Backend</code></h2>
 <p>Which backend is executing this program.</p>
-<p><code>interpreted?</code> and <code>underBeam?</code> below are the readable way to ask.</p>
+<p>Its <code>interpreted?</code>, <code>compiled?</code> and <code>beam?</code> are the readable way to ask.</p>
 
 </section>
-<section class="entity" id="constant-interpreted?">
-<h2><span class="kind kind-constant">constant</span> <code>interpreted?</code> <code>?</code></h2>
-<p>Returns <code>true</code> when running on the tree-walking interpreter.</p>
-
-</section>
-<section class="entity" id="constant-underbeam?">
-<h2><span class="kind kind-constant">constant</span> <code>underBeam?</code> <code>?</code></h2>
-<p>Returns <code>true</code> when running on the BEAM.</p>
-<p>The backend a program is on decides what is available: processes and the web server need the BEAM (<code>kex -R file.kex</code>).</p>
-
-</section>
-<section class="entity" id="module-kex-kernel">
-<h2><span class="kind kind-module">module</span> <code>Kex.Kernel</code></h2>
-<p>Build identity for the compiler and runtime executing this program.</p>
-<p>Useful in bug reports, generated artifacts, and compatibility checks where <code>Kex.BACKEND</code> alone is not enough to identify the toolchain.</p>
 <section class="entity" id="record-version">
 <h2><span class="kind kind-record">record</span> <code>Version</code></h2>
-<p>The toolchain a program is running on. <code>kex --version</code> and the REPL banner report the same numbers.</p>
+<p>Build identity for the compiler and runtime executing this program: <code>Version</code> and <code>VERSION</code> below.</p>
+<p>Useful in bug reports, generated artifacts, and compatibility checks where <code>Kex.BACKEND</code> alone is not enough to identify the toolchain. The toolchain a program is running on. <code>kex --version</code> and the REPL banner report the same numbers.</p>
 <p><code>revision</code> is the git commit the compiler was built from: <code>None</code> when it was built from a source archive rather than a checkout, which is why it is an Optional rather than a String.</p>
 <h3>Fields</h3>
 <dl class="fields">
@@ -272,7 +294,7 @@ data-page="kex.html">
 <pre class="code"><code>tuple <span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">Integer</span><span class="tok-punct">,</span> <span class="tok-type">Integer</span><span class="tok-punct">,</span> <span class="tok-type">Integer</span><span class="tok-punct">,</span> <span class="tok-type">String?</span><span class="tok-punct">)</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>(Integer, Integer, Integer, String?)</code> — major, minor, patch, revision</p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-keyword">let</span> <span class="tok-punct">(</span>major<span class="tok-punct">,</span> minor<span class="tok-punct">,</span> patch<span class="tok-punct">,</span> revision<span class="tok-punct">)</span> <span class="tok-op">=</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Kernel</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">tuple</span>
+<pre class="code"><code><span class="tok-keyword">let</span> <span class="tok-punct">(</span>major<span class="tok-punct">,</span> minor<span class="tok-punct">,</span> patch<span class="tok-punct">,</span> revision<span class="tok-punct">)</span> <span class="tok-op">=</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">tuple</span>
 major   <span class="tok-comment"># =&gt; 0</span></code></pre>
 
 </div>
@@ -283,7 +305,7 @@ major   <span class="tok-comment"># =&gt; 0</span></code></pre>
 <pre class="code"><code>release <span class="tok-op">:</span> <span class="tok-type">String</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>String</code> — the release string</p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Kernel</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">release</span>   <span class="tok-comment"># =&gt; &quot;0.4.0-alpha.2&quot;</span></code></pre>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">release</span>   <span class="tok-comment"># =&gt; &quot;0.4.0-alpha.2&quot;</span></code></pre>
 
 </div>
 <div class="fn" id="fn-number">
@@ -294,9 +316,9 @@ major   <span class="tok-comment"># =&gt; 0</span></code></pre>
 <pre class="code"><code>number <span class="tok-op">:</span> <span class="tok-type">String</span></code></pre>
 <p class="returns"><strong>Returns:</strong> <code>String</code> — the full version string</p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Kernel</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">number</span>   <span class="tok-comment"># =&gt; &quot;0.4.0-alpha.2 (219e625)&quot;</span></code></pre>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">number</span>   <span class="tok-comment"># =&gt; &quot;0.4.0-alpha.2 (219e625)&quot;</span></code></pre>
 <p class="caption"><em>Reporting the toolchain in a tool's output</em></p>
-<pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">built with Kex </span><span class="tok-string">${</span><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Kernel</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">number</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">built with Kex </span><span class="tok-string">${</span><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">number</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 </div>
@@ -305,7 +327,6 @@ major   <span class="tok-comment"># =&gt; 0</span></code></pre>
 <h2><span class="kind kind-constant">constant</span> <code>VERSION</code> <code>Version</code></h2>
 <p>This build's version.</p>
 
-</section>
 </section>
 <section class="entity" id="module-kex-feature">
 <h2><span class="kind kind-module">module</span> <code>Kex.Feature</code></h2>
@@ -321,7 +342,7 @@ major   <span class="tok-comment"># =&gt; 0</span></code></pre>
 </dl>
 <p class="returns"><strong>Returns:</strong> <code>Bool</code> — <code>true</code> when it is available</p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Feature</span><span class="tok-op">.</span><span class="tok-method">has?</span><span class="tok-punct">(</span><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; true</span></code></pre>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Feature</span><span class="tok-op">.</span><span class="tok-method">has?</span><span class="tok-punct">(</span><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">ExternalPrograms</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true, except in a browser</span></code></pre>
 
 </section>
 <section class="entity" id="constant-list">
@@ -391,7 +412,7 @@ major   <span class="tok-comment"># =&gt; 0</span></code></pre>
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-09-23T18:11:03.468589555Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="kex.md">Markdown</a></div>
+<div class="wrap">Generated by kex docgen at 2026-09-23T20:38:14.542083466Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="kex.md">Markdown</a></div>
 </footer>
 </body>
 </html>

@@ -8,6 +8,17 @@ entities:
   - { kind: make, name: "Float" }
   - { kind: module, name: "Integer" }
   - { kind: module, name: "Float" }
+  - { kind: module, name: "Float32" }
+  - { kind: module, name: "Float64" }
+  - { kind: module, name: "Int8" }
+  - { kind: module, name: "Int16" }
+  - { kind: module, name: "Int32" }
+  - { kind: module, name: "Int64" }
+  - { kind: module, name: "UInt8" }
+  - { kind: module, name: "UInt16" }
+  - { kind: module, name: "UInt32" }
+  - { kind: module, name: "UInt64" }
+  - { kind: module, name: "Byte" }
   - { kind: module, name: "Number" }
 ---
 
@@ -441,6 +452,198 @@ Parses a float from the front of the string and returns it together with the unc
 ```kex
 parsePrefix(s) : String -> (Float, String)?
 ```
+
+
+## constant `MAX`
+
+The largest finite `Float`.
+
+A Kex `Float` is always finite, so there is no infinity to start from: this is the bound to use instead, say as the first "smallest so far".
+
+
+
+## constant `MIN`
+
+The most negative finite `Float`: `-Float.MAX`. Not the smallest positive one, which some languages call MIN.
+
+
+
+## module `Float32`
+
+The bounds of the sized numeric types: `Int8.MAX`, `UInt64.MAX`, `Float32.MIN` and so on. `Integer` has none: it is arbitrary-precision. For a float type, `MIN` is the most negative finite value, not the smallest positive one.
+
+The range of a 32-bit float.
+
+## constant `MAX`
+
+The largest Float32: 3.4028234663852886e38.
+
+
+
+## constant `MIN`
+
+The most negative finite Float32: -3.4028234663852886e38.
+
+
+
+## module `Float64`
+
+The range of a 64-bit float, the same as a `Float`.
+
+## constant `MAX`
+
+The largest Float64: 1.7976931348623157e308.
+
+
+
+## constant `MIN`
+
+The most negative finite Float64: -1.7976931348623157e308.
+
+
+
+## module `Int8`
+
+The range of a signed 8-bit integer.
+
+## constant `MAX`
+
+The largest Int8: 127.
+
+
+
+## constant `MIN`
+
+The smallest Int8: -128.
+
+
+
+## module `Int16`
+
+The range of a signed 16-bit integer.
+
+## constant `MAX`
+
+The largest Int16: 32767.
+
+
+
+## constant `MIN`
+
+The smallest Int16: -32768.
+
+
+
+## module `Int32`
+
+The range of a signed 32-bit integer.
+
+## constant `MAX`
+
+The largest Int32: 2147483647.
+
+
+
+## constant `MIN`
+
+The smallest Int32: -2147483648.
+
+
+
+## module `Int64`
+
+The range of a signed 64-bit integer.
+
+## constant `MAX`
+
+The largest Int64: 9223372036854775807.
+
+
+
+## constant `MIN`
+
+The smallest Int64: -9223372036854775808.
+
+
+
+## module `UInt8`
+
+The range of an unsigned 8-bit integer: `UInt8` is another name for `Byte`.
+
+## constant `MAX`
+
+The largest UInt8: 255.
+
+
+
+## constant `MIN`
+
+The smallest UInt8: 0.
+
+
+
+## module `UInt16`
+
+The range of an unsigned 16-bit integer.
+
+## constant `MAX`
+
+The largest UInt16: 65535.
+
+
+
+## constant `MIN`
+
+The smallest UInt16: 0.
+
+
+
+## module `UInt32`
+
+The range of an unsigned 32-bit integer.
+
+## constant `MAX`
+
+The largest UInt32: 4294967295.
+
+
+
+## constant `MIN`
+
+The smallest UInt32: 0.
+
+
+
+## module `UInt64`
+
+The range of an unsigned 64-bit integer.
+
+## constant `MAX`
+
+The largest UInt64: 18446744073709551615.
+
+
+
+## constant `MIN`
+
+The smallest UInt64: 0.
+
+
+
+## module `Byte`
+
+The range of a `Byte`, Kex's unsigned 8-bit integer (also called `UInt8`).
+
+## constant `MAX`
+
+The largest Byte: 255.
+
+
+
+## constant `MIN`
+
+The smallest Byte: 0.
+
 
 
 ## module `Number`

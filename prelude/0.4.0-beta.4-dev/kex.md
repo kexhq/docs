@@ -133,8 +133,9 @@ The running toolchain, which backend, which version, which features.
 
 ```kex
 Kex.BACKEND                  # => Interpreter
-Kex.Kernel.VERSION.release   # => "0.4.0"
-Kex.Feature.has?(Kex.FS)     # => true
+Kex.BACKEND.compiled?        # => false
+Kex.VERSION.release          # => "0.4.0"
+Kex.Feature.has?(Kex.FileSystem)   # => true
 ```
 
 ## type `Backend`
@@ -148,48 +149,85 @@ Which backend is executing the program: the tree-walking `Interpreter`, or the `
   - `Interpreter`
   - `Beam`
 
+## make `Backend`
+
+
+#### `interpreted?`
+
+Whether this is the tree-walking interpreter.
+
+```kex
+interpreted? : Bool
+```
+
+**Returns**: `Bool` — `true` for `Interpreter`
+
+**Examples**
+
+```kex
+Kex.BACKEND.interpreted?   # => true under `kex -R file.kex`
+```
+
+#### `compiled?`
+
+Whether this backend runs compiled code: today, the BEAM.
+
+```kex
+compiled? : Bool
+```
+
+**Returns**: `Bool` — `true` for every backend but the interpreter
+
+**Examples**
+
+```kex
+Kex.BACKEND.compiled?   # => true under `kex file.kex`
+```
+
+#### `beam?`
+
+Whether this is the BEAM virtual machine. Processes, the web server and clustering need it.
+
+```kex
+beam? : Bool
+```
+
+**Returns**: `Bool` — `true` for `Beam`
+
+**Examples**
+
+```kex
+Kex.BACKEND.beam?   # => true under `kex file.kex`
+```
+
 ## type `Feature`
 
 An optional capability a build may or may not include. Ask about one with `Kex.Feature.has?` before relying on it.
+
+`FileSystem`: the program can read and write the host's files (`FS`). `ExternalPrograms`: it can run other programs (`Process.run`, `Process.stream`), which the browser build cannot.
+
+Kex's own processes (`spawn`, `receive`) are not optional: every backend has them. Networking has its finer-grained report, `Net.Support.current`.
 
 
 
 **Variants**
 
-  - `FS`
-  - `Process`
+  - `FileSystem`
+  - `ExternalPrograms`
 
 ## constant `BACKEND`
 
 Which backend is executing this program.
 
-`interpreted?` and `underBeam?` below are the readable way to ask.
+Its `interpreted?`, `compiled?` and `beam?` are the readable way to ask.
 
 
-
-## constant `interpreted?`
-
-Returns `true` when running on the tree-walking interpreter.
-
-
-
-## constant `underBeam?`
-
-Returns `true` when running on the BEAM.
-
-The backend a program is on decides what is available: processes and the web server need the BEAM (`kex -R file.kex`).
-
-
-
-## module `Kex.Kernel`
-
-Build identity for the compiler and runtime executing this program.
-
-Useful in bug reports, generated artifacts, and compatibility checks where `Kex.BACKEND` alone is not enough to identify the toolchain.
 
 ## record `Version`
 
-The toolchain a program is running on. `kex --version` and the REPL banner report the same numbers.
+Build identity for the compiler and runtime executing this program: `Version` and `VERSION` below.
+
+Useful in bug reports, generated artifacts, and compatibility checks where `Kex.BACKEND` alone is not enough to identify the toolchain. The toolchain a program is running on. `kex --version` and the REPL banner report the same numbers.
 
 `revision` is the git commit the compiler was built from: `None` when it was built from a source archive rather than a checkout, which is why it is an Optional rather than a String.
 
@@ -219,7 +257,7 @@ tuple : (Integer, Integer, Integer, String?)
 **Examples**
 
 ```kex
-let (major, minor, patch, revision) = Kex.Kernel.VERSION.tuple
+let (major, minor, patch, revision) = Kex.VERSION.tuple
 major   # => 0
 ```
 
@@ -238,7 +276,7 @@ release : String
 **Examples**
 
 ```kex
-Kex.Kernel.VERSION.release   # => "0.4.0-alpha.2"
+Kex.VERSION.release   # => "0.4.0-alpha.2"
 ```
 
 #### `number`
@@ -258,12 +296,12 @@ number : String
 **Examples**
 
 ```kex
-Kex.Kernel.VERSION.number   # => "0.4.0-alpha.2 (219e625)"
+Kex.VERSION.number   # => "0.4.0-alpha.2 (219e625)"
 ```
 _Reporting the toolchain in a tool's output_
 
 ```kex
-IO.printLine("built with Kex ${Kex.Kernel.VERSION.number}")
+IO.printLine("built with Kex ${Kex.VERSION.number}")
 ```
 
 ## constant `VERSION`

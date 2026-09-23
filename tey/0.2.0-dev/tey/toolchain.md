@@ -13,7 +13,7 @@ entities:
 
 ## record `ToolchainInfo`
 
-Facts reported by the compiler Tey selected for this project. This is deliberately not Kex.Kernel.VERSION: that names the compiler which built Tey itself, and a package may select a newer (or older) compiler to build its own sources.
+Facts reported by the compiler Tey selected for this project. This is deliberately not Kex.VERSION: that names the compiler which built Tey itself, and a package may select a newer (or older) compiler to build its own sources.
 
 **Fields**
 

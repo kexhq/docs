@@ -122,13 +122,13 @@ send : Atom -> Atom -> X -> Void
 ```
 
 
-## function `whereis`
+## function `whereIs`
 
 The `Pid` registered as `name` on `node`, or `None`.
 
 
 ```kex
-whereis(node, name) : Atom -> Atom -> Pid?
+whereIs(node, name) : Atom -> Atom -> Pid?
 ```
 
 

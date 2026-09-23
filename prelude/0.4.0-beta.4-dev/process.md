@@ -70,7 +70,7 @@ Backed by Kex.Intrinsic.Process and the BEAM runtime.
 
 An opaque BEAM process identifier.
 
-Obtained from `Process.self` or `Process.whereis`. Send it messages, link to it, monitor it, or ask whether it is still alive.
+Obtained from `Process.self` or `Process.whereIs`. Send it messages, link to it, monitor it, or ask whether it is still alive.
 
 
 
@@ -245,13 +245,13 @@ register(pid, name) : Process<X> -> Atom -> Void
 ```
 
 
-## function `whereis`
+## function `whereIs`
 
 Returns the `Pid` registered under `name`, or `None` when nothing is.
 
 
 ```kex
-whereis(name) : Atom -> Pid?
+whereIs(name) : Atom -> Pid?
 ```
 
 

@@ -103,11 +103,15 @@ data-page="atom.html">
 <pre class="code"><code><span class="tok-op">:</span>ok
 <span class="tok-op">:</span>b<span class="tok-op">@</span><span class="tok-field">localhost</span>                  <span class="tok-comment"># an interior `@` is part of a bare atom</span>
 <span class="tok-op">:</span><span class="tok-string">&quot;</span><span class="tok-string">b@host.example.com</span><span class="tok-string">&quot;</span>         <span class="tok-comment"># the quoted form spells any text</span></code></pre>
-<p>Most atoms are written in the source. <code>Atom.from</code> makes one from text built at runtime — a node name, say — and <code>string</code> gives the text back.</p>
+<p>Most atoms are written in the source. From text:</p>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-keyword">as</span><span class="tok-punct">(</span><span class="tok-type">Atom</span><span class="tok-punct">)</span>     <span class="tok-comment"># at compile time, from a literal</span>
+<span class="tok-type">Atom</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span>      <span class="tok-comment"># at run time, making the atom — a node name, say</span>
+text<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Atom</span><span class="tok-punct">)</span>        <span class="tok-comment"># at run time, only an atom that already exists: Atom?</span></code></pre>
+<p>and <code>string</code> gives the text back.</p>
 <section class="entity" id="function-from">
 <h2><span class="kind kind-function">function</span> <code>from</code></h2>
 <p>Returns the atom whose name is <code>text</code>.</p>
-<p>On the BEAM atoms are never freed, and a node holds at most about a million. Build atoms from a bounded set of names — node names, config keys — never from untrusted input; <code>existing</code> is the safe form for that.</p>
+<p>On the BEAM atoms are never freed, and a node holds at most about a million. Build atoms from a bounded set of names — node names, config keys — never from untrusted input; <code>text.to(Atom)</code> is the safe form for that, since it only finds atoms that already exist.</p>
 <pre class="code"><code><span class="tok-keyword">from</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Atom</span></code></pre>
 <h5>Parameters</h5>
 <dl class="params">
@@ -117,23 +121,6 @@ data-page="atom.html">
 <h5>Examples</h5>
 <pre class="code"><code><span class="tok-type">Atom</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">ok</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-op">:</span>ok                <span class="tok-comment"># =&gt; true</span>
 <span class="tok-type">Atom</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app@</span><span class="tok-string">${</span>host<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>              <span class="tok-comment"># =&gt; :&quot;app@myhost&quot;</span></code></pre>
-
-</section>
-<section class="entity" id="function-existing">
-<h2><span class="kind kind-function">function</span> <code>existing</code></h2>
-<p>Returns the atom named <code>text</code> only if one already exists, and <code>None</code> otherwise — it never creates an atom, so it is safe on untrusted input.</p>
-<pre class="code"><code><span class="tok-fn">existing</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span> <span class="tok-op">:</span> <span class="tok-type">String</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Atom?</span></code></pre>
-<h5>Parameters</h5>
-<dl class="params">
-<div class="param"><dt><code>text</code> <code>String</code></dt><dd>the atom's name</dd></div>
-</dl>
-<p class="returns"><strong>Returns:</strong> <code>Atom?</code> — the atom, or <code>None</code></p>
-<h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">Atom</span><span class="tok-op">.</span><span class="tok-method">existing</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">ok</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>                   <span class="tok-comment"># =&gt; Just(:ok)</span>
-<span class="tok-keyword">match</span> <span class="tok-type">Atom</span><span class="tok-op">.</span><span class="tok-method">existing</span><span class="tok-punct">(</span>input<span class="tok-punct">)</span> <span class="tok-keyword">do</span>
-  <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-op">:</span>start<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">begin</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
-  _ <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">unknown command</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-<span class="tok-keyword">end</span></code></pre>
 
 </section>
 </section>
@@ -157,7 +144,7 @@ data-page="atom.html">
 </main>
 </div>
 <footer class="foot">
-<div class="wrap">Generated by kex docgen at 2026-09-23T18:11:03.468589555Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="atom.md">Markdown</a></div>
+<div class="wrap">Generated by kex docgen at 2026-09-23T20:38:14.542083466Z · <a href="../../llms.txt">llms.txt</a> · <a href="../../search.json">search.json</a> · <a href="atom.md">Markdown</a></div>
 </footer>
 </body>
 </html>

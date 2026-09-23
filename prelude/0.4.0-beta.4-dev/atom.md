@@ -20,27 +20,25 @@ Atoms: the `:name` values. An atom is its own name — two atoms with the same t
 :"b@host.example.com"         # the quoted form spells any text
 ```
 
-Most atoms are written in the source. `Atom.from` makes one from text built at runtime — a node name, say — and `string` gives the text back.
+Most atoms are written in the source. From text:
+
+```kex
+"hello".as(Atom)     # at compile time, from a literal
+Atom.from(text)      # at run time, making the atom — a node name, say
+text.to(Atom)        # at run time, only an atom that already exists: Atom?
+```
+
+and `string` gives the text back.
 
 ## function `from`
 
 Returns the atom whose name is `text`.
 
-On the BEAM atoms are never freed, and a node holds at most about a million. Build atoms from a bounded set of names — node names, config keys — never from untrusted input; `existing` is the safe form for that.
+On the BEAM atoms are never freed, and a node holds at most about a million. Build atoms from a bounded set of names — node names, config keys — never from untrusted input; `text.to(Atom)` is the safe form for that, since it only finds atoms that already exist.
 
 
 ```kex
 from(text) : String -> Atom
-```
-
-
-## function `existing`
-
-Returns the atom named `text` only if one already exists, and `None` otherwise — it never creates an atom, so it is safe on untrusted input.
-
-
-```kex
-existing(text) : String -> Atom?
 ```
 
 

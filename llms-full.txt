@@ -352,27 +352,25 @@ Atoms: the `:name` values. An atom is its own name — two atoms with the same t
 :"b@host.example.com"         # the quoted form spells any text
 ```
 
-Most atoms are written in the source. `Atom.from` makes one from text built at runtime — a node name, say — and `string` gives the text back.
+Most atoms are written in the source. From text:
+
+```kex
+"hello".as(Atom)     # at compile time, from a literal
+Atom.from(text)      # at run time, making the atom — a node name, say
+text.to(Atom)        # at run time, only an atom that already exists: Atom?
+```
+
+and `string` gives the text back.
 
 ## function `from`
 
 Returns the atom whose name is `text`.
 
-On the BEAM atoms are never freed, and a node holds at most about a million. Build atoms from a bounded set of names — node names, config keys — never from untrusted input; `existing` is the safe form for that.
+On the BEAM atoms are never freed, and a node holds at most about a million. Build atoms from a bounded set of names — node names, config keys — never from untrusted input; `text.to(Atom)` is the safe form for that, since it only finds atoms that already exist.
 
 
 ```kex
 from(text) : String -> Atom
-```
-
-
-## function `existing`
-
-Returns the atom named `text` only if one already exists, and `None` otherwise — it never creates an atom, so it is safe on untrusted input.
-
-
-```kex
-existing(text) : String -> Atom?
 ```
 
 
@@ -3998,8 +3996,9 @@ The running toolchain, which backend, which version, which features.
 
 ```kex
 Kex.BACKEND                  # => Interpreter
-Kex.Kernel.VERSION.release   # => "0.4.0"
-Kex.Feature.has?(Kex.FS)     # => true
+Kex.BACKEND.compiled?        # => false
+Kex.VERSION.release          # => "0.4.0"
+Kex.Feature.has?(Kex.FileSystem)   # => true
 ```
 
 ## type `Backend`
@@ -4013,48 +4012,85 @@ Which backend is executing the program: the tree-walking `Interpreter`, or the `
   - `Interpreter`
   - `Beam`
 
+## make `Backend`
+
+
+#### `interpreted?`
+
+Whether this is the tree-walking interpreter.
+
+```kex
+interpreted? : Bool
+```
+
+**Returns**: `Bool` — `true` for `Interpreter`
+
+**Examples**
+
+```kex
+Kex.BACKEND.interpreted?   # => true under `kex -R file.kex`
+```
+
+#### `compiled?`
+
+Whether this backend runs compiled code: today, the BEAM.
+
+```kex
+compiled? : Bool
+```
+
+**Returns**: `Bool` — `true` for every backend but the interpreter
+
+**Examples**
+
+```kex
+Kex.BACKEND.compiled?   # => true under `kex file.kex`
+```
+
+#### `beam?`
+
+Whether this is the BEAM virtual machine. Processes, the web server and clustering need it.
+
+```kex
+beam? : Bool
+```
+
+**Returns**: `Bool` — `true` for `Beam`
+
+**Examples**
+
+```kex
+Kex.BACKEND.beam?   # => true under `kex file.kex`
+```
+
 ## type `Feature`
 
 An optional capability a build may or may not include. Ask about one with `Kex.Feature.has?` before relying on it.
+
+`FileSystem`: the program can read and write the host's files (`FS`). `ExternalPrograms`: it can run other programs (`Process.run`, `Process.stream`), which the browser build cannot.
+
+Kex's own processes (`spawn`, `receive`) are not optional: every backend has them. Networking has its finer-grained report, `Net.Support.current`.
 
 
 
 **Variants**
 
-  - `FS`
-  - `Process`
+  - `FileSystem`
+  - `ExternalPrograms`
 
 ## constant `BACKEND`
 
 Which backend is executing this program.
 
-`interpreted?` and `underBeam?` below are the readable way to ask.
+Its `interpreted?`, `compiled?` and `beam?` are the readable way to ask.
 
 
-
-## constant `interpreted?`
-
-Returns `true` when running on the tree-walking interpreter.
-
-
-
-## constant `underBeam?`
-
-Returns `true` when running on the BEAM.
-
-The backend a program is on decides what is available: processes and the web server need the BEAM (`kex -R file.kex`).
-
-
-
-## module `Kex.Kernel`
-
-Build identity for the compiler and runtime executing this program.
-
-Useful in bug reports, generated artifacts, and compatibility checks where `Kex.BACKEND` alone is not enough to identify the toolchain.
 
 ## record `Version`
 
-The toolchain a program is running on. `kex --version` and the REPL banner report the same numbers.
+Build identity for the compiler and runtime executing this program: `Version` and `VERSION` below.
+
+Useful in bug reports, generated artifacts, and compatibility checks where `Kex.BACKEND` alone is not enough to identify the toolchain. The toolchain a program is running on. `kex --version` and the REPL banner report the same numbers.
 
 `revision` is the git commit the compiler was built from: `None` when it was built from a source archive rather than a checkout, which is why it is an Optional rather than a String.
 
@@ -4084,7 +4120,7 @@ tuple : (Integer, Integer, Integer, String?)
 **Examples**
 
 ```kex
-let (major, minor, patch, revision) = Kex.Kernel.VERSION.tuple
+let (major, minor, patch, revision) = Kex.VERSION.tuple
 major   # => 0
 ```
 
@@ -4103,7 +4139,7 @@ release : String
 **Examples**
 
 ```kex
-Kex.Kernel.VERSION.release   # => "0.4.0-alpha.2"
+Kex.VERSION.release   # => "0.4.0-alpha.2"
 ```
 
 #### `number`
@@ -4123,12 +4159,12 @@ number : String
 **Examples**
 
 ```kex
-Kex.Kernel.VERSION.number   # => "0.4.0-alpha.2 (219e625)"
+Kex.VERSION.number   # => "0.4.0-alpha.2 (219e625)"
 ```
 _Reporting the toolchain in a tool's output_
 
 ```kex
-IO.printLine("built with Kex ${Kex.Kernel.VERSION.number}")
+IO.printLine("built with Kex ${Kex.VERSION.number}")
 ```
 
 ## constant `VERSION`
@@ -6663,13 +6699,13 @@ send : Atom -> Atom -> X -> Void
 ```
 
 
-## function `whereis`
+## function `whereIs`
 
 The `Pid` registered as `name` on `node`, or `None`.
 
 
 ```kex
-whereis(node, name) : Atom -> Atom -> Pid?
+whereIs(node, name) : Atom -> Atom -> Pid?
 ```
 
 
@@ -6698,6 +6734,17 @@ entities:
   - { kind: make, name: "Float" }
   - { kind: module, name: "Integer" }
   - { kind: module, name: "Float" }
+  - { kind: module, name: "Float32" }
+  - { kind: module, name: "Float64" }
+  - { kind: module, name: "Int8" }
+  - { kind: module, name: "Int16" }
+  - { kind: module, name: "Int32" }
+  - { kind: module, name: "Int64" }
+  - { kind: module, name: "UInt8" }
+  - { kind: module, name: "UInt16" }
+  - { kind: module, name: "UInt32" }
+  - { kind: module, name: "UInt64" }
+  - { kind: module, name: "Byte" }
   - { kind: module, name: "Number" }
 ---
 
@@ -7131,6 +7178,198 @@ Parses a float from the front of the string and returns it together with the unc
 ```kex
 parsePrefix(s) : String -> (Float, String)?
 ```
+
+
+## constant `MAX`
+
+The largest finite `Float`.
+
+A Kex `Float` is always finite, so there is no infinity to start from: this is the bound to use instead, say as the first "smallest so far".
+
+
+
+## constant `MIN`
+
+The most negative finite `Float`: `-Float.MAX`. Not the smallest positive one, which some languages call MIN.
+
+
+
+## module `Float32`
+
+The bounds of the sized numeric types: `Int8.MAX`, `UInt64.MAX`, `Float32.MIN` and so on. `Integer` has none: it is arbitrary-precision. For a float type, `MIN` is the most negative finite value, not the smallest positive one.
+
+The range of a 32-bit float.
+
+## constant `MAX`
+
+The largest Float32: 3.4028234663852886e38.
+
+
+
+## constant `MIN`
+
+The most negative finite Float32: -3.4028234663852886e38.
+
+
+
+## module `Float64`
+
+The range of a 64-bit float, the same as a `Float`.
+
+## constant `MAX`
+
+The largest Float64: 1.7976931348623157e308.
+
+
+
+## constant `MIN`
+
+The most negative finite Float64: -1.7976931348623157e308.
+
+
+
+## module `Int8`
+
+The range of a signed 8-bit integer.
+
+## constant `MAX`
+
+The largest Int8: 127.
+
+
+
+## constant `MIN`
+
+The smallest Int8: -128.
+
+
+
+## module `Int16`
+
+The range of a signed 16-bit integer.
+
+## constant `MAX`
+
+The largest Int16: 32767.
+
+
+
+## constant `MIN`
+
+The smallest Int16: -32768.
+
+
+
+## module `Int32`
+
+The range of a signed 32-bit integer.
+
+## constant `MAX`
+
+The largest Int32: 2147483647.
+
+
+
+## constant `MIN`
+
+The smallest Int32: -2147483648.
+
+
+
+## module `Int64`
+
+The range of a signed 64-bit integer.
+
+## constant `MAX`
+
+The largest Int64: 9223372036854775807.
+
+
+
+## constant `MIN`
+
+The smallest Int64: -9223372036854775808.
+
+
+
+## module `UInt8`
+
+The range of an unsigned 8-bit integer: `UInt8` is another name for `Byte`.
+
+## constant `MAX`
+
+The largest UInt8: 255.
+
+
+
+## constant `MIN`
+
+The smallest UInt8: 0.
+
+
+
+## module `UInt16`
+
+The range of an unsigned 16-bit integer.
+
+## constant `MAX`
+
+The largest UInt16: 65535.
+
+
+
+## constant `MIN`
+
+The smallest UInt16: 0.
+
+
+
+## module `UInt32`
+
+The range of an unsigned 32-bit integer.
+
+## constant `MAX`
+
+The largest UInt32: 4294967295.
+
+
+
+## constant `MIN`
+
+The smallest UInt32: 0.
+
+
+
+## module `UInt64`
+
+The range of an unsigned 64-bit integer.
+
+## constant `MAX`
+
+The largest UInt64: 18446744073709551615.
+
+
+
+## constant `MIN`
+
+The smallest UInt64: 0.
+
+
+
+## module `Byte`
+
+The range of a `Byte`, Kex's unsigned 8-bit integer (also called `UInt8`).
+
+## constant `MAX`
+
+The largest Byte: 255.
+
+
+
+## constant `MIN`
+
+The smallest Byte: 0.
+
 
 
 ## module `Number`
@@ -8593,7 +8832,7 @@ Backed by Kex.Intrinsic.Process and the BEAM runtime.
 
 An opaque BEAM process identifier.
 
-Obtained from `Process.self` or `Process.whereis`. Send it messages, link to it, monitor it, or ask whether it is still alive.
+Obtained from `Process.self` or `Process.whereIs`. Send it messages, link to it, monitor it, or ask whether it is still alive.
 
 
 
@@ -8768,13 +9007,13 @@ register(pid, name) : Process<X> -> Atom -> Void
 ```
 
 
-## function `whereis`
+## function `whereIs`
 
 Returns the `Pid` registered under `name`, or `None` when nothing is.
 
 
 ```kex
-whereis(name) : Atom -> Pid?
+whereIs(name) : Atom -> Pid?
 ```
 
 
@@ -23511,7 +23750,7 @@ entities:
 
 ## record `ToolchainInfo`
 
-Facts reported by the compiler Tey selected for this project. This is deliberately not Kex.Kernel.VERSION: that names the compiler which built Tey itself, and a package may select a newer (or older) compiler to build its own sources.
+Facts reported by the compiler Tey selected for this project. This is deliberately not Kex.VERSION: that names the compiler which built Tey itself, and a package may select a newer (or older) compiler to build its own sources.
 
 **Fields**
 
