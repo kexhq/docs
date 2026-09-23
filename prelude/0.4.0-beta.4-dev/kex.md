@@ -302,7 +302,7 @@ Reading the typed public surface of a compiled Kex module.
 
 Reads the KexI interface chunk of a compiled Kex module: its typed public surface, and answers the decoded term, or None when the file has no such chunk, does not exist, or is not a BEAM artifact.
 
-The term is an ordinary tree of tuples, lists, atoms, integers and strings, so it is walked with normal pattern matching and `Tuple.items`. This exists so that reading it needs no `Erlang.*` interop: it is the one intentional entry point rather than a general term decoder.
+The term is an ordinary tree of tuples, lists, atoms, integers and strings, so it is walked with normal pattern matching and `Tuple.items`. This exists so that reading it needs no `BEAM.*` interop: it is the one intentional entry point rather than a general term decoder.
 
 
 ```kex

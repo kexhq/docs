@@ -333,6 +333,75 @@ groups.reduce([]) { |acc, g| acc.combine(g) }
 ---
 package: prelude
 version: "0.4.0-beta.4-dev"
+source: atom.kex
+title: Atom
+entities:
+  - { kind: module, name: "Atom" }
+  - { kind: make, name: "Atom" }
+---
+
+# Atom
+
+## module `Atom`
+
+Atoms: the `:name` values. An atom is its own name — two atoms with the same text are the same value, and comparing them is as cheap as comparing numbers.
+
+```kex
+:ok
+:b@localhost                  # an interior `@` is part of a bare atom
+:"b@host.example.com"         # the quoted form spells any text
+```
+
+Most atoms are written in the source. `Atom.from` makes one from text built at runtime — a node name, say — and `string` gives the text back.
+
+## function `from`
+
+Returns the atom whose name is `text`.
+
+On the BEAM atoms are never freed, and a node holds at most about a million. Build atoms from a bounded set of names — node names, config keys — never from untrusted input; `existing` is the safe form for that.
+
+
+```kex
+from(text) : String -> Atom
+```
+
+
+## function `existing`
+
+Returns the atom named `text` only if one already exists, and `None` otherwise — it never creates an atom, so it is safe on untrusted input.
+
+
+```kex
+existing(text) : String -> Atom?
+```
+
+
+## make `Atom`
+
+
+#### `string`
+
+Returns the atom's name as text, without the leading colon. Total, like `Char.string`: every atom has a name.
+
+```kex
+string : String
+```
+
+**Returns**: `String` — the name
+
+**Examples**
+
+```kex
+:ok.string                    # => "ok"
+:"b@host.example.com".string  # => "b@host.example.com"
+```
+
+
+---
+
+---
+package: prelude
+version: "0.4.0-beta.4-dev"
 source: binary.kex
 title: Binary
 entities:
@@ -4098,7 +4167,7 @@ Reading the typed public surface of a compiled Kex module.
 
 Reads the KexI interface chunk of a compiled Kex module: its typed public surface, and answers the decoded term, or None when the file has no such chunk, does not exist, or is not a BEAM artifact.
 
-The term is an ordinary tree of tuples, lists, atoms, integers and strings, so it is walked with normal pattern matching and `Tuple.items`. This exists so that reading it needs no `Erlang.*` interop: it is the one intentional entry point rather than a general term decoder.
+The term is an ordinary tree of tuples, lists, atoms, integers and strings, so it is walked with normal pattern matching and `Tuple.items`. This exists so that reading it needs no `BEAM.*` interop: it is the one intentional entry point rather than a general term decoder.
 
 
 ```kex
@@ -6473,6 +6542,155 @@ IO.printLine("listening on 127.0.0.1:${port.string}")
 ---
 package: prelude
 version: "0.4.0-beta.4-dev"
+source: node.kex
+title: Node
+entities:
+  - { kind: module, name: "Node" }
+---
+
+# Node
+
+## module `Node`
+
+Distributed Kex: this BEAM node, and the other nodes it is connected to.
+
+A node is one running BEAM VM with a name. Once two nodes share a cookie and are connected, a `Pid` from one works on the other: `send`, `link` and `monitor` cross the network unchanged, and so do typed `Process` and `Server` handles.
+
+Name a node when starting it (`kex --sname a --cookie secret app.kex`), or from inside the program with `Node.start`:
+
+```kex
+using Node
+
+main do
+  Node.connect(:b@myhost)
+  Node.send(:b@myhost, :logger, (:hello, Node.self))
+end
+```
+
+Node names are atoms: `:b@myhost` for a short name, the quoted `:"b@host.example.com"` for one with dots, or `Atom.from(text)` for one built at runtime.
+
+Both nodes need the same compiled code for anything that carries a function, like a lambda or a record whose methods the receiver calls; `Node.spawn` sends its block's code along. Plain data — numbers, strings, lists, tuples, records — needs nothing.
+
+Backed by Kex.Intrinsic.Node on the BEAM. The tree-walk interpreter is always a single, unnamed node.
+
+## function `self`
+
+This node's name, or `:nonode@nohost` when it is not distributed.
+
+
+```kex
+self() : Atom
+```
+
+
+## function `alive?`
+
+Whether this node is distributed — started with a name, so other nodes can connect to it.
+
+
+```kex
+alive?() : Bool
+```
+
+
+## function `list`
+
+The nodes this one is currently connected to, not including itself.
+
+
+```kex
+list() : [Atom]
+```
+
+
+## function `start`
+
+Makes this node distributed under `name`, as `--sname`/`--name` would at startup. A `name` whose host has a dot (`:"app@host.example.com"`) uses long names; anything else uses short names.
+
+
+```kex
+start(name) : Atom -> Result<Atom, String>
+```
+
+
+## function `stop`
+
+Stops distribution: the node drops its name and every connection.
+
+
+```kex
+stop() : Bool
+```
+
+
+## function `connect`
+
+Connects to the node named `node`. Both nodes must share a cookie.
+
+
+```kex
+connect(node) : Atom -> Bool
+```
+
+
+## function `disconnect`
+
+Drops the connection to `node`.
+
+
+```kex
+disconnect(node) : Atom -> Bool
+```
+
+
+## function `setCookie`
+
+Sets the cookie this node presents when connecting. Nodes connect only when their cookies match.
+
+
+```kex
+setCookie(cookie) : String -> Void
+```
+
+
+## function `send`
+
+Sends `message` to the process registered as `name` on `node`, unchanged. Like `Pid.send`, it never blocks and never fails.
+
+
+```kex
+send : Atom -> Atom -> X -> Void
+```
+
+
+## function `whereis`
+
+The `Pid` registered as `name` on `node`, or `None`.
+
+
+```kex
+whereis(node, name) : Atom -> Atom -> Pid?
+```
+
+
+## function `spawn`
+
+Runs `block` in a new process on `node` and returns its `Pid`.
+
+The block is a function of THIS program. When `node` has not loaded the module it belongs to, that module's compiled code is sent over and loaded first. A module `node` already has is left as it is.
+
+
+```kex
+spawn(node, block) : Atom -> Block<X> -> Pid
+```
+
+
+
+---
+
+---
+package: prelude
+version: "0.4.0-beta.4-dev"
 source: number.kex
 title: Number
 entities:
@@ -8546,6 +8764,7 @@ Registers `pid` under the atom `name`, so it can be found by name rather than by
 
 ```kex
 register(pid, name) : Pid -> Atom -> Void
+register(pid, name) : Process<X> -> Atom -> Void
 ```
 
 
@@ -22137,7 +22356,7 @@ librarySourcesAt(packageRoot)
 
 ## function `backendFlags`
 
-What `tey build` produces is what ships, so what `tey run` and `tey test` exercise has to be the same thing — which is what `kex` does with no backend flag at all: it compiles and runs on the BEAM. `-R` tree-walks the source instead, and processes, `Erlang.*` interop and the String/Char representation differ enough between the two that a green interpreter run says nothing about the built package.
+What `tey build` produces is what ships, so what `tey run` and `tey test` exercise has to be the same thing — which is what `kex` does with no backend flag at all: it compiles and runs on the BEAM. `-R` tree-walks the source instead, and processes, `BEAM.*` interop and the String/Char representation differ enough between the two that a green interpreter run says nothing about the built package.
 
 `--interpret` is the way back, for a backend gap or a debugging session.
 

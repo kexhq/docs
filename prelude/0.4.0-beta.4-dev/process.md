@@ -241,6 +241,7 @@ Registers `pid` under the atom `name`, so it can be found by name rather than by
 
 ```kex
 register(pid, name) : Pid -> Atom -> Void
+register(pid, name) : Process<X> -> Atom -> Void
 ```
 
 
