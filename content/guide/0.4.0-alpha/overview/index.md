@@ -1,7 +1,10 @@
 ---
-title: Overview
-description: What Kex is, and what it is for.
-order: 1
+id: "guide-0-4-0-alpha-overview"
+title: "Overview"
+description: "What Kex is, and what it is for."
+path: "/guide/0.4.0-alpha/overview/"
+draft: false
+template: "page"
 ---
 
 Kex is a functional language with Ruby-like syntax, immutability by default,

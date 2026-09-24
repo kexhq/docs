@@ -1,0 +1,233 @@
+# The site-wide files of docs.kex.run, written into dist/ after `marq build`:
+#
+#   llms.txt       every page, one section per collection, with its Markdown
+#   llms-full.txt  the whole corpus concatenated, for a model in one shot
+#   sitemap.xml    every page's canonical URL
+#   robots.txt     points at the sitemap
+#   CNAME          the custom domain GitHub Pages serves
+#
+# Two kinds of page make up the site: the ones authored here (content/, in
+# Marqraft) and the reference kexhq/kex generates into generated/ (one
+# <package>/<version>/ per unit, each with its own manifest.json and a .md
+# twin per page). Both are listed; drafts are not.
+#
+#   kex --run scripts/finish.kex -- <site-dir> [base-url]
+
+main(args) do
+  let site = args.first.or(".")
+  let baseUrl = normalizeBase(args.drop(1).first.or("https://docs.kex.run"))
+  let dist = FS.Path.join(site, "dist")
+  if !FS.File.directory?(dist)
+    IO.printError("finish: no ${dist} — run marq build first")
+    return System.exit(1)
+  end
+  let guide = authoredPages(site)
+  let units = generatedUnits(site)
+  let sections = [Section { title: "Guide", pages: guide }] + units.map { |unit| unitSection(unit) }
+  guide.each { |page| writeTwin(dist, page) }
+  write(dist, "llms.txt", llmsTxt(sections, baseUrl))
+  write(dist, "llms-full.txt", llmsFull(site, guide, units))
+  write(dist, "sitemap.xml", sitemap(sections, baseUrl))
+  write(dist, "robots.txt", "User-agent: *\nAllow: /\nSitemap: ${baseUrl}/sitemap.xml\n")
+  let host = hostOf(baseUrl)
+  write(dist, "CNAME", host + "\n") if !host.empty?
+  let total = sections.map { |s| s.pages.count }.reduce(0, { |a, b| a + b })
+  IO.printLine("finish: ${total} page(s) in ${sections.count} section(s); wrote llms.txt, llms-full.txt, sitemap.xml, robots.txt${host.empty? then "" else ", CNAME"}")
+  return System.exit(0)
+end
+
+record Page do
+  title : String
+  # The site path, "/guide/0.4.0/syntax/".
+  path : String
+  # The project file holding its Markdown: content/…/index.md for an
+  # authored page, generated/<pkg>/<ver>/<page>.md for a reference page.
+  markdown : String
+end
+
+record Section do
+  title : String
+  pages : [Page]
+end
+
+record Unit do
+  label : String
+  version : String
+  generatedAt : String
+  listed : Bool
+  pages : [Page]
+end
+
+# --- authored pages ------------------------------------------------------
+
+foul authoredPages(site: String) -> [Page] do
+  let root = FS.Path.join(site, "content")
+  return markdownFiles(root, "").flatMap { |file| authoredPage(site, FS.Path.join(root, file)) }.sort { |a, b| a.path < b.path }
+end
+
+foul markdownFiles(dir: String, prefix: String) -> [String] do
+  let names = FS.Directory.list(dir).or([]).sort
+  return names.flatMap { |name|
+    let rel = prefix.empty? then name else "${prefix}/${name}"
+    let full = FS.Path.join(dir, name)
+    FS.File.directory?(full) then markdownFiles(full, rel) else (name.endsWith?(".md") then [rel] else [])
+  }
+end
+
+# A page with its frontmatter's title and path; a draft is not published,
+# so it is not listed either.
+foul authoredPage(site: String, file: String) -> [Page] do
+  match FS.File.read(file) do
+    Error(_) => []
+    Ok(text) => do
+      let lines = text.split("\n")
+      let front = lines.drop(1).takeWhile { |line| line.trim != "---" }
+      let title = field(front, "title")
+      let path = field(front, "path")
+      return [] if path.empty? || field(front, "draft") == "true"
+      [Page { title: title, path: path, markdown: file }]
+    end
+  end
+end
+
+foul field(front: [String], key: String) -> String do
+  let raw = front.find { |line| line.startsWith?("${key}:") }.or("").drop(key.count + 1).trim
+  return raw.drop(1).take(raw.count - 2) if raw.startsWith?("\"") && raw.endsWith?("\"") && raw.count >= 2
+  return raw
+end
+
+# --- generated reference -------------------------------------------------
+
+# Every <package>/<version>/ under generated/ that docgen wrote a
+# manifest.json for. A package's newest build is its current one: listed
+# first in llms.txt and the only one concatenated into llms-full.txt.
+foul generatedUnits(site: String) -> [Unit] do
+  let dir = FS.Path.join(site, "generated")
+  let packages = FS.Directory.directories(dir).or([]).sort
+  return packages.flatMap { |package|
+    let units = FS.Directory.directories(FS.Path.join(dir, package)).or([]).sort.flatMap { |version|
+      unitOf(FS.Path.join(FS.Path.join(dir, package), version))
+    }
+    let newest = units.map { |u| u.generatedAt }.reduce("", { |a, b| a > b then a else b })
+    units.map { |u| Unit { ...u, listed: u.generatedAt == newest } }.sort { |a, b| a.listed && !b.listed }
+  }
+end
+
+foul unitOf(unitDir: String) -> [Unit] do
+  match FS.File.read(FS.Path.join(unitDir, "manifest.json")) do
+    Error(_) => []
+    Ok(body) => match JSON.parse(body) do
+      Error(_) => []
+      Ok(value) => do
+        let package = text(value["package"])
+        let version = text(value["version"])
+        let pages = match value["pages"] do
+          None => []
+          Just(items) => items.map { |item|
+            let path = text(item["path"])
+            Page { title: text(item["title"]), path: "/${package}/${version}/${path}/", markdown: FS.Path.join(unitDir, "${path}.md") }
+          }
+        end
+        [Unit { label: text(value["label"]), version: version, generatedAt: text(value["generatedAt"]), listed: false, pages: pages }]
+      end
+    end
+  end
+end
+
+foul unitSection(unit: Unit) -> Section do
+  let mark = unit.listed then " (current)" else ""
+  return Section { title: "${unit.label} ${unit.version}${mark}", pages: unit.pages }
+end
+
+foul text(value: Any?) -> String do
+  match value do
+    Just(v) => "${v}"
+    None => ""
+  end
+end
+
+# --- the files -----------------------------------------------------------
+
+foul llmsTxt(sections: [Section], baseUrl: String) -> String do
+  let header = [
+    "# Kex documentation",
+    "",
+    "Everything published at ${baseUrl}: the Guide, written by hand, then the",
+    "reference generated from each package's source, one section per version.",
+    "",
+    "How to read this with an LLM: start with the Guide, then the reference",
+    "section marked (current). Versions ending in `-dev` are unreleased",
+    "snapshots. Every page also exists as raw Markdown, linked beside it, and",
+    "the whole corpus concatenated is `llms-full.txt`. Each reference version",
+    "carries its own `model.json` (the full typed model) and `search.json`.",
+    ""
+  ].join("\n")
+  let body = sections.reject { |s| s.pages.empty? }.map { |s|
+    "## ${s.title}\n\n" + s.pages.map { |p| "- [${p.title}](${baseUrl}${p.path}) ([Markdown](${baseUrl}${markdownUrl(p)}))" }.join("\n")
+  }.join("\n\n")
+  return header + "\n" + body + "\n"
+end
+
+# Where a page's Markdown is served: beside its directory, /guide/syntax.md
+# for /guide/syntax/ — docgen's layout for reference pages, and the one
+# writeTwin gives authored pages. The site root's is /index.md.
+foul markdownUrl(page: Page) -> String do
+  return "/index.md" if page.path == "/"
+  let trimmed = page.path.take(page.path.count - 1)
+  return "${trimmed}.md"
+end
+
+# An authored page's Markdown twin, published beside its HTML.
+foul writeTwin(dist: String, page: Page) -> () do
+  match bodyOf(page, true).first do
+    Just(body) => do
+      let target = FS.Path.join(dist, markdownUrl(page).drop(1))
+      let _ = FS.Directory.create(FS.Path.dirname(target))
+      let _ = FS.File.write(target, body + "\n")
+      ()
+    end
+    None => ()
+  end
+  return ()
+end
+
+foul llmsFull(site: String, guide: [Page], units: [Unit]) -> String do
+  let guideTexts = guide.flatMap { |p| bodyOf(p, true) }
+  let unitTexts = units.filter { |u| u.listed }.flatMap { |u| u.pages.flatMap { |p| bodyOf(p, false) } }
+  return (guideTexts + unitTexts).join("\n\n---\n\n") + "\n"
+end
+
+# An authored page's Markdown without its frontmatter, under its title.
+foul bodyOf(page: Page, authored: Bool) -> [String] do
+  match FS.File.read(page.markdown) do
+    Error(_) => []
+    Ok(text) => do
+      return [text] if !authored
+      let lines = text.split("\n")
+      let closing = lines.drop(1).takeWhile { |line| line.trim != "---" }.count + 2
+      ["# ${page.title}\n\n" + lines.drop(closing).join("\n").trim]
+    end
+  end
+end
+
+foul sitemap(sections: [Section], baseUrl: String) -> String do
+  let urls = sections.flatMap { |s| s.pages }.map { |p| "  <url><loc>${baseUrl}${p.path}</loc></url>" }.join("\n")
+  return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n${urls}\n</urlset>\n"
+end
+
+foul write(dist: String, name: String, body: String) -> () do
+  let _ = FS.File.write(FS.Path.join(dist, name), body)
+  return ()
+end
+
+foul hostOf(baseUrl: String) -> String do
+  match URI.URL.parse(baseUrl) do
+    Error(_) => ""
+    Ok(url) => url.host.ascii
+  end
+end
+
+foul normalizeBase(url: String) -> String do
+  return url.take(url.count - 1) if url.endsWith?("/")
+  return url
+end

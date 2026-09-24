@@ -1,0 +1,108 @@
+name: Publish
+
+# Builds docs.kex.run and publishes it to this repository's gh-pages branch,
+# which GitHub Pages serves.
+#
+# Two things make up the site: the pages authored here with Marqraft
+# (content/, .marqraft/, the Krix theme) and the reference kexhq/kex
+# generates from source. kexhq/kex force-pushes that reference to this
+# repository's `reference` branch and then sends `reference-updated`; an edit
+# to the authored pages arrives as a push to main. Either way the whole site
+# is rebuilt from both.
+on:
+  push:
+    branches: [main]
+  repository_dispatch:
+    types: [reference-updated]
+  workflow_dispatch:
+
+concurrency:
+  group: publish
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Check out the generated reference
+        uses: actions/checkout@v4
+        with:
+          ref: reference
+          path: generated
+
+      - name: Check out Marqraft
+        uses: actions/checkout@v4
+        with:
+          repository: Marqraft/cli
+          path: .marqraft-cli
+
+      # The same toolchain Marqraft's own CI builds (Marqraft/cli,
+      # .github/workflows/ci.yml): Kex and Tey from kexhq/kex main, with a
+      # `tey` on PATH that forwards to the checkout's launcher. The released
+      # toolchains predate what Marqraft needs.
+      - name: Check out Kex
+        uses: actions/checkout@v4
+        with:
+          repository: kexhq/kex
+          ref: main
+          path: .kex-src
+
+      - name: Install Kex build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake libgmp-dev libpcre2-dev libreadline-dev \
+            libssl-dev erlang-base libboost-context-dev
+
+      # --parallel 1: an unbounded build OOM-kills the compiler on this
+      # runner (see Marqraft's CI).
+      - name: Build Kex and Tey
+        working-directory: .kex-src
+        run: |
+          cmake -B build -G "Unix Makefiles" -DKEX_BOOST_STATIC=ON
+          cmake --build build --parallel 1
+          make build-tey
+          make tey-run
+
+      - name: Put kex and tey on PATH
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          cat > "$HOME/.local/bin/tey" <<WRAP
+          #!/bin/sh
+          export TEY_ERL="$(command -v erl)"
+          exec "$GITHUB_WORKSPACE/.kex-src/tey-run" "\$@"
+          WRAP
+          chmod +x "$HOME/.local/bin/tey"
+          ln -s "$GITHUB_WORKSPACE/.kex-src/build/kex" "$HOME/.local/bin/kex"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Build marq
+        working-directory: .marqraft-cli
+        run: |
+          tey install
+          tey build
+
+      # marq renders theme templates with the `kex` on PATH (or TEY_KEX).
+      - name: Build the site
+        run: escript .marqraft-cli/ebin/marq build .
+
+      # llms.txt, llms-full.txt, sitemap.xml, robots.txt and CNAME: the files
+      # that describe the whole site, authored and generated pages alike.
+      - name: Site-wide files
+        run: kex --run scripts/finish.kex -- . https://docs.kex.run
+
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: dist
+          cname: docs.kex.run
+          enable_jekyll: false
+          commit_message: "publish: ${{ github.event_name }} ${{ github.event.client_payload.ref || github.sha }}"
