@@ -27,9 +27,15 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
+      # Marqraft/cli and the theme-krix submodule are private, and the
+      # default GITHUB_TOKEN can only read this repository. MARQRAFT_TOKEN is
+      # a token that can read both (a fine-grained PAT with Contents: read on
+      # Marqraft/cli and Marqraft/theme-krix); without the secret the default
+      # token is used, which is enough once those repositories are public.
       - uses: actions/checkout@v4
         with:
           submodules: true
+          token: ${{ secrets.MARQRAFT_TOKEN || github.token }}
 
       - name: Check out the generated reference
         uses: actions/checkout@v4
@@ -42,6 +48,7 @@ jobs:
         with:
           repository: Marqraft/cli
           path: .marqraft-cli
+          token: ${{ secrets.MARQRAFT_TOKEN || github.token }}
 
       # The same toolchain Marqraft's own CI builds (Marqraft/cli,
       # .github/workflows/ci.yml): Kex and Tey from kexhq/kex main, with a
