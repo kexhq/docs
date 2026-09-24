@@ -54,11 +54,18 @@ jobs:
           ref: main
           path: .kex-src
 
+      # Kex and Marqraft need OTP 27+ (Kex refuses to build on anything
+      # older), and ubuntu-latest's erlang-base is OTP 25. Installed before
+      # Kex so everything runs on one OTP.
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: "27"
+
       - name: Install Kex build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake libgmp-dev libpcre2-dev libreadline-dev \
-            libssl-dev erlang-base libboost-context-dev
+            libssl-dev libboost-context-dev
 
       # --parallel 1: an unbounded build OOM-kills the compiler on this
       # runner (see Marqraft's CI).
