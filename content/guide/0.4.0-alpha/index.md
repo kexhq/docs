@@ -5,5 +5,6 @@ description: "The Kex guide for 0.4.0-alpha."
 path: "/guide/0.4.0-alpha/"
 draft: false
 template: "landing"
+version: "0.4.0-alpha"
 ---
 Read cover to cover, or jump in anywhere.
