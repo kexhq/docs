@@ -1,65 +1,12 @@
-// Search and the version switcher, ported from Tey docgen's site.js.
-//
-// Search reads several indexes: the site's own (Marqraft's "search" index of
-// the authored pages) and each generated package's docgen search.json. A
-// reference page searches its own package at its own version; every other
-// package is searched at its current version — the newest generatedAt in
-// versions.json, the same rule llms.txt uses. A package's pages live under
-// /<package>/<version>/, as the reference mounts serve them.
+// Search, ported from Tey docgen's site.js. It reads one file: the site's
+// search index (Marqraft's "search" setting), which holds the authored pages
+// and, merged by Marqraft, each generated reference's newest version. Every
+// entry carries its `url`; generated ones also carry `collection` and
+// `version`.
 (function () {
   var trigger = document.getElementById("search");
-  var badge = document.getElementById("version-badge");
-  var versionsUrl = (trigger || badge) && (trigger || badge).getAttribute("data-versions");
-  var versionsPending = null;
-
-  function loadVersions() {
-    if (!versionsPending) {
-      versionsPending = versionsUrl
-        ? fetch(versionsUrl, { cache: "no-store" }).then(function (res) { return res.ok ? res.json() : { versions: [] }; })
-          .then(function (data) { return data.versions || []; }).catch(function () { return []; })
-        : Promise.resolve([]);
-    }
-    return versionsPending;
-  }
-
-  // ── Version switcher ────────────────────────────────────────────────
-  if (badge) {
-    var pkg = badge.getAttribute("data-package");
-    var current = badge.getAttribute("data-version");
-    loadVersions().then(function (all) {
-      var versions = all.filter(function (v) { return v.package === pkg; });
-      if (versions.length < 2) return;
-      var select = document.createElement("select");
-      select.className = "version-select";
-      select.setAttribute("aria-label", "Documentation version");
-      versions.forEach(function (v) {
-        var opt = document.createElement("option");
-        opt.value = v.id;
-        opt.textContent = v.label + " " + v.id;
-        if (v.id === current) opt.selected = true;
-        select.appendChild(opt);
-      });
-      select.addEventListener("change", function () {
-        var from = "/" + pkg + "/" + current + "/";
-        var base = "/" + pkg + "/" + select.value + "/";
-        var here = window.location.pathname;
-        var target = here.indexOf(from) === 0 ? base + here.slice(from.length) : base;
-        // The same page may not exist in the target version (a renamed
-        // module, or a source that no longer parses): fall back to the
-        // version's index rather than landing on a 404.
-        fetch(target, { method: "HEAD", cache: "no-store" })
-          .then(function (res) { window.location.href = res.ok ? target : base; })
-          .catch(function () { window.location.href = base; });
-      });
-      badge.replaceWith(select);
-    });
-  }
-
-  // ── Search (modal) ─────────────────────────────────────────────────
   if (!trigger) return;
   var siteIndex = trigger.getAttribute("data-index") || "";
-  var pagePackage = trigger.getAttribute("data-package") || "";
-  var pageVersion = trigger.getAttribute("data-version") || "";
   var index = null;
   var pending = null;
 
@@ -82,48 +29,13 @@
   overlay.appendChild(panel);
   document.body.appendChild(overlay);
 
-  function fetchEntries(url) {
-    return fetch(url, { cache: "no-store" })
-      .then(function (res) { return res.ok ? res.json() : { entries: [] }; })
-      .then(function (data) { return data.entries || []; })
-      .catch(function () { return []; });
-  }
-
-  // The package versions to search: the page's own, else each package's newest.
-  function packageSources(all) {
-    var chosen = {};
-    all.forEach(function (v) {
-      if (pagePackage && v.package === pagePackage) {
-        if (v.id === pageVersion) chosen[v.package] = v;
-        return;
-      }
-      var best = chosen[v.package];
-      if (!best || (v.generatedAt || "") > (best.generatedAt || "")) chosen[v.package] = v;
-    });
-    return Object.keys(chosen).map(function (key) { return chosen[key]; });
-  }
-
   function loadIndex() {
     if (index) return Promise.resolve(index);
     if (!pending) {
-      var site = siteIndex ? fetchEntries(siteIndex).then(function (entries) {
-        return entries.map(function (e) { return Object.assign({}, e, { href: e.url }); });
-      }) : Promise.resolve([]);
-      var packages = loadVersions().then(function (all) {
-        return Promise.all(packageSources(all).map(function (v) {
-          var base = "/" + v.package + "/" + v.id + "/";
-          return fetchEntries(base + "search.json").then(function (entries) {
-            return entries.map(function (e) {
-              var page = e.urlPath ? base + e.urlPath + "/" : base;
-              return Object.assign({}, e, { href: page + (e.anchor ? "#" + e.anchor : ""), page: page, source: v.label });
-            });
-          });
-        }));
-      });
-      pending = Promise.all([site, packages]).then(function (parts) {
-        index = parts[0].concat.apply(parts[0], parts[1]);
-        return index;
-      });
+      pending = (siteIndex ? fetch(siteIndex, { cache: "no-store" }) : Promise.reject())
+        .then(function (res) { return res.ok ? res.json() : { entries: [] }; })
+        .then(function (data) { index = data.entries || []; return index; })
+        .catch(function () { index = []; return index; });
     }
     return pending;
   }
@@ -167,7 +79,7 @@
   function hitEl(e) {
     var a = document.createElement("a");
     a.className = "search-hit";
-    a.href = e.href;
+    a.href = e.url;
     var head = document.createElement("span");
     head.className = "search-head";
     var kind = document.createElement("span");
@@ -181,11 +93,12 @@
     // The DEFINING module or entity for reference entries — "Enumerable"
     // for Enumerable.map — and the page or collection for the site's own.
     var where = e.qualifiedName || "";
-    if (e.source && where) {
+    if (e.collection && where) {
       var dot = where.lastIndexOf(".");
       where = dot === -1 ? (where === e.name ? "" : where) : where.slice(0, dot);
     }
-    var label = [e.source || "", where].filter(function (part) { return part; }).join(" · ");
+    var source = e.collection ? e.collection + (e.version ? " " + e.version : "") : "";
+    var label = [source, where].filter(function (part) { return part; }).join(" · ");
     if (label) {
       var qual = document.createElement("span");
       qual.className = "search-qual";
@@ -230,7 +143,7 @@
     var here = window.location.pathname;
     loadIndex().then(function (entries) {
       if (input.value.trim()) return;
-      var local = entries.filter(function (e) { return (e.page || e.href.split("#")[0]) === here && e.kind !== "page"; }).slice(0, 4);
+      var local = entries.filter(function (e) { return (e.url || "").split("#")[0] === here && e.kind !== "page"; }).slice(0, 4);
       if (local.length === 0) return;
       var section = document.createElement("div");
       section.className = "search-local";
