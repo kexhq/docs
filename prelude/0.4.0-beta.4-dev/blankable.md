@@ -35,18 +35,21 @@ None.blank?      # => true
 fields.all? { |name, value| value.present? }
 ```
 
+Implemented by [`Bool`](#make-bool), [`Integer`](#make-integer), [`Float`](#make-float), [`String`](#make-string), [`Optional<X>`](#make-optional), [`[X]`](#make-list), [`Map<K, V>`](map.md#make-map), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack).
+
+### Required methods
 
 #### `blank?`
-
-Returns `true` when the value holds nothing meaningful.
-
-What that means is up to each type: whitespace-only for a string, no elements for a collection, `None` for an optional, `false` for a boolean.
 
 ```kex
 blank? : Bool
 ```
 
-**Returns**: `Bool` — `true` when the value is blank
+Returns `true` when the value holds nothing meaningful.
+
+What that means is up to each type: whitespace-only for a string, no elements for a collection, `None` for an optional, `false` for a boolean.
+
+**Returns**: `true` when the value is blank
 
 **Examples**
 
@@ -56,18 +59,23 @@ blank? : Bool
 "hi".blank?    # => false
 ```
 
-## make `Bool` implements [Blankable](#trait-blankable)
 
 
-#### `blank?`
+## extends `Bool`
 
-Returns `true` for `false`: the only blank boolean.
+More methods of [`Bool`](truthyable.md#make-bool), added by this module.
+
+Implements [`Blankable`](#trait-blankable).
+
+### `blank?` (from Blankable)
 
 ```kex
 blank? : Bool
 ```
 
-**Returns**: `Bool` — `true` when the value is `false`
+Returns `true` for `false`: the only blank boolean.
+
+**Returns**: `true` when the value is `false`
 
 **Examples**
 
@@ -76,18 +84,21 @@ false.blank?   # => true
 true.blank?    # => false
 ```
 
-## make `Integer` implements [Blankable](#trait-blankable)
+## extends `Integer`
 
+More methods of [`Integer`](number.md#make-integer), added by this module.
 
-#### `blank?`
+Implements [`Blankable`](#trait-blankable).
 
-Always `false`: every integer is a value, including zero.
+### `blank?` (from Blankable)
 
 ```kex
 blank? : Bool
 ```
 
-**Returns**: `Bool` — always `false`
+Always `false`: every integer is a value, including zero.
+
+**Returns**: always `false`
 
 **Examples**
 
@@ -96,18 +107,21 @@ blank? : Bool
 42.blank?   # => false
 ```
 
-## make `Float` implements [Blankable](#trait-blankable)
+## extends `Float`
 
+More methods of [`Float`](number.md#make-float), added by this module.
 
-#### `blank?`
+Implements [`Blankable`](#trait-blankable).
 
-Always `false`: every float is a value, including zero.
+### `blank?` (from Blankable)
 
 ```kex
 blank? : Bool
 ```
 
-**Returns**: `Bool` — always `false`
+Always `false`: every float is a value, including zero.
+
+**Returns**: always `false`
 
 **Examples**
 
@@ -115,20 +129,23 @@ blank? : Bool
 0.0.blank?   # => false
 ```
 
-## make `String` implements [Blankable](#trait-blankable)
+## extends `String`
 
+More methods of [`String`](string.md#make-string), added by this module.
 
-#### `blank?`
+Implements [`Blankable`](#trait-blankable).
 
-Returns `true` when the string is empty or contains only whitespace.
-
-This is what separates it from `empty?`: a string of spaces is not empty, but it is blank, and for user input that is usually the question being asked.
+### `blank?` (from Blankable)
 
 ```kex
 blank? : Bool
 ```
 
-**Returns**: `Bool` — `true` for an empty or whitespace-only string
+Returns `true` when the string is empty or contains only whitespace.
+
+This is what separates it from `empty?`: a string of spaces is not empty, but it is blank, and for user input that is usually the question being asked.
+
+**Returns**: `true` for an empty or whitespace-only string
 
 **Examples**
 
@@ -138,6 +155,7 @@ blank? : Bool
 "\n\t".blank?    # => true
 " hi ".blank?    # => false
 ```
+
 _Rejecting an empty answer_
 
 ```kex
@@ -147,20 +165,23 @@ if name.blank?
 end
 ```
 
-## make `Optional<X>` implements [Blankable](#trait-blankable)
+## extends `Optional<X>`
 
+More methods of [`Optional`](optional.md#type-optional), added by this module.
 
-#### `blank?`
+Implements [`Blankable`](#trait-blankable).
 
-Returns `true` for `None` and `false` for a `Just`: whatever it wraps.
-
-Note that `Just("")` is present, not blank: the optional holds a value, even though that value is itself blank.
+### `blank?` (from Blankable)
 
 ```kex
 blank? : Bool
 ```
 
-**Returns**: `Bool` — `true` for `None`
+Returns `true` for `None` and `false` for a `Just`: whatever it wraps.
+
+Note that `Just("")` is present, not blank: the optional holds a value, even though that value is itself blank.
+
+**Returns**: `true` for `None`
 
 **Examples**
 
@@ -170,18 +191,21 @@ Just(1).blank?     # => false
 Just("").blank?    # => false
 ```
 
-## make `[X]` implements [Blankable](#trait-blankable)
+## extends `[X]`
 
+More methods of [`List`](list.md#type-list), added by this module.
 
-#### `blank?`
+Implements [`Blankable`](#trait-blankable).
 
-Returns `true` when the list has no elements.
+### `blank?` (from Blankable)
 
 ```kex
 blank? : Bool
 ```
 
-**Returns**: `Bool` — `true` for the empty list
+Returns `true` when the list has no elements.
+
+**Returns**: `true` for the empty list
 
 **Examples**
 
@@ -189,6 +213,7 @@ blank? : Bool
 [].blank?         # => true
 [1, 2].blank?     # => false
 ```
+
 _Reporting an empty result set_
 
 ```kex

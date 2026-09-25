@@ -27,13 +27,413 @@ end
 
 Every value is a `Measure` from the prelude, so the arithmetic, conversion and comparison described there apply unchanged. What this module adds is the SI vocabulary, the prefixes, and a table of which dimension results from multiplying or dividing two others, so `2.newton * 3.meter` answers in joules and `100.meter / 10.sec` in metres per second.
 
+### `meter`
+
+```kex
+meter(value: Number) -> Measure
+```
+
+`value` metres, as a `Measure`.
+
+**Parameters**
+
+  - `value` — the quantity
+
+**Returns**: the length
+
+**Examples**
+
+```kex
+5000.meter.to(String)        # => "5000.0 m"
+5000.meter.kilo.to(String)   # => "5.0 km"
+```
+
+### `gram`
+
+```kex
+gram(value: Number) -> Measure
+```
+
+`value` grams, as a `Measure`.
+
+**Parameters**
+
+  - `value` — the quantity
+
+**Returns**: the mass
+
+**Examples**
+
+```kex
+500.gram.to(String)   # => "500.0 g"
+```
+
+### `kilogram`
+
+```kex
+kilogram(value: Number) -> Measure
+```
+
+`value` kilograms, as a `Measure`.
+
+**Parameters**
+
+  - `value` — the quantity
+
+**Returns**: the mass
+
+**Examples**
+
+```kex
+1.kilogram.to(String)   # => "1.0 kg"
+```
+
+### `kelvin`
+
+```kex
+kelvin(value: Number) -> Measure
+```
+
+`value` kelvin, as a `Measure`.
+
+**Parameters**
+
+  - `value` — the quantity
+
+**Returns**: the temperature
+
+**Examples**
+
+```kex
+300.kelvin.to(String)   # => "300.0 K"
+```
+
+### `liter`
+
+```kex
+liter(value: Number) -> Measure
+```
+
+`value` litres, as a `Measure`.
+
+**Parameters**
+
+  - `value` — the quantity
+
+**Returns**: the volume
+
+**Examples**
+
+```kex
+2.liter.to(String)   # => "2.0 L"
+```
+
+### `newton`
+
+```kex
+newton(value: Number) -> Measure
+```
+
+`value` newtons, as a `Measure`.
+
+**Parameters**
+
+  - `value` — the quantity
+
+**Returns**: the force
+
+**Examples**
+
+_Force times distance is energy_
+
+```kex
+(2.newton * 3.meter).to(String)   # => "6.0 J"
+```
+
+### `joule`
+
+```kex
+joule(value: Number) -> Measure
+```
+
+`value` joules, as a `Measure`.
+
+**Parameters**
+
+  - `value` — the quantity
+
+**Returns**: the energy
+
+**Examples**
+
+```kex
+100.joule.to(String)   # => "100.0 J"
+```
+
+### `watt`
+
+```kex
+watt(value: Number) -> Measure
+```
+
+`value` watts, as a `Measure`.
+
+**Parameters**
+
+  - `value` — the quantity
+
+**Returns**: the power
+
+**Examples**
+
+```kex
+3.kilo.watt.to(String)                 # => "3000.0 W"
+1500.watt.to(String, in: Kilo(Watt))   # => Just("1.5 kW")
+```
+
+_Power times time is energy_
+
+```kex
+(3.kilo.watt * 2.hour).to(String)   # => "21600000.0 J"
+```
+
+### `volt`
+
+```kex
+volt(value: Number) -> Measure
+```
+
+`value` volts, as a `Measure`.
+
+**Parameters**
+
+  - `value` — the quantity
+
+**Returns**: the voltage
+
+**Examples**
+
+```kex
+12.volt.to(String)   # => "12.0 V"
+```
+
+### `ampere`
+
+```kex
+ampere(value: Number) -> Measure
+```
+
+`value` amperes, as a `Measure`.
+
+**Parameters**
+
+  - `value` — the quantity
+
+**Returns**: the current
+
+**Examples**
+
+_Voltage times current is power_
+
+```kex
+(12.volt * 2.ampere).to(String)   # => "24.0 W"
+```
+
+### `ohm`
+
+```kex
+ohm(value: Number) -> Measure
+```
+
+`value` ohms, as a `Measure`.
+
+**Parameters**
+
+  - `value` — the quantity
+
+**Returns**: the resistance
+
+**Examples**
+
+```kex
+470.ohm.to(String)   # => "470.0 Ω"
+```
+
+### `coulomb`
+
+```kex
+coulomb(value: Number) -> Measure
+```
+
+`value` coulombs, as a `Measure`.
+
+**Parameters**
+
+  - `value` — the quantity
+
+**Returns**: the charge
+
+**Examples**
+
+```kex
+3.coulomb.to(String)   # => "3.0 C"
+```
+
+### `to`
+
+```kex
+to(measure: Measure, _, in: SIPrefix) -> String
+```
+
+Renders a measure as its value followed by its unit symbol.
+
+**Parameters**
+
+  - `String` — the target type
+
+**Returns**: the rendered measure
+
+**Examples**
+
+```kex
+5000.meter.to(String)   # => "5000.0 m"
+12.volt.to(String)      # => "12.0 V"
+```
+
+### `mega`
+
+```kex
+mega(measure: Measure) -> Measure
+```
+
+The same measure, displayed with the mega- prefix.
+
+**Parameters**
+
+  - `measure` — the measure to rescale for display
+
+**Returns**: the same quantity, displayed in mega-units
+
+**Examples**
+
+```kex
+5000000.watt.mega.to(String)   # => "5.0 MW"
+```
+
+### `giga`
+
+```kex
+giga(measure: Measure) -> Measure
+```
+
+The same measure, displayed with the giga- prefix.
+
+**Parameters**
+
+  - `measure` — the measure to rescale for display
+
+**Returns**: the same quantity, displayed in giga-units
+
+### `milli`
+
+```kex
+milli(measure: Measure) -> Measure
+```
+
+The same measure, displayed with the milli- prefix.
+
+**Parameters**
+
+  - `measure` — the measure to rescale for display
+
+**Returns**: the same quantity, displayed in milli-units
+
+**Examples**
+
+```kex
+0.5.watt.milli.to(String)   # => "500.0 mW"
+```
+
+### `micro`
+
+```kex
+micro(measure: Measure) -> Measure
+```
+
+The same measure, displayed with the micro- prefix.
+
+**Parameters**
+
+  - `measure` — the measure to rescale for display
+
+**Returns**: the same quantity, displayed in micro-units
+
+### `nano`
+
+```kex
+nano(measure: Measure) -> Measure
+```
+
+The same measure, displayed with the nano- prefix.
+
+**Parameters**
+
+  - `measure` — the measure to rescale for display
+
+**Returns**: the same quantity, displayed in nano-units
+
+### `per`
+
+```kex
+per(measure: Measure, other: Measure) -> Measure
+```
+
+Divides one measure by another, naming the resulting dimension.
+
+The spelled-out form of `/`: `100.meter.per(10.sec)` and `100.meter / 10.sec` are the same call. Metres over seconds is speed, energy over time is power, force over area is pressure: the dimension table decides, and the symbol follows it.
+
+**Parameters**
+
+  - `measure` — the numerator
+  - `other` — the denominator
+
+**Returns**: the quotient, in its derived unit
+
+**Examples**
+
+```kex
+100.meter.per(10.sec).to(String)   # => "10.0 m/s"
+```
+
+### `times`
+
+```kex
+times(measure: Measure, other: Measure) -> Measure
+```
+
+Multiplies one measure by another, naming the resulting dimension.
+
+The spelled-out form of `*`. Force times distance is energy, voltage times current is power, power times time is energy.
+
+**Parameters**
+
+  - `measure` — the first factor
+  - `other` — the second factor
+
+**Returns**: the product, in its derived unit
+
+**Examples**
+
+```kex
+2.newton.times(3.meter).to(String)   # => "6.0 J"
+(12.volt * 2.ampere).to(String)      # => "24.0 W"
+```
+
 ## type `SIUnit`
 
 The SI units this module names.
 
 Each carries its dimension (`:length`, `:mass`, `:power`, …) and its symbol, which is what a `Measure` built from it displays with.
-
-
 
 **Variants**
 
@@ -50,6 +450,32 @@ Each carries its dimension (`:length`, `:mass`, `:power`, …) and its symbol, w
   - `Ohm`
   - `Coulomb`
 
+Implements [`Unit`](../units.md#trait-unit).
+
+### Methods
+
+#### `factor` (from Unit)
+
+
+
+#### `kind` (from Unit)
+
+```kex
+kind(_)
+```
+
+#### `symbol` (from Unit)
+
+```kex
+symbol(_)
+```
+
+#### `*`
+
+```kex
+*(_, _) -> UnitDefinition
+```
+
 ## type `SIPrefix`
 
 A decimal prefix applied to a unit, for display.
@@ -60,8 +486,6 @@ A display prefix carries the unit it will display, for example `Kilo(Watt * Hour
 1500.watt.to(String, in: Kilo(Watt))   # => Just("1.5 kW")
 ```
 
-
-
 **Variants**
 
   - `Kilo(Unit)`
@@ -71,317 +495,79 @@ A display prefix carries the unit it will display, for example `Kilo(Watt * Hour
   - `Micro(Unit)`
   - `Nano(Unit)`
 
-## make `SIPrefix` implements [Unit](../units.md#trait-unit)
+Implements [`Unit`](../units.md#trait-unit).
 
+### Methods
 
-#### `factor`
-
-```kex
-factor(@Kilo(unit))
-```
-
-#### `kind`
+#### `factor` (from Unit)
 
 ```kex
-kind(@Kilo(unit))
+factor(_)
 ```
 
-#### `symbol`
+#### `kind` (from Unit)
 
 ```kex
-symbol(@Kilo(unit))
+kind(_)
 ```
 
-## make `SIUnit` implements [Unit](../units.md#trait-unit)
-
-
-#### `factor`
+#### `symbol` (from Unit)
 
 ```kex
-factor : ?
+symbol(_)
 ```
 
-#### `kind`
+## extends `UnitDefinition`
 
-```kex
-kind(@Meter)
-```
+More methods of [`UnitDefinition`](../units.md#record-unitdefinition), added by this module.
 
-#### `symbol`
+Implements [`Unit`](../units.md#trait-unit).
 
-```kex
-symbol(@Meter)
-```
-
-## make `UnitDefinition` implements [Unit](../units.md#trait-unit)
+### `factor` (from Unit)
 
 
-#### `factor`
 
-```kex
-factor : ?
-```
-
-#### `kind`
-
-```kex
-kind : ?
-```
-
-#### `symbol`
-
-```kex
-symbol : ?
-```
-
-## make `Measure`
+### `kind` (from Unit)
 
 
-#### `factor`
+
+### `symbol` (from Unit)
+
+
+
+## extends `Measure`
+
+More methods of [`Measure`](../units.md#record-measure), added by this module.
+
+Prefixes work both on an existing measure (`5000.meter.kilo`) and at the beginning of a postfix unit expression (`3.kilo.watt`).
+
+### `factor`
 
 ```kex
 factor : Float
 ```
 
-#### `kind`
+### `kind`
 
 ```kex
 kind : Atom
 ```
 
-#### `symbol`
+### `symbol`
 
 ```kex
 symbol : String
 ```
 
-## function `meter`
-
-`value` metres, as a `Measure`.
-
-
-```kex
-meter(value)
-```
-
-
-## function `gram`
-
-`value` grams, as a `Measure`.
-
-
-```kex
-gram(value)
-```
-
-
-## function `kilogram`
-
-`value` kilograms, as a `Measure`.
-
-
-```kex
-kilogram(value)
-```
-
-
-## function `kelvin`
-
-`value` kelvin, as a `Measure`.
-
-
-```kex
-kelvin(value)
-```
-
-
-## function `liter`
-
-`value` litres, as a `Measure`.
-
-
-```kex
-liter(value)
-```
-
-
-## function `newton`
-
-`value` newtons, as a `Measure`.
-
-
-```kex
-newton(value)
-```
-
-
-## function `joule`
-
-`value` joules, as a `Measure`.
-
-
-```kex
-joule(value)
-```
-
-
-## function `watt`
-
-`value` watts, as a `Measure`.
-
-
-```kex
-watt(value)
-```
-
-
-## function `volt`
-
-`value` volts, as a `Measure`.
-
-
-```kex
-volt(value)
-```
-
-
-## function `ampere`
-
-`value` amperes, as a `Measure`.
-
-
-```kex
-ampere(value)
-```
-
-
-## function `ohm`
-
-`value` ohms, as a `Measure`.
-
-
-```kex
-ohm(value)
-```
-
-
-## function `coulomb`
-
-`value` coulombs, as a `Measure`.
-
-
-```kex
-coulomb(value)
-```
-
-
-## make `SIUnit`
-
-
-#### `*`
-
-```kex
-*(@Watt, @Hour)
-```
-
-## function `to`
-
-Renders a measure as its value followed by its unit symbol.
-
-
-```kex
-to(measure, String)
-```
-
-
-## function `mega`
-
-The same measure, displayed with the mega- prefix.
-
-
-```kex
-mega(measure)
-```
-
-
-## function `giga`
-
-The same measure, displayed with the giga- prefix.
-
-
-```kex
-giga(measure)
-```
-
-
-## function `milli`
-
-The same measure, displayed with the milli- prefix.
-
-
-```kex
-milli(measure)
-```
-
-
-## function `micro`
-
-The same measure, displayed with the micro- prefix.
-
-
-```kex
-micro(measure)
-```
-
-
-## function `nano`
-
-The same measure, displayed with the nano- prefix.
-
-
-```kex
-nano(measure)
-```
-
-
-## function `per`
-
-Divides one measure by another, naming the resulting dimension.
-
-The spelled-out form of `/`: `100.meter.per(10.sec)` and `100.meter / 10.sec` are the same call. Metres over seconds is speed, energy over time is power, force over area is pressure: the dimension table decides, and the symbol follows it.
-
-
-```kex
-per(measure, other) : Measure -> Measure -> Measure
-```
-
-
-## function `times`
-
-Multiplies one measure by another, naming the resulting dimension.
-
-The spelled-out form of `*`. Force times distance is energy, voltage times current is power, power times time is energy.
-
-
-```kex
-times(measure, other) : Measure -> Measure -> Measure
-```
-
-
-## make `Measure`
-
-Prefixes work both on an existing measure (`5000.meter.kilo`) and at the beginning of a postfix unit expression (`3.kilo.watt`).
-
-
-#### `kilo`
-
-The same measure, displayed with the kilo- prefix.
+### `kilo`
 
 ```kex
 kilo : Measure
 ```
 
-**Returns**: `Measure` — the same quantity, displayed in kilo-units
+The same measure, displayed with the kilo- prefix.
+
+**Returns**: the same quantity, displayed in kilo-units
 
 **Examples**
 
@@ -389,71 +575,70 @@ kilo : Measure
 5000.meter.kilo.to(String)   # => "5.0 km"
 ```
 
-## make `Integer`
+### `*`
 
+```kex
+*(other: Measure) -> Measure
+```
 
-#### `kilo`
+### `/`
+
+```kex
+/(other: Measure) -> Measure
+```
+
+### `product`
+
+```kex
+product(other) -> Measure
+```
+
+### `quotient`
+
+```kex
+quotient(other) -> Measure
+```
+
+### `productKind`
+
+```kex
+productKind(left, _)
+```
+
+### `quotientKind`
+
+```kex
+quotientKind(left, _)
+```
+
+### `productSymbol`
+
+```kex
+productSymbol(_, left, right)
+```
+
+### `quotientSymbol`
+
+```kex
+quotientSymbol(_, left, right)
+```
+
+## extends `Integer`
+
+More methods of [`Integer`](../number.md#make-integer), added by this module.
+
+### `kilo`
 
 ```kex
 kilo : Float
 ```
 
-## make `Float`
+## extends `Float`
 
+More methods of [`Float`](../number.md#make-float), added by this module.
 
-#### `kilo`
+### `kilo`
 
 ```kex
 kilo : Float
-```
-
-## make `Measure`
-
-
-#### `*`
-
-```kex
-*(other)
-```
-
-#### `/`
-
-```kex
-/(other)
-```
-
-#### `product`
-
-```kex
-product(other)
-```
-
-#### `quotient`
-
-```kex
-quotient(other)
-```
-
-#### `productKind`
-
-```kex
-productKind(mass, acceleration)
-```
-
-#### `quotientKind`
-
-```kex
-quotientKind(length, time)
-```
-
-#### `productSymbol`
-
-```kex
-productSymbol(force, _, _)
-```
-
-#### `quotientSymbol`
-
-```kex
-quotientSymbol(speed, left, _)
 ```

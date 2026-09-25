@@ -32,114 +32,191 @@ Both nodes need the same compiled code for anything that carries a function, lik
 
 Backed by Kex.Intrinsic.Node on the BEAM. The tree-walk interpreter is always a single, unnamed node.
 
-## function `self`
+### `self`
+
+```kex
+self : Atom
+```
 
 This node's name, or `:nonode@nohost` when it is not distributed.
 
+**Returns**: the node name
+
+**Examples**
 
 ```kex
-self() : Atom
+Node.self   # => :a@myhost
 ```
 
+### `alive?`
 
-## function `alive?`
+```kex
+alive? : Bool
+```
 
 Whether this node is distributed — started with a name, so other nodes can connect to it.
 
+**Returns**: true once the node has a name
+
+**Examples**
 
 ```kex
-alive?() : Bool
+Node.alive?   # => false, unless started with --sname or Node.start
 ```
 
+### `list`
 
-## function `list`
+```kex
+list : [Atom]
+```
 
 The nodes this one is currently connected to, not including itself.
 
+**Returns**: the connected node names
+
+**Examples**
 
 ```kex
-list() : [Atom]
+Node.list   # => [:b@myhost]
 ```
 
+### `start`
 
-## function `start`
+```kex
+start(name: Atom) -> Result<Atom, String>
+```
 
 Makes this node distributed under `name`, as `--sname`/`--name` would at startup. A `name` whose host has a dot (`:"app@host.example.com"`) uses long names; anything else uses short names.
 
+**Parameters**
+
+  - `name` — the node name, like `:app` or `:app@myhost`
+
+**Returns**: the full node name, or why it could not start
+
+**Examples**
 
 ```kex
-start(name) : Atom -> Result<Atom, String>
+Node.start(:app)   # => Ok(:app@myhost)
 ```
 
+### `stop`
 
-## function `stop`
+```kex
+stop : Bool
+```
 
 Stops distribution: the node drops its name and every connection.
 
+**Returns**: whether it was distributed and has now stopped
+
+### `connect`
 
 ```kex
-stop() : Bool
+connect(node: Atom) -> Bool
 ```
-
-
-## function `connect`
 
 Connects to the node named `node`. Both nodes must share a cookie.
 
+**Parameters**
+
+  - `node` — the node to connect to
+
+**Returns**: whether the connection is up
+
+**Examples**
 
 ```kex
-connect(node) : Atom -> Bool
+Node.connect(:b@myhost)   # => true
 ```
 
+### `disconnect`
 
-## function `disconnect`
+```kex
+disconnect(node: Atom) -> Bool
+```
 
 Drops the connection to `node`.
 
+**Parameters**
+
+  - `node` — the node to disconnect from
+
+**Returns**: whether a connection was dropped
+
+### `setCookie`
 
 ```kex
-disconnect(node) : Atom -> Bool
+setCookie(cookie: String) -> Void
 ```
-
-
-## function `setCookie`
 
 Sets the cookie this node presents when connecting. Nodes connect only when their cookies match.
 
+**Parameters**
 
-```kex
-setCookie(cookie) : String -> Void
-```
+  - `cookie` — the shared secret
 
-
-## function `send`
-
-Sends `message` to the process registered as `name` on `node`, unchanged. Like `Pid.send`, it never blocks and never fails.
-
+### `send`
 
 ```kex
 send : Atom -> Atom -> X -> Void
 ```
 
+Sends `message` to the process registered as `name` on `node`, unchanged. Like `Pid.send`, it never blocks and never fails.
 
-## function `whereIs`
+**Parameters**
+
+  - `node` — the node the process runs on
+  - `name` — the name it was registered under
+  - `message` — the message
+
+**Examples**
+
+```kex
+Node.send(:b@myhost, :logger, (:info, "started"))
+```
+
+### `whereIs`
+
+```kex
+whereIs(node: Atom, name: Atom) -> Pid?
+```
 
 The `Pid` registered as `name` on `node`, or `None`.
 
+**Parameters**
+
+  - `node` — the node to ask
+  - `name` — the registered name
+
+**Returns**: the process, or `None`
+
+**Examples**
 
 ```kex
-whereIs(node, name) : Atom -> Atom -> Pid?
+Node.whereIs(:b@myhost, :logger).map { |pid| pid.send(:flush) }
 ```
 
+### `spawn`
 
-## function `spawn`
+```kex
+spawn(node: Atom, block: Block<X>) -> Pid
+```
 
 Runs `block` in a new process on `node` and returns its `Pid`.
 
 The block is a function of THIS program. When `node` has not loaded the module it belongs to, that module's compiled code is sent over and loaded first. A module `node` already has is left as it is.
 
+**Parameters**
+
+  - `node` — where to run it
+  - `block` — the work
+
+**Returns**: the new process
+
+**Examples**
 
 ```kex
-spawn(node, block) : Atom -> Block<X> -> Pid
+let me = Process.self
+Node.spawn(:b@myhost) do me.send(Node.self) end
 ```
-

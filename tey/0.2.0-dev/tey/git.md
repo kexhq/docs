@@ -11,28 +11,22 @@ entities:
 
 ## module `Tey.Git`
 
-## function `execute`
-
-
-```kex
-execute(args)
-```
-
-
-## function `pinRef`
-
+### `execute`
 
 ```kex
-pinRef(url, selector, requested)
+execute(args: [String]) -> Result<ProcessResult, String>
 ```
 
+### `pinRef`
 
-## function `tags`
+```kex
+pinRef(url: String, selector: String, requested: String) -> Result<(String, String), String>
+```
+
+### `tags`
+
+```kex
+tags(url: String) -> Result<[String], String>
+```
 
 Every version-shaped tag a repository publishes, newest first. Used to answer a range requirement, and to list installable Kex toolchains.
-
-
-```kex
-tags(url)
-```
-

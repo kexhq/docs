@@ -30,22 +30,26 @@ It is `Enumerable` and `Foldable`, so the traversal methods work directly, and t
 (1..3).items.each { |n| IO.printLine(n) }
 ```
 
+Implements [`Enumerable`](enumerable.md#trait-enumerable), [`Foldable`](enumerable.md#trait-foldable).
 
+### Methods
 
-## make `Range` implements [Enumerable](enumerable.md#trait-enumerable), [Foldable](enumerable.md#trait-foldable)
+#### `reduce` (from Enumerable, Foldable)
 
-
-#### `reduce`
+```kex
+reduce(acc: A, f: (A -> B -> A)) -> A
+```
 
 Folds over the range's elements in ascending order.
 
 This is `Range`'s `Enumerable` primitive; the traversal methods are built on it. A range stays structurally minimal, so the fold runs over its materialized items.
 
-```kex
-reduce(acc, f)
-```
+**Parameters**
 
-**Returns**: `A` — the final accumulator
+  - `acc` — the initial accumulator
+  - `f` — combines the accumulator with each element
+
+**Returns**: the final accumulator
 
 **Examples**
 
@@ -56,10 +60,6 @@ reduce(acc, f)
 #### `sum`
 
 Returns the sum of the range's elements.
-
-```kex
-sum : ?
-```
 
 **Returns**: `Number` — the sum
 
@@ -74,10 +74,6 @@ sum : ?
 
 Returns the product of the range's elements.
 
-```kex
-product : ?
-```
-
 **Returns**: `Number` — the product
 
 **Examples**
@@ -88,15 +84,19 @@ product : ?
 
 #### `contains?`
 
+```kex
+contains?(value: A) -> Bool
+```
+
 Returns `true` when `value` falls inside the range, endpoints included.
 
 `5.in?(1..10)` says the same thing from the value's side, and often reads better.
 
-```kex
-contains?(value) : A -> Bool
-```
+**Parameters**
 
-**Returns**: `Bool` — `true` when the value is in range
+  - `value` — the value to test
+
+**Returns**: `true` when the value is in range
 
 **Examples**
 
@@ -107,15 +107,15 @@ contains?(value) : A -> Bool
 
 #### `items`
 
-Returns the range's elements as a list.
-
-This is where a range stops being two numbers and becomes real data, so it is also where a very large range starts to cost something.
-
 ```kex
 items : [A]
 ```
 
-**Returns**: `[A]` — the elements, in ascending order
+Returns the range's elements as a list.
+
+This is where a range stops being two numbers and becomes real data, so it is also where a very large range starts to cost something.
+
+**Returns**: the elements, in ascending order
 
 **Examples**
 
@@ -123,6 +123,7 @@ items : [A]
 (1..3).items      # => [1, 2, 3]
 ('a'..'c').items  # => ['a', 'b', 'c']
 ```
+
 _Building a lookup table_
 
 ```kex
@@ -131,15 +132,15 @@ _Building a lookup table_
 
 #### `first`
 
-Returns the first element, or `None` for an empty range.
-
-The list operations, over the materialized items. A range is an ordered collection, so `(1..5).first` and `(1..5).length` operate on its materialized elements. Floating bounds do not define such a collection.
-
 ```kex
 first : A?
 ```
 
-**Returns**: `A?` — the first element, or `None`
+Returns the first element, or `None` for an empty range.
+
+The list operations, over the materialized items. A range is an ordered collection, so `(1..5).first` and `(1..5).length` operate on its materialized elements. Floating bounds do not define such a collection.
+
+**Returns**: the first element, or `None`
 
 **Examples**
 
@@ -149,13 +150,13 @@ first : A?
 
 #### `second`
 
-Returns the second element, or `None` when the range is shorter than two.
-
 ```kex
 second : A?
 ```
 
-**Returns**: `A?` — the second element, or `None`
+Returns the second element, or `None` when the range is shorter than two.
+
+**Returns**: the second element, or `None`
 
 **Examples**
 
@@ -165,13 +166,13 @@ second : A?
 
 #### `third`
 
-Returns the third element, or `None` when the range is shorter than three.
-
 ```kex
 third : A?
 ```
 
-**Returns**: `A?` — the third element, or `None`
+Returns the third element, or `None` when the range is shorter than three.
+
+**Returns**: the third element, or `None`
 
 **Examples**
 
@@ -181,13 +182,13 @@ third : A?
 
 #### `last`
 
-Returns the last element, or `None` for an empty range.
-
 ```kex
 last : A?
 ```
 
-**Returns**: `A?` — the last element, or `None`
+Returns the last element, or `None` for an empty range.
+
+**Returns**: the last element, or `None`
 
 **Examples**
 
@@ -197,13 +198,13 @@ last : A?
 
 #### `rest`
 
-Returns every element after the first, as a list.
-
 ```kex
 rest : [A]
 ```
 
-**Returns**: `[A]` — the remaining elements
+Returns every element after the first, as a list.
+
+**Returns**: the remaining elements
 
 **Examples**
 
@@ -213,13 +214,13 @@ rest : [A]
 
 #### `length`
 
-Returns how many elements the range has.
-
 ```kex
 length : Integer
 ```
 
-**Returns**: `Integer` — the number of elements
+Returns how many elements the range has.
+
+**Returns**: the number of elements
 
 **Examples**
 
@@ -228,15 +229,15 @@ length : Integer
 (5..5).length    # => 1
 ```
 
-#### `count`
-
-Returns how many elements the range has. The same as `length`.
+#### `count` (from Foldable)
 
 ```kex
 count : Integer
 ```
 
-**Returns**: `Integer` — the number of elements
+Returns how many elements the range has. The same as `length`.
+
+**Returns**: the number of elements
 
 **Examples**
 
@@ -246,13 +247,13 @@ count : Integer
 
 #### `empty?`
 
-Returns `true` when the range has no elements.
-
 ```kex
 empty? : Bool
 ```
 
-**Returns**: `Bool` — `true` for an empty range
+Returns `true` when the range has no elements.
+
+**Returns**: `true` for an empty range
 
 **Examples**
 
@@ -262,13 +263,13 @@ empty? : Bool
 
 #### `max`
 
-Returns the largest element, or `None` for an empty range.
-
 ```kex
 max : A?
 ```
 
-**Returns**: `A?` — the largest element, or `None`
+Returns the largest element, or `None` for an empty range.
+
+**Returns**: the largest element, or `None`
 
 **Examples**
 
@@ -278,13 +279,13 @@ max : A?
 
 #### `min`
 
-Returns the smallest element, or `None` for an empty range.
-
 ```kex
 min : A?
 ```
 
-**Returns**: `A?` — the smallest element, or `None`
+Returns the smallest element, or `None` for an empty range.
+
+**Returns**: the smallest element, or `None`
 
 **Examples**
 
@@ -294,19 +295,20 @@ min : A?
 
 #### `reverse`
 
-Returns the elements as a list, in descending order.
-
 ```kex
 reverse : [A]
 ```
 
-**Returns**: `[A]` — the elements, reversed
+Returns the elements as a list, in descending order.
+
+**Returns**: the elements, reversed
 
 **Examples**
 
 ```kex
 (1..4).reverse   # => [4, 3, 2, 1]
 ```
+
 _Counting down_
 
 ```kex
@@ -315,13 +317,13 @@ _Counting down_
 
 #### `sort`
 
-Returns the elements as a sorted list. A range is already ascending, so this is the identity: it exists so that generic code can call it.
-
 ```kex
 sort : [A]
 ```
 
-**Returns**: `[A]` — the elements, sorted
+Returns the elements as a sorted list. A range is already ascending, so this is the identity: it exists so that generic code can call it.
+
+**Returns**: the elements, sorted
 
 **Examples**
 
@@ -329,15 +331,17 @@ sort : [A]
 (1..4).sort   # => [1, 2, 3, 4]
 ```
 
-#### `sort`
+```kex
+sort(comparator: (A -> A -> Bool)) -> [A]
+```
 
 Returns the elements as a list, ordered by `comparator`.
 
-```kex
-sort(comparator) : (A -> A -> Bool) -> [A]
-```
+**Parameters**
 
-**Returns**: `[A]` — the sorted elements
+  - `comparator` — `true` when the first should come first
+
+**Returns**: the sorted elements
 
 **Examples**
 
@@ -347,13 +351,13 @@ sort(comparator) : (A -> A -> Bool) -> [A]
 
 #### `uniq`
 
-Returns the elements as a list with duplicates removed. A range has none, so this is the identity: it exists so that generic code can call it.
-
 ```kex
 uniq : [A]
 ```
 
-**Returns**: `[A]` — the distinct elements
+Returns the elements as a list with duplicates removed. A range has none, so this is the identity: it exists so that generic code can call it.
+
+**Returns**: the distinct elements
 
 **Examples**
 
@@ -363,19 +367,24 @@ uniq : [A]
 
 #### `join`
 
-Renders the elements as text, with `separator` between them.
-
 ```kex
-join(separator) : String -> String
+join(separator: String) -> String
 ```
 
-**Returns**: `String` — the joined text
+Renders the elements as text, with `separator` between them.
+
+**Parameters**
+
+  - `separator` — placed between elements
+
+**Returns**: the joined text
 
 **Examples**
 
 ```kex
 (1..4).join(", ")   # => "1, 2, 3, 4"
 ```
+
 _A comma-separated header_
 
 ```kex
@@ -384,15 +393,19 @@ _A comma-separated header_
 
 #### `at`
 
+```kex
+at(index: Integer) -> A?
+```
+
 Returns the element at index `index`, counting from 0, or `None` when out of range.
 
 Note that the index counts positions, not values: `(10..20).at(0)` is `Just(10)`.
 
-```kex
-at(index) : Integer -> A?
-```
+**Parameters**
 
-**Returns**: `A?` — the element, or `None`
+  - `index` — the 0-based position
+
+**Returns**: the element, or `None`
 
 **Examples**
 
@@ -403,14 +416,18 @@ at(index) : Integer -> A?
 
 #### `get`
 
-Returns the element at index `index`, counting from 0, or `None` when out of range. The same as `at`, named to match `List` and `Map`.
-
 ```kex
-get(index) : Integer -> A?
-get(index) : Integer -> A -> A
+get(index: Integer) -> A?
+get(index: Integer, fallback: A) -> A
 ```
 
-**Returns**: `A?` — the element, or `None`
+Returns the element at index `index`, counting from 0, or `None` when out of range. The same as `at`, named to match `List` and `Map`.
+
+**Parameters**
+
+  - `index` — the 0-based position
+
+**Returns**: the element, or `None`
 
 **Examples**
 
@@ -421,13 +438,17 @@ get(index) : Integer -> A -> A
 
 #### `take`
 
-Returns the first `n` elements as a list.
-
 ```kex
-take(n) : Integer -> [A]
+take(n: Integer) -> [A]
 ```
 
-**Returns**: `[A]` — the leading elements
+Returns the first `n` elements as a list.
+
+**Parameters**
+
+  - `n` — how many elements to keep
+
+**Returns**: the leading elements
 
 **Examples**
 
@@ -437,13 +458,17 @@ take(n) : Integer -> [A]
 
 #### `drop`
 
-Returns everything after the first `n` elements, as a list.
-
 ```kex
-drop(n) : Integer -> [A]
+drop(n: Integer) -> [A]
 ```
 
-**Returns**: `[A]` — the remaining elements
+Returns everything after the first `n` elements, as a list.
+
+**Parameters**
+
+  - `n` — how many elements to skip
+
+**Returns**: the remaining elements
 
 **Examples**
 
@@ -453,13 +478,17 @@ drop(n) : Integer -> [A]
 
 #### `indexOf`
 
-Returns the position of `value` in the range, or `None` when it is not in it.
-
 ```kex
-indexOf(value) : A -> Integer?
+indexOf(value: A) -> Integer?
 ```
 
-**Returns**: `Integer?` — the 0-based position, or `None`
+Returns the position of `value` in the range, or `None` when it is not in it.
+
+**Parameters**
+
+  - `value` — the element to look for
+
+**Returns**: the 0-based position, or `None`
 
 **Examples**
 
@@ -470,19 +499,24 @@ indexOf(value) : A -> Integer?
 
 #### `zip`
 
-Pairs each element with the element at the same position in `other`, stopping at the shorter of the two.
-
 ```kex
-zip(other) : [B] -> [(A, B)]
+zip(other: [B]) -> [(A, B)]
 ```
 
-**Returns**: `[(A, B)]` — the pairs, in order
+Pairs each element with the element at the same position in `other`, stopping at the shorter of the two.
+
+**Parameters**
+
+  - `other` — the list to pair with
+
+**Returns**: the pairs, in order
 
 **Examples**
 
 ```kex
 (1..3).zip(["a", "b", "c"])   # => [(1, "a"), (2, "b"), (3, "c")]
 ```
+
 _Numbering a list_
 
 ```kex
@@ -491,13 +525,17 @@ _Numbering a list_
 
 #### `partition`
 
-Splits the elements into those satisfying `pred` and those that do not.
-
 ```kex
-partition(pred) : (A -> Bool) -> ([A], [A])
+partition(pred: (A -> Bool)) -> ([A], [A])
 ```
 
-**Returns**: `([A], [A])` — the matching and non-matching elements
+Splits the elements into those satisfying `pred` and those that do not.
+
+**Parameters**
+
+  - `pred` — the test applied to each element
+
+**Returns**: the matching and non-matching elements
 
 **Examples**
 
@@ -507,13 +545,17 @@ partition(pred) : (A -> Bool) -> ([A], [A])
 
 #### `push`
 
-Returns the elements as a list with `value` added at the end.
-
 ```kex
-push(value) : A -> [A]
+push(value: A) -> [A]
 ```
 
-**Returns**: `[A]` — the elements plus `value`
+Returns the elements as a list with `value` added at the end.
+
+**Parameters**
+
+  - `value` — the element to add
+
+**Returns**: the elements plus `value`
 
 **Examples**
 
@@ -523,16 +565,36 @@ push(value) : A -> [A]
 
 #### `reject`
 
-Returns the elements that do NOT satisfy `pred`, as a list.
-
 ```kex
-reject(pred) : (A -> Bool) -> [A]
+reject(pred: (A -> Bool)) -> [A]
 ```
 
-**Returns**: `[A]` — the elements that failed the predicate
+Returns the elements that do NOT satisfy `pred`, as a list.
+
+**Parameters**
+
+  - `pred` — the test applied to each element
+
+**Returns**: the elements that failed the predicate
 
 **Examples**
 
 ```kex
 (1..5).reject { |n| n.even? }   # => [1, 3, 5]
 ```
+
+### From [`Enumerable`](enumerable.md#trait-enumerable)
+
+  - [`map`](enumerable.md#enumerable-map) — Applies `f` to each item and collects the results into a list.
+  - [`mapIndexed`](enumerable.md#enumerable-mapindexed) — Applies `f` to each item and its 0-based position, and collects the results into a list.
+  - [`filter`](enumerable.md#enumerable-filter) — Returns the items for which `pred` answers `true`.
+  - [`flatMap`](enumerable.md#enumerable-flatmap) — Applies `f` to each item, expecting a list back, and concatenates the results into one flat list.
+  - [`collect`](enumerable.md#enumerable-collect) — Applies `f` to each item, expecting an `Optional` back, and returns the values that were present: unwrapped.
+
+### From [`Foldable`](enumerable.md#trait-foldable)
+
+  - [`each`](enumerable.md#foldable-each) — Calls `f` with each item, for its side effects.
+  - [`eachIndexed`](enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
+  - [`all?`](enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`.
+  - [`any?`](enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`.
+  - [`find`](enumerable.md#foldable-find) — Returns the first item satisfying `pred`, or `None` when nothing does.

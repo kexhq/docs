@@ -32,81 +32,164 @@ main(args, env) do
 end
 ```
 
-## function `get`
+### `get`
+
+```kex
+get(key: String, default) -> String?
+```
 
 Returns the value of the environment variable `key`, or `None` when it is not set.
 
+**Parameters**
+
+  - `key` — the variable name
+
+**Returns**: the value, or `None`
+
+**Examples**
 
 ```kex
-get(key)
+ENV.get("HOME")        # => Just("/home/ada")
+ENV.get("NOT_SET")     # => None
 ```
 
+_Handling both cases explicitly_
 
-## function `has?`
+```kex
+match ENV.get("HOME") do
+  Just(home) => IO.printLine("home: ${home}")
+  None       => IO.printError("HOME is not set")
+end
+```
+
+### `has?`
+
+```kex
+has?(key: String) -> Bool
+```
 
 Returns `true` when `key` is set, whatever its value.
 
 Distinguishes an unset variable from one set to the empty string, which a `get` with a default cannot.
 
+**Parameters**
+
+  - `key` — the variable name
+
+**Returns**: `true` when the variable is set
+
+**Examples**
 
 ```kex
-has?(key)
+ENV.has?("PATH")      # => true
+ENV.has?("NOT_SET")   # => false
 ```
 
+_Turning a flag on by its presence alone_
 
-## function `keys`
+```kex
+let debug = ENV.has?("DEBUG")
+```
+
+### `keys`
+
+```kex
+keys : [String]
+```
 
 Returns every variable name in the environment.
 
+**Returns**: the variable names
+
+**Examples**
 
 ```kex
-keys()
+ENV.keys.count   # => 47
 ```
 
+_Every variable belonging to one tool_
 
-## function `values`
+```kex
+ENV.keys.filter { |name| name.startsWith?("KEX_") }
+```
+
+### `values`
+
+```kex
+values : [String]
+```
 
 Returns every variable value in the environment.
 
+**Returns**: the values
+
+**Examples**
 
 ```kex
-values()
+ENV.values.count   # => 47
 ```
 
+### `count`
 
-## function `count`
+```kex
+count : Integer
+```
 
 Returns how many variables the environment has.
 
+**Returns**: the number of variables
+
+**Examples**
 
 ```kex
-count()
+IO.printLine("environment has ${ENV.count} variables")
 ```
 
+### `each`
 
-## function `each`
+```kex
+each(f: (String -> String -> Void)) -> Void
+```
 
 Calls `f` with each variable's name and value.
 
+**Parameters**
+
+  - `f` — called once per variable
+
+**Examples**
+
+_Dumping the environment_
 
 ```kex
-each(f)
+ENV.each { |name, value| IO.printLine("${name}=${value}") }
 ```
 
+### `entries`
 
-## function `entries`
+```kex
+entries : [(String, String)]
+```
 
 Returns the environment as a list of `(name, value)` pairs.
 
 The bridge to the `List` operations, sorting, grouping, taking a slice.
 
+**Returns**: the variables
+
+**Examples**
+
+_Printing the environment in name order_
 
 ```kex
-entries()
+ENV.entries.each { |name, value| IO.printLine("${name}=${value}") }
 ```
 
+### `set`
 
-## function `set`
+```kex
+set(name: String, value: String) -> Void
+```
 
 Sets an environment variable for this process and every child it starts.
 
@@ -118,18 +201,45 @@ Sets a variable for THIS process and every child it starts. `ENV` is a snapshot,
 
 This is how a program decides what a child sees: `Kex.AST` shells out to the compiler named by `$KEX`, so a tool that knows which compiler it means says so here rather than hoping PATH agrees.
 
+**Parameters**
+
+  - `name` — the variable to set
+  - `value` — the value to give it
+
+**Examples**
 
 ```kex
-set(name, value)
+ENV.set("KEX", "/usr/local/bin/kex")
+ENV.get("KEX")   # => Just("/usr/local/bin/kex")
 ```
 
+_Making a child process quiet_
 
-## function `unset`
+```kex
+ENV.set("NO_COLOR", "1")
+```
+
+### `unset`
+
+```kex
+unset(name: String) -> Void
+```
 
 Removes an environment variable from this process and its children.
 
+**Parameters**
+
+  - `name` — the variable to remove
+
+**Examples**
 
 ```kex
-unset(name)
+ENV.unset("DEBUG")
+ENV.has?("DEBUG")   # => false
 ```
 
+_Making sure a child does not inherit a setting_
+
+```kex
+ENV.unset("KEX_TRACE")
+```

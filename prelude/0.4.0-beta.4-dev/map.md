@@ -6,12 +6,9 @@ title: Map
 entities:
   - { kind: type, name: "Map" }
   - { kind: make, name: "Map<K, V>" }
-  - { kind: make, name: "Map<K, V>" }
 ---
 
 # Map
-
-## type `Map<K, V>`
 
 An immutable key-value store, written `{key: value}`.
 
@@ -33,28 +30,30 @@ config.each { |k, v| IO.printLine("${k} = ${v}") }
 config.filter { |k, v| k != :port }   # => { :host: "localhost" }
 ```
 
+## type `Map<K, V>`
+
 Declared for the same reason list.kex declares `type List<X> = [X]`: it gives the name `Map` a source declaration, so it resolves as a type through the collected interfaces rather than needing to be known to the compiler.
 
+Implements [`Enumerable`](enumerable.md#trait-enumerable), [`Foldable`](enumerable.md#trait-foldable), [`Monoid`](algebra.md#trait-monoid), [`Blankable`](blankable.md#trait-blankable), [`Truthyable`](truthyable.md#trait-truthyable).
 
+### Methods
 
-**Variants**
+#### `reduce` (from Enumerable, Foldable)
 
-  - _(abstract)_
-
-## make `Map<K, V>` implements [Enumerable](enumerable.md#trait-enumerable), [Foldable](enumerable.md#trait-foldable), [Monoid](algebra.md#trait-monoid)
-
-
-#### `reduce`
+```kex
+reduce(acc: A, g: (A -> (K, V) -> A)) -> A
+```
 
 Folds over the map's `(key, value)` pairs in canonical key order.
 
 This is `Map`'s `Enumerable` primitive: `map`, `filter`, `find`, `any?` and the rest are built on it. The block receives the accumulator and one pair; destructure the pair to name its halves.
 
-```kex
-reduce(acc, g)
-```
+**Parameters**
 
-**Returns**: `A` — the final accumulator
+  - `acc` — the initial accumulator
+  - `g` — combines the accumulator with each pair
+
+**Returns**: the final accumulator
 
 **Examples**
 
@@ -67,19 +66,16 @@ _Summing the values_
 end
 # => 3
 ```
+
 _Rendering the map as a query string_
 
 ```kex
 { a: 1, b: 2 }.entries.map { |k, v| "${k}=${v}" }.join("&")
 ```
 
-#### `identity`
+#### `identity` (from Monoid)
 
 The empty map: the identity element of the `Monoid` instance, so `m.combine({})` is `m`.
-
-```kex
-identity : ?
-```
 
 **Returns**: `Map<K, V>` — the empty map
 
@@ -89,21 +85,26 @@ identity : ?
 Map.identity   # => {}
 ```
 
-#### `combine`
+#### `combine` (from Monoid)
+
+```kex
+combine(other: This) -> This
+```
 
 Combines two maps by merging them, with `other`'s values winning on a key conflict. The `Monoid` operation, and the same thing `merge` does.
 
-```kex
-combine(other)
-```
+**Parameters**
 
-**Returns**: `This` — the combined map
+  - `other` — the map to merge in
+
+**Returns**: the combined map
 
 **Examples**
 
 ```kex
 { a: 1 }.combine({ b: 2 })   # => { :a: 1, :b: 2 }
 ```
+
 _Folding a list of maps into one_
 
 ```kex
@@ -113,16 +114,20 @@ _Folding a list of maps into one_
 
 #### `get`
 
+```kex
+get(key: K) -> V?
+get(key: K, default: V) -> V
+```
+
 Returns the value stored under `key`, or `None` when the key is absent.
 
 Missing keys are an ordinary answer rather than a failure, so a lookup on data you did not produce is safe by default. Use the two-argument form below when you have a sensible fallback.
 
-```kex
-get(key) : K -> V?
-get(key) : K -> V -> V
-```
+**Parameters**
 
-**Returns**: `V?` — the value, or `None`
+  - `key` — the key to look up
+
+**Returns**: the value, or `None`
 
 **Examples**
 
@@ -131,6 +136,7 @@ let user = { name: "Alice", age: 32 }
 user.get(:name)      # => Just("Alice")
 user.get(:missing)   # => None
 ```
+
 _Chaining through a nested map_
 
 ```kex
@@ -139,15 +145,20 @@ settings.get(:server).flatMap { |s| s.get(:port) }.or(8080)
 
 #### `put`
 
+```kex
+put(k: K, v: V) -> Map<K, V>
+```
+
 Returns a new map with `key` mapped to `value`, replacing any previous entry for that key.
 
 The receiver is untouched. Use `put!` when you want the variable holding the map to be rebound to the result.
 
-```kex
-put(k, v) : K -> V -> Map<K, V>
-```
+**Parameters**
 
-**Returns**: `Map<K, V>` — a new map including the entry
+  - `k` — the key to set
+  - `v` — the value to store
+
+**Returns**: a new map including the entry
 
 **Examples**
 
@@ -155,6 +166,7 @@ put(k, v) : K -> V -> Map<K, V>
 {}.put(:x, 1)              # => { :x: 1 }
 { x: 1 }.put(:x, 2)        # => { :x: 2 }
 ```
+
 _Rebinding with the +!+ form_
 
 ```kex
@@ -165,15 +177,19 @@ totals                     # => { :visits: 1 }
 
 #### `delete`
 
+```kex
+delete(key: K) -> Map<K, V>
+```
+
 Returns a new map without `key`. A key that is not present is not an error: the map comes back unchanged.
 
 Use `delete!` to rebind the receiver variable.
 
-```kex
-delete(key) : K -> Map<K, V>
-```
+**Parameters**
 
-**Returns**: `Map<K, V>` — a new map without that entry
+  - `key` — the key to remove
+
+**Returns**: a new map without that entry
 
 **Examples**
 
@@ -181,6 +197,7 @@ delete(key) : K -> Map<K, V>
 { a: 1, b: 2 }.delete(:a)   # => { :b: 2 }
 { a: 1 }.delete(:z)         # => { :a: 1 }
 ```
+
 _Stripping a secret before logging_
 
 ```kex
@@ -189,15 +206,19 @@ IO.printLine(params.delete(:password))
 
 #### `has?`
 
+```kex
+has?(key: K) -> Bool
+```
+
 Returns `true` when `key` has an entry in the map.
 
 Distinguishes a missing key from one whose value is itself empty, which a `get` with a default cannot.
 
-```kex
-has?(key) : K -> Bool
-```
+**Parameters**
 
-**Returns**: `Bool` — `true` when the key is present
+  - `key` — the key to test
+
+**Returns**: `true` when the key is present
 
 **Examples**
 
@@ -205,6 +226,7 @@ has?(key) : K -> Bool
 { a: 1 }.has?(:a)   # => true
 { a: 1 }.has?(:z)   # => false
 ```
+
 _Checking a required setting_
 
 ```kex
@@ -215,13 +237,13 @@ end
 
 #### `empty?`
 
-Returns `true` when the map has no entries.
-
 ```kex
 empty? : Bool
 ```
 
-**Returns**: `Bool` — `true` for the empty map
+Returns `true` when the map has no entries.
+
+**Returns**: `true` for the empty map
 
 **Examples**
 
@@ -230,15 +252,15 @@ empty? : Bool
 { a: 1 }.empty?   # => false
 ```
 
-#### `count`
-
-Returns the number of entries.
+#### `count` (from Foldable)
 
 ```kex
 count : Integer
 ```
 
-**Returns**: `Integer` — the entry count
+Returns the number of entries.
+
+**Returns**: the entry count
 
 **Examples**
 
@@ -247,21 +269,24 @@ count : Integer
 {}.count               # => 0
 ```
 
-#### `count`
+```kex
+count(pred: (K -> V -> Bool)) -> Integer
+```
 
 Returns the number of entries satisfying `pred`.
 
-```kex
-count : (K -> V -> Bool) -> Integer
-```
+**Parameters**
 
-**Returns**: `Integer` — how many entries matched
+  - `pred` — the test applied to each entry
+
+**Returns**: how many entries matched
 
 **Examples**
 
 ```kex
 { a: 1, b: 2 }.count { |k, v| v > 1 }   # => 1
 ```
+
 _How many settings are still at their default_
 
 ```kex
@@ -270,19 +295,20 @@ config.count { |k, v| v == defaults.get(k, v) }
 
 #### `keys`
 
-Returns the map's keys as a list, in canonical key order.
-
 ```kex
 keys : [K]
 ```
 
-**Returns**: `[K]` — the keys
+Returns the map's keys as a list, in canonical key order.
+
+**Returns**: the keys
 
 **Examples**
 
 ```kex
 { b: 1, a: 2 }.keys   # => [:a, :b]
 ```
+
 _Reporting unrecognised options_
 
 ```kex
@@ -291,13 +317,13 @@ params.keys.reject { |k| known.contains?(k) }
 
 #### `values`
 
-Returns the map's values as a list, ordered by their keys.
-
 ```kex
 values : [V]
 ```
 
-**Returns**: `[V]` — the values
+Returns the map's values as a list, ordered by their keys.
+
+**Returns**: the values
 
 **Examples**
 
@@ -308,36 +334,39 @@ values : [V]
 
 #### `entries`
 
-Returns the map's entries as a list of `(key, value)` tuples, in canonical key order.
-
-This is the bridge to the `List` methods a map does not have of its own, and the form the two-parameter blocks elsewhere are splatting from.
-
 ```kex
 entries : [(K, V)]
 ```
 
-**Returns**: `[(K, V)]` — the entries
+Returns the map's entries as a list of `(key, value)` tuples, in canonical key order.
+
+This is the bridge to the `List` methods a map does not have of its own, and the form the two-parameter blocks elsewhere are splatting from.
+
+**Returns**: the entries
 
 **Examples**
 
 ```kex
 { a: 1, b: 2 }.entries   # => [(:a, 1), (:b, 2)]
 ```
+
 _Sorting entries by value_
 
 ```kex
 scores.entries.sort { |x, y| x.items.last.or(0) > y.items.last.or(0) }
 ```
 
-#### `each`
+#### `each` (from Foldable)
+
+```kex
+each(f: (K -> V -> Void)) -> Void
+```
 
 Calls `f` with each key and value, for its side effects.
 
-```kex
-each : (K -> V -> Void) -> Void
-```
+**Parameters**
 
-**Returns**: `Void`
+  - `f` — called once per entry
 
 **Examples**
 
@@ -345,23 +374,28 @@ each : (K -> V -> Void) -> Void
 scores.each { |k, v| IO.printLine("${k}: ${v}") }
 ```
 
-#### `map`
+#### `map` (from Enumerable)
+
+```kex
+map(f: (K -> V -> R)) -> [R]
+```
 
 Applies `f` to each key and value and collects the results into a LIST.
 
 Note the return type: `map` comes from `Enumerable`, whose contract is to produce a list, because `f` may return anything at all. Use `mapValues` or `mapKeys` when you want a map back.
 
-```kex
-map : (K -> V -> R) -> [R]
-```
+**Parameters**
 
-**Returns**: `[R]` — the results, in canonical key order
+  - `f` — applied to each entry
+
+**Returns**: the results, in canonical key order
 
 **Examples**
 
 ```kex
 { "a": 1, "b": 2 }.map { |k, v| "${k}=${v}" }   # => ["a=1", "b=2"]
 ```
+
 _Building a header block_
 
 ```kex
@@ -370,19 +404,24 @@ headers.map { |name, value| "${name}: ${value}" }.join("\n")
 
 #### `mapValues`
 
-Returns a new map with every value replaced by `f(value)`. The keys are left alone.
-
 ```kex
-mapValues(f) : (V -> W) -> Map<K, W>
+mapValues(f: (V -> W)) -> Map<K, W>
 ```
 
-**Returns**: `Map<K, W>` — a map with the same keys and transformed values
+Returns a new map with every value replaced by `f(value)`. The keys are left alone.
+
+**Parameters**
+
+  - `f` — applied to each value
+
+**Returns**: a map with the same keys and transformed values
 
 **Examples**
 
 ```kex
 { a: 1, b: 2 }.mapValues { |v| v * 10 }   # => { :a: 10, :b: 20 }
 ```
+
 _Normalising values read as text_
 
 ```kex
@@ -391,44 +430,54 @@ raw.mapValues { |s| s.trim.lowerCase }
 
 #### `mapKeys`
 
+```kex
+mapKeys(f: (K -> J)) -> Map<J, V>
+```
+
 Returns a new map with every key replaced by `f(key)`. The values are left alone.
 
 If `f` maps two keys onto the same result, one entry wins: the map cannot hold both.
 
-```kex
-mapKeys(f) : (K -> J) -> Map<J, V>
-```
+**Parameters**
 
-**Returns**: `Map<J, V>` — a map with transformed keys
+  - `f` — applied to each key
+
+**Returns**: a map with transformed keys
 
 **Examples**
 
 ```kex
 { "a": 1, "b": 2 }.mapKeys { |k| k.upperCase }   # => { A: 1, B: 2 }
 ```
+
 _Making header lookups case-insensitive_
 
 ```kex
 headers.mapKeys { |name| name.lowerCase }
 ```
 
-#### `filter`
+#### `filter` (from Enumerable)
+
+```kex
+filter(pred: (K -> V -> Bool)) -> Map<K, V>
+```
 
 Returns a new map with only the entries for which `pred` answers `true`.
 
 Map overrides the map-returning HOFs (Enumerable's default returns a list).
 
-```kex
-filter(pred) : (K -> V -> Bool) -> Map<K, V>
-```
+**Parameters**
 
-**Returns**: `Map<K, V>` — the matching entries
+  - `pred` — the test applied to each entry
+
+**Returns**: the matching entries
 
 **Examples**
 
 ```kex
 { a: 1, b: 2, c: 3 }.filter { |k, v| v > 1 }   # => { :b: 2, :c: 3 }
 ```
+
 _Keeping only the options that were actually set_
 
 ```kex
@@ -437,19 +486,24 @@ options.filter { |name, value| !value.blank? }
 
 #### `reject`
 
-Returns a new map with the entries for which `pred` answers `true` removed. The complement of `filter`.
-
 ```kex
-reject(pred) : (K -> V -> Bool) -> Map<K, V>
+reject(pred: (K -> V -> Bool)) -> Map<K, V>
 ```
 
-**Returns**: `Map<K, V>` — the entries that failed the predicate
+Returns a new map with the entries for which `pred` answers `true` removed. The complement of `filter`.
+
+**Parameters**
+
+  - `pred` — the test applied to each entry
+
+**Returns**: the entries that failed the predicate
 
 **Examples**
 
 ```kex
 { a: 1, b: 2, c: 3 }.reject { |k, v| v > 1 }   # => { :a: 1 }
 ```
+
 _Dropping internal keys before serialising_
 
 ```kex
@@ -458,36 +512,45 @@ record.reject { |name, _| name.startsWith?("_") }
 
 #### `merge`
 
+```kex
+merge(other: Map<K, V>) -> Map<K, V>
+```
+
 Returns a new map holding the entries of both. When a key appears in both, `other`'s value wins.
 
 The right-biased rule is what makes this the natural way to apply overrides on top of defaults.
 
-```kex
-merge(other) : Map<K, V> -> Map<K, V>
-```
+**Parameters**
 
-**Returns**: `Map<K, V>` — the combined map
+  - `other` — the map whose values take precedence
+
+**Returns**: the combined map
 
 **Examples**
 
 ```kex
 { a: 1, b: 2 }.merge({ b: 99, c: 3 })   # => { :a: 1, :b: 99, :c: 3 }
 ```
+
 _Layering user settings over defaults_
 
 ```kex
 defaults.merge(userConfig)
 ```
 
-#### `any?`
+#### `any?` (from Foldable)
+
+```kex
+any?(pred: (K -> V -> Bool)) -> Bool
+```
 
 Returns `true` when at least one entry satisfies `pred`. Stops at the first match.
 
-```kex
-any? : (K -> V -> Bool) -> Bool
-```
+**Parameters**
 
-**Returns**: `Bool` — `true` when any entry matches
+  - `pred` — the test applied to each entry
+
+**Returns**: `true` when any entry matches
 
 **Examples**
 
@@ -496,15 +559,19 @@ any? : (K -> V -> Bool) -> Bool
 { a: 1, b: 2 }.any? { |k, v| v > 9 }   # => false
 ```
 
-#### `all?`
+#### `all?` (from Foldable)
+
+```kex
+all?(pred: (K -> V -> Bool)) -> Bool
+```
 
 Returns `true` when every entry satisfies `pred`. The empty map answers `true`.
 
-```kex
-all? : (K -> V -> Bool) -> Bool
-```
+**Parameters**
 
-**Returns**: `Bool` — `true` when all entries match
+  - `pred` — the test applied to each entry
+
+**Returns**: `true` when all entries match
 
 **Examples**
 
@@ -512,23 +579,28 @@ all? : (K -> V -> Bool) -> Bool
 { a: 1, b: 2 }.all? { |k, v| v > 0 }   # => true
 { a: 1, b: 2 }.all? { |k, v| v > 1 }   # => false
 ```
+
 _Validating a form_
 
 ```kex
 fields.all? { |name, value| !value.blank? }
 ```
 
-#### `find`
+#### `find` (from Foldable)
+
+```kex
+find(pred: (K -> V -> Bool)) -> (K, V)?
+```
 
 Returns the first entry satisfying `pred` as a `(key, value)` tuple, or `None` when nothing matches.
 
 "First" means first in canonical key order.
 
-```kex
-find : (K -> V -> Bool) -> (K, V)?
-```
+**Parameters**
 
-**Returns**: `(K, V)?` — the matching entry, or `None`
+  - `pred` — the test applied to each entry
+
+**Returns**: the matching entry, or `None`
 
 **Examples**
 
@@ -536,24 +608,22 @@ find : (K -> V -> Bool) -> (K, V)?
 { a: 1, b: 2 }.find { |k, v| v > 1 }   # => Just((:b, 2))
 { a: 1, b: 2 }.find { |k, v| v > 9 }   # => None
 ```
+
 _Locating a value without knowing its key_
 
 ```kex
 users.find { |id, user| user.email == target }
 ```
 
-## make `Map<K, V>` implements [Blankable](blankable.md#trait-blankable)
-
-
-#### `blank?`
-
-Returns `true` when the map has no entries. The `Blankable` view of `empty?`, so a map can be tested by the same generic code that tests strings and lists.
+#### `blank?` (from Blankable)
 
 ```kex
 blank? : Bool
 ```
 
-**Returns**: `Bool` — `true` for the empty map
+Returns `true` when the map has no entries. The `Blankable` view of `empty?`, so a map can be tested by the same generic code that tests strings and lists.
+
+**Returns**: `true` for the empty map
 
 **Examples**
 
@@ -561,3 +631,21 @@ blank? : Bool
 {}.blank?         # => true
 { a: 1 }.blank?   # => false
 ```
+
+### From [`Enumerable`](enumerable.md#trait-enumerable)
+
+  - [`mapIndexed`](enumerable.md#enumerable-mapindexed) — Applies `f` to each item and its 0-based position, and collects the results into a list.
+  - [`flatMap`](enumerable.md#enumerable-flatmap) — Applies `f` to each item, expecting a list back, and concatenates the results into one flat list.
+  - [`collect`](enumerable.md#enumerable-collect) — Applies `f` to each item, expecting an `Optional` back, and returns the values that were present: unwrapped.
+
+### From [`Foldable`](enumerable.md#trait-foldable)
+
+  - [`eachIndexed`](enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
+
+### From [`Monoid`](algebra.md#trait-monoid)
+
+  - [`repeat`](algebra.md#monoid-repeat) — Combines this value with itself `n` times.
+
+### Defined in other modules
+
+  - [Truthyable](truthyable.md#make-map): [`truthy?`](truthyable.md#map-truthy?)

@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Range | Standard Library 0.4.0-beta.4-dev | kex docs</title>
+    <meta name="description" content="A span between two bounds, written (1..10) or (&#39;a&#39;..&#39;z&#39;).">
+    <link rel="icon" href="/_theme/icon.png" type="image/png" sizes="403x403">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>/* Krix: the Kex documentation stylesheet, from Tey docgen (tey/src/tey/docgen/css.kex, MIT).
+   Marqraft additions follow the original rules. */
+/* kex docs — design tokens ported from kex.run (see module comment) */
+
+:root {
+  --bg: #fcf5e2;
+  --bg-subtle: #f6ecd0;
+  --bg-muted: #f0e2bc;
+  --bg-sunken: #ead9a8;
+  --ink: #2a1c0a;
+  --ink-soft: #54380f;
+  --muted: #7a5a25;
+  --faint: #9c7a3c;
+  --line: #ecdcb4;
+  --line-strong: #dbc78c;
+  --accent: #b06a14;
+  --accent-strong: #8a4f0a;
+  --accent-soft: #f4e2b8;
+  --accent-ink: #5a3408;
+  --code-bg: #1b140a;
+  --code-bg-soft: #221a0e;
+  --code-border: #382a16;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+/* JetBrains Mono ships programming ligatures (-> to a single arrow, =>,
+   !=, ...) on by default. They read well in code blocks, so they stay
+   there — but in the search box the reader is TYPING, and -> must
+   appear exactly as entered. Disable ligatures there only. */
+.search-modal-panel input, .search-page-box input {
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0, "dlig" 0;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse 90% 50% at 50% -10%, rgba(236, 178, 94, 0.28), transparent 70%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+::selection { background: var(--accent-soft); color: var(--accent-ink); }
+
+a { color: inherit; text-decoration: none; }
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.wrap { width: 100%; max-width: 76rem; margin-inline: auto; padding-inline: 1.5rem; }
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(252, 245, 226, 0.85);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+
+.top-inner { display: flex; align-items: center; gap: 0.75rem; height: 3.5rem; }
+
+/* ── Search ─────────────────────────────────────────────────────────── */
+
+.search-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  height: 2.1rem;
+  min-width: 14rem;
+  padding: 0 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-soft);
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.search-trigger:hover { border-color: var(--accent); color: var(--ink); }
+.search-trigger kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  padding: 0.2rem 0.35rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  color: var(--faint);
+}
+
+/* The modal is frosted glass: a translucent warm panel over a blurred
+   backdrop, in the same voice as the sticky header. */
+.search-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+  background: rgba(42, 28, 10, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.search-modal[hidden] { display: none; }
+
+.search-modal-panel {
+  width: min(44rem, 92vw);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 253, 248, 0.82);
+  backdrop-filter: blur(28px) saturate(140%);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
+  border: 1px solid rgba(236, 220, 180, 0.9);
+  box-shadow: 0 24px 72px rgba(42, 28, 10, 0.35);
+}
+
+.search-modal-panel input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1.05rem 1.3rem;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(236, 220, 180, 0.9);
+  outline: none;
+}
+.search-modal-panel input::placeholder { color: var(--faint); }
+
+.search-modal-results { max-height: 55vh; overflow-y: auto; padding: 0.5rem; }
+
+.search-hit {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.1rem;
+  border-radius: 10px;
+  text-decoration: none;
+}
+.search-hit:hover { background: rgba(246, 236, 208, 0.6); }
+.search-hit.selected { background: rgba(244, 226, 184, 0.9); }
+
+.search-head { display: flex; align-items: baseline; gap: 0.6rem; }
+
+.search-kind {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-strong);
+}
+/* Each kind has its own hue, so a scan down the list separates
+   functions from types from modules at a glance. */
+.search-kind-module { color: #6b5bd2; }
+.search-kind-function { color: #2f855a; }
+.search-kind-make { color: #b06a14; }
+.search-kind-trait { color: #c2498a; }
+.search-kind-record { color: #2b6cb0; }
+.search-kind-type { color: #0f8a8a; }
+.search-kind-constant { color: #9a5a13; }
+.search-name { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--ink); }
+.search-qual { margin-left: auto; font-family: var(--font-mono); font-size: 12px; color: var(--muted); text-align: right; }
+.search-sig {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 12.5px;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-empty { padding: 0.8rem 0.9rem; font-size: 13px; color: var(--faint); }
+
+.search-modal-footer {
+  border-top: 1px solid rgba(236, 220, 180, 0.9);
+  padding: 0.55rem 0.9rem;
+  font-size: 12.5px;
+}
+.search-modal-footer a { color: var(--accent-strong); text-decoration: none; }
+.search-modal-footer a:hover { text-decoration: underline; }
+
+/* The empty state: an explainer, example chips, and this page's items. */
+.search-hint, .search-local { padding: 0.8rem 1rem 0.6rem; }
+
+.search-hint-title { margin: 0 0 0.25rem; font-size: 13px; font-weight: 600; color: var(--ink); }
+.search-hint-body { margin: 0 0 0.6rem; font-size: 12.5px; color: var(--muted); }
+
+.search-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
+.search-chip {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 0.25rem 0.6rem;
+  color: var(--ink-soft);
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.search-chip:hover { border-color: var(--accent); color: var(--ink); }
+
+.search-local { border-top: 1px solid rgba(236, 220, 180, 0.7); }
+
+/* ── Full search page ──────────────────────────────────────────────── */
+
+.search-page { max-width: 52rem; }
+
+.search-page-box input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.85rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--ink);
+  background: rgba(246, 236, 208, 0.6);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  outline: none;
+}
+.search-page-box input:focus { border-color: var(--accent); }
+
+.search-page-results { margin-top: 1.25rem; }
+
+.search-page-hit {
+  display: block;
+  padding: 0.8rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+}
+.search-page-hit:hover { background: var(--bg-subtle); }
+
+.search-summary {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.brand-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  padding-top: 0.2rem;
+}
+
+.spacer { flex: 1; }
+
+.pkg-badge {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+}
+
+.version-select {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.15rem 0.4rem 0.15rem 0.7rem;
+  cursor: pointer;
+}
+
+.version-select:hover { border-color: var(--accent); }
+
+.back { font-size: 13.5px; color: var(--muted); }
+.back:hover { color: var(--accent-strong); }
+
+/* ── Layout ─────────────────────────────────────────────────────────── */
+
+.layout {
+  display: grid;
+  gap: 3rem;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  padding-block: 2.5rem;
+}
+
+/* The module list is longer than the viewport, and it is stuck to it —
+   so it needs its own scrollbar, or everything past the fold is
+   unreachable. The height is what is left below the sticky header. */
+.side nav {
+  position: sticky;
+  top: 5rem;
+  max-height: calc(100vh - 6.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.35rem;
+}
+
+.side-heading {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+
+.side-list { list-style: none; margin: 0; padding: 0; }
+
+.side-list > li > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.side-list > li > a:hover { background: var(--bg-subtle); color: var(--ink); }
+
+.side-list > li > a.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+.side-sub { list-style: none; margin: 0.15rem 0 0.4rem; padding: 0 0 0 1.1rem; }
+
+.side-sub a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.15rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--faint);
+}
+
+.side-sub a:hover { color: var(--accent-strong); background: var(--bg-subtle); }
+
+/* Nested modules ("FS" → "FS.Path"): same voice as the top list, one
+   step quieter and indented under their parent. */
+.side-nest { list-style: none; margin: 0; padding: 0 0 0.25rem 0.75rem; }
+.side-nest > li > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.18rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--faint);
+}
+.side-nest > li > a:hover { background: var(--bg-subtle); color: var(--ink); }
+.side-nest > li > a.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+/* Cross-reference links inside code spans: the code face stays, the
+   colour signals "this goes somewhere". */
+a.xref { color: var(--accent-strong); text-decoration: none; border-bottom: 1px solid color-mix(in oklab, var(--accent) 45%, transparent); }
+a.xref:hover { border-bottom-color: var(--accent-strong); }
+
+.content { min-width: 0; max-width: 48rem; }
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--faint);
+  margin-bottom: 1rem;
+}
+
+.crumbs a:hover { color: var(--accent-strong); }
+.crumbs .sep { opacity: 0.6; }
+
+/* ── Prose ──────────────────────────────────────────────────────────── */
+
+.prose { color: var(--ink-soft); font-size: 1.0125rem; line-height: 1.75; }
+
+.prose h1 { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 1rem; line-height: 1.15; }
+
+/* The standalone index pages (site root, package versions) carry their
+   h1 directly in .content.prose — unlike the entity pages, which get
+   top breathing room from .layout's padding. Give those a little air
+   under the header. */
+.content.prose > h1 { margin-top: 2rem; }
+
+.prose h1 .ver {
+  font-family: var(--font-mono);
+  font-size: 0.45em;
+  font-weight: 500;
+  color: var(--muted);
+  vertical-align: middle;
+  letter-spacing: 0;
+}
+
+.prose h2 {
+  font-size: 1.35rem;
+  font-weight: 650;
+  margin: 2.6rem 0 0.9rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+
+.prose h3 { font-size: 1.05rem; font-weight: 600; margin: 1.6rem 0 0.5rem; }
+
+.prose h5 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  margin: 1.4rem 0 0.4rem;
+}
+
+.prose p { margin: 0 0 1.1rem; }
+
+.prose a { color: var(--accent-strong); text-decoration: underline; text-decoration-color: var(--accent-soft); text-underline-offset: 3px; }
+.prose a:hover { text-decoration-color: currentColor; }
+
+.prose code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  background: var(--bg-muted);
+  border: 1px solid var(--line);
+  padding: 0.12rem 0.4rem;
+  border-radius: 6px;
+  color: var(--muted);
+}
+
+.prose strong { color: var(--ink); font-weight: 600; }
+
+.lede { font-size: 1.05rem; color: var(--muted); }
+
+/* ── Entities ───────────────────────────────────────────────────────── */
+
+/* Anchor navigation lands a heading below the sticky header, not under
+   it: reserve the header's height (3.5rem) plus breathing room. */
+.entity, .fn { scroll-margin-top: 4.75rem; }
+
+.entity h2 code { font-size: 0.95em; }
+
+.kind {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  padding: 0.1rem 0.45rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+/* Each declaration kind has its own hue — the same palette as the
+   search results — so a module, a trait and a make are told apart at
+   a glance rather than all reading as one amber badge. */
+.kind-module { color: #6b5bd2; border-color: #d6cdf3; background: #efeafc; }
+.kind-function { color: #2f855a; border-color: #c6e6d4; background: #e8f4ec; }
+.kind-make { color: #b06a14; border-color: #ecd6ac; background: #f7ecd6; }
+.kind-trait { color: #c2498a; border-color: #efcfe0; background: #f9ecf3; }
+.kind-record { color: #2b6cb0; border-color: #c8dcf0; background: #e9f1fa; }
+.kind-type { color: #0f8a8a; border-color: #c0e4e2; background: #e4f4f3; }
+.kind-constant { color: #9a5a13; border-color: #e6d2b4; background: #f6ecdd; }
+
+.fields, .params { margin: 0 0 1.1rem; }
+
+.field, .param {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.field dt, .param dt { flex-shrink: 0; }
+.field dd, .param dd { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+.opt {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--faint);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 0.5rem;
+  margin-left: 0.4rem;
+}
+
+.variants { margin: 0 0 1.1rem; padding-left: 1.3rem; list-style: disc; }
+.variants li { margin: 0.3rem 0; }
+.variants .abstract { color: var(--faint); }
+
+.fn {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 0.9rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.fn h4 { margin: 0 0 0.4rem; font-size: 1rem; }
+.fn p:last-child, .fn pre:last-child { margin-bottom: 0; }
+
+.fn h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+
+/* The heading of a member links to itself, so a reader can copy a
+   deep link without hunting for a pilcrow. */
+a.self { color: inherit; text-decoration: none; }
+a.self:hover code { border-color: var(--accent); }
+
+/* A method's signature leads its box: the call shape first, prose after. */
+pre.code.sig { margin-bottom: 0.8rem; padding: 0.6rem 0.9rem; }
+pre.code a.xref { color: inherit; border-bottom: 1px dotted color-mix(in oklab, #e6a960 60%, transparent); }
+
+/* "Implements Monoid, Enumerable." / "Implemented by ...": where a
+   type's methods come from, said right under its heading. */
+.implements, .home-note {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin: 0 0 1.1rem;
+}
+
+/* A member group inside a type: "Methods", "On [Number]". */
+.members { margin-top: 1.8rem; }
+.members > h3, .entity > h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.3rem;
+}
+
+/* Which trait a member fulfils: a small link chip beside its name. */
+.tag-trait, .tag-kind {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid #efcfe0;
+  border-radius: 999px;
+  background: #f9ecf3;
+  color: #c2498a;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  text-decoration: none;
+  vertical-align: middle;
+}
+.tag-kind { border-color: #e6d2b4; background: #f6ecdd; color: #9a5a13; }
+.tag-trait:hover { border-color: #c2498a; }
+
+/* Methods a type gets from a trait without writing them. */
+.inherited dt, .elsewhere dt { min-width: 9rem; }
+
+.prose ul { margin: 0 0 1.1rem; padding-left: 1.3rem; }
+.prose li { margin: 0.25rem 0; }
+
+/* A file's opening comment: what the page is about, before any one
+   declaration. */
+.intro { font-size: 1.02rem; margin-bottom: 1.6rem; }
+
+.caption { margin: 0 0 0.3rem; color: var(--muted); font-size: 0.95rem; }
+
+.returns { color: var(--muted); }
+.returns strong { color: var(--ink-soft); }
+
+.deprecated {
+  border-left: 3px solid var(--accent);
+  background: var(--bg-subtle);
+  padding: 0.7rem 1rem;
+  margin: 1.2rem 0;
+  border-radius: 0 8px 8px 0;
+}
+
+/* ── Code surface ───────────────────────────────────────────────────── */
+
+pre.code {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 1.1rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #e9e0cf;
+}
+
+pre.code code { font-family: inherit; }
+
+.tok-comment { color: #94876a; font-style: italic; }
+.tok-keyword { color: #f0c987; }
+.tok-type    { color: #e6a960; }
+.tok-string  { color: #c9e0a0; }
+.tok-interp  { color: #e9e0cf; }
+.tok-number  { color: #ffc18a; }
+.tok-fn      { color: #ffe0a0; }
+.tok-method  { color: #ffe0a0; }
+.tok-op      { color: #d8b878; }
+.tok-punct   { color: #a89a78; }
+.tok-const   { color: #e6a960; }
+.tok-field   { color: #f0e8d4; }
+.tok-bool    { color: #ffc18a; }
+
+/* ── Cards (version index) ──────────────────────────────────────────── */
+
+.cards {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  margin-top: 1.6rem;
+}
+
+/* Section headings on the index and the prelude page: what separates
+   "given to you" from "one using away". */
+.group {
+  margin: 2.6rem 0 0.2rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.group-note { margin: 0; color: var(--muted); font-size: 0.92rem; }
+
+/* "prelude": this page needs no import. It sits on the page heading,
+   beside the module name it qualifies. */
+.tag-prelude {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+h1 .tag-prelude { font-size: 11px; vertical-align: 0.45em; }
+
+.prelude-list {
+  list-style: none;
+  margin: 1.2rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+}
+
+.prelude-list li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.prelude-note {
+  color: var(--faint);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.card:hover { border-color: var(--line-strong); background: var(--bg-subtle); }
+
+.card-title { display: block; font-family: var(--font-mono); font-weight: 600; color: var(--ink); }
+.card:hover .card-title { color: var(--accent-strong); }
+.card-meta { display: block; margin-top: 0.25rem; font-size: 12.5px; color: var(--faint); }
+
+/* ── Footer ─────────────────────────────────────────────────────────── */
+
+.foot {
+  border-top: 1px solid var(--line);
+  margin-top: 3rem;
+  padding: 1.4rem 0 2rem;
+  font-size: 13px;
+  color: var(--faint);
+}
+
+.foot a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.foot a:hover { color: var(--accent-strong); }
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .layout { grid-template-columns: 1fr; }
+  .side { display: none; }
+}
+
+/* ── Marqraft additions ───────────────────────────────────────────────── */
+
+/* Settings: links follow the accent, the column follows the content width. */
+.prose a, a.xref { color: var(--marq-accent, var(--accent-strong)); }
+.content { max-width: var(--marq-contentWidth, 48rem); }
+.site-logo { height: 1.4rem; margin-right: 0.4rem; vertical-align: -0.2rem; }
+
+/* The navigation binding renders nested ul/li/a; style it as the docgen sidebar. */
+.side-tree ul { list-style: none; margin: 0; padding: 0; }
+.side-tree li > a,
+.side-tree li > .marq-nav-row > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.side-tree li > a:hover,
+.side-tree li > .marq-nav-row > a:hover { background: var(--bg-subtle); color: var(--ink); }
+.side-tree a[aria-current=page] { background: var(--accent-soft); color: var(--accent-ink); font-weight: 500; }
+.side-tree ul ul { padding: 0 0 0.25rem 0.75rem; }
+.side-tree ul ul a { padding-block: 0.18rem; font-size: 12.5px; color: var(--faint); }
+.marq-draft {
+  margin-left: 0.4rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+/* Chapter list on the index page. */
+.chapters ul { list-style: none; margin: 0.8rem 0 0; padding: 0; counter-reset: chapter; }
+.chapters ul ul { padding-left: 1.4rem; margin: 0; }
+.chapters li > a, .chapters li > .marq-nav-row > a {
+  display: block;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+.chapters a:hover { color: var(--accent-strong); }
+
+/* Reading order: the docgen "prevnext" footer. */
+.marq-pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2.6rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+.marq-pager a { text-decoration: none; display: flex; flex-direction: column; }
+.marq-pager small { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--faint); }
+.marq-pager span { color: var(--accent-strong); }
+.marq-pager-previous span::before { content: "← "; }
+.marq-pager-next { margin-left: auto; text-align: right; }
+.marq-pager-next span::after { content: " →"; }
+
+/* Prose elements docgen leaves to the browser. */
+.prose ul, .prose ol { margin: 0 0 1.1rem; padding-left: 1.4rem; }
+.prose li { margin: 0.2rem 0; }
+.prose li > ul, .prose li > ol { margin: 0.2rem 0; }
+.prose blockquote {
+  margin: 0 0 1.1rem;
+  padding: 0.7rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--bg-subtle);
+  border-radius: 0 8px 8px 0;
+  color: var(--muted);
+}
+.prose blockquote p:last-child { margin-bottom: 0; }
+.prose hr { border: 0; border-top: 1px solid var(--line); margin: 2rem 0; }
+.prose img { max-width: 100%; border-radius: 10px; border: 1px solid var(--line); }
+.table-scroll { overflow-x: auto; margin: 0 0 1.1rem; }
+.prose table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+.prose th, .prose td { text-align: left; padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--line); }
+.prose th { font-weight: 600; color: var(--ink); border-bottom-color: var(--line-strong); }
+.prose pre:not(.code) {
+  background: var(--code-bg); color: #e9e0cf; border: 1px solid var(--code-border);
+  border-radius: 10px; padding: 0.9rem 1.1rem; overflow-x: auto; font-family: var(--font-mono); font-size: 0.85rem;
+}
+
+/* Blocks. */
+.marq-code { margin: 0 0 1.1rem; }
+.marq-code figcaption { font-family: var(--font-mono); font-size: 12px; color: var(--faint); margin-bottom: 0.35rem; }
+.marq-code figcaption:empty, .marq-code small:empty { display: none; }
+.marq-code pre { margin-bottom: 0.35rem; }
+.marq-code small { display: block; font-size: 12.5px; color: var(--muted); }
+.marq-tabs { border: 1px solid var(--line); border-radius: 10px; padding: 0.4rem 1.1rem; margin: 0 0 1.1rem; background: rgba(255, 255, 255, 0.35); }
+.marq-area + .marq-area { border-top: 1px solid var(--line); }
+.marq-area h3 { margin: 0.8rem 0 0.4rem; font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--faint); }
+/* GitHub alerts: > [!NOTE], [!TIP], [!IMPORTANT], [!WARNING], [!CAUTION]. */
+.markdown-alert { margin: 0 0 1.1rem; padding: 0.7rem 1rem; border-left: 3px solid var(--accent); background: var(--bg-subtle); border-radius: 0 8px 8px 0; }
+.markdown-alert-note { border-left-color: #2b6cb0; background: #e9f1fa; }
+.markdown-alert-tip { border-left-color: #2f855a; background: #e8f4ec; }
+.markdown-alert-important { border-left-color: #6b5bd2; background: #efeafc; }
+.markdown-alert-warning { border-left-color: var(--accent); background: #f7ecd6; }
+.markdown-alert-caution { border-left-color: #c2498a; background: #f9ecf3; }
+.markdown-alert-title { margin: 0 0 0.2rem !important; font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-ink); }
+.markdown-alert-body > :last-child { margin-bottom: 0; }
+.marq-source { border: 1px dashed var(--line-strong); padding: 0.7rem; white-space: pre-wrap; }
+
+/* Collections: the top-level pages (Guide, Tutorial, ...) as header links. */
+.top-nav { margin-left: 1rem; }
+.top-nav ul { display: flex; align-items: center; gap: 0.2rem; list-style: none; margin: 0; padding: 0; }
+.top-nav li { position: relative; }
+.top-nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.top-nav a:hover { color: var(--ink); background: var(--bg-subtle); }
+.top-nav a[aria-current] { color: var(--accent-ink); background: var(--accent-soft); font-weight: 500; }
+/* Header links: ordinary links after the version badge, e.g. kex.run. */
+.top-links .marq-menu { display: flex; align-items: center; gap: 0.9rem; list-style: none; margin: 0 0 0 0.75rem; padding: 0; }
+.top-links li { position: relative; }
+.top-links a { font-size: 13.5px; color: var(--muted); }
+.top-links a:hover { color: var(--accent-strong); }
+.top-links a[href^="http"]::after { content: " ↗"; }
+@media (max-width: 640px) { .brand-sub, .pkg-badge { display: none; } .top-nav { margin-left: 0.25rem; } }
+
+/* Authoring (marq dev only): keep the sticky header and toolbar below the Marqraft bar. */
+body:has(#marq-chrome) .top { top: 48px; }
+body:has(#marq-chrome) { --marq-toolbar-top: calc(48px + 3.5rem + 0.5rem); }
+body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
+
+/* Reference pages (reference.html.ket): generated API documentation with an
+   "On this page" rail beside the content. The producer (Tey docgen's
+   fragments output) renders the rail's list; the theme places it. */
+.layout.has-toc { grid-template-columns: 15rem minmax(0, 1fr) 12rem; }
+.toc { font-size: 12.5px; }
+.toc > * { position: sticky; top: 5rem; }
+.toc-heading {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+.toc ul { list-style: none; margin: 0; padding: 0; max-height: calc(100vh - 8rem); overflow-y: auto; }
+.toc li a { display: block; padding: 0.2rem 0.5rem; border-left: 2px solid var(--line); color: var(--muted); }
+.toc li a:hover { color: var(--ink); border-left-color: var(--accent); }
+.toc li.toc-nested a { padding-left: 1.1rem; }
+.reference .content { max-width: none; }
+@media (max-width: 1280px) { .layout.has-toc { grid-template-columns: 15rem minmax(0, 1fr); } .toc { display: none; } }
+@media (max-width: 1024px) { .layout.has-toc { grid-template-columns: 1fr; } }
+
+:root{--marq-accent:#8a4f0a;--marq-contentWidth:48rem;}</style>
+  </head>
+  <body class="reference">
+    <header class="top">
+      <div class="wrap top-inner">
+        <a class="brand" href="/">kex</a>
+        <span class="brand-sub">docs</span>
+        <nav class="top-nav" aria-label="Collections"><ul><li><a href="/guide/0.4.0-alpha/">Guide</a></li><li><a href="/prelude/" aria-current="true">Standard Library</a></li><li><a href="/tey/">Tey</a></li></ul></nav>
+        <span class="spacer"></span>
+        <span class="pkg-badge">Standard Library 0.4.0-beta.4-dev</span>
+        <nav class="top-links" aria-label="Links"><ul class="marq-menu"><li><a href="https://kex.run/docs">kex.run</a></li></ul></nav>
+      </div>
+    </header>
+    <div class="wrap layout has-toc">
+      <aside class="side">
+        <nav aria-label="Standard Library">
+          <p class="side-heading"><a href="/prelude/">Standard Library</a></p>
+          <div class="side-tree"><ul><li><a href="/prelude/0.4.0-beta.4-dev/">Standard Library</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/algebra/">Algebra</a></li><li><a href="/prelude/0.4.0-beta.4-dev/test/">Assert</a></li><li><a href="/prelude/0.4.0-beta.4-dev/atom/">Atom</a></li><li><a href="/prelude/0.4.0-beta.4-dev/binary/">Binary</a></li><li><a href="/prelude/0.4.0-beta.4-dev/bits/">Bits</a></li><li><a href="/prelude/0.4.0-beta.4-dev/blankable/">Blankable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/comparable/">Comparable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/console/">Console</a></li><li><a href="/prelude/0.4.0-beta.4-dev/control/retry/">Control.Retry</a></li><li><a href="/prelude/0.4.0-beta.4-dev/data/queue/">Data.Queue</a></li><li><a href="/prelude/0.4.0-beta.4-dev/data/set/">Data.Set</a></li><li><a href="/prelude/0.4.0-beta.4-dev/data/stack/">Data.Stack</a></li><li><a href="/prelude/0.4.0-beta.4-dev/digest/">Digest</a></li><li><a href="/prelude/0.4.0-beta.4-dev/dimensions/">Dimensions</a></li><li><a href="/prelude/0.4.0-beta.4-dev/enumerable/">Enumerable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/env/">ENV</a></li><li><a href="/prelude/0.4.0-beta.4-dev/errorable/">Errorable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/evaluator/">Evaluator</a></li><li><a href="/prelude/0.4.0-beta.4-dev/feed/">Feed</a></li><li><a href="/prelude/0.4.0-beta.4-dev/filehandle/">FileHandle</a></li><li><a href="/prelude/0.4.0-beta.4-dev/fs/">FS</a></li><li><a href="/prelude/0.4.0-beta.4-dev/io/">IO</a></li><li><a href="/prelude/0.4.0-beta.4-dev/json/">JSON</a></li><li><a href="/prelude/0.4.0-beta.4-dev/kex/">Kex</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/kex/ast/">Kex.AST</a></li></ul></li><li><a href="/prelude/0.4.0-beta.4-dev/list/">List</a></li><li><a href="/prelude/0.4.0-beta.4-dev/map/">Map</a></li><li><a href="/prelude/0.4.0-beta.4-dev/math/">Math</a></li><li><a href="/prelude/0.4.0-beta.4-dev/mock/">Mock</a></li><li><a href="/prelude/0.4.0-beta.4-dev/net/">Net</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/net/dns/">Net.DNS</a></li><li><a href="/prelude/0.4.0-beta.4-dev/net/http/">Net.HTTP</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/net/http/websocket/">Net.HTTP.WebSocket</a></li></ul></li><li><a href="/prelude/0.4.0-beta.4-dev/net/ip/">Net.IP</a></li><li><a href="/prelude/0.4.0-beta.4-dev/net/socket/">Net.Socket</a></li></ul></li><li><a href="/prelude/0.4.0-beta.4-dev/node/">Node</a></li><li><a href="/prelude/0.4.0-beta.4-dev/number/">Number</a></li><li><a href="/prelude/0.4.0-beta.4-dev/optional/">Optional</a></li><li><a href="/prelude/0.4.0-beta.4-dev/optionparser/">OptionParser</a></li><li><a href="/prelude/0.4.0-beta.4-dev/parsing/">Parsing</a></li><li><a href="/prelude/0.4.0-beta.4-dev/prelude/">Prelude</a></li><li><a href="/prelude/0.4.0-beta.4-dev/process/">Process</a></li><li><a href="/prelude/0.4.0-beta.4-dev/random/">Random</a></li><li><a href="/prelude/0.4.0-beta.4-dev/range/" aria-current="page">Range</a></li><li><a href="/prelude/0.4.0-beta.4-dev/regex/">Regex</a></li><li><a href="/prelude/0.4.0-beta.4-dev/stream/">Stream</a></li><li><a href="/prelude/0.4.0-beta.4-dev/string/">String</a></li><li><a href="/prelude/0.4.0-beta.4-dev/system/">System</a></li><li><a href="/prelude/0.4.0-beta.4-dev/taggedvalidation/">TaggedValidation</a></li><li><a href="/prelude/0.4.0-beta.4-dev/template/">Template</a></li><li><a href="/prelude/0.4.0-beta.4-dev/time/">Time</a></li><li><a href="/prelude/0.4.0-beta.4-dev/truthyable/">Truthyable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/type/">Type</a></li><li><a href="/prelude/0.4.0-beta.4-dev/units/">Units</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/units/data/">Units.Data</a></li><li><a href="/prelude/0.4.0-beta.4-dev/units/si/">Units.SI</a></li></ul></li><li><a href="/prelude/0.4.0-beta.4-dev/uri/">URI</a></li></ul></li></ul></div>
+        </nav>
+      </aside>
+      <main class="content">
+        <nav class="crumbs"><a href="/prelude/">Standard Library</a> <span class="sep">/</span> <span>Range</span></nav>
+        <article class="prose">
+          <h1>Range</h1>
+          <section class="entity" id="type-range">
+<h2><span class="kind kind-type">type</span> <code>Range</code></h2>
+<p>A span between two bounds, written <code>(1..10)</code> or <code>('a'..'z')</code>.</p>
+<p>A range stores its endpoints on both backends without building a list. Integer and character ranges can be enumerated with both ends included. Float ranges describe continuous bounds, for example <code>(-1.0..1.0)</code> for random sampling; they cannot be enumerated without an explicit step.</p>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>          <span class="tok-comment"># =&gt; [1, 2, 3, 4, 5]</span>
+<span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">sum</span>            <span class="tok-comment"># =&gt; 15</span>
+<span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">in?</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span>          <span class="tok-comment"># =&gt; true</span>
+<span class="tok-punct">(</span>'a'<span class="tok-op">.</span><span class="tok-op">.</span>'e'<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>      <span class="tok-comment"># =&gt; ['a', 'b', 'c', 'd', 'e']</span></code></pre>
+<p>It is <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-enumerable"><code>Enumerable</code></a> and <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-foldable"><code>Foldable</code></a>, so the traversal methods work directly, and the list operations below answer in list terms. Use <code>items</code> when you want a real list to hand to something else.</p>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">filter</span><span class="tok-punct">(</span><span class="tok-op">~</span>even?<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [2, 4, 6, 8, 10]</span>
+<span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>n<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+<p class="implements">Implements <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-enumerable"><code>Enumerable</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-foldable"><code>Foldable</code></a>.</p>
+<section class="members" id="make-range">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="range-reduce">
+<h4><a class="self" href="#range-reduce"><code>reduce</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-reduce" title="Implements Enumerable.reduce">Enumerable</a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-reduce" title="Implements Foldable.reduce">Foldable</a></h4>
+<pre class="code sig"><code><span class="tok-fn">reduce</span><span class="tok-punct">(</span>acc<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">,</span> f<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <span class="tok-type">B</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span></code></pre>
+<p>Folds over the range's elements in ascending order.</p>
+<p>This is <a class="xref" href="#type-range"><code>Range</code></a>'s <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-enumerable"><code>Enumerable</code></a> primitive; the traversal methods are built on it. A range stays structurally minimal, so the fold runs over its materialized items.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>acc</code></dt><dd>the initial accumulator</dd></div>
+<div class="param"><dt><code>f</code></dt><dd>combines the accumulator with each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the final accumulator</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reduce</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>sum<span class="tok-punct">,</span> n<span class="tok-op">|</span> sum <span class="tok-op">+</span> n <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; 10</span></code></pre>
+
+</div>
+<div class="fn" id="range-sum">
+<h4><a class="self" href="#range-sum"><code>sum</code></a></h4>
+<p>Returns the sum of the range's elements.</p>
+<p class="returns"><strong>Returns</strong> <code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#">Number</a></code> — the sum</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">sum</span>   <span class="tok-comment"># =&gt; 55</span>
+<span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">sum</span>    <span class="tok-comment"># =&gt; 1</span></code></pre>
+
+</div>
+<div class="fn" id="range-product">
+<h4><a class="self" href="#range-product"><code>product</code></a></h4>
+<p>Returns the product of the range's elements.</p>
+<p class="returns"><strong>Returns</strong> <code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#">Number</a></code> — the product</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">product</span>   <span class="tok-comment"># =&gt; 120   (five factorial)</span></code></pre>
+
+</div>
+<div class="fn" id="range-contains?">
+<h4><a class="self" href="#range-contains?"><code>contains?</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">contains?</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when <code>value</code> falls inside the range, endpoints included.</p>
+<p><code>5.in?(1..10)</code> says the same thing from the value's side, and often reads better.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the value to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the value is in range</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; true</span>
+<span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-number">11</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="range-items">
+<h4><a class="self" href="#range-items"><code>items</code></a></h4>
+<pre class="code sig"><code>items <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p>Returns the range's elements as a list.</p>
+<p>This is where a range stops being two numbers and becomes real data, so it is also where a very large range starts to cost something.</p>
+<p class="returns"><strong>Returns</strong> the elements, in ascending order</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>      <span class="tok-comment"># =&gt; [1, 2, 3]</span>
+<span class="tok-punct">(</span>'a'<span class="tok-op">.</span><span class="tok-op">.</span>'c'<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>  <span class="tok-comment"># =&gt; ['a', 'b', 'c']</span></code></pre>
+<p class="caption"><em>Building a lookup table</em></p>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">12</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> <span class="tok-punct">(</span>m<span class="tok-punct">,</span> <span class="tok-fn">monthName</span><span class="tok-punct">(</span>m<span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="range-first">
+<h4><a class="self" href="#range-first"><code>first</code></a></h4>
+<pre class="code sig"><code>first <span class="tok-op">:</span> <span class="tok-type">A?</span></code></pre>
+<p>Returns the first element, or <code>None</code> for an empty range.</p>
+<p>The list operations, over the materialized items. A range is an ordered collection, so <code>(1..5).first</code> and <code>(1..5).length</code> operate on its materialized elements. Floating bounds do not define such a collection.</p>
+<p class="returns"><strong>Returns</strong> the first element, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">first</span>   <span class="tok-comment"># =&gt; Just(3)</span></code></pre>
+
+</div>
+<div class="fn" id="range-second">
+<h4><a class="self" href="#range-second"><code>second</code></a></h4>
+<pre class="code sig"><code>second <span class="tok-op">:</span> <span class="tok-type">A?</span></code></pre>
+<p>Returns the second element, or <code>None</code> when the range is shorter than two.</p>
+<p class="returns"><strong>Returns</strong> the second element, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">second</span>   <span class="tok-comment"># =&gt; Just(4)</span></code></pre>
+
+</div>
+<div class="fn" id="range-third">
+<h4><a class="self" href="#range-third"><code>third</code></a></h4>
+<pre class="code sig"><code>third <span class="tok-op">:</span> <span class="tok-type">A?</span></code></pre>
+<p>Returns the third element, or <code>None</code> when the range is shorter than three.</p>
+<p class="returns"><strong>Returns</strong> the third element, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">third</span>   <span class="tok-comment"># =&gt; Just(5)</span></code></pre>
+
+</div>
+<div class="fn" id="range-last">
+<h4><a class="self" href="#range-last"><code>last</code></a></h4>
+<pre class="code sig"><code>last <span class="tok-op">:</span> <span class="tok-type">A?</span></code></pre>
+<p>Returns the last element, or <code>None</code> for an empty range.</p>
+<p class="returns"><strong>Returns</strong> the last element, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">last</span>   <span class="tok-comment"># =&gt; Just(7)</span></code></pre>
+
+</div>
+<div class="fn" id="range-rest">
+<h4><a class="self" href="#range-rest"><code>rest</code></a></h4>
+<pre class="code sig"><code>rest <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p>Returns every element after the first, as a list.</p>
+<p class="returns"><strong>Returns</strong> the remaining elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">rest</span>   <span class="tok-comment"># =&gt; [2, 3, 4]</span></code></pre>
+
+</div>
+<div class="fn" id="range-length">
+<h4><a class="self" href="#range-length"><code>length</code></a></h4>
+<pre class="code sig"><code>length <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Returns how many elements the range has.</p>
+<p class="returns"><strong>Returns</strong> the number of elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">length</span>   <span class="tok-comment"># =&gt; 10</span>
+<span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">length</span>    <span class="tok-comment"># =&gt; 1</span></code></pre>
+
+</div>
+<div class="fn" id="range-count">
+<h4><a class="self" href="#range-count"><code>count</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-count" title="Implements Foldable.count">Foldable</a></h4>
+<pre class="code sig"><code>count <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Returns how many elements the range has. The same as <code>length</code>.</p>
+<p class="returns"><strong>Returns</strong> the number of elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span>   <span class="tok-comment"># =&gt; 10</span></code></pre>
+
+</div>
+<div class="fn" id="range-empty?">
+<h4><a class="self" href="#range-empty?"><code>empty?</code></a></h4>
+<pre class="code sig"><code>empty? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the range has no elements.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> for an empty range</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">empty?</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="range-max">
+<h4><a class="self" href="#range-max"><code>max</code></a></h4>
+<pre class="code sig"><code>max <span class="tok-op">:</span> <span class="tok-type">A?</span></code></pre>
+<p>Returns the largest element, or <code>None</code> for an empty range.</p>
+<p class="returns"><strong>Returns</strong> the largest element, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">max</span>   <span class="tok-comment"># =&gt; Just(10)</span></code></pre>
+
+</div>
+<div class="fn" id="range-min">
+<h4><a class="self" href="#range-min"><code>min</code></a></h4>
+<pre class="code sig"><code>min <span class="tok-op">:</span> <span class="tok-type">A?</span></code></pre>
+<p>Returns the smallest element, or <code>None</code> for an empty range.</p>
+<p class="returns"><strong>Returns</strong> the smallest element, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">min</span>   <span class="tok-comment"># =&gt; Just(1)</span></code></pre>
+
+</div>
+<div class="fn" id="range-reverse">
+<h4><a class="self" href="#range-reverse"><code>reverse</code></a></h4>
+<pre class="code sig"><code>reverse <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p>Returns the elements as a list, in descending order.</p>
+<p class="returns"><strong>Returns</strong> the elements, reversed</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reverse</span>   <span class="tok-comment"># =&gt; [4, 3, 2, 1]</span></code></pre>
+<p class="caption"><em>Counting down</em></p>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reverse</span><span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>n<span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># prints 3, 2, 1</span></code></pre>
+
+</div>
+<div class="fn" id="range-sort">
+<h4><a class="self" href="#range-sort"><code>sort</code></a></h4>
+<pre class="code sig"><code>sort <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p>Returns the elements as a sorted list. A range is already ascending, so this is the identity: it exists so that generic code can call it.</p>
+<p class="returns"><strong>Returns</strong> the elements, sorted</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">sort</span>   <span class="tok-comment"># =&gt; [1, 2, 3, 4]</span></code></pre>
+
+<pre class="code sig"><code><span class="tok-fn">sort</span><span class="tok-punct">(</span>comparator<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p>Returns the elements as a list, ordered by <code>comparator</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>comparator</code></dt><dd><code>true</code> when the first should come first</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the sorted elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">sort</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>a<span class="tok-punct">,</span> b<span class="tok-op">|</span> a <span class="tok-op">&gt;</span> b <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; [4, 3, 2, 1]</span></code></pre>
+
+</div>
+<div class="fn" id="range-uniq">
+<h4><a class="self" href="#range-uniq"><code>uniq</code></a></h4>
+<pre class="code sig"><code>uniq <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p>Returns the elements as a list with duplicates removed. A range has none, so this is the identity: it exists so that generic code can call it.</p>
+<p class="returns"><strong>Returns</strong> the distinct elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">uniq</span>   <span class="tok-comment"># =&gt; [1, 2, 3]</span></code></pre>
+
+</div>
+<div class="fn" id="range-join">
+<h4><a class="self" href="#range-join"><code>join</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">join</span><span class="tok-punct">(</span>separator<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Renders the elements as text, with <a class="xref" href="/prelude/0.4.0-beta.4-dev/fs/#constant-fs-path-separator"><code>separator</code></a> between them.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>separator</code></dt><dd>placed between elements</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the joined text</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">, </span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;1, 2, 3, 4&quot;</span></code></pre>
+<p class="caption"><em>A comma-separated header</em></p>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">columns: </span><span class="tok-string">${</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">,</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-string">}</span><span class="tok-string">&quot;</span>   <span class="tok-comment"># =&gt; &quot;columns: 1,2,3&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="range-at">
+<h4><a class="self" href="#range-at"><code>at</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">at</span><span class="tok-punct">(</span>index<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A?</span></code></pre>
+<p>Returns the element at index <code>index</code>, counting from 0, or <code>None</code> when out of range.</p>
+<p>Note that the index counts positions, not values: <code>(10..20).at(0)</code> is <code>Just(10)</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>index</code></dt><dd>the 0-based position</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the element, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">20</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">at</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(10)</span>
+<span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">20</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">at</span><span class="tok-punct">(</span><span class="tok-number">99</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; None</span></code></pre>
+
+</div>
+<div class="fn" id="range-get">
+<h4><a class="self" href="#range-get"><code>get</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">get</span><span class="tok-punct">(</span>index<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A?</span>
+<span class="tok-fn">get</span><span class="tok-punct">(</span>index<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> fallback<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span></code></pre>
+<p>Returns the element at index <code>index</code>, counting from 0, or <code>None</code> when out of range. The same as <code>at</code>, named to match <a class="xref" href="/prelude/0.4.0-beta.4-dev/list/#type-list"><code>List</code></a> and <a class="xref" href="/prelude/0.4.0-beta.4-dev/map/#type-map"><code>Map</code></a>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>index</code></dt><dd>the 0-based position</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the element, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">20</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(10)</span>
+<span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">20</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">99</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; None</span></code></pre>
+
+</div>
+<div class="fn" id="range-take">
+<h4><a class="self" href="#range-take"><code>take</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">take</span><span class="tok-punct">(</span>n<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p>Returns the first <code>n</code> elements as a list.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>n</code></dt><dd>how many elements to keep</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the leading elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [1, 2, 3]</span></code></pre>
+
+</div>
+<div class="fn" id="range-drop">
+<h4><a class="self" href="#range-drop"><code>drop</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">drop</span><span class="tok-punct">(</span>n<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p>Returns everything after the first <code>n</code> elements, as a list.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>n</code></dt><dd>how many elements to skip</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the remaining elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">drop</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [4, 5]</span></code></pre>
+
+</div>
+<div class="fn" id="range-indexof">
+<h4><a class="self" href="#range-indexof"><code>indexOf</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">indexOf</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer?</span></code></pre>
+<p>Returns the position of <code>value</code> in the range, or <code>None</code> when it is not in it.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the element to look for</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the 0-based position, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span>'a'<span class="tok-op">.</span><span class="tok-op">.</span>'e'<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">indexOf</span><span class="tok-punct">(</span>'c'<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(2)</span>
+<span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">20</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">indexOf</span><span class="tok-punct">(</span><span class="tok-number">12</span><span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; Just(2)</span></code></pre>
+
+</div>
+<div class="fn" id="range-zip">
+<h4><a class="self" href="#range-zip"><code>zip</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">zip</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">B</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-type">A</span><span class="tok-punct">,</span> <span class="tok-type">B</span><span class="tok-punct">)</span><span class="tok-punct">]</span></code></pre>
+<p>Pairs each element with the element at the same position in <code>other</code>, stopping at the shorter of the two.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the list to pair with</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the pairs, in order</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">zip</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">c</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [(1, &quot;a&quot;), (2, &quot;b&quot;), (3, &quot;c&quot;)]</span></code></pre>
+<p class="caption"><em>Numbering a list</em></p>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-method">names</span><span class="tok-op">.</span><span class="tok-method">count</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">zip</span><span class="tok-punct">(</span>names<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="range-partition">
+<h4><a class="self" href="#range-partition"><code>partition</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">partition</span><span class="tok-punct">(</span>pred<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
+<p>Splits the elements into those satisfying <code>pred</code> and those that do not.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>pred</code></dt><dd>the test applied to each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the matching and non-matching elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">partition</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n<span class="tok-op">.</span><span class="tok-method">even?</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; ([2, 4], [1, 3])</span></code></pre>
+
+</div>
+<div class="fn" id="range-push">
+<h4><a class="self" href="#range-push"><code>push</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">push</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p>Returns the elements as a list with <code>value</code> added at the end.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the element to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the elements plus <code>value</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">push</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [1, 2, 3, 4]</span></code></pre>
+
+</div>
+<div class="fn" id="range-reject">
+<h4><a class="self" href="#range-reject"><code>reject</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">reject</span><span class="tok-punct">(</span>pred<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p>Returns the elements that do NOT satisfy <code>pred</code>, as a list.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>pred</code></dt><dd>the test applied to each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the elements that failed the predicate</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reject</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n<span class="tok-op">.</span><span class="tok-method">even?</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; [1, 3, 5]</span></code></pre>
+
+</div>
+</div>
+</section><h3>From <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-enumerable"><code>Enumerable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-map"><code>map</code></a></dt><dd>Applies <code>f</code> to each item and collects the results into a list.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-mapindexed"><code>mapIndexed</code></a></dt><dd>Applies <code>f</code> to each item and its 0-based position, and collects the results into a list.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-filter"><code>filter</code></a></dt><dd>Returns the items for which <code>pred</code> answers <code>true</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-flatmap"><code>flatMap</code></a></dt><dd>Applies <code>f</code> to each item, expecting a list back, and concatenates the results into one flat list.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-collect"><code>collect</code></a></dt><dd>Applies <code>f</code> to each item, expecting an <code>Optional</code> back, and returns the values that were present: unwrapped.</dd></div>
+</dl>
+<h3>From <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-foldable"><code>Foldable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-each"><code>each</code></a></dt><dd>Calls <code>f</code> with each item, for its side effects.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-eachindexed"><code>eachIndexed</code></a></dt><dd>Calls <code>f</code> with each item and its 0-based position, for its side effects.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-all?"><code>all?</code></a></dt><dd>Returns <code>true</code> when every item satisfies <code>pred</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-any?"><code>any?</code></a></dt><dd>Returns <code>true</code> when at least one item satisfies <code>pred</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-find"><code>find</code></a></dt><dd>Returns the first item satisfying <code>pred</code>, or <code>None</code> when nothing does.</dd></div>
+</dl>
+
+</section>
+
+        </article>
+      </main>
+      <aside class="toc" aria-label="On this page">
+        
+      </aside>
+    </div>
+    <footer class="foot">
+      <div class="wrap">Generated from source (<code>range.kex</code>) · Built with Marqraft · <a href="https://kex.run">kex.run</a></div>
+    </footer>
+  </body>
+</html>

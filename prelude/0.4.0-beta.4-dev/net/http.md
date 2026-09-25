@@ -28,6 +28,8 @@ let response = client.get("https://example.test/").try
 client.close.try
 ```
 
+
+
 ## record `Headers`
 
 An insertion-ordered HTTP field collection. Names compare case-insensitively and duplicate fields are preserved.
@@ -38,7 +40,109 @@ Order is kept for the same reason. RFC 9110 makes order insignificant BETWEEN di
 
 **Fields**
 
-  - `entries` : [(String, String)]
+  - `entries` : [([String](../string.md#make-string), [String](../string.md#make-string))]
+
+Implements [`Showable`](../kex.md#trait-showable), [`Inspectable`](../kex.md#trait-inspectable).
+
+### Methods
+
+#### `add`
+
+```kex
+add(name: String, value: String) -> Result<Headers, NetError>
+```
+
+Appends a field, keeping existing fields of the same name.
+
+Repeats are how `Set-Cookie` works: it is not a comma-separated list, so two cookies must be two fields. For replace-semantics, `remove` first.
+
+An invalid name or value is an `Error`, not a silent drop. Rejecting `"a\r\nX: y"` is what stops response splitting, but dropping it quietly left the caller holding a valid `Headers` that simply lacked the field it asked for, and a response with no `Content-Type` invites MIME sniffing. `from` and `parse` already answer with a `Result` for this same input.
+
+**Returns**: the extended fields, or `Parse`
+
+**Examples**
+
+_Two cookies on one response_
+
+```kex
+Headers.empty
+  .add("Set-Cookie", "session=abc; HttpOnly").try
+  .add("Set-Cookie", "theme=dark").try
+```
+
+_Replacing a field_
+
+```kex
+headers.remove("Content-Type").add("Content-Type", "application/json").try
+```
+
+#### `remove`
+
+```kex
+remove(name: String) -> Headers
+```
+
+Removes every field matching `name` case-insensitively.
+
+**Examples**
+
+_Stripping hop-by-hop state before forwarding_
+
+```kex
+let forwarded = incoming.remove("Connection")
+```
+
+#### `get`
+
+```kex
+get(name: String) -> String?
+```
+
+Returns the first matching field value.
+
+**Examples**
+
+_Selecting a response decoder_
+
+```kex
+let contentType = response.headers.get("Content-Type").or("application/octet-stream")
+```
+
+#### `getAll`
+
+```kex
+getAll(name: String) -> [String]
+```
+
+Returns every matching value in insertion order.
+
+**Examples**
+
+_Preserving every Set-Cookie field_
+
+```kex
+let cookies = response.headers.getAll("Set-Cookie")
+```
+
+#### `showValue` (from Showable)
+
+```kex
+showValue : String
+```
+
+Renders fields while replacing authorization and cookie values with `***`.
+
+#### `inspectValue` (from Inspectable)
+
+```kex
+inspectValue(colors: Bool) -> String
+```
+
+Structural inspection uses the same credential-safe rendering.
+
+### From [`Showable`](../kex.md#trait-showable)
+
+  - [`to`](../kex.md#showable-to) — 
 
 ## record `Status`
 
@@ -46,7 +150,49 @@ A validated HTTP status code in `100..599`.
 
 **Fields**
 
-  - `code` : Integer
+  - `code` : [Integer](../number.md#make-integer)
+
+### Methods
+
+#### `informational?`
+
+```kex
+informational? : Bool
+```
+
+**Returns**: whether the status is in `100..199`
+
+#### `success?`
+
+```kex
+success? : Bool
+```
+
+**Returns**: whether the status is in `200..299`
+
+#### `redirect?`
+
+```kex
+redirect? : Bool
+```
+
+**Returns**: whether the status is in `300..399`
+
+#### `clientError?`
+
+```kex
+clientError? : Bool
+```
+
+**Returns**: whether the status is in `400..499`
+
+#### `serverError?`
+
+```kex
+serverError? : Bool
+```
+
+**Returns**: whether the status is in `500..599`
 
 ## record `Response<B>`
 
@@ -54,9 +200,11 @@ A typed HTTP response envelope whose body representation is explicit.
 
 **Fields**
 
-  - `status` : Status
-  - `headers` : Headers
+  - `status` : [Status](#record-net-http-status)
+  - `headers` : [Headers](#record-net-http-headers)
   - `body` : B
+
+
 
 ## record `Request<B>`
 
@@ -64,10 +212,12 @@ A typed HTTP request envelope whose body representation is explicit.
 
 **Fields**
 
-  - `method` : String
-  - `target` : URI
-  - `headers` : Headers
+  - `method` : [String](../string.md#make-string)
+  - `target` : [URI](../uri.md#record-uri-uri)
+  - `headers` : [Headers](#record-net-http-headers)
   - `body` : B
+
+
 
 ## record `RouteContext`
 
@@ -75,7 +225,31 @@ Route captures decoded after path segmentation.
 
 **Fields**
 
-  - `parameters` : Map<String, String> (optional)
+  - `parameters` : [Map](../map.md#type-map)<[String](../string.md#make-string), [String](../string.md#make-string)> (optional)
+
+### Methods
+
+#### `parameter`
+
+```kex
+parameter(name: String) -> Result<String, NetError>
+```
+
+Returns one decoded named or wildcard route capture.
+
+**Parameters**
+
+  - `name` — the capture name declared in the route
+
+**Returns**: the capture, or `Parse` when absent
+
+**Examples**
+
+_Reading +:id+ from a +/users/:id+ route_
+
+```kex
+let id = context.parameter("id").try
+```
 
 ## record `Context`
 
@@ -83,7 +257,9 @@ Per-request server context.
 
 **Fields**
 
-  - `route` : RouteContext
+  - `route` : [RouteContext](#record-net-http-routecontext)
+
+
 
 ## type `Handler`
 
@@ -91,19 +267,17 @@ A buffered HTTP route handler. Handling a request is effectful: routes may read 
 
 
 
-**Variants**
-
-  - _(abstract)_
-
 ## record `Route`
 
 One declared route; routers preserve declaration order.
 
 **Fields**
 
-  - `method` : String
-  - `path` : String
-  - `handler` : [Handler](#type-handler)
+  - `method` : [String](../string.md#make-string)
+  - `path` : [String](../string.md#make-string)
+  - `handler` : [Handler](#type-net-http-handler)
+
+
 
 ## record `Router`
 
@@ -111,175 +285,19 @@ An immutable, declaration-ordered HTTP router.
 
 **Fields**
 
-  - `routes` : [[Route](#record-route)] (optional)
+  - `routes` : [[Route](#record-net-http-route)] (optional)
 
-## record `ShutdownReport`
-
-Counts and elapsed time from graceful server shutdown.
-
-**Fields**
-
-  - `completed` : Integer
-  - `failed` : Integer
-  - `forced` : Integer
-  - `elapsedMilliseconds` : Integer
-
-## record `ServerOptions`
-
-Bounded HTTP server resources and default graceful-shutdown duration.
-
-**Fields**
-
-  - `maximumHandlers` : Integer (optional)
-  - `backlog` : Integer (optional)
-  - `gracefulShutdown` : Duration (optional)
-
-## record `PoolOptions`
-
-HTTP connection-pool bounds and idle lifetime.
-
-**Fields**
-
-  - `perOrigin` : Integer (optional)
-  - `total` : Integer (optional)
-  - `queuedRequests` : Integer (optional)
-  - `idleExpiryMilliseconds` : Integer (optional)
-
-## record `ClientOptions`
-
-Options owned by an explicit HTTP client.
-
-**Fields**
-
-  - `pool` : [PoolOptions](#record-pooloptions) (optional)
-
-## record `ClientStatistics`
-
-Lifetime request/reuse counters plus current pooled connections.
-
-**Fields**
-
-  - `openConnections` : Integer
-  - `requests` : Integer
-  - `reusedConnections` : Integer
-
-## record `ClientCloseReport`
-
-Resources released by `Client.close`.
-
-**Fields**
-
-  - `closedConnections` : Integer
-
-## type `Client`
-
-The pooled HTTP client. An opaque handle over the connection pool that owns it; `Client.open` makes one and `client.close` releases it.
-
-
-
-## module `Net.HTTP.Headers`
-
-Construction and parsing of validated HTTP header collections.
-
-## constant `empty`
-
-Returns a field collection with no entries.
-
-
-
-## function `from`
-
-Validates header names and values without folding duplicates.
-
-Duplicate fields stay in their original order. Invalid names and values containing line breaks are rejected instead of creating a malformed or injectable HTTP message.
-
-
-```kex
-from(entries) : [(String, String)] -> Result<Headers, NetError>
-from(entries) : Map<String, String> -> Result<Headers, NetError>
-```
-
-
-## function `parse`
-
-Parses CRLF- or LF-separated header fields.
-
-Use this at a protocol boundary when headers arrive as text. Application code normally builds them with `from`, `add`, and `set`.
-
-
-```kex
-parse(text) : String -> Result<Headers, NetError>
-```
-
-
-## module `Net.HTTP.Status`
-
-Validation for numeric HTTP status codes.
-
-## function `from`
-
-Validates an HTTP status code.
-
-
-```kex
-from(code) : Integer -> Result<Status, NetError>
-```
-
-
-## module `Net.HTTP.Response`
-
-Buffered response constructors for route handlers.
-
-## function `binary`
-
-Builds a buffered binary response with validated headers.
-
-
-```kex
-binary(status, body, headers)
-```
-
-
-## function `text`
-
-Builds a UTF-8 text response with an explicit text/plain content type.
-
-
-```kex
-text(status, body)
-```
-
-
-## function `empty`
-
-Builds a response with an empty body.
-
-
-```kex
-empty(status)
-```
-
-
-## module `Net.HTTP.Router`
-
-The empty starting point for an immutable route declaration chain.
-
-## constant `build`
-
-
-
-## make `Router`
-
+### Methods
 
 #### `route`
+
+```kex
+route(method: String, path: String, handler: Handler) -> Router
+```
 
 Appends a route; earlier matching declarations win.
 
 Use this for a method without a convenience function. Paths may include named or wildcard captures, which the handler reads from `RouteContext`.
-
-```kex
-route(method, path, handler)
-```
 
 **Examples**
 
@@ -291,161 +309,145 @@ router.route("PURGE", "/cache/:key", ~purge)
 
 #### `get`
 
-Appends a GET route. GET also supplies automatic HEAD fallback.
-
 ```kex
-get(path, handler)
+get(path: String, handler: Handler) -> Router
 ```
+
+Appends a GET route. GET also supplies automatic HEAD fallback.
 
 #### `head`
 
-Appends an explicit HEAD route, overriding automatic GET fallback.
-
 ```kex
-head(path, handler)
+head(path: String, handler: Handler) -> Router
 ```
+
+Appends an explicit HEAD route, overriding automatic GET fallback.
 
 #### `options`
 
-Appends an explicit OPTIONS route, overriding generated OPTIONS.
-
 ```kex
-options(path, handler)
+options(path: String, handler: Handler) -> Router
 ```
+
+Appends an explicit OPTIONS route, overriding generated OPTIONS.
 
 #### `post`
 
-Appends a POST route.
-
 ```kex
-post(path, handler)
+post(path: String, handler: Handler) -> Router
 ```
+
+Appends a POST route.
 
 #### `put`
 
-Appends a PUT route.
-
 ```kex
-put(path, handler)
+put(path: String, handler: Handler) -> Router
 ```
+
+Appends a PUT route.
 
 #### `patch`
 
-Appends a PATCH route.
-
 ```kex
-patch(path, handler)
+patch(path: String, handler: Handler) -> Router
 ```
+
+Appends a PATCH route.
 
 #### `delete`
 
+```kex
+delete(path: String, handler: Handler) -> Router
+```
+
 Appends a DELETE route.
 
-```kex
-delete(path, handler)
-```
+## record `ShutdownReport`
 
-## module `Net.HTTP.Server`
+Counts and elapsed time from graceful server shutdown.
 
-Starting, observing, and gracefully stopping HTTP servers.
+**Fields**
 
-## type `Running`
-
-An opaque asynchronous HTTP server handle.
-
+  - `completed` : [Integer](../number.md#make-integer)
+  - `failed` : [Integer](../number.md#make-integer)
+  - `forced` : [Integer](../number.md#make-integer)
+  - `elapsedMilliseconds` : [Integer](../number.md#make-integer)
 
 
-## function `start`
 
-Starts a server with conservative defaults and returns immediately.
+## record `ServerOptions`
 
-The returned handle owns the listener and active handlers. Use `start` when the process has other work to do; use `serve` for a foreground server whose main job is handling HTTP.
+Bounded HTTP server resources and default graceful-shutdown duration.
 
+**Fields**
 
-```kex
-start(endpoint, router)
-```
-
-
-## function `serve`
-
-Starts with defaults and blocks until the server stops.
+  - `maximumHandlers` : [Integer](../number.md#make-integer) (optional)
+  - `backlog` : [Integer](../number.md#make-integer) (optional)
+  - `gracefulShutdown` : [Duration](../units.md#record-duration) (optional)
 
 
-```kex
-serve(endpoint, router)
-```
+
+## record `PoolOptions`
+
+HTTP connection-pool bounds and idle lifetime.
+
+**Fields**
+
+  - `perOrigin` : [Integer](../number.md#make-integer) (optional)
+  - `total` : [Integer](../number.md#make-integer) (optional)
+  - `queuedRequests` : [Integer](../number.md#make-integer) (optional)
+  - `idleExpiryMilliseconds` : [Integer](../number.md#make-integer) (optional)
 
 
-## function `stop`
 
-Gracefully stops using the duration captured at start.
+## record `ClientOptions`
 
-New requests stop being accepted while in-flight handlers get their grace period to finish. The report says how much work completed or was forced down during shutdown.
+Options owned by an explicit HTTP client.
 
+**Fields**
 
-```kex
-stop(server)
-```
+  - `pool` : [PoolOptions](#record-net-http-pooloptions) (optional)
 
 
-## function `join`
 
-Waits until the server owner exits.
+## record `ClientStatistics`
 
+Lifetime request/reuse counters plus current pooled connections.
 
-```kex
-join(server)
-```
+**Fields**
 
-
-## function `running?`
-
-
-```kex
-running?(server)
-```
+  - `openConnections` : [Integer](../number.md#make-integer)
+  - `requests` : [Integer](../number.md#make-integer)
+  - `reusedConnections` : [Integer](../number.md#make-integer)
 
 
-## function `localAddress`
 
-Returns the bound address, including an operating-system-assigned port.
+## record `ClientCloseReport`
 
+Resources released by `Client.close`.
 
-```kex
-localAddress(server)
-```
+**Fields**
 
-
-## module `Net.HTTP.Client`
-
-Constructors for explicitly owned, connection-pooling HTTP clients.
-
-## function `open`
-
-Opens an explicit pooled client with conservative defaults.
-
-Reuse one client for related requests so keep-alive connections and DNS work can be reused. Close it when the owning service shuts down.
+  - `closedConnections` : [Integer](../number.md#make-integer)
 
 
-```kex
-open() : Result<Client, NetError>
-open(options) : ClientOptions -> Result<Client, NetError>
-```
 
+## type `Client`
 
-## make `Client`
+The pooled HTTP client. An opaque handle over the connection pool that owns it; `Client.open` makes one and `client.close` releases it.
 
+### Methods
 
 #### `request`
+
+```kex
+request(method: String, url: String, headers: Headers, body: Binary) -> Result<Response<Binary>, NetError>
+```
 
 Sends a buffered request. Redirects and generic retries are not implicit.
 
 This keeps policy with the caller: inspect a redirect before following it, and retry only methods and failures your application knows are safe.
-
-```kex
-request(method, url, headers, body)
-```
 
 **Examples**
 
@@ -460,69 +462,69 @@ client.request("POST", url, headers, JSON.stringify(order).to(Binary).try)
 
 #### `get`
 
-Sends a buffered GET request.
-
 ```kex
-get(url)
+get(url: String) -> Result<Response<Binary>, NetError>
 ```
+
+Sends a buffered GET request.
 
 #### `post`
 
-Sends a buffered binary POST request.
-
 ```kex
-post(url, body)
+post(url: String, body: Binary) -> Result<Response<Binary>, NetError>
 ```
+
+Sends a buffered binary POST request.
 
 #### `put`
 
-Sends a buffered binary PUT request.
-
 ```kex
-put(url, body)
+put(url: String, body: Binary) -> Result<Response<Binary>, NetError>
 ```
+
+Sends a buffered binary PUT request.
 
 #### `patch`
 
-Sends a buffered binary PATCH request.
-
 ```kex
-patch(url, body)
+patch(url: String, body: Binary) -> Result<Response<Binary>, NetError>
 ```
+
+Sends a buffered binary PATCH request.
 
 #### `delete`
 
-Sends a DELETE request with an empty body.
-
 ```kex
-delete(url)
+delete(url: String) -> Result<Response<Binary>, NetError>
 ```
+
+Sends a DELETE request with an empty body.
 
 #### `head`
 
-Sends a HEAD request; the returned body is empty.
-
 ```kex
-head(url)
+head(url: String) -> Result<Response<Binary>, NetError>
 ```
+
+Sends a HEAD request; the returned body is empty.
 
 #### `options`
 
-Sends an OPTIONS request.
-
 ```kex
-options(url)
+options(url: String) -> Result<Response<Binary>, NetError>
 ```
+
+Sends an OPTIONS request.
 
 #### `statistics`
 
-Reports current pool occupancy and lifetime request counters.
-
 ```kex
-statistics()
+statistics : ClientStatistics
 ```
 
-**Returns**: `ClientStatistics` — current pool and lifetime request counters
+Reports current pool occupancy and lifetime request counters.
+
+**Returns**: current pool and lifetime request counters
 
 **Examples**
 
@@ -535,256 +537,379 @@ IO.printLine("HTTP reuse: ${stats.reusedConnections}/${stats.requests}")
 
 #### `close`
 
+```kex
+close : Result<ClientCloseReport, NetError>
+```
+
 Idempotently closes the client and every idle pooled connection.
 
 Further requests fail with `Closed`; a second close is harmless.
 
-```kex
-close()
-```
+## module `Net.HTTP.Headers`
 
-## make `Headers` implements Showable, Inspectable
+Construction and parsing of validated HTTP header collections.
 
-
-#### `add`
-
-Appends a field, keeping existing fields of the same name.
-
-Repeats are how `Set-Cookie` works: it is not a comma-separated list, so two cookies must be two fields. For replace-semantics, `remove` first.
-
-An invalid name or value is an `Error`, not a silent drop. Rejecting `"a\r\nX: y"` is what stops response splitting, but dropping it quietly left the caller holding a valid `Headers` that simply lacked the field it asked for, and a response with no `Content-Type` invites MIME sniffing. `from` and `parse` already answer with a `Result` for this same input.
+### `empty` (constant)
 
 ```kex
-add(name, value)
+empty : Headers
 ```
 
-**Returns**: `Result<Headers, NetError>` — the extended fields, or `Parse`
+Returns a field collection with no entries.
 
 **Examples**
 
-_Two cookies on one response_
+_Building request headers immutably_
 
 ```kex
 Headers.empty
-  .add("Set-Cookie", "session=abc; HttpOnly").try
-  .add("Set-Cookie", "theme=dark").try
+  .add("Accept", "application/json").try
+  .add("User-Agent", "inventory-sync/1.0").try
 ```
-_Replacing a field_
+
+
+
+### `from`
 
 ```kex
-headers.remove("Content-Type").add("Content-Type", "application/json").try
+from(entries: [(String, String)]) -> Result<Headers, NetError>
+from(entries: Map<String, String>) -> Result<Headers, NetError>
 ```
 
-#### `remove`
+Validates header names and values without folding duplicates.
 
-Removes every field matching `name` case-insensitively.
+Duplicate fields stay in their original order. Invalid names and values containing line breaks are rejected instead of creating a malformed or injectable HTTP message.
 
-```kex
-remove(name)
-```
+**Returns**: validated fields, or `Parse`
 
 **Examples**
 
-_Stripping hop-by-hop state before forwarding_
+_Forwarding an explicitly selected set of request headers_
 
 ```kex
-let forwarded = incoming.remove("Connection")
+Headers.from([
+  ("Accept", "application/json"),
+  ("X-Request-ID", requestId)
+]).try
 ```
 
-#### `get`
-
-Returns the first matching field value.
+### `parse`
 
 ```kex
-get(name)
+parse(text: String) -> Result<Headers, NetError>
 ```
+
+Parses CRLF- or LF-separated header fields.
+
+Use this at a protocol boundary when headers arrive as text. Application code normally builds them with `from`, `add`, and `set`.
+
+**Returns**: fields in source order, or `Parse`
 
 **Examples**
 
-_Selecting a response decoder_
+_Parsing headers captured from a diagnostic fixture_
 
 ```kex
-let contentType = response.headers.get("Content-Type").or("application/octet-stream")
+Headers.parse("Content-Type: text/plain\r\nX-Trace: abc\r\n").try
 ```
 
-#### `getAll`
+## module `Net.HTTP.Status`
 
-Returns every matching value in insertion order.
+Validation for numeric HTTP status codes.
+
+### `from`
 
 ```kex
-getAll(name)
+from(code: Integer) -> Result<Status, NetError>
 ```
+
+Validates an HTTP status code.
+
+**Parameters**
+
+  - `code` — a status in `100..599`
+
+**Returns**: the status, or `Parse`
 
 **Examples**
 
-_Preserving every Set-Cookie field_
+_Validating a configurable health-check success code_
 
 ```kex
-let cookies = response.headers.getAll("Set-Cookie")
+let code = ENV.get("HEALTH_STATUS").flatMap { |text| text.to(Integer) }.or(204)
+let expected = Status.from(code).try
 ```
 
-#### `showValue`
+## module `Net.HTTP.Response`
 
-Renders fields while replacing authorization and cookie values with `***`.
+Buffered response constructors for route handlers.
+
+### `binary`
 
 ```kex
-showValue : String
+binary(status: Integer, body: Binary, headers: Headers) -> Response<Binary>
 ```
 
-#### `inspectValue`
-
-Structural inspection uses the same credential-safe rendering.
-
-```kex
-inspectValue(colors)
-```
-
-## make `Status`
-
-
-#### `informational?`
-
-```kex
-informational? : Bool
-```
-
-**Returns**: `Bool` — whether the status is in `100..199`
-
-#### `success?`
-
-```kex
-success? : Bool
-```
-
-**Returns**: `Bool` — whether the status is in `200..299`
-
-#### `redirect?`
-
-```kex
-redirect? : Bool
-```
-
-**Returns**: `Bool` — whether the status is in `300..399`
-
-#### `clientError?`
-
-```kex
-clientError? : Bool
-```
-
-**Returns**: `Bool` — whether the status is in `400..499`
-
-#### `serverError?`
-
-```kex
-serverError? : Bool
-```
-
-**Returns**: `Bool` — whether the status is in `500..599`
-
-## make `RouteContext`
-
-
-#### `parameter`
-
-Returns one decoded named or wildcard route capture.
-
-```kex
-parameter(name)
-```
-
-**Returns**: `Result<String, NetError>` — the capture, or `Parse` when absent
+Builds a buffered binary response with validated headers.
 
 **Examples**
 
-_Reading +:id+ from a +/users/:id+ route_
+_Returning a downloaded file without decoding it as text_
 
 ```kex
-let id = context.parameter("id").try
+Response.binary(200, archive, Headers.empty.add("Content-Type", "application/zip").try)
+```
+
+### `text`
+
+```kex
+text(status: Integer, body: String) -> Response<Binary>
+```
+
+Builds a UTF-8 text response with an explicit text/plain content type.
+
+**Examples**
+
+_A small health endpoint_
+
+```kex
+Response.text(200, "ok")
+```
+
+### `empty`
+
+```kex
+empty(status: Integer) -> Response<Binary>
+```
+
+Builds a response with an empty body.
+
+**Examples**
+
+_A successful DELETE endpoint_
+
+```kex
+Response.empty(204)
+```
+
+## module `Net.HTTP.Router`
+
+The empty starting point for an immutable route declaration chain.
+
+### `build` (constant)
+
+**Examples**
+
+_+Router.build.get("/health", { |request, context| Response.text(200, "ok") })+_
+
+```kex
+
+```
+
+
+
+## module `Net.HTTP.Server`
+
+Starting, observing, and gracefully stopping HTTP servers.
+
+### `start`
+
+```kex
+start(endpoint: Net.Socket.TCP.Endpoint, router: Router, options: ServerOptions) -> Result<Running, NetError>
+```
+
+Starts a server with conservative defaults and returns immediately.
+
+The returned handle owns the listener and active handlers. Use `start` when the process has other work to do; use `serve` for a foreground server whose main job is handling HTTP.
+
+**Examples**
+
+```kex
+let router = Router.build.get("/health", do |request, context|
+  Response.text(200, "ok")
+end)
+let endpoint = Net.Socket.TCP.Endpoint.loopback(Net.Port.from(0).try)
+let server = Server.start(endpoint, router).try
+Server.stop(server).try
+```
+
+### `serve`
+
+```kex
+serve(endpoint: Net.Socket.TCP.Endpoint, router: Router, options: ServerOptions) -> Result<Void, NetError>
+```
+
+Starts with defaults and blocks until the server stops.
+
+### `stop`
+
+```kex
+stop(server: Running, grace: Duration) -> Result<ShutdownReport, NetError>
+```
+
+Gracefully stops using the duration captured at start.
+
+New requests stop being accepted while in-flight handlers get their grace period to finish. The report says how much work completed or was forced down during shutdown.
+
+**Examples**
+
+_Shutting down from an application lifecycle hook_
+
+```kex
+let report = Server.stop(server).try
+IO.printLine("closed after ${report.completed} requests")
+```
+
+### `join`
+
+```kex
+join(server: Running) -> Result<Void, NetError>
+```
+
+Waits until the server owner exits.
+
+### `running?`
+
+```kex
+running?(server: Running) -> Bool
+```
+
+**Returns**: whether the server owner is alive
+
+### `localAddress`
+
+```kex
+localAddress(server: Running) -> Net.Socket.TCP.Endpoint
+```
+
+Returns the bound address, including an operating-system-assigned port.
+
+**Returns**: the bound address
+
+**Examples**
+
+_Publishing the actual address of a test server_
+
+```kex
+let endpoint = Server.localAddress(server)
+IO.printLine("test server: http://${endpoint.host}:${endpoint.port.string}")
+```
+
+## type `Running`
+
+An opaque asynchronous HTTP server handle.
+
+
+
+## module `Net.HTTP.Client`
+
+Constructors for explicitly owned, connection-pooling HTTP clients.
+
+### `open`
+
+```kex
+open : Result<Client, NetError>
+open(options: ClientOptions) -> Result<Client, NetError>
+```
+
+Opens an explicit pooled client with conservative defaults.
+
+Reuse one client for related requests so keep-alive connections and DNS work can be reused. Close it when the owning service shuts down.
+
+**Examples**
+
+_Fetching several pages through one connection pool_
+
+```kex
+let client = Client.open.try
+let first = client.get("https://api.example.com/items?page=1").try
+let second = client.get("https://api.example.com/items?page=2").try
+client.close.try
 ```
 
 ## module `Net.HTTP.HTTP`
 
 Stateless HTTP convenience calls for scripts and occasional requests.
 
-## function `request`
-
-Sends one stateless buffered request with no redirect or hidden retry.
-
-Each call owns a short-lived client. This is convenient for scripts and occasional requests; use `Client` for a service making repeated calls.
-
+### `request`
 
 ```kex
 request : String -> String -> Headers -> Binary -> Result<Response<Binary>, NetError>
 ```
 
+Sends one stateless buffered request with no redirect or hidden retry.
 
-## function `get`
+Each call owns a short-lived client. This is convenient for scripts and occasional requests; use `Client` for a service making repeated calls.
+
+**Examples**
+
+_A one-off authenticated request in a command-line tool_
+
+```kex
+let headers = Headers.empty.add("Authorization", "Bearer ${token}").try
+HTTP.request("GET", url, headers).try
+```
+
+### `get`
+
+```kex
+get(url: String) -> Result<Response<Binary>, NetError>
+```
 
 Sends one stateless buffered GET.
 
+**Examples**
+
+_+HTTP.get("https://example.test/").try+_
 
 ```kex
-get(url) : String -> Result<Response<Binary>, NetError>
+
 ```
 
+### `delete`
 
-## function `delete`
+```kex
+delete(url: String) -> Result<Response<Binary>, NetError>
+```
 
 Sends one stateless DELETE with an empty body.
 
+### `head`
 
 ```kex
-delete(url) : String -> Result<Response<Binary>, NetError>
+head(url: String) -> Result<Response<Binary>, NetError>
 ```
-
-
-## function `head`
 
 Sends one stateless HEAD and returns an empty response body.
 
+### `options`
 
 ```kex
-head(url) : String -> Result<Response<Binary>, NetError>
+options(url: String) -> Result<Response<Binary>, NetError>
 ```
-
-
-## function `options`
 
 Sends one stateless OPTIONS request.
 
+### `post`
 
 ```kex
-options(url) : String -> Result<Response<Binary>, NetError>
+post(url: String, body: Binary) -> Result<Response<Binary>, NetError>
 ```
-
-
-## function `post`
 
 Sends one stateless buffered binary POST.
 
+### `put`
 
 ```kex
-post(url, body) : String -> Binary -> Result<Response<Binary>, NetError>
+put(url: String, body: Binary) -> Result<Response<Binary>, NetError>
 ```
-
-
-## function `put`
 
 Sends one stateless buffered binary PUT.
 
+### `patch`
 
 ```kex
-put(url, body) : String -> Binary -> Result<Response<Binary>, NetError>
+patch(url: String, body: Binary) -> Result<Response<Binary>, NetError>
 ```
-
-
-## function `patch`
 
 Sends one stateless buffered binary PATCH.
-
-
-```kex
-patch(url, body) : String -> Binary -> Result<Response<Binary>, NetError>
-```
-

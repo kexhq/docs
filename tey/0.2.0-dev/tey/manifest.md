@@ -11,9 +11,41 @@ entities:
 
 ## module `Tey.Manifest`
 
+### `reservedCommands` (constant)
+
+```kex
+reservedCommands : [String]
+```
+
+The command names Tey answers itself. A `command(...)` may not take one of them: `tey test` must mean the same thing in every checkout, so a manifest that tries to redefine it is an error at read time rather than a silent shadow. Kept here because the READER is what enforces it, and Tey.Cli cannot be asked: it is built on this module, so reading the list off its declared commands would be a cycle. The two have to be kept in step by hand — one `.command(...)` in Tey.Cli, one name here (the first word is enough: `kex` covers every `kex ...` subcommand).
+
+
+
+### `read`
+
+```kex
+read(text: String) -> Result<ManifestPackage, String>
+```
+
+Reads a `package.kex`.
+
+The compiler parses the manifest. Tey only interprets the resulting Kex AST, so comments, multiline calls, strings, and future grammar fixes cannot drift from the language that actually compiles package.kex.
+
+### `readWorkspace`
+
+```kex
+readWorkspace(text: String) -> Result<ManifestWorkspace, String>
+```
+
+Reads a virtual-workspace manifest: a package.kex whose root is `workspace` rather than a publishable package. Package-root workspaces are returned on ManifestPackage.manifestWorkspace by `read` above.
+
+### `readLocal`
+
+```kex
+readLocal(text: String) -> Result<[LocalOverride], String>
+```
+
 ## type `DependencySource`
-
-
 
 **Variants**
 
@@ -21,65 +53,83 @@ entities:
   - `GitSource(String, String, String, String)`
   - `PathSource(String)`
 
+
+
 ## record `Dependency`
 
 **Fields**
 
-  - `manifestName` : String
-  - `manifestSource` : [DependencySource](#type-dependencysource)
-  - `manifestGroups` : [String] (optional)
+  - `manifestName` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `manifestSource` : [DependencySource](#type-tey-manifest-dependencysource)
+  - `manifestGroups` : [[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)] (optional)
+
+
 
 ## record `ManifestWorkspace`
 
 **Fields**
 
-  - `memberPatterns` : [String] (optional)
+  - `memberPatterns` : [[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)] (optional)
+
+
 
 ## record `LocalOverride`
 
 **Fields**
 
-  - `localName` : String
-  - `localPath` : String
+  - `localName` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `localPath` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+
+
 
 ## record `Target`
 
 **Fields**
 
-  - `name` : String
-  - `entrypoint` : String
+  - `name` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `entrypoint` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+
+
 
 ## record `PluginCapability`
 
 **Fields**
 
-  - `capabilityKind` : String
-  - `capabilityValues` : [String] (optional)
+  - `capabilityKind` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `capabilityValues` : [[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)] (optional)
+
+
 
 ## record `PluginOption`
 
 **Fields**
 
-  - `optionName` : String
-  - `optionType` : String
+  - `optionName` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `optionType` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+
+
 
 ## record `PluginOperation`
 
 **Fields**
 
-  - `operationName` : String
-  - `operationEntrypoint` : String
-  - `operationOptions` : [[PluginOption](#record-pluginoption)] (optional)
+  - `operationName` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `operationEntrypoint` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `operationOptions` : [[PluginOption](#record-tey-manifest-pluginoption)] (optional)
+
+
 
 ## record `Plugin`
 
 **Fields**
 
-  - `pluginNamespace` : String
-  - `pluginTeyRequirement` : String
-  - `pluginCapabilities` : [[PluginCapability](#record-plugincapability)] (optional)
-  - `pluginCommands` : [[PluginOperation](#record-pluginoperation)] (optional)
-  - `pluginGenerators` : [[PluginOperation](#record-pluginoperation)] (optional)
+  - `pluginNamespace` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `pluginTeyRequirement` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `pluginCapabilities` : [[PluginCapability](#record-tey-manifest-plugincapability)] (optional)
+  - `pluginCommands` : [[PluginOperation](#record-tey-manifest-pluginoperation)] (optional)
+  - `pluginGenerators` : [[PluginOperation](#record-tey-manifest-pluginoperation)] (optional)
+
+
 
 ## record `Command`
 
@@ -89,9 +139,11 @@ A name is one word, grouped with a colon: `db:migrate`, `assets:build`.
 
 **Fields**
 
-  - `commandName` : String
-  - `commandRun` : String
-  - `commandDescription` : String (optional)
+  - `commandName` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `commandRun` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `commandDescription` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+
+
 
 ## record `Toolchain`
 
@@ -101,61 +153,29 @@ Fields are prefixed like Command's: a bare `compiler` would be read as a method 
 
 **Fields**
 
-  - `toolchainName` : String
-  - `toolchainCompiler` : String (optional)
-  - `toolchainRuntime` : String (optional)
-  - `toolchainStdlib` : String (optional)
+  - `toolchainName` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `toolchainCompiler` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `toolchainRuntime` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `toolchainStdlib` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+
+
 
 ## record `ManifestPackage`
 
 **Fields**
 
-  - `name` : String
-  - `version` : String (optional)
-  - `description` : String (optional)
-  - `license` : String (optional)
-  - `packageKexRequirement` : String (optional)
-  - `packageOtpRequirement` : String (optional)
-  - `entrypoint` : String (optional)
+  - `name` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `version` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `description` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `license` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `packageKexRequirement` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `packageOtpRequirement` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `entrypoint` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
   - `manifestDependencies` : [Dependency] (optional)
-  - `targets` : [[Target](#record-target)] (optional)
-  - `commands` : [[Command](#record-command)] (optional)
+  - `targets` : [[Target](#record-tey-manifest-target)] (optional)
+  - `commands` : [[Command](#record-tey-manifest-command)] (optional)
   - `manifestToolchain` : Toolchain? (optional)
-  - `manifestWorkspace` : [ManifestWorkspace](#record-manifestworkspace)? (optional)
-  - `plugins` : [[Plugin](#record-plugin)] (optional)
+  - `manifestWorkspace` : [ManifestWorkspace](#record-tey-manifest-manifestworkspace)? (optional)
+  - `plugins` : [[Plugin](#record-tey-manifest-plugin)] (optional)
 
-## constant `reservedCommands`
-
-The command names Tey answers itself. A `command(...)` may not take one of them: `tey test` must mean the same thing in every checkout, so a manifest that tries to redefine it is an error at read time rather than a silent shadow. Kept here because the READER is what enforces it, and Tey.Cli cannot be asked: it is built on this module, so reading the list off its declared commands would be a cycle. The two have to be kept in step by hand — one `.command(...)` in Tey.Cli, one name here (the first word is enough: `kex` covers every `kex ...` subcommand).
-
-
-
-## function `read`
-
-Reads a `package.kex`.
-
-The compiler parses the manifest. Tey only interprets the resulting Kex AST, so comments, multiline calls, strings, and future grammar fixes cannot drift from the language that actually compiles package.kex.
-
-
-```kex
-read(text)
-```
-
-
-## function `readWorkspace`
-
-Reads a virtual-workspace manifest: a package.kex whose root is `workspace` rather than a publishable package. Package-root workspaces are returned on ManifestPackage.manifestWorkspace by `read` above.
-
-
-```kex
-readWorkspace(text)
-```
-
-
-## function `readLocal`
-
-
-```kex
-readLocal(text)
-```
 

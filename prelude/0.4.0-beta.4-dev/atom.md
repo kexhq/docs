@@ -30,30 +30,40 @@ text.to(Atom)        # at run time, only an atom that already exists: Atom?
 
 and `string` gives the text back.
 
-## function `from`
+### `from`
+
+```kex
+from(text: String) -> Atom
+```
 
 Returns the atom whose name is `text`.
 
 On the BEAM atoms are never freed, and a node holds at most about a million. Build atoms from a bounded set of names — node names, config keys — never from untrusted input; `text.to(Atom)` is the safe form for that, since it only finds atoms that already exist.
 
+**Parameters**
+
+  - `text` — the atom's name
+
+**Returns**: the atom
+
+**Examples**
 
 ```kex
-from(text) : String -> Atom
+Atom.from("ok") == :ok                # => true
+Atom.from("app@${host}")              # => :"app@myhost"
 ```
 
+## type `Atom`
 
-## make `Atom`
-
-
-#### `string`
-
-Returns the atom's name as text, without the leading colon. Total, like `Char.string`: every atom has a name.
+### `string`
 
 ```kex
 string : String
 ```
 
-**Returns**: `String` — the name
+Returns the atom's name as text, without the leading colon. Total, like `Char.string`: every atom has a name.
+
+**Returns**: the name
 
 **Examples**
 
@@ -61,3 +71,5 @@ string : String
 :ok.string                    # => "ok"
 :"b@host.example.com".string  # => "b@host.example.com"
 ```
+
+

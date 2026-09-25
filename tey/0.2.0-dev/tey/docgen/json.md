@@ -9,194 +9,148 @@ entities:
 
 # Tey.Docgen.Json
 
-## module `Tey.Docgen.Json`
-
 Model records → JSON artifacts. This is the single boundary where typed records become plain maps (atom keys, JSON-ready values) so JSON.stringify can serialise them: model.json (the full model) and search.json (a flat index for dynamic name/kind/type search on the docs site).
 
-## function `modelJson`
+## module `Tey.Docgen.Json`
 
-
-```kex
-modelJson(model)
-```
-
-
-## function `moduleIndexValue`
-
+### `modelJson`
 
 ```kex
-moduleIndexValue(m)
+modelJson(model: PackageModel) -> String
 ```
 
-
-## function `linkValue`
-
+### `moduleIndexValue`
 
 ```kex
-linkValue(l)
+moduleIndexValue(m: Tey.Docgen.Model.ModuleIndexEntry) -> Any
 ```
 
-
-## function `labelOrPackage`
-
+### `linkValue`
 
 ```kex
-labelOrPackage(model)
+linkValue(l: Tey.Docgen.Model.LinkEntry) -> Any
 ```
 
-
-## function `pageValue`
-
+### `labelOrPackage`
 
 ```kex
-pageValue(page)
+labelOrPackage(model: PackageModel) -> String
 ```
 
-
-## function `entityValue`
-
+### `pageValue`
 
 ```kex
-entityValue(e)
+pageValue(page: SourcePage) -> Any
 ```
 
-
-## function `variantsValue`
-
+### `entityValue`
 
 ```kex
-variantsValue(variants)
+entityValue(e: Entity) -> Any
 ```
 
-
-## function `fieldValue`
-
+### `variantsValue`
 
 ```kex
-fieldValue(f)
+variantsValue(variants: [VariantEntry]?) -> Any
 ```
 
+### `fieldValue`
 
-## function `fieldValues`
+```kex
+fieldValue(f: FieldEntry) -> Any
+```
+
+### `fieldValues`
+
+```kex
+fieldValues(fields: [FieldEntry]) -> Any
+```
 
 A named helper so the lambda's element type comes from the [FieldEntry] parameter, not from the surrounding map literal's value type.
 
+### `functionValue`
 
 ```kex
-fieldValues(fields)
+functionValue(f: FunctionEntry) -> Any
 ```
 
-
-## function `functionValue`
-
+### `docValue`
 
 ```kex
-functionValue(f)
+docValue(doc: Doc) -> Any
 ```
 
-
-## function `docValue`
-
+### `returnsValue`
 
 ```kex
-docValue(doc)
+returnsValue(doc: Doc) -> Any
 ```
 
-
-## function `returnsValue`
-
+### `searchJson`
 
 ```kex
-returnsValue(doc)
+searchJson(model: PackageModel) -> String
 ```
 
-
-## function `searchJson`
-
+### `searchEntries`
 
 ```kex
-searchJson(model)
+searchEntries(model: PackageModel) -> [SearchEntry]
 ```
 
-
-## function `searchEntries`
-
+### `pageSearchEntries`
 
 ```kex
-searchEntries(model)
+pageSearchEntries(page: SourcePage) -> [SearchEntry]
 ```
 
-
-## function `pageSearchEntries`
-
+### `entitySearchEntries`
 
 ```kex
-pageSearchEntries(page)
+entitySearchEntries(e: Entity, page: SourcePage) -> [SearchEntry]
 ```
 
-
-## function `entitySearchEntries`
-
+### `entityTypes`
 
 ```kex
-entitySearchEntries(e, page)
+entityTypes(e: Entity) -> [String]
 ```
-
-
-## function `entityTypes`
 
 The type names an entity is "about" — the search-by-type dimension. For a function that is its signature's types; for a record its field types; for a type its parents and variant fields; for a trait/make the types its methods mention; for a module the union of its children.
 
+### `variantFieldTypes`
 
 ```kex
-entityTypes(e)
+variantFieldTypes(variants: [VariantEntry]?) -> [String]
 ```
 
-
-## function `variantFieldTypes`
-
+### `childSearchEntries`
 
 ```kex
-variantFieldTypes(variants)
+childSearchEntries(e: Entity, page: SourcePage) -> [SearchEntry]
 ```
 
-
-## function `childSearchEntries`
-
+### `functionSearchEntry`
 
 ```kex
-childSearchEntries(e, page)
+functionSearchEntry(f: FunctionEntry, page: SourcePage, owner: String) -> SearchEntry
 ```
 
-
-## function `functionSearchEntry`
-
+### `searchValue`
 
 ```kex
-functionSearchEntry(f, page)
+searchValue(entry: SearchEntry) -> Any
 ```
 
-
-## function `searchValue`
-
+### `entitySignatures`
 
 ```kex
-searchValue(entry)
+entitySignatures(e: Entity) -> [String]
 ```
 
-
-## function `entitySignatures`
-
+### `entitySummary`
 
 ```kex
-entitySignatures(e)
+entitySummary(e: Entity) -> String
 ```
-
-
-## function `entitySummary`
-
-
-```kex
-entitySummary(e)
-```
-

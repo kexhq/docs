@@ -22,24 +22,27 @@ foul report(e: Errorable) -> Void do
 end
 ```
 
+### Required methods
 
 #### `message`
-
-A human-readable description of what went wrong.
-
-Written for a person reading output, not for a program to match on: branch on the error's own type or fields for that.
 
 ```kex
 message : String
 ```
 
-**Returns**: `String` — the failure message
+A human-readable description of what went wrong.
+
+Written for a person reading output, not for a program to match on: branch on the error's own type or fields for that.
+
+**Returns**: the failure message
 
 **Examples**
 
 ```kex
 IO.printError("error: ${e.message}")
 ```
+
+
 
 ## record `ParseError`
 
@@ -58,8 +61,10 @@ The `position` and `rest` are what make a hand-written scanner possible: the err
 
 **Fields**
 
-  - `input` : String
-  - `position` : Integer
+  - `input` : [String](string.md#make-string)
+  - `position` : [Integer](number.md#make-integer)
   - `value` : Any
-  - `message` : String
-  - `rest` : String
+  - `message` : [String](string.md#make-string)
+  - `rest` : [String](string.md#make-string)
+
+

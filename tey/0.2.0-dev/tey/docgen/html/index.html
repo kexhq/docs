@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tey.Docgen.Html | Tey 0.2.0-dev | kex docs</title>
+    <meta name="description" content="Model records → static HTML pages, styled after kex.run&#39;s docs section (warm honey/cream palette, Fraunces/Plus Jakarta Sans/JetBrains Mono, dark code surface with tok-* syntax classes).">
+    <link rel="icon" href="/_theme/icon.png" type="image/png" sizes="403x403">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>/* Krix: the Kex documentation stylesheet, from Tey docgen (tey/src/tey/docgen/css.kex, MIT).
+   Marqraft additions follow the original rules. */
+/* kex docs — design tokens ported from kex.run (see module comment) */
+
+:root {
+  --bg: #fcf5e2;
+  --bg-subtle: #f6ecd0;
+  --bg-muted: #f0e2bc;
+  --bg-sunken: #ead9a8;
+  --ink: #2a1c0a;
+  --ink-soft: #54380f;
+  --muted: #7a5a25;
+  --faint: #9c7a3c;
+  --line: #ecdcb4;
+  --line-strong: #dbc78c;
+  --accent: #b06a14;
+  --accent-strong: #8a4f0a;
+  --accent-soft: #f4e2b8;
+  --accent-ink: #5a3408;
+  --code-bg: #1b140a;
+  --code-bg-soft: #221a0e;
+  --code-border: #382a16;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+/* JetBrains Mono ships programming ligatures (-> to a single arrow, =>,
+   !=, ...) on by default. They read well in code blocks, so they stay
+   there — but in the search box the reader is TYPING, and -> must
+   appear exactly as entered. Disable ligatures there only. */
+.search-modal-panel input, .search-page-box input {
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0, "dlig" 0;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse 90% 50% at 50% -10%, rgba(236, 178, 94, 0.28), transparent 70%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+::selection { background: var(--accent-soft); color: var(--accent-ink); }
+
+a { color: inherit; text-decoration: none; }
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.wrap { width: 100%; max-width: 76rem; margin-inline: auto; padding-inline: 1.5rem; }
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(252, 245, 226, 0.85);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+
+.top-inner { display: flex; align-items: center; gap: 0.75rem; height: 3.5rem; }
+
+/* ── Search ─────────────────────────────────────────────────────────── */
+
+.search-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  height: 2.1rem;
+  min-width: 14rem;
+  padding: 0 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-soft);
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.search-trigger:hover { border-color: var(--accent); color: var(--ink); }
+.search-trigger kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  padding: 0.2rem 0.35rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  color: var(--faint);
+}
+
+/* The modal is frosted glass: a translucent warm panel over a blurred
+   backdrop, in the same voice as the sticky header. */
+.search-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+  background: rgba(42, 28, 10, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.search-modal[hidden] { display: none; }
+
+.search-modal-panel {
+  width: min(44rem, 92vw);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 253, 248, 0.82);
+  backdrop-filter: blur(28px) saturate(140%);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
+  border: 1px solid rgba(236, 220, 180, 0.9);
+  box-shadow: 0 24px 72px rgba(42, 28, 10, 0.35);
+}
+
+.search-modal-panel input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1.05rem 1.3rem;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(236, 220, 180, 0.9);
+  outline: none;
+}
+.search-modal-panel input::placeholder { color: var(--faint); }
+
+.search-modal-results { max-height: 55vh; overflow-y: auto; padding: 0.5rem; }
+
+.search-hit {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.1rem;
+  border-radius: 10px;
+  text-decoration: none;
+}
+.search-hit:hover { background: rgba(246, 236, 208, 0.6); }
+.search-hit.selected { background: rgba(244, 226, 184, 0.9); }
+
+.search-head { display: flex; align-items: baseline; gap: 0.6rem; }
+
+.search-kind {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-strong);
+}
+/* Each kind has its own hue, so a scan down the list separates
+   functions from types from modules at a glance. */
+.search-kind-module { color: #6b5bd2; }
+.search-kind-function { color: #2f855a; }
+.search-kind-make { color: #b06a14; }
+.search-kind-trait { color: #c2498a; }
+.search-kind-record { color: #2b6cb0; }
+.search-kind-type { color: #0f8a8a; }
+.search-kind-constant { color: #9a5a13; }
+.search-name { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--ink); }
+.search-qual { margin-left: auto; font-family: var(--font-mono); font-size: 12px; color: var(--muted); text-align: right; }
+.search-sig {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 12.5px;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-empty { padding: 0.8rem 0.9rem; font-size: 13px; color: var(--faint); }
+
+.search-modal-footer {
+  border-top: 1px solid rgba(236, 220, 180, 0.9);
+  padding: 0.55rem 0.9rem;
+  font-size: 12.5px;
+}
+.search-modal-footer a { color: var(--accent-strong); text-decoration: none; }
+.search-modal-footer a:hover { text-decoration: underline; }
+
+/* The empty state: an explainer, example chips, and this page's items. */
+.search-hint, .search-local { padding: 0.8rem 1rem 0.6rem; }
+
+.search-hint-title { margin: 0 0 0.25rem; font-size: 13px; font-weight: 600; color: var(--ink); }
+.search-hint-body { margin: 0 0 0.6rem; font-size: 12.5px; color: var(--muted); }
+
+.search-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
+.search-chip {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 0.25rem 0.6rem;
+  color: var(--ink-soft);
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.search-chip:hover { border-color: var(--accent); color: var(--ink); }
+
+.search-local { border-top: 1px solid rgba(236, 220, 180, 0.7); }
+
+/* ── Full search page ──────────────────────────────────────────────── */
+
+.search-page { max-width: 52rem; }
+
+.search-page-box input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.85rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--ink);
+  background: rgba(246, 236, 208, 0.6);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  outline: none;
+}
+.search-page-box input:focus { border-color: var(--accent); }
+
+.search-page-results { margin-top: 1.25rem; }
+
+.search-page-hit {
+  display: block;
+  padding: 0.8rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+}
+.search-page-hit:hover { background: var(--bg-subtle); }
+
+.search-summary {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.brand-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  padding-top: 0.2rem;
+}
+
+.spacer { flex: 1; }
+
+.pkg-badge {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+}
+
+.version-select {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.15rem 0.4rem 0.15rem 0.7rem;
+  cursor: pointer;
+}
+
+.version-select:hover { border-color: var(--accent); }
+
+.back { font-size: 13.5px; color: var(--muted); }
+.back:hover { color: var(--accent-strong); }
+
+/* ── Layout ─────────────────────────────────────────────────────────── */
+
+.layout {
+  display: grid;
+  gap: 3rem;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  padding-block: 2.5rem;
+}
+
+/* The module list is longer than the viewport, and it is stuck to it —
+   so it needs its own scrollbar, or everything past the fold is
+   unreachable. The height is what is left below the sticky header. */
+.side nav {
+  position: sticky;
+  top: 5rem;
+  max-height: calc(100vh - 6.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.35rem;
+}
+
+.side-heading {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+
+.side-list { list-style: none; margin: 0; padding: 0; }
+
+.side-list > li > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.side-list > li > a:hover { background: var(--bg-subtle); color: var(--ink); }
+
+.side-list > li > a.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+.side-sub { list-style: none; margin: 0.15rem 0 0.4rem; padding: 0 0 0 1.1rem; }
+
+.side-sub a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.15rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--faint);
+}
+
+.side-sub a:hover { color: var(--accent-strong); background: var(--bg-subtle); }
+
+/* Nested modules ("FS" → "FS.Path"): same voice as the top list, one
+   step quieter and indented under their parent. */
+.side-nest { list-style: none; margin: 0; padding: 0 0 0.25rem 0.75rem; }
+.side-nest > li > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.18rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--faint);
+}
+.side-nest > li > a:hover { background: var(--bg-subtle); color: var(--ink); }
+.side-nest > li > a.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+/* Cross-reference links inside code spans: the code face stays, the
+   colour signals "this goes somewhere". */
+a.xref { color: var(--accent-strong); text-decoration: none; border-bottom: 1px solid color-mix(in oklab, var(--accent) 45%, transparent); }
+a.xref:hover { border-bottom-color: var(--accent-strong); }
+
+.content { min-width: 0; max-width: 48rem; }
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--faint);
+  margin-bottom: 1rem;
+}
+
+.crumbs a:hover { color: var(--accent-strong); }
+.crumbs .sep { opacity: 0.6; }
+
+/* ── Prose ──────────────────────────────────────────────────────────── */
+
+.prose { color: var(--ink-soft); font-size: 1.0125rem; line-height: 1.75; }
+
+.prose h1 { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 1rem; line-height: 1.15; }
+
+/* The standalone index pages (site root, package versions) carry their
+   h1 directly in .content.prose — unlike the entity pages, which get
+   top breathing room from .layout's padding. Give those a little air
+   under the header. */
+.content.prose > h1 { margin-top: 2rem; }
+
+.prose h1 .ver {
+  font-family: var(--font-mono);
+  font-size: 0.45em;
+  font-weight: 500;
+  color: var(--muted);
+  vertical-align: middle;
+  letter-spacing: 0;
+}
+
+.prose h2 {
+  font-size: 1.35rem;
+  font-weight: 650;
+  margin: 2.6rem 0 0.9rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+
+.prose h3 { font-size: 1.05rem; font-weight: 600; margin: 1.6rem 0 0.5rem; }
+
+.prose h5 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  margin: 1.4rem 0 0.4rem;
+}
+
+.prose p { margin: 0 0 1.1rem; }
+
+.prose a { color: var(--accent-strong); text-decoration: underline; text-decoration-color: var(--accent-soft); text-underline-offset: 3px; }
+.prose a:hover { text-decoration-color: currentColor; }
+
+.prose code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  background: var(--bg-muted);
+  border: 1px solid var(--line);
+  padding: 0.12rem 0.4rem;
+  border-radius: 6px;
+  color: var(--muted);
+}
+
+.prose strong { color: var(--ink); font-weight: 600; }
+
+.lede { font-size: 1.05rem; color: var(--muted); }
+
+/* ── Entities ───────────────────────────────────────────────────────── */
+
+/* Anchor navigation lands a heading below the sticky header, not under
+   it: reserve the header's height (3.5rem) plus breathing room. */
+.entity, .fn { scroll-margin-top: 4.75rem; }
+
+.entity h2 code { font-size: 0.95em; }
+
+.kind {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  padding: 0.1rem 0.45rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+/* Each declaration kind has its own hue — the same palette as the
+   search results — so a module, a trait and a make are told apart at
+   a glance rather than all reading as one amber badge. */
+.kind-module { color: #6b5bd2; border-color: #d6cdf3; background: #efeafc; }
+.kind-function { color: #2f855a; border-color: #c6e6d4; background: #e8f4ec; }
+.kind-make { color: #b06a14; border-color: #ecd6ac; background: #f7ecd6; }
+.kind-trait { color: #c2498a; border-color: #efcfe0; background: #f9ecf3; }
+.kind-record { color: #2b6cb0; border-color: #c8dcf0; background: #e9f1fa; }
+.kind-type { color: #0f8a8a; border-color: #c0e4e2; background: #e4f4f3; }
+.kind-constant { color: #9a5a13; border-color: #e6d2b4; background: #f6ecdd; }
+
+.fields, .params { margin: 0 0 1.1rem; }
+
+.field, .param {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.field dt, .param dt { flex-shrink: 0; }
+.field dd, .param dd { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+.opt {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--faint);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 0.5rem;
+  margin-left: 0.4rem;
+}
+
+.variants { margin: 0 0 1.1rem; padding-left: 1.3rem; list-style: disc; }
+.variants li { margin: 0.3rem 0; }
+.variants .abstract { color: var(--faint); }
+
+.fn {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 0.9rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.fn h4 { margin: 0 0 0.4rem; font-size: 1rem; }
+.fn p:last-child, .fn pre:last-child { margin-bottom: 0; }
+
+.fn h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+
+/* The heading of a member links to itself, so a reader can copy a
+   deep link without hunting for a pilcrow. */
+a.self { color: inherit; text-decoration: none; }
+a.self:hover code { border-color: var(--accent); }
+
+/* A method's signature leads its box: the call shape first, prose after. */
+pre.code.sig { margin-bottom: 0.8rem; padding: 0.6rem 0.9rem; }
+pre.code a.xref { color: inherit; border-bottom: 1px dotted color-mix(in oklab, #e6a960 60%, transparent); }
+
+/* "Implements Monoid, Enumerable." / "Implemented by ...": where a
+   type's methods come from, said right under its heading. */
+.implements, .home-note {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin: 0 0 1.1rem;
+}
+
+/* A member group inside a type: "Methods", "On [Number]". */
+.members { margin-top: 1.8rem; }
+.members > h3, .entity > h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.3rem;
+}
+
+/* Which trait a member fulfils: a small link chip beside its name. */
+.tag-trait, .tag-kind {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid #efcfe0;
+  border-radius: 999px;
+  background: #f9ecf3;
+  color: #c2498a;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  text-decoration: none;
+  vertical-align: middle;
+}
+.tag-kind { border-color: #e6d2b4; background: #f6ecdd; color: #9a5a13; }
+.tag-trait:hover { border-color: #c2498a; }
+
+/* Methods a type gets from a trait without writing them. */
+.inherited dt, .elsewhere dt { min-width: 9rem; }
+
+.prose ul { margin: 0 0 1.1rem; padding-left: 1.3rem; }
+.prose li { margin: 0.25rem 0; }
+
+/* A file's opening comment: what the page is about, before any one
+   declaration. */
+.intro { font-size: 1.02rem; margin-bottom: 1.6rem; }
+
+.caption { margin: 0 0 0.3rem; color: var(--muted); font-size: 0.95rem; }
+
+.returns { color: var(--muted); }
+.returns strong { color: var(--ink-soft); }
+
+.deprecated {
+  border-left: 3px solid var(--accent);
+  background: var(--bg-subtle);
+  padding: 0.7rem 1rem;
+  margin: 1.2rem 0;
+  border-radius: 0 8px 8px 0;
+}
+
+/* ── Code surface ───────────────────────────────────────────────────── */
+
+pre.code {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 1.1rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #e9e0cf;
+}
+
+pre.code code { font-family: inherit; }
+
+.tok-comment { color: #94876a; font-style: italic; }
+.tok-keyword { color: #f0c987; }
+.tok-type    { color: #e6a960; }
+.tok-string  { color: #c9e0a0; }
+.tok-interp  { color: #e9e0cf; }
+.tok-number  { color: #ffc18a; }
+.tok-fn      { color: #ffe0a0; }
+.tok-method  { color: #ffe0a0; }
+.tok-op      { color: #d8b878; }
+.tok-punct   { color: #a89a78; }
+.tok-const   { color: #e6a960; }
+.tok-field   { color: #f0e8d4; }
+.tok-bool    { color: #ffc18a; }
+
+/* ── Cards (version index) ──────────────────────────────────────────── */
+
+.cards {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  margin-top: 1.6rem;
+}
+
+/* Section headings on the index and the prelude page: what separates
+   "given to you" from "one using away". */
+.group {
+  margin: 2.6rem 0 0.2rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.group-note { margin: 0; color: var(--muted); font-size: 0.92rem; }
+
+/* "prelude": this page needs no import. It sits on the page heading,
+   beside the module name it qualifies. */
+.tag-prelude {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+h1 .tag-prelude { font-size: 11px; vertical-align: 0.45em; }
+
+.prelude-list {
+  list-style: none;
+  margin: 1.2rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+}
+
+.prelude-list li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.prelude-note {
+  color: var(--faint);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.card:hover { border-color: var(--line-strong); background: var(--bg-subtle); }
+
+.card-title { display: block; font-family: var(--font-mono); font-weight: 600; color: var(--ink); }
+.card:hover .card-title { color: var(--accent-strong); }
+.card-meta { display: block; margin-top: 0.25rem; font-size: 12.5px; color: var(--faint); }
+
+/* ── Footer ─────────────────────────────────────────────────────────── */
+
+.foot {
+  border-top: 1px solid var(--line);
+  margin-top: 3rem;
+  padding: 1.4rem 0 2rem;
+  font-size: 13px;
+  color: var(--faint);
+}
+
+.foot a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.foot a:hover { color: var(--accent-strong); }
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .layout { grid-template-columns: 1fr; }
+  .side { display: none; }
+}
+
+/* ── Marqraft additions ───────────────────────────────────────────────── */
+
+/* Settings: links follow the accent, the column follows the content width. */
+.prose a, a.xref { color: var(--marq-accent, var(--accent-strong)); }
+.content { max-width: var(--marq-contentWidth, 48rem); }
+.site-logo { height: 1.4rem; margin-right: 0.4rem; vertical-align: -0.2rem; }
+
+/* The navigation binding renders nested ul/li/a; style it as the docgen sidebar. */
+.side-tree ul { list-style: none; margin: 0; padding: 0; }
+.side-tree li > a,
+.side-tree li > .marq-nav-row > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.side-tree li > a:hover,
+.side-tree li > .marq-nav-row > a:hover { background: var(--bg-subtle); color: var(--ink); }
+.side-tree a[aria-current=page] { background: var(--accent-soft); color: var(--accent-ink); font-weight: 500; }
+.side-tree ul ul { padding: 0 0 0.25rem 0.75rem; }
+.side-tree ul ul a { padding-block: 0.18rem; font-size: 12.5px; color: var(--faint); }
+.marq-draft {
+  margin-left: 0.4rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+/* Chapter list on the index page. */
+.chapters ul { list-style: none; margin: 0.8rem 0 0; padding: 0; counter-reset: chapter; }
+.chapters ul ul { padding-left: 1.4rem; margin: 0; }
+.chapters li > a, .chapters li > .marq-nav-row > a {
+  display: block;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+.chapters a:hover { color: var(--accent-strong); }
+
+/* Reading order: the docgen "prevnext" footer. */
+.marq-pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2.6rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+.marq-pager a { text-decoration: none; display: flex; flex-direction: column; }
+.marq-pager small { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--faint); }
+.marq-pager span { color: var(--accent-strong); }
+.marq-pager-previous span::before { content: "← "; }
+.marq-pager-next { margin-left: auto; text-align: right; }
+.marq-pager-next span::after { content: " →"; }
+
+/* Prose elements docgen leaves to the browser. */
+.prose ul, .prose ol { margin: 0 0 1.1rem; padding-left: 1.4rem; }
+.prose li { margin: 0.2rem 0; }
+.prose li > ul, .prose li > ol { margin: 0.2rem 0; }
+.prose blockquote {
+  margin: 0 0 1.1rem;
+  padding: 0.7rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--bg-subtle);
+  border-radius: 0 8px 8px 0;
+  color: var(--muted);
+}
+.prose blockquote p:last-child { margin-bottom: 0; }
+.prose hr { border: 0; border-top: 1px solid var(--line); margin: 2rem 0; }
+.prose img { max-width: 100%; border-radius: 10px; border: 1px solid var(--line); }
+.table-scroll { overflow-x: auto; margin: 0 0 1.1rem; }
+.prose table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+.prose th, .prose td { text-align: left; padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--line); }
+.prose th { font-weight: 600; color: var(--ink); border-bottom-color: var(--line-strong); }
+.prose pre:not(.code) {
+  background: var(--code-bg); color: #e9e0cf; border: 1px solid var(--code-border);
+  border-radius: 10px; padding: 0.9rem 1.1rem; overflow-x: auto; font-family: var(--font-mono); font-size: 0.85rem;
+}
+
+/* Blocks. */
+.marq-code { margin: 0 0 1.1rem; }
+.marq-code figcaption { font-family: var(--font-mono); font-size: 12px; color: var(--faint); margin-bottom: 0.35rem; }
+.marq-code figcaption:empty, .marq-code small:empty { display: none; }
+.marq-code pre { margin-bottom: 0.35rem; }
+.marq-code small { display: block; font-size: 12.5px; color: var(--muted); }
+.marq-tabs { border: 1px solid var(--line); border-radius: 10px; padding: 0.4rem 1.1rem; margin: 0 0 1.1rem; background: rgba(255, 255, 255, 0.35); }
+.marq-area + .marq-area { border-top: 1px solid var(--line); }
+.marq-area h3 { margin: 0.8rem 0 0.4rem; font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--faint); }
+/* GitHub alerts: > [!NOTE], [!TIP], [!IMPORTANT], [!WARNING], [!CAUTION]. */
+.markdown-alert { margin: 0 0 1.1rem; padding: 0.7rem 1rem; border-left: 3px solid var(--accent); background: var(--bg-subtle); border-radius: 0 8px 8px 0; }
+.markdown-alert-note { border-left-color: #2b6cb0; background: #e9f1fa; }
+.markdown-alert-tip { border-left-color: #2f855a; background: #e8f4ec; }
+.markdown-alert-important { border-left-color: #6b5bd2; background: #efeafc; }
+.markdown-alert-warning { border-left-color: var(--accent); background: #f7ecd6; }
+.markdown-alert-caution { border-left-color: #c2498a; background: #f9ecf3; }
+.markdown-alert-title { margin: 0 0 0.2rem !important; font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-ink); }
+.markdown-alert-body > :last-child { margin-bottom: 0; }
+.marq-source { border: 1px dashed var(--line-strong); padding: 0.7rem; white-space: pre-wrap; }
+
+/* Collections: the top-level pages (Guide, Tutorial, ...) as header links. */
+.top-nav { margin-left: 1rem; }
+.top-nav ul { display: flex; align-items: center; gap: 0.2rem; list-style: none; margin: 0; padding: 0; }
+.top-nav li { position: relative; }
+.top-nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.top-nav a:hover { color: var(--ink); background: var(--bg-subtle); }
+.top-nav a[aria-current] { color: var(--accent-ink); background: var(--accent-soft); font-weight: 500; }
+/* Header links: ordinary links after the version badge, e.g. kex.run. */
+.top-links .marq-menu { display: flex; align-items: center; gap: 0.9rem; list-style: none; margin: 0 0 0 0.75rem; padding: 0; }
+.top-links li { position: relative; }
+.top-links a { font-size: 13.5px; color: var(--muted); }
+.top-links a:hover { color: var(--accent-strong); }
+.top-links a[href^="http"]::after { content: " ↗"; }
+@media (max-width: 640px) { .brand-sub, .pkg-badge { display: none; } .top-nav { margin-left: 0.25rem; } }
+
+/* Authoring (marq dev only): keep the sticky header and toolbar below the Marqraft bar. */
+body:has(#marq-chrome) .top { top: 48px; }
+body:has(#marq-chrome) { --marq-toolbar-top: calc(48px + 3.5rem + 0.5rem); }
+body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
+
+/* Reference pages (reference.html.ket): generated API documentation with an
+   "On this page" rail beside the content. The producer (Tey docgen's
+   fragments output) renders the rail's list; the theme places it. */
+.layout.has-toc { grid-template-columns: 15rem minmax(0, 1fr) 12rem; }
+.toc { font-size: 12.5px; }
+.toc > * { position: sticky; top: 5rem; }
+.toc-heading {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+.toc ul { list-style: none; margin: 0; padding: 0; max-height: calc(100vh - 8rem); overflow-y: auto; }
+.toc li a { display: block; padding: 0.2rem 0.5rem; border-left: 2px solid var(--line); color: var(--muted); }
+.toc li a:hover { color: var(--ink); border-left-color: var(--accent); }
+.toc li.toc-nested a { padding-left: 1.1rem; }
+.reference .content { max-width: none; }
+@media (max-width: 1280px) { .layout.has-toc { grid-template-columns: 15rem minmax(0, 1fr); } .toc { display: none; } }
+@media (max-width: 1024px) { .layout.has-toc { grid-template-columns: 1fr; } }
+
+:root{--marq-accent:#8a4f0a;--marq-contentWidth:48rem;}</style>
+  </head>
+  <body class="reference">
+    <header class="top">
+      <div class="wrap top-inner">
+        <a class="brand" href="/">kex</a>
+        <span class="brand-sub">docs</span>
+        <nav class="top-nav" aria-label="Collections"><ul><li><a href="/guide/0.4.0-alpha/">Guide</a></li><li><a href="/prelude/">Standard Library</a></li><li><a href="/tey/" aria-current="true">Tey</a></li></ul></nav>
+        <span class="spacer"></span>
+        <span class="pkg-badge">Tey 0.2.0-dev</span>
+        <nav class="top-links" aria-label="Links"><ul class="marq-menu"><li><a href="https://kex.run/docs">kex.run</a></li></ul></nav>
+      </div>
+    </header>
+    <div class="wrap layout has-toc">
+      <aside class="side">
+        <nav aria-label="Tey">
+          <p class="side-heading"><a href="/tey/">Tey</a></p>
+          <div class="side-tree"><ul><li><a href="/tey/0.2.0-dev/">Tey</a><ul><li><a href="/tey/0.2.0-dev/main/">Main</a></li><li><a href="/tey/0.2.0-dev/tey/cache/">Tey.Cache</a></li><li><a href="/tey/0.2.0-dev/tey/cli/">Tey.Cli</a></li><li><a href="/tey/0.2.0-dev/tey/commands/">Tey.Commands</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/assets/">Tey.Docgen.Assets</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/cli/">Tey.Docgen.Cli</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/css/">Tey.Docgen.Css</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/extract/">Tey.Docgen.Extract</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/fragments/">Tey.Docgen.Fragments</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/highlight/">Tey.Docgen.Highlight</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/html/" aria-current="page">Tey.Docgen.Html</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/index/">Tey.Docgen.Index</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/json/">Tey.Docgen.Json</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/markdown/">Tey.Docgen.Markdown</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/md/">Tey.Docgen.Md</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/model/">Tey.Docgen.Model</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/nav/">Tey.Docgen.Nav</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/prose/">Tey.Docgen.Prose</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/rdoc/">Tey.Docgen.Rdoc</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/relations/">Tey.Docgen.Relations</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/scan/">Tey.Docgen.Scan</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/serve/">Tey.Docgen.Serve</a></li><li><a href="/tey/0.2.0-dev/tey/generator/">Tey.Generator</a></li><li><a href="/tey/0.2.0-dev/tey/git/">Tey.Git</a></li><li><a href="/tey/0.2.0-dev/tey/local/">Tey.Local</a></li><li><a href="/tey/0.2.0-dev/tey/lockfile/">Tey.Lockfile</a></li><li><a href="/tey/0.2.0-dev/tey/manifest/">Tey.Manifest</a></li><li><a href="/tey/0.2.0-dev/tey/plugin/">Tey.Plugin</a></li><li><a href="/tey/0.2.0-dev/tey/pluginhost/">Tey.PluginHost</a></li><li><a href="/tey/0.2.0-dev/tey/resolver/">Tey.Resolver</a></li><li><a href="/tey/0.2.0-dev/tey/self_update/">Tey.SelfUpdate</a></li><li><a href="/tey/0.2.0-dev/tey/semver/">Tey.Semver</a></li><li><a href="/tey/0.2.0-dev/tey/snapshot/">Tey.Snapshot</a></li><li><a href="/tey/0.2.0-dev/tey/toolchain/">Tey.Toolchain</a></li><li><a href="/tey/0.2.0-dev/tey/version/">Tey.Version</a></li><li><a href="/tey/0.2.0-dev/tey/workspace/">Tey.Workspace</a></li></ul></li></ul></div>
+        </nav>
+      </aside>
+      <main class="content">
+        <nav class="crumbs"><a href="/tey/">Tey</a> <span class="sep">/</span> <span>Tey.Docgen.Html</span></nav>
+        <article class="prose">
+          <h1>Tey.Docgen.Html</h1>
+          <div class="intro">
+<p>Model records → static HTML pages, styled after kex.run's docs section (warm honey/cream palette, Fraunces/Plus Jakarta Sans/JetBrains Mono, dark code surface with tok-* syntax classes). The stylesheet lives in Tey.Docgen.Css and is written to assets/style.css by the build driver.</p>
+<p>HTML is a sibling renderer of the Markdown one: both walk the typed PackageModel, so nothing here parses Markdown or JSON.</p>
+</div>
+<section class="entity" id="module-tey-docgen-html">
+<h2><span class="kind kind-module">module</span> <code>Tey.Docgen.Html</code></h2>
+<div class="functions">
+<div class="fn" id="function-tey-docgen-html-pagehtml">
+<h3><a class="self" href="#function-tey-docgen-html-pagehtml"><code>pageHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">pageHtml</span><span class="tok-punct">(</span>page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-pagebodyhtml">
+<h3><a class="self" href="#function-tey-docgen-html-pagebodyhtml"><code>pageBodyHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">pageBodyHtml</span><span class="tok-punct">(</span>page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">,</span> heading<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>A page's content without the chrome — what <code>pageHtml</code> wraps in the layout, and what a host site (the fragments output) wraps in its own. <code>heading</code> is false when the host renders the title itself.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-submoduleshtml">
+<h3><a class="self" href="#function-tey-docgen-html-submoduleshtml"><code>submodulesHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">submodulesHtml</span><span class="tok-punct">(</span>page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>A module family spread over several files (&quot;Net&quot; + net/dns.kex, net/http.kex, ...) gets one page per file, and the parent page says nothing about the rest — a reader on &quot;Net&quot; has no reason to believe Net.DNS or Net.Socket are documented at all. This section is the signpost: every descendant page, with the summary its module declares.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-submoduleitem">
+<h3><a class="self" href="#function-tey-docgen-html-submoduleitem"><code>submoduleItem</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">submoduleItem</span><span class="tok-punct">(</span>child<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-preludepage?">
+<h3><a class="self" href="#function-tey-docgen-html-preludepage?"><code>preludePage?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">preludePage?</span><span class="tok-punct">(</span>page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-preludebodyhtml">
+<h3><a class="self" href="#function-tey-docgen-html-preludebodyhtml"><code>preludeBodyHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">preludeBodyHtml</span><span class="tok-punct">(</span>page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">,</span> heading<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The prelude declares nothing, so the generic page renderer leaves it blank. What it HAS is a list of imports and a comment explaining them — which is exactly the page a reader wants: what am I given for free, and where does each of those live.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-preludeitem">
+<h3><a class="self" href="#function-tey-docgen-html-preludeitem"><code>preludeItem</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">preludeItem</span><span class="tok-punct">(</span>model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">,</span> fromPath<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-preludelink">
+<h3><a class="self" href="#function-tey-docgen-html-preludelink"><code>preludeLink</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">preludeLink</span><span class="tok-punct">(</span>model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">,</span> fromPath<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>A <code>using X</code> in prelude.kex names a sibling SOURCE FILE, so the page for that file is the exact target. Going through the link index instead would lose half the list: <a class="xref" href="/prelude/0.4.0-beta.4-dev/map/#type-map"><code>Map</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/data/set/#record-data-set"><code>Set</code></a> and <a class="xref" href="/prelude/0.4.0-beta.4-dev/range/#type-range"><code>Range</code></a> are ambiguous as bare names — a module and a type both claim them — and resolve to nothing.</p>
+<p>The file is what matches, not the title: <code>using Test</code> is test.kex, whose page is titled &quot;Assert&quot;, and <code>using Env</code> is env.kex, titled &quot;ENV&quot;.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-pagenamed">
+<h3><a class="self" href="#function-tey-docgen-html-pagenamed"><code>pageNamed</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">pageNamed</span><span class="tok-punct">(</span>model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">,</span> name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">SourcePage?</span></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-pagestem">
+<h3><a class="self" href="#function-tey-docgen-html-pagestem"><code>pageStem</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">pageStem</span><span class="tok-punct">(</span>urlPath<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-modulesummary">
+<h3><a class="self" href="#function-tey-docgen-html-modulesummary"><code>moduleSummary</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">moduleSummary</span><span class="tok-punct">(</span>model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">,</span> name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-versionindexhtml">
+<h3><a class="self" href="#function-tey-docgen-html-versionindexhtml"><code>versionIndexHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">versionIndexHtml</span><span class="tok-punct">(</span>model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Landing page for &lt;pkg&gt;/&lt;version&gt;/index.html: every module as a card. When the package has a prelude, the cards are split by how a reader REACHES them — visible everywhere, or one <code>using</code> away — because that is the first question anyone has about a standard library.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-versionindexbodyhtml">
+<h3><a class="self" href="#function-tey-docgen-html-versionindexbodyhtml"><code>versionIndexBodyHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">versionIndexBodyHtml</span><span class="tok-punct">(</span>model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">,</span> heading<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-cardmodules">
+<h3><a class="self" href="#function-tey-docgen-html-cardmodules"><code>cardModules</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">cardModules</span><span class="tok-punct">(</span>model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">Tey</span><span class="tok-op">.</span><span class="tok-type">Docgen</span><span class="tok-op">.</span><span class="tok-type">Model</span><span class="tok-op">.</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-moduleindexentry"><span class="tok-type">ModuleIndexEntry</span></a><span class="tok-punct">]</span></code></pre>
+<p>The modules worth a card. <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#module-int8"><code>Int8</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#module-float32"><code>Float32</code></a> and friends are modules holding two constants each, declared in number.kex beside Integer and Float: listing them beside <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#module-net"><code>Net</code></a> and <a class="xref" href="/prelude/0.4.0-beta.4-dev/fs/#module-fs"><code>FS</code></a> made the index read as if the stdlib had a dozen integer libraries. They are on their file's page.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-constantsonly?">
+<h3><a class="self" href="#function-tey-docgen-html-constantsonly?"><code>constantsOnly?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">constantsOnly?</span><span class="tok-punct">(</span>model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">,</span> m<span class="tok-op">:</span> <span class="tok-type">Tey</span><span class="tok-op">.</span><span class="tok-type">Docgen</span><span class="tok-op">.</span><span class="tok-type">Model</span><span class="tok-op">.</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-moduleindexentry"><span class="tok-type">ModuleIndexEntry</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-indexsections">
+<h3><a class="self" href="#function-tey-docgen-html-indexsections"><code>indexSections</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">indexSections</span><span class="tok-punct">(</span>model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">,</span> top<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-preludepaths">
+<h3><a class="self" href="#function-tey-docgen-html-preludepaths"><code>preludePaths</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">preludePaths</span><span class="tok-punct">(</span>model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+<p>The prelude imports FILES, and everything a listed file declares comes with it: <code>using Time</code> is what puts <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#record-date"><code>Date</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#record-duration"><code>Duration</code></a> and <code>Time.Period</code> in scope, none of which prelude.kex names. So the split is by page, not by module name.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-preludepath">
+<h3><a class="self" href="#function-tey-docgen-html-preludepath"><code>preludePath</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">preludePath</span><span class="tok-punct">(</span>model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">,</span> name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-cardgrid">
+<h3><a class="self" href="#function-tey-docgen-html-cardgrid"><code>cardGrid</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">cardGrid</span><span class="tok-punct">(</span>modules<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">Tey</span><span class="tok-op">.</span><span class="tok-type">Docgen</span><span class="tok-op">.</span><span class="tok-type">Model</span><span class="tok-op">.</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-moduleindexentry"><span class="tok-type">ModuleIndexEntry</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> top<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-packageversionshtml">
+<h3><a class="self" href="#function-tey-docgen-html-packageversionshtml"><code>packageVersionsHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">packageVersionsHtml</span><span class="tok-punct">(</span>packageName<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> versions<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-versionentry"><span class="tok-type">VersionEntry</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>&lt;pkg&gt;/index.html: the versions of one package, newest first — the page a reader lands on when they want a different release of what they are reading. What the ids MEAN is the package's own story: a library's own releases, the stdlib's Kex releases. The page does not need to know.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-versioncard">
+<h3><a class="self" href="#function-tey-docgen-html-versioncard"><code>versionCard</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">versionCard</span><span class="tok-punct">(</span>v<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-versionentry"><span class="tok-type">VersionEntry</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-searchpagehtml">
+<h3><a class="self" href="#function-tey-docgen-html-searchpagehtml"><code>searchPageHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">searchPageHtml</span><span class="tok-punct">(</span>model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>&lt;pkg&gt;/&lt;version&gt;/search.html: the shareable full-page search. The modal on every page links here with ?q=&lt;term&gt;, so a results page is a URL rather than a state — the page reads the term back from the query string.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-rootindexhtml">
+<h3><a class="self" href="#function-tey-docgen-html-rootindexhtml"><code>rootIndexHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">rootIndexHtml</span><span class="tok-punct">(</span>versions<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-versionentry"><span class="tok-type">VersionEntry</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Site root index.html: one card per PACKAGE (its newest build), not per build — a reader arrives at &quot;the docs&quot; for a thing, and the thing is a package; its versions are one click down. Built from the accumulated versions.json entries, not just this build's model.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-packagenames">
+<h3><a class="self" href="#function-tey-docgen-html-packagenames"><code>packageNames</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">packageNames</span><span class="tok-punct">(</span>versions<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-versionentry"><span class="tok-type">VersionEntry</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+<p>Package names in first-seen order of their newest entry: versions arrive newest-first from accumulateVersions, so the first entry of each package is that package's newest build.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-packagecard">
+<h3><a class="self" href="#function-tey-docgen-html-packagecard"><code>packageCard</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">packageCard</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> versions<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-versionentry"><span class="tok-type">VersionEntry</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-layout">
+<h3><a class="self" href="#function-tey-docgen-html-layout"><code>layout</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">layout</span><span class="tok-punct">(</span>title<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> current<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> bodyContent<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-sidebar">
+<h3><a class="self" href="#function-tey-docgen-html-sidebar"><code>sidebar</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">sidebar</span><span class="tok-punct">(</span>model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">,</span> current<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The sidebar lists one entry per source FILE, nested by module family: a page whose title is a dotted child of another page's title nests under it (&quot;Net.DNS&quot; under &quot;Net&quot;, &quot;Net.HTTP.WebSocket&quot; under &quot;Net.HTTP&quot;), so a multi-file module reads as one branch instead of trailing the list in directory-walk order. The active file expands to its top-level declarations so a reader can jump straight to one. The label is the page's title (the module it declares), not the raw file name. The heading is a link: it is the package's name, and the obvious thing to want from it is the list of what the package contains — which is the version index, where the prelude split lives.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-sidebarentry">
+<h3><a class="self" href="#function-tey-docgen-html-sidebarentry"><code>sidebarEntry</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">sidebarEntry</span><span class="tok-punct">(</span>page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> current<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> vpre<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-preludetag">
+<h3><a class="self" href="#function-tey-docgen-html-preludetag"><code>preludeTag</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">preludeTag</span><span class="tok-punct">(</span>inPrelude<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The page's own heading carries it — the sidebar is a list to scan, and a chip on 32 of 41 rows is noise rather than an answer.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-firstmodulesofpages">
+<h3><a class="self" href="#function-tey-docgen-html-firstmodulesofpages"><code>firstModulesOfPages</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">firstModulesOfPages</span><span class="tok-punct">(</span>pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+<p>The modules that OPEN a page — their section sits at the very top, so a card for one links to the page itself rather than to an anchor that lands where the page already starts. A page whose first declaration is a type or record has no such module.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-modulecard">
+<h3><a class="self" href="#function-tey-docgen-html-modulecard"><code>moduleCard</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">moduleCard</span><span class="tok-punct">(</span>m<span class="tok-op">:</span> <span class="tok-type">Tey</span><span class="tok-op">.</span><span class="tok-type">Docgen</span><span class="tok-op">.</span><span class="tok-type">Model</span><span class="tok-op">.</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-moduleindexentry"><span class="tok-type">ModuleIndexEntry</span></a><span class="tok-punct">,</span> top<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-entitieshtml">
+<h3><a class="self" href="#function-tey-docgen-html-entitieshtml"><code>entitiesHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">entitiesHtml</span><span class="tok-punct">(</span>entities<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>A page's declarations in source order — except that a type's <code>make</code> blocks on the same page are pulled into the type's own section, so <a class="xref" href="/prelude/0.4.0-beta.4-dev/list/#type-list"><code>List</code></a> reads as one thing (the type, then its methods, grouped by the receiver they need) rather than a type followed by three loose &quot;make&quot; sections.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-sectionentities">
+<h3><a class="self" href="#function-tey-docgen-html-sectionentities"><code>sectionEntities</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">sectionEntities</span><span class="tok-punct">(</span>entities<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">]</span></code></pre>
+<p>The declarations that get a section of their own: everything except the make blocks folded into a type or trait on the same page.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-declaredtypenames">
+<h3><a class="self" href="#function-tey-docgen-html-declaredtypenames"><code>declaredTypeNames</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">declaredTypeNames</span><span class="tok-punct">(</span>entities<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-declaredtraitnames">
+<h3><a class="self" href="#function-tey-docgen-html-declaredtraitnames"><code>declaredTraitNames</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">declaredTraitNames</span><span class="tok-punct">(</span>entities<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+<p>A <code>make &lt;Trait&gt;</code> beside its trait is the trait's defaults, rendered in the trait's own section (Relations.traitMethods).</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-makesfor">
+<h3><a class="self" href="#function-tey-docgen-html-makesfor"><code>makesFor</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">makesFor</span><span class="tok-punct">(</span>entities<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-makeentry"><span class="tok-type">MakeEntry</span></a><span class="tok-punct">]</span></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-entitysection">
+<h3><a class="self" href="#function-tey-docgen-html-entitysection"><code>entitySection</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">entitySection</span><span class="tok-punct">(</span>e<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-linker">
+<h3><a class="self" href="#function-tey-docgen-html-linker"><code>linker</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">linker</span><span class="tok-punct">(</span>page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>A reference resolver scoped to one page: links resolve against the whole package index, but the href is relative to the page doing the referring.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-hrefer">
+<h3><a class="self" href="#function-tey-docgen-html-hrefer"><code>hrefer</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">hrefer</span><span class="tok-punct">(</span>page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The bare href for a name, or &quot;&quot; — what linked highlighting and linked prose both need.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-typesection">
+<h3><a class="self" href="#function-tey-docgen-html-typesection"><code>typeSection</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">typeSection</span><span class="tok-punct">(</span>e<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-typeentry"><span class="tok-type">TypeEntry</span></a><span class="tok-punct">,</span> makes<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-makeentry"><span class="tok-type">MakeEntry</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-variantshtml">
+<h3><a class="self" href="#function-tey-docgen-html-variantshtml"><code>variantsHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">variantsHtml</span><span class="tok-punct">(</span>variants<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-variantentry"><span class="tok-type">VariantEntry</span></a><span class="tok-punct">]</span><span class="tok-op">?</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Only real constructors: an abstract type (<code>type List&lt;X&gt;</code>) has none, and a &quot;Variants: (abstract)&quot; heading told the reader nothing.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-variantitem">
+<h3><a class="self" href="#function-tey-docgen-html-variantitem"><code>variantItem</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">variantItem</span><span class="tok-punct">(</span>v<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-variantentry"><span class="tok-type">VariantEntry</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-recordsection">
+<h3><a class="self" href="#function-tey-docgen-html-recordsection"><code>recordSection</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">recordSection</span><span class="tok-punct">(</span>e<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-recordentry"><span class="tok-type">RecordEntry</span></a><span class="tok-punct">,</span> makes<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-makeentry"><span class="tok-type">MakeEntry</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-typebodyhtml">
+<h3><a class="self" href="#function-tey-docgen-html-typebodyhtml"><code>typeBodyHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">typeBodyHtml</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> makes<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-makeentry"><span class="tok-type">MakeEntry</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Everything about a type beyond its declaration: the traits it implements (from every file), its methods grouped by receiver, the methods it gets from those traits for free, and the other modules that add methods to it.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-makegrouphtml">
+<h3><a class="self" href="#function-tey-docgen-html-makegrouphtml"><code>makeGroupHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">makeGroupHtml</span><span class="tok-punct">(</span>m<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-makeentry"><span class="tok-type">MakeEntry</span></a><span class="tok-punct">,</span> base<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>&quot;Methods&quot; for the plain receiver, &quot;On <code>[Number]</code>&quot; for a specialised one.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-genericreceiver?">
+<h3><a class="self" href="#function-tey-docgen-html-genericreceiver?"><code>genericReceiver?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">genericReceiver?</span><span class="tok-punct">(</span>target<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> base<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p><code>[X]</code> and <code>FileHandle&lt;R, W&gt;</code> are the type itself; <code>[Number]</code> is not.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-implementshtml">
+<h3><a class="self" href="#function-tey-docgen-html-implementshtml"><code>implementsHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">implementsHtml</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Every trait the type implements, wherever the implementing make block lives — algebra.kex is what makes Integer a Monoid, and number.kex's reader should still learn that.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-traitlinks">
+<h3><a class="self" href="#function-tey-docgen-html-traitlinks"><code>traitLinks</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">traitLinks</span><span class="tok-punct">(</span>traits<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-providedhtml">
+<h3><a class="self" href="#function-tey-docgen-html-providedhtml"><code>providedHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">providedHtml</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The trait methods a type gets without writing them: a trait's provided methods, minus any the type defines itself somewhere. This is the answer to &quot;where does <code>List.eachIndexed</code> come from?&quot;.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-providedfromhtml">
+<h3><a class="self" href="#function-tey-docgen-html-providedfromhtml"><code>providedFromHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">providedFromHtml</span><span class="tok-punct">(</span>written<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> own<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-elsewherehtml">
+<h3><a class="self" href="#function-tey-docgen-html-elsewherehtml"><code>elsewhereHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">elsewhereHtml</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Other modules that add methods to this type: <code>make Integer</code> in time.kex is where <code>5.seconds</code> comes from.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-fieldrow">
+<h3><a class="self" href="#function-tey-docgen-html-fieldrow"><code>fieldRow</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">fieldRow</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <span class="tok-type">Tey</span><span class="tok-op">.</span><span class="tok-type">Docgen</span><span class="tok-op">.</span><span class="tok-type">Model</span><span class="tok-op">.</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-fieldentry"><span class="tok-type">FieldEntry</span></a><span class="tok-punct">,</span> link<span class="tok-op">:</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-linktypetext">
+<h3><a class="self" href="#function-tey-docgen-html-linktypetext"><code>linkTypeText</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">linkTypeText</span><span class="tok-punct">(</span>link<span class="tok-op">:</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span><span class="tok-punct">,</span> text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>A type text is code with links inside it: split into identifier and punctuation segments, link the identifiers that resolve, escape the rest.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-linktype">
+<h3><a class="self" href="#function-tey-docgen-html-linktype"><code>linkType</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">linkType</span><span class="tok-punct">(</span>links<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-linkentry"><span class="tok-type">LinkEntry</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> fromPath<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The whole-package resolution one segment goes through: an exact name hit links (display text escaped); anything else is plain escaped code.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-traitsection">
+<h3><a class="self" href="#function-tey-docgen-html-traitsection"><code>traitSection</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">traitSection</span><span class="tok-punct">(</span>e<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-traitentry"><span class="tok-type">TraitEntry</span></a><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>A trait: what an implementor must write, what it then gets for free, and who implements it.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-implementedbyhtml">
+<h3><a class="self" href="#function-tey-docgen-html-implementedbyhtml"><code>implementedByHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">implementedByHtml</span><span class="tok-punct">(</span>e<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-traitentry"><span class="tok-type">TraitEntry</span></a><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-makesection">
+<h3><a class="self" href="#function-tey-docgen-html-makesection"><code>makeSection</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">makeSection</span><span class="tok-punct">(</span>e<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-makeentry"><span class="tok-type">MakeEntry</span></a><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>A make block with no type declaration on its page. On the type's home page (string.kex for String) it carries everything the type section would; elsewhere it points home.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-firstmakeonpage?">
+<h3><a class="self" href="#function-tey-docgen-html-firstmakeonpage?"><code>firstMakeOnPage?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">firstMakeOnPage?</span><span class="tok-punct">(</span>facts<span class="tok-op">:</span> <span class="tok-type">Tey</span><span class="tok-op">.</span><span class="tok-type">Docgen</span><span class="tok-op">.</span><span class="tok-type">Model</span><span class="tok-op">.</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-typefacts"><span class="tok-type">TypeFacts</span></a><span class="tok-punct">,</span> e<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-makeentry"><span class="tok-type">MakeEntry</span></a><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-homenote">
+<h3><a class="self" href="#function-tey-docgen-html-homenote"><code>homeNote</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">homeNote</span><span class="tok-punct">(</span>base<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> facts<span class="tok-op">:</span> <span class="tok-type">Tey</span><span class="tok-op">.</span><span class="tok-type">Docgen</span><span class="tok-op">.</span><span class="tok-type">Model</span><span class="tok-op">.</span><span class="tok-type">TypeFacts?</span><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-modulesection">
+<h3><a class="self" href="#function-tey-docgen-html-modulesection"><code>moduleSection</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">moduleSection</span><span class="tok-punct">(</span>e<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-moduleentry"><span class="tok-type">ModuleEntry</span></a><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>A module's own functions and constants are its API, listed under it (h3) like a type's methods. Types, traits and nested modules it declares stand as sections of their own after that.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-memberentity?">
+<h3><a class="self" href="#function-tey-docgen-html-memberentity?"><code>memberEntity?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">memberEntity?</span><span class="tok-punct">(</span>e<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-modulememberhtml">
+<h3><a class="self" href="#function-tey-docgen-html-modulememberhtml"><code>moduleMemberHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">moduleMemberHtml</span><span class="tok-punct">(</span>e<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-functionsection">
+<h3><a class="self" href="#function-tey-docgen-html-functionsection"><code>functionSection</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">functionSection</span><span class="tok-punct">(</span>e<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-functionentry"><span class="tok-type">FunctionEntry</span></a><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-constantsection">
+<h3><a class="self" href="#function-tey-docgen-html-constantsection"><code>constantSection</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">constantSection</span><span class="tok-punct">(</span>e<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-constantentry"><span class="tok-type">ConstantEntry</span></a><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-functionshtml">
+<h3><a class="self" href="#function-tey-docgen-html-functionshtml"><code>functionsHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">functionsHtml</span><span class="tok-punct">(</span>functions<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-functionentry"><span class="tok-type">FunctionEntry</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> owner<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> level<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> implements<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Members of a trait or make block, one heading per NAME: overloads (<code>count</code> and <code>count(pred)</code>) are one method with several signatures, not two unrelated entries. <code>owner</code> scopes the anchors; <code>implements</code> lets a member that fulfils a trait method say which trait.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-functiongrouphtml">
+<h3><a class="self" href="#function-tey-docgen-html-functiongrouphtml"><code>functionGroupHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">functionGroupHtml</span><span class="tok-punct">(</span>fs<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-functionentry"><span class="tok-type">FunctionEntry</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> owner<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> level<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> implements<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-traittag">
+<h3><a class="self" href="#function-tey-docgen-html-traittag"><code>traitTag</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">traitTag</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> implements<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>&quot;from Enumerable&quot;: this member is the type's own version of a method the trait declares, linked to the trait's description of it.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-overloadhtml">
+<h3><a class="self" href="#function-tey-docgen-html-overloadhtml"><code>overloadHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">overloadHtml</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-functionentry"><span class="tok-type">FunctionEntry</span></a><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>One overload: its signature first (what you call), then the prose.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-signatureshtml">
+<h3><a class="self" href="#function-tey-docgen-html-signatureshtml"><code>signaturesHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">signaturesHtml</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-functionentry"><span class="tok-type">FunctionEntry</span></a><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-dochtml">
+<h3><a class="self" href="#function-tey-docgen-html-dochtml"><code>docHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">docHtml</span><span class="tok-punct">(</span>doc<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-doc"><span class="tok-type">Doc</span></a><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-entitydochtml">
+<h3><a class="self" href="#function-tey-docgen-html-entitydochtml"><code>entityDocHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">entityDocHtml</span><span class="tok-punct">(</span>doc<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-doc"><span class="tok-type">Doc</span></a><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>A declaration's doc: prose, then its examples and any deprecation — a type's @example is as much a part of it as a method's.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-plaindochtml">
+<h3><a class="self" href="#function-tey-docgen-html-plaindochtml"><code>plainDocHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">plainDocHtml</span><span class="tok-punct">(</span>doc<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-doc"><span class="tok-type">Doc</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Unlinked: for prose with no page to resolve against (the prelude comment, card summaries).</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-summaryparagraphs">
+<h3><a class="self" href="#function-tey-docgen-html-summaryparagraphs"><code>summaryParagraphs</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">summaryParagraphs</span><span class="tok-punct">(</span>summary<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+<p>Paragraphs break on blank lines — except inside a fenced block, where a blank line is part of the code rather than the end of a paragraph.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-groupparagraphs">
+<h3><a class="self" href="#function-tey-docgen-html-groupparagraphs"><code>groupParagraphs</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">groupParagraphs</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> current<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> accum<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> fenced<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-paragraphhtml">
+<h3><a class="self" href="#function-tey-docgen-html-paragraphhtml"><code>paragraphHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">paragraphHtml</span><span class="tok-punct">(</span>p<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> hrefOf<span class="tok-op">:</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>A summary paragraph is prose, a fenced block that Rdoc produced from an indented (verbatim) block, or a bullet list — each rendered as what it is rather than reflowed into one paragraph.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-bulletline?">
+<h3><a class="self" href="#function-tey-docgen-html-bulletline?"><code>bulletLine?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">bulletLine?</span><span class="tok-punct">(</span>line<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-bulletlisthtml">
+<h3><a class="self" href="#function-tey-docgen-html-bulletlisthtml"><code>bulletListHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">bulletListHtml</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> hrefOf<span class="tok-op">:</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p><code>- item</code> lines, with indented continuation lines folded into the item above them.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-inlinecode">
+<h3><a class="self" href="#function-tey-docgen-html-inlinecode"><code>inlineCode</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">inlineCode</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Minimal inline Markdown for doc prose: <code>code</code> spans. Splitting on the backtick alternates plain/code segments; an unmatched trailing backtick degrades to literal text rather than swallowing the rest of the page.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-linkedinline">
+<h3><a class="self" href="#function-tey-docgen-html-linkedinline"><code>linkedInline</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">linkedInline</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> hrefOf<span class="tok-op">:</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The same, with a code span that names something documented — a type, a trait, <a class="xref" href="/prelude/0.4.0-beta.4-dev/list/#list-map"><code>List.map</code></a> — linked to it.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-linkablecode?">
+<h3><a class="self" href="#function-tey-docgen-html-linkablecode?"><code>linkableCode?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">linkableCode?</span><span class="tok-punct">(</span>code<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Only a bare name is a reference: <a class="xref" href="/prelude/0.4.0-beta.4-dev/list/#type-list"><code>List</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/fs/#module-fs-path"><code>FS.Path</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/list/#list-map"><code>List.map</code></a>. A code span with spaces or parentheses is an expression, not a name.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-firstsentence">
+<h3><a class="self" href="#function-tey-docgen-html-firstsentence"><code>firstSentence</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">firstSentence</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-paramshtml">
+<h3><a class="self" href="#function-tey-docgen-html-paramshtml"><code>paramsHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">paramsHtml</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-functionentry"><span class="tok-type">FunctionEntry</span></a><span class="tok-punct">,</span> link<span class="tok-op">:</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Each parameter's meaning. Its type is in the signature right above, so it is repeated here only when there is no signature to read it from.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-returnshtml">
+<h3><a class="self" href="#function-tey-docgen-html-returnshtml"><code>returnsHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">returnsHtml</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-functionentry"><span class="tok-type">FunctionEntry</span></a><span class="tok-punct">,</span> link<span class="tok-op">:</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The signature already states the result type, so when there is one &quot;Returns&quot; says only what the value MEANS. A @return tag whose type disagrees would otherwise put two answers side by side (<code>min : X?</code> above &quot;Returns: Number?&quot;).</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-exampleshtml">
+<h3><a class="self" href="#function-tey-docgen-html-exampleshtml"><code>examplesHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">examplesHtml</span><span class="tok-punct">(</span>doc<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-doc"><span class="tok-type">Doc</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-deprecatedhtml">
+<h3><a class="self" href="#function-tey-docgen-html-deprecatedhtml"><code>deprecatedHtml</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">deprecatedHtml</span><span class="tok-punct">(</span>doc<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-doc"><span class="tok-type">Doc</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-esc">
+<h3><a class="self" href="#function-tey-docgen-html-esc"><code>esc</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">esc</span><span class="tok-punct">(</span>s<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Escape text for HTML (content and double-quoted attributes).</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-labelof">
+<h3><a class="self" href="#function-tey-docgen-html-labelof"><code>labelOf</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">labelOf</span><span class="tok-punct">(</span>model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.0-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-pagetarget">
+<h3><a class="self" href="#function-tey-docgen-html-pagetarget"><code>pageTarget</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">pageTarget</span><span class="tok-punct">(</span>current<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The page the version switcher tries first in the target version.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-markdownlink">
+<h3><a class="self" href="#function-tey-docgen-html-markdownlink"><code>markdownLink</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">markdownLink</span><span class="tok-punct">(</span>current<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Every page's raw Markdown, next to its HTML: the footer link humans see, and the address llms.txt tells models about. Index pages have none. The target is a bare sibling filename — the page already stands in the directory its <code>.md</code> was written to, so no prefix climbing is wanted.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-slug">
+<h3><a class="self" href="#function-tey-docgen-html-slug"><code>slug</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">slug</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-typeparamsuffix">
+<h3><a class="self" href="#function-tey-docgen-html-typeparamsuffix"><code>typeParamSuffix</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">typeParamSuffix</span><span class="tok-punct">(</span>typeParams<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-versionprefix">
+<h3><a class="self" href="#function-tey-docgen-html-versionprefix"><code>versionPrefix</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">versionPrefix</span><span class="tok-punct">(</span>urlPath<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Relative path from a page's urlPath back to the version directory: &quot;string&quot; → &quot;&quot; (sibling), &quot;kex/ast&quot; → &quot;../&quot;.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-rootprefix">
+<h3><a class="self" href="#function-tey-docgen-html-rootprefix"><code>rootPrefix</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">rootPrefix</span><span class="tok-punct">(</span>urlPath<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>From the page to the site root: version dir is &lt;pkg&gt;/&lt;version&gt;/.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-html-ups">
+<h3><a class="self" href="#function-tey-docgen-html-ups"><code>ups</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">ups</span><span class="tok-punct">(</span>n<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+</div>
+</section>
+
+
+        </article>
+      </main>
+      <aside class="toc" aria-label="On this page">
+        
+      </aside>
+    </div>
+    <footer class="foot">
+      <div class="wrap">Generated from source (<code>tey/docgen/html.kex</code>) · Built with Marqraft · <a href="https://kex.run">kex.run</a></div>
+    </footer>
+  </body>
+</html>

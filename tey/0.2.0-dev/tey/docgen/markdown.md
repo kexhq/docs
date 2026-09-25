@@ -9,216 +9,222 @@ entities:
 
 # Tey.Docgen.Markdown
 
-## module `Tey.Docgen.Markdown`
-
 Model records → Markdown pages (LLM-friendly: stable headings, fenced kex signatures, frontmatter with the entity index).
 
-## function `pageMarkdown`
+## module `Tey.Docgen.Markdown`
 
-
-```kex
-pageMarkdown(page, model)
-```
-
-
-## function `pageFrontmatter`
-
+### `pageMarkdown`
 
 ```kex
-pageFrontmatter(page, model)
+pageMarkdown(page: SourcePage, model: PackageModel) -> String
 ```
 
-
-## function `entityFrontmatterLine`
-
+### `pageFrontmatter`
 
 ```kex
-entityFrontmatterLine(e)
+pageFrontmatter(page: SourcePage, model: PackageModel) -> String
 ```
 
-
-## function `pageBody`
-
+### `entityFrontmatterLine`
 
 ```kex
-pageBody(page, model)
+entityFrontmatterLine(e: Entity) -> String
 ```
 
-
-## function `entitySection`
-
+### `pageBody`
 
 ```kex
-entitySection(e, page, model)
+pageBody(page: SourcePage, model: PackageModel) -> String
 ```
 
+### `entitiesMd`
 
-## function `linkMd`
+```kex
+entitiesMd(entities: [Entity], page: SourcePage, model: PackageModel) -> String
+```
+
+The same layout as the HTML: a type's make blocks on its own page are folded into the type's section.
+
+### `entitySection`
+
+```kex
+entitySection(e: Entity, page: SourcePage, model: PackageModel) -> String
+```
+
+### `linkMd`
+
+```kex
+linkMd(model: PackageModel, fromPath: String, name: String) -> String
+```
 
 Cross-links in Markdown resolve against the same package index the HTML renderer uses — one resolution rule, two renderings. Targets are the .md siblings of this page.
 
+### `hrefMd`
 
 ```kex
-linkMd(model, fromPath, name)
+hrefMd(fromPath: String, toPath: String, anchor: String) -> String
 ```
 
-
-## function `linkTypeMd`
-
+### `linkTypeMd`
 
 ```kex
-linkTypeMd(model, fromPath, text)
+linkTypeMd(model: PackageModel, fromPath: String, text: String) -> String
 ```
 
-
-## function `typeSection`
-
+### `typeSection`
 
 ```kex
-typeSection(e, page, model)
+typeSection(e: TypeEntry, makes: [MakeEntry], page: SourcePage, model: PackageModel) -> String
 ```
 
-
-## function `variantBullet`
-
+### `variantBullet`
 
 ```kex
-variantBullet(name, fields)
+variantBullet(name: String, fields: [String]) -> String
 ```
 
-
-## function `recordSection`
-
+### `recordSection`
 
 ```kex
-recordSection(e, page, model)
+recordSection(e: RecordEntry, makes: [MakeEntry], page: SourcePage, model: PackageModel) -> String
 ```
 
-
-## function `traitSection`
-
+### `typeBodyMd`
 
 ```kex
-traitSection(e)
+typeBodyMd(name: String, makes: [MakeEntry], page: SourcePage, model: PackageModel) -> String
 ```
 
-
-## function `makeSection`
-
+### `implementsMd`
 
 ```kex
-makeSection(e, page, model)
+implementsMd(name: String, page: SourcePage, model: PackageModel) -> String
 ```
 
-
-## function `moduleSection`
-
+### `traitLinksMd`
 
 ```kex
-moduleSection(e, page, model)
+traitLinksMd(traits: [String], page: SourcePage, model: PackageModel) -> String
 ```
 
-
-## function `functionSection`
-
+### `providedMd`
 
 ```kex
-functionSection(e)
+providedMd(name: String, page: SourcePage, model: PackageModel) -> String
 ```
 
-
-## function `signatureBlock`
-
+### `providedFromMd`
 
 ```kex
-signatureBlock(f)
+providedFromMd(written: String, own: [String], page: SourcePage, model: PackageModel) -> String
 ```
 
-
-## function `constantSection`
-
+### `elsewhereMd`
 
 ```kex
-constantSection(e)
+elsewhereMd(name: String, page: SourcePage, model: PackageModel) -> String
 ```
 
-
-## function `renderFunctions`
-
+### `traitSection`
 
 ```kex
-renderFunctions(functions)
+traitSection(e: TraitEntry, page: SourcePage, model: PackageModel) -> String
 ```
 
-
-## function `functionBlock`
-
+### `makeSection`
 
 ```kex
-functionBlock(f)
+makeSection(e: MakeEntry, page: SourcePage, model: PackageModel) -> String
 ```
 
-
-## function `signatureParts`
-
+### `moduleSection`
 
 ```kex
-signatureParts(parts, f)
+moduleSection(e: ModuleEntry, page: SourcePage, model: PackageModel) -> String
 ```
 
-
-## function `returnParts`
-
+### `constantSection`
 
 ```kex
-returnParts(parts, doc)
+constantSection(e: ConstantEntry) -> String
 ```
 
-
-## function `returnLine`
-
+### `functionsMd`
 
 ```kex
-returnLine(r)
+functionsMd(functions: [FunctionEntry], owner: String, level: Integer, implements: [String], page: SourcePage, model: PackageModel) -> String
 ```
 
+One heading per name; overloads listed under it.
 
-## function `exampleParts`
-
+### `traitTagsMd`
 
 ```kex
-exampleParts(parts, doc)
+traitTagsMd(name: String, implements: [String], page: SourcePage, model: PackageModel) -> String
 ```
 
-
-## function `exampleBlocks`
-
+### `overloadMd`
 
 ```kex
-exampleBlocks(examples)
+overloadMd(f: FunctionEntry, page: SourcePage, model: PackageModel) -> String
 ```
 
-
-## function `exampleBlock`
-
+### `signatureParts`
 
 ```kex
-exampleBlock(ex)
+signatureParts(parts: [String], f: FunctionEntry) -> [String]
 ```
 
-
-## function `docBlock`
-
+### `paramParts`
 
 ```kex
-docBlock(doc)
+paramParts(parts: [String], f: FunctionEntry) -> [String]
 ```
 
-
-## function `typeParamSuffix`
-
+### `returnParts`
 
 ```kex
-typeParamSuffix(typeParams)
+returnParts(parts: [String], f: FunctionEntry) -> [String]
 ```
 
+### `returnLine`
+
+```kex
+returnLine(r: Return) -> String
+```
+
+### `exampleParts`
+
+```kex
+exampleParts(parts: [String], doc: Doc) -> [String]
+```
+
+### `exampleBlocks`
+
+```kex
+exampleBlocks(examples: [Example]) -> [String]
+```
+
+### `exampleBlock`
+
+```kex
+exampleBlock(ex: Example) -> [String]
+```
+
+### `entityDocMd`
+
+```kex
+entityDocMd(doc: Doc) -> String
+```
+
+### `docBlock`
+
+```kex
+docBlock(doc: Doc) -> String
+```
+
+### `typeParamSuffix`
+
+```kex
+typeParamSuffix(typeParams: [String]) -> String
+```

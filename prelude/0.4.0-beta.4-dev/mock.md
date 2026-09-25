@@ -26,19 +26,11 @@ All Mock.* sub-modules live in a single `module Mock` block so merged compilatio
 
 
 
-**Variants**
-
-  - _(abstract)_
-
 ## type `Lookup`
 
 An environment stand-in's lookup hook: a name in, its value or `None` out.
 
 
-
-**Variants**
-
-  - _(abstract)_
 
 ## type `Writer`
 
@@ -46,11 +38,9 @@ An environment stand-in's WRITE hook: the name and the value a program set. A `M
 
 
 
-**Variants**
-
-  - _(abstract)_
-
 ## module `Mock`
+
+
 
 ## record `Files`
 
@@ -66,239 +56,20 @@ end
 
 **Fields**
 
-  - `files` : Map<[FS.FilePath](fs.md#type-filepath), String> (optional)
+  - `files` : [Map](map.md#type-map)<[FS.FilePath](fs.md#type-fs-filepath), [String](string.md#make-string)> (optional)
   - `onRead` : [Reader](#type-reader)? (optional)
 
-## record `Env`
+Implements `FS.File`.
 
-A stand-in for the `ENV` capability. A name simply left out of `vars` reads as unset, which is the whole reason `Mock.ENV.unset` exists: absence is an answer programs act on. `onGet` answers instead of the map when a test wants a rule rather than a fixture.
-
-```kex
-with ENV = Mock.Env { vars: {"HOME": "/fake"} } do
-  assert(configHome() == "/fake/.config")
-end
-```
-
-**Fields**
-
-  - `vars` : Map<String, String> (optional)
-  - `onGet` : [Lookup](#type-lookup)? (optional)
-  - `onSet` : [Writer](#type-writer)? (optional)
-
-## module `Mock.FS`
-
-A stateful stand-in for the filesystem: files a test declares, that the real `FS.File` then reads back.
-
-The store is global and lives until `clear`, which is what makes a write followed by a read testable, and what makes two tests able to interfere. Clear it in an `after` hook.
-
-```kex
-describe "the config loader" do
-  before do
-    Mock.FS.files({ "app.conf": "port = 8080\n" })
-  end
-
-  after do
-    Mock.FS.clear()
-  end
-
-  it "reads the port" do
-    Assert.equal(loadPort(), 8080)
-  end
-end
-```
-
-## function `File`
-
-Declares one file and its content.
-
-
-```kex
-File(path, content) : FS.FilePath -> String -> Void
-```
-
-
-## function `Directory`
-
-Declares a directory at `path`.
-
-
-```kex
-Directory(path) : FS.FilePath -> Void
-```
-
-
-## function `clear`
-
-Empties the store, so nothing declared so far is visible any more.
-
-Call it in an `after` hook: the store is global, and what one test leaves behind the next one sees.
-
-
-```kex
-clear() : Void
-```
-
-
-## function `files`
-
-Declares the whole fixture in one call.
-
-The same shape `Mock.Files { files: ... }` takes: one line instead of one per file (kexhq/kex#143).
-
-
-```kex
-files(entries) : Map<FS.FilePath, String> -> Void
-```
-
-
-## function `onRead`
-
-Answers reads by RULE rather than from a fixture.
-
-Content derived from the path, a failure on the third call, a record of what was asked for. Consulted before the map, and returning `None` means "no such file", so absence is expressible too.
-
-
-```kex
-onRead(reader) : Reader -> Void
-```
-
-
-## module `Mock.ENV`
-
-Overlays the process environment, so a test can say what `ENV` holds instead of depending on how it was launched.
-
-The overlay is global and lives until `clear`: clear it in an `after` hook.
-
-```kex
-Mock.ENV.vars({ "HOME": "/fake", "LOG_LEVEL": "debug" })
-assert(configPath() == "/fake/.config")
-Mock.ENV.clear()
-```
-
-## function `set`
-
-Sets one variable in the overlay.
-
-
-```kex
-set(name, value) : String -> String -> Void
-```
-
-
-## function `unset`
-
-Removes one variable from the overlay, so it reads as unset.
-
-Separate from `set` because a variable being ABSENT is an answer programs act on, and there is no value that means it.
-
-
-```kex
-unset(name) : String -> Void
-```
-
-
-## function `clear`
-
-Removes the whole overlay, restoring the real environment.
-
-
-```kex
-clear() : Void
-```
-
-
-## function `vars`
-
-Declares the whole overlay in one call.
-
-The same shape `Mock.Env { vars: ... }` takes (kexhq/kex#143). There is no `onGet` here: global `ENV` is a materialised Map, so there is nothing for a callback to intercept: use `with ENV = Mock.Env { onGet: ... }` when a rule is what you want.
-
-
-```kex
-vars(entries) : Map<String, String> -> Void
-```
-
-
-## module `Mock.IO`
-
-A stateful stand-in for the console: captures what a program prints, and feeds it lines as if they had been typed.
-
-The way to test a program that talks to a person without one being there.
-
-```kex
-Mock.IO.start()
-Mock.IO.input("Ada", "42")
-greet()
-Assert.equal(Mock.IO.output(), "hello, Ada\n")
-Mock.IO.stop()
-```
-
-## function `start`
-
-Starts capturing output and serving queued input.
-
-
-```kex
-start()
-```
-
-
-## function `stop`
-
-Stops capturing, and restores the real console.
-
-
-```kex
-stop()
-```
-
-
-## function `output`
-
-Everything the program has printed since capturing started.
-
-Newlines are included, so a single `IO.printLine("hi")` gives `"hi\n"`.
-
-
-```kex
-output()
-```
-
-
-## function `clear`
-
-Discards the captured output, while continuing to capture.
-
-Useful between phases of one test, when only the later output matters.
-
-
-```kex
-clear()
-```
-
-
-## function `input`
-
-Queues the lines `IO.getLine` will return, in order.
-
-Takes a list, or up to four lines as separate arguments. Once they run out, `IO.getLine` answers `None`: end of input, exactly as a closed stdin would.
-
-
-```kex
-input(lines)
-```
-
-
-## make `Files` implements [FS.File](fs.md#module-fs-file)
-
+### Methods
 
 #### `cannedRead`
-
-Named apart from `read`: `this.read(path)` would bind to the capability's own `read : FilePath -> String?`, not to this method.
 
 ```kex
 cannedRead(path)
 ```
+
+Named apart from `read`: `this.read(path)` would bind to the capability's own `read : FilePath -> String?`, not to this method.
 
 #### `read`
 
@@ -368,11 +139,11 @@ symlink?(path)
 
 #### `open`
 
-A fake is a value, so there is nowhere for a write to go. Refusing is the honest answer and the useful one: a test that did not expect a write sees it fail rather than silently succeed.
-
 ```kex
 open(path, mode)
 ```
+
+A fake is a value, so there is nowhere for a write to go. Refusing is the honest answer and the useful one: a test that did not expect a write sees it fail rather than silently succeed.
 
 #### `write`
 
@@ -410,21 +181,38 @@ copy(src, dst)
 rename(src, dst)
 ```
 
-## make `Env` implements [ENV](env.md#module-env)
+## record `Env`
 
+A stand-in for the `ENV` capability. A name simply left out of `vars` reads as unset, which is the whole reason `Mock.ENV.unset` exists: absence is an answer programs act on. `onGet` answers instead of the map when a test wants a rule rather than a fixture.
+
+```kex
+with ENV = Mock.Env { vars: {"HOME": "/fake"} } do
+  assert(configHome() == "/fake/.config")
+end
+```
+
+**Fields**
+
+  - `vars` : [Map](map.md#type-map)<[String](string.md#make-string), [String](string.md#make-string)> (optional)
+  - `onGet` : [Lookup](#type-lookup)? (optional)
+  - `onSet` : [Writer](#type-writer)? (optional)
+
+Implements `ENV`.
+
+### Methods
 
 #### `lookup`
-
-Named apart from `get`: `this.get(key)` would bind to the capability's own `get`, not to this method.
 
 ```kex
 lookup(key)
 ```
 
+Named apart from `get`: `this.get(key)` would bind to the capability's own `get`, not to this method.
+
 #### `get`
 
 ```kex
-get(key)
+get(key, default)
 ```
 
 #### `has?`
@@ -436,19 +224,19 @@ has?(key)
 #### `keys`
 
 ```kex
-keys()
+keys
 ```
 
 #### `values`
 
 ```kex
-values()
+values
 ```
 
 #### `count`
 
 ```kex
-count()
+count
 ```
 
 #### `each`
@@ -460,16 +248,16 @@ each(f)
 #### `entries`
 
 ```kex
-entries()
+entries
 ```
 
 #### `set`
 
-A write goes to `onSet` or nowhere. It must NOT reach the real environment: a substituted ENV is the whole point of the mock, and a test that set a variable would otherwise leak it into the next one and into every process the suite starts. `vars` cannot take it either: a record is immutable, so a test that cares about writes supplies the hook, and one that does not gets a write that goes quietly nowhere.
-
 ```kex
 set(name, value)
 ```
+
+A write goes to `onSet` or nowhere. It must NOT reach the real environment: a substituted ENV is the whole point of the mock, and a test that set a variable would otherwise leak it into the next one and into every process the suite starts. `vars` cannot take it either: a record is immutable, so a test that cares about writes supplies the hook, and one that does not gets a write that goes quietly nowhere.
 
 #### `unset`
 
@@ -477,13 +265,344 @@ set(name, value)
 unset(name)
 ```
 
+## module `Mock.FS`
+
+A stateful stand-in for the filesystem: files a test declares, that the real `FS.File` then reads back.
+
+The store is global and lives until `clear`, which is what makes a write followed by a read testable, and what makes two tests able to interfere. Clear it in an `after` hook.
+
+```kex
+describe "the config loader" do
+  before do
+    Mock.FS.files({ "app.conf": "port = 8080\n" })
+  end
+
+  after do
+    Mock.FS.clear()
+  end
+
+  it "reads the port" do
+    Assert.equal(loadPort(), 8080)
+  end
+end
+```
+
+### `File`
+
+```kex
+File(path: FS.FilePath, content: String) -> Void
+```
+
+Declares one file and its content.
+
+**Parameters**
+
+  - `path` — the path the file appears at
+  - `content` — its contents
+
+**Examples**
+
+```kex
+Mock.FS.File("app.conf", "port = 8080\n")
+```
+
+### `Directory`
+
+```kex
+Directory(path: FS.FilePath) -> Void
+```
+
+Declares a directory at `path`.
+
+**Parameters**
+
+  - `path` — the directory to declare
+
+**Examples**
+
+```kex
+Mock.FS.Directory("src")
+```
+
+### `clear`
+
+```kex
+clear : Void
+```
+
+Empties the store, so nothing declared so far is visible any more.
+
+Call it in an `after` hook: the store is global, and what one test leaves behind the next one sees.
+
+**Examples**
+
+```kex
+after do
+  Mock.FS.clear()
+end
+```
+
+### `files`
+
+```kex
+files(entries: Map<FS.FilePath, String>) -> Void
+```
+
+Declares the whole fixture in one call.
+
+The same shape `Mock.Files { files: ... }` takes: one line instead of one per file (kexhq/kex#143).
+
+**Parameters**
+
+  - `entries` — paths to their contents
+
+**Examples**
+
+```kex
+Mock.FS.files({
+  "app.conf": "port = 8080\n",
+  "hosts":    "localhost\n"
+})
+```
+
+### `onRead`
+
+```kex
+onRead(reader: Reader) -> Void
+```
+
+Answers reads by RULE rather than from a fixture.
+
+Content derived from the path, a failure on the third call, a record of what was asked for. Consulted before the map, and returning `None` means "no such file", so absence is expressible too.
+
+**Parameters**
+
+  - `reader` — the rule to answer reads with
+
+**Examples**
+
+_Every .txt path has content, nothing else exists_
+
+```kex
+Mock.FS.onRead do |path|
+  path.endsWith?(".txt") then Just("stub") else None
+end
+```
+
+## module `Mock.ENV`
+
+Overlays the process environment, so a test can say what `ENV` holds instead of depending on how it was launched.
+
+The overlay is global and lives until `clear`: clear it in an `after` hook.
+
+```kex
+Mock.ENV.vars({ "HOME": "/fake", "LOG_LEVEL": "debug" })
+assert(configPath() == "/fake/.config")
+Mock.ENV.clear()
+```
+
+### `set`
+
+```kex
+set(name: String, value: String) -> Void
+```
+
+Sets one variable in the overlay.
+
+**Parameters**
+
+  - `name` — the variable name
+  - `value` — its value
+
+**Examples**
+
+```kex
+Mock.ENV.set("LOG_LEVEL", "debug")
+```
+
+### `unset`
+
+```kex
+unset(name: String) -> Void
+```
+
+Removes one variable from the overlay, so it reads as unset.
+
+Separate from `set` because a variable being ABSENT is an answer programs act on, and there is no value that means it.
+
+**Parameters**
+
+  - `name` — the variable to remove
+
+**Examples**
+
+_Testing the unset path_
+
+```kex
+Mock.ENV.unset("HOME")
+Assert.equal(configPath(), ".")
+```
+
+### `clear`
+
+```kex
+clear : Void
+```
+
+Removes the whole overlay, restoring the real environment.
+
+**Examples**
+
+```kex
+after do
+  Mock.ENV.clear()
+end
+```
+
+### `vars`
+
+```kex
+vars(entries: Map<String, String>) -> Void
+```
+
+Declares the whole overlay in one call.
+
+The same shape `Mock.Env { vars: ... }` takes (kexhq/kex#143). There is no `onGet` here: global `ENV` is a materialised Map, so there is nothing for a callback to intercept: use `with ENV = Mock.Env { onGet: ... }` when a rule is what you want.
+
+**Parameters**
+
+  - `entries` — variable names to their values
+
+**Examples**
+
+```kex
+Mock.ENV.vars({ "HOME": "/fake", "LOG_LEVEL": "debug" })
+```
+
+## module `Mock.IO`
+
+A stateful stand-in for the console: captures what a program prints, and feeds it lines as if they had been typed.
+
+The way to test a program that talks to a person without one being there.
+
+```kex
+Mock.IO.start()
+Mock.IO.input("Ada", "42")
+greet()
+Assert.equal(Mock.IO.output(), "hello, Ada\n")
+Mock.IO.stop()
+```
+
+### `start`
+
+```kex
+start : Void
+```
+
+Starts capturing output and serving queued input.
+
+**Examples**
+
+```kex
+before do
+  Mock.IO.start()
+end
+```
+
+### `stop`
+
+```kex
+stop : Void
+```
+
+Stops capturing, and restores the real console.
+
+**Examples**
+
+```kex
+after do
+  Mock.IO.stop()
+end
+```
+
+### `output`
+
+```kex
+output : String
+```
+
+Everything the program has printed since capturing started.
+
+Newlines are included, so a single `IO.printLine("hi")` gives `"hi\n"`.
+
+**Returns**: the captured output
+
+**Examples**
+
+```kex
+Mock.IO.start()
+IO.printLine("hello")
+Assert.equal(Mock.IO.output(), "hello\n")
+```
+
+### `clear`
+
+```kex
+clear : Void
+```
+
+Discards the captured output, while continuing to capture.
+
+Useful between phases of one test, when only the later output matters.
+
+**Examples**
+
+```kex
+setUpNoisily()
+Mock.IO.clear()
+theThingUnderTest()
+Assert.equal(Mock.IO.output(), "done\n")
+```
+
+### `input`
+
+```kex
+input(first, second, third, fourth) -> Void
+```
+
+Queues the lines `IO.getLine` will return, in order.
+
+Takes a list, or up to four lines as separate arguments. Once they run out, `IO.getLine` answers `None`: end of input, exactly as a closed stdin would.
+
+**Parameters**
+
+  - `lines` — the lines to serve, in order
+
+**Examples**
+
+_A list of lines_
+
+```kex
+Mock.IO.input(["Ada", "42"])
+```
+
+_The same, as separate arguments_
+
+```kex
+Mock.IO.input("Ada", "42")
+```
+
 ## module `Mock.Net`
 
 Scriptable networking values are namespaced so importing Mock does not recreate any of the removed global HTTP types.
 
+
+
 ## module `Mock.Net.HTTP`
 
 Canned HTTP transport state for networking specifications.
+
+
 
 ## record `Transport`
 
@@ -493,9 +612,13 @@ Responses returned in order by a scripted transport.
 
   - `responses` : [Any]
 
+
+
 ## module `Mock.Net.DNS`
 
 Canned DNS resolver state for networking specifications.
+
+
 
 ## record `ResolverScript`
 
@@ -503,11 +626,15 @@ Hostname-to-address answers supplied without touching the network.
 
 **Fields**
 
-  - `answers` : {String: [String]}
+  - `answers` : {[String](string.md#make-string): [[String](string.md#make-string)]}
+
+
 
 ## module `Mock.Net.Socket`
 
 Canned byte-stream state for socket specifications.
+
+
 
 ## record `Script`
 
@@ -515,11 +642,15 @@ Binary chunks delivered in order as incoming socket data.
 
 **Fields**
 
-  - `incoming` : [Binary]
+  - `incoming` : [[Binary](binary.md#type-binary)]
+
+
 
 ## module `Mock.Net.WebSocket`
 
 Canned message state for WebSocket specifications.
+
+
 
 ## record `Script`
 
@@ -528,3 +659,5 @@ High-level messages delivered in order by a scripted connection.
 **Fields**
 
   - `incoming` : [Any]
+
+

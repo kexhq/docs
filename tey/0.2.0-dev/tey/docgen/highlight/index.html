@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tey.Docgen.Highlight | Tey 0.2.0-dev | kex docs</title>
+    <meta name="description" content="A small syntax highlighter for Kex source, ported from kex-run-site&#39;s src/lib/highlight.ts: a &quot;good enough&quot; tokenizer rather than a full grammar.">
+    <link rel="icon" href="/_theme/icon.png" type="image/png" sizes="403x403">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>/* Krix: the Kex documentation stylesheet, from Tey docgen (tey/src/tey/docgen/css.kex, MIT).
+   Marqraft additions follow the original rules. */
+/* kex docs — design tokens ported from kex.run (see module comment) */
+
+:root {
+  --bg: #fcf5e2;
+  --bg-subtle: #f6ecd0;
+  --bg-muted: #f0e2bc;
+  --bg-sunken: #ead9a8;
+  --ink: #2a1c0a;
+  --ink-soft: #54380f;
+  --muted: #7a5a25;
+  --faint: #9c7a3c;
+  --line: #ecdcb4;
+  --line-strong: #dbc78c;
+  --accent: #b06a14;
+  --accent-strong: #8a4f0a;
+  --accent-soft: #f4e2b8;
+  --accent-ink: #5a3408;
+  --code-bg: #1b140a;
+  --code-bg-soft: #221a0e;
+  --code-border: #382a16;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+/* JetBrains Mono ships programming ligatures (-> to a single arrow, =>,
+   !=, ...) on by default. They read well in code blocks, so they stay
+   there — but in the search box the reader is TYPING, and -> must
+   appear exactly as entered. Disable ligatures there only. */
+.search-modal-panel input, .search-page-box input {
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0, "dlig" 0;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse 90% 50% at 50% -10%, rgba(236, 178, 94, 0.28), transparent 70%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+::selection { background: var(--accent-soft); color: var(--accent-ink); }
+
+a { color: inherit; text-decoration: none; }
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.wrap { width: 100%; max-width: 76rem; margin-inline: auto; padding-inline: 1.5rem; }
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(252, 245, 226, 0.85);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+
+.top-inner { display: flex; align-items: center; gap: 0.75rem; height: 3.5rem; }
+
+/* ── Search ─────────────────────────────────────────────────────────── */
+
+.search-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  height: 2.1rem;
+  min-width: 14rem;
+  padding: 0 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-soft);
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.search-trigger:hover { border-color: var(--accent); color: var(--ink); }
+.search-trigger kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  padding: 0.2rem 0.35rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  color: var(--faint);
+}
+
+/* The modal is frosted glass: a translucent warm panel over a blurred
+   backdrop, in the same voice as the sticky header. */
+.search-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+  background: rgba(42, 28, 10, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.search-modal[hidden] { display: none; }
+
+.search-modal-panel {
+  width: min(44rem, 92vw);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 253, 248, 0.82);
+  backdrop-filter: blur(28px) saturate(140%);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
+  border: 1px solid rgba(236, 220, 180, 0.9);
+  box-shadow: 0 24px 72px rgba(42, 28, 10, 0.35);
+}
+
+.search-modal-panel input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1.05rem 1.3rem;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(236, 220, 180, 0.9);
+  outline: none;
+}
+.search-modal-panel input::placeholder { color: var(--faint); }
+
+.search-modal-results { max-height: 55vh; overflow-y: auto; padding: 0.5rem; }
+
+.search-hit {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.1rem;
+  border-radius: 10px;
+  text-decoration: none;
+}
+.search-hit:hover { background: rgba(246, 236, 208, 0.6); }
+.search-hit.selected { background: rgba(244, 226, 184, 0.9); }
+
+.search-head { display: flex; align-items: baseline; gap: 0.6rem; }
+
+.search-kind {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-strong);
+}
+/* Each kind has its own hue, so a scan down the list separates
+   functions from types from modules at a glance. */
+.search-kind-module { color: #6b5bd2; }
+.search-kind-function { color: #2f855a; }
+.search-kind-make { color: #b06a14; }
+.search-kind-trait { color: #c2498a; }
+.search-kind-record { color: #2b6cb0; }
+.search-kind-type { color: #0f8a8a; }
+.search-kind-constant { color: #9a5a13; }
+.search-name { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--ink); }
+.search-qual { margin-left: auto; font-family: var(--font-mono); font-size: 12px; color: var(--muted); text-align: right; }
+.search-sig {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 12.5px;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-empty { padding: 0.8rem 0.9rem; font-size: 13px; color: var(--faint); }
+
+.search-modal-footer {
+  border-top: 1px solid rgba(236, 220, 180, 0.9);
+  padding: 0.55rem 0.9rem;
+  font-size: 12.5px;
+}
+.search-modal-footer a { color: var(--accent-strong); text-decoration: none; }
+.search-modal-footer a:hover { text-decoration: underline; }
+
+/* The empty state: an explainer, example chips, and this page's items. */
+.search-hint, .search-local { padding: 0.8rem 1rem 0.6rem; }
+
+.search-hint-title { margin: 0 0 0.25rem; font-size: 13px; font-weight: 600; color: var(--ink); }
+.search-hint-body { margin: 0 0 0.6rem; font-size: 12.5px; color: var(--muted); }
+
+.search-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
+.search-chip {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 0.25rem 0.6rem;
+  color: var(--ink-soft);
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.search-chip:hover { border-color: var(--accent); color: var(--ink); }
+
+.search-local { border-top: 1px solid rgba(236, 220, 180, 0.7); }
+
+/* ── Full search page ──────────────────────────────────────────────── */
+
+.search-page { max-width: 52rem; }
+
+.search-page-box input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.85rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--ink);
+  background: rgba(246, 236, 208, 0.6);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  outline: none;
+}
+.search-page-box input:focus { border-color: var(--accent); }
+
+.search-page-results { margin-top: 1.25rem; }
+
+.search-page-hit {
+  display: block;
+  padding: 0.8rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+}
+.search-page-hit:hover { background: var(--bg-subtle); }
+
+.search-summary {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.brand-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  padding-top: 0.2rem;
+}
+
+.spacer { flex: 1; }
+
+.pkg-badge {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+}
+
+.version-select {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.15rem 0.4rem 0.15rem 0.7rem;
+  cursor: pointer;
+}
+
+.version-select:hover { border-color: var(--accent); }
+
+.back { font-size: 13.5px; color: var(--muted); }
+.back:hover { color: var(--accent-strong); }
+
+/* ── Layout ─────────────────────────────────────────────────────────── */
+
+.layout {
+  display: grid;
+  gap: 3rem;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  padding-block: 2.5rem;
+}
+
+/* The module list is longer than the viewport, and it is stuck to it —
+   so it needs its own scrollbar, or everything past the fold is
+   unreachable. The height is what is left below the sticky header. */
+.side nav {
+  position: sticky;
+  top: 5rem;
+  max-height: calc(100vh - 6.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.35rem;
+}
+
+.side-heading {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+
+.side-list { list-style: none; margin: 0; padding: 0; }
+
+.side-list > li > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.side-list > li > a:hover { background: var(--bg-subtle); color: var(--ink); }
+
+.side-list > li > a.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+.side-sub { list-style: none; margin: 0.15rem 0 0.4rem; padding: 0 0 0 1.1rem; }
+
+.side-sub a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.15rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--faint);
+}
+
+.side-sub a:hover { color: var(--accent-strong); background: var(--bg-subtle); }
+
+/* Nested modules ("FS" → "FS.Path"): same voice as the top list, one
+   step quieter and indented under their parent. */
+.side-nest { list-style: none; margin: 0; padding: 0 0 0.25rem 0.75rem; }
+.side-nest > li > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.18rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--faint);
+}
+.side-nest > li > a:hover { background: var(--bg-subtle); color: var(--ink); }
+.side-nest > li > a.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+/* Cross-reference links inside code spans: the code face stays, the
+   colour signals "this goes somewhere". */
+a.xref { color: var(--accent-strong); text-decoration: none; border-bottom: 1px solid color-mix(in oklab, var(--accent) 45%, transparent); }
+a.xref:hover { border-bottom-color: var(--accent-strong); }
+
+.content { min-width: 0; max-width: 48rem; }
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--faint);
+  margin-bottom: 1rem;
+}
+
+.crumbs a:hover { color: var(--accent-strong); }
+.crumbs .sep { opacity: 0.6; }
+
+/* ── Prose ──────────────────────────────────────────────────────────── */
+
+.prose { color: var(--ink-soft); font-size: 1.0125rem; line-height: 1.75; }
+
+.prose h1 { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 1rem; line-height: 1.15; }
+
+/* The standalone index pages (site root, package versions) carry their
+   h1 directly in .content.prose — unlike the entity pages, which get
+   top breathing room from .layout's padding. Give those a little air
+   under the header. */
+.content.prose > h1 { margin-top: 2rem; }
+
+.prose h1 .ver {
+  font-family: var(--font-mono);
+  font-size: 0.45em;
+  font-weight: 500;
+  color: var(--muted);
+  vertical-align: middle;
+  letter-spacing: 0;
+}
+
+.prose h2 {
+  font-size: 1.35rem;
+  font-weight: 650;
+  margin: 2.6rem 0 0.9rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+
+.prose h3 { font-size: 1.05rem; font-weight: 600; margin: 1.6rem 0 0.5rem; }
+
+.prose h5 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  margin: 1.4rem 0 0.4rem;
+}
+
+.prose p { margin: 0 0 1.1rem; }
+
+.prose a { color: var(--accent-strong); text-decoration: underline; text-decoration-color: var(--accent-soft); text-underline-offset: 3px; }
+.prose a:hover { text-decoration-color: currentColor; }
+
+.prose code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  background: var(--bg-muted);
+  border: 1px solid var(--line);
+  padding: 0.12rem 0.4rem;
+  border-radius: 6px;
+  color: var(--muted);
+}
+
+.prose strong { color: var(--ink); font-weight: 600; }
+
+.lede { font-size: 1.05rem; color: var(--muted); }
+
+/* ── Entities ───────────────────────────────────────────────────────── */
+
+/* Anchor navigation lands a heading below the sticky header, not under
+   it: reserve the header's height (3.5rem) plus breathing room. */
+.entity, .fn { scroll-margin-top: 4.75rem; }
+
+.entity h2 code { font-size: 0.95em; }
+
+.kind {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  padding: 0.1rem 0.45rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+/* Each declaration kind has its own hue — the same palette as the
+   search results — so a module, a trait and a make are told apart at
+   a glance rather than all reading as one amber badge. */
+.kind-module { color: #6b5bd2; border-color: #d6cdf3; background: #efeafc; }
+.kind-function { color: #2f855a; border-color: #c6e6d4; background: #e8f4ec; }
+.kind-make { color: #b06a14; border-color: #ecd6ac; background: #f7ecd6; }
+.kind-trait { color: #c2498a; border-color: #efcfe0; background: #f9ecf3; }
+.kind-record { color: #2b6cb0; border-color: #c8dcf0; background: #e9f1fa; }
+.kind-type { color: #0f8a8a; border-color: #c0e4e2; background: #e4f4f3; }
+.kind-constant { color: #9a5a13; border-color: #e6d2b4; background: #f6ecdd; }
+
+.fields, .params { margin: 0 0 1.1rem; }
+
+.field, .param {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.field dt, .param dt { flex-shrink: 0; }
+.field dd, .param dd { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+.opt {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--faint);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 0.5rem;
+  margin-left: 0.4rem;
+}
+
+.variants { margin: 0 0 1.1rem; padding-left: 1.3rem; list-style: disc; }
+.variants li { margin: 0.3rem 0; }
+.variants .abstract { color: var(--faint); }
+
+.fn {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 0.9rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.fn h4 { margin: 0 0 0.4rem; font-size: 1rem; }
+.fn p:last-child, .fn pre:last-child { margin-bottom: 0; }
+
+.fn h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+
+/* The heading of a member links to itself, so a reader can copy a
+   deep link without hunting for a pilcrow. */
+a.self { color: inherit; text-decoration: none; }
+a.self:hover code { border-color: var(--accent); }
+
+/* A method's signature leads its box: the call shape first, prose after. */
+pre.code.sig { margin-bottom: 0.8rem; padding: 0.6rem 0.9rem; }
+pre.code a.xref { color: inherit; border-bottom: 1px dotted color-mix(in oklab, #e6a960 60%, transparent); }
+
+/* "Implements Monoid, Enumerable." / "Implemented by ...": where a
+   type's methods come from, said right under its heading. */
+.implements, .home-note {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin: 0 0 1.1rem;
+}
+
+/* A member group inside a type: "Methods", "On [Number]". */
+.members { margin-top: 1.8rem; }
+.members > h3, .entity > h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.3rem;
+}
+
+/* Which trait a member fulfils: a small link chip beside its name. */
+.tag-trait, .tag-kind {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid #efcfe0;
+  border-radius: 999px;
+  background: #f9ecf3;
+  color: #c2498a;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  text-decoration: none;
+  vertical-align: middle;
+}
+.tag-kind { border-color: #e6d2b4; background: #f6ecdd; color: #9a5a13; }
+.tag-trait:hover { border-color: #c2498a; }
+
+/* Methods a type gets from a trait without writing them. */
+.inherited dt, .elsewhere dt { min-width: 9rem; }
+
+.prose ul { margin: 0 0 1.1rem; padding-left: 1.3rem; }
+.prose li { margin: 0.25rem 0; }
+
+/* A file's opening comment: what the page is about, before any one
+   declaration. */
+.intro { font-size: 1.02rem; margin-bottom: 1.6rem; }
+
+.caption { margin: 0 0 0.3rem; color: var(--muted); font-size: 0.95rem; }
+
+.returns { color: var(--muted); }
+.returns strong { color: var(--ink-soft); }
+
+.deprecated {
+  border-left: 3px solid var(--accent);
+  background: var(--bg-subtle);
+  padding: 0.7rem 1rem;
+  margin: 1.2rem 0;
+  border-radius: 0 8px 8px 0;
+}
+
+/* ── Code surface ───────────────────────────────────────────────────── */
+
+pre.code {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 1.1rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #e9e0cf;
+}
+
+pre.code code { font-family: inherit; }
+
+.tok-comment { color: #94876a; font-style: italic; }
+.tok-keyword { color: #f0c987; }
+.tok-type    { color: #e6a960; }
+.tok-string  { color: #c9e0a0; }
+.tok-interp  { color: #e9e0cf; }
+.tok-number  { color: #ffc18a; }
+.tok-fn      { color: #ffe0a0; }
+.tok-method  { color: #ffe0a0; }
+.tok-op      { color: #d8b878; }
+.tok-punct   { color: #a89a78; }
+.tok-const   { color: #e6a960; }
+.tok-field   { color: #f0e8d4; }
+.tok-bool    { color: #ffc18a; }
+
+/* ── Cards (version index) ──────────────────────────────────────────── */
+
+.cards {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  margin-top: 1.6rem;
+}
+
+/* Section headings on the index and the prelude page: what separates
+   "given to you" from "one using away". */
+.group {
+  margin: 2.6rem 0 0.2rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.group-note { margin: 0; color: var(--muted); font-size: 0.92rem; }
+
+/* "prelude": this page needs no import. It sits on the page heading,
+   beside the module name it qualifies. */
+.tag-prelude {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+h1 .tag-prelude { font-size: 11px; vertical-align: 0.45em; }
+
+.prelude-list {
+  list-style: none;
+  margin: 1.2rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+}
+
+.prelude-list li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.prelude-note {
+  color: var(--faint);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.card:hover { border-color: var(--line-strong); background: var(--bg-subtle); }
+
+.card-title { display: block; font-family: var(--font-mono); font-weight: 600; color: var(--ink); }
+.card:hover .card-title { color: var(--accent-strong); }
+.card-meta { display: block; margin-top: 0.25rem; font-size: 12.5px; color: var(--faint); }
+
+/* ── Footer ─────────────────────────────────────────────────────────── */
+
+.foot {
+  border-top: 1px solid var(--line);
+  margin-top: 3rem;
+  padding: 1.4rem 0 2rem;
+  font-size: 13px;
+  color: var(--faint);
+}
+
+.foot a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.foot a:hover { color: var(--accent-strong); }
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .layout { grid-template-columns: 1fr; }
+  .side { display: none; }
+}
+
+/* ── Marqraft additions ───────────────────────────────────────────────── */
+
+/* Settings: links follow the accent, the column follows the content width. */
+.prose a, a.xref { color: var(--marq-accent, var(--accent-strong)); }
+.content { max-width: var(--marq-contentWidth, 48rem); }
+.site-logo { height: 1.4rem; margin-right: 0.4rem; vertical-align: -0.2rem; }
+
+/* The navigation binding renders nested ul/li/a; style it as the docgen sidebar. */
+.side-tree ul { list-style: none; margin: 0; padding: 0; }
+.side-tree li > a,
+.side-tree li > .marq-nav-row > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.side-tree li > a:hover,
+.side-tree li > .marq-nav-row > a:hover { background: var(--bg-subtle); color: var(--ink); }
+.side-tree a[aria-current=page] { background: var(--accent-soft); color: var(--accent-ink); font-weight: 500; }
+.side-tree ul ul { padding: 0 0 0.25rem 0.75rem; }
+.side-tree ul ul a { padding-block: 0.18rem; font-size: 12.5px; color: var(--faint); }
+.marq-draft {
+  margin-left: 0.4rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+/* Chapter list on the index page. */
+.chapters ul { list-style: none; margin: 0.8rem 0 0; padding: 0; counter-reset: chapter; }
+.chapters ul ul { padding-left: 1.4rem; margin: 0; }
+.chapters li > a, .chapters li > .marq-nav-row > a {
+  display: block;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+.chapters a:hover { color: var(--accent-strong); }
+
+/* Reading order: the docgen "prevnext" footer. */
+.marq-pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2.6rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+.marq-pager a { text-decoration: none; display: flex; flex-direction: column; }
+.marq-pager small { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--faint); }
+.marq-pager span { color: var(--accent-strong); }
+.marq-pager-previous span::before { content: "← "; }
+.marq-pager-next { margin-left: auto; text-align: right; }
+.marq-pager-next span::after { content: " →"; }
+
+/* Prose elements docgen leaves to the browser. */
+.prose ul, .prose ol { margin: 0 0 1.1rem; padding-left: 1.4rem; }
+.prose li { margin: 0.2rem 0; }
+.prose li > ul, .prose li > ol { margin: 0.2rem 0; }
+.prose blockquote {
+  margin: 0 0 1.1rem;
+  padding: 0.7rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--bg-subtle);
+  border-radius: 0 8px 8px 0;
+  color: var(--muted);
+}
+.prose blockquote p:last-child { margin-bottom: 0; }
+.prose hr { border: 0; border-top: 1px solid var(--line); margin: 2rem 0; }
+.prose img { max-width: 100%; border-radius: 10px; border: 1px solid var(--line); }
+.table-scroll { overflow-x: auto; margin: 0 0 1.1rem; }
+.prose table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+.prose th, .prose td { text-align: left; padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--line); }
+.prose th { font-weight: 600; color: var(--ink); border-bottom-color: var(--line-strong); }
+.prose pre:not(.code) {
+  background: var(--code-bg); color: #e9e0cf; border: 1px solid var(--code-border);
+  border-radius: 10px; padding: 0.9rem 1.1rem; overflow-x: auto; font-family: var(--font-mono); font-size: 0.85rem;
+}
+
+/* Blocks. */
+.marq-code { margin: 0 0 1.1rem; }
+.marq-code figcaption { font-family: var(--font-mono); font-size: 12px; color: var(--faint); margin-bottom: 0.35rem; }
+.marq-code figcaption:empty, .marq-code small:empty { display: none; }
+.marq-code pre { margin-bottom: 0.35rem; }
+.marq-code small { display: block; font-size: 12.5px; color: var(--muted); }
+.marq-tabs { border: 1px solid var(--line); border-radius: 10px; padding: 0.4rem 1.1rem; margin: 0 0 1.1rem; background: rgba(255, 255, 255, 0.35); }
+.marq-area + .marq-area { border-top: 1px solid var(--line); }
+.marq-area h3 { margin: 0.8rem 0 0.4rem; font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--faint); }
+/* GitHub alerts: > [!NOTE], [!TIP], [!IMPORTANT], [!WARNING], [!CAUTION]. */
+.markdown-alert { margin: 0 0 1.1rem; padding: 0.7rem 1rem; border-left: 3px solid var(--accent); background: var(--bg-subtle); border-radius: 0 8px 8px 0; }
+.markdown-alert-note { border-left-color: #2b6cb0; background: #e9f1fa; }
+.markdown-alert-tip { border-left-color: #2f855a; background: #e8f4ec; }
+.markdown-alert-important { border-left-color: #6b5bd2; background: #efeafc; }
+.markdown-alert-warning { border-left-color: var(--accent); background: #f7ecd6; }
+.markdown-alert-caution { border-left-color: #c2498a; background: #f9ecf3; }
+.markdown-alert-title { margin: 0 0 0.2rem !important; font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-ink); }
+.markdown-alert-body > :last-child { margin-bottom: 0; }
+.marq-source { border: 1px dashed var(--line-strong); padding: 0.7rem; white-space: pre-wrap; }
+
+/* Collections: the top-level pages (Guide, Tutorial, ...) as header links. */
+.top-nav { margin-left: 1rem; }
+.top-nav ul { display: flex; align-items: center; gap: 0.2rem; list-style: none; margin: 0; padding: 0; }
+.top-nav li { position: relative; }
+.top-nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.top-nav a:hover { color: var(--ink); background: var(--bg-subtle); }
+.top-nav a[aria-current] { color: var(--accent-ink); background: var(--accent-soft); font-weight: 500; }
+/* Header links: ordinary links after the version badge, e.g. kex.run. */
+.top-links .marq-menu { display: flex; align-items: center; gap: 0.9rem; list-style: none; margin: 0 0 0 0.75rem; padding: 0; }
+.top-links li { position: relative; }
+.top-links a { font-size: 13.5px; color: var(--muted); }
+.top-links a:hover { color: var(--accent-strong); }
+.top-links a[href^="http"]::after { content: " ↗"; }
+@media (max-width: 640px) { .brand-sub, .pkg-badge { display: none; } .top-nav { margin-left: 0.25rem; } }
+
+/* Authoring (marq dev only): keep the sticky header and toolbar below the Marqraft bar. */
+body:has(#marq-chrome) .top { top: 48px; }
+body:has(#marq-chrome) { --marq-toolbar-top: calc(48px + 3.5rem + 0.5rem); }
+body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
+
+/* Reference pages (reference.html.ket): generated API documentation with an
+   "On this page" rail beside the content. The producer (Tey docgen's
+   fragments output) renders the rail's list; the theme places it. */
+.layout.has-toc { grid-template-columns: 15rem minmax(0, 1fr) 12rem; }
+.toc { font-size: 12.5px; }
+.toc > * { position: sticky; top: 5rem; }
+.toc-heading {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+.toc ul { list-style: none; margin: 0; padding: 0; max-height: calc(100vh - 8rem); overflow-y: auto; }
+.toc li a { display: block; padding: 0.2rem 0.5rem; border-left: 2px solid var(--line); color: var(--muted); }
+.toc li a:hover { color: var(--ink); border-left-color: var(--accent); }
+.toc li.toc-nested a { padding-left: 1.1rem; }
+.reference .content { max-width: none; }
+@media (max-width: 1280px) { .layout.has-toc { grid-template-columns: 15rem minmax(0, 1fr); } .toc { display: none; } }
+@media (max-width: 1024px) { .layout.has-toc { grid-template-columns: 1fr; } }
+
+:root{--marq-accent:#8a4f0a;--marq-contentWidth:48rem;}</style>
+  </head>
+  <body class="reference">
+    <header class="top">
+      <div class="wrap top-inner">
+        <a class="brand" href="/">kex</a>
+        <span class="brand-sub">docs</span>
+        <nav class="top-nav" aria-label="Collections"><ul><li><a href="/guide/0.4.0-alpha/">Guide</a></li><li><a href="/prelude/">Standard Library</a></li><li><a href="/tey/" aria-current="true">Tey</a></li></ul></nav>
+        <span class="spacer"></span>
+        <span class="pkg-badge">Tey 0.2.0-dev</span>
+        <nav class="top-links" aria-label="Links"><ul class="marq-menu"><li><a href="https://kex.run/docs">kex.run</a></li></ul></nav>
+      </div>
+    </header>
+    <div class="wrap layout has-toc">
+      <aside class="side">
+        <nav aria-label="Tey">
+          <p class="side-heading"><a href="/tey/">Tey</a></p>
+          <div class="side-tree"><ul><li><a href="/tey/0.2.0-dev/">Tey</a><ul><li><a href="/tey/0.2.0-dev/main/">Main</a></li><li><a href="/tey/0.2.0-dev/tey/cache/">Tey.Cache</a></li><li><a href="/tey/0.2.0-dev/tey/cli/">Tey.Cli</a></li><li><a href="/tey/0.2.0-dev/tey/commands/">Tey.Commands</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/assets/">Tey.Docgen.Assets</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/cli/">Tey.Docgen.Cli</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/css/">Tey.Docgen.Css</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/extract/">Tey.Docgen.Extract</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/fragments/">Tey.Docgen.Fragments</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/highlight/" aria-current="page">Tey.Docgen.Highlight</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/html/">Tey.Docgen.Html</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/index/">Tey.Docgen.Index</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/json/">Tey.Docgen.Json</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/markdown/">Tey.Docgen.Markdown</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/md/">Tey.Docgen.Md</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/model/">Tey.Docgen.Model</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/nav/">Tey.Docgen.Nav</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/prose/">Tey.Docgen.Prose</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/rdoc/">Tey.Docgen.Rdoc</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/relations/">Tey.Docgen.Relations</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/scan/">Tey.Docgen.Scan</a></li><li><a href="/tey/0.2.0-dev/tey/docgen/serve/">Tey.Docgen.Serve</a></li><li><a href="/tey/0.2.0-dev/tey/generator/">Tey.Generator</a></li><li><a href="/tey/0.2.0-dev/tey/git/">Tey.Git</a></li><li><a href="/tey/0.2.0-dev/tey/local/">Tey.Local</a></li><li><a href="/tey/0.2.0-dev/tey/lockfile/">Tey.Lockfile</a></li><li><a href="/tey/0.2.0-dev/tey/manifest/">Tey.Manifest</a></li><li><a href="/tey/0.2.0-dev/tey/plugin/">Tey.Plugin</a></li><li><a href="/tey/0.2.0-dev/tey/pluginhost/">Tey.PluginHost</a></li><li><a href="/tey/0.2.0-dev/tey/resolver/">Tey.Resolver</a></li><li><a href="/tey/0.2.0-dev/tey/self_update/">Tey.SelfUpdate</a></li><li><a href="/tey/0.2.0-dev/tey/semver/">Tey.Semver</a></li><li><a href="/tey/0.2.0-dev/tey/snapshot/">Tey.Snapshot</a></li><li><a href="/tey/0.2.0-dev/tey/toolchain/">Tey.Toolchain</a></li><li><a href="/tey/0.2.0-dev/tey/version/">Tey.Version</a></li><li><a href="/tey/0.2.0-dev/tey/workspace/">Tey.Workspace</a></li></ul></li></ul></div>
+        </nav>
+      </aside>
+      <main class="content">
+        <nav class="crumbs"><a href="/tey/">Tey</a> <span class="sep">/</span> <span>Tey.Docgen.Highlight</span></nav>
+        <article class="prose">
+          <h1>Tey.Docgen.Highlight</h1>
+          <div class="intro">
+<p>A small syntax highlighter for Kex source, ported from kex-run-site's src/lib/highlight.ts: a &quot;good enough&quot; tokenizer rather than a full grammar. Emits &lt;span class=&quot;tok-*&quot;&gt; HTML at docgen build time, so the docs carry no client-side JavaScript. Runs over [Char] lists; pure recursion, no state.</p>
+<p>Fidelity note: backtick raw strings are not tracked inside interpolation braces, and <code>and</code>/<code>or</code> are colored as keywords even where the compiler treats them as identifiers — same trade-offs as the site version.</p>
+</div>
+<section class="entity" id="module-tey-docgen-highlight">
+<h2><span class="kind kind-module">module</span> <code>Tey.Docgen.Highlight</code></h2>
+<div class="functions">
+<div class="fn" id="function-tey-docgen-highlight-highlight">
+<h3><a class="self" href="#function-tey-docgen-highlight-highlight"><code>highlight</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">highlight</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-lexall">
+<h3><a class="self" href="#function-tey-docgen-highlight-lexall"><code>lexAll</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">lexAll</span><span class="tok-punct">(</span>cs<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> out<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-highlight-tok"><span class="tok-type">Tok</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-highlight-tok"><span class="tok-type">Tok</span></a><span class="tok-punct">]</span></code></pre>
+<p>out accumulates newest-first; the final reverse restores source order.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-nexttoken">
+<h3><a class="self" href="#function-tey-docgen-highlight-nexttoken"><code>nextToken</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">nextToken</span><span class="tok-punct">(</span>cs<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> out<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-highlight-tok"><span class="tok-type">Tok</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-highlight-tok"><span class="tok-type">Tok</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-lexstring">
+<h3><a class="self" href="#function-tey-docgen-highlight-lexstring"><code>lexString</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">lexString</span><span class="tok-punct">(</span>cs<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> acc<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-highlight-tok"><span class="tok-type">Tok</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-highlight-tok"><span class="tok-type">Tok</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
+<p>cs starts after the opening quote; acc is newest-first tokens so far.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-takestringtext">
+<h3><a class="self" href="#function-tey-docgen-highlight-takestringtext"><code>takeStringText</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">takeStringText</span><span class="tok-punct">(</span>cs<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> acc<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
+<p>Collect literal string text up to (not including) the closing quote, an interpolation opener, or the end of input. Backslash escapes are opaque.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-balancedbraces">
+<h3><a class="self" href="#function-tey-docgen-highlight-balancedbraces"><code>balancedBraces</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">balancedBraces</span><span class="tok-punct">(</span>cs<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> depth<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> acc<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
+<p>From just after &quot;${&quot;, collect the interpolation body up to its matching &quot;}&quot; (which is consumed but not collected). Embedded &quot;...&quot; strings are skipped whole so braces inside them do not count.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-skipstring">
+<h3><a class="self" href="#function-tey-docgen-highlight-skipstring"><code>skipString</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">skipString</span><span class="tok-punct">(</span>cs<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
+<p>Consume a whole &quot;...&quot; literal starting at the opening quote; returns the consumed characters (both quotes included) and the remainder.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-skipstringbody">
+<h3><a class="self" href="#function-tey-docgen-highlight-skipstringbody"><code>skipStringBody</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">skipStringBody</span><span class="tok-punct">(</span>cs<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> acc<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-lexnumber">
+<h3><a class="self" href="#function-tey-docgen-highlight-lexnumber"><code>lexNumber</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">lexNumber</span><span class="tok-punct">(</span>cs<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-highlight-tok"><span class="tok-type">Tok</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-exponentlength">
+<h3><a class="self" href="#function-tey-docgen-highlight-exponentlength"><code>exponentLength</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">exponentLength</span><span class="tok-punct">(</span>cs<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-hexdigit?">
+<h3><a class="self" href="#function-tey-docgen-highlight-hexdigit?"><code>hexDigit?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">hexDigit?</span><span class="tok-punct">(</span>c<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-lexidentifier">
+<h3><a class="self" href="#function-tey-docgen-highlight-lexidentifier"><code>lexIdentifier</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">lexIdentifier</span><span class="tok-punct">(</span>cs<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> out<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-highlight-tok"><span class="tok-type">Tok</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-highlight-tok"><span class="tok-type">Tok</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-classifyword">
+<h3><a class="self" href="#function-tey-docgen-highlight-classifyword"><code>classifyWord</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">classifyWord</span><span class="tok-punct">(</span>word<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> prevDot<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">,</span> nextCh<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-previousisdot">
+<h3><a class="self" href="#function-tey-docgen-highlight-previousisdot"><code>previousIsDot</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">previousIsDot</span><span class="tok-punct">(</span>out<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-highlight-tok"><span class="tok-type">Tok</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>The most recent token that is not whitespace: out is newest-first, so a plain find walks backwards in time.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-identchar?">
+<h3><a class="self" href="#function-tey-docgen-highlight-identchar?"><code>identChar?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">identChar?</span><span class="tok-punct">(</span>c<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-lexoperator">
+<h3><a class="self" href="#function-tey-docgen-highlight-lexoperator"><code>lexOperator</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">lexOperator</span><span class="tok-punct">(</span>cs<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-highlight-tok"><span class="tok-type">Tok</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-twocharop">
+<h3><a class="self" href="#function-tey-docgen-highlight-twocharop"><code>twoCharOp</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">twoCharOp</span><span class="tok-punct">(</span>cs<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-keywords">
+<h3><a class="self" href="#function-tey-docgen-highlight-keywords"><code>keywords</code></a></h3>
+<pre class="code sig"><code>keywords <span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+<p>Functions rather than module constants: on BEAM, method calls on a module-level constant fail to dispatch.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-constants">
+<h3><a class="self" href="#function-tey-docgen-highlight-constants"><code>constants</code></a></h3>
+<pre class="code sig"><code>constants <span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-typenames">
+<h3><a class="self" href="#function-tey-docgen-highlight-typenames"><code>typeNames</code></a></h3>
+<pre class="code sig"><code>typeNames <span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-rendertokens">
+<h3><a class="self" href="#function-tey-docgen-highlight-rendertokens"><code>renderTokens</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">renderTokens</span><span class="tok-punct">(</span>toks<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-highlight-tok"><span class="tok-type">Tok</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-highlightlinked">
+<h3><a class="self" href="#function-tey-docgen-highlight-highlightlinked"><code>highlightLinked</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">highlightLinked</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> hrefOf<span class="tok-op">:</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The same highlighting, with every type name that <code>hrefOf</code> can place wrapped in a link to it — signatures read as code and navigate as a reference. <code>hrefOf</code> answers &quot;&quot; for a name it cannot place.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-renderlinkedtok">
+<h3><a class="self" href="#function-tey-docgen-highlight-renderlinkedtok"><code>renderLinkedTok</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">renderLinkedTok</span><span class="tok-punct">(</span>t<span class="tok-op">:</span> <a class="xref" href="#record-tey-docgen-highlight-tok"><span class="tok-type">Tok</span></a><span class="tok-punct">,</span> hrefOf<span class="tok-op">:</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-rendertok">
+<h3><a class="self" href="#function-tey-docgen-highlight-rendertok"><code>renderTok</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">renderTok</span><span class="tok-punct">(</span>t<span class="tok-op">:</span> <a class="xref" href="#record-tey-docgen-highlight-tok"><span class="tok-type">Tok</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-esc">
+<h3><a class="self" href="#function-tey-docgen-highlight-esc"><code>esc</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">esc</span><span class="tok-punct">(</span>s<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Local copy of Tey.Docgen.Html.esc — duplicating four replaces keeps the modules acyclic (Html calls Highlight for code blocks).</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-textof">
+<h3><a class="self" href="#function-tey-docgen-highlight-textof"><code>textOf</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">textOf</span><span class="tok-punct">(</span>cs<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-docgen-highlight-startswithchars">
+<h3><a class="self" href="#function-tey-docgen-highlight-startswithchars"><code>startsWithChars</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">startsWithChars</span><span class="tok-punct">(</span>cs<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> s<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="record-tey-docgen-highlight-tok">
+<h2><span class="kind kind-record">record</span> <code>Tok</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>cls</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>text</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+</dl>
+
+</section>
+
+        </article>
+      </main>
+      <aside class="toc" aria-label="On this page">
+        <nav><p class="toc-heading">On this page</p><ul><li><a href="#module-tey-docgen-highlight">Tey.Docgen.Highlight</a></li><li class="toc-nested"><a href="#record-tey-docgen-highlight-tok">Tok</a></li></ul></nav>
+      </aside>
+    </div>
+    <footer class="foot">
+      <div class="wrap">Generated from source (<code>tey/docgen/highlight.kex</code>) · Built with Marqraft · <a href="https://kex.run">kex.run</a></div>
+    </footer>
+  </body>
+</html>

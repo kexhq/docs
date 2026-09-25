@@ -11,108 +11,83 @@ entities:
 
 ## module `Tey.Commands`
 
-## record `WorkspaceRunState`
-
-**Fields**
-
-  - `runStatus` : Integer (optional)
-  - `failedMembers` : [String] (optional)
-
-## function `manifest`
-
+### `manifest`
 
 ```kex
-manifest()
+manifest : Result<ManifestPackage, String>
 ```
 
-
-## function `lock`
-
+### `lock`
 
 ```kex
-lock()
+lock : Integer
 ```
 
-
-## function `add`
-
+### `add`
 
 ```kex
-add(name, options)
+add(name: String, options: ParsedOptions) -> Integer
 ```
 
-
-## function `localOverride`
-
+### `localOverride`
 
 ```kex
-localOverride(name, path, remove?, list?)
+localOverride(name: String, path: String, remove?: Bool, list?: Bool) -> Integer
 ```
 
+### `install`
 
-## function `install`
+```kex
+install(without: String, packageName: String = …) -> Integer
+```
 
 `--without dev` leaves a group's dependencies out of this install. The LOCKFILE still lists them — what is omitted is the fetching, so switching the flag off later needs no re-resolve.
 
+### `updateDependencies`
 
 ```kex
-install(without, packageName)
+updateDependencies(name: String = …) -> Integer
 ```
 
-
-## function `updateDependencies`
-
+### `dependencyClosure`
 
 ```kex
-updateDependencies(name)
+dependencyClosure(state: LockState, roots: [String]) -> [String]
 ```
-
-
-## function `dependencyClosure`
 
 Names affected by a member-local or named update, including transitive dependency edges recorded in the newly resolved graph.
 
+### `mergeUpdate`
 
 ```kex
-dependencyClosure(state, roots)
+mergeUpdate(previous: LockState, fresh: LockState, roots: [String], wholeWorkspace?: Bool) -> LockState
 ```
-
-
-## function `mergeUpdate`
 
 Publishes fresh workspace metadata and selected resolutions while retaining unrelated external pins. Existing approvals are carried forward here and subsequently filtered against the visible declarations by approvePlugins.
 
+### `lockReusable?`
 
 ```kex
-mergeUpdate(previous, fresh, roots, wholeWorkspace?)
+lockReusable?(state: LockState, manifestFingerprint: String, toolchain: Tey.Toolchain.ToolchainInfo) -> Bool
 ```
 
-
-## function `lockReusable?`
-
+### `validateUpdateName`
 
 ```kex
-lockReusable?(state, manifestFingerprint, toolchain)
+validateUpdateName(members: [Member], name: String) -> Result<Void, String>
 ```
 
-
-## function `validateUpdateName`
-
+### `updateScopeMembers`
 
 ```kex
-validateUpdateName(members, name)
+updateScopeMembers(context: Context) -> [Member]
 ```
 
-
-## function `updateScopeMembers`
-
+### `installTargets`
 
 ```kex
-updateScopeMembers(context)
+installTargets : Integer
 ```
-
-
-## function `installTargets`
 
 Puts this package's `target(...)` executables where they can be run by name.
 
@@ -120,97 +95,77 @@ Puts this package's `target(...)` executables where they can be run by name.
 
 Only packages that DECLARE a target are affected. A library has none, so `tey install` in one still means exactly what it meant before: fetch the dependencies.
 
+### `installTargetsSelected`
 
 ```kex
-installTargets()
+installTargetsSelected(context: Context, packageName: String) -> Integer
 ```
 
-
-## function `installTargetsSelected`
-
+### `installMemberTargets`
 
 ```kex
-installTargetsSelected(context, packageName)
+installMemberTargets(member: Member) -> Integer
 ```
 
-
-## function `installMemberTargets`
-
+### `dependencyRoots`
 
 ```kex
-installMemberTargets(member)
+dependencyRoots : [String]
 ```
-
-
-## function `dependencyRoots`
 
 `--source-root` for every fetched dependency. Without these a dependency is just bytes in the cache: `using Greet` cannot find it, and the package that declared it does not compile. A dependency the lockfile names but the cache does not have is reported rather than quietly dropped — the answer is `tey install`, and silence would look like a broken `using`.
 
+### `sourceRoots`
 
 ```kex
-dependencyRoots()
+sourceRoots : [String]
 ```
-
-
-## function `sourceRoots`
 
 Every `--source-root` a compile of THIS package needs: its own `src/` first, then each dependency's. Own-first is deliberate — a package that shadows a dependency's module name means its own, the same way `--source-root` order already decides that for dependencies among themselves.
 
+### `sourceRootsAt`
 
 ```kex
-sourceRoots()
+sourceRootsAt(packageRoot: String) -> [String]
 ```
 
-
-## function `sourceRootsAt`
-
+### `librarySources`
 
 ```kex
-sourceRootsAt(packageRoot)
+librarySources : [String]
 ```
-
-
-## function `librarySources`
 
 A library's compilable units: every `.kex` directly under `src/`. Not a recursive walk — a nested module is reached by the file that declares it, and compiling it twice by name is how you get a duplicate-module error out of a perfectly good package.
 
+### `librarySourcesAt`
 
 ```kex
-librarySources()
+librarySourcesAt(packageRoot: String) -> [String]
 ```
-
-
-## function `librarySourcesAt`
 
 Returns units relative to `packageRoot`, not absolute: the compiler double-registers a module's declarations when the entry file it is asked to compile is an absolute path that also falls under an explicit `--source-root` (kexhq/kex#?, surfaced by `tey build`ing Rodolfo — a `private do` function building a record literal of a type carrying earlier `make` methods reported that type's method "defined twice"). A relative unit, resolved through the working directory `streamAt`/`runAt` `cd` into, does not collide with the source-root the same way. Callers must invoke the compiler with `packageRoot` as the working directory.
 
+### `backendFlags`
 
 ```kex
-librarySourcesAt(packageRoot)
+backendFlags(interpret?: Bool) -> [String]
 ```
-
-
-## function `backendFlags`
 
 What `tey build` produces is what ships, so what `tey run` and `tey test` exercise has to be the same thing — which is what `kex` does with no backend flag at all: it compiles and runs on the BEAM. `-R` tree-walks the source instead, and processes, `BEAM.*` interop and the String/Char representation differ enough between the two that a green interpreter run says nothing about the built package.
 
 `--interpret` is the way back, for a backend gap or a debugging session.
 
+### `runPackage`
 
 ```kex
-backendFlags(interpret?)
+runPackage(extra: [String], interpret?: Bool, packageName: String = …) -> Integer
 ```
 
-
-## function `runPackage`
-
+### `runCommand`
 
 ```kex
-runPackage(extra, interpret?, packageName)
+runCommand(command: Command, extra: [String], interpret?: Bool) -> Integer
 ```
-
-
-## function `runCommand`
 
 `tey <name>` for a `command(...)` the manifest declares.
 
@@ -218,45 +173,35 @@ A `.kex` script is run through the SELECTED toolchain with this package's source
 
 The `--` before the arguments plays the same role as in runPackage.
 
+### `list`
 
 ```kex
-runCommand(command, extra, interpret?)
+list : Integer
 ```
 
-
-## function `list`
-
+### `build`
 
 ```kex
-list()
+build : Integer
 ```
 
-
-## function `build`
-
+### `buildSelected`
 
 ```kex
-build()
+buildSelected(packageName: String, workspace?: Bool, requestedJobs: String = …) -> Integer
 ```
 
-
-## function `buildSelected`
-
+### `buildMember`
 
 ```kex
-buildSelected(packageName, workspace?, requestedJobs)
+buildMember(member: Member) -> Integer
 ```
 
-
-## function `buildMember`
-
+### `testReportingFlags`
 
 ```kex
-buildMember(member)
+testReportingFlags(json?: Bool, list?: Bool, only: String) -> [String]
 ```
-
-
-## function `testReportingFlags`
 
 How `tey test` should REPORT, as compiler flags (kexhq/kex#199).
 
@@ -264,80 +209,67 @@ How `tey test` should REPORT, as compiler flags (kexhq/kex#199).
 
 Tey does not interpret any of it: the flags are the compiler's, the records are the compiler's, and this is the mapping from what a person typed to what the compiler is asked. Which is the point — an editor drives `tey test` because Tey knows the package's source roots, not because it wants Tey to reformat the answer (docs/testing.md).
 
+### `testSpecs`
 
 ```kex
-testReportingFlags(json?, list?, only)
+testSpecs(requested: [String]) -> [String]
 ```
-
-
-## function `testSpecs`
 
 The spec files to run: the ones named on the line, or every `spec/*.spec.kex` when none were. Naming one is what an editor's per-file ▶ needs — and what anyone debugging a single suite in a package with thirty of them wants.
 
+### `test`
 
 ```kex
-testSpecs(requested)
+test(requested: [String], interpret?: Bool, json?: Bool, list?: Bool, only: String) -> Integer
 ```
 
-
-## function `test`
-
+### `testSelected`
 
 ```kex
-test(requested, interpret?, json?, list?, only)
+testSelected(requested: [String], packageName: String, workspace?: Bool, interpret?: Bool, json?: Bool, list?: Bool, only: String, requestedJobs: String = …) -> Integer
 ```
 
-
-## function `testSelected`
-
+### `testAt`
 
 ```kex
-testSelected(requested, packageName, workspace?, interpret?, json?, list?, only, requestedJobs)
+testAt(packageRoot: String, requested: [String], interpret?: Bool, json?: Bool, list?: Bool, only: String) -> Integer
 ```
 
-
-## function `testAt`
-
+### `clean`
 
 ```kex
-testAt(packageRoot, requested, interpret?, json?, list?, only)
+clean(all?: Bool) -> Integer
 ```
 
-
-## function `clean`
-
+### `setupMergeDriver`
 
 ```kex
-clean(all?)
+setupMergeDriver(remove?: Bool) -> Integer
 ```
 
-
-## function `setupMergeDriver`
-
+### `new`
 
 ```kex
-setupMergeDriver(remove?)
+new(directory: String, library: Bool) -> Integer
 ```
-
-
-## function `new`
 
 `tey new <name>` — a package in a directory of its own, which the command creates. The pair with `init` below follows what `git init` and `cargo new` already taught everyone: `new` makes the directory, `init` adopts the one you are standing in.
 
+### `init`
 
 ```kex
-new(directory, library)
+init(name: String, library: Bool) -> Integer
 ```
-
-
-## function `init`
 
 `tey init` — a package in the CURRENT directory, named after it. This is the half that was missing: a repository someone had already made and cloned had no way to become a package except `tey new` in a temp directory and moving the files over by hand.
 
 The name is overridable because a directory name is not always the package name — `kexhq/greet` checked out as `greet-main` is still `greet`.
 
+## record `WorkspaceRunState`
 
-```kex
-init(name, library)
-```
+**Fields**
+
+  - `runStatus` : [Integer](../../../prelude/0.4.0-beta.4-dev/number.md#make-integer) (optional)
+  - `failedMembers` : [[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)] (optional)
+
 

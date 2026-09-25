@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kex.AST | Standard Library 0.4.0-beta.4-dev | kex docs</title>
+    <meta name="description" content="Parses Kex source code into a structured AST, at run time.">
+    <link rel="icon" href="/_theme/icon.png" type="image/png" sizes="403x403">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>/* Krix: the Kex documentation stylesheet, from Tey docgen (tey/src/tey/docgen/css.kex, MIT).
+   Marqraft additions follow the original rules. */
+/* kex docs — design tokens ported from kex.run (see module comment) */
+
+:root {
+  --bg: #fcf5e2;
+  --bg-subtle: #f6ecd0;
+  --bg-muted: #f0e2bc;
+  --bg-sunken: #ead9a8;
+  --ink: #2a1c0a;
+  --ink-soft: #54380f;
+  --muted: #7a5a25;
+  --faint: #9c7a3c;
+  --line: #ecdcb4;
+  --line-strong: #dbc78c;
+  --accent: #b06a14;
+  --accent-strong: #8a4f0a;
+  --accent-soft: #f4e2b8;
+  --accent-ink: #5a3408;
+  --code-bg: #1b140a;
+  --code-bg-soft: #221a0e;
+  --code-border: #382a16;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+/* JetBrains Mono ships programming ligatures (-> to a single arrow, =>,
+   !=, ...) on by default. They read well in code blocks, so they stay
+   there — but in the search box the reader is TYPING, and -> must
+   appear exactly as entered. Disable ligatures there only. */
+.search-modal-panel input, .search-page-box input {
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0, "dlig" 0;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse 90% 50% at 50% -10%, rgba(236, 178, 94, 0.28), transparent 70%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+::selection { background: var(--accent-soft); color: var(--accent-ink); }
+
+a { color: inherit; text-decoration: none; }
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.wrap { width: 100%; max-width: 76rem; margin-inline: auto; padding-inline: 1.5rem; }
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(252, 245, 226, 0.85);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+
+.top-inner { display: flex; align-items: center; gap: 0.75rem; height: 3.5rem; }
+
+/* ── Search ─────────────────────────────────────────────────────────── */
+
+.search-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  height: 2.1rem;
+  min-width: 14rem;
+  padding: 0 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-soft);
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.search-trigger:hover { border-color: var(--accent); color: var(--ink); }
+.search-trigger kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  padding: 0.2rem 0.35rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  color: var(--faint);
+}
+
+/* The modal is frosted glass: a translucent warm panel over a blurred
+   backdrop, in the same voice as the sticky header. */
+.search-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+  background: rgba(42, 28, 10, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.search-modal[hidden] { display: none; }
+
+.search-modal-panel {
+  width: min(44rem, 92vw);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 253, 248, 0.82);
+  backdrop-filter: blur(28px) saturate(140%);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
+  border: 1px solid rgba(236, 220, 180, 0.9);
+  box-shadow: 0 24px 72px rgba(42, 28, 10, 0.35);
+}
+
+.search-modal-panel input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1.05rem 1.3rem;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(236, 220, 180, 0.9);
+  outline: none;
+}
+.search-modal-panel input::placeholder { color: var(--faint); }
+
+.search-modal-results { max-height: 55vh; overflow-y: auto; padding: 0.5rem; }
+
+.search-hit {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.1rem;
+  border-radius: 10px;
+  text-decoration: none;
+}
+.search-hit:hover { background: rgba(246, 236, 208, 0.6); }
+.search-hit.selected { background: rgba(244, 226, 184, 0.9); }
+
+.search-head { display: flex; align-items: baseline; gap: 0.6rem; }
+
+.search-kind {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-strong);
+}
+/* Each kind has its own hue, so a scan down the list separates
+   functions from types from modules at a glance. */
+.search-kind-module { color: #6b5bd2; }
+.search-kind-function { color: #2f855a; }
+.search-kind-make { color: #b06a14; }
+.search-kind-trait { color: #c2498a; }
+.search-kind-record { color: #2b6cb0; }
+.search-kind-type { color: #0f8a8a; }
+.search-kind-constant { color: #9a5a13; }
+.search-name { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--ink); }
+.search-qual { margin-left: auto; font-family: var(--font-mono); font-size: 12px; color: var(--muted); text-align: right; }
+.search-sig {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 12.5px;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-empty { padding: 0.8rem 0.9rem; font-size: 13px; color: var(--faint); }
+
+.search-modal-footer {
+  border-top: 1px solid rgba(236, 220, 180, 0.9);
+  padding: 0.55rem 0.9rem;
+  font-size: 12.5px;
+}
+.search-modal-footer a { color: var(--accent-strong); text-decoration: none; }
+.search-modal-footer a:hover { text-decoration: underline; }
+
+/* The empty state: an explainer, example chips, and this page's items. */
+.search-hint, .search-local { padding: 0.8rem 1rem 0.6rem; }
+
+.search-hint-title { margin: 0 0 0.25rem; font-size: 13px; font-weight: 600; color: var(--ink); }
+.search-hint-body { margin: 0 0 0.6rem; font-size: 12.5px; color: var(--muted); }
+
+.search-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
+.search-chip {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 0.25rem 0.6rem;
+  color: var(--ink-soft);
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.search-chip:hover { border-color: var(--accent); color: var(--ink); }
+
+.search-local { border-top: 1px solid rgba(236, 220, 180, 0.7); }
+
+/* ── Full search page ──────────────────────────────────────────────── */
+
+.search-page { max-width: 52rem; }
+
+.search-page-box input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.85rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--ink);
+  background: rgba(246, 236, 208, 0.6);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  outline: none;
+}
+.search-page-box input:focus { border-color: var(--accent); }
+
+.search-page-results { margin-top: 1.25rem; }
+
+.search-page-hit {
+  display: block;
+  padding: 0.8rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+}
+.search-page-hit:hover { background: var(--bg-subtle); }
+
+.search-summary {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.brand-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  padding-top: 0.2rem;
+}
+
+.spacer { flex: 1; }
+
+.pkg-badge {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+}
+
+.version-select {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.15rem 0.4rem 0.15rem 0.7rem;
+  cursor: pointer;
+}
+
+.version-select:hover { border-color: var(--accent); }
+
+.back { font-size: 13.5px; color: var(--muted); }
+.back:hover { color: var(--accent-strong); }
+
+/* ── Layout ─────────────────────────────────────────────────────────── */
+
+.layout {
+  display: grid;
+  gap: 3rem;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  padding-block: 2.5rem;
+}
+
+/* The module list is longer than the viewport, and it is stuck to it —
+   so it needs its own scrollbar, or everything past the fold is
+   unreachable. The height is what is left below the sticky header. */
+.side nav {
+  position: sticky;
+  top: 5rem;
+  max-height: calc(100vh - 6.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.35rem;
+}
+
+.side-heading {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+
+.side-list { list-style: none; margin: 0; padding: 0; }
+
+.side-list > li > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.side-list > li > a:hover { background: var(--bg-subtle); color: var(--ink); }
+
+.side-list > li > a.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+.side-sub { list-style: none; margin: 0.15rem 0 0.4rem; padding: 0 0 0 1.1rem; }
+
+.side-sub a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.15rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--faint);
+}
+
+.side-sub a:hover { color: var(--accent-strong); background: var(--bg-subtle); }
+
+/* Nested modules ("FS" → "FS.Path"): same voice as the top list, one
+   step quieter and indented under their parent. */
+.side-nest { list-style: none; margin: 0; padding: 0 0 0.25rem 0.75rem; }
+.side-nest > li > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.18rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--faint);
+}
+.side-nest > li > a:hover { background: var(--bg-subtle); color: var(--ink); }
+.side-nest > li > a.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+/* Cross-reference links inside code spans: the code face stays, the
+   colour signals "this goes somewhere". */
+a.xref { color: var(--accent-strong); text-decoration: none; border-bottom: 1px solid color-mix(in oklab, var(--accent) 45%, transparent); }
+a.xref:hover { border-bottom-color: var(--accent-strong); }
+
+.content { min-width: 0; max-width: 48rem; }
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--faint);
+  margin-bottom: 1rem;
+}
+
+.crumbs a:hover { color: var(--accent-strong); }
+.crumbs .sep { opacity: 0.6; }
+
+/* ── Prose ──────────────────────────────────────────────────────────── */
+
+.prose { color: var(--ink-soft); font-size: 1.0125rem; line-height: 1.75; }
+
+.prose h1 { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 1rem; line-height: 1.15; }
+
+/* The standalone index pages (site root, package versions) carry their
+   h1 directly in .content.prose — unlike the entity pages, which get
+   top breathing room from .layout's padding. Give those a little air
+   under the header. */
+.content.prose > h1 { margin-top: 2rem; }
+
+.prose h1 .ver {
+  font-family: var(--font-mono);
+  font-size: 0.45em;
+  font-weight: 500;
+  color: var(--muted);
+  vertical-align: middle;
+  letter-spacing: 0;
+}
+
+.prose h2 {
+  font-size: 1.35rem;
+  font-weight: 650;
+  margin: 2.6rem 0 0.9rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+
+.prose h3 { font-size: 1.05rem; font-weight: 600; margin: 1.6rem 0 0.5rem; }
+
+.prose h5 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  margin: 1.4rem 0 0.4rem;
+}
+
+.prose p { margin: 0 0 1.1rem; }
+
+.prose a { color: var(--accent-strong); text-decoration: underline; text-decoration-color: var(--accent-soft); text-underline-offset: 3px; }
+.prose a:hover { text-decoration-color: currentColor; }
+
+.prose code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  background: var(--bg-muted);
+  border: 1px solid var(--line);
+  padding: 0.12rem 0.4rem;
+  border-radius: 6px;
+  color: var(--muted);
+}
+
+.prose strong { color: var(--ink); font-weight: 600; }
+
+.lede { font-size: 1.05rem; color: var(--muted); }
+
+/* ── Entities ───────────────────────────────────────────────────────── */
+
+/* Anchor navigation lands a heading below the sticky header, not under
+   it: reserve the header's height (3.5rem) plus breathing room. */
+.entity, .fn { scroll-margin-top: 4.75rem; }
+
+.entity h2 code { font-size: 0.95em; }
+
+.kind {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  padding: 0.1rem 0.45rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+/* Each declaration kind has its own hue — the same palette as the
+   search results — so a module, a trait and a make are told apart at
+   a glance rather than all reading as one amber badge. */
+.kind-module { color: #6b5bd2; border-color: #d6cdf3; background: #efeafc; }
+.kind-function { color: #2f855a; border-color: #c6e6d4; background: #e8f4ec; }
+.kind-make { color: #b06a14; border-color: #ecd6ac; background: #f7ecd6; }
+.kind-trait { color: #c2498a; border-color: #efcfe0; background: #f9ecf3; }
+.kind-record { color: #2b6cb0; border-color: #c8dcf0; background: #e9f1fa; }
+.kind-type { color: #0f8a8a; border-color: #c0e4e2; background: #e4f4f3; }
+.kind-constant { color: #9a5a13; border-color: #e6d2b4; background: #f6ecdd; }
+
+.fields, .params { margin: 0 0 1.1rem; }
+
+.field, .param {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.field dt, .param dt { flex-shrink: 0; }
+.field dd, .param dd { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+.opt {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--faint);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 0.5rem;
+  margin-left: 0.4rem;
+}
+
+.variants { margin: 0 0 1.1rem; padding-left: 1.3rem; list-style: disc; }
+.variants li { margin: 0.3rem 0; }
+.variants .abstract { color: var(--faint); }
+
+.fn {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 0.9rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.fn h4 { margin: 0 0 0.4rem; font-size: 1rem; }
+.fn p:last-child, .fn pre:last-child { margin-bottom: 0; }
+
+.fn h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+
+/* The heading of a member links to itself, so a reader can copy a
+   deep link without hunting for a pilcrow. */
+a.self { color: inherit; text-decoration: none; }
+a.self:hover code { border-color: var(--accent); }
+
+/* A method's signature leads its box: the call shape first, prose after. */
+pre.code.sig { margin-bottom: 0.8rem; padding: 0.6rem 0.9rem; }
+pre.code a.xref { color: inherit; border-bottom: 1px dotted color-mix(in oklab, #e6a960 60%, transparent); }
+
+/* "Implements Monoid, Enumerable." / "Implemented by ...": where a
+   type's methods come from, said right under its heading. */
+.implements, .home-note {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin: 0 0 1.1rem;
+}
+
+/* A member group inside a type: "Methods", "On [Number]". */
+.members { margin-top: 1.8rem; }
+.members > h3, .entity > h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.3rem;
+}
+
+/* Which trait a member fulfils: a small link chip beside its name. */
+.tag-trait, .tag-kind {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid #efcfe0;
+  border-radius: 999px;
+  background: #f9ecf3;
+  color: #c2498a;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  text-decoration: none;
+  vertical-align: middle;
+}
+.tag-kind { border-color: #e6d2b4; background: #f6ecdd; color: #9a5a13; }
+.tag-trait:hover { border-color: #c2498a; }
+
+/* Methods a type gets from a trait without writing them. */
+.inherited dt, .elsewhere dt { min-width: 9rem; }
+
+.prose ul { margin: 0 0 1.1rem; padding-left: 1.3rem; }
+.prose li { margin: 0.25rem 0; }
+
+/* A file's opening comment: what the page is about, before any one
+   declaration. */
+.intro { font-size: 1.02rem; margin-bottom: 1.6rem; }
+
+.caption { margin: 0 0 0.3rem; color: var(--muted); font-size: 0.95rem; }
+
+.returns { color: var(--muted); }
+.returns strong { color: var(--ink-soft); }
+
+.deprecated {
+  border-left: 3px solid var(--accent);
+  background: var(--bg-subtle);
+  padding: 0.7rem 1rem;
+  margin: 1.2rem 0;
+  border-radius: 0 8px 8px 0;
+}
+
+/* ── Code surface ───────────────────────────────────────────────────── */
+
+pre.code {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 1.1rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #e9e0cf;
+}
+
+pre.code code { font-family: inherit; }
+
+.tok-comment { color: #94876a; font-style: italic; }
+.tok-keyword { color: #f0c987; }
+.tok-type    { color: #e6a960; }
+.tok-string  { color: #c9e0a0; }
+.tok-interp  { color: #e9e0cf; }
+.tok-number  { color: #ffc18a; }
+.tok-fn      { color: #ffe0a0; }
+.tok-method  { color: #ffe0a0; }
+.tok-op      { color: #d8b878; }
+.tok-punct   { color: #a89a78; }
+.tok-const   { color: #e6a960; }
+.tok-field   { color: #f0e8d4; }
+.tok-bool    { color: #ffc18a; }
+
+/* ── Cards (version index) ──────────────────────────────────────────── */
+
+.cards {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  margin-top: 1.6rem;
+}
+
+/* Section headings on the index and the prelude page: what separates
+   "given to you" from "one using away". */
+.group {
+  margin: 2.6rem 0 0.2rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.group-note { margin: 0; color: var(--muted); font-size: 0.92rem; }
+
+/* "prelude": this page needs no import. It sits on the page heading,
+   beside the module name it qualifies. */
+.tag-prelude {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+h1 .tag-prelude { font-size: 11px; vertical-align: 0.45em; }
+
+.prelude-list {
+  list-style: none;
+  margin: 1.2rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+}
+
+.prelude-list li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.prelude-note {
+  color: var(--faint);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.card:hover { border-color: var(--line-strong); background: var(--bg-subtle); }
+
+.card-title { display: block; font-family: var(--font-mono); font-weight: 600; color: var(--ink); }
+.card:hover .card-title { color: var(--accent-strong); }
+.card-meta { display: block; margin-top: 0.25rem; font-size: 12.5px; color: var(--faint); }
+
+/* ── Footer ─────────────────────────────────────────────────────────── */
+
+.foot {
+  border-top: 1px solid var(--line);
+  margin-top: 3rem;
+  padding: 1.4rem 0 2rem;
+  font-size: 13px;
+  color: var(--faint);
+}
+
+.foot a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.foot a:hover { color: var(--accent-strong); }
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .layout { grid-template-columns: 1fr; }
+  .side { display: none; }
+}
+
+/* ── Marqraft additions ───────────────────────────────────────────────── */
+
+/* Settings: links follow the accent, the column follows the content width. */
+.prose a, a.xref { color: var(--marq-accent, var(--accent-strong)); }
+.content { max-width: var(--marq-contentWidth, 48rem); }
+.site-logo { height: 1.4rem; margin-right: 0.4rem; vertical-align: -0.2rem; }
+
+/* The navigation binding renders nested ul/li/a; style it as the docgen sidebar. */
+.side-tree ul { list-style: none; margin: 0; padding: 0; }
+.side-tree li > a,
+.side-tree li > .marq-nav-row > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.side-tree li > a:hover,
+.side-tree li > .marq-nav-row > a:hover { background: var(--bg-subtle); color: var(--ink); }
+.side-tree a[aria-current=page] { background: var(--accent-soft); color: var(--accent-ink); font-weight: 500; }
+.side-tree ul ul { padding: 0 0 0.25rem 0.75rem; }
+.side-tree ul ul a { padding-block: 0.18rem; font-size: 12.5px; color: var(--faint); }
+.marq-draft {
+  margin-left: 0.4rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+/* Chapter list on the index page. */
+.chapters ul { list-style: none; margin: 0.8rem 0 0; padding: 0; counter-reset: chapter; }
+.chapters ul ul { padding-left: 1.4rem; margin: 0; }
+.chapters li > a, .chapters li > .marq-nav-row > a {
+  display: block;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+.chapters a:hover { color: var(--accent-strong); }
+
+/* Reading order: the docgen "prevnext" footer. */
+.marq-pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2.6rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+.marq-pager a { text-decoration: none; display: flex; flex-direction: column; }
+.marq-pager small { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--faint); }
+.marq-pager span { color: var(--accent-strong); }
+.marq-pager-previous span::before { content: "← "; }
+.marq-pager-next { margin-left: auto; text-align: right; }
+.marq-pager-next span::after { content: " →"; }
+
+/* Prose elements docgen leaves to the browser. */
+.prose ul, .prose ol { margin: 0 0 1.1rem; padding-left: 1.4rem; }
+.prose li { margin: 0.2rem 0; }
+.prose li > ul, .prose li > ol { margin: 0.2rem 0; }
+.prose blockquote {
+  margin: 0 0 1.1rem;
+  padding: 0.7rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--bg-subtle);
+  border-radius: 0 8px 8px 0;
+  color: var(--muted);
+}
+.prose blockquote p:last-child { margin-bottom: 0; }
+.prose hr { border: 0; border-top: 1px solid var(--line); margin: 2rem 0; }
+.prose img { max-width: 100%; border-radius: 10px; border: 1px solid var(--line); }
+.table-scroll { overflow-x: auto; margin: 0 0 1.1rem; }
+.prose table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+.prose th, .prose td { text-align: left; padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--line); }
+.prose th { font-weight: 600; color: var(--ink); border-bottom-color: var(--line-strong); }
+.prose pre:not(.code) {
+  background: var(--code-bg); color: #e9e0cf; border: 1px solid var(--code-border);
+  border-radius: 10px; padding: 0.9rem 1.1rem; overflow-x: auto; font-family: var(--font-mono); font-size: 0.85rem;
+}
+
+/* Blocks. */
+.marq-code { margin: 0 0 1.1rem; }
+.marq-code figcaption { font-family: var(--font-mono); font-size: 12px; color: var(--faint); margin-bottom: 0.35rem; }
+.marq-code figcaption:empty, .marq-code small:empty { display: none; }
+.marq-code pre { margin-bottom: 0.35rem; }
+.marq-code small { display: block; font-size: 12.5px; color: var(--muted); }
+.marq-tabs { border: 1px solid var(--line); border-radius: 10px; padding: 0.4rem 1.1rem; margin: 0 0 1.1rem; background: rgba(255, 255, 255, 0.35); }
+.marq-area + .marq-area { border-top: 1px solid var(--line); }
+.marq-area h3 { margin: 0.8rem 0 0.4rem; font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--faint); }
+/* GitHub alerts: > [!NOTE], [!TIP], [!IMPORTANT], [!WARNING], [!CAUTION]. */
+.markdown-alert { margin: 0 0 1.1rem; padding: 0.7rem 1rem; border-left: 3px solid var(--accent); background: var(--bg-subtle); border-radius: 0 8px 8px 0; }
+.markdown-alert-note { border-left-color: #2b6cb0; background: #e9f1fa; }
+.markdown-alert-tip { border-left-color: #2f855a; background: #e8f4ec; }
+.markdown-alert-important { border-left-color: #6b5bd2; background: #efeafc; }
+.markdown-alert-warning { border-left-color: var(--accent); background: #f7ecd6; }
+.markdown-alert-caution { border-left-color: #c2498a; background: #f9ecf3; }
+.markdown-alert-title { margin: 0 0 0.2rem !important; font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-ink); }
+.markdown-alert-body > :last-child { margin-bottom: 0; }
+.marq-source { border: 1px dashed var(--line-strong); padding: 0.7rem; white-space: pre-wrap; }
+
+/* Collections: the top-level pages (Guide, Tutorial, ...) as header links. */
+.top-nav { margin-left: 1rem; }
+.top-nav ul { display: flex; align-items: center; gap: 0.2rem; list-style: none; margin: 0; padding: 0; }
+.top-nav li { position: relative; }
+.top-nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.top-nav a:hover { color: var(--ink); background: var(--bg-subtle); }
+.top-nav a[aria-current] { color: var(--accent-ink); background: var(--accent-soft); font-weight: 500; }
+/* Header links: ordinary links after the version badge, e.g. kex.run. */
+.top-links .marq-menu { display: flex; align-items: center; gap: 0.9rem; list-style: none; margin: 0 0 0 0.75rem; padding: 0; }
+.top-links li { position: relative; }
+.top-links a { font-size: 13.5px; color: var(--muted); }
+.top-links a:hover { color: var(--accent-strong); }
+.top-links a[href^="http"]::after { content: " ↗"; }
+@media (max-width: 640px) { .brand-sub, .pkg-badge { display: none; } .top-nav { margin-left: 0.25rem; } }
+
+/* Authoring (marq dev only): keep the sticky header and toolbar below the Marqraft bar. */
+body:has(#marq-chrome) .top { top: 48px; }
+body:has(#marq-chrome) { --marq-toolbar-top: calc(48px + 3.5rem + 0.5rem); }
+body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
+
+/* Reference pages (reference.html.ket): generated API documentation with an
+   "On this page" rail beside the content. The producer (Tey docgen's
+   fragments output) renders the rail's list; the theme places it. */
+.layout.has-toc { grid-template-columns: 15rem minmax(0, 1fr) 12rem; }
+.toc { font-size: 12.5px; }
+.toc > * { position: sticky; top: 5rem; }
+.toc-heading {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+.toc ul { list-style: none; margin: 0; padding: 0; max-height: calc(100vh - 8rem); overflow-y: auto; }
+.toc li a { display: block; padding: 0.2rem 0.5rem; border-left: 2px solid var(--line); color: var(--muted); }
+.toc li a:hover { color: var(--ink); border-left-color: var(--accent); }
+.toc li.toc-nested a { padding-left: 1.1rem; }
+.reference .content { max-width: none; }
+@media (max-width: 1280px) { .layout.has-toc { grid-template-columns: 15rem minmax(0, 1fr); } .toc { display: none; } }
+@media (max-width: 1024px) { .layout.has-toc { grid-template-columns: 1fr; } }
+
+:root{--marq-accent:#8a4f0a;--marq-contentWidth:48rem;}</style>
+  </head>
+  <body class="reference">
+    <header class="top">
+      <div class="wrap top-inner">
+        <a class="brand" href="/">kex</a>
+        <span class="brand-sub">docs</span>
+        <nav class="top-nav" aria-label="Collections"><ul><li><a href="/guide/0.4.0-alpha/">Guide</a></li><li><a href="/prelude/" aria-current="true">Standard Library</a></li><li><a href="/tey/">Tey</a></li></ul></nav>
+        <span class="spacer"></span>
+        <span class="pkg-badge">Standard Library 0.4.0-beta.4-dev</span>
+        <nav class="top-links" aria-label="Links"><ul class="marq-menu"><li><a href="https://kex.run/docs">kex.run</a></li></ul></nav>
+      </div>
+    </header>
+    <div class="wrap layout has-toc">
+      <aside class="side">
+        <nav aria-label="Standard Library">
+          <p class="side-heading"><a href="/prelude/">Standard Library</a></p>
+          <div class="side-tree"><ul><li><a href="/prelude/0.4.0-beta.4-dev/">Standard Library</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/algebra/">Algebra</a></li><li><a href="/prelude/0.4.0-beta.4-dev/test/">Assert</a></li><li><a href="/prelude/0.4.0-beta.4-dev/atom/">Atom</a></li><li><a href="/prelude/0.4.0-beta.4-dev/binary/">Binary</a></li><li><a href="/prelude/0.4.0-beta.4-dev/bits/">Bits</a></li><li><a href="/prelude/0.4.0-beta.4-dev/blankable/">Blankable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/comparable/">Comparable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/console/">Console</a></li><li><a href="/prelude/0.4.0-beta.4-dev/control/retry/">Control.Retry</a></li><li><a href="/prelude/0.4.0-beta.4-dev/data/queue/">Data.Queue</a></li><li><a href="/prelude/0.4.0-beta.4-dev/data/set/">Data.Set</a></li><li><a href="/prelude/0.4.0-beta.4-dev/data/stack/">Data.Stack</a></li><li><a href="/prelude/0.4.0-beta.4-dev/digest/">Digest</a></li><li><a href="/prelude/0.4.0-beta.4-dev/dimensions/">Dimensions</a></li><li><a href="/prelude/0.4.0-beta.4-dev/enumerable/">Enumerable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/env/">ENV</a></li><li><a href="/prelude/0.4.0-beta.4-dev/errorable/">Errorable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/evaluator/">Evaluator</a></li><li><a href="/prelude/0.4.0-beta.4-dev/feed/">Feed</a></li><li><a href="/prelude/0.4.0-beta.4-dev/filehandle/">FileHandle</a></li><li><a href="/prelude/0.4.0-beta.4-dev/fs/">FS</a></li><li><a href="/prelude/0.4.0-beta.4-dev/io/">IO</a></li><li><a href="/prelude/0.4.0-beta.4-dev/json/">JSON</a></li><li><a href="/prelude/0.4.0-beta.4-dev/kex/">Kex</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/kex/ast/" aria-current="page">Kex.AST</a></li></ul></li><li><a href="/prelude/0.4.0-beta.4-dev/list/">List</a></li><li><a href="/prelude/0.4.0-beta.4-dev/map/">Map</a></li><li><a href="/prelude/0.4.0-beta.4-dev/math/">Math</a></li><li><a href="/prelude/0.4.0-beta.4-dev/mock/">Mock</a></li><li><a href="/prelude/0.4.0-beta.4-dev/net/">Net</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/net/dns/">Net.DNS</a></li><li><a href="/prelude/0.4.0-beta.4-dev/net/http/">Net.HTTP</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/net/http/websocket/">Net.HTTP.WebSocket</a></li></ul></li><li><a href="/prelude/0.4.0-beta.4-dev/net/ip/">Net.IP</a></li><li><a href="/prelude/0.4.0-beta.4-dev/net/socket/">Net.Socket</a></li></ul></li><li><a href="/prelude/0.4.0-beta.4-dev/node/">Node</a></li><li><a href="/prelude/0.4.0-beta.4-dev/number/">Number</a></li><li><a href="/prelude/0.4.0-beta.4-dev/optional/">Optional</a></li><li><a href="/prelude/0.4.0-beta.4-dev/optionparser/">OptionParser</a></li><li><a href="/prelude/0.4.0-beta.4-dev/parsing/">Parsing</a></li><li><a href="/prelude/0.4.0-beta.4-dev/prelude/">Prelude</a></li><li><a href="/prelude/0.4.0-beta.4-dev/process/">Process</a></li><li><a href="/prelude/0.4.0-beta.4-dev/random/">Random</a></li><li><a href="/prelude/0.4.0-beta.4-dev/range/">Range</a></li><li><a href="/prelude/0.4.0-beta.4-dev/regex/">Regex</a></li><li><a href="/prelude/0.4.0-beta.4-dev/stream/">Stream</a></li><li><a href="/prelude/0.4.0-beta.4-dev/string/">String</a></li><li><a href="/prelude/0.4.0-beta.4-dev/system/">System</a></li><li><a href="/prelude/0.4.0-beta.4-dev/taggedvalidation/">TaggedValidation</a></li><li><a href="/prelude/0.4.0-beta.4-dev/template/">Template</a></li><li><a href="/prelude/0.4.0-beta.4-dev/time/">Time</a></li><li><a href="/prelude/0.4.0-beta.4-dev/truthyable/">Truthyable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/type/">Type</a></li><li><a href="/prelude/0.4.0-beta.4-dev/units/">Units</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/units/data/">Units.Data</a></li><li><a href="/prelude/0.4.0-beta.4-dev/units/si/">Units.SI</a></li></ul></li><li><a href="/prelude/0.4.0-beta.4-dev/uri/">URI</a></li></ul></li></ul></div>
+        </nav>
+      </aside>
+      <main class="content">
+        <nav class="crumbs"><a href="/prelude/">Standard Library</a> <span class="sep">/</span> <span>Kex.AST</span></nav>
+        <article class="prose">
+          <h1>Kex.AST</h1>
+          <section class="entity" id="module-kex-ast">
+<h2><span class="kind kind-module">module</span> <code>Kex.AST</code></h2>
+<p>Parses Kex source code into a structured AST, at run time.</p>
+<p>Opt-in: nothing here is in scope until <code>using Kex.AST</code>.</p>
+<p>This is the entry point for tools that read Kex source: linters, formatters, documentation generators, code search. The AST includes module definitions, function signatures, type/record definitions, traits, make blocks, and the doc-comments extracted from <code>#</code> lines, which is how the standard library's own documentation is generated.</p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span>
+
+<span class="tok-keyword">main</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">match</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseFile</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+    <span class="tok-bool">Ok</span><span class="tok-punct">(</span>program<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>program<span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">count</span><span class="tok-string">}</span><span class="tok-string"> top-level items</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span>    <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span>e<span class="tok-op">.</span><span class="tok-method">message</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span></code></pre>
+<p>Everything answers a <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><code>Result</code></a>, so a source file that does not parse is a value you handle rather than an exception.</p>
+<div class="functions">
+<div class="fn" id="function-kex-ast-parse">
+<h3><a class="self" href="#function-kex-ast-parse"><code>parse</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-kex-ast-program"><span class="tok-type">Program</span></a><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span>
+<span class="tok-fn">parse</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> filename<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-kex-ast-program"><span class="tok-type">Program</span></a><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span></code></pre>
+<p>Parses Kex source text into a structured AST.</p>
+<p>Pass <code>filename</code> when you have one: it is what appears in every <a class="xref" href="#record-kex-ast-location"><code>Location</code></a> and in the error message, so diagnostics can point at a real file.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>source</code></dt><dd>the Kex source text</dd></div>
+<div class="param"><dt><code>filename</code></dt><dd>the name to report locations against; optional</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the parsed program, or why it failed</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">let double(n: Integer) -&gt; Integer = n * 2\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; Ok(Program { schemaVersion: 2, items: [...] })</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">let x =</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">error?</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>Counting a file's top-level items</em></p>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span>source<span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> p<span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">count</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="function-kex-ast-parsefile">
+<h3><a class="self" href="#function-kex-ast-parsefile"><code>parseFile</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">parseFile</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/fs/#module-fs"><span class="tok-type">FS</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/fs/#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-kex-ast-program"><span class="tok-type">Program</span></a><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span></code></pre>
+<p>Reads a file and parses it, reporting locations against its path.</p>
+<p>A file that cannot be read is an <a class="xref" href="/prelude/0.4.0-beta.4-dev/json/#type-json-error"><code>Error</code></a> like one that cannot be parsed.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the file to read and parse</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the parsed program, or why it failed</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseFile</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>program<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>program<span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">count</span><span class="tok-string">}</span><span class="tok-string"> items</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span>    <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span>e<span class="tok-op">.</span><span class="tok-method">message</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+<p class="caption"><em>Parsing every source in a directory</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">files</span><span class="tok-punct">(</span>dir<span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>f<span class="tok-op">|</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">extension</span><span class="tok-punct">(</span>f<span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">.kex</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span>
+  <span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>f<span class="tok-op">|</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseFile</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span>dir<span class="tok-punct">,</span> f<span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="function-kex-ast-parsetype">
+<h3><a class="self" href="#function-kex-ast-parsetype"><code>parseType</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">parseType</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-kex-ast-typeref"><span class="tok-type">TypeRef</span></a><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span></code></pre>
+<p>Parses a type expression on its own, without a surrounding program.</p>
+<p>Use it to read a type written in data: a signature in a config file, a type named on a command line. <code>typeRefText</code> renders the result back.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>source</code></dt><dd>the type expression</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the parsed type, or why it failed</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseType</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">[Integer]</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>t<span class="tok-op">|</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">typeRefText</span><span class="tok-punct">(</span>t<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-comment"># =&gt; Ok(&quot;[Integer]&quot;)</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseType</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Map&lt;String, Integer&gt;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>t<span class="tok-op">|</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">typeRefText</span><span class="tok-punct">(</span>t<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-comment"># =&gt; Ok(&quot;Map&lt;String, Integer&gt;&quot;)</span></code></pre>
+
+</div>
+<div class="fn" id="function-kex-ast-parseexpression">
+<h3><a class="self" href="#function-kex-ast-parseexpression"><code>parseExpression</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">parseExpression</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-kex-ast-expression"><span class="tok-type">Expression</span></a><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span></code></pre>
+<p>Parses a single expression on its own, without a surrounding program.</p>
+<p>This gives you the expression's SHAPE. To evaluate one instead, use <code>Evaluator.runExpression</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>source</code></dt><dd>the expression text</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the parsed expression, or why it failed</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseExpression</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">1 + 2</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">ok?</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseExpression</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">1 +</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">ok?</span>     <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="function-kex-ast-parsesyntax">
+<h3><a class="self" href="#function-kex-ast-parsesyntax"><code>parseSyntax</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">parseSyntax</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-kex-ast-syntaxnode"><span class="tok-type">SyntaxNode</span></a><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span></code></pre>
+<p>Parses Kex source into its lossless syntax tree.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>source</code></dt><dd>the Kex source text</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the tree rooted at <a class="xref" href="#record-kex-ast-program"><code>Program</code></a>, or why it failed</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseSyntax</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">let x = 1\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>tree<span class="tok-op">|</span> tree<span class="tok-op">.</span><span class="tok-method">kind</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(&quot;Program&quot;)</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseSyntax</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">let x =</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">error?</span>                         <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+<div class="fn" id="function-kex-ast-tosource">
+<h3><a class="self" href="#function-kex-ast-tosource"><code>toSource</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">toSource</span><span class="tok-punct">(</span>node<span class="tok-op">:</span> <a class="xref" href="#record-kex-ast-syntaxnode"><span class="tok-type">SyntaxNode</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Reprints a syntax tree as the source it was parsed from, byte for byte.</p>
+<p>Every node prints its own tokens and its nested nodes in order, never a slice of the original text, so a rearranged tree prints the rearranged program, its comments moving with it.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>node</code></dt><dd>a tree, or any node in one</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the source the node covers, trivia included</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> source <span class="tok-op">=</span> <span class="tok-string">&quot;</span><span class="tok-string">let x = 1   # one\n</span><span class="tok-string">&quot;</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseSyntax</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>tree<span class="tok-op">|</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">toSource</span><span class="tok-punct">(</span>tree<span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(source)</span></code></pre>
+
+</div>
+<div class="fn" id="function-kex-ast-elementsource">
+<h3><a class="self" href="#function-kex-ast-elementsource"><code>elementSource</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">elementSource</span><span class="tok-punct">(</span>element<span class="tok-op">:</span> <a class="xref" href="#type-kex-ast-syntaxelement"><span class="tok-type">SyntaxElement</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The source of one child of a node: a token's trivia and text, or a nested node reprinted.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>element</code></dt><dd>the child</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> its source text</p>
+
+</div>
+<div class="fn" id="function-kex-ast-commentsbefore">
+<h3><a class="self" href="#function-kex-ast-commentsbefore"><code>commentsBefore</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">commentsBefore</span><span class="tok-punct">(</span>parent<span class="tok-op">:</span> <a class="xref" href="#record-kex-ast-syntaxnode"><span class="tok-type">SyntaxNode</span></a><span class="tok-punct">,</span> index<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+<p>The comments written on their own lines directly above the child at <code>index</code>: the ones that belong to it, move with it when a formatter moves it, and hold a <code># kex:disable-next-line</code> meant for it.</p>
+<p>A comment at the end of the previous line trails that line instead, and is not included.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>parent</code></dt><dd>the node holding the child</dd></div>
+<div class="param"><dt><code>index</code></dt><dd>the child's position in <code>parent.children</code></dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the comment lines, top to bottom, each starting with <code>#</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> tree <span class="tok-op">=</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseSyntax</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">let x = 1  # x\n# about y\nlet y = 2\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">commentsBefore</span><span class="tok-punct">(</span>tree<span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [&quot;# about y&quot;]</span></code></pre>
+
+</div>
+<div class="fn" id="function-kex-ast-blanklinesbefore">
+<h3><a class="self" href="#function-kex-ast-blanklinesbefore"><code>blankLinesBefore</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">blankLinesBefore</span><span class="tok-punct">(</span>parent<span class="tok-op">:</span> <a class="xref" href="#record-kex-ast-syntaxnode"><span class="tok-type">SyntaxNode</span></a><span class="tok-punct">,</span> index<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>How many blank lines separate the child at <code>index</code> from what precedes it.</p>
+<p>Kept as a count, not a flag: a formatter preserves one blank line between declarations and collapses longer runs, which needs to know how many there were.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>parent</code></dt><dd>the node holding the child</dd></div>
+<div class="param"><dt><code>index</code></dt><dd>the child's position in <code>parent.children</code></dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the number of blank lines directly above the child</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> tree <span class="tok-op">=</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseSyntax</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">let x = 1\n\n\nlet y = 2\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">blankLinesBefore</span><span class="tok-punct">(</span>tree<span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 2</span></code></pre>
+
+</div>
+<div class="fn" id="function-kex-ast-linesbefore">
+<h3><a class="self" href="#function-kex-ast-linesbefore"><code>linesBefore</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">linesBefore</span><span class="tok-punct">(</span>parent<span class="tok-op">:</span> <a class="xref" href="#record-kex-ast-syntaxnode"><span class="tok-type">SyntaxNode</span></a><span class="tok-punct">,</span> index<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+<p>The whole lines between the child at <code>index</code> and the code before it, as the trivia of the <code>Newline</code> tokens that end them. The newline that ends the previous line of code is not one of them: what sits in front of it trails that code.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>parent</code></dt><dd>the node holding the child</dd></div>
+<div class="param"><dt><code>index</code></dt><dd>the child's position in <code>parent.children</code></dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the lines, top to bottom, without their newlines</p>
+
+</div>
+<div class="fn" id="function-kex-ast-typereftext">
+<h3><a class="self" href="#function-kex-ast-typereftext"><code>typeRefText</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">typeRefText</span><span class="tok-punct">(</span>typeRef<span class="tok-op">:</span> <a class="xref" href="#type-kex-ast-typeref"><span class="tok-type">TypeRef</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Renders a <a class="xref" href="#type-kex-ast-typeref"><code>TypeRef</code></a> back to the way it is written in source.</p>
+<p>A list reads as <code>[Integer]</code>, a map as <code>{String: Integer}</code>, an optional as <code>String?</code>: the spelling a reader would recognise, not the constructor tree behind it.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>typeRef</code></dt><dd>the parsed type</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the type, as source</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseType</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">[Integer]</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>t<span class="tok-op">|</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">typeRefText</span><span class="tok-punct">(</span>t<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-comment"># =&gt; Ok(&quot;[Integer]&quot;)</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseType</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">String?</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>t<span class="tok-op">|</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">typeRefText</span><span class="tok-punct">(</span>t<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-comment"># =&gt; Ok(&quot;String?&quot;)</span></code></pre>
+
+</div>
+<div class="fn" id="function-kex-ast-patternreftext">
+<h3><a class="self" href="#function-kex-ast-patternreftext"><code>patternRefText</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">patternRefText</span><span class="tok-punct">(</span>patternRef<span class="tok-op">:</span> <a class="xref" href="#type-kex-ast-patternref"><span class="tok-type">PatternRef</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Renders a <a class="xref" href="#type-kex-ast-patternref"><code>PatternRef</code></a> back to the way it is written in source.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>patternRef</code></dt><dd>the parsed pattern</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the pattern, as source</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">patternRefText</span><span class="tok-punct">(</span><span class="tok-type">WildcardPattern</span><span class="tok-punct">)</span>             <span class="tok-comment"># =&gt; &quot;_&quot;</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">patternRefText</span><span class="tok-punct">(</span><span class="tok-type">BindPattern</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>            <span class="tok-comment"># =&gt; &quot;n&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="function-kex-ast-patternfieldtext">
+<h3><a class="self" href="#function-kex-ast-patternfieldtext"><code>patternFieldText</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">patternFieldText</span><span class="tok-punct">(</span>name<span class="tok-punct">,</span> _<span class="tok-punct">,</span> _<span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-kex-ast-referencetext">
+<h3><a class="self" href="#function-kex-ast-referencetext"><code>referenceText</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">referenceText</span><span class="tok-punct">(</span>reference<span class="tok-op">:</span> <a class="xref" href="#type-kex-ast-typeref"><span class="tok-type">TypeRef</span></a> <span class="tok-op">|</span> <a class="xref" href="#type-kex-ast-patternref"><span class="tok-type">PatternRef</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Renders either a type or a pattern back to source.</p>
+<p>The one call to reach for when a node may carry either: it dispatches to <code>typeRefText</code> or <code>patternRefText</code> as appropriate.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>reference</code></dt><dd>the parsed node</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the node, as source</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">referenceText</span><span class="tok-punct">(</span><span class="tok-type">WildcardPattern</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;_&quot;</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">referenceText</span><span class="tok-punct">(</span><span class="tok-type">AnyType</span><span class="tok-punct">)</span>           <span class="tok-comment"># =&gt; &quot;Any&quot;</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="record-kex-ast-location">
+<h2><span class="kind kind-record">record</span> <code>Location</code></h2>
+<p>Where in a source file something appeared.</p>
+<p>Line and column are 1-based, for reporting to a person; the offsets are 0-based byte positions, for slicing the source.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>file</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>line</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>column</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>startOffset</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>endOffset</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-program">
+<h2><span class="kind kind-record">record</span> <code>Program</code></h2>
+<p>A parsed source file: its schema version, and its top-level items.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>schemaVersion</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>items</code></dt><dd><code>[Node]</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-parseerror">
+<h2><span class="kind kind-record">record</span> <code>ParseError</code></h2>
+<p>Why a source file could not be parsed.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>message</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-kex-ast-location">Location</a>?</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-syntaxtoken">
+<h2><span class="kind kind-record">record</span> <code>SyntaxToken</code></h2>
+<p>One token of a lossless syntax tree, exactly as written.</p>
+<p>Where <code>parse</code> gives a program's meaning, <code>parseSyntax</code> gives its text: nothing is normalised or dropped, so <code>toSource</code> reprints the file byte for byte. It is the tree a formatter or a linter works on (kexhq/kex#136).</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>kind</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>text</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>trivia</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="type-kex-ast-syntaxelement">
+<h2><span class="kind kind-type">type</span> <code>SyntaxElement</code></h2>
+<p>One child of a <a class="xref" href="#record-kex-ast-syntaxnode"><code>SyntaxNode</code></a>: a token, or a nested node.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>TokenElement(SyntaxToken)</code></li>
+<li><code>NodeElement(SyntaxNode)</code></li>
+</ul>
+
+</section>
+<section class="entity" id="record-kex-ast-syntaxnode">
+<h2><span class="kind kind-record">record</span> <code>SyntaxNode</code></h2>
+<p>A declaration, expression, pattern or type, holding its own tokens and nested nodes in source order.</p>
+<pre class="code"><code><span class="tok-keyword">let</span> tree <span class="tok-op">=</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">parseSyntax</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string"># the answer\nlet x = 42\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+tree<span class="tok-op">.</span><span class="tok-method">kind</span>                  <span class="tok-comment"># =&gt; &quot;Program&quot;</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">toSource</span><span class="tok-punct">(</span>tree<span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; &quot;# the answer\nlet x = 42\n&quot;</span></code></pre>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>kind</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>children</code></dt><dd><code>[<a class="xref" href="#type-kex-ast-syntaxelement">SyntaxElement</a>]</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="type-kex-ast-typeref">
+<h2><span class="kind kind-type">type</span> <code>TypeRef</code></h2>
+<p>A type as it was written in source.</p>
+<p><code>typeRefText</code> renders one back to the source spelling.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>NamedType(String, [TypeRef])</code></li>
+<li><code>FunctionType([TypeRef], TypeRef)</code></li>
+<li><code>TupleType([TypeRef])</code></li>
+<li><code>ListType(TypeRef)</code></li>
+<li><code>MapType(TypeRef, TypeRef)</code></li>
+<li><code>UnionType([TypeRef])</code></li>
+<li><code>IntersectionType([TypeRef])</code></li>
+<li><code>RecordType([(String, TypeRef)])</code></li>
+<li><code>NullableType(TypeRef)</code></li>
+<li><code>BlockType(TypeRef)</code></li>
+<li><code>AtomType(String)</code></li>
+<li><code>TypeQuery(String, Expression)</code></li>
+<li><code>TypeVar(String)</code></li>
+<li><code>AnyType</code></li>
+<li><code>NoneType</code></li>
+</ul>
+
+</section>
+<section class="entity" id="type-kex-ast-patternref">
+<h2><span class="kind kind-type">type</span> <code>PatternRef</code></h2>
+<p>Structured representation of patterns.</p>
+<p>Pattern nodes describe what a declaration or match arm accepts; they do not contain runtime values. A linter can distinguish a wildcard from a binding, for example, without reparsing source text.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Finding catch-all match arms</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> catchAll? <span class="tok-op">=</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-method">patternRefText</span><span class="tok-punct">(</span>pattern<span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">_</span><span class="tok-string">&quot;</span></code></pre>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>BindPattern(String)</code></li>
+<li><code>LiteralPattern(String)</code></li>
+<li><code>ConstructorPattern(String, [PatternRef])</code></li>
+<li><code>TuplePattern([PatternRef])</code></li>
+<li><code>ListPattern([PatternRef], PatternRef?)</code></li>
+<li><code>RecordPattern(String?, [PatternField])</code></li>
+<li><code>RangePattern(PatternRef, PatternRef)</code></li>
+<li><code>ThisPattern(PatternRef)</code></li>
+<li><code>WildcardPattern</code></li>
+</ul>
+
+</section>
+<section class="entity" id="record-kex-ast-patternfield">
+<h2><span class="kind kind-record">record</span> <code>PatternField</code></h2>
+<p>One field inside a record or map-shaped pattern.</p>
+<p><code>pattern</code> is <code>None</code> for shorthand such as <code>{ name }</code>. <code>stringKey</code> keeps <code>{&quot;name&quot;: value}</code> distinct from the atom-key spelling <code>{ name: value }</code>.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>pattern</code></dt><dd><code><a class="xref" href="#type-kex-ast-patternref">PatternRef</a>?</code></dd></div>
+<div class="field"><dt><code>stringKey</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="type-kex-ast-expression">
+<h2><span class="kind kind-type">type</span> <code>Expression</code></h2>
+<p>Structured representation of expression AST nodes.</p>
+<p>Expressions retain syntax-level distinctions that matter to tools: a method call is not flattened into a generic call, <code>var</code> is distinct from <code>let</code>, and a trailing <code>if</code> remains recognizable. Walk these constructors when writing a linter or code search; use <a class="xref" href="/prelude/0.4.0-beta.4-dev/evaluator/#module-evaluator"><code>Evaluator</code></a> when the goal is to execute an expression rather than inspect it.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>LitInt(Int)</code></li>
+<li><code>LitFloat(Float)</code></li>
+<li><code>LitChar(Int)</code></li>
+<li><code>LitString(String)</code></li>
+<li><code>InterpolatedString([String], [Expression])</code></li>
+<li><code>LitBool(Bool)</code></li>
+<li><code>LitAtom(String)</code></li>
+<li><code>LitNone</code></li>
+<li><code>Identifier(String)</code></li>
+<li><code>This</code></li>
+<li><code>BinaryOp(Expression, String, Expression)</code></li>
+<li><code>UnaryOp(String, Expression)</code></li>
+<li><code>Call(Expression, [Expression], [NamedArgument], Expression?)</code></li>
+<li><code>TaggedLiteral(String, [String], [Expression])</code></li>
+<li><code>MethodCall(Expression, String, [Expression], [NamedArgument], Expression?, Bool, Bool, TypeRef?)</code></li>
+<li><code>If(Expression, PatternRef?, [Expression], [ElseIf], [Expression]?)</code></li>
+<li><code>Match(Expression, String?, [MatchArm])</code></li>
+<li><code>Receive(String?, [MatchArm], Expression?, Expression?)</code></li>
+<li><code>ListLit([Expression], Expression?)</code></li>
+<li><code>MapLit([MapItem])</code></li>
+<li><code>RecordLit(String, [RecordField])</code></li>
+<li><code>TupleLit([Expression])</code></li>
+<li><code>Block([Expression])</code></li>
+<li><code>Lambda([LambdaParam], [Expression], TypeRef?, RescueInfo?)</code></li>
+<li><code>Let(PatternRef, TypeRef?, Expression)</code></li>
+<li><code>Var(String, TypeRef?, Expression)</code></li>
+<li><code>Assign(String, Expression)</code></li>
+<li><code>Return(Expression)</code></li>
+<li><code>Break</code></li>
+<li><code>Next</code></li>
+<li><code>Spawn([Expression])</code></li>
+<li><code>Try(Expression)</code></li>
+<li><code>Spread(Expression)</code></li>
+<li><code>TrailingIf(Expression, Expression)</code></li>
+<li><code>ThenElse(Expression, Expression, Expression)</code></li>
+<li><code>ShorthandLambda(String, [Expression], Bool)</code></li>
+<li><code>CurryPlaceholder</code></li>
+<li><code>Curry(String, String?, Bool, [[Expression]])</code></li>
+<li><code>Using(String, String?, [String], [String], [Expression])</code></li>
+<li><code>With(String, Expression, [Expression])</code></li>
+<li><code>GeneratedDeclaration(Expression, GeneratedTemplate)</code></li>
+<li><code>ErrorExpression(String)</code></li>
+<li><code>Trying([Expression], RescueInfo)</code></li>
+<li><code>While(Expression, [Expression])</code></li>
+<li><code>Loop([String], [Expression])</code></li>
+<li><code>RangeLit(Expression, Expression)</code></li>
+</ul>
+
+</section>
+<section class="entity" id="record-kex-ast-namedargument">
+<h2><span class="kind kind-record">record</span> <code>NamedArgument</code></h2>
+<p>One <code>name: value</code> argument at a call site.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>value</code></dt><dd><code><a class="xref" href="#type-kex-ast-expression">Expression</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-matcharm">
+<h2><span class="kind kind-record">record</span> <code>MatchArm</code></h2>
+<p>One arm of <code>match</code>, <code>receive</code>, or <code>rescue</code>.</p>
+<p>Multiple <code>patterns</code> are the comma-separated alternatives on the left of the arrow. <code>guard</code> is absent when the arm has no <code>when</code> condition.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>patterns</code></dt><dd><code>[<a class="xref" href="#type-kex-ast-patternref">PatternRef</a>]</code></dd></div>
+<div class="field"><dt><code>guard</code></dt><dd><code><a class="xref" href="#type-kex-ast-expression">Expression</a>?</code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code><a class="xref" href="#type-kex-ast-expression">Expression</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-lambdaparam">
+<h2><span class="kind kind-record">record</span> <code>LambdaParam</code></h2>
+<p>One lambda parameter and its optional source annotation.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>type</code></dt><dd><code><a class="xref" href="#type-kex-ast-typeref">TypeRef</a>?</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-rescueinfo">
+<h2><span class="kind kind-record">record</span> <code>RescueInfo</code></h2>
+<p>The structured recovery clauses attached to a function or expression.</p>
+<p>Named rescue arms live in <code>arms</code>; a catch-all rescue keeps its optional binding and body separately. <code>inlineReturn</code> represents the compact rescue form rather than inventing a synthetic block.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>arms</code></dt><dd><code>[<a class="xref" href="#record-kex-ast-matcharm">MatchArm</a>]</code></dd></div>
+<div class="field"><dt><code>catchAllName</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>?</code></dd></div>
+<div class="field"><dt><code>catchAllBody</code></dt><dd><code>[<a class="xref" href="#type-kex-ast-expression">Expression</a>]</code></dd></div>
+<div class="field"><dt><code>inlineReturn</code></dt><dd><code><a class="xref" href="#type-kex-ast-expression">Expression</a>?</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-elseif">
+<h2><span class="kind kind-record">record</span> <code>ElseIf</code></h2>
+<p>One <code>elif</code> branch, in source order.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>condition</code></dt><dd><code><a class="xref" href="#type-kex-ast-expression">Expression</a></code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code>[<a class="xref" href="#type-kex-ast-expression">Expression</a>]</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="type-kex-ast-mapitem">
+<h2><span class="kind kind-type">type</span> <code>MapItem</code></h2>
+<p>One entry in a map literal: either a key/value pair or <code>...spread</code>.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>MapEntry(Expression, Expression)</code></li>
+<li><code>MapSpread(Expression)</code></li>
+</ul>
+
+</section>
+<section class="entity" id="record-kex-ast-recordfield">
+<h2><span class="kind kind-record">record</span> <code>RecordField</code></h2>
+<p>One explicitly initialized field in a record literal.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>value</code></dt><dd><code><a class="xref" href="#type-kex-ast-expression">Expression</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="type-kex-ast-generatedtemplate">
+<h2><span class="kind kind-type">type</span> <code>GeneratedTemplate</code></h2>
+<p>A declaration template whose name (and, for a make block, target) is computed by a <code>compiled do</code> expression.</p>
+<p>Tools normally encounter this only while inspecting metaprogramming code. After expansion, generated declarations appear as ordinary +Node+s.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>GeneratedNode(Node)</code></li>
+<li><code>GeneratedMake(GeneratedMakeInfo)</code></li>
+</ul>
+
+</section>
+<section class="entity" id="record-kex-ast-generatedmakeinfo">
+<h2><span class="kind kind-record">record</span> <code>GeneratedMakeInfo</code></h2>
+<p>The fixed portion of a generated <code>make</code> declaration.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>isFinal</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code></dd></div>
+<div class="field"><dt><code>implements</code></dt><dd><code>[<a class="xref" href="#type-kex-ast-typeref">TypeRef</a>]</code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code>[<a class="xref" href="#type-kex-ast-compileditem">CompiledItem</a>]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-kex-ast-location">Location</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-maininfo">
+<h2><span class="kind kind-record">record</span> <code>MainInfo</code></h2>
+<p>The program entry point, including documentation and recovery clauses.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>doc</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>?</code></dd></div>
+<div class="field"><dt><code>params</code></dt><dd><code>[<a class="xref" href="#record-kex-ast-paraminfo">ParamInfo</a>]</code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code>[<a class="xref" href="#type-kex-ast-expression">Expression</a>]</code></dd></div>
+<div class="field"><dt><code>rescueInfo</code></dt><dd><code><a class="xref" href="#record-kex-ast-rescueinfo">RescueInfo</a>?</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-kex-ast-location">Location</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-paraminfo">
+<h2><span class="kind kind-record">record</span> <code>ParamInfo</code></h2>
+<p>One declared function parameter.</p>
+<p><code>name</code> is absent for a destructuring parameter; <code>pattern</code> preserves that destructuring shape. <code>hasDefault</code> records whether an initializer appeared.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>?</code></dd></div>
+<div class="field"><dt><code>pattern</code></dt><dd><code><a class="xref" href="#type-kex-ast-patternref">PatternRef</a>?</code></dd></div>
+<div class="field"><dt><code>type</code></dt><dd><code><a class="xref" href="#type-kex-ast-typeref">TypeRef</a>?</code></dd></div>
+<div class="field"><dt><code>hasDefault</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-clauseinfo">
+<h2><span class="kind kind-record">record</span> <code>ClauseInfo</code></h2>
+<p>One clause of a function, including its patterns and body.</p>
+<p>Multi-clause functions place all clauses in one <a class="xref" href="#record-kex-ast-functioninfo"><code>FunctionInfo</code></a>, preserving source order so tooling can reason about which pattern is tried first.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>params</code></dt><dd><code>[<a class="xref" href="#record-kex-ast-paraminfo">ParamInfo</a>]</code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code>[<a class="xref" href="#type-kex-ast-expression">Expression</a>]</code></dd></div>
+<div class="field"><dt><code>returnType</code></dt><dd><code><a class="xref" href="#type-kex-ast-typeref">TypeRef</a>?</code></dd></div>
+<div class="field"><dt><code>rescueInfo</code></dt><dd><code><a class="xref" href="#record-kex-ast-rescueinfo">RescueInfo</a>?</code></dd></div>
+<div class="field"><dt><code>hasParamList</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-functioninfo">
+<h2><span class="kind kind-record">record</span> <code>FunctionInfo</code></h2>
+<p>A named function and all of its pattern-matching clauses.</p>
+<p><code>doc</code> contains the normalized <code>#</code> comment immediately attached to the declaration. Documentation generators can therefore share the same parsed structure as linters instead of scanning comments independently.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>doc</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>?</code></dd></div>
+<div class="field"><dt><code>isFoul</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code></dd></div>
+<div class="field"><dt><code>predicate</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code></dd></div>
+<div class="field"><dt><code>clauses</code></dt><dd><code>[<a class="xref" href="#record-kex-ast-clauseinfo">ClauseInfo</a>]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-kex-ast-location">Location</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-annotationinfo">
+<h2><span class="kind kind-record">record</span> <code>AnnotationInfo</code></h2>
+<p>A standalone function or method type signature.</p>
+<p><code>implicitThis</code> distinguishes <code>:&gt;</code> methods from module-level <code>:</code> functions without making a tool inspect punctuation in the original source.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>type</code></dt><dd><code><a class="xref" href="#type-kex-ast-typeref">TypeRef</a></code></dd></div>
+<div class="field"><dt><code>doc</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>?</code></dd></div>
+<div class="field"><dt><code>implicitThis</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-kex-ast-location">Location</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-variantinfo">
+<h2><span class="kind kind-record">record</span> <code>VariantInfo</code></h2>
+<p>One constructor of an algebraic data type.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>fields</code></dt><dd><code>[<a class="xref" href="#type-kex-ast-typeref">TypeRef</a>]</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-typeinfo">
+<h2><span class="kind kind-record">record</span> <code>TypeInfo</code></h2>
+<p>A type alias or algebraic data type declaration.</p>
+<p><code>variants</code> is present for an ADT and absent for an alias or abstract type. <code>parents</code> preserves declared bounds and inherited type relationships.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>doc</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>?</code></dd></div>
+<div class="field"><dt><code>typeParams</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>]</code></dd></div>
+<div class="field"><dt><code>parents</code></dt><dd><code>[<a class="xref" href="#type-kex-ast-typeref">TypeRef</a>]</code></dd></div>
+<div class="field"><dt><code>variants</code></dt><dd><code>[<a class="xref" href="#record-kex-ast-variantinfo">VariantInfo</a>]?</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-kex-ast-location">Location</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-fieldinfo">
+<h2><span class="kind kind-record">record</span> <code>FieldInfo</code></h2>
+<p>One field declared by a record type.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>type</code></dt><dd><code><a class="xref" href="#type-kex-ast-typeref">TypeRef</a></code></dd></div>
+<div class="field"><dt><code>hasDefault</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-recordinfo">
+<h2><span class="kind kind-record">record</span> <code>RecordInfo</code></h2>
+<p>A record declaration with fields in source order.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>doc</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>?</code></dd></div>
+<div class="field"><dt><code>typeParams</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>]</code></dd></div>
+<div class="field"><dt><code>fields</code></dt><dd><code>[<a class="xref" href="#record-kex-ast-fieldinfo">FieldInfo</a>]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-kex-ast-location">Location</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-traitinfo">
+<h2><span class="kind kind-record">record</span> <code>TraitInfo</code></h2>
+<p>A trait declaration and the signatures or default methods in its body.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>doc</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>?</code></dd></div>
+<div class="field"><dt><code>typeParams</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>]</code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code>[Node]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-kex-ast-location">Location</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-makeinfo">
+<h2><span class="kind kind-record">record</span> <code>MakeInfo</code></h2>
+<p>A <code>make</code> implementation block.</p>
+<p><code>target</code> is the receiver type, <code>implements</code> lists explicit traits, and <code>body</code> retains methods and visibility sections in declaration order.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>target</code></dt><dd><code><a class="xref" href="#type-kex-ast-typeref">TypeRef</a></code></dd></div>
+<div class="field"><dt><code>doc</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>?</code></dd></div>
+<div class="field"><dt><code>isFinal</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code></dd></div>
+<div class="field"><dt><code>implements</code></dt><dd><code>[<a class="xref" href="#type-kex-ast-typeref">TypeRef</a>]</code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code>[Node]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-kex-ast-location">Location</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-pragmainfo">
+<h2><span class="kind kind-record">record</span> <code>PragmaInfo</code></h2>
+<p>A compiler pragma and its optional value.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>value</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>?</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-kex-ast-location">Location</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-moduleinfo">
+<h2><span class="kind kind-record">record</span> <code>ModuleInfo</code></h2>
+<p>A module and its declarations in source order.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>doc</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>?</code></dd></div>
+<div class="field"><dt><code>items</code></dt><dd><code>[Node]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-kex-ast-location">Location</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-constantinfo">
+<h2><span class="kind kind-record">record</span> <code>ConstantInfo</code></h2>
+<p>A named constant declaration. The AST reader never evaluates its value.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>doc</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>?</code></dd></div>
+<div class="field"><dt><code>type</code></dt><dd><code><a class="xref" href="#type-kex-ast-typeref">TypeRef</a>?</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-kex-ast-location">Location</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-visibilityinfo">
+<h2><span class="kind kind-record">record</span> <code>VisibilityInfo</code></h2>
+<p>A <code>public</code> or <code>private</code> section and the declarations it contains.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>isPublic</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code></dd></div>
+<div class="field"><dt><code>items</code></dt><dd><code>[Node]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-kex-ast-location">Location</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-usinginfo">
+<h2><span class="kind kind-record">record</span> <code>UsingInfo</code></h2>
+<p>A <code>using</code> import, including aliasing, filters, and an optional scoped body.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>moduleName</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>alias</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>?</code></dd></div>
+<div class="field"><dt><code>onlyNames</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>]</code></dd></div>
+<div class="field"><dt><code>exceptNames</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>]</code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code>[<a class="xref" href="#type-kex-ast-expression">Expression</a>]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-kex-ast-location">Location</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-kex-ast-exportinfo">
+<h2><span class="kind kind-record">record</span> <code>ExportInfo</code></h2>
+<p>An <code>export</code> declaration and its public-name filters.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>moduleName</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>alias</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>?</code></dd></div>
+<div class="field"><dt><code>onlyNames</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>]</code></dd></div>
+<div class="field"><dt><code>exceptNames</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-kex-ast-location">Location</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="type-kex-ast-compileditem">
+<h2><span class="kind kind-type">type</span> <code>CompiledItem</code></h2>
+<p>One item inside a <code>compiled do</code> block before expansion.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>CompiledNode(Node)</code></li>
+<li><code>CompiledExpression(Expression)</code></li>
+</ul>
+
+</section>
+<section class="entity" id="record-kex-ast-compiledinfo">
+<h2><span class="kind kind-record">record</span> <code>CompiledInfo</code></h2>
+<p>A compile-time block and its declarations or expressions in source order.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>items</code></dt><dd><code>[<a class="xref" href="#type-kex-ast-compileditem">CompiledItem</a>]</code></dd></div>
+<div class="field"><dt><code>location</code></dt><dd><code><a class="xref" href="#record-kex-ast-location">Location</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="type-kex-ast-node">
+<h2><span class="kind kind-type">type</span> <code>Node</code></h2>
+<p>Any top-level or declaration-level AST node.</p>
+<p>A source tool can match only the declarations it understands and leave the rest alone. The program's <code>schemaVersion</code> lets persisted consumers reject a tree whose possible node shapes have changed.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Listing documented functions in a parsed file</em></p>
+<pre class="code"><code>program<span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>node<span class="tok-op">|</span>
+  <span class="tok-keyword">match</span> node <span class="tok-keyword">do</span>
+    <span class="tok-type">FunctionDef</span><span class="tok-punct">(</span>info<span class="tok-punct">)</span> <span class="tok-keyword">if</span> info<span class="tok-op">.</span><span class="tok-method">doc</span><span class="tok-op">.</span><span class="tok-method">present?</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>info<span class="tok-op">.</span><span class="tok-method">name</span><span class="tok-punct">)</span>
+    _ <span class="tok-op">=&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span></code></pre>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>ModuleDef(ModuleInfo)</code></li>
+<li><code>FunctionDef(FunctionInfo)</code></li>
+<li><code>TypeAnnotation(AnnotationInfo)</code></li>
+<li><code>TypeDef(TypeInfo)</code></li>
+<li><code>RecordDef(RecordInfo)</code></li>
+<li><code>TraitDef(TraitInfo)</code></li>
+<li><code>MakeDef(MakeInfo)</code></li>
+<li><code>PragmaDef(PragmaInfo)</code></li>
+<li><code>ConstantDef(ConstantInfo)</code></li>
+<li><code>MainDef(MainInfo)</code></li>
+<li><code>Visibility(VisibilityInfo)</code></li>
+<li><code>UsingDef(UsingInfo)</code></li>
+<li><code>ExportDef(ExportInfo)</code></li>
+<li><code>Compiled(CompiledInfo)</code></li>
+</ul>
+
+</section>
+<section class="entity" id="make-typeref-patternref">
+<h2><span class="kind kind-type">type</span> <code>TypeRef | PatternRef</code></h2>
+<p>Source-like conversion through the standard <code>to(String)</code> spelling.</p>
+<p>Useful in diagnostics: a tool can interpolate the type or pattern it found without manually dispatching between the two reference families.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Building a lint message from a parsed annotation</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> written <span class="tok-op">=</span> reference<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">unknown</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">warn</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">avoid the broad </span><span class="tok-string">${</span>written<span class="tok-string">}</span><span class="tok-string"> annotation</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+<div class="functions">
+<div class="fn" id="typeref-patternref-to">
+<h3><a class="self" href="#typeref-patternref-to"><code>to</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">to</span><span class="tok-punct">(</span>_<span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></code></pre>
+
+</div>
+</div>
+</section>
+
+        </article>
+      </main>
+      <aside class="toc" aria-label="On this page">
+        <nav><p class="toc-heading">On this page</p><ul><li><a href="#module-kex-ast">Kex.AST</a></li><li class="toc-nested"><a href="#record-kex-ast-location">Location</a></li><li class="toc-nested"><a href="#record-kex-ast-program">Program</a></li><li class="toc-nested"><a href="#record-kex-ast-parseerror">ParseError</a></li><li class="toc-nested"><a href="#record-kex-ast-syntaxtoken">SyntaxToken</a></li><li class="toc-nested"><a href="#type-kex-ast-syntaxelement">SyntaxElement</a></li><li class="toc-nested"><a href="#record-kex-ast-syntaxnode">SyntaxNode</a></li><li class="toc-nested"><a href="#type-kex-ast-typeref">TypeRef</a></li><li class="toc-nested"><a href="#type-kex-ast-patternref">PatternRef</a></li><li class="toc-nested"><a href="#record-kex-ast-patternfield">PatternField</a></li><li class="toc-nested"><a href="#type-kex-ast-expression">Expression</a></li><li class="toc-nested"><a href="#record-kex-ast-namedargument">NamedArgument</a></li><li class="toc-nested"><a href="#record-kex-ast-matcharm">MatchArm</a></li><li class="toc-nested"><a href="#record-kex-ast-lambdaparam">LambdaParam</a></li><li class="toc-nested"><a href="#record-kex-ast-rescueinfo">RescueInfo</a></li><li class="toc-nested"><a href="#record-kex-ast-elseif">ElseIf</a></li><li class="toc-nested"><a href="#type-kex-ast-mapitem">MapItem</a></li><li class="toc-nested"><a href="#record-kex-ast-recordfield">RecordField</a></li><li class="toc-nested"><a href="#type-kex-ast-generatedtemplate">GeneratedTemplate</a></li><li class="toc-nested"><a href="#record-kex-ast-generatedmakeinfo">GeneratedMakeInfo</a></li><li class="toc-nested"><a href="#record-kex-ast-maininfo">MainInfo</a></li><li class="toc-nested"><a href="#record-kex-ast-paraminfo">ParamInfo</a></li><li class="toc-nested"><a href="#record-kex-ast-clauseinfo">ClauseInfo</a></li><li class="toc-nested"><a href="#record-kex-ast-functioninfo">FunctionInfo</a></li><li class="toc-nested"><a href="#record-kex-ast-annotationinfo">AnnotationInfo</a></li><li class="toc-nested"><a href="#record-kex-ast-variantinfo">VariantInfo</a></li><li class="toc-nested"><a href="#record-kex-ast-typeinfo">TypeInfo</a></li><li class="toc-nested"><a href="#record-kex-ast-fieldinfo">FieldInfo</a></li><li class="toc-nested"><a href="#record-kex-ast-recordinfo">RecordInfo</a></li><li class="toc-nested"><a href="#record-kex-ast-traitinfo">TraitInfo</a></li><li class="toc-nested"><a href="#record-kex-ast-makeinfo">MakeInfo</a></li><li class="toc-nested"><a href="#record-kex-ast-pragmainfo">PragmaInfo</a></li><li class="toc-nested"><a href="#record-kex-ast-moduleinfo">ModuleInfo</a></li><li class="toc-nested"><a href="#record-kex-ast-constantinfo">ConstantInfo</a></li><li class="toc-nested"><a href="#record-kex-ast-visibilityinfo">VisibilityInfo</a></li><li class="toc-nested"><a href="#record-kex-ast-usinginfo">UsingInfo</a></li><li class="toc-nested"><a href="#record-kex-ast-exportinfo">ExportInfo</a></li><li class="toc-nested"><a href="#type-kex-ast-compileditem">CompiledItem</a></li><li class="toc-nested"><a href="#record-kex-ast-compiledinfo">CompiledInfo</a></li><li class="toc-nested"><a href="#type-kex-ast-node">Node</a></li><li class="toc-nested"><a href="#make-typeref-patternref">TypeRef | PatternRef</a></li></ul></nav>
+      </aside>
+    </div>
+    <footer class="foot">
+      <div class="wrap">Generated from source (<code>kex/ast.kex</code>) · Built with Marqraft · <a href="https://kex.run">kex.run</a></div>
+    </footer>
+  </body>
+</html>

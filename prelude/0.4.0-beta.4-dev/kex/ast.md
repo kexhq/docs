@@ -30,6 +30,316 @@ end
 
 Everything answers a `Result`, so a source file that does not parse is a value you handle rather than an exception.
 
+### `parse`
+
+```kex
+parse(source: String) -> Result<Program, ParseError>
+parse(source: String, filename: String) -> Result<Program, ParseError>
+```
+
+Parses Kex source text into a structured AST.
+
+Pass `filename` when you have one: it is what appears in every `Location` and in the error message, so diagnostics can point at a real file.
+
+**Parameters**
+
+  - `source` — the Kex source text
+  - `filename` — the name to report locations against; optional
+
+**Returns**: the parsed program, or why it failed
+
+**Examples**
+
+```kex
+Kex.AST.parse("let double(n: Integer) -> Integer = n * 2\n")
+# => Ok(Program { schemaVersion: 2, items: [...] })
+Kex.AST.parse("let x =").error?   # => true
+```
+
+_Counting a file's top-level items_
+
+```kex
+Kex.AST.parse(source, "main.kex").map { |p| p.items.count }
+```
+
+### `parseFile`
+
+```kex
+parseFile(path: FS.FilePath) -> Result<Program, ParseError>
+```
+
+Reads a file and parses it, reporting locations against its path.
+
+A file that cannot be read is an `Error` like one that cannot be parsed.
+
+**Parameters**
+
+  - `path` — the file to read and parse
+
+**Returns**: the parsed program, or why it failed
+
+**Examples**
+
+```kex
+match Kex.AST.parseFile("src/main.kex") do
+  Ok(program) => IO.printLine("${program.items.count} items")
+  Error(e)    => IO.printError(e.message)
+end
+```
+
+_Parsing every source in a directory_
+
+```kex
+FS.Directory.files(dir)
+  .or([])
+  .filter { |f| FS.Path.extension(f) == ".kex" }
+  .map { |f| Kex.AST.parseFile(FS.Path.join(dir, f)) }
+```
+
+### `parseType`
+
+```kex
+parseType(source: String) -> Result<TypeRef, ParseError>
+```
+
+Parses a type expression on its own, without a surrounding program.
+
+Use it to read a type written in data: a signature in a config file, a type named on a command line. `typeRefText` renders the result back.
+
+**Parameters**
+
+  - `source` — the type expression
+
+**Returns**: the parsed type, or why it failed
+
+**Examples**
+
+```kex
+Kex.AST.parseType("[Integer]").map { |t| Kex.AST.typeRefText(t) }
+# => Ok("[Integer]")
+Kex.AST.parseType("Map<String, Integer>").map { |t| Kex.AST.typeRefText(t) }
+# => Ok("Map<String, Integer>")
+```
+
+### `parseExpression`
+
+```kex
+parseExpression(source: String) -> Result<Expression, ParseError>
+```
+
+Parses a single expression on its own, without a surrounding program.
+
+This gives you the expression's SHAPE. To evaluate one instead, use `Evaluator.runExpression`.
+
+**Parameters**
+
+  - `source` — the expression text
+
+**Returns**: the parsed expression, or why it failed
+
+**Examples**
+
+```kex
+Kex.AST.parseExpression("1 + 2").ok?   # => true
+Kex.AST.parseExpression("1 +").ok?     # => false
+```
+
+### `parseSyntax`
+
+```kex
+parseSyntax(source: String) -> Result<SyntaxNode, ParseError>
+```
+
+Parses Kex source into its lossless syntax tree.
+
+**Parameters**
+
+  - `source` — the Kex source text
+
+**Returns**: the tree rooted at `Program`, or why it failed
+
+**Examples**
+
+```kex
+Kex.AST.parseSyntax("let x = 1\n").map { |tree| tree.kind }   # => Ok("Program")
+Kex.AST.parseSyntax("let x =").error?                         # => true
+```
+
+### `toSource`
+
+```kex
+toSource(node: SyntaxNode) -> String
+```
+
+Reprints a syntax tree as the source it was parsed from, byte for byte.
+
+Every node prints its own tokens and its nested nodes in order, never a slice of the original text, so a rearranged tree prints the rearranged program, its comments moving with it.
+
+**Parameters**
+
+  - `node` — a tree, or any node in one
+
+**Returns**: the source the node covers, trivia included
+
+**Examples**
+
+```kex
+let source = "let x = 1   # one\n"
+Kex.AST.parseSyntax(source).map { |tree| Kex.AST.toSource(tree) }   # => Ok(source)
+```
+
+### `elementSource`
+
+```kex
+elementSource(element: SyntaxElement) -> String
+```
+
+The source of one child of a node: a token's trivia and text, or a nested node reprinted.
+
+**Parameters**
+
+  - `element` — the child
+
+**Returns**: its source text
+
+### `commentsBefore`
+
+```kex
+commentsBefore(parent: SyntaxNode, index: Integer) -> [String]
+```
+
+The comments written on their own lines directly above the child at `index`: the ones that belong to it, move with it when a formatter moves it, and hold a `# kex:disable-next-line` meant for it.
+
+A comment at the end of the previous line trails that line instead, and is not included.
+
+**Parameters**
+
+  - `parent` — the node holding the child
+  - `index` — the child's position in `parent.children`
+
+**Returns**: the comment lines, top to bottom, each starting with `#`
+
+**Examples**
+
+```kex
+let tree = Kex.AST.parseSyntax("let x = 1  # x\n# about y\nlet y = 2\n").try
+Kex.AST.commentsBefore(tree, 3)   # => ["# about y"]
+```
+
+### `blankLinesBefore`
+
+```kex
+blankLinesBefore(parent: SyntaxNode, index: Integer) -> Integer
+```
+
+How many blank lines separate the child at `index` from what precedes it.
+
+Kept as a count, not a flag: a formatter preserves one blank line between declarations and collapses longer runs, which needs to know how many there were.
+
+**Parameters**
+
+  - `parent` — the node holding the child
+  - `index` — the child's position in `parent.children`
+
+**Returns**: the number of blank lines directly above the child
+
+**Examples**
+
+```kex
+let tree = Kex.AST.parseSyntax("let x = 1\n\n\nlet y = 2\n").try
+Kex.AST.blankLinesBefore(tree, 4)   # => 2
+```
+
+### `linesBefore`
+
+```kex
+linesBefore(parent: SyntaxNode, index: Integer) -> [String]
+```
+
+The whole lines between the child at `index` and the code before it, as the trivia of the `Newline` tokens that end them. The newline that ends the previous line of code is not one of them: what sits in front of it trails that code.
+
+**Parameters**
+
+  - `parent` — the node holding the child
+  - `index` — the child's position in `parent.children`
+
+**Returns**: the lines, top to bottom, without their newlines
+
+### `typeRefText`
+
+```kex
+typeRefText(typeRef: TypeRef) -> String
+```
+
+Renders a `TypeRef` back to the way it is written in source.
+
+A list reads as `[Integer]`, a map as `{String: Integer}`, an optional as `String?`: the spelling a reader would recognise, not the constructor tree behind it.
+
+**Parameters**
+
+  - `typeRef` — the parsed type
+
+**Returns**: the type, as source
+
+**Examples**
+
+```kex
+Kex.AST.parseType("[Integer]").map { |t| Kex.AST.typeRefText(t) }
+# => Ok("[Integer]")
+Kex.AST.parseType("String?").map { |t| Kex.AST.typeRefText(t) }
+# => Ok("String?")
+```
+
+### `patternRefText`
+
+```kex
+patternRefText(patternRef: PatternRef) -> String
+```
+
+Renders a `PatternRef` back to the way it is written in source.
+
+**Parameters**
+
+  - `patternRef` — the parsed pattern
+
+**Returns**: the pattern, as source
+
+**Examples**
+
+```kex
+Kex.AST.patternRefText(WildcardPattern)             # => "_"
+Kex.AST.patternRefText(BindPattern("n"))            # => "n"
+```
+
+### `patternFieldText`
+
+```kex
+patternFieldText(name, _, _) -> String
+```
+
+### `referenceText`
+
+```kex
+referenceText(reference: TypeRef | PatternRef) -> String
+```
+
+Renders either a type or a pattern back to source.
+
+The one call to reach for when a node may carry either: it dispatches to `typeRefText` or `patternRefText` as appropriate.
+
+**Parameters**
+
+  - `reference` — the parsed node
+
+**Returns**: the node, as source
+
+**Examples**
+
+```kex
+Kex.AST.referenceText(WildcardPattern)   # => "_"
+Kex.AST.referenceText(AnyType)           # => "Any"
+```
+
 ## record `Location`
 
 Where in a source file something appeared.
@@ -38,11 +348,13 @@ Line and column are 1-based, for reporting to a person; the offsets are 0-based 
 
 **Fields**
 
-  - `file` : String
-  - `line` : Integer
-  - `column` : Integer
-  - `startOffset` : Integer
-  - `endOffset` : Integer
+  - `file` : [String](../string.md#make-string)
+  - `line` : [Integer](../number.md#make-integer)
+  - `column` : [Integer](../number.md#make-integer)
+  - `startOffset` : [Integer](../number.md#make-integer)
+  - `endOffset` : [Integer](../number.md#make-integer)
+
+
 
 ## record `Program`
 
@@ -50,8 +362,10 @@ A parsed source file: its schema version, and its top-level items.
 
 **Fields**
 
-  - `schemaVersion` : Integer
+  - `schemaVersion` : [Integer](../number.md#make-integer)
   - `items` : [Node]
+
+
 
 ## record `ParseError`
 
@@ -59,56 +373,9 @@ Why a source file could not be parsed.
 
 **Fields**
 
-  - `message` : String
-  - `location` : [Location](#record-location)?
+  - `message` : [String](../string.md#make-string)
+  - `location` : [Location](#record-kex-ast-location)?
 
-## function `parse`
-
-Parses Kex source text into a structured AST.
-
-Pass `filename` when you have one: it is what appears in every `Location` and in the error message, so diagnostics can point at a real file.
-
-
-```kex
-parse(source) : String -> Result<Program, ParseError>
-parse(source) : String -> String -> Result<Program, ParseError>
-```
-
-
-## function `parseFile`
-
-Reads a file and parses it, reporting locations against its path.
-
-A file that cannot be read is an `Error` like one that cannot be parsed.
-
-
-```kex
-parseFile(path) : FS.FilePath -> Result<Program, ParseError>
-```
-
-
-## function `parseType`
-
-Parses a type expression on its own, without a surrounding program.
-
-Use it to read a type written in data: a signature in a config file, a type named on a command line. `typeRefText` renders the result back.
-
-
-```kex
-parseType(source) : String -> Result<TypeRef, ParseError>
-```
-
-
-## function `parseExpression`
-
-Parses a single expression on its own, without a surrounding program.
-
-This gives you the expression's SHAPE. To evaluate one instead, use `Evaluator.runExpression`.
-
-
-```kex
-parseExpression(source) : String -> Result<Expression, ParseError>
-```
 
 
 ## record `SyntaxToken`
@@ -119,20 +386,22 @@ Where `parse` gives a program's meaning, `parseSyntax` gives its text: nothing i
 
 **Fields**
 
-  - `kind` : String
-  - `text` : String
-  - `trivia` : String
+  - `kind` : [String](../string.md#make-string)
+  - `text` : [String](../string.md#make-string)
+  - `trivia` : [String](../string.md#make-string)
+
+
 
 ## type `SyntaxElement`
 
 One child of a `SyntaxNode`: a token, or a nested node.
 
-
-
 **Variants**
 
   - `TokenElement(SyntaxToken)`
   - `NodeElement(SyntaxNode)`
+
+
 
 ## record `SyntaxNode`
 
@@ -146,73 +415,9 @@ Kex.AST.toSource(tree)     # => "# the answer\nlet x = 42\n"
 
 **Fields**
 
-  - `kind` : String
-  - `children` : [[SyntaxElement](#type-syntaxelement)]
+  - `kind` : [String](../string.md#make-string)
+  - `children` : [[SyntaxElement](#type-kex-ast-syntaxelement)]
 
-## function `parseSyntax`
-
-Parses Kex source into its lossless syntax tree.
-
-
-```kex
-parseSyntax(source) : String -> Result<SyntaxNode, ParseError>
-```
-
-
-## function `toSource`
-
-Reprints a syntax tree as the source it was parsed from, byte for byte.
-
-Every node prints its own tokens and its nested nodes in order, never a slice of the original text, so a rearranged tree prints the rearranged program, its comments moving with it.
-
-
-```kex
-toSource(node) : SyntaxNode -> String
-```
-
-
-## function `elementSource`
-
-The source of one child of a node: a token's trivia and text, or a nested node reprinted.
-
-
-```kex
-elementSource(element) : SyntaxElement -> String
-```
-
-
-## function `commentsBefore`
-
-The comments written on their own lines directly above the child at `index`: the ones that belong to it, move with it when a formatter moves it, and hold a `# kex:disable-next-line` meant for it.
-
-A comment at the end of the previous line trails that line instead, and is not included.
-
-
-```kex
-commentsBefore(parent, index) : SyntaxNode -> Integer -> [String]
-```
-
-
-## function `blankLinesBefore`
-
-How many blank lines separate the child at `index` from what precedes it.
-
-Kept as a count, not a flag: a formatter preserves one blank line between declarations and collapses longer runs, which needs to know how many there were.
-
-
-```kex
-blankLinesBefore(parent, index) : SyntaxNode -> Integer -> Integer
-```
-
-
-## function `linesBefore`
-
-The whole lines between the child at `index` and the code before it, as the trivia of the `Newline` tokens that end them. The newline that ends the previous line of code is not one of them: what sits in front of it trails that code.
-
-
-```kex
-linesBefore(parent, index) : SyntaxNode -> Integer -> [String]
-```
 
 
 ## type `TypeRef`
@@ -220,8 +425,6 @@ linesBefore(parent, index) : SyntaxNode -> Integer -> [String]
 A type as it was written in source.
 
 `typeRefText` renders one back to the source spelling.
-
-
 
 **Variants**
 
@@ -241,16 +444,6 @@ A type as it was written in source.
   - `AnyType`
   - `NoneType`
 
-## function `typeRefText`
-
-Renders a `TypeRef` back to the way it is written in source.
-
-A list reads as `[Integer]`, a map as `{String: Integer}`, an optional as `String?`: the spelling a reader would recognise, not the constructor tree behind it.
-
-
-```kex
-typeRefText(NamedType(name, []))
-```
 
 
 ## type `PatternRef`
@@ -259,7 +452,13 @@ Structured representation of patterns.
 
 Pattern nodes describe what a declaration or match arm accepts; they do not contain runtime values. A linter can distinguish a wildcard from a binding, for example, without reparsing source text.
 
+**Examples**
 
+_Finding catch-all match arms_
+
+```kex
+let catchAll? = Kex.AST.patternRefText(pattern) == "_"
+```
 
 **Variants**
 
@@ -273,6 +472,8 @@ Pattern nodes describe what a declaration or match arm accepts; they do not cont
   - `ThisPattern(PatternRef)`
   - `WildcardPattern`
 
+
+
 ## record `PatternField`
 
 One field inside a record or map-shaped pattern.
@@ -281,38 +482,10 @@ One field inside a record or map-shaped pattern.
 
 **Fields**
 
-  - `name` : String
-  - `pattern` : [PatternRef](#type-patternref)?
-  - `stringKey` : Bool
+  - `name` : [String](../string.md#make-string)
+  - `pattern` : [PatternRef](#type-kex-ast-patternref)?
+  - `stringKey` : [Bool](../truthyable.md#make-bool)
 
-## function `patternRefText`
-
-Renders a `PatternRef` back to the way it is written in source.
-
-
-```kex
-patternRefText(BindPattern(name))
-```
-
-
-## function `patternFieldText`
-
-
-```kex
-patternFieldText(PatternField { name, pattern, stringKey })
-```
-
-
-## function `referenceText`
-
-Renders either a type or a pattern back to source.
-
-The one call to reach for when a node may carry either: it dispatches to `typeRefText` or `patternRefText` as appropriate.
-
-
-```kex
-referenceText(NamedType(name, args))
-```
 
 
 ## type `Expression`
@@ -320,8 +493,6 @@ referenceText(NamedType(name, args))
 Structured representation of expression AST nodes.
 
 Expressions retain syntax-level distinctions that matter to tools: a method call is not flattened into a generic call, `var` is distinct from `let`, and a trailing `if` remains recognizable. Walk these constructors when writing a linter or code search; use `Evaluator` when the goal is to execute an expression rather than inspect it.
-
-
 
 **Variants**
 
@@ -372,14 +543,18 @@ Expressions retain syntax-level distinctions that matter to tools: a method call
   - `Loop([String], [Expression])`
   - `RangeLit(Expression, Expression)`
 
+
+
 ## record `NamedArgument`
 
 One `name: value` argument at a call site.
 
 **Fields**
 
-  - `name` : String
-  - `value` : [Expression](#type-expression)
+  - `name` : [String](../string.md#make-string)
+  - `value` : [Expression](#type-kex-ast-expression)
+
+
 
 ## record `MatchArm`
 
@@ -389,9 +564,11 @@ Multiple `patterns` are the comma-separated alternatives on the left of the arro
 
 **Fields**
 
-  - `patterns` : [[PatternRef](#type-patternref)]
-  - `guard` : [Expression](#type-expression)?
-  - `body` : [Expression](#type-expression)
+  - `patterns` : [[PatternRef](#type-kex-ast-patternref)]
+  - `guard` : [Expression](#type-kex-ast-expression)?
+  - `body` : [Expression](#type-kex-ast-expression)
+
+
 
 ## record `LambdaParam`
 
@@ -399,8 +576,10 @@ One lambda parameter and its optional source annotation.
 
 **Fields**
 
-  - `name` : String
-  - `type` : [TypeRef](#type-typeref)?
+  - `name` : [String](../string.md#make-string)
+  - `type` : [TypeRef](#type-kex-ast-typeref)?
+
+
 
 ## record `RescueInfo`
 
@@ -410,10 +589,12 @@ Named rescue arms live in `arms`; a catch-all rescue keeps its optional binding 
 
 **Fields**
 
-  - `arms` : [[MatchArm](#record-matcharm)]
-  - `catchAllName` : String?
-  - `catchAllBody` : [[Expression](#type-expression)]
-  - `inlineReturn` : [Expression](#type-expression)?
+  - `arms` : [[MatchArm](#record-kex-ast-matcharm)]
+  - `catchAllName` : [String](../string.md#make-string)?
+  - `catchAllBody` : [[Expression](#type-kex-ast-expression)]
+  - `inlineReturn` : [Expression](#type-kex-ast-expression)?
+
+
 
 ## record `ElseIf`
 
@@ -421,19 +602,21 @@ One `elif` branch, in source order.
 
 **Fields**
 
-  - `condition` : [Expression](#type-expression)
-  - `body` : [[Expression](#type-expression)]
+  - `condition` : [Expression](#type-kex-ast-expression)
+  - `body` : [[Expression](#type-kex-ast-expression)]
+
+
 
 ## type `MapItem`
 
 One entry in a map literal: either a key/value pair or `...spread`.
 
-
-
 **Variants**
 
   - `MapEntry(Expression, Expression)`
   - `MapSpread(Expression)`
+
+
 
 ## record `RecordField`
 
@@ -441,8 +624,10 @@ One explicitly initialized field in a record literal.
 
 **Fields**
 
-  - `name` : String
-  - `value` : [Expression](#type-expression)
+  - `name` : [String](../string.md#make-string)
+  - `value` : [Expression](#type-kex-ast-expression)
+
+
 
 ## type `GeneratedTemplate`
 
@@ -450,12 +635,12 @@ A declaration template whose name (and, for a make block, target) is computed by
 
 Tools normally encounter this only while inspecting metaprogramming code. After expansion, generated declarations appear as ordinary +Node+s.
 
-
-
 **Variants**
 
   - `GeneratedNode(Node)`
   - `GeneratedMake(GeneratedMakeInfo)`
+
+
 
 ## record `GeneratedMakeInfo`
 
@@ -463,10 +648,12 @@ The fixed portion of a generated `make` declaration.
 
 **Fields**
 
-  - `isFinal` : Bool
-  - `implements` : [[TypeRef](#type-typeref)]
-  - `body` : [[CompiledItem](#type-compileditem)]
-  - `location` : [Location](#record-location)
+  - `isFinal` : [Bool](../truthyable.md#make-bool)
+  - `implements` : [[TypeRef](#type-kex-ast-typeref)]
+  - `body` : [[CompiledItem](#type-kex-ast-compileditem)]
+  - `location` : [Location](#record-kex-ast-location)
+
+
 
 ## record `MainInfo`
 
@@ -474,11 +661,13 @@ The program entry point, including documentation and recovery clauses.
 
 **Fields**
 
-  - `doc` : String?
-  - `params` : [[ParamInfo](#record-paraminfo)]
-  - `body` : [[Expression](#type-expression)]
-  - `rescueInfo` : [RescueInfo](#record-rescueinfo)?
-  - `location` : [Location](#record-location)
+  - `doc` : [String](../string.md#make-string)?
+  - `params` : [[ParamInfo](#record-kex-ast-paraminfo)]
+  - `body` : [[Expression](#type-kex-ast-expression)]
+  - `rescueInfo` : [RescueInfo](#record-kex-ast-rescueinfo)?
+  - `location` : [Location](#record-kex-ast-location)
+
+
 
 ## record `ParamInfo`
 
@@ -488,10 +677,12 @@ One declared function parameter.
 
 **Fields**
 
-  - `name` : String?
-  - `pattern` : [PatternRef](#type-patternref)?
-  - `type` : [TypeRef](#type-typeref)?
-  - `hasDefault` : Bool
+  - `name` : [String](../string.md#make-string)?
+  - `pattern` : [PatternRef](#type-kex-ast-patternref)?
+  - `type` : [TypeRef](#type-kex-ast-typeref)?
+  - `hasDefault` : [Bool](../truthyable.md#make-bool)
+
+
 
 ## record `ClauseInfo`
 
@@ -501,11 +692,13 @@ Multi-clause functions place all clauses in one `FunctionInfo`, preserving sourc
 
 **Fields**
 
-  - `params` : [[ParamInfo](#record-paraminfo)]
-  - `body` : [[Expression](#type-expression)]
-  - `returnType` : [TypeRef](#type-typeref)?
-  - `rescueInfo` : [RescueInfo](#record-rescueinfo)?
-  - `hasParamList` : Bool
+  - `params` : [[ParamInfo](#record-kex-ast-paraminfo)]
+  - `body` : [[Expression](#type-kex-ast-expression)]
+  - `returnType` : [TypeRef](#type-kex-ast-typeref)?
+  - `rescueInfo` : [RescueInfo](#record-kex-ast-rescueinfo)?
+  - `hasParamList` : [Bool](../truthyable.md#make-bool)
+
+
 
 ## record `FunctionInfo`
 
@@ -515,12 +708,14 @@ A named function and all of its pattern-matching clauses.
 
 **Fields**
 
-  - `name` : String
-  - `doc` : String?
-  - `isFoul` : Bool
-  - `predicate` : Bool
-  - `clauses` : [[ClauseInfo](#record-clauseinfo)]
-  - `location` : [Location](#record-location)
+  - `name` : [String](../string.md#make-string)
+  - `doc` : [String](../string.md#make-string)?
+  - `isFoul` : [Bool](../truthyable.md#make-bool)
+  - `predicate` : [Bool](../truthyable.md#make-bool)
+  - `clauses` : [[ClauseInfo](#record-kex-ast-clauseinfo)]
+  - `location` : [Location](#record-kex-ast-location)
+
+
 
 ## record `AnnotationInfo`
 
@@ -530,11 +725,13 @@ A standalone function or method type signature.
 
 **Fields**
 
-  - `name` : String
-  - `type` : [TypeRef](#type-typeref)
-  - `doc` : String?
-  - `implicitThis` : Bool
-  - `location` : [Location](#record-location)
+  - `name` : [String](../string.md#make-string)
+  - `type` : [TypeRef](#type-kex-ast-typeref)
+  - `doc` : [String](../string.md#make-string)?
+  - `implicitThis` : [Bool](../truthyable.md#make-bool)
+  - `location` : [Location](#record-kex-ast-location)
+
+
 
 ## record `VariantInfo`
 
@@ -542,8 +739,10 @@ One constructor of an algebraic data type.
 
 **Fields**
 
-  - `name` : String
-  - `fields` : [[TypeRef](#type-typeref)]
+  - `name` : [String](../string.md#make-string)
+  - `fields` : [[TypeRef](#type-kex-ast-typeref)]
+
+
 
 ## record `TypeInfo`
 
@@ -553,12 +752,14 @@ A type alias or algebraic data type declaration.
 
 **Fields**
 
-  - `name` : String
-  - `doc` : String?
-  - `typeParams` : [String]
-  - `parents` : [[TypeRef](#type-typeref)]
-  - `variants` : [[VariantInfo](#record-variantinfo)]?
-  - `location` : [Location](#record-location)
+  - `name` : [String](../string.md#make-string)
+  - `doc` : [String](../string.md#make-string)?
+  - `typeParams` : [[String](../string.md#make-string)]
+  - `parents` : [[TypeRef](#type-kex-ast-typeref)]
+  - `variants` : [[VariantInfo](#record-kex-ast-variantinfo)]?
+  - `location` : [Location](#record-kex-ast-location)
+
+
 
 ## record `FieldInfo`
 
@@ -566,9 +767,11 @@ One field declared by a record type.
 
 **Fields**
 
-  - `name` : String
-  - `type` : [TypeRef](#type-typeref)
-  - `hasDefault` : Bool
+  - `name` : [String](../string.md#make-string)
+  - `type` : [TypeRef](#type-kex-ast-typeref)
+  - `hasDefault` : [Bool](../truthyable.md#make-bool)
+
+
 
 ## record `RecordInfo`
 
@@ -576,11 +779,13 @@ A record declaration with fields in source order.
 
 **Fields**
 
-  - `name` : String
-  - `doc` : String?
-  - `typeParams` : [String]
-  - `fields` : [[FieldInfo](#record-fieldinfo)]
-  - `location` : [Location](#record-location)
+  - `name` : [String](../string.md#make-string)
+  - `doc` : [String](../string.md#make-string)?
+  - `typeParams` : [[String](../string.md#make-string)]
+  - `fields` : [[FieldInfo](#record-kex-ast-fieldinfo)]
+  - `location` : [Location](#record-kex-ast-location)
+
+
 
 ## record `TraitInfo`
 
@@ -588,11 +793,13 @@ A trait declaration and the signatures or default methods in its body.
 
 **Fields**
 
-  - `name` : String
-  - `doc` : String?
-  - `typeParams` : [String]
+  - `name` : [String](../string.md#make-string)
+  - `doc` : [String](../string.md#make-string)?
+  - `typeParams` : [[String](../string.md#make-string)]
   - `body` : [Node]
-  - `location` : [Location](#record-location)
+  - `location` : [Location](#record-kex-ast-location)
+
+
 
 ## record `MakeInfo`
 
@@ -602,12 +809,14 @@ A `make` implementation block.
 
 **Fields**
 
-  - `target` : [TypeRef](#type-typeref)
-  - `doc` : String?
-  - `isFinal` : Bool
-  - `implements` : [[TypeRef](#type-typeref)]
+  - `target` : [TypeRef](#type-kex-ast-typeref)
+  - `doc` : [String](../string.md#make-string)?
+  - `isFinal` : [Bool](../truthyable.md#make-bool)
+  - `implements` : [[TypeRef](#type-kex-ast-typeref)]
   - `body` : [Node]
-  - `location` : [Location](#record-location)
+  - `location` : [Location](#record-kex-ast-location)
+
+
 
 ## record `PragmaInfo`
 
@@ -615,9 +824,11 @@ A compiler pragma and its optional value.
 
 **Fields**
 
-  - `name` : String
-  - `value` : String?
-  - `location` : [Location](#record-location)
+  - `name` : [String](../string.md#make-string)
+  - `value` : [String](../string.md#make-string)?
+  - `location` : [Location](#record-kex-ast-location)
+
+
 
 ## record `ModuleInfo`
 
@@ -625,10 +836,12 @@ A module and its declarations in source order.
 
 **Fields**
 
-  - `name` : String
-  - `doc` : String?
+  - `name` : [String](../string.md#make-string)
+  - `doc` : [String](../string.md#make-string)?
   - `items` : [Node]
-  - `location` : [Location](#record-location)
+  - `location` : [Location](#record-kex-ast-location)
+
+
 
 ## record `ConstantInfo`
 
@@ -636,10 +849,12 @@ A named constant declaration. The AST reader never evaluates its value.
 
 **Fields**
 
-  - `name` : String
-  - `doc` : String?
-  - `type` : [TypeRef](#type-typeref)?
-  - `location` : [Location](#record-location)
+  - `name` : [String](../string.md#make-string)
+  - `doc` : [String](../string.md#make-string)?
+  - `type` : [TypeRef](#type-kex-ast-typeref)?
+  - `location` : [Location](#record-kex-ast-location)
+
+
 
 ## record `VisibilityInfo`
 
@@ -647,9 +862,11 @@ A `public` or `private` section and the declarations it contains.
 
 **Fields**
 
-  - `isPublic` : Bool
+  - `isPublic` : [Bool](../truthyable.md#make-bool)
   - `items` : [Node]
-  - `location` : [Location](#record-location)
+  - `location` : [Location](#record-kex-ast-location)
+
+
 
 ## record `UsingInfo`
 
@@ -657,12 +874,14 @@ A `using` import, including aliasing, filters, and an optional scoped body.
 
 **Fields**
 
-  - `moduleName` : String
-  - `alias` : String?
-  - `onlyNames` : [String]
-  - `exceptNames` : [String]
-  - `body` : [[Expression](#type-expression)]
-  - `location` : [Location](#record-location)
+  - `moduleName` : [String](../string.md#make-string)
+  - `alias` : [String](../string.md#make-string)?
+  - `onlyNames` : [[String](../string.md#make-string)]
+  - `exceptNames` : [[String](../string.md#make-string)]
+  - `body` : [[Expression](#type-kex-ast-expression)]
+  - `location` : [Location](#record-kex-ast-location)
+
+
 
 ## record `ExportInfo`
 
@@ -670,22 +889,24 @@ An `export` declaration and its public-name filters.
 
 **Fields**
 
-  - `moduleName` : String
-  - `alias` : String?
-  - `onlyNames` : [String]
-  - `exceptNames` : [String]
-  - `location` : [Location](#record-location)
+  - `moduleName` : [String](../string.md#make-string)
+  - `alias` : [String](../string.md#make-string)?
+  - `onlyNames` : [[String](../string.md#make-string)]
+  - `exceptNames` : [[String](../string.md#make-string)]
+  - `location` : [Location](#record-kex-ast-location)
+
+
 
 ## type `CompiledItem`
 
 One item inside a `compiled do` block before expansion.
 
-
-
 **Variants**
 
   - `CompiledNode(Node)`
   - `CompiledExpression(Expression)`
+
+
 
 ## record `CompiledInfo`
 
@@ -693,8 +914,10 @@ A compile-time block and its declarations or expressions in source order.
 
 **Fields**
 
-  - `items` : [[CompiledItem](#type-compileditem)]
-  - `location` : [Location](#record-location)
+  - `items` : [[CompiledItem](#type-kex-ast-compileditem)]
+  - `location` : [Location](#record-kex-ast-location)
+
+
 
 ## type `Node`
 
@@ -702,7 +925,18 @@ Any top-level or declaration-level AST node.
 
 A source tool can match only the declarations it understands and leave the rest alone. The program's `schemaVersion` lets persisted consumers reject a tree whose possible node shapes have changed.
 
+**Examples**
 
+_Listing documented functions in a parsed file_
+
+```kex
+program.items.each do |node|
+  match node do
+    FunctionDef(info) if info.doc.present? => IO.printLine(info.name)
+    _ => ()
+  end
+end
+```
 
 **Variants**
 
@@ -721,15 +955,27 @@ A source tool can match only the declarations it understands and leave the rest 
   - `ExportDef(ExportInfo)`
   - `Compiled(CompiledInfo)`
 
-## make `TypeRef | PatternRef`
+
+
+## type `TypeRef | PatternRef`
 
 Source-like conversion through the standard `to(String)` spelling.
 
 Useful in diagnostics: a tool can interpolate the type or pattern it found without manually dispatching between the two reference families.
 
+**Examples**
 
-#### `to`
+_Building a lint message from a parsed annotation_
 
 ```kex
-to(String)
+let written = reference.to(String).or("unknown")
+IO.warn("avoid the broad ${written} annotation")
 ```
+
+### `to`
+
+```kex
+to(_) -> String?
+```
+
+

@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Net.Socket | Standard Library 0.4.0-beta.4-dev | kex docs</title>
+    <meta name="description" content="Process-owned TCP byte streams and listeners.">
+    <link rel="icon" href="/_theme/icon.png" type="image/png" sizes="403x403">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>/* Krix: the Kex documentation stylesheet, from Tey docgen (tey/src/tey/docgen/css.kex, MIT).
+   Marqraft additions follow the original rules. */
+/* kex docs — design tokens ported from kex.run (see module comment) */
+
+:root {
+  --bg: #fcf5e2;
+  --bg-subtle: #f6ecd0;
+  --bg-muted: #f0e2bc;
+  --bg-sunken: #ead9a8;
+  --ink: #2a1c0a;
+  --ink-soft: #54380f;
+  --muted: #7a5a25;
+  --faint: #9c7a3c;
+  --line: #ecdcb4;
+  --line-strong: #dbc78c;
+  --accent: #b06a14;
+  --accent-strong: #8a4f0a;
+  --accent-soft: #f4e2b8;
+  --accent-ink: #5a3408;
+  --code-bg: #1b140a;
+  --code-bg-soft: #221a0e;
+  --code-border: #382a16;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+/* JetBrains Mono ships programming ligatures (-> to a single arrow, =>,
+   !=, ...) on by default. They read well in code blocks, so they stay
+   there — but in the search box the reader is TYPING, and -> must
+   appear exactly as entered. Disable ligatures there only. */
+.search-modal-panel input, .search-page-box input {
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0, "dlig" 0;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse 90% 50% at 50% -10%, rgba(236, 178, 94, 0.28), transparent 70%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+::selection { background: var(--accent-soft); color: var(--accent-ink); }
+
+a { color: inherit; text-decoration: none; }
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.wrap { width: 100%; max-width: 76rem; margin-inline: auto; padding-inline: 1.5rem; }
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(252, 245, 226, 0.85);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+
+.top-inner { display: flex; align-items: center; gap: 0.75rem; height: 3.5rem; }
+
+/* ── Search ─────────────────────────────────────────────────────────── */
+
+.search-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  height: 2.1rem;
+  min-width: 14rem;
+  padding: 0 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-soft);
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.search-trigger:hover { border-color: var(--accent); color: var(--ink); }
+.search-trigger kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  padding: 0.2rem 0.35rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  color: var(--faint);
+}
+
+/* The modal is frosted glass: a translucent warm panel over a blurred
+   backdrop, in the same voice as the sticky header. */
+.search-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+  background: rgba(42, 28, 10, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.search-modal[hidden] { display: none; }
+
+.search-modal-panel {
+  width: min(44rem, 92vw);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 253, 248, 0.82);
+  backdrop-filter: blur(28px) saturate(140%);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
+  border: 1px solid rgba(236, 220, 180, 0.9);
+  box-shadow: 0 24px 72px rgba(42, 28, 10, 0.35);
+}
+
+.search-modal-panel input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1.05rem 1.3rem;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(236, 220, 180, 0.9);
+  outline: none;
+}
+.search-modal-panel input::placeholder { color: var(--faint); }
+
+.search-modal-results { max-height: 55vh; overflow-y: auto; padding: 0.5rem; }
+
+.search-hit {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.1rem;
+  border-radius: 10px;
+  text-decoration: none;
+}
+.search-hit:hover { background: rgba(246, 236, 208, 0.6); }
+.search-hit.selected { background: rgba(244, 226, 184, 0.9); }
+
+.search-head { display: flex; align-items: baseline; gap: 0.6rem; }
+
+.search-kind {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-strong);
+}
+/* Each kind has its own hue, so a scan down the list separates
+   functions from types from modules at a glance. */
+.search-kind-module { color: #6b5bd2; }
+.search-kind-function { color: #2f855a; }
+.search-kind-make { color: #b06a14; }
+.search-kind-trait { color: #c2498a; }
+.search-kind-record { color: #2b6cb0; }
+.search-kind-type { color: #0f8a8a; }
+.search-kind-constant { color: #9a5a13; }
+.search-name { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--ink); }
+.search-qual { margin-left: auto; font-family: var(--font-mono); font-size: 12px; color: var(--muted); text-align: right; }
+.search-sig {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 12.5px;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-empty { padding: 0.8rem 0.9rem; font-size: 13px; color: var(--faint); }
+
+.search-modal-footer {
+  border-top: 1px solid rgba(236, 220, 180, 0.9);
+  padding: 0.55rem 0.9rem;
+  font-size: 12.5px;
+}
+.search-modal-footer a { color: var(--accent-strong); text-decoration: none; }
+.search-modal-footer a:hover { text-decoration: underline; }
+
+/* The empty state: an explainer, example chips, and this page's items. */
+.search-hint, .search-local { padding: 0.8rem 1rem 0.6rem; }
+
+.search-hint-title { margin: 0 0 0.25rem; font-size: 13px; font-weight: 600; color: var(--ink); }
+.search-hint-body { margin: 0 0 0.6rem; font-size: 12.5px; color: var(--muted); }
+
+.search-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
+.search-chip {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 0.25rem 0.6rem;
+  color: var(--ink-soft);
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.search-chip:hover { border-color: var(--accent); color: var(--ink); }
+
+.search-local { border-top: 1px solid rgba(236, 220, 180, 0.7); }
+
+/* ── Full search page ──────────────────────────────────────────────── */
+
+.search-page { max-width: 52rem; }
+
+.search-page-box input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.85rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--ink);
+  background: rgba(246, 236, 208, 0.6);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  outline: none;
+}
+.search-page-box input:focus { border-color: var(--accent); }
+
+.search-page-results { margin-top: 1.25rem; }
+
+.search-page-hit {
+  display: block;
+  padding: 0.8rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+}
+.search-page-hit:hover { background: var(--bg-subtle); }
+
+.search-summary {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.brand-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  padding-top: 0.2rem;
+}
+
+.spacer { flex: 1; }
+
+.pkg-badge {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+}
+
+.version-select {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.15rem 0.4rem 0.15rem 0.7rem;
+  cursor: pointer;
+}
+
+.version-select:hover { border-color: var(--accent); }
+
+.back { font-size: 13.5px; color: var(--muted); }
+.back:hover { color: var(--accent-strong); }
+
+/* ── Layout ─────────────────────────────────────────────────────────── */
+
+.layout {
+  display: grid;
+  gap: 3rem;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  padding-block: 2.5rem;
+}
+
+/* The module list is longer than the viewport, and it is stuck to it —
+   so it needs its own scrollbar, or everything past the fold is
+   unreachable. The height is what is left below the sticky header. */
+.side nav {
+  position: sticky;
+  top: 5rem;
+  max-height: calc(100vh - 6.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.35rem;
+}
+
+.side-heading {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+
+.side-list { list-style: none; margin: 0; padding: 0; }
+
+.side-list > li > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.side-list > li > a:hover { background: var(--bg-subtle); color: var(--ink); }
+
+.side-list > li > a.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+.side-sub { list-style: none; margin: 0.15rem 0 0.4rem; padding: 0 0 0 1.1rem; }
+
+.side-sub a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.15rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--faint);
+}
+
+.side-sub a:hover { color: var(--accent-strong); background: var(--bg-subtle); }
+
+/* Nested modules ("FS" → "FS.Path"): same voice as the top list, one
+   step quieter and indented under their parent. */
+.side-nest { list-style: none; margin: 0; padding: 0 0 0.25rem 0.75rem; }
+.side-nest > li > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.18rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--faint);
+}
+.side-nest > li > a:hover { background: var(--bg-subtle); color: var(--ink); }
+.side-nest > li > a.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+/* Cross-reference links inside code spans: the code face stays, the
+   colour signals "this goes somewhere". */
+a.xref { color: var(--accent-strong); text-decoration: none; border-bottom: 1px solid color-mix(in oklab, var(--accent) 45%, transparent); }
+a.xref:hover { border-bottom-color: var(--accent-strong); }
+
+.content { min-width: 0; max-width: 48rem; }
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--faint);
+  margin-bottom: 1rem;
+}
+
+.crumbs a:hover { color: var(--accent-strong); }
+.crumbs .sep { opacity: 0.6; }
+
+/* ── Prose ──────────────────────────────────────────────────────────── */
+
+.prose { color: var(--ink-soft); font-size: 1.0125rem; line-height: 1.75; }
+
+.prose h1 { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 1rem; line-height: 1.15; }
+
+/* The standalone index pages (site root, package versions) carry their
+   h1 directly in .content.prose — unlike the entity pages, which get
+   top breathing room from .layout's padding. Give those a little air
+   under the header. */
+.content.prose > h1 { margin-top: 2rem; }
+
+.prose h1 .ver {
+  font-family: var(--font-mono);
+  font-size: 0.45em;
+  font-weight: 500;
+  color: var(--muted);
+  vertical-align: middle;
+  letter-spacing: 0;
+}
+
+.prose h2 {
+  font-size: 1.35rem;
+  font-weight: 650;
+  margin: 2.6rem 0 0.9rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+
+.prose h3 { font-size: 1.05rem; font-weight: 600; margin: 1.6rem 0 0.5rem; }
+
+.prose h5 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  margin: 1.4rem 0 0.4rem;
+}
+
+.prose p { margin: 0 0 1.1rem; }
+
+.prose a { color: var(--accent-strong); text-decoration: underline; text-decoration-color: var(--accent-soft); text-underline-offset: 3px; }
+.prose a:hover { text-decoration-color: currentColor; }
+
+.prose code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  background: var(--bg-muted);
+  border: 1px solid var(--line);
+  padding: 0.12rem 0.4rem;
+  border-radius: 6px;
+  color: var(--muted);
+}
+
+.prose strong { color: var(--ink); font-weight: 600; }
+
+.lede { font-size: 1.05rem; color: var(--muted); }
+
+/* ── Entities ───────────────────────────────────────────────────────── */
+
+/* Anchor navigation lands a heading below the sticky header, not under
+   it: reserve the header's height (3.5rem) plus breathing room. */
+.entity, .fn { scroll-margin-top: 4.75rem; }
+
+.entity h2 code { font-size: 0.95em; }
+
+.kind {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  padding: 0.1rem 0.45rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+/* Each declaration kind has its own hue — the same palette as the
+   search results — so a module, a trait and a make are told apart at
+   a glance rather than all reading as one amber badge. */
+.kind-module { color: #6b5bd2; border-color: #d6cdf3; background: #efeafc; }
+.kind-function { color: #2f855a; border-color: #c6e6d4; background: #e8f4ec; }
+.kind-make { color: #b06a14; border-color: #ecd6ac; background: #f7ecd6; }
+.kind-trait { color: #c2498a; border-color: #efcfe0; background: #f9ecf3; }
+.kind-record { color: #2b6cb0; border-color: #c8dcf0; background: #e9f1fa; }
+.kind-type { color: #0f8a8a; border-color: #c0e4e2; background: #e4f4f3; }
+.kind-constant { color: #9a5a13; border-color: #e6d2b4; background: #f6ecdd; }
+
+.fields, .params { margin: 0 0 1.1rem; }
+
+.field, .param {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.field dt, .param dt { flex-shrink: 0; }
+.field dd, .param dd { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+.opt {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--faint);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 0.5rem;
+  margin-left: 0.4rem;
+}
+
+.variants { margin: 0 0 1.1rem; padding-left: 1.3rem; list-style: disc; }
+.variants li { margin: 0.3rem 0; }
+.variants .abstract { color: var(--faint); }
+
+.fn {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 0.9rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.fn h4 { margin: 0 0 0.4rem; font-size: 1rem; }
+.fn p:last-child, .fn pre:last-child { margin-bottom: 0; }
+
+.fn h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+
+/* The heading of a member links to itself, so a reader can copy a
+   deep link without hunting for a pilcrow. */
+a.self { color: inherit; text-decoration: none; }
+a.self:hover code { border-color: var(--accent); }
+
+/* A method's signature leads its box: the call shape first, prose after. */
+pre.code.sig { margin-bottom: 0.8rem; padding: 0.6rem 0.9rem; }
+pre.code a.xref { color: inherit; border-bottom: 1px dotted color-mix(in oklab, #e6a960 60%, transparent); }
+
+/* "Implements Monoid, Enumerable." / "Implemented by ...": where a
+   type's methods come from, said right under its heading. */
+.implements, .home-note {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin: 0 0 1.1rem;
+}
+
+/* A member group inside a type: "Methods", "On [Number]". */
+.members { margin-top: 1.8rem; }
+.members > h3, .entity > h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.3rem;
+}
+
+/* Which trait a member fulfils: a small link chip beside its name. */
+.tag-trait, .tag-kind {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid #efcfe0;
+  border-radius: 999px;
+  background: #f9ecf3;
+  color: #c2498a;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  text-decoration: none;
+  vertical-align: middle;
+}
+.tag-kind { border-color: #e6d2b4; background: #f6ecdd; color: #9a5a13; }
+.tag-trait:hover { border-color: #c2498a; }
+
+/* Methods a type gets from a trait without writing them. */
+.inherited dt, .elsewhere dt { min-width: 9rem; }
+
+.prose ul { margin: 0 0 1.1rem; padding-left: 1.3rem; }
+.prose li { margin: 0.25rem 0; }
+
+/* A file's opening comment: what the page is about, before any one
+   declaration. */
+.intro { font-size: 1.02rem; margin-bottom: 1.6rem; }
+
+.caption { margin: 0 0 0.3rem; color: var(--muted); font-size: 0.95rem; }
+
+.returns { color: var(--muted); }
+.returns strong { color: var(--ink-soft); }
+
+.deprecated {
+  border-left: 3px solid var(--accent);
+  background: var(--bg-subtle);
+  padding: 0.7rem 1rem;
+  margin: 1.2rem 0;
+  border-radius: 0 8px 8px 0;
+}
+
+/* ── Code surface ───────────────────────────────────────────────────── */
+
+pre.code {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 1.1rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #e9e0cf;
+}
+
+pre.code code { font-family: inherit; }
+
+.tok-comment { color: #94876a; font-style: italic; }
+.tok-keyword { color: #f0c987; }
+.tok-type    { color: #e6a960; }
+.tok-string  { color: #c9e0a0; }
+.tok-interp  { color: #e9e0cf; }
+.tok-number  { color: #ffc18a; }
+.tok-fn      { color: #ffe0a0; }
+.tok-method  { color: #ffe0a0; }
+.tok-op      { color: #d8b878; }
+.tok-punct   { color: #a89a78; }
+.tok-const   { color: #e6a960; }
+.tok-field   { color: #f0e8d4; }
+.tok-bool    { color: #ffc18a; }
+
+/* ── Cards (version index) ──────────────────────────────────────────── */
+
+.cards {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  margin-top: 1.6rem;
+}
+
+/* Section headings on the index and the prelude page: what separates
+   "given to you" from "one using away". */
+.group {
+  margin: 2.6rem 0 0.2rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.group-note { margin: 0; color: var(--muted); font-size: 0.92rem; }
+
+/* "prelude": this page needs no import. It sits on the page heading,
+   beside the module name it qualifies. */
+.tag-prelude {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+h1 .tag-prelude { font-size: 11px; vertical-align: 0.45em; }
+
+.prelude-list {
+  list-style: none;
+  margin: 1.2rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+}
+
+.prelude-list li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.prelude-note {
+  color: var(--faint);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.card:hover { border-color: var(--line-strong); background: var(--bg-subtle); }
+
+.card-title { display: block; font-family: var(--font-mono); font-weight: 600; color: var(--ink); }
+.card:hover .card-title { color: var(--accent-strong); }
+.card-meta { display: block; margin-top: 0.25rem; font-size: 12.5px; color: var(--faint); }
+
+/* ── Footer ─────────────────────────────────────────────────────────── */
+
+.foot {
+  border-top: 1px solid var(--line);
+  margin-top: 3rem;
+  padding: 1.4rem 0 2rem;
+  font-size: 13px;
+  color: var(--faint);
+}
+
+.foot a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.foot a:hover { color: var(--accent-strong); }
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .layout { grid-template-columns: 1fr; }
+  .side { display: none; }
+}
+
+/* ── Marqraft additions ───────────────────────────────────────────────── */
+
+/* Settings: links follow the accent, the column follows the content width. */
+.prose a, a.xref { color: var(--marq-accent, var(--accent-strong)); }
+.content { max-width: var(--marq-contentWidth, 48rem); }
+.site-logo { height: 1.4rem; margin-right: 0.4rem; vertical-align: -0.2rem; }
+
+/* The navigation binding renders nested ul/li/a; style it as the docgen sidebar. */
+.side-tree ul { list-style: none; margin: 0; padding: 0; }
+.side-tree li > a,
+.side-tree li > .marq-nav-row > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.side-tree li > a:hover,
+.side-tree li > .marq-nav-row > a:hover { background: var(--bg-subtle); color: var(--ink); }
+.side-tree a[aria-current=page] { background: var(--accent-soft); color: var(--accent-ink); font-weight: 500; }
+.side-tree ul ul { padding: 0 0 0.25rem 0.75rem; }
+.side-tree ul ul a { padding-block: 0.18rem; font-size: 12.5px; color: var(--faint); }
+.marq-draft {
+  margin-left: 0.4rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+/* Chapter list on the index page. */
+.chapters ul { list-style: none; margin: 0.8rem 0 0; padding: 0; counter-reset: chapter; }
+.chapters ul ul { padding-left: 1.4rem; margin: 0; }
+.chapters li > a, .chapters li > .marq-nav-row > a {
+  display: block;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+.chapters a:hover { color: var(--accent-strong); }
+
+/* Reading order: the docgen "prevnext" footer. */
+.marq-pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2.6rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+.marq-pager a { text-decoration: none; display: flex; flex-direction: column; }
+.marq-pager small { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--faint); }
+.marq-pager span { color: var(--accent-strong); }
+.marq-pager-previous span::before { content: "← "; }
+.marq-pager-next { margin-left: auto; text-align: right; }
+.marq-pager-next span::after { content: " →"; }
+
+/* Prose elements docgen leaves to the browser. */
+.prose ul, .prose ol { margin: 0 0 1.1rem; padding-left: 1.4rem; }
+.prose li { margin: 0.2rem 0; }
+.prose li > ul, .prose li > ol { margin: 0.2rem 0; }
+.prose blockquote {
+  margin: 0 0 1.1rem;
+  padding: 0.7rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--bg-subtle);
+  border-radius: 0 8px 8px 0;
+  color: var(--muted);
+}
+.prose blockquote p:last-child { margin-bottom: 0; }
+.prose hr { border: 0; border-top: 1px solid var(--line); margin: 2rem 0; }
+.prose img { max-width: 100%; border-radius: 10px; border: 1px solid var(--line); }
+.table-scroll { overflow-x: auto; margin: 0 0 1.1rem; }
+.prose table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+.prose th, .prose td { text-align: left; padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--line); }
+.prose th { font-weight: 600; color: var(--ink); border-bottom-color: var(--line-strong); }
+.prose pre:not(.code) {
+  background: var(--code-bg); color: #e9e0cf; border: 1px solid var(--code-border);
+  border-radius: 10px; padding: 0.9rem 1.1rem; overflow-x: auto; font-family: var(--font-mono); font-size: 0.85rem;
+}
+
+/* Blocks. */
+.marq-code { margin: 0 0 1.1rem; }
+.marq-code figcaption { font-family: var(--font-mono); font-size: 12px; color: var(--faint); margin-bottom: 0.35rem; }
+.marq-code figcaption:empty, .marq-code small:empty { display: none; }
+.marq-code pre { margin-bottom: 0.35rem; }
+.marq-code small { display: block; font-size: 12.5px; color: var(--muted); }
+.marq-tabs { border: 1px solid var(--line); border-radius: 10px; padding: 0.4rem 1.1rem; margin: 0 0 1.1rem; background: rgba(255, 255, 255, 0.35); }
+.marq-area + .marq-area { border-top: 1px solid var(--line); }
+.marq-area h3 { margin: 0.8rem 0 0.4rem; font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--faint); }
+/* GitHub alerts: > [!NOTE], [!TIP], [!IMPORTANT], [!WARNING], [!CAUTION]. */
+.markdown-alert { margin: 0 0 1.1rem; padding: 0.7rem 1rem; border-left: 3px solid var(--accent); background: var(--bg-subtle); border-radius: 0 8px 8px 0; }
+.markdown-alert-note { border-left-color: #2b6cb0; background: #e9f1fa; }
+.markdown-alert-tip { border-left-color: #2f855a; background: #e8f4ec; }
+.markdown-alert-important { border-left-color: #6b5bd2; background: #efeafc; }
+.markdown-alert-warning { border-left-color: var(--accent); background: #f7ecd6; }
+.markdown-alert-caution { border-left-color: #c2498a; background: #f9ecf3; }
+.markdown-alert-title { margin: 0 0 0.2rem !important; font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-ink); }
+.markdown-alert-body > :last-child { margin-bottom: 0; }
+.marq-source { border: 1px dashed var(--line-strong); padding: 0.7rem; white-space: pre-wrap; }
+
+/* Collections: the top-level pages (Guide, Tutorial, ...) as header links. */
+.top-nav { margin-left: 1rem; }
+.top-nav ul { display: flex; align-items: center; gap: 0.2rem; list-style: none; margin: 0; padding: 0; }
+.top-nav li { position: relative; }
+.top-nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.top-nav a:hover { color: var(--ink); background: var(--bg-subtle); }
+.top-nav a[aria-current] { color: var(--accent-ink); background: var(--accent-soft); font-weight: 500; }
+/* Header links: ordinary links after the version badge, e.g. kex.run. */
+.top-links .marq-menu { display: flex; align-items: center; gap: 0.9rem; list-style: none; margin: 0 0 0 0.75rem; padding: 0; }
+.top-links li { position: relative; }
+.top-links a { font-size: 13.5px; color: var(--muted); }
+.top-links a:hover { color: var(--accent-strong); }
+.top-links a[href^="http"]::after { content: " ↗"; }
+@media (max-width: 640px) { .brand-sub, .pkg-badge { display: none; } .top-nav { margin-left: 0.25rem; } }
+
+/* Authoring (marq dev only): keep the sticky header and toolbar below the Marqraft bar. */
+body:has(#marq-chrome) .top { top: 48px; }
+body:has(#marq-chrome) { --marq-toolbar-top: calc(48px + 3.5rem + 0.5rem); }
+body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
+
+/* Reference pages (reference.html.ket): generated API documentation with an
+   "On this page" rail beside the content. The producer (Tey docgen's
+   fragments output) renders the rail's list; the theme places it. */
+.layout.has-toc { grid-template-columns: 15rem minmax(0, 1fr) 12rem; }
+.toc { font-size: 12.5px; }
+.toc > * { position: sticky; top: 5rem; }
+.toc-heading {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+.toc ul { list-style: none; margin: 0; padding: 0; max-height: calc(100vh - 8rem); overflow-y: auto; }
+.toc li a { display: block; padding: 0.2rem 0.5rem; border-left: 2px solid var(--line); color: var(--muted); }
+.toc li a:hover { color: var(--ink); border-left-color: var(--accent); }
+.toc li.toc-nested a { padding-left: 1.1rem; }
+.reference .content { max-width: none; }
+@media (max-width: 1280px) { .layout.has-toc { grid-template-columns: 15rem minmax(0, 1fr); } .toc { display: none; } }
+@media (max-width: 1024px) { .layout.has-toc { grid-template-columns: 1fr; } }
+
+:root{--marq-accent:#8a4f0a;--marq-contentWidth:48rem;}</style>
+  </head>
+  <body class="reference">
+    <header class="top">
+      <div class="wrap top-inner">
+        <a class="brand" href="/">kex</a>
+        <span class="brand-sub">docs</span>
+        <nav class="top-nav" aria-label="Collections"><ul><li><a href="/guide/0.4.0-alpha/">Guide</a></li><li><a href="/prelude/" aria-current="true">Standard Library</a></li><li><a href="/tey/">Tey</a></li></ul></nav>
+        <span class="spacer"></span>
+        <span class="pkg-badge">Standard Library 0.4.0-beta.4-dev</span>
+        <nav class="top-links" aria-label="Links"><ul class="marq-menu"><li><a href="https://kex.run/docs">kex.run</a></li></ul></nav>
+      </div>
+    </header>
+    <div class="wrap layout has-toc">
+      <aside class="side">
+        <nav aria-label="Standard Library">
+          <p class="side-heading"><a href="/prelude/">Standard Library</a></p>
+          <div class="side-tree"><ul><li><a href="/prelude/0.4.0-beta.4-dev/">Standard Library</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/algebra/">Algebra</a></li><li><a href="/prelude/0.4.0-beta.4-dev/test/">Assert</a></li><li><a href="/prelude/0.4.0-beta.4-dev/atom/">Atom</a></li><li><a href="/prelude/0.4.0-beta.4-dev/binary/">Binary</a></li><li><a href="/prelude/0.4.0-beta.4-dev/bits/">Bits</a></li><li><a href="/prelude/0.4.0-beta.4-dev/blankable/">Blankable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/comparable/">Comparable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/console/">Console</a></li><li><a href="/prelude/0.4.0-beta.4-dev/control/retry/">Control.Retry</a></li><li><a href="/prelude/0.4.0-beta.4-dev/data/queue/">Data.Queue</a></li><li><a href="/prelude/0.4.0-beta.4-dev/data/set/">Data.Set</a></li><li><a href="/prelude/0.4.0-beta.4-dev/data/stack/">Data.Stack</a></li><li><a href="/prelude/0.4.0-beta.4-dev/digest/">Digest</a></li><li><a href="/prelude/0.4.0-beta.4-dev/dimensions/">Dimensions</a></li><li><a href="/prelude/0.4.0-beta.4-dev/enumerable/">Enumerable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/env/">ENV</a></li><li><a href="/prelude/0.4.0-beta.4-dev/errorable/">Errorable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/evaluator/">Evaluator</a></li><li><a href="/prelude/0.4.0-beta.4-dev/feed/">Feed</a></li><li><a href="/prelude/0.4.0-beta.4-dev/filehandle/">FileHandle</a></li><li><a href="/prelude/0.4.0-beta.4-dev/fs/">FS</a></li><li><a href="/prelude/0.4.0-beta.4-dev/io/">IO</a></li><li><a href="/prelude/0.4.0-beta.4-dev/json/">JSON</a></li><li><a href="/prelude/0.4.0-beta.4-dev/kex/">Kex</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/kex/ast/">Kex.AST</a></li></ul></li><li><a href="/prelude/0.4.0-beta.4-dev/list/">List</a></li><li><a href="/prelude/0.4.0-beta.4-dev/map/">Map</a></li><li><a href="/prelude/0.4.0-beta.4-dev/math/">Math</a></li><li><a href="/prelude/0.4.0-beta.4-dev/mock/">Mock</a></li><li><a href="/prelude/0.4.0-beta.4-dev/net/">Net</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/net/dns/">Net.DNS</a></li><li><a href="/prelude/0.4.0-beta.4-dev/net/http/">Net.HTTP</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/net/http/websocket/">Net.HTTP.WebSocket</a></li></ul></li><li><a href="/prelude/0.4.0-beta.4-dev/net/ip/">Net.IP</a></li><li><a href="/prelude/0.4.0-beta.4-dev/net/socket/" aria-current="page">Net.Socket</a></li></ul></li><li><a href="/prelude/0.4.0-beta.4-dev/node/">Node</a></li><li><a href="/prelude/0.4.0-beta.4-dev/number/">Number</a></li><li><a href="/prelude/0.4.0-beta.4-dev/optional/">Optional</a></li><li><a href="/prelude/0.4.0-beta.4-dev/optionparser/">OptionParser</a></li><li><a href="/prelude/0.4.0-beta.4-dev/parsing/">Parsing</a></li><li><a href="/prelude/0.4.0-beta.4-dev/prelude/">Prelude</a></li><li><a href="/prelude/0.4.0-beta.4-dev/process/">Process</a></li><li><a href="/prelude/0.4.0-beta.4-dev/random/">Random</a></li><li><a href="/prelude/0.4.0-beta.4-dev/range/">Range</a></li><li><a href="/prelude/0.4.0-beta.4-dev/regex/">Regex</a></li><li><a href="/prelude/0.4.0-beta.4-dev/stream/">Stream</a></li><li><a href="/prelude/0.4.0-beta.4-dev/string/">String</a></li><li><a href="/prelude/0.4.0-beta.4-dev/system/">System</a></li><li><a href="/prelude/0.4.0-beta.4-dev/taggedvalidation/">TaggedValidation</a></li><li><a href="/prelude/0.4.0-beta.4-dev/template/">Template</a></li><li><a href="/prelude/0.4.0-beta.4-dev/time/">Time</a></li><li><a href="/prelude/0.4.0-beta.4-dev/truthyable/">Truthyable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/type/">Type</a></li><li><a href="/prelude/0.4.0-beta.4-dev/units/">Units</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/units/data/">Units.Data</a></li><li><a href="/prelude/0.4.0-beta.4-dev/units/si/">Units.SI</a></li></ul></li><li><a href="/prelude/0.4.0-beta.4-dev/uri/">URI</a></li></ul></li></ul></div>
+        </nav>
+      </aside>
+      <main class="content">
+        <nav class="crumbs"><a href="/prelude/">Standard Library</a> <span class="sep">/</span> <span>Net.Socket</span></nav>
+        <article class="prose">
+          <h1>Net.Socket</h1>
+          <section class="entity" id="module-net-socket">
+<h2><span class="kind kind-module">module</span> <code>Net.Socket</code></h2>
+<p>Process-owned TCP byte streams and listeners. All blocking operations return typed <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><code>NetError</code></a> values; close operations are idempotent.</p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Net</span>
+<span class="tok-keyword">using</span> <span class="tok-type">Net</span><span class="tok-op">.</span><span class="tok-type">Socket</span>
+
+<span class="tok-keyword">let</span> listener <span class="tok-op">=</span> <span class="tok-type">TCP</span><span class="tok-op">.</span><span class="tok-method">listen</span><span class="tok-punct">(</span><span class="tok-type">TCP</span><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-op">.</span><span class="tok-method">loopback</span><span class="tok-punct">(</span><span class="tok-type">Port</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> address <span class="tok-op">=</span> listener<span class="tok-op">.</span><span class="tok-method">localAddress</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> client <span class="tok-op">=</span> <span class="tok-type">TCP</span><span class="tok-op">.</span><span class="tok-method">connect</span><span class="tok-punct">(</span>address<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+client<span class="tok-op">.</span><span class="tok-method">sendAll</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">ping</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Binary</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+listener<span class="tok-op">.</span><span class="tok-method">close</span></code></pre>
+</section>
+<section class="entity" id="module-net-socket-tcp">
+<h2><span class="kind kind-module">module</span> <code>Net.Socket.TCP</code></h2>
+<div class="functions">
+<div class="fn" id="function-net-socket-tcp-connect">
+<h3><a class="self" href="#function-net-socket-tcp-connect"><code>connect</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">connect</span><span class="tok-punct">(</span>endpoint<span class="tok-op">:</span> <span class="tok-type">Endpoint</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-socket-tcp-tcpconnection"><span class="tok-type">TCPConnection</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span>
+<span class="tok-fn">connect</span><span class="tok-punct">(</span>endpoint<span class="tok-op">:</span> <span class="tok-type">Endpoint</span><span class="tok-punct">,</span> options<span class="tok-op">:</span> <span class="tok-type">ConnectOptions</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-socket-tcp-tcpconnection"><span class="tok-type">TCPConnection</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Connects to a TCP endpoint with the backend's bounded connect deadline.</p>
+<p class="returns"><strong>Returns</strong> a stream or <code>Connect</code>/<code>Timeout</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Connecting to a line-oriented local service</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> endpoint <span class="tok-op">=</span> <span class="tok-type">TCP</span><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-op">.</span><span class="tok-method">host</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">127.0.0.1</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Port</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-number">9000</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span>
+<span class="tok-keyword">let</span> connection <span class="tok-op">=</span> <span class="tok-type">TCP</span><span class="tok-op">.</span><span class="tok-method">connect</span><span class="tok-punct">(</span>endpoint<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-socket-tcp-listen">
+<h3><a class="self" href="#function-net-socket-tcp-listen"><code>listen</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">listen</span><span class="tok-punct">(</span>endpoint<span class="tok-op">:</span> <span class="tok-type">Endpoint</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-socket-tcp-tcplistener"><span class="tok-type">TCPListener</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span>
+<span class="tok-fn">listen</span><span class="tok-punct">(</span>endpoint<span class="tok-op">:</span> <span class="tok-type">Endpoint</span><span class="tok-punct">,</span> options<span class="tok-op">:</span> <span class="tok-type">ListenOptions</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-socket-tcp-tcplistener"><span class="tok-type">TCPListener</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Binds and starts listening. Port zero selects an ephemeral local port.</p>
+<p class="returns"><strong>Returns</strong> a listener or <code>Connect</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Giving each integration test its own free port</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> listener <span class="tok-op">=</span> <span class="tok-type">TCP</span><span class="tok-op">.</span><span class="tok-method">listen</span><span class="tok-punct">(</span><span class="tok-type">TCP</span><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-op">.</span><span class="tok-method">loopback</span><span class="tok-punct">(</span><span class="tok-type">Port</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> port <span class="tok-op">=</span> listener<span class="tok-op">.</span><span class="tok-method">localAddress</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-op">.</span><span class="tok-method">port</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-socket-tcp-sendall">
+<h3><a class="self" href="#function-net-socket-tcp-sendall"><code>sendAll</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">sendAll</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-tcp-tcpconnection"><span class="tok-type">TCPConnection</span></a><span class="tok-punct">,</span> data<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends every byte, retrying partial operating-system writes internally.</p>
+<p>On failure, <code>NetError.progress</code> records how many bytes were accepted before the error. Do not blindly retry the whole payload when progress is present.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Sending one newline-delimited request</em></p>
+<pre class="code"><code>connection<span class="tok-op">.</span><span class="tok-method">sendAll</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">status\n</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Binary</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-socket-tcp-receivechunk">
+<h3><a class="self" href="#function-net-socket-tcp-receivechunk"><code>receiveChunk</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">receiveChunk</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-tcp-tcpconnection"><span class="tok-type">TCPConnection</span></a><span class="tok-punct">,</span> limit<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> timeout<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#record-duration"><span class="tok-type">Duration</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Receives up to <code>limit</code> bytes; EOF is reported as <code>Closed</code>.</p>
+<p>A successful result is one available chunk, not necessarily a complete application message. Use <code>receiveExactly</code>, <code>receiveUntil</code>, or <code>receiveLine</code> when the protocol supplies a boundary.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Reading up to 16 KiB from a streaming response</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> chunk <span class="tok-op">=</span> connection<span class="tok-op">.</span><span class="tok-method">receiveChunk</span><span class="tok-punct">(</span><span class="tok-number">16</span> <span class="tok-op">*</span> <span class="tok-number">1024</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-socket-tcp-receiveexactly">
+<h3><a class="self" href="#function-net-socket-tcp-receiveexactly"><code>receiveExactly</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">receiveExactly</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-tcp-tcpconnection"><span class="tok-type">TCPConnection</span></a><span class="tok-punct">,</span> count<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> timeout<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#record-duration"><span class="tok-type">Duration</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Receives exactly <code>count</code> bytes or returns a typed EOF/timeout failure.</p>
+<p>Useful after a protocol header has declared the payload length.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Reading a four-byte frame header</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> header <span class="tok-op">=</span> connection<span class="tok-op">.</span><span class="tok-method">receiveExactly</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-socket-tcp-receiveuntil">
+<h3><a class="self" href="#function-net-socket-tcp-receiveuntil"><code>receiveUntil</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">receiveUntil</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-tcp-tcpconnection"><span class="tok-type">TCPConnection</span></a><span class="tok-punct">,</span> delimiter<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">,</span> limit<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> timeout<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#record-duration"><span class="tok-type">Duration</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Receives through the first <code>delimiter</code> without exceeding <code>limit</code> bytes.</p>
+<p>The delimiter is included in the returned bytes. An empty delimiter is a <code>Parse</code> error; reaching the bound first is a <code>Limit</code> error.</p>
+<h5>Examples</h5>
+<p class="caption"><em>+connection.receiveUntil(&quot;\r\n\r\n&quot;.to(Binary).try, 65536).try+</em></p>
+<pre class="code"><code></code></pre>
+
+</div>
+<div class="fn" id="function-net-socket-tcp-receiveline">
+<h3><a class="self" href="#function-net-socket-tcp-receiveline"><code>receiveLine</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">receiveLine</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-tcp-tcpconnection"><span class="tok-type">TCPConnection</span></a><span class="tok-punct">,</span> limit<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> timeout<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#record-duration"><span class="tok-type">Duration</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Receives through a newline without exceeding <code>limit</code> bytes.</p>
+<p>The newline remains in the returned binary. Decode and trim only after a complete bounded line has been received.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Reading a response line with a defensive 8 KiB limit</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> line <span class="tok-op">=</span> connection<span class="tok-op">.</span><span class="tok-method">receiveLine</span><span class="tok-punct">(</span><span class="tok-number">8192</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-op">.</span><span class="tok-method">trim</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-socket-tcp-shutdownwrite">
+<h3><a class="self" href="#function-net-socket-tcp-shutdownwrite"><code>shutdownWrite</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">shutdownWrite</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-tcp-tcpconnection"><span class="tok-type">TCPConnection</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Half-closes the write side while leaving reads available.</p>
+
+</div>
+<div class="fn" id="function-net-socket-tcp-accept">
+<h3><a class="self" href="#function-net-socket-tcp-accept"><code>accept</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">accept</span><span class="tok-punct">(</span>listener<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-tcp-tcplistener"><span class="tok-type">TCPListener</span></a><span class="tok-punct">,</span> timeout<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#record-duration"><span class="tok-type">Duration</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-socket-tcp-tcpconnection"><span class="tok-type">TCPConnection</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Waits for and returns the next connection accepted by the listener.</p>
+<p>A timeout applies to this wait only; it does not become a read timeout on the returned connection.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Accepting one client in a small test server</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> client <span class="tok-op">=</span> listener<span class="tok-op">.</span><span class="tok-method">accept</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">seconds</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-socket-tcp-close">
+<h3><a class="self" href="#function-net-socket-tcp-close"><code>close</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">close</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-tcp-tcpconnection"><span class="tok-type">TCPConnection</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Idempotently closes a connected stream.</p>
+
+</div>
+<div class="fn" id="function-net-socket-tcp-closed?">
+<h3><a class="self" href="#function-net-socket-tcp-closed?"><code>closed?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">closed?</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-tcp-tcpconnection"><span class="tok-type">TCPConnection</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p class="returns"><strong>Returns</strong> whether the listener owner has stopped</p>
+
+</div>
+<div class="fn" id="function-net-socket-tcp-localaddress">
+<h3><a class="self" href="#function-net-socket-tcp-localaddress"><code>localAddress</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">localAddress</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-tcp-tcpconnection"><span class="tok-type">TCPConnection</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Endpoint</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Returns the bound local endpoint, including an ephemeral assigned port.</p>
+
+</div>
+<div class="fn" id="function-net-socket-tcp-peeraddress">
+<h3><a class="self" href="#function-net-socket-tcp-peeraddress"><code>peerAddress</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">peerAddress</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-tcp-tcpconnection"><span class="tok-type">TCPConnection</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Endpoint</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Returns the remote endpoint of a connected stream.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Recording the peer in an access log</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> peer <span class="tok-op">=</span> connection<span class="tok-op">.</span><span class="tok-method">peerAddress</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">accepted </span><span class="tok-string">${</span>peer<span class="tok-op">.</span><span class="tok-method">host</span><span class="tok-string">}</span><span class="tok-string">:</span><span class="tok-string">${</span>peer<span class="tok-op">.</span><span class="tok-method">port</span><span class="tok-op">.</span><span class="tok-method">string</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="type-net-socket-tcp-plain">
+<h2><span class="kind kind-type">type</span> <code>Plain</code></h2>
+<p>Marker for an unencrypted stream.</p>
+
+</section>
+<section class="entity" id="type-net-socket-tcp-tcpconnection">
+<h2><span class="kind kind-type">type</span> <code>TCPConnection</code></h2>
+<p>An opaque connected TCP stream.</p>
+
+</section>
+<section class="entity" id="type-net-socket-tcp-tcplistener">
+<h2><span class="kind kind-type">type</span> <code>TCPListener</code></h2>
+<p>An opaque TCP listening socket.</p>
+
+</section>
+<section class="entity" id="record-net-socket-tcp-endpoint">
+<h2><span class="kind kind-record">record</span> <code>Endpoint</code></h2>
+<p>A host name or numeric address paired with a validated port.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>host</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>port</code></dt><dd><code>Net.Port</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-socket-tcp-connectoptions">
+<h2><span class="kind kind-record">record</span> <code>ConnectOptions</code></h2>
+<p>Connection deadlines and operating-system socket policy.</p>
+<p>Buffer values of zero leave sizing to the operating system. <code>noDelay?</code> disables Nagle's algorithm, which is usually right for request/response traffic; bulk-transfer protocols may prefer fewer, larger packets.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>connectTimeout</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#record-duration">Duration</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>noDelay?</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>keepAlive?</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>sendBuffer</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>receiveBuffer</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-socket-tcp-listenoptions">
+<h2><span class="kind kind-record">record</span> <code>ListenOptions</code></h2>
+<p>Listener queue and policy inherited by accepted connections.</p>
+<p><code>backlog</code> bounds connections waiting for <code>accept</code>. Buffer values of zero keep the platform defaults rather than requesting a particular byte size.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>backlog</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>reuseAddress?</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>noDelay?</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>keepAlive?</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>sendBuffer</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>receiveBuffer</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="module-net-socket-tcp-endpoint">
+<h2><span class="kind kind-module">module</span> <code>Net.Socket.TCP.Endpoint</code></h2>
+<div class="functions">
+<div class="fn" id="function-net-socket-tcp-endpoint-host">
+<h3><a class="self" href="#function-net-socket-tcp-endpoint-host"><code>host</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">host</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> port<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#module-net"><span class="tok-type">Net</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-port"><span class="tok-type">Port</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Endpoint</span></code></pre>
+<p>Pairs a hostname or numeric address with a port.</p>
+<p>Resolution happens when connecting, so this preserves <code>name</code> exactly as supplied rather than validating it as an <code>IP.Address</code>.</p>
+<p class="returns"><strong>Returns</strong> the remote or listening endpoint</p>
+<h5>Examples</h5>
+<p class="caption"><em>Connecting by hostname</em></p>
+<pre class="code"><code><span class="tok-type">TCP</span><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-op">.</span><span class="tok-method">host</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cache.internal</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Port</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-number">6379</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-socket-tcp-endpoint-any">
+<h3><a class="self" href="#function-net-socket-tcp-endpoint-any"><code>any</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">any</span><span class="tok-punct">(</span>port<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#module-net"><span class="tok-type">Net</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-port"><span class="tok-type">Port</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Endpoint</span></code></pre>
+<p>Builds an IPv4 wildcard endpoint for listening on every local interface.</p>
+<p>Be deliberate with this in development: unlike <code>loopback</code>, it may expose the service to other machines on the network.</p>
+<p class="returns"><strong>Returns</strong> an IPv4 wildcard listening endpoint</p>
+<h5>Examples</h5>
+<p class="caption"><em>Exposing a production service on port 8080</em></p>
+<pre class="code"><code><span class="tok-type">TCP</span><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-op">.</span><span class="tok-method">any</span><span class="tok-punct">(</span><span class="tok-type">Port</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-number">8080</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-socket-tcp-endpoint-loopback">
+<h3><a class="self" href="#function-net-socket-tcp-endpoint-loopback"><code>loopback</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">loopback</span><span class="tok-punct">(</span>port<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#module-net"><span class="tok-type">Net</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-port"><span class="tok-type">Port</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Endpoint</span></code></pre>
+<p>Builds an IPv4 loopback endpoint reachable only from this machine.</p>
+<p>Port zero lets the operating system choose a free port, which is useful for tests; ask <code>localAddress</code> which port was assigned after listening.</p>
+<p class="returns"><strong>Returns</strong> an IPv4 loopback endpoint</p>
+<h5>Examples</h5>
+<p class="caption"><em>Starting an isolated test listener</em></p>
+<pre class="code"><code><span class="tok-type">TCP</span><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-op">.</span><span class="tok-method">loopback</span><span class="tok-punct">(</span><span class="tok-type">Port</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-net-socket-udp">
+<h2><span class="kind kind-module">module</span> <code>Net.Socket.UDP</code></h2>
+<div class="functions">
+<div class="fn" id="function-net-socket-udp-bind">
+<h3><a class="self" href="#function-net-socket-udp-bind"><code>bind</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">bind</span><span class="tok-punct">(</span>endpoint<span class="tok-op">:</span> <span class="tok-type">Endpoint</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-socket-udp-socket"><span class="tok-type">Socket</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span>
+<span class="tok-fn">bind</span><span class="tok-punct">(</span>endpoint<span class="tok-op">:</span> <span class="tok-type">Endpoint</span><span class="tok-punct">,</span> options<span class="tok-op">:</span> <a class="xref" href="#record-net-socket-udp-bindoptions"><span class="tok-type">BindOptions</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-socket-udp-socket"><span class="tok-type">Socket</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Binds a datagram socket. Port zero selects an ephemeral local port.</p>
+<h5>Examples</h5>
+<p class="caption"><em>A local UDP echo test</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> socket <span class="tok-op">=</span> <span class="tok-type">UDP</span><span class="tok-op">.</span><span class="tok-method">bind</span><span class="tok-punct">(</span><span class="tok-type">UDP</span><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-op">.</span><span class="tok-method">loopback</span><span class="tok-punct">(</span><span class="tok-type">Port</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> endpoint <span class="tok-op">=</span> socket<span class="tok-op">.</span><span class="tok-method">localAddress</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-socket-udp-sendto">
+<h3><a class="self" href="#function-net-socket-udp-sendto"><code>sendTo</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">sendTo</span><span class="tok-punct">(</span>socket<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-udp-socket"><span class="tok-type">Socket</span></a><span class="tok-punct">,</span> endpoint<span class="tok-op">:</span> <span class="tok-type">Endpoint</span><span class="tok-punct">,</span> data<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends one complete datagram and returns its byte count.</p>
+<p>Datagram boundaries are preserved: one <code>sendTo</code> corresponds to one <code>receiveFrom</code>, unless the packet is lost by the network.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Sending a StatsD-style counter</em></p>
+<pre class="code"><code>socket<span class="tok-op">.</span><span class="tok-method">sendTo</span><span class="tok-punct">(</span>collector<span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">orders:1|c</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Binary</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-socket-udp-receivefrom">
+<h3><a class="self" href="#function-net-socket-udp-receivefrom"><code>receiveFrom</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">receiveFrom</span><span class="tok-punct">(</span>socket<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-udp-socket"><span class="tok-type">Socket</span></a><span class="tok-punct">,</span> limit<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-socket-udp-datagram"><span class="tok-type">Datagram</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Receives one datagram no larger than <code>limit</code> bytes.</p>
+<p>Oversized packets fail with <code>Limit</code> instead of being silently truncated, so a caller never mistakes a prefix for a complete message.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Receiving and replying to one packet</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> packet <span class="tok-op">=</span> socket<span class="tok-op">.</span><span class="tok-method">receiveFrom</span><span class="tok-punct">(</span><span class="tok-number">4096</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+socket<span class="tok-op">.</span><span class="tok-method">sendTo</span><span class="tok-punct">(</span>packet<span class="tok-op">.</span><span class="tok-method">source</span><span class="tok-punct">,</span> packet<span class="tok-op">.</span><span class="tok-method">data</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-socket-udp-close">
+<h3><a class="self" href="#function-net-socket-udp-close"><code>close</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">close</span><span class="tok-punct">(</span>socket<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-udp-socket"><span class="tok-type">Socket</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Idempotently closes the socket.</p>
+
+</div>
+<div class="fn" id="function-net-socket-udp-closed?">
+<h3><a class="self" href="#function-net-socket-udp-closed?"><code>closed?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">closed?</span><span class="tok-punct">(</span>socket<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-udp-socket"><span class="tok-type">Socket</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p class="returns"><strong>Returns</strong> whether the socket owner has stopped</p>
+
+</div>
+<div class="fn" id="function-net-socket-udp-localaddress">
+<h3><a class="self" href="#function-net-socket-udp-localaddress"><code>localAddress</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">localAddress</span><span class="tok-punct">(</span>socket<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-udp-socket"><span class="tok-type">Socket</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Endpoint</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Returns the bound endpoint, including an ephemeral assigned port.</p>
+
+</div>
+<div class="fn" id="function-net-socket-udp-joinmulticast">
+<h3><a class="self" href="#function-net-socket-udp-joinmulticast"><code>joinMulticast</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">joinMulticast</span><span class="tok-punct">(</span>socket<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-udp-socket"><span class="tok-type">Socket</span></a><span class="tok-punct">,</span> group<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#module-net"><span class="tok-type">Net</span></a><span class="tok-op">.</span><span class="tok-type">IP</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/net/ip/#record-net-ip-address"><span class="tok-type">Address</span></a><span class="tok-punct">,</span> interface<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#module-net"><span class="tok-type">Net</span></a><span class="tok-op">.</span><span class="tok-type">IP</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/net/ip/#record-net-ip-address"><span class="tok-type">Address</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Joins an IPv4 multicast group on the selected local interface. The group must be multicast and the interface must be an IPv4 address.</p>
+
+</div>
+<div class="fn" id="function-net-socket-udp-leavemulticast">
+<h3><a class="self" href="#function-net-socket-udp-leavemulticast"><code>leaveMulticast</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">leaveMulticast</span><span class="tok-punct">(</span>socket<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-udp-socket"><span class="tok-type">Socket</span></a><span class="tok-punct">,</span> group<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#module-net"><span class="tok-type">Net</span></a><span class="tok-op">.</span><span class="tok-type">IP</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/net/ip/#record-net-ip-address"><span class="tok-type">Address</span></a><span class="tok-punct">,</span> interface<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#module-net"><span class="tok-type">Net</span></a><span class="tok-op">.</span><span class="tok-type">IP</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/net/ip/#record-net-ip-address"><span class="tok-type">Address</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Leaves a membership previously joined with the same group and interface.</p>
+
+</div>
+</div>
+</section>
+<section class="entity" id="type-net-socket-udp-socket">
+<h2><span class="kind kind-type">type</span> <code>Socket</code></h2>
+<p>Connectionless datagrams. A receive limit rejects an oversized datagram instead of returning a silently truncated payload.</p>
+<pre class="code"><code><span class="tok-keyword">let</span> socket <span class="tok-op">=</span> <span class="tok-type">UDP</span><span class="tok-op">.</span><span class="tok-method">bind</span><span class="tok-punct">(</span><span class="tok-type">UDP</span><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-op">.</span><span class="tok-method">loopback</span><span class="tok-punct">(</span><span class="tok-type">Port</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> address <span class="tok-op">=</span> socket<span class="tok-op">.</span><span class="tok-method">localAddress</span><span class="tok-op">.</span><span class="tok-method">try</span>
+socket<span class="tok-op">.</span><span class="tok-method">sendTo</span><span class="tok-punct">(</span>address<span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Binary</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> packet <span class="tok-op">=</span> socket<span class="tok-op">.</span><span class="tok-method">receiveFrom</span><span class="tok-punct">(</span><span class="tok-number">1024</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+socket<span class="tok-op">.</span><span class="tok-method">close</span></code></pre>
+<p>An opaque bound datagram socket.</p>
+
+</section>
+<section class="entity" id="record-net-socket-udp-endpoint">
+<h2><span class="kind kind-record">record</span> <code>Endpoint</code></h2>
+<p>A datagram address paired with a validated port.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>host</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>port</code></dt><dd><code>Net.Port</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-socket-udp-datagram">
+<h2><span class="kind kind-record">record</span> <code>Datagram</code></h2>
+<p>A received datagram and its source endpoint.</p>
+<p>Reply to <code>source</code> rather than the socket's local address: UDP has no connection that remembers which peer sent the packet.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>source</code></dt><dd><code>Endpoint</code></dd></div>
+<div class="field"><dt><code>data</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary">Binary</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-socket-udp-bindoptions">
+<h2><span class="kind kind-record">record</span> <code>BindOptions</code></h2>
+<p>Curated socket policy. Broadcast is opt-in. The receive timeout applies to each <code>receiveFrom</code> call; multicast TTL is bounded to the IP hop-limit range.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>broadcast?</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>multicastTtl</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>multicastLoopback?</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>receiveTimeout</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#record-duration">Duration</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="module-net-socket-udp-endpoint">
+<h2><span class="kind kind-module">module</span> <code>Net.Socket.UDP.Endpoint</code></h2>
+<div class="functions">
+<div class="fn" id="function-net-socket-udp-endpoint-host">
+<h3><a class="self" href="#function-net-socket-udp-endpoint-host"><code>host</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">host</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> port<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#module-net"><span class="tok-type">Net</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-port"><span class="tok-type">Port</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Endpoint</span></code></pre>
+<p>Pairs a hostname or numeric address with a UDP port.</p>
+<p class="returns"><strong>Returns</strong> an endpoint using <code>name</code> exactly as supplied</p>
+<h5>Examples</h5>
+<p class="caption"><em>Addressing a local metrics collector</em></p>
+<pre class="code"><code><span class="tok-type">UDP</span><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-op">.</span><span class="tok-method">host</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">metrics.internal</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Port</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-number">8125</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-socket-udp-endpoint-any">
+<h3><a class="self" href="#function-net-socket-udp-endpoint-any"><code>any</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">any</span><span class="tok-punct">(</span>port<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#module-net"><span class="tok-type">Net</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-port"><span class="tok-type">Port</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Endpoint</span></code></pre>
+<p>Builds an IPv4 wildcard endpoint for receiving on every local interface.</p>
+<p class="returns"><strong>Returns</strong> an IPv4 wildcard endpoint</p>
+<h5>Examples</h5>
+<p class="caption"><em>Receiving discovery packets on port 9999</em></p>
+<pre class="code"><code><span class="tok-type">UDP</span><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-op">.</span><span class="tok-method">any</span><span class="tok-punct">(</span><span class="tok-type">Port</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-number">9999</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-socket-udp-endpoint-loopback">
+<h3><a class="self" href="#function-net-socket-udp-endpoint-loopback"><code>loopback</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">loopback</span><span class="tok-punct">(</span>port<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#module-net"><span class="tok-type">Net</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-port"><span class="tok-type">Port</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Endpoint</span></code></pre>
+<p>Builds an IPv4 loopback endpoint reachable only from this machine.</p>
+<p class="returns"><strong>Returns</strong> an IPv4 loopback endpoint</p>
+<h5>Examples</h5>
+<p class="caption"><em>Allocating a free UDP port for a test</em></p>
+<pre class="code"><code><span class="tok-type">UDP</span><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-op">.</span><span class="tok-method">loopback</span><span class="tok-punct">(</span><span class="tok-type">Port</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-net-socket-unix">
+<h2><span class="kind kind-module">module</span> <code>Net.Socket.Unix</code></h2>
+<div class="functions">
+<div class="fn" id="function-net-socket-unix-connect">
+<h3><a class="self" href="#function-net-socket-unix-connect"><code>connect</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">connect</span><span class="tok-punct">(</span>address<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/ip/#record-net-ip-address"><span class="tok-type">Address</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-socket-unix-unixconnection"><span class="tok-type">UnixConnection</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span>
+<span class="tok-fn">connect</span><span class="tok-punct">(</span>address<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/ip/#record-net-ip-address"><span class="tok-type">Address</span></a><span class="tok-punct">,</span> options<span class="tok-op">:</span> <span class="tok-type">ConnectOptions</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-socket-unix-unixconnection"><span class="tok-type">UnixConnection</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Connects to a filesystem-domain listener.</p>
+<p>Unix sockets avoid opening a network port and are a good fit for two processes on the same machine, such as a CLI and its background daemon.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> daemon <span class="tok-op">=</span> <span class="tok-type">Unix</span><span class="tok-op">.</span><span class="tok-method">connect</span><span class="tok-punct">(</span><span class="tok-type">Unix</span><span class="tok-op">.</span><span class="tok-type">Address</span><span class="tok-op">.</span><span class="tok-method">path</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/tmp/my-app.sock</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-socket-unix-listen">
+<h3><a class="self" href="#function-net-socket-unix-listen"><code>listen</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">listen</span><span class="tok-punct">(</span>address<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/ip/#record-net-ip-address"><span class="tok-type">Address</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-socket-unix-unixlistener"><span class="tok-type">UnixListener</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span>
+<span class="tok-fn">listen</span><span class="tok-punct">(</span>address<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/ip/#record-net-ip-address"><span class="tok-type">Address</span></a><span class="tok-punct">,</span> options<span class="tok-op">:</span> <span class="tok-type">ListenOptions</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-socket-unix-unixlistener"><span class="tok-type">UnixListener</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Binds a new path; an existing filesystem entry is never removed implicitly.</p>
+<p>This conservative default protects regular files and also avoids taking over a socket that may still belong to a running service.</p>
+
+</div>
+<div class="fn" id="function-net-socket-unix-sendall">
+<h3><a class="self" href="#function-net-socket-unix-sendall"><code>sendAll</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">sendAll</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-unix-unixconnection"><span class="tok-type">UnixConnection</span></a><span class="tok-punct">,</span> data<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends every byte and returns the count.</p>
+
+</div>
+<div class="fn" id="function-net-socket-unix-receivechunk">
+<h3><a class="self" href="#function-net-socket-unix-receivechunk"><code>receiveChunk</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">receiveChunk</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-unix-unixconnection"><span class="tok-type">UnixConnection</span></a><span class="tok-punct">,</span> limit<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Receives one bounded chunk; EOF is <code>Closed</code>.</p>
+
+</div>
+<div class="fn" id="function-net-socket-unix-receiveexactly">
+<h3><a class="self" href="#function-net-socket-unix-receiveexactly"><code>receiveExactly</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">receiveExactly</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-unix-unixconnection"><span class="tok-type">UnixConnection</span></a><span class="tok-punct">,</span> count<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Receives exactly <code>count</code> bytes or returns a typed EOF/timeout failure.</p>
+
+</div>
+<div class="fn" id="function-net-socket-unix-receiveuntil">
+<h3><a class="self" href="#function-net-socket-unix-receiveuntil"><code>receiveUntil</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">receiveUntil</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-unix-unixconnection"><span class="tok-type">UnixConnection</span></a><span class="tok-punct">,</span> delimiter<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">,</span> limit<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Receives through <code>delimiter</code>, including it, within an explicit bound.</p>
+<h5>Examples</h5>
+<p class="caption"><em>+connection.receiveUntil(&quot;\n&quot;.to(Binary).try, 4096).try+</em></p>
+<pre class="code"><code></code></pre>
+
+</div>
+<div class="fn" id="function-net-socket-unix-receiveline">
+<h3><a class="self" href="#function-net-socket-unix-receiveline"><code>receiveLine</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">receiveLine</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-unix-unixconnection"><span class="tok-type">UnixConnection</span></a><span class="tok-punct">,</span> limit<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Receives through a newline without exceeding <code>limit</code> bytes.</p>
+
+</div>
+<div class="fn" id="function-net-socket-unix-shutdownwrite">
+<h3><a class="self" href="#function-net-socket-unix-shutdownwrite"><code>shutdownWrite</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">shutdownWrite</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-unix-unixconnection"><span class="tok-type">UnixConnection</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Half-closes the write side while leaving reads available.</p>
+
+</div>
+<div class="fn" id="function-net-socket-unix-accept">
+<h3><a class="self" href="#function-net-socket-unix-accept"><code>accept</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">accept</span><span class="tok-punct">(</span>listener<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-unix-unixlistener"><span class="tok-type">UnixListener</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-socket-unix-unixconnection"><span class="tok-type">UnixConnection</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Waits for and returns the next stream connection.</p>
+
+</div>
+<div class="fn" id="function-net-socket-unix-close">
+<h3><a class="self" href="#function-net-socket-unix-close"><code>close</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">close</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-unix-unixconnection"><span class="tok-type">UnixConnection</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Idempotently closes a stream.</p>
+
+</div>
+<div class="fn" id="function-net-socket-unix-closed?">
+<h3><a class="self" href="#function-net-socket-unix-closed?"><code>closed?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">closed?</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-unix-unixconnection"><span class="tok-type">UnixConnection</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p class="returns"><strong>Returns</strong> whether the listener owner has stopped</p>
+
+</div>
+</div>
+</section>
+<section class="entity" id="type-net-socket-unix-unixconnection">
+<h2><span class="kind kind-type">type</span> <code>UnixConnection</code></h2>
+<p>Filesystem-domain streams for local IPC. The listener owns and removes only the socket path it successfully created.</p>
+<pre class="code"><code><span class="tok-keyword">let</span> address <span class="tok-op">=</span> <span class="tok-type">Unix</span><span class="tok-op">.</span><span class="tok-type">Address</span><span class="tok-op">.</span><span class="tok-method">path</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/tmp/my-service.sock</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> listener <span class="tok-op">=</span> <span class="tok-type">Unix</span><span class="tok-op">.</span><span class="tok-method">listen</span><span class="tok-punct">(</span>address<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> client <span class="tok-op">=</span> <span class="tok-type">Unix</span><span class="tok-op">.</span><span class="tok-method">connect</span><span class="tok-punct">(</span>address<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+listener<span class="tok-op">.</span><span class="tok-method">close</span></code></pre>
+<p>An opaque connected filesystem-domain byte stream.</p>
+
+</section>
+<section class="entity" id="type-net-socket-unix-unixlistener">
+<h2><span class="kind kind-type">type</span> <code>UnixListener</code></h2>
+<p>An opaque filesystem-domain stream listener.</p>
+
+</section>
+<section class="entity" id="record-net-socket-unix-address">
+<h2><span class="kind kind-record">record</span> <code>Address</code></h2>
+<p>A validated absolute filesystem socket path.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>path</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+</dl>
+<h3>Defined in other modules</h3>
+<dl class="params elsewhere">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/net/ip/#make-address">Net.IP</a></dt><dd><a class="xref" href="/prelude/0.4.0-beta.4-dev/net/ip/#address-string"><code>string</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/ip/#address-version"><code>version</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/ip/#address-loopback?"><code>loopback?</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/ip/#address-private?"><code>private?</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/ip/#address-unspecified?"><code>unspecified?</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/ip/#address-multicast?"><code>multicast?</code></a></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-socket-unix-connectoptions">
+<h2><span class="kind kind-record">record</span> <code>ConnectOptions</code></h2>
+<p>Connection and read deadlines for a local IPC client.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>connectTimeout</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#record-duration">Duration</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>receiveTimeout</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#record-duration">Duration</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-socket-unix-listenoptions">
+<h2><span class="kind kind-record">record</span> <code>ListenOptions</code></h2>
+<p>Listener queue, stale-socket policy, and per-operation deadlines.</p>
+<p><code>removeStale?</code> removes only a filesystem socket, never a regular file or directory that happens to occupy the requested path.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>backlog</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>removeStale?</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>acceptTimeout</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#record-duration">Duration</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>receiveTimeout</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#record-duration">Duration</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="module-net-socket-unix-address">
+<h2><span class="kind kind-module">module</span> <code>Net.Socket.Unix.Address</code></h2>
+<div class="functions">
+<div class="fn" id="function-net-socket-unix-address-path">
+<h3><a class="self" href="#function-net-socket-unix-address-path"><code>path</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">path</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/net/ip/#record-net-ip-address"><span class="tok-type">Address</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Validates a nonempty absolute Unix-domain socket path.</p>
+<p>Relative paths are rejected so ownership and cleanup always refer to one unambiguous filesystem entry.</p>
+<p class="returns"><strong>Returns</strong> the address, or <code>Parse</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Addressing a per-user background service</em></p>
+<pre class="code"><code><span class="tok-type">Unix</span><span class="tok-op">.</span><span class="tok-type">Address</span><span class="tok-op">.</span><span class="tok-method">path</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/tmp/my-app.sock</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-net-socket-tls">
+<h2><span class="kind kind-module">module</span> <code>Net.Socket.TLS</code></h2>
+<div class="functions">
+<div class="fn" id="function-net-socket-tls-connect">
+<h3><a class="self" href="#function-net-socket-tls-connect"><code>connect</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">connect</span><span class="tok-punct">(</span>endpoint<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#module-net"><span class="tok-type">Net</span></a><span class="tok-op">.</span><a class="xref" href="#type-net-socket-udp-socket"><span class="tok-type">Socket</span></a><span class="tok-op">.</span><span class="tok-type">TCP</span><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-punct">,</span> config<span class="tok-op">:</span> <a class="xref" href="#record-net-socket-tls-clientconfig"><span class="tok-type">ClientConfig</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-socket-tls-tlsconnection"><span class="tok-type">TLSConnection</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Opens a direct TLS connection with a bounded handshake deadline.</p>
+<p><code>serverName</code> drives both certificate hostname verification and SNI. Pass the DNS name from the URL, not an address it happened to resolve to.</p>
+<p class="returns"><strong>Returns</strong> a TLS stream or typed failure</p>
+<h5>Examples</h5>
+<p class="caption"><em>Opening a verified connection to an HTTPS origin</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> endpoint <span class="tok-op">=</span> <span class="tok-type">TCP</span><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-op">.</span><span class="tok-method">host</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">example.com</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Port</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-number">443</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span>
+<span class="tok-keyword">let</span> connection <span class="tok-op">=</span> <span class="tok-type">TLS</span><span class="tok-op">.</span><span class="tok-method">connect</span><span class="tok-punct">(</span>endpoint<span class="tok-punct">,</span> <span class="tok-type">TLS</span><span class="tok-op">.</span><span class="tok-type">ClientConfig</span> <span class="tok-punct">{</span>
+  serverName<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">example.com</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span>
+  alpn<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">http/1.1</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-socket-tls-sendall">
+<h3><a class="self" href="#function-net-socket-tls-sendall"><code>sendAll</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">sendAll</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-tls-tlsconnection"><span class="tok-type">TLSConnection</span></a><span class="tok-punct">,</span> data<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends every plaintext byte through the TLS stream.</p>
+
+</div>
+<div class="fn" id="function-net-socket-tls-receivechunk">
+<h3><a class="self" href="#function-net-socket-tls-receivechunk"><code>receiveChunk</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">receiveChunk</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-tls-tlsconnection"><span class="tok-type">TLSConnection</span></a><span class="tok-punct">,</span> limit<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Receives one decrypted chunk no larger than <code>limit</code>.</p>
+
+</div>
+<div class="fn" id="function-net-socket-tls-close">
+<h3><a class="self" href="#function-net-socket-tls-close"><code>close</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">close</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-tls-tlsconnection"><span class="tok-type">TLSConnection</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Idempotently closes the TLS stream.</p>
+
+</div>
+<div class="fn" id="function-net-socket-tls-closed?">
+<h3><a class="self" href="#function-net-socket-tls-closed?"><code>closed?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">closed?</span><span class="tok-punct">(</span>connection<span class="tok-op">:</span> <a class="xref" href="#type-net-socket-tls-tlsconnection"><span class="tok-type">TLSConnection</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p class="returns"><strong>Returns</strong> whether the TLS connection owner has stopped</p>
+
+</div>
+</div>
+</section>
+<section class="entity" id="type-net-socket-tls-tlsconnection">
+<h2><span class="kind kind-type">type</span> <code>TLSConnection</code></h2>
+<p>TLS client streams. Certificate and hostname verification are enabled by default; disabling verification must be an explicit configuration choice.</p>
+<pre class="code"><code><span class="tok-keyword">let</span> endpoint <span class="tok-op">=</span> <span class="tok-type">TCP</span><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-op">.</span><span class="tok-method">host</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">example.test</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Port</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-number">443</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span>
+<span class="tok-keyword">let</span> tls <span class="tok-op">=</span> <span class="tok-type">TLS</span><span class="tok-op">.</span><span class="tok-method">connect</span><span class="tok-punct">(</span>endpoint<span class="tok-punct">,</span> <span class="tok-type">TLS</span><span class="tok-op">.</span><span class="tok-type">ClientConfig</span> <span class="tok-punct">{</span>
+  serverName<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">example.test</span><span class="tok-string">&quot;</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+tls<span class="tok-op">.</span><span class="tok-method">close</span></code></pre>
+<p>An opaque verified or explicitly unverified TLS byte stream.</p>
+
+</section>
+<section class="entity" id="record-net-socket-tls-clientconfig">
+<h2><span class="kind kind-record">record</span> <code>ClientConfig</code></h2>
+<p>Client handshake policy. TLS 1.2/1.3 are enabled; verification defaults on.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>serverName</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>verify?</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>alpn</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>]</code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+
+        </article>
+      </main>
+      <aside class="toc" aria-label="On this page">
+        <nav><p class="toc-heading">On this page</p><ul><li><a href="#module-net-socket">Net.Socket</a></li><li class="toc-nested"><a href="#module-net-socket-tcp">Net.Socket.TCP</a></li><li class="toc-nested"><a href="#type-net-socket-tcp-plain">Plain</a></li><li class="toc-nested"><a href="#type-net-socket-tcp-tcpconnection">TCPConnection</a></li><li class="toc-nested"><a href="#type-net-socket-tcp-tcplistener">TCPListener</a></li><li class="toc-nested"><a href="#record-net-socket-tcp-endpoint">Endpoint</a></li><li class="toc-nested"><a href="#record-net-socket-tcp-connectoptions">ConnectOptions</a></li><li class="toc-nested"><a href="#record-net-socket-tcp-listenoptions">ListenOptions</a></li><li class="toc-nested"><a href="#module-net-socket-tcp-endpoint">Net.Socket.TCP.Endpoint</a></li><li class="toc-nested"><a href="#module-net-socket-udp">Net.Socket.UDP</a></li><li class="toc-nested"><a href="#type-net-socket-udp-socket">Socket</a></li><li class="toc-nested"><a href="#record-net-socket-udp-endpoint">Endpoint</a></li><li class="toc-nested"><a href="#record-net-socket-udp-datagram">Datagram</a></li><li class="toc-nested"><a href="#record-net-socket-udp-bindoptions">BindOptions</a></li><li class="toc-nested"><a href="#module-net-socket-udp-endpoint">Net.Socket.UDP.Endpoint</a></li><li class="toc-nested"><a href="#module-net-socket-unix">Net.Socket.Unix</a></li><li class="toc-nested"><a href="#type-net-socket-unix-unixconnection">UnixConnection</a></li><li class="toc-nested"><a href="#type-net-socket-unix-unixlistener">UnixListener</a></li><li class="toc-nested"><a href="#record-net-socket-unix-address">Address</a></li><li class="toc-nested"><a href="#record-net-socket-unix-connectoptions">ConnectOptions</a></li><li class="toc-nested"><a href="#record-net-socket-unix-listenoptions">ListenOptions</a></li><li class="toc-nested"><a href="#module-net-socket-unix-address">Net.Socket.Unix.Address</a></li><li class="toc-nested"><a href="#module-net-socket-tls">Net.Socket.TLS</a></li><li class="toc-nested"><a href="#type-net-socket-tls-tlsconnection">TLSConnection</a></li><li class="toc-nested"><a href="#record-net-socket-tls-clientconfig">ClientConfig</a></li></ul></nav>
+      </aside>
+    </div>
+    <footer class="foot">
+      <div class="wrap">Generated from source (<code>net/socket.kex</code>) · Built with Marqraft · <a href="https://kex.run">kex.run</a></div>
+    </footer>
+  </body>
+</html>

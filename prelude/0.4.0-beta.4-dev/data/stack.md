@@ -31,6 +31,8 @@ Stack.empty.pop       # => None
 
 Every method answers with a new stack rather than changing the receiver. `push!` and `pop!` come free from the `!` rebinding form, the same as `add!`/`delete!` do for `Data.Set`: they build a new stack and rebind the receiver variable rather than modifying anything in place.
 
+
+
 ## record `Stack<A>`
 
 A stack of elements, held top first.
@@ -45,40 +47,26 @@ Stack.from([1, 2, 3]).items   # => [1, 2, 3]
 
   - `elements` : [A] (optional)
 
-## module `Data.Stack`
+Implements [`Enumerable`](../enumerable.md#trait-enumerable), [`Foldable`](../enumerable.md#trait-foldable), [`Monoid`](../algebra.md#trait-monoid), [`Showable`](../kex.md#trait-showable), [`Blankable`](../blankable.md#trait-blankable).
 
-Constructors for `Stack`.
+### Methods
 
-## function `from`
-
-Builds a stack from a list, read bottom-to-top: the last element is on top.
-
+#### `reduce` (from Enumerable, Foldable)
 
 ```kex
-from(items)
+reduce(acc: B, f: (B -> A -> B)) -> B
 ```
-
-
-## constant `empty`
-
-The stack with no elements. Also the `Monoid` identity.
-
-
-
-## make `Stack<A>` implements [Enumerable](../enumerable.md#trait-enumerable), [Foldable](../enumerable.md#trait-foldable), [Monoid](../algebra.md#trait-monoid), Showable
-
-
-#### `reduce`
 
 Folds from the top down to the bottom.
 
 This is `Stack`'s `Enumerable`/`Foldable` primitive.
 
-```kex
-reduce(acc, f) : B -> (B -> A -> B) -> B
-```
+**Parameters**
 
-**Returns**: `B` — the final accumulator
+  - `acc` — the initial accumulator
+  - `f` — combines the accumulator with each element
+
+**Returns**: the final accumulator
 
 **Examples**
 
@@ -86,25 +74,29 @@ reduce(acc, f) : B -> (B -> A -> B) -> B
 Stack.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
 ```
 
-#### `identity`
-
-The empty stack: the `Monoid` identity.
+#### `identity` (from Monoid)
 
 ```kex
 identity : Stack<A>
 ```
 
-**Returns**: `Stack<A>` — the empty stack
+The empty stack: the `Monoid` identity.
 
-#### `combine`
+**Returns**: the empty stack
+
+#### `combine` (from Monoid)
+
+```kex
+combine(other: Stack<A>) -> Stack<A>
+```
 
 Combines two stacks by pushing the argument's elements on top of this one, top element last.
 
-```kex
-combine(other) : Stack<A> -> Stack<A>
-```
+**Parameters**
 
-**Returns**: `Stack<A>` — this stack with `other` stacked above it
+  - `other` — the stack to push on top
+
+**Returns**: this stack with `other` stacked above it
 
 **Examples**
 
@@ -114,13 +106,13 @@ Stack.from([1, 2]).combine(Stack.from([3, 4])).items   # => [1, 2, 3, 4]
 
 #### `items`
 
-Returns the elements bottom-to-top: the order you would have pushed them in.
-
 ```kex
 items : [A]
 ```
 
-**Returns**: `[A]` — the elements, bottom first
+Returns the elements bottom-to-top: the order you would have pushed them in.
+
+**Returns**: the elements, bottom first
 
 **Examples**
 
@@ -130,15 +122,19 @@ Stack.from([1, 2, 3]).items   # => [1, 2, 3]
 
 #### `push`
 
+```kex
+push(value: A) -> Stack<A>
+```
+
 Returns a new stack with `value` pushed on top.
 
 Use `push!` to rebind the receiver variable.
 
-```kex
-push(value) : A -> Stack<A>
-```
+**Parameters**
 
-**Returns**: `Stack<A>` — a stack with `value` on top
+  - `value` — the element to push
+
+**Returns**: a stack with `value` on top
 
 **Examples**
 
@@ -148,15 +144,15 @@ Stack.from([1, 2]).push(3).items   # => [1, 2, 3]
 
 #### `pop`
 
-Returns the top element and the stack without it, wrapped in `Just`, or `None` for an empty stack.
-
-Use `pop!` to rebind the receiver variable.
-
 ```kex
 pop : (A, Stack<A>)?
 ```
 
-**Returns**: `(A, Stack<A>)?` — the top element and the rest, or `None`
+Returns the top element and the stack without it, wrapped in `Just`, or `None` for an empty stack.
+
+Use `pop!` to rebind the receiver variable.
+
+**Returns**: the top element and the rest, or `None`
 
 **Examples**
 
@@ -167,13 +163,13 @@ Stack.empty.pop             # => None
 
 #### `peek`
 
-Returns the top element wrapped in `Just`, or `None` for an empty stack.
-
 ```kex
 peek : A?
 ```
 
-**Returns**: `A?` — the top element, or `None`
+Returns the top element wrapped in `Just`, or `None` for an empty stack.
+
+**Returns**: the top element, or `None`
 
 **Examples**
 
@@ -182,15 +178,15 @@ Stack.from([1, 2, 3]).peek   # => Just(3)
 Stack.empty.peek             # => None
 ```
 
-#### `count`
-
-Returns the number of elements.
+#### `count` (from Foldable)
 
 ```kex
 count : Integer
 ```
 
-**Returns**: `Integer` — the number of elements
+Returns the number of elements.
+
+**Returns**: the number of elements
 
 **Examples**
 
@@ -200,13 +196,13 @@ Stack.from([1, 2, 3]).count   # => 3
 
 #### `empty?`
 
-Returns `true` when the stack has no elements.
-
 ```kex
 empty? : Bool
 ```
 
-**Returns**: `Bool` — `true` for the empty stack
+Returns `true` when the stack has no elements.
+
+**Returns**: `true` for the empty stack
 
 **Examples**
 
@@ -217,16 +213,20 @@ Stack.from([1]).empty?     # => false
 
 #### `+`
 
+```kex
++(other: Stack<A>) -> Stack<A>
++(other: [A]) -> Stack<A>
+```
+
 Pushes another stack's elements, or a plain list's, on top.
 
 The list form reads bottom-to-top, the same as `Stack.from`: the last element of the list ends up on top.
 
-```kex
-+(other) : Stack<A> -> Stack<A>
-+(other) : [A] -> Stack<A>
-```
+**Parameters**
 
-**Returns**: `Stack<A>` — this stack with `other` pushed above it
+  - `other` — the elements to push
+
+**Returns**: this stack with `other` pushed above it
 
 **Examples**
 
@@ -235,15 +235,15 @@ Stack.from([1, 2]) + [3, 4]             # => Stack(1, 2, 3, 4)
 Stack.from([1, 2]) + Stack.from([3])    # => Stack(1, 2, 3)
 ```
 
-#### `showValue`
-
-Renders the stack as `Stack(...)`, bottom-to-top.
+#### `showValue` (from Showable)
 
 ```kex
 showValue : String
 ```
 
-**Returns**: `String` — the rendered stack
+Renders the stack as `Stack(...)`, bottom-to-top.
+
+**Returns**: the rendered stack
 
 **Examples**
 
@@ -251,18 +251,15 @@ showValue : String
 Stack.from([1, 2, 3]).showValue   # => "Stack(1, 2, 3)"
 ```
 
-## make `Stack<A>` implements [Blankable](../blankable.md#trait-blankable)
-
-
-#### `blank?`
-
-Returns `true` when the stack has no elements. The `Blankable` view of `empty?`.
+#### `blank?` (from Blankable)
 
 ```kex
 blank? : Bool
 ```
 
-**Returns**: `Bool` — `true` for the empty stack
+Returns `true` when the stack has no elements. The `Blankable` view of `empty?`.
+
+**Returns**: `true` for the empty stack
 
 **Examples**
 
@@ -270,3 +267,67 @@ blank? : Bool
 Stack.empty.blank?         # => true
 Stack.from([1]).blank?     # => false
 ```
+
+### From [`Enumerable`](../enumerable.md#trait-enumerable)
+
+  - [`map`](../enumerable.md#enumerable-map) — Applies `f` to each item and collects the results into a list.
+  - [`mapIndexed`](../enumerable.md#enumerable-mapindexed) — Applies `f` to each item and its 0-based position, and collects the results into a list.
+  - [`filter`](../enumerable.md#enumerable-filter) — Returns the items for which `pred` answers `true`.
+  - [`flatMap`](../enumerable.md#enumerable-flatmap) — Applies `f` to each item, expecting a list back, and concatenates the results into one flat list.
+  - [`collect`](../enumerable.md#enumerable-collect) — Applies `f` to each item, expecting an `Optional` back, and returns the values that were present: unwrapped.
+
+### From [`Foldable`](../enumerable.md#trait-foldable)
+
+  - [`each`](../enumerable.md#foldable-each) — Calls `f` with each item, for its side effects.
+  - [`eachIndexed`](../enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
+  - [`all?`](../enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`.
+  - [`any?`](../enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`.
+  - [`find`](../enumerable.md#foldable-find) — Returns the first item satisfying `pred`, or `None` when nothing does.
+
+### From [`Monoid`](../algebra.md#trait-monoid)
+
+  - [`repeat`](../algebra.md#monoid-repeat) — Combines this value with itself `n` times.
+
+### From [`Showable`](../kex.md#trait-showable)
+
+  - [`to`](../kex.md#showable-to) — 
+
+## module `Data.Stack`
+
+Constructors for `Stack`.
+
+### `from`
+
+```kex
+from(items: [A]) -> Stack<A>
+```
+
+Builds a stack from a list, read bottom-to-top: the last element is on top.
+
+**Parameters**
+
+  - `items` — the elements, bottom first
+
+**Returns**: the stack, with `items`'s last element on top
+
+**Examples**
+
+```kex
+Stack.from([1, 2, 3]).peek   # => Just(3)
+```
+
+### `empty` (constant)
+
+```kex
+empty : Stack<A>
+```
+
+The stack with no elements. Also the `Monoid` identity.
+
+**Examples**
+
+```kex
+Stack.empty.empty?   # => true
+```
+
+

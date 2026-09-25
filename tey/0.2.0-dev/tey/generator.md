@@ -11,37 +11,31 @@ entities:
 
 ## module `Tey.Generator`
 
+### `decode`
+
+```kex
+decode(text: String) -> Result<[Operation], String>
+```
+
+Decodes the child-to-host half of the separately versioned protocol. Plugin stdout is data, never Kex source evaluated in Tey's process.
+
+### `apply`
+
+```kex
+apply(operations: [Operation], workspaceRoot: String, force?: Bool) -> Result<Void, String>
+```
+
+### `safePath`
+
+```kex
+safePath(workspaceRoot: String, path: String) -> Result<String, String>
+```
+
 ## type `Operation`
-
-
 
 **Variants**
 
   - `WriteFile(String, String)`
   - `DeleteFile(String)`
 
-## function `decode`
-
-Decodes the child-to-host half of the separately versioned protocol. Plugin stdout is data, never Kex source evaluated in Tey's process.
-
-
-```kex
-decode(text)
-```
-
-
-## function `apply`
-
-
-```kex
-apply(operations, workspaceRoot, force?)
-```
-
-
-## function `safePath`
-
-
-```kex
-safePath(workspaceRoot, path)
-```
 

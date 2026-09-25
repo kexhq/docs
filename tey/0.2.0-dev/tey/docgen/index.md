@@ -9,288 +9,262 @@ entities:
 
 # Tey.Docgen.Index
 
-## module `Tey.Docgen.Index`
-
 The build driver: scan → extract → PackageModel, then emit everything derived from it — model.json, search.json, Markdown pages, manifest, versions, llms.txt/llms-full.txt, robots.txt and sitemap.xml.
 
-## function `buildCommand`
+## module `Tey.Docgen.Index`
 
-
-```kex
-buildCommand(parsed)
-```
-
-
-## function `optString`
-
+### `buildCommand`
 
 ```kex
-optString(value)
+buildCommand(parsed: OptionParser.ParsedOptions) -> Integer
 ```
 
+### `externalLinks`
 
-## function `preludeInfo`
+```kex
+externalLinks(paths: String) -> [LinkEntry]
+```
+
+Names another unit documents, so this one's signatures and prose can link to them: the Tey reference links `String` and `FS.Path` into the standard library's. Each model.json says which unit it is; its pages sit at ../../<package>/<version>/ from this unit's version directory. A file that cannot be read is reported and skipped — links are an extra.
+
+### `writeUnitIndexFiles`
+
+```kex
+writeUnitIndexFiles(pages: [SourcePage], model: PackageModel, out: String) -> ()
+```
+
+The unit's own index files — its manifest and the shared versions.json — without the site-level ones (landing pages, llms.txt, sitemap), which a host site that frames fragments owns.
+
+### `reportDocDrift`
+
+```kex
+reportDocDrift(pages: [SourcePage]) -> ()
+```
+
+A @return tag that names a different type than the signature declares is a doc comment that has drifted from its code (`min : X?` documented as returning `Number?`). The page shows the signature's type; this says where the tag disagrees so the comment can be fixed.
+
+### `normalizeType`
+
+```kex
+normalizeType(text: String) -> String
+```
+
+### `optString`
+
+```kex
+optString(value: String?) -> String
+```
+
+### `preludeInfo`
+
+```kex
+preludeInfo(source: String) -> (String, [String], String)
+```
 
 A source tree with a `prelude.kex` has a subset that is visible without an import, and the reader wants to know which. The file is declarative by convention — an opening comment, then one bare `using <Module>` per line — so reading it is enough. A package without one gets empties, and nothing in the output mentions a prelude at all.
 
 Returns (the file, the modules it makes visible, its opening comment).
 
+### `leadingComment`
 
 ```kex
-preludeInfo(source)
+leadingComment(lines: [String]) -> String
 ```
-
-
-## function `leadingComment`
 
 The file's opening comment block, `#` markers stripped, ready for the same Rdoc parse every other doc comment goes through.
 
+### `commentBody`
 
 ```kex
-leadingComment(lines)
+commentBody(line: String) -> String
 ```
 
-
-## function `commentBody`
-
+### `fileHeader`
 
 ```kex
-commentBody(line)
+fileHeader(lines: [String]) -> String
 ```
 
+The file's opening comment, when it is its own block: a blank line after it, not a declaration. A comment that runs straight into a declaration is that declaration's doc, and the page gets no intro.
 
-## function `usingName`
+### `usingName`
+
+```kex
+usingName(line: String) -> String
+```
 
 "using List" -> "List"; anything else (a comment, a blank line, an `only:` list) -> "".
 
+### `defaultSource`
 
 ```kex
-usingName(line)
+defaultSource(given: String) -> String
 ```
-
-
-## function `defaultSource`
 
 `src/` when it is standing there, else the flag as given (an empty one is reported by the scan: "no .kex files found in").
 
+### `defaultPackage`
 
 ```kex
-defaultSource(given)
+defaultPackage(given: String) -> String
 ```
-
-
-## function `defaultPackage`
 
 The manifest's name when the CWD is a package — the identity docgen should not have to be told. Outside one, "": the caller has to say, and buildCommand refuses rather than inventing a name. Docgen used to answer "prelude" here, which meant a build with a swallowed or forgotten --package filed its pages under whatever the CWD's package.kex said (the stdlib was published as "kex" for exactly that reason, kexhq/kex#287).
 
+### `defaultVersion`
 
 ```kex
-defaultPackage(given)
+defaultVersion(given: String) -> String
 ```
-
-
-## function `defaultVersion`
 
 The version of the thing being documented: a package's own release when standing in one. What a package's versions ARE differs per package — a library's own releases, the stdlib's Kex releases — so outside a package this is the caller's to state (--release) rather than docgen's to guess.
 
+### `manifestVersion`
 
 ```kex
-defaultVersion(given)
+manifestVersion : (String, String)?
 ```
-
-
-## function `manifestVersion`
 
 (name, version) of the package.kex in the CWD, if there is a readable one. Both defaults read it; one read, one parse.
 
+### `buildPages`
 
 ```kex
-manifestVersion()
+buildPages(files: [String], sourceDir: String) -> [SourcePage]
 ```
 
-
-## function `buildPages`
-
+### `buildPagesLoop`
 
 ```kex
-buildPages(files, sourceDir)
+buildPagesLoop(files: [String], sourceDir: String, pages: [SourcePage]) -> [SourcePage]
 ```
 
-
-## function `buildPagesLoop`
-
+### `writePages`
 
 ```kex
-buildPagesLoop(files, sourceDir, pages)
+writePages(pages: [SourcePage], versionDir: String, model: PackageModel) -> Integer
 ```
 
-
-## function `writePages`
-
+### `writeHtml`
 
 ```kex
-writePages(pages, versionDir, model)
+writeHtml(pages: [SourcePage], versionDir: String, out: String, model: PackageModel) -> ()
 ```
-
-
-## function `writeHtml`
 
 HTML mirrors the Markdown layout: one page per source file, plus the version landing page, the site-root redirect and the shared stylesheet.
 
+### `dirNameOf`
 
 ```kex
-writeHtml(pages, versionDir, out, model)
+dirNameOf(urlPath: String) -> String
 ```
-
-
-## function `dirNameOf`
 
 "kex/ast" → "kex"; "fs" → "" (already inside versionDir).
 
+### `ensureDirectory`
 
 ```kex
-dirNameOf(urlPath)
+ensureDirectory(path: String) -> ()
 ```
 
-
-## function `ensureDirectory`
-
+### `writeIndexFiles`
 
 ```kex
-ensureDirectory(path)
+writeIndexFiles(pages: [SourcePage], model: PackageModel, out: String) -> ()
 ```
 
-
-## function `writeIndexFiles`
-
+### `versionManifestJson`
 
 ```kex
-writeIndexFiles(pages, model, out)
+versionManifestJson(pages: [SourcePage], model: PackageModel) -> String
 ```
-
-
-## function `versionManifestJson`
 
 One version's pages, with the package and version they belong to, so a reader of the file needs nothing but the file. Page paths stay relative to the version directory — the URL prefix is `<package>/<version>/`, and whoever assembles the site is the one that knows the site root.
 
+### `manifestJson`
 
 ```kex
-versionManifestJson(pages, model)
+manifestJson(pages: [SourcePage]) -> String
 ```
 
-
-## function `manifestJson`
-
+### `accumulateVersions`
 
 ```kex
-manifestJson(pages)
+accumulateVersions(out: String, model: PackageModel) -> [VersionEntry]
 ```
-
-
-## function `accumulateVersions`
 
 The output directory is the published site, so a build must not clobber the versions other builds published: read what is there, upsert this (package, version), write the union back, newest first.
 
+### `upsertVersion`
 
 ```kex
-accumulateVersions(out, model)
+upsertVersion(current: VersionEntry, existing: [VersionEntry]) -> [VersionEntry]
 ```
-
-
-## function `upsertVersion`
 
 This build's entry first, the other packages' and versions' kept: the pure half of accumulate, so the upsert rule itself can be spec'd.
 
+### `readVersionEntries`
 
 ```kex
-upsertVersion(current, existing)
+readVersionEntries(out: String) -> [VersionEntry]
 ```
 
-
-## function `readVersionEntries`
-
+### `parseVersionEntry`
 
 ```kex
-readVersionEntries(out)
+parseVersionEntry(v: Any) -> VersionEntry
 ```
 
-
-## function `parseVersionEntry`
-
+### `jsonText`
 
 ```kex
-parseVersionEntry(v)
+jsonText(value: Any?) -> String
 ```
 
-
-## function `jsonText`
-
+### `labelOrPackage`
 
 ```kex
-jsonText(value)
+labelOrPackage(model: PackageModel) -> String
 ```
 
-
-## function `labelOrPackage`
-
+### `versionsJson`
 
 ```kex
-labelOrPackage(model)
+versionsJson(entries: [VersionEntry]) -> String
 ```
 
-
-## function `versionsJson`
-
+### `versionEntryValue`
 
 ```kex
-versionsJson(entries)
+versionEntryValue(e: VersionEntry) -> Any
 ```
 
-
-## function `versionEntryValue`
-
+### `llmsTxt`
 
 ```kex
-versionEntryValue(e)
+llmsTxt(pages: [SourcePage], model: PackageModel) -> String
 ```
 
-
-## function `llmsTxt`
-
+### `llmsFullTxt`
 
 ```kex
-llmsTxt(pages, model)
+llmsFullTxt(pages: [SourcePage], model: PackageModel) -> String
 ```
 
-
-## function `llmsFullTxt`
-
+### `robotsTxt`
 
 ```kex
-llmsFullTxt(pages, model)
+robotsTxt(baseUrl: String) -> String
 ```
 
-
-## function `robotsTxt`
-
+### `sitemapXml`
 
 ```kex
-robotsTxt(baseUrl)
+sitemapXml(pages: [SourcePage], model: PackageModel) -> String
 ```
 
-
-## function `sitemapXml`
-
+### `normalizeBaseUrl`
 
 ```kex
-sitemapXml(pages, model)
+normalizeBaseUrl(url: String) -> String
 ```
-
-
-## function `normalizeBaseUrl`
-
-
-```kex
-normalizeBaseUrl(url)
-```
-

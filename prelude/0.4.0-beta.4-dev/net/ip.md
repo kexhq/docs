@@ -21,6 +21,8 @@ let network = Network.parse("192.0.2.0/24").try
 network.contains(address)   # => true
 ```
 
+
+
 ## record `Address`
 
 A canonical IPv4 or IPv6 address.
@@ -29,58 +31,19 @@ The stored spelling is normalized, so addresses that arrived in different forms 
 
 **Fields**
 
-  - `source` : String
+  - `source` : [String](../string.md#make-string)
 
-## record `Network`
-
-A canonical CIDR network with host bits cleared.
-
-Parsing `192.0.2.9/24` therefore produces `192.0.2.0/24`. This makes a `Network` suitable for access-control rules and routing tables: its identity is the range, not whichever host address happened to describe it.
-
-**Fields**
-
-  - `source` : String
-
-## module `Net.IP.Address`
-
-Strict parsing and canonicalization of individual IP addresses.
-
-## function `parse`
-
-Parses IPv4 or IPv6 text and canonicalizes its spelling.
-
-
-```kex
-parse(text) : String -> Result<Address, NetError>
-```
-
-
-## module `Net.IP.Network`
-
-Strict parsing and canonicalization of CIDR networks.
-
-## function `parse`
-
-Parses a CIDR and clears host bits.
-
-
-```kex
-parse(text) : String -> Result<Network, NetError>
-```
-
-
-## make `Address`
-
+### Methods
 
 #### `string`
-
-Returns the canonical text form of the address.
 
 ```kex
 string : String
 ```
 
-**Returns**: `String` — canonical address text
+Returns the canonical text form of the address.
+
+**Returns**: canonical address text
 
 **Examples**
 
@@ -92,13 +55,13 @@ Address.parse("2001:0db8:0:0::42").try.string   # => "2001:db8::42"
 
 #### `version`
 
-Returns the address family as `4` or `6`.
-
 ```kex
 version : Integer
 ```
 
-**Returns**: `Integer` — `4` for IPv4 or `6` for IPv6
+Returns the address family as `4` or `6`.
+
+**Returns**: `4` for IPv4 or `6` for IPv6
 
 **Examples**
 
@@ -110,15 +73,15 @@ let family = address.version == 6 then :ipv6 else :ipv4
 
 #### `loopback?`
 
-Returns `true` for an address that routes back to this host.
-
-This covers the IPv4 `127.0.0.0/8` block as well as IPv6 `::1`; it is not limited to the familiar `127.0.0.1` spelling.
-
 ```kex
 loopback? : Bool
 ```
 
-**Returns**: `Bool` — whether this is a loopback address
+Returns `true` for an address that routes back to this host.
+
+This covers the IPv4 `127.0.0.0/8` block as well as IPv6 `::1`; it is not limited to the familiar `127.0.0.1` spelling.
+
+**Returns**: whether this is a loopback address
 
 **Examples**
 
@@ -130,15 +93,15 @@ die("development server must use loopback") if !address.loopback?
 
 #### `private?`
 
-Returns `true` for an address reserved for private networks.
-
-Use this as one signal in a network policy, not as proof that a peer is trusted: private addresses can still belong to another machine.
-
 ```kex
 private? : Bool
 ```
 
-**Returns**: `Bool` — whether this is a private-use address
+Returns `true` for an address reserved for private networks.
+
+Use this as one signal in a network policy, not as proof that a peer is trusted: private addresses can still belong to another machine.
+
+**Returns**: whether this is a private-use address
 
 **Examples**
 
@@ -150,15 +113,15 @@ Error("target must be private") if !target.private?
 
 #### `unspecified?`
 
-Returns `true` for the all-zero address: `0.0.0.0` or `::`.
-
-On a listening endpoint this usually means "all local interfaces". It is not a usable remote destination.
-
 ```kex
 unspecified? : Bool
 ```
 
-**Returns**: `Bool` — whether every address bit is zero
+Returns `true` for the all-zero address: `0.0.0.0` or `::`.
+
+On a listening endpoint this usually means "all local interfaces". It is not a usable remote destination.
+
+**Returns**: whether every address bit is zero
 
 **Examples**
 
@@ -170,13 +133,13 @@ IO.warn("service will be publicly reachable") if bind.unspecified?
 
 #### `multicast?`
 
-Returns `true` when the address names a multicast group.
-
 ```kex
 multicast? : Bool
 ```
 
-**Returns**: `Bool` — whether this is a multicast address
+Returns `true` when the address names a multicast group.
+
+**Returns**: whether this is a multicast address
 
 **Examples**
 
@@ -186,18 +149,27 @@ _Choosing multicast-specific socket setup_
 let mode = destination.multicast? then :group else :unicast
 ```
 
-## make `Network`
+## record `Network`
 
+A canonical CIDR network with host bits cleared.
+
+Parsing `192.0.2.9/24` therefore produces `192.0.2.0/24`. This makes a `Network` suitable for access-control rules and routing tables: its identity is the range, not whichever host address happened to describe it.
+
+**Fields**
+
+  - `source` : [String](../string.md#make-string)
+
+### Methods
 
 #### `string`
-
-Returns canonical CIDR text, including the prefix length.
 
 ```kex
 string : String
 ```
 
-**Returns**: `String` — canonical CIDR text
+Returns canonical CIDR text, including the prefix length.
+
+**Returns**: canonical CIDR text
 
 **Examples**
 
@@ -207,15 +179,19 @@ Network.parse("192.0.2.99/24").try.string   # => "192.0.2.0/24"
 
 #### `contains`
 
+```kex
+contains(address: Address) -> Bool
+```
+
 Returns `true` when `address` falls within this network.
 
 An address from the other family is simply outside the network; callers do not need to compare `version` first.
 
-```kex
-contains(address) : Address -> Bool
-```
+**Parameters**
 
-**Returns**: `Bool` — whether `address` belongs to this network
+  - `address` — the address to test
+
+**Returns**: whether `address` belongs to this network
 
 **Examples**
 
@@ -228,13 +204,13 @@ let allowed? = office.contains(requestAddress)
 
 #### `prefix`
 
-Returns the number of fixed leading address bits.
-
 ```kex
 prefix : Integer
 ```
 
-**Returns**: `Integer` — the prefix length
+Returns the number of fixed leading address bits.
+
+**Returns**: the prefix length
 
 **Examples**
 
@@ -244,13 +220,13 @@ Network.parse("10.0.0.0/8").try.prefix   # => 8
 
 #### `first`
 
-Returns the first address in the range: the address with all host bits cleared.
-
 ```kex
 first : Address
 ```
 
-**Returns**: `Address` — the first address in the range
+Returns the first address in the range: the address with all host bits cleared.
+
+**Returns**: the first address in the range
 
 **Examples**
 
@@ -260,18 +236,70 @@ Network.parse("192.0.2.9/24").try.first.string   # => "192.0.2.0"
 
 #### `last`
 
-Returns the last address in the range: the address with all host bits set.
-
-This is the IPv4 broadcast-shaped endpoint of the mathematical range; the API does not decide whether a protocol permits assigning it to a host.
-
 ```kex
 last : Address
 ```
 
-**Returns**: `Address` — the last address in the range
+Returns the last address in the range: the address with all host bits set.
+
+This is the IPv4 broadcast-shaped endpoint of the mathematical range; the API does not decide whether a protocol permits assigning it to a host.
+
+**Returns**: the last address in the range
 
 **Examples**
 
 ```kex
 Network.parse("192.0.2.9/24").try.last.string   # => "192.0.2.255"
+```
+
+## module `Net.IP.Address`
+
+Strict parsing and canonicalization of individual IP addresses.
+
+### `parse`
+
+```kex
+parse(text: String) -> Result<Address, NetError>
+```
+
+Parses IPv4 or IPv6 text and canonicalizes its spelling.
+
+**Parameters**
+
+  - `text` — an IPv4 dotted quad or IPv6 address
+
+**Returns**: the address, or `Parse`
+
+**Examples**
+
+_+Address.parse("2001:db8::42").try.string+._
+
+```kex
+
+```
+
+## module `Net.IP.Network`
+
+Strict parsing and canonicalization of CIDR networks.
+
+### `parse`
+
+```kex
+parse(text: String) -> Result<Network, NetError>
+```
+
+Parses a CIDR and clears host bits.
+
+**Parameters**
+
+  - `text` — an address followed by a prefix length
+
+**Returns**: the network, or `Parse`
+
+**Examples**
+
+_+Network.parse("192.0.2.9/24").try.string+ is +"192.0.2.0/24"+._
+
+```kex
+
 ```

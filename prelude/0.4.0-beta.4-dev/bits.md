@@ -23,122 +23,295 @@ Useful for packing flags into one number, reading a binary format, or working wi
 
 Integers are arbitrary precision, and a negative one behaves as if it were written in infinite-precision two's complement, so `Bits.not(0)` is `-1` and `Bits.and(-1, 255)` is `255`, with no word size to overflow. Shifts and bit indices count from bit 0 (the least significant bit).
 
-## function `and`
+### `and`
+
+```kex
+and(a: Integer, b: Integer) -> Integer
+```
 
 Bitwise AND of `a` and `b`.
 
+**Parameters**
+
+  - `a` — the first operand
+  - `b` — the second operand
+
+**Returns**: the result
+
+**Examples**
 
 ```kex
-and(a, b) : Integer -> Integer -> Integer
+Bits.and(0b1100, 0b1010)   # => 0b1000
+Bits.and(0xff, 0x0f)       # => 15
 ```
 
+_Masking off the low byte of a value_
 
-## function `or`
+```kex
+Bits.and(value, 0xff)
+```
+
+_Testing whether a flag is present in a bitmask_
+
+```kex
+Bits.and(flags, READONLY) != 0
+```
+
+### `or`
+
+```kex
+or(a: Integer, b: Integer) -> Integer
+```
 
 Bitwise OR of `a` and `b`.
 
+**Parameters**
+
+  - `a` — the first operand
+  - `b` — the second operand
+
+**Returns**: the result
+
+**Examples**
 
 ```kex
-or(a, b) : Integer -> Integer -> Integer
+Bits.or(0b1100, 0b1010)   # => 0b1110
 ```
 
+_Combining flags into one value_
 
-## function `xor`
+```kex
+Bits.or(Bits.or(READ, WRITE), APPEND)
+```
+
+### `xor`
+
+```kex
+xor(a: Integer, b: Integer) -> Integer
+```
 
 Bitwise exclusive OR of `a` and `b`.
 
+**Parameters**
+
+  - `a` — the first operand
+  - `b` — the second operand
+
+**Returns**: the result
+
+**Examples**
 
 ```kex
-xor(a, b) : Integer -> Integer -> Integer
+Bits.xor(0b1100, 0b1010)   # => 0b0110
 ```
 
+_Toggling a set of flags_
 
-## function `not`
+```kex
+Bits.xor(flags, VERBOSE)
+```
+
+### `not`
+
+```kex
+not(a: Integer) -> Integer
+```
 
 Bitwise complement of `a`. Every integer is signed and unbounded, so this is always +-(a + 1)+ rather than a width-dependent mask.
 
+**Parameters**
+
+  - `a` — the operand
+
+**Returns**: the complement
+
+**Examples**
 
 ```kex
-not(a) : Integer -> Integer
+Bits.not(0)   # => -1
+Bits.not(5)   # => -6
 ```
 
+### `shiftLeft`
 
-## function `shiftLeft`
+```kex
+shiftLeft(n: Integer, by: Integer) -> Integer
+```
 
 Shifts `n` left by `by` bits. Raises if `by` is negative.
 
+**Parameters**
+
+  - `n` — the value to shift
+  - `by` — how many bits to shift by
+
+**Returns**: the shifted value
+
+**Examples**
 
 ```kex
-shiftLeft(n, by) : Integer -> Integer -> Integer
+Bits.shiftLeft(1, 8)   # => 256
+Bits.shiftLeft(3, 2)   # => 12
 ```
 
+_Building a flag constant for bit n_
 
-## function `shiftRight`
+```kex
+Bits.shiftLeft(1, n)
+```
+
+### `shiftRight`
+
+```kex
+shiftRight(n: Integer, by: Integer) -> Integer
+```
 
 Shifts `n` right by `by` bits, propagating the sign: the result of shifting a negative number stays negative. Raises if `by` is negative.
 
+**Parameters**
+
+  - `n` — the value to shift
+  - `by` — how many bits to shift by
+
+**Returns**: the shifted value
+
+**Examples**
 
 ```kex
-shiftRight(n, by) : Integer -> Integer -> Integer
+Bits.shiftRight(256, 8)   # => 1
+Bits.shiftRight(-8, 1)    # => -4
 ```
 
+### `test?`
 
-## function `test?`
+```kex
+test?(n: Integer, index: Integer) -> Bool
+```
 
 True when the bit at `index` of `n` is set. Raises if `index` is negative.
 
+**Parameters**
+
+  - `n` — the value to inspect
+  - `index` — the bit position, counting from 0
+
+**Returns**: `true` when that bit is set
+
+**Examples**
 
 ```kex
-test?(n, index) : Integer -> Integer -> Bool
+Bits.test?(0b1000, 3)   # => true
+Bits.test?(0b1000, 0)   # => false
 ```
 
+### `set`
 
-## function `set`
+```kex
+set(n: Integer, index: Integer) -> Integer
+```
 
 `n` with the bit at `index` set. Raises if `index` is negative.
 
+**Parameters**
+
+  - `n` — the value to modify
+  - `index` — the bit position, counting from 0
+
+**Returns**: the modified value
+
+**Examples**
 
 ```kex
-set(n, index) : Integer -> Integer -> Integer
+Bits.set(0, 3)   # => 8
 ```
 
+### `clear`
 
-## function `clear`
+```kex
+clear(n: Integer, index: Integer) -> Integer
+```
 
 `n` with the bit at `index` cleared. Raises if `index` is negative.
 
+**Parameters**
+
+  - `n` — the value to modify
+  - `index` — the bit position, counting from 0
+
+**Returns**: the modified value
+
+**Examples**
 
 ```kex
-clear(n, index) : Integer -> Integer -> Integer
+Bits.clear(0b1111, 0)   # => 14
 ```
 
+### `toggle`
 
-## function `toggle`
+```kex
+toggle(n: Integer, index: Integer) -> Integer
+```
 
 `n` with the bit at `index` flipped. Raises if `index` is negative.
 
+**Parameters**
+
+  - `n` — the value to modify
+  - `index` — the bit position, counting from 0
+
+**Returns**: the modified value
+
+**Examples**
 
 ```kex
-toggle(n, index) : Integer -> Integer -> Integer
+Bits.toggle(0b1010, 0)   # => 11
 ```
 
+### `count`
 
-## function `count`
+```kex
+count(n: Integer) -> Integer
+```
 
 Number of set bits in `n` (population count). A negative value has infinitely many under two's complement, so this raises for one.
 
+**Parameters**
+
+  - `n` — the value to measure
+
+**Returns**: the count
+
+**Examples**
 
 ```kex
-count(n) : Integer -> Integer
+Bits.count(0b1011)   # => 3
+Bits.count(255)      # => 8
 ```
 
+_How many flags are set_
 
-## function `width`
+```kex
+Bits.count(flags)
+```
+
+### `width`
+
+```kex
+width(n: Integer) -> Integer
+```
 
 Number of bits needed to represent `n`, i.e. the position of its highest set bit plus one. Zero needs none. Raises for a negative value.
 
+**Parameters**
+
+  - `n` — the value to measure
+
+**Returns**: the count
+
+**Examples**
 
 ```kex
-width(n) : Integer -> Integer
+Bits.width(0)     # => 0
+Bits.width(255)   # => 8
+Bits.width(256)   # => 9
 ```
-

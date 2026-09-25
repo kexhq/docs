@@ -9,8 +9,6 @@ entities:
 
 # Tey.Docgen.Rdoc
 
-## module `Tey.Docgen.Rdoc`
-
 RDoc-style doc-comment text → structured documentation (typed).
 
 A doc comment is free prose followed by directive paragraphs:
@@ -26,201 +24,167 @@ A doc comment is free prose followed by directive paragraphs:
 
 Inline ``code`` pairs are rewritten to `` `code` ``. The result is a Tey.Docgen.Model.Doc record.
 
-## record `Bracketed`
+## module `Tey.Docgen.Rdoc`
 
-**Fields**
-
-  - `content` : String
-  - `rest` : String
-
-## function `parseDoc`
-
+### `parseDoc`
 
 ```kex
-parseDoc(text)
+parseDoc(text: String) -> Doc?
 ```
 
-
-## function `parseOrEmpty`
-
+### `parseOrEmpty`
 
 ```kex
-parseOrEmpty(text)
+parseOrEmpty(text: String) -> Doc
 ```
 
+### `rewriteProseBlocks`
 
-## function `rewriteProseBlocks`
+```kex
+rewriteProseBlocks(blocks: [[String]]) -> [[String]]
+```
 
 ``code`` is prose markup, so it is rewritten per prose block — after the split, not before it. Rewriting the whole comment at once paired a `+` operator inside an indented code sample (say `1 + 1`) with the next prose pair (``describe``), turning the operator into a stray backtick and eating the markup. Verbatim blocks and `@example` code are Kex source and are left alone; `@param`/`@return` descriptions are prose and still rewrite. Pairing never crosses a block: each block is rewritten on its own.
 
+### `rewriteProseBlock`
 
 ```kex
-rewriteProseBlocks(blocks)
+rewriteProseBlock(block: [String]) -> [String]
 ```
 
-
-## function `rewriteProseBlock`
-
+### `rewritePlusPairs`
 
 ```kex
-rewriteProseBlock(block)
+rewritePlusPairs(s: String, accum: String) -> String
 ```
 
-
-## function `rewritePlusPairs`
-
+### `plusPair?`
 
 ```kex
-rewritePlusPairs(s, accum)
+plusPair?(head: String, inner: String, tail: String) -> Bool
 ```
-
-
-## function `plusPair?`
 
 A ``...`` pair is markup only when it reads as one: content with no space against either delimiter (so `1 + 1` stays an addition), no backtick inside (so converted spans never nest), and a non-identifier character on both sides (so `a+b` stays put even if it ever reaches here).
 
+### `boundaryBefore?`
 
 ```kex
-plusPair?(head, inner, tail)
+boundaryBefore?(head: String) -> Bool
 ```
 
-
-## function `boundaryBefore?`
-
+### `boundaryAfter?`
 
 ```kex
-boundaryBefore?(head)
+boundaryAfter?(tail: String) -> Bool
 ```
 
-
-## function `boundaryAfter?`
-
+### `splitParagraphs`
 
 ```kex
-boundaryAfter?(tail)
+splitParagraphs(lines: [String], current: [String], accum: [[String]]) -> [[String]]
 ```
-
-
-## function `splitParagraphs`
 
 Splits lines into paragraphs (blocks). Prose groups until a blank line; directives are LINE-based, so each `@param`/`@return`/`@example` line begins its own paragraph — consecutive `@param a` / `@param b` lines must not merge into one block, or only the first would be parsed. An `@example`'s indented code lines follow it and stay in its block (they do not open with `@`).
 
+### `directiveBlock?`
 
 ```kex
-splitParagraphs(lines, current, accum)
+directiveBlock?(current: [String]) -> Bool
 ```
 
-
-## function `directiveBlock?`
-
+### `indented?`
 
 ```kex
-directiveBlock?(current)
+indented?(line: String) -> Bool
 ```
 
-
-## function `indented?`
-
+### `indentWidth`
 
 ```kex
-indented?(line)
+indentWidth(s: String) -> Integer
 ```
-
-
-## function `indentWidth`
 
 RDoc's verbatim marker is indentation: a prose block whose every line is indented is code — or a hand-laid-out table — that the author positioned deliberately. Reflowing it into a paragraph loses both the line breaks and the highlighting, so it is carried through the summary as a fenced block instead, which both renderers turn back into a highlighted `<pre>`.
 
 Leading-space count of a line.
 
+### `verbatim?`
 
 ```kex
-indentWidth(s)
+verbatim?(lines: [String]) -> Bool
 ```
 
-
-## function `verbatim?`
-
+### `dedent`
 
 ```kex
-verbatim?(lines)
+dedent(lines: [String]) -> [String]
 ```
-
-
-## function `dedent`
 
 Strips the common indentation shared by every non-blank line, so a block written at two spaces (or nested deeper) renders flush left.
 
+### `fenceVerbatim`
 
 ```kex
-dedent(lines)
+fenceVerbatim(lines: [String]) -> String
 ```
 
-
-## function `fenceVerbatim`
-
+### `mergeVerbatim`
 
 ```kex
-fenceVerbatim(lines)
+mergeVerbatim(blocks: [[String]], accum: [[String]]) -> [[String]]
 ```
-
-
-## function `mergeVerbatim`
 
 A blank line inside a verbatim block ends a paragraph but not the block, so adjacent verbatim blocks are re-joined with the blank line between them.
 
+### `classifyBlocks`
 
 ```kex
-mergeVerbatim(blocks, accum)
+classifyBlocks(blocks: [[String]], summary: String, params: [Param], returns: Return?, examples: [Example], deprecated: String?) -> Doc?
 ```
 
-
-## function `classifyBlocks`
-
+### `parseParam`
 
 ```kex
-classifyBlocks(blocks, summary, params, returns, examples, deprecated)
+parseParam(lines: [String]) -> Param
 ```
 
+**Parameters**
 
-## function `parseParam`
+  - `name` — description
 
+### `parseReturn`
 
 ```kex
-parseParam(lines)
+parseReturn(lines: [String]) -> Return
 ```
 
+Reads a `@return [Type] description` directive.
 
-## function `parseReturn`
-
+### `parseExample`
 
 ```kex
-parseReturn(lines)
+parseExample(lines: [String]) -> Example
 ```
 
-
-## function `parseExample`
-
+### `parseBracketed`
 
 ```kex
-parseExample(lines)
+parseBracketed(s: String) -> Bracketed?
 ```
-
-
-## function `parseBracketed`
 
 "[...]" prefix → Bracketed. None when the text does not open with a bracketed group.
 
+### `findClosingBracket`
 
 ```kex
-parseBracketed(s)
+findClosingBracket(s: String, index: Integer, depth: Integer) -> Integer?
 ```
 
+## record `Bracketed`
 
-## function `findClosingBracket`
+**Fields**
 
+  - `content` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `rest` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
 
-```kex
-findClosingBracket(s, index, depth)
-```
 

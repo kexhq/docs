@@ -9,8 +9,6 @@ entities:
 
 # Tey.Docgen.Cli
 
-## module `Tey.Docgen.Cli`
-
 Command-line interface for docgen: option declarations, dispatch, usage.
 
 Inside a package (a directory with a package.kex), most of the line is already implied — `tey docs build --out <site>` is the whole command:
@@ -26,36 +24,30 @@ tey docs serve --out <dir> --port 4322
 
 A built-in Tey command. Everything after the command word is docgen's own vocabulary — OptionParser passes a command's options through — so no `--` is needed, though `tey docs -- build ...` works too (the `--` is stripped).
 
-## function `options`
+## module `Tey.Docgen.Cli`
+
+### `options`
+
+```kex
+options : OptionParser.OptionConfig
+```
 
 A function rather than a module-level constant: on BEAM, calling a make-method (`.parse`, `.help`) on a module-level constant fails with "Undefined function" — the dispatcher doesn't resolve the constant.
 
+### `dispatch`
 
 ```kex
-options()
+dispatch(args: [String]) -> Integer
 ```
 
-
-## function `dispatch`
-
+### `runCommand`
 
 ```kex
-dispatch(args)
+runCommand(parsed: OptionParser.ParsedOptions) -> Integer
 ```
 
-
-## function `runCommand`
-
+### `printUsage`
 
 ```kex
-runCommand(parsed)
+printUsage : Integer
 ```
-
-
-## function `printUsage`
-
-
-```kex
-printUsage()
-```
-

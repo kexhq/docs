@@ -9,8 +9,6 @@ entities:
 
 # Tey.Docgen.Nav
 
-## module `Tey.Docgen.Nav`
-
 Navigation and cross-linking: the two indexes every renderer resolves against, derived once from the extracted pages.
 
 ```kex
@@ -20,224 +18,192 @@ links   — one LinkEntry per linkable name (the interlink universe)
 
 Both are computed here rather than in each renderer so HTML, Markdown and model.json cannot disagree about where a name lands — the same reasoning that keeps the typed model the single source: resolve once, render often.
 
-## function `buildModules`
+## module `Tey.Docgen.Nav`
+
+### `buildModules`
+
+```kex
+buildModules(pages: [SourcePage]) -> [ModuleIndexEntry]
+```
 
 Every module in the package, in declaration order, pointing at the page it lives on. Nested modules are entries of their own (the sidebar nests them by name).
 
+### `modulesOnPage`
 
 ```kex
-buildModules(pages)
+modulesOnPage(entities: [Entity], urlPath: String) -> [ModuleIndexEntry]
 ```
 
-
-## function `modulesOnPage`
-
+### `moduleEntry`
 
 ```kex
-modulesOnPage(entities, urlPath)
+moduleEntry(entry: ModuleEntry, urlPath: String) -> ModuleIndexEntry
 ```
 
-
-## function `moduleEntry`
-
+### `firstLine`
 
 ```kex
-moduleEntry(entry, urlPath)
+firstLine(summary: String) -> String
 ```
 
-
-## function `firstLine`
-
+### `parentTitleOf`
 
 ```kex
-firstLine(summary)
+parentTitleOf(pages: [SourcePage], page: SourcePage) -> String?
 ```
-
-
-## function `parentTitleOf`
 
 The file tree a module family grows into, rebuilt from titles: a page nests under the page whose title is its dotted prefix, so "Net.DNS" (net/dns.kex) is a child of "Net" (net.kex), and "Net.HTTP.WebSocket" of "Net.HTTP". The longest existing prefix wins; a prefix with no page of its own ("Control" for "Control.Retry") leaves the page at the top level. Titles, not paths, carry the relation — the module names are what a reader scans for.
 
+### `parentLoop`
 
 ```kex
-parentTitleOf(pages, page)
+parentLoop(parts: [String], pages: [SourcePage], page: SourcePage) -> String?
 ```
 
-
-## function `parentLoop`
-
+### `claimedByAnother?`
 
 ```kex
-parentLoop(parts, pages, page)
+claimedByAnother?(pages: [SourcePage], page: SourcePage, title: String) -> Bool
 ```
 
-
-## function `claimedByAnother?`
-
+### `topLevelPages`
 
 ```kex
-claimedByAnother?(pages, page, title)
+topLevelPages(pages: [SourcePage]) -> [SourcePage]
 ```
-
-
-## function `topLevelPages`
 
 The sidebar's top level: pages nothing parents, alphabetically by title — a reader scans by name, not by directory-walk order.
 
+### `childPages`
 
 ```kex
-topLevelPages(pages)
+childPages(pages: [SourcePage], title: String) -> [SourcePage]
 ```
-
-
-## function `childPages`
 
 The pages nested directly under `title`, alphabetically.
 
+### `descendantPages`
 
 ```kex
-childPages(pages, title)
+descendantPages(pages: [SourcePage], page: SourcePage) -> [SourcePage]
 ```
-
-
-## function `descendantPages`
 
 Every page in `page`'s family at any depth, alphabetically — what a module page lists as its submodules.
 
+### `sortedByTitle`
 
 ```kex
-descendantPages(pages, page)
+sortedByTitle(pages: [SourcePage]) -> [SourcePage]
 ```
 
-
-## function `sortedByTitle`
-
+### `buildLinks`
 
 ```kex
-sortedByTitle(pages)
+buildLinks(pages: [SourcePage]) -> [LinkEntry]
 ```
-
-
-## function `buildLinks`
 
 Linkable names, unique-target-wins: a name links while exactly one (page, anchor) answers it. A qualified name ("FS.Path") is its own name; a simple one ("Path") survives only while nothing else claims it — once two different entities answer "Request", the simple spelling stops linking and only the spelled-out names do.
 
+### `withTypeHomes`
 
 ```kex
-buildLinks(pages)
+withTypeHomes(links: [LinkEntry], types: [Tey.Docgen.Model.TypeFacts]) -> [LinkEntry]
 ```
 
+The links, plus a home for every type that make blocks extend. A bare `Integer` is claimed by a module (number parsing) AND by five make blocks, so the uniqueness rule drops it — yet a type name in a signature means the type, and the type has a home page (Relations.homePathOf). Those homes fill in what uniqueness left out; a name that already links keeps its link.
 
-## function `linkEntriesOnPage`
-
+### `linkEntriesOnPage`
 
 ```kex
-linkEntriesOnPage(entities, urlPath)
+linkEntriesOnPage(entities: [Entity], urlPath: String) -> [LinkEntry]
 ```
 
+### `memberLinks`
 
-## function `linkableNames`
+```kex
+memberLinks(ownerName: String, owner: String, functions: [Tey.Docgen.Model.FunctionEntry], urlPath: String) -> [LinkEntry]
+```
+
+`List.map`, `Enumerable.filter`: members are linkable under their owner's name, so prose that writes `List.map` lands on the method.
+
+### `linkableNames`
+
+```kex
+linkableNames(e: Entity) -> [String]
+```
 
 A type/reference name links under its qualified name; entities whose qualified name is the bare name (top-level declarations) offer that spelling too. A make's target with type parameters ("[X]", "Map<K, V>") links under the base name before the "<" — the anchor is still the full-target one, matching the section id.
 
+### `uniqueTarget?`
 
 ```kex
-linkableNames(e)
+uniqueTarget?(entries: [LinkEntry], candidate: LinkEntry) -> Bool
 ```
-
-
-## function `uniqueTarget?`
 
 Whether `candidate`'s name answers to exactly one target: every other entry under the same name must land on the same (page, anchor).
 
+### `differentTarget?`
 
 ```kex
-uniqueTarget?(entries, candidate)
+differentTarget?(a: LinkEntry, b: LinkEntry) -> Bool
 ```
 
-
-## function `differentTarget?`
-
+### `resolve`
 
 ```kex
-differentTarget?(a, b)
+resolve(links: [LinkEntry], name: String) -> LinkEntry?
 ```
 
-
-## function `resolve`
-
+### `segmentsOf`
 
 ```kex
-resolve(links, name)
+segmentsOf(typeText: String) -> [String]
 ```
-
-
-## function `segmentsOf`
 
 Splits a type reference into identifier segments and separator runs, so a renderer can link the identifiers and leave the punctuation alone: "Map<String, FS.Path>" → ["Map", "<", "String", ", ", "FS.Path", ">"].
 
+### `splitLoop`
 
 ```kex
-segmentsOf(typeText)
+splitLoop(rest: String, ident: String, sep: String, out: [String]) -> [String]
 ```
-
-
-## function `splitLoop`
 
 `ident` is the identifier being read, `sep` the separator run since it; only one is non-empty at a time, and whichever it is goes out in order.
 
+### `flushIdent`
 
 ```kex
-splitLoop(rest, ident, sep, out)
+flushIdent(ident: String, out: [String]) -> [String]
 ```
 
-
-## function `flushIdent`
-
+### `flushSep`
 
 ```kex
-flushIdent(ident, out)
+flushSep(sep: String, out: [String]) -> [String]
 ```
 
-
-## function `flushSep`
-
+### `isIdentChar?`
 
 ```kex
-flushSep(sep, out)
+isIdentChar?(ch: String) -> Bool
 ```
 
-
-## function `isIdentChar?`
-
+### `hrefFrom`
 
 ```kex
-isIdentChar?(ch)
+hrefFrom(fromPath: String, toPath: String, anchor: String) -> String
 ```
-
-
-## function `hrefFrom`
 
 The href from one page of this package to another, with anchor: same page → "#anchor"; else up to the version directory and back down.
 
+### `upsToVersionDir`
 
 ```kex
-hrefFrom(fromPath, toPath, anchor)
+upsToVersionDir(urlPath: String) -> String
 ```
 
-
-## function `upsToVersionDir`
-
+### `ups`
 
 ```kex
-upsToVersionDir(urlPath)
+ups(n: Integer) -> String
 ```
-
-
-## function `ups`
-
-
-```kex
-ups(n)
-```
-

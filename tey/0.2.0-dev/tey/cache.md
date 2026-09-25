@@ -11,44 +11,34 @@ entities:
 
 ## module `Tey.Cache`
 
-## function `root`
-
+### `root`
 
 ```kex
-root()
+root : String
 ```
 
+### `packagePath`
 
-## function `packagePath`
+```kex
+packagePath(dep: Tey.Lockfile.Dependency) -> String
+```
 
 Include the source URL in the cache identity: two packages with the same display name must never share a checkout.
 
+### `repositoryPath`
 
 ```kex
-packagePath(dep)
+repositoryPath(dep: Tey.Lockfile.Dependency) -> String
 ```
 
-
-## function `repositoryPath`
-
+### `fetch`
 
 ```kex
-repositoryPath(dep)
+fetch(dep: Tey.Lockfile.Dependency) -> Result<String, String>
 ```
 
-
-## function `fetch`
-
+### `verify`
 
 ```kex
-fetch(dep)
+verify(dep: Tey.Lockfile.Dependency) -> Result<String, String>
 ```
-
-
-## function `verify`
-
-
-```kex
-verify(dep)
-```
-

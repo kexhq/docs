@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FS | Standard Library 0.4.0-beta.4-dev | kex docs</title>
+    <meta name="description" content="The filesystem: reading and writing files, walking directories, and manipulating paths.">
+    <link rel="icon" href="/_theme/icon.png" type="image/png" sizes="403x403">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>/* Krix: the Kex documentation stylesheet, from Tey docgen (tey/src/tey/docgen/css.kex, MIT).
+   Marqraft additions follow the original rules. */
+/* kex docs — design tokens ported from kex.run (see module comment) */
+
+:root {
+  --bg: #fcf5e2;
+  --bg-subtle: #f6ecd0;
+  --bg-muted: #f0e2bc;
+  --bg-sunken: #ead9a8;
+  --ink: #2a1c0a;
+  --ink-soft: #54380f;
+  --muted: #7a5a25;
+  --faint: #9c7a3c;
+  --line: #ecdcb4;
+  --line-strong: #dbc78c;
+  --accent: #b06a14;
+  --accent-strong: #8a4f0a;
+  --accent-soft: #f4e2b8;
+  --accent-ink: #5a3408;
+  --code-bg: #1b140a;
+  --code-bg-soft: #221a0e;
+  --code-border: #382a16;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+/* JetBrains Mono ships programming ligatures (-> to a single arrow, =>,
+   !=, ...) on by default. They read well in code blocks, so they stay
+   there — but in the search box the reader is TYPING, and -> must
+   appear exactly as entered. Disable ligatures there only. */
+.search-modal-panel input, .search-page-box input {
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0, "dlig" 0;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse 90% 50% at 50% -10%, rgba(236, 178, 94, 0.28), transparent 70%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+::selection { background: var(--accent-soft); color: var(--accent-ink); }
+
+a { color: inherit; text-decoration: none; }
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.wrap { width: 100%; max-width: 76rem; margin-inline: auto; padding-inline: 1.5rem; }
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(252, 245, 226, 0.85);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+
+.top-inner { display: flex; align-items: center; gap: 0.75rem; height: 3.5rem; }
+
+/* ── Search ─────────────────────────────────────────────────────────── */
+
+.search-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  height: 2.1rem;
+  min-width: 14rem;
+  padding: 0 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-soft);
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.search-trigger:hover { border-color: var(--accent); color: var(--ink); }
+.search-trigger kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  padding: 0.2rem 0.35rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  color: var(--faint);
+}
+
+/* The modal is frosted glass: a translucent warm panel over a blurred
+   backdrop, in the same voice as the sticky header. */
+.search-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+  background: rgba(42, 28, 10, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.search-modal[hidden] { display: none; }
+
+.search-modal-panel {
+  width: min(44rem, 92vw);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 253, 248, 0.82);
+  backdrop-filter: blur(28px) saturate(140%);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
+  border: 1px solid rgba(236, 220, 180, 0.9);
+  box-shadow: 0 24px 72px rgba(42, 28, 10, 0.35);
+}
+
+.search-modal-panel input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1.05rem 1.3rem;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(236, 220, 180, 0.9);
+  outline: none;
+}
+.search-modal-panel input::placeholder { color: var(--faint); }
+
+.search-modal-results { max-height: 55vh; overflow-y: auto; padding: 0.5rem; }
+
+.search-hit {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.1rem;
+  border-radius: 10px;
+  text-decoration: none;
+}
+.search-hit:hover { background: rgba(246, 236, 208, 0.6); }
+.search-hit.selected { background: rgba(244, 226, 184, 0.9); }
+
+.search-head { display: flex; align-items: baseline; gap: 0.6rem; }
+
+.search-kind {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-strong);
+}
+/* Each kind has its own hue, so a scan down the list separates
+   functions from types from modules at a glance. */
+.search-kind-module { color: #6b5bd2; }
+.search-kind-function { color: #2f855a; }
+.search-kind-make { color: #b06a14; }
+.search-kind-trait { color: #c2498a; }
+.search-kind-record { color: #2b6cb0; }
+.search-kind-type { color: #0f8a8a; }
+.search-kind-constant { color: #9a5a13; }
+.search-name { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--ink); }
+.search-qual { margin-left: auto; font-family: var(--font-mono); font-size: 12px; color: var(--muted); text-align: right; }
+.search-sig {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 12.5px;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-empty { padding: 0.8rem 0.9rem; font-size: 13px; color: var(--faint); }
+
+.search-modal-footer {
+  border-top: 1px solid rgba(236, 220, 180, 0.9);
+  padding: 0.55rem 0.9rem;
+  font-size: 12.5px;
+}
+.search-modal-footer a { color: var(--accent-strong); text-decoration: none; }
+.search-modal-footer a:hover { text-decoration: underline; }
+
+/* The empty state: an explainer, example chips, and this page's items. */
+.search-hint, .search-local { padding: 0.8rem 1rem 0.6rem; }
+
+.search-hint-title { margin: 0 0 0.25rem; font-size: 13px; font-weight: 600; color: var(--ink); }
+.search-hint-body { margin: 0 0 0.6rem; font-size: 12.5px; color: var(--muted); }
+
+.search-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
+.search-chip {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 0.25rem 0.6rem;
+  color: var(--ink-soft);
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.search-chip:hover { border-color: var(--accent); color: var(--ink); }
+
+.search-local { border-top: 1px solid rgba(236, 220, 180, 0.7); }
+
+/* ── Full search page ──────────────────────────────────────────────── */
+
+.search-page { max-width: 52rem; }
+
+.search-page-box input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.85rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--ink);
+  background: rgba(246, 236, 208, 0.6);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  outline: none;
+}
+.search-page-box input:focus { border-color: var(--accent); }
+
+.search-page-results { margin-top: 1.25rem; }
+
+.search-page-hit {
+  display: block;
+  padding: 0.8rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+}
+.search-page-hit:hover { background: var(--bg-subtle); }
+
+.search-summary {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.brand-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  padding-top: 0.2rem;
+}
+
+.spacer { flex: 1; }
+
+.pkg-badge {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+}
+
+.version-select {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.15rem 0.4rem 0.15rem 0.7rem;
+  cursor: pointer;
+}
+
+.version-select:hover { border-color: var(--accent); }
+
+.back { font-size: 13.5px; color: var(--muted); }
+.back:hover { color: var(--accent-strong); }
+
+/* ── Layout ─────────────────────────────────────────────────────────── */
+
+.layout {
+  display: grid;
+  gap: 3rem;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  padding-block: 2.5rem;
+}
+
+/* The module list is longer than the viewport, and it is stuck to it —
+   so it needs its own scrollbar, or everything past the fold is
+   unreachable. The height is what is left below the sticky header. */
+.side nav {
+  position: sticky;
+  top: 5rem;
+  max-height: calc(100vh - 6.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.35rem;
+}
+
+.side-heading {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+
+.side-list { list-style: none; margin: 0; padding: 0; }
+
+.side-list > li > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.side-list > li > a:hover { background: var(--bg-subtle); color: var(--ink); }
+
+.side-list > li > a.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+.side-sub { list-style: none; margin: 0.15rem 0 0.4rem; padding: 0 0 0 1.1rem; }
+
+.side-sub a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.15rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--faint);
+}
+
+.side-sub a:hover { color: var(--accent-strong); background: var(--bg-subtle); }
+
+/* Nested modules ("FS" → "FS.Path"): same voice as the top list, one
+   step quieter and indented under their parent. */
+.side-nest { list-style: none; margin: 0; padding: 0 0 0.25rem 0.75rem; }
+.side-nest > li > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.18rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--faint);
+}
+.side-nest > li > a:hover { background: var(--bg-subtle); color: var(--ink); }
+.side-nest > li > a.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+/* Cross-reference links inside code spans: the code face stays, the
+   colour signals "this goes somewhere". */
+a.xref { color: var(--accent-strong); text-decoration: none; border-bottom: 1px solid color-mix(in oklab, var(--accent) 45%, transparent); }
+a.xref:hover { border-bottom-color: var(--accent-strong); }
+
+.content { min-width: 0; max-width: 48rem; }
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--faint);
+  margin-bottom: 1rem;
+}
+
+.crumbs a:hover { color: var(--accent-strong); }
+.crumbs .sep { opacity: 0.6; }
+
+/* ── Prose ──────────────────────────────────────────────────────────── */
+
+.prose { color: var(--ink-soft); font-size: 1.0125rem; line-height: 1.75; }
+
+.prose h1 { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 1rem; line-height: 1.15; }
+
+/* The standalone index pages (site root, package versions) carry their
+   h1 directly in .content.prose — unlike the entity pages, which get
+   top breathing room from .layout's padding. Give those a little air
+   under the header. */
+.content.prose > h1 { margin-top: 2rem; }
+
+.prose h1 .ver {
+  font-family: var(--font-mono);
+  font-size: 0.45em;
+  font-weight: 500;
+  color: var(--muted);
+  vertical-align: middle;
+  letter-spacing: 0;
+}
+
+.prose h2 {
+  font-size: 1.35rem;
+  font-weight: 650;
+  margin: 2.6rem 0 0.9rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+
+.prose h3 { font-size: 1.05rem; font-weight: 600; margin: 1.6rem 0 0.5rem; }
+
+.prose h5 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  margin: 1.4rem 0 0.4rem;
+}
+
+.prose p { margin: 0 0 1.1rem; }
+
+.prose a { color: var(--accent-strong); text-decoration: underline; text-decoration-color: var(--accent-soft); text-underline-offset: 3px; }
+.prose a:hover { text-decoration-color: currentColor; }
+
+.prose code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  background: var(--bg-muted);
+  border: 1px solid var(--line);
+  padding: 0.12rem 0.4rem;
+  border-radius: 6px;
+  color: var(--muted);
+}
+
+.prose strong { color: var(--ink); font-weight: 600; }
+
+.lede { font-size: 1.05rem; color: var(--muted); }
+
+/* ── Entities ───────────────────────────────────────────────────────── */
+
+/* Anchor navigation lands a heading below the sticky header, not under
+   it: reserve the header's height (3.5rem) plus breathing room. */
+.entity, .fn { scroll-margin-top: 4.75rem; }
+
+.entity h2 code { font-size: 0.95em; }
+
+.kind {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  padding: 0.1rem 0.45rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+/* Each declaration kind has its own hue — the same palette as the
+   search results — so a module, a trait and a make are told apart at
+   a glance rather than all reading as one amber badge. */
+.kind-module { color: #6b5bd2; border-color: #d6cdf3; background: #efeafc; }
+.kind-function { color: #2f855a; border-color: #c6e6d4; background: #e8f4ec; }
+.kind-make { color: #b06a14; border-color: #ecd6ac; background: #f7ecd6; }
+.kind-trait { color: #c2498a; border-color: #efcfe0; background: #f9ecf3; }
+.kind-record { color: #2b6cb0; border-color: #c8dcf0; background: #e9f1fa; }
+.kind-type { color: #0f8a8a; border-color: #c0e4e2; background: #e4f4f3; }
+.kind-constant { color: #9a5a13; border-color: #e6d2b4; background: #f6ecdd; }
+
+.fields, .params { margin: 0 0 1.1rem; }
+
+.field, .param {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.field dt, .param dt { flex-shrink: 0; }
+.field dd, .param dd { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+.opt {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--faint);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 0.5rem;
+  margin-left: 0.4rem;
+}
+
+.variants { margin: 0 0 1.1rem; padding-left: 1.3rem; list-style: disc; }
+.variants li { margin: 0.3rem 0; }
+.variants .abstract { color: var(--faint); }
+
+.fn {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 0.9rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.fn h4 { margin: 0 0 0.4rem; font-size: 1rem; }
+.fn p:last-child, .fn pre:last-child { margin-bottom: 0; }
+
+.fn h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+
+/* The heading of a member links to itself, so a reader can copy a
+   deep link without hunting for a pilcrow. */
+a.self { color: inherit; text-decoration: none; }
+a.self:hover code { border-color: var(--accent); }
+
+/* A method's signature leads its box: the call shape first, prose after. */
+pre.code.sig { margin-bottom: 0.8rem; padding: 0.6rem 0.9rem; }
+pre.code a.xref { color: inherit; border-bottom: 1px dotted color-mix(in oklab, #e6a960 60%, transparent); }
+
+/* "Implements Monoid, Enumerable." / "Implemented by ...": where a
+   type's methods come from, said right under its heading. */
+.implements, .home-note {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin: 0 0 1.1rem;
+}
+
+/* A member group inside a type: "Methods", "On [Number]". */
+.members { margin-top: 1.8rem; }
+.members > h3, .entity > h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.3rem;
+}
+
+/* Which trait a member fulfils: a small link chip beside its name. */
+.tag-trait, .tag-kind {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid #efcfe0;
+  border-radius: 999px;
+  background: #f9ecf3;
+  color: #c2498a;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  text-decoration: none;
+  vertical-align: middle;
+}
+.tag-kind { border-color: #e6d2b4; background: #f6ecdd; color: #9a5a13; }
+.tag-trait:hover { border-color: #c2498a; }
+
+/* Methods a type gets from a trait without writing them. */
+.inherited dt, .elsewhere dt { min-width: 9rem; }
+
+.prose ul { margin: 0 0 1.1rem; padding-left: 1.3rem; }
+.prose li { margin: 0.25rem 0; }
+
+/* A file's opening comment: what the page is about, before any one
+   declaration. */
+.intro { font-size: 1.02rem; margin-bottom: 1.6rem; }
+
+.caption { margin: 0 0 0.3rem; color: var(--muted); font-size: 0.95rem; }
+
+.returns { color: var(--muted); }
+.returns strong { color: var(--ink-soft); }
+
+.deprecated {
+  border-left: 3px solid var(--accent);
+  background: var(--bg-subtle);
+  padding: 0.7rem 1rem;
+  margin: 1.2rem 0;
+  border-radius: 0 8px 8px 0;
+}
+
+/* ── Code surface ───────────────────────────────────────────────────── */
+
+pre.code {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 1.1rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #e9e0cf;
+}
+
+pre.code code { font-family: inherit; }
+
+.tok-comment { color: #94876a; font-style: italic; }
+.tok-keyword { color: #f0c987; }
+.tok-type    { color: #e6a960; }
+.tok-string  { color: #c9e0a0; }
+.tok-interp  { color: #e9e0cf; }
+.tok-number  { color: #ffc18a; }
+.tok-fn      { color: #ffe0a0; }
+.tok-method  { color: #ffe0a0; }
+.tok-op      { color: #d8b878; }
+.tok-punct   { color: #a89a78; }
+.tok-const   { color: #e6a960; }
+.tok-field   { color: #f0e8d4; }
+.tok-bool    { color: #ffc18a; }
+
+/* ── Cards (version index) ──────────────────────────────────────────── */
+
+.cards {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  margin-top: 1.6rem;
+}
+
+/* Section headings on the index and the prelude page: what separates
+   "given to you" from "one using away". */
+.group {
+  margin: 2.6rem 0 0.2rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.group-note { margin: 0; color: var(--muted); font-size: 0.92rem; }
+
+/* "prelude": this page needs no import. It sits on the page heading,
+   beside the module name it qualifies. */
+.tag-prelude {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+h1 .tag-prelude { font-size: 11px; vertical-align: 0.45em; }
+
+.prelude-list {
+  list-style: none;
+  margin: 1.2rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+}
+
+.prelude-list li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.prelude-note {
+  color: var(--faint);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.card:hover { border-color: var(--line-strong); background: var(--bg-subtle); }
+
+.card-title { display: block; font-family: var(--font-mono); font-weight: 600; color: var(--ink); }
+.card:hover .card-title { color: var(--accent-strong); }
+.card-meta { display: block; margin-top: 0.25rem; font-size: 12.5px; color: var(--faint); }
+
+/* ── Footer ─────────────────────────────────────────────────────────── */
+
+.foot {
+  border-top: 1px solid var(--line);
+  margin-top: 3rem;
+  padding: 1.4rem 0 2rem;
+  font-size: 13px;
+  color: var(--faint);
+}
+
+.foot a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.foot a:hover { color: var(--accent-strong); }
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .layout { grid-template-columns: 1fr; }
+  .side { display: none; }
+}
+
+/* ── Marqraft additions ───────────────────────────────────────────────── */
+
+/* Settings: links follow the accent, the column follows the content width. */
+.prose a, a.xref { color: var(--marq-accent, var(--accent-strong)); }
+.content { max-width: var(--marq-contentWidth, 48rem); }
+.site-logo { height: 1.4rem; margin-right: 0.4rem; vertical-align: -0.2rem; }
+
+/* The navigation binding renders nested ul/li/a; style it as the docgen sidebar. */
+.side-tree ul { list-style: none; margin: 0; padding: 0; }
+.side-tree li > a,
+.side-tree li > .marq-nav-row > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.side-tree li > a:hover,
+.side-tree li > .marq-nav-row > a:hover { background: var(--bg-subtle); color: var(--ink); }
+.side-tree a[aria-current=page] { background: var(--accent-soft); color: var(--accent-ink); font-weight: 500; }
+.side-tree ul ul { padding: 0 0 0.25rem 0.75rem; }
+.side-tree ul ul a { padding-block: 0.18rem; font-size: 12.5px; color: var(--faint); }
+.marq-draft {
+  margin-left: 0.4rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+/* Chapter list on the index page. */
+.chapters ul { list-style: none; margin: 0.8rem 0 0; padding: 0; counter-reset: chapter; }
+.chapters ul ul { padding-left: 1.4rem; margin: 0; }
+.chapters li > a, .chapters li > .marq-nav-row > a {
+  display: block;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+.chapters a:hover { color: var(--accent-strong); }
+
+/* Reading order: the docgen "prevnext" footer. */
+.marq-pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2.6rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+.marq-pager a { text-decoration: none; display: flex; flex-direction: column; }
+.marq-pager small { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--faint); }
+.marq-pager span { color: var(--accent-strong); }
+.marq-pager-previous span::before { content: "← "; }
+.marq-pager-next { margin-left: auto; text-align: right; }
+.marq-pager-next span::after { content: " →"; }
+
+/* Prose elements docgen leaves to the browser. */
+.prose ul, .prose ol { margin: 0 0 1.1rem; padding-left: 1.4rem; }
+.prose li { margin: 0.2rem 0; }
+.prose li > ul, .prose li > ol { margin: 0.2rem 0; }
+.prose blockquote {
+  margin: 0 0 1.1rem;
+  padding: 0.7rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--bg-subtle);
+  border-radius: 0 8px 8px 0;
+  color: var(--muted);
+}
+.prose blockquote p:last-child { margin-bottom: 0; }
+.prose hr { border: 0; border-top: 1px solid var(--line); margin: 2rem 0; }
+.prose img { max-width: 100%; border-radius: 10px; border: 1px solid var(--line); }
+.table-scroll { overflow-x: auto; margin: 0 0 1.1rem; }
+.prose table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+.prose th, .prose td { text-align: left; padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--line); }
+.prose th { font-weight: 600; color: var(--ink); border-bottom-color: var(--line-strong); }
+.prose pre:not(.code) {
+  background: var(--code-bg); color: #e9e0cf; border: 1px solid var(--code-border);
+  border-radius: 10px; padding: 0.9rem 1.1rem; overflow-x: auto; font-family: var(--font-mono); font-size: 0.85rem;
+}
+
+/* Blocks. */
+.marq-code { margin: 0 0 1.1rem; }
+.marq-code figcaption { font-family: var(--font-mono); font-size: 12px; color: var(--faint); margin-bottom: 0.35rem; }
+.marq-code figcaption:empty, .marq-code small:empty { display: none; }
+.marq-code pre { margin-bottom: 0.35rem; }
+.marq-code small { display: block; font-size: 12.5px; color: var(--muted); }
+.marq-tabs { border: 1px solid var(--line); border-radius: 10px; padding: 0.4rem 1.1rem; margin: 0 0 1.1rem; background: rgba(255, 255, 255, 0.35); }
+.marq-area + .marq-area { border-top: 1px solid var(--line); }
+.marq-area h3 { margin: 0.8rem 0 0.4rem; font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--faint); }
+/* GitHub alerts: > [!NOTE], [!TIP], [!IMPORTANT], [!WARNING], [!CAUTION]. */
+.markdown-alert { margin: 0 0 1.1rem; padding: 0.7rem 1rem; border-left: 3px solid var(--accent); background: var(--bg-subtle); border-radius: 0 8px 8px 0; }
+.markdown-alert-note { border-left-color: #2b6cb0; background: #e9f1fa; }
+.markdown-alert-tip { border-left-color: #2f855a; background: #e8f4ec; }
+.markdown-alert-important { border-left-color: #6b5bd2; background: #efeafc; }
+.markdown-alert-warning { border-left-color: var(--accent); background: #f7ecd6; }
+.markdown-alert-caution { border-left-color: #c2498a; background: #f9ecf3; }
+.markdown-alert-title { margin: 0 0 0.2rem !important; font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-ink); }
+.markdown-alert-body > :last-child { margin-bottom: 0; }
+.marq-source { border: 1px dashed var(--line-strong); padding: 0.7rem; white-space: pre-wrap; }
+
+/* Collections: the top-level pages (Guide, Tutorial, ...) as header links. */
+.top-nav { margin-left: 1rem; }
+.top-nav ul { display: flex; align-items: center; gap: 0.2rem; list-style: none; margin: 0; padding: 0; }
+.top-nav li { position: relative; }
+.top-nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.top-nav a:hover { color: var(--ink); background: var(--bg-subtle); }
+.top-nav a[aria-current] { color: var(--accent-ink); background: var(--accent-soft); font-weight: 500; }
+/* Header links: ordinary links after the version badge, e.g. kex.run. */
+.top-links .marq-menu { display: flex; align-items: center; gap: 0.9rem; list-style: none; margin: 0 0 0 0.75rem; padding: 0; }
+.top-links li { position: relative; }
+.top-links a { font-size: 13.5px; color: var(--muted); }
+.top-links a:hover { color: var(--accent-strong); }
+.top-links a[href^="http"]::after { content: " ↗"; }
+@media (max-width: 640px) { .brand-sub, .pkg-badge { display: none; } .top-nav { margin-left: 0.25rem; } }
+
+/* Authoring (marq dev only): keep the sticky header and toolbar below the Marqraft bar. */
+body:has(#marq-chrome) .top { top: 48px; }
+body:has(#marq-chrome) { --marq-toolbar-top: calc(48px + 3.5rem + 0.5rem); }
+body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
+
+/* Reference pages (reference.html.ket): generated API documentation with an
+   "On this page" rail beside the content. The producer (Tey docgen's
+   fragments output) renders the rail's list; the theme places it. */
+.layout.has-toc { grid-template-columns: 15rem minmax(0, 1fr) 12rem; }
+.toc { font-size: 12.5px; }
+.toc > * { position: sticky; top: 5rem; }
+.toc-heading {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+.toc ul { list-style: none; margin: 0; padding: 0; max-height: calc(100vh - 8rem); overflow-y: auto; }
+.toc li a { display: block; padding: 0.2rem 0.5rem; border-left: 2px solid var(--line); color: var(--muted); }
+.toc li a:hover { color: var(--ink); border-left-color: var(--accent); }
+.toc li.toc-nested a { padding-left: 1.1rem; }
+.reference .content { max-width: none; }
+@media (max-width: 1280px) { .layout.has-toc { grid-template-columns: 15rem minmax(0, 1fr); } .toc { display: none; } }
+@media (max-width: 1024px) { .layout.has-toc { grid-template-columns: 1fr; } }
+
+:root{--marq-accent:#8a4f0a;--marq-contentWidth:48rem;}</style>
+  </head>
+  <body class="reference">
+    <header class="top">
+      <div class="wrap top-inner">
+        <a class="brand" href="/">kex</a>
+        <span class="brand-sub">docs</span>
+        <nav class="top-nav" aria-label="Collections"><ul><li><a href="/guide/0.4.0-alpha/">Guide</a></li><li><a href="/prelude/" aria-current="true">Standard Library</a></li><li><a href="/tey/">Tey</a></li></ul></nav>
+        <span class="spacer"></span>
+        <span class="pkg-badge">Standard Library 0.4.0-beta.4-dev</span>
+        <nav class="top-links" aria-label="Links"><ul class="marq-menu"><li><a href="https://kex.run/docs">kex.run</a></li></ul></nav>
+      </div>
+    </header>
+    <div class="wrap layout has-toc">
+      <aside class="side">
+        <nav aria-label="Standard Library">
+          <p class="side-heading"><a href="/prelude/">Standard Library</a></p>
+          <div class="side-tree"><ul><li><a href="/prelude/0.4.0-beta.4-dev/">Standard Library</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/algebra/">Algebra</a></li><li><a href="/prelude/0.4.0-beta.4-dev/test/">Assert</a></li><li><a href="/prelude/0.4.0-beta.4-dev/atom/">Atom</a></li><li><a href="/prelude/0.4.0-beta.4-dev/binary/">Binary</a></li><li><a href="/prelude/0.4.0-beta.4-dev/bits/">Bits</a></li><li><a href="/prelude/0.4.0-beta.4-dev/blankable/">Blankable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/comparable/">Comparable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/console/">Console</a></li><li><a href="/prelude/0.4.0-beta.4-dev/control/retry/">Control.Retry</a></li><li><a href="/prelude/0.4.0-beta.4-dev/data/queue/">Data.Queue</a></li><li><a href="/prelude/0.4.0-beta.4-dev/data/set/">Data.Set</a></li><li><a href="/prelude/0.4.0-beta.4-dev/data/stack/">Data.Stack</a></li><li><a href="/prelude/0.4.0-beta.4-dev/digest/">Digest</a></li><li><a href="/prelude/0.4.0-beta.4-dev/dimensions/">Dimensions</a></li><li><a href="/prelude/0.4.0-beta.4-dev/enumerable/">Enumerable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/env/">ENV</a></li><li><a href="/prelude/0.4.0-beta.4-dev/errorable/">Errorable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/evaluator/">Evaluator</a></li><li><a href="/prelude/0.4.0-beta.4-dev/feed/">Feed</a></li><li><a href="/prelude/0.4.0-beta.4-dev/filehandle/">FileHandle</a></li><li><a href="/prelude/0.4.0-beta.4-dev/fs/" aria-current="page">FS</a></li><li><a href="/prelude/0.4.0-beta.4-dev/io/">IO</a></li><li><a href="/prelude/0.4.0-beta.4-dev/json/">JSON</a></li><li><a href="/prelude/0.4.0-beta.4-dev/kex/">Kex</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/kex/ast/">Kex.AST</a></li></ul></li><li><a href="/prelude/0.4.0-beta.4-dev/list/">List</a></li><li><a href="/prelude/0.4.0-beta.4-dev/map/">Map</a></li><li><a href="/prelude/0.4.0-beta.4-dev/math/">Math</a></li><li><a href="/prelude/0.4.0-beta.4-dev/mock/">Mock</a></li><li><a href="/prelude/0.4.0-beta.4-dev/net/">Net</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/net/dns/">Net.DNS</a></li><li><a href="/prelude/0.4.0-beta.4-dev/net/http/">Net.HTTP</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/net/http/websocket/">Net.HTTP.WebSocket</a></li></ul></li><li><a href="/prelude/0.4.0-beta.4-dev/net/ip/">Net.IP</a></li><li><a href="/prelude/0.4.0-beta.4-dev/net/socket/">Net.Socket</a></li></ul></li><li><a href="/prelude/0.4.0-beta.4-dev/node/">Node</a></li><li><a href="/prelude/0.4.0-beta.4-dev/number/">Number</a></li><li><a href="/prelude/0.4.0-beta.4-dev/optional/">Optional</a></li><li><a href="/prelude/0.4.0-beta.4-dev/optionparser/">OptionParser</a></li><li><a href="/prelude/0.4.0-beta.4-dev/parsing/">Parsing</a></li><li><a href="/prelude/0.4.0-beta.4-dev/prelude/">Prelude</a></li><li><a href="/prelude/0.4.0-beta.4-dev/process/">Process</a></li><li><a href="/prelude/0.4.0-beta.4-dev/random/">Random</a></li><li><a href="/prelude/0.4.0-beta.4-dev/range/">Range</a></li><li><a href="/prelude/0.4.0-beta.4-dev/regex/">Regex</a></li><li><a href="/prelude/0.4.0-beta.4-dev/stream/">Stream</a></li><li><a href="/prelude/0.4.0-beta.4-dev/string/">String</a></li><li><a href="/prelude/0.4.0-beta.4-dev/system/">System</a></li><li><a href="/prelude/0.4.0-beta.4-dev/taggedvalidation/">TaggedValidation</a></li><li><a href="/prelude/0.4.0-beta.4-dev/template/">Template</a></li><li><a href="/prelude/0.4.0-beta.4-dev/time/">Time</a></li><li><a href="/prelude/0.4.0-beta.4-dev/truthyable/">Truthyable</a></li><li><a href="/prelude/0.4.0-beta.4-dev/type/">Type</a></li><li><a href="/prelude/0.4.0-beta.4-dev/units/">Units</a><ul><li><a href="/prelude/0.4.0-beta.4-dev/units/data/">Units.Data</a></li><li><a href="/prelude/0.4.0-beta.4-dev/units/si/">Units.SI</a></li></ul></li><li><a href="/prelude/0.4.0-beta.4-dev/uri/">URI</a></li></ul></li></ul></div>
+        </nav>
+      </aside>
+      <main class="content">
+        <nav class="crumbs"><a href="/prelude/">Standard Library</a> <span class="sep">/</span> <span>FS</span></nav>
+        <article class="prose">
+          <h1>FS</h1>
+          <section class="entity" id="module-fs">
+<h2><span class="kind kind-module">module</span> <code>FS</code></h2>
+<p>The filesystem: reading and writing files, walking directories, and manipulating paths.</p>
+<p><a class="xref" href="#module-fs"><code>FS</code></a> is not in the prelude: start with <code>using FS</code>.</p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">FS</span>
+
+<span class="tok-keyword">main</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">match</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">config.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+    <span class="tok-bool">Just</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>text<span class="tok-op">.</span><span class="tok-method">lines</span><span class="tok-op">.</span><span class="tok-method">count</span><span class="tok-punct">)</span>
+    <span class="tok-bool">None</span>       <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">config.txt is missing</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span></code></pre>
+<p>It is organised in three parts:</p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span>        reading<span class="tok-punct">,</span> writing<span class="tok-punct">,</span> copying <span class="tok-keyword">and</span> deleting files
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span>   creating<span class="tok-punct">,</span> listing <span class="tok-keyword">and</span> removing directories
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span>        pure path arithmetic<span class="tok-punct">,</span> <span class="tok-keyword">with</span> no filesystem access at all</code></pre>
+<p>The first two are capabilities: everything in them touches the real filesystem, so they can only be called from <code>foul</code> code, and a test can replace the whole of <a class="xref" href="#module-fs-file"><code>FS.File</code></a> for a lexical region rather than mutating global state. <a class="xref" href="#module-fs-path"><code>FS.Path</code></a> is ordinary pure code.</p>
+<p>Most read operations answer with an <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-optional"><code>Optional</code></a> and most write operations with a <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><code>Bool</code></a>, so a missing file or a failed write is an ordinary value you handle rather than an exception you catch.</p>
+</section>
+<section class="entity" id="type-fs-filepath">
+<h2><span class="kind kind-type">type</span> <code>FilePath</code></h2>
+<p>A filesystem path. An alias for <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><code>String</code></a>, so every <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><code>String</code></a> method applies to one; <a class="xref" href="#module-fs-path"><code>FS.Path</code></a> adds the path-aware operations.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>String</code></li>
+</ul>
+
+</section>
+<section class="entity" id="type-fs-filemodes">
+<h2><span class="kind kind-type">type</span> <code>FileModes</code></h2>
+<p>How a file should be opened: <code>Read</code> to read it, <code>Write</code> to replace it, <code>Append</code> to add to its end, <code>ReadWrite</code> for both. The mode chosen decides what type the resulting <a class="xref" href="/prelude/0.4.0-beta.4-dev/filehandle/#type-filehandle"><code>FileHandle</code></a> has, and therefore which operations the compiler will let you call on it.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>Read</code></li>
+<li><code>Write</code></li>
+<li><code>Append</code></li>
+<li><code>ReadWrite</code></li>
+</ul>
+
+</section>
+<section class="entity" id="type-fs-readpermission">
+<h2><span class="kind kind-type">type</span> <code>ReadPermission</code></h2>
+<p>Whether a <a class="xref" href="/prelude/0.4.0-beta.4-dev/filehandle/#type-filehandle"><code>FileHandle</code></a> may be read from. Part of the handle's type rather than a runtime flag, so reading from a write-only handle is a compile error.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>CanRead</code></li>
+<li><code>CannotRead</code></li>
+</ul>
+
+</section>
+<section class="entity" id="type-fs-writepermission">
+<h2><span class="kind kind-type">type</span> <code>WritePermission</code></h2>
+<p>Whether a <a class="xref" href="/prelude/0.4.0-beta.4-dev/filehandle/#type-filehandle"><code>FileHandle</code></a> may be written to. Part of the handle's type, so writing to a read-only handle is a compile error.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>CanWrite</code></li>
+<li><code>CannotWrite</code></li>
+</ul>
+
+</section>
+<section class="entity" id="type-fs-fileerror">
+<h2><span class="kind kind-type">type</span> <code>FileError</code></h2>
+<p>A file operation that failed, carrying the path it failed on.</p>
+<p><code>OpenFailed</code> and <code>ReadFailed</code> mean the filesystem refused the operation. <code>InvalidUtf8</code> means the bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>OpenFailed(FilePath)</code></li>
+<li><code>ReadFailed(FilePath)</code></li>
+<li><code>InvalidUtf8(FilePath, Integer)</code></li>
+</ul>
+
+</section>
+<section class="entity" id="module-fs-file">
+<h2><span class="kind kind-module">module</span> <code>FS.File</code></h2>
+<p>Reading and writing files.</p>
+<p>A capability: every member reaches the real filesystem, so a test can replace the whole thing for a lexical region with <code>with FS.File = ...</code> instead of mutating global mock state (kexhq/kex#143). The boundary is here rather than on <a class="xref" href="#module-fs"><code>FS</code></a>, because <a class="xref" href="#module-fs-path"><code>FS.Path</code></a> below is pure string work with no implementation to substitute.</p>
+<div class="functions">
+<div class="fn" id="function-fs-file-open">
+<h3><a class="self" href="#function-fs-file-open"><code>open</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">open</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> mode<span class="tok-op">:</span> <span class="tok-type">Read</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/filehandle/#type-filehandle"><span class="tok-type">FileHandle</span></a><span class="tok-op">&lt;</span><span class="tok-type">CanRead</span><span class="tok-punct">,</span> <span class="tok-type">CannotWrite</span><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span>
+<span class="tok-fn">open</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> mode<span class="tok-op">:</span> <span class="tok-type">Write</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/filehandle/#type-filehandle"><span class="tok-type">FileHandle</span></a><span class="tok-op">&lt;</span><span class="tok-type">CannotRead</span><span class="tok-punct">,</span> <span class="tok-type">CanWrite</span><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span>
+<span class="tok-fn">open</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> mode<span class="tok-op">:</span> <span class="tok-type">Append</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/filehandle/#type-filehandle"><span class="tok-type">FileHandle</span></a><span class="tok-op">&lt;</span><span class="tok-type">CannotRead</span><span class="tok-punct">,</span> <span class="tok-type">CanWrite</span><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span>
+<span class="tok-fn">open</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> mode<span class="tok-op">:</span> <span class="tok-type">ReadWrite</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/filehandle/#type-filehandle"><span class="tok-type">FileHandle</span></a><span class="tok-op">&lt;</span><span class="tok-type">CanRead</span><span class="tok-punct">,</span> <span class="tok-type">CanWrite</span><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span>
+<span class="tok-fn">open</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> mode<span class="tok-op">:</span> <span class="tok-type">Read</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/filehandle/#type-filehandle"><span class="tok-type">FileHandle</span></a><span class="tok-op">&lt;</span><span class="tok-type">CanRead</span><span class="tok-punct">,</span> <span class="tok-type">CannotWrite</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span>
+<span class="tok-fn">open</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> mode<span class="tok-op">:</span> <span class="tok-type">Write</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/filehandle/#type-filehandle"><span class="tok-type">FileHandle</span></a><span class="tok-op">&lt;</span><span class="tok-type">CannotRead</span><span class="tok-punct">,</span> <span class="tok-type">CanWrite</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span>
+<span class="tok-fn">open</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> mode<span class="tok-op">:</span> <span class="tok-type">Append</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/filehandle/#type-filehandle"><span class="tok-type">FileHandle</span></a><span class="tok-op">&lt;</span><span class="tok-type">CannotRead</span><span class="tok-punct">,</span> <span class="tok-type">CanWrite</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span>
+<span class="tok-fn">open</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> mode<span class="tok-op">:</span> <span class="tok-type">ReadWrite</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/filehandle/#type-filehandle"><span class="tok-type">FileHandle</span></a><span class="tok-op">&lt;</span><span class="tok-type">CanRead</span><span class="tok-punct">,</span> <span class="tok-type">CanWrite</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Opens <code>path</code> and returns a <a class="xref" href="/prelude/0.4.0-beta.4-dev/filehandle/#type-filehandle"><code>FileHandle</code></a> for it.</p>
+<p>The mode decides the handle's type, and the type decides what you may do with it: a handle opened <code>Read</code> has no <code>write</code>, a handle opened <code>Write</code> has no <code>read</code>. That is checked at compile time, not at run time.</p>
+<p>Use the whole-file <code>read</code> and <code>write</code> below when a file fits in memory and you have no reason to hold it open; reach for a handle when you want to stream through a large file or make many small writes.</p>
+<p>Close the handle when you are done with it.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the file to open</dd></div>
+<div class="param"><dt><code>mode</code></dt><dd><code>Read</code>, <code>Write</code>, <code>Append</code> or <code>ReadWrite</code></dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the handle, or <code>OpenFailed</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Reading a file line by line</em></p>
+<pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">log.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Read</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>handle<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">do</span>
+    <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>handle<span class="tok-op">.</span><span class="tok-method">readLine</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    handle<span class="tok-op">.</span><span class="tok-method">close</span>
+  <span class="tok-keyword">end</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cannot open: </span><span class="tok-string">${</span>e<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+<p class="caption"><em>Writing a report</em></p>
+<pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">report.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Write</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>handle<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">do</span>
+    rows<span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>row<span class="tok-op">|</span> handle<span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>row<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    handle<span class="tok-op">.</span><span class="tok-method">close</span>
+  <span class="tok-keyword">end</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span>_<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cannot write report</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+<p class="caption"><em>A failure names the path</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">missing/x.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Read</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Error(OpenFailed(&quot;missing/x.txt&quot;))</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-read">
+<h3><a class="self" href="#function-fs-file-read"><code>read</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">read</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Reads the whole file and decodes it as UTF-8 text.</p>
+<p>Answers <code>Error(ReadFailed(path))</code> when the file does not exist or cannot be read, and <code>Error(InvalidUtf8(path, offset))</code> when the bytes are not valid UTF-8, so a missing or non-text file is something you handle rather than something that stops the program. Reach for <code>FS.File.readBytes</code> when the contents are not text.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the file to read</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the contents, or the failure</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; Ok(&quot;hello\n&quot;)</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">nowhere.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Error(ReadFailed(&quot;nowhere.txt&quot;))</span></code></pre>
+<p class="caption"><em>Reading with a default</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> config <span class="tok-op">=</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.conf</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<p class="caption"><em>Counting words in a file</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">essay.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">split</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string"> </span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reject</span><span class="tok-punct">(</span><span class="tok-op">~</span>empty?<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-readbytes">
+<h3><a class="self" href="#function-fs-file-readbytes"><code>readBytes</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">readBytes</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Reads the whole file as raw bytes, without decoding it as text.</p>
+<p>The byte counterpart of <code>FS.File.read</code>: it never validates UTF-8, so it round trips images, archives, and any other non-text payload losslessly. Answers <code>Error(ReadFailed(path))</code> when the file cannot be read.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the file to read</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the contents, or the failure</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">readBytes</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">logo.png</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(#Binary&lt;2048 bytes&gt;)</span></code></pre>
+<p class="caption"><em>Hashing a file</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">readBytes</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>data<span class="tok-op">|</span> <span class="tok-type">Digest</span><span class="tok-op">.</span><span class="tok-method">sha256</span><span class="tok-punct">(</span>data<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">hex</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-writebytes">
+<h3><a class="self" href="#function-fs-file-writebytes"><code>writeBytes</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">writeBytes</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> content<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Writes <code>content</code> to <code>path</code> as raw bytes, replacing whatever was there.</p>
+<p>The byte counterpart of <code>FS.File.write</code>: the payload lands on disk exactly as given, with no encoding step. Answers <code>false</code> when the write fails.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the file to write</dd></div>
+<div class="param"><dt><code>content</code></dt><dd>the bytes to write</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the write succeeded</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">writeBytes</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">out.bin</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Binary</span><span class="tok-op">.</span><span class="tok-method">fromBytes</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">255</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>Copying a file without decoding it</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">readBytes</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>data<span class="tok-op">|</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">writeBytes</span><span class="tok-punct">(</span>target<span class="tok-punct">,</span> data<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-write">
+<h3><a class="self" href="#function-fs-file-write"><code>write</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">write</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> content<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Writes <code>content</code> to <code>path</code>, replacing whatever was there.</p>
+<p>Creates the file if it does not exist. The containing directory must already exist: see <code>FS.Directory.create</code>. Answers <code>false</code> when the write fails.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the file to write</dd></div>
+<div class="param"><dt><code>content</code></dt><dd>the text to write</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the write succeeded</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">out.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">hello\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>Reporting a failed write</em></p>
+<pre class="code"><code><span class="tok-keyword">if</span> <span class="tok-op">!</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span>target<span class="tok-punct">,</span> rendered<span class="tok-punct">)</span>
+  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">could not write </span><span class="tok-string">${</span>target<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+<p class="caption"><em>Writing a list of lines</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">names.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> names<span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-op">+</span> <span class="tok-string">&quot;</span><span class="tok-string">\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-append">
+<h3><a class="self" href="#function-fs-file-append"><code>append</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">append</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> content<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Adds <code>content</code> to the end of <code>path</code>, keeping what is already there.</p>
+<p>Creates the file if it does not exist, so it is safe to append to a log that has not been started yet.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the file to append to</dd></div>
+<div class="param"><dt><code>content</code></dt><dd>the text to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the write succeeded</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">append</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.log</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">started\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>A simple logger</em></p>
+<pre class="code"><code><span class="tok-keyword">foul</span> <span class="tok-fn">log</span><span class="tok-punct">(</span>message<span class="tok-op">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">append</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.log</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">${</span><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">now</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-string">}</span><span class="tok-string"> </span><span class="tok-string">${</span>message<span class="tok-string">}</span><span class="tok-string">\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-exists?">
+<h3><a class="self" href="#function-fs-file-exists?"><code>exists?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">exists?</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when something exists at <code>path</code>: a file, a directory, or anything else. Use <code>file?</code> or <code>directory?</code> when the kind matters.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the path exists</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">exists?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">README.md</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">exists?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">nowhere</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; false</span></code></pre>
+<p class="caption"><em>Not overwriting an existing file</em></p>
+<pre class="code"><code><span class="tok-keyword">if</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">exists?</span><span class="tok-punct">(</span>target<span class="tok-punct">)</span>
+  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>target<span class="tok-string">}</span><span class="tok-string"> already exists</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">else</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span>target<span class="tok-punct">,</span> content<span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-file?">
+<h3><a class="self" href="#function-fs-file-file?"><code>file?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">file?</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when <code>path</code> exists and is a regular file: not a directory.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> for a regular file</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">file?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">README.md</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">file?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>         <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-directory?">
+<h3><a class="self" href="#function-fs-file-directory?"><code>directory?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">directory?</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when <code>path</code> exists and is a directory.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> for a directory</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">directory?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">directory?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">README.md</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; false</span></code></pre>
+<p class="caption"><em>Separating files from directories in a listing</em></p>
+<pre class="code"><code>entries<span class="tok-op">.</span><span class="tok-method">partition</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>e<span class="tok-op">|</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">directory?</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-delete">
+<h3><a class="self" href="#function-fs-file-delete"><code>delete</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">delete</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Deletes the file at <code>path</code>.</p>
+<p>Answers <code>false</code> when the file does not exist or cannot be removed. Use <code>FS.Directory.delete</code> for a directory.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the file to delete</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the file was deleted</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">tmp.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>Cleaning up after a temporary file</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span>tmp<span class="tok-punct">,</span> data<span class="tok-punct">)</span>
+<span class="tok-fn">process</span><span class="tok-punct">(</span>tmp<span class="tok-punct">)</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span>tmp<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-copy">
+<h3><a class="self" href="#function-fs-file-copy"><code>copy</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">copy</span><span class="tok-punct">(</span>src<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> dst<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Copies the file at <code>src</code> to <code>dst</code>, replacing <code>dst</code> if it exists.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>src</code></dt><dd>the file to copy</dd></div>
+<div class="param"><dt><code>dst</code></dt><dd>where to copy it</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the copy succeeded</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">copy</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.conf</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">app.conf.bak</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>Backing a file up before rewriting it</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">copy</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">${</span>path<span class="tok-string">}</span><span class="tok-string">.bak</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> updated<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-rename">
+<h3><a class="self" href="#function-fs-file-rename"><code>rename</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">rename</span><span class="tok-punct">(</span>src<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> dst<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Renames (or moves) the file at <code>src</code> to <code>dst</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>src</code></dt><dd>the current path</dd></div>
+<div class="param"><dt><code>dst</code></dt><dd>the new path</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the rename succeeded</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">rename</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">draft.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">final.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>Writing to a temporary file, then swapping it in</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>path<span class="tok-string">}</span><span class="tok-string">.tmp</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> content<span class="tok-punct">)</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">rename</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>path<span class="tok-string">}</span><span class="tok-string">.tmp</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-readlines">
+<h3><a class="self" href="#function-fs-file-readlines"><code>readLines</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">readLines</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-op">?</span></code></pre>
+<p>Reads the file and returns its lines, without their newlines.</p>
+<p>Answers <code>None</code> when the file cannot be read. A trailing newline does not produce a final empty line, so the count is the number of lines you would see in an editor.</p>
+<p>NOT <code>lines</code>: FilePath is an alias for String, so a receiver function named <code>lines</code> here is indistinguishable from String's own <code>lines</code> at every call site, and merely saying <code>using FS</code> made <code>text.lines</code> ambiguous. <code>readLines</code> also says what it does: it reads the file.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the file to read</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the lines, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">readLines</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">names.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just([&quot;ada&quot;, &quot;grace&quot;])</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">readLines</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">nowhere</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; None</span></code></pre>
+<p class="caption"><em>Ignoring blank lines and comments</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">readLines</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hosts</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">map</span><span class="tok-punct">(</span><span class="tok-op">~</span>trim<span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">reject</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> line<span class="tok-op">.</span><span class="tok-method">empty?</span> <span class="tok-op">||</span> line<span class="tok-op">.</span><span class="tok-method">startsWith?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">#</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-feed">
+<h3><a class="self" href="#function-fs-file-feed"><code>feed</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">feed</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/feed/#type-feed"><span class="tok-type">Feed</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span><span class="tok-op">?</span></code></pre>
+<p>Returns a lazy <a class="xref" href="/prelude/0.4.0-beta.4-dev/feed/#type-feed"><code>Feed</code></a> of the file's lines, or <code>None</code> when it cannot be read.</p>
+<p>Unlike <code>readLines</code>, the file is read a line at a time off a handle held open for the feed's lifetime, so this is the way to walk a file too large to hold in memory: nothing but the current line is retained.</p>
+<p>A <a class="xref" href="/prelude/0.4.0-beta.4-dev/feed/#type-feed"><code>Feed</code></a> rather than a <a class="xref" href="/prelude/0.4.0-beta.4-dev/stream/#type-stream"><code>Stream</code></a> because that is what a file honestly is: reading consumes, and there is no rewinding. Taking twice walks forward rather than answering the same lines again. On a file small enough to replay, <code>toStream</code> buys that back.</p>
+<p>The feed ends at the last line, so asking for more lines than the file has answers just the lines there are: unlike <code>Stream.Sequence</code>, which is deliberately infinite.</p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">two-lines.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>lines<span class="tok-op">|</span> lines<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; [&quot;one&quot;, &quot;two&quot;]</span></code></pre>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the file to read</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the lines as a feed, or <code>None</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Peeking at the head of a large file</em></p>
+<pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">huge.log</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Just</span><span class="tok-punct">(</span>lines<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> lines<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>line<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+  <span class="tok-bool">None</span>        <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cannot read huge.log</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+<p class="caption"><em>The first ten errors in a long log, in one pass</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.log</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>lines<span class="tok-op">|</span> lines<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> line<span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">ERROR</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+  <span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-size">
+<h3><a class="self" href="#function-fs-file-size"><code>size</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">size</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer?</span></code></pre>
+<p>Returns the file's size in bytes, or <code>None</code> when it cannot be read.</p>
+<p>Bytes, not characters: a file of non-ASCII text has more bytes than it has characters.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the file to measure</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the size in bytes, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">size</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(6)</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">size</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">nowhere</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; None</span></code></pre>
+<p class="caption"><em>Skipping files that are too large</em></p>
+<pre class="code"><code>paths<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">size</span><span class="tok-punct">(</span>p<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-op">&lt;</span> <span class="tok-number">1048576</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-absolute">
+<h3><a class="self" href="#function-fs-file-absolute"><code>absolute</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">absolute</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></code></pre>
+<p>Resolves <code>path</code> against the process's current directory and returns the absolute form, or <code>None</code> when it cannot be resolved.</p>
+<p>This is the one path operation that is not in <a class="xref" href="#module-fs-path"><code>FS.Path</code></a>, because it is not lexical: it asks the process where it is.</p>
+<p>Path manipulation lives in FS.Path: <code>basename</code>, <code>dirname</code>, <code>extension</code> and <code>join</code> used to be here too, but a name cannot sit in both modules: FilePath IS String, so two same-named receiver functions on it are indistinguishable at every call site. <code>absolute</code> stays because it is not lexical: it asks the process where it is.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to resolve</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the absolute path, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">absolute</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(&quot;/home/ada/proj/src/main.kex&quot;)</span></code></pre>
+<p class="caption"><em>Reporting a file unambiguously</em></p>
+<pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">failed: </span><span class="tok-string">${</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">absolute</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-canonical">
+<h3><a class="self" href="#function-fs-file-canonical"><code>canonical</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">canonical</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>The canonical form of <code>path</code>: absolute, with every <code>.</code>, <code>..</code> and symlink resolved, like <code>realpath(3)</code>.</p>
+<p>Unlike <code>absolute</code> this reads the filesystem, so a path that does not exist (or a symlink loop) is an error. Use it to keep reads and writes inside a directory: compare the real path's prefix, and neither <code>../</code> nor a symlink can escape.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to resolve</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the canonical path, or <code>ReadFailed</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">canonical</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/tmp/../etc</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(&quot;/private/etc&quot;) on macOS</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-symlink?">
+<h3><a class="self" href="#function-fs-file-symlink?"><code>symlink?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">symlink?</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Whether <code>path</code> is itself a symlink, without following it. A dangling link is still a symlink.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to inspect</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> for a symlink</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">symlink?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">current</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-fs-path">
+<h2><span class="kind kind-module">module</span> <code>FS.Path</code></h2>
+<p>Path arithmetic: joining, splitting, normalising and comparing paths.</p>
+<p>Everything here is pure string manipulation with no filesystem access, so the answer is the same whether or not the path exists, which also means these functions can be called from ordinary pure code, unlike <a class="xref" href="#module-fs-file"><code>FS.File</code></a>. POSIX separators only for now.</p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>            <span class="tok-comment"># =&gt; &quot;src/main.kex&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">extension</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>          <span class="tok-comment"># =&gt; &quot;.kex&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">withExtension</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">beam</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;src/main.beam&quot;</span></code></pre>
+<div class="functions">
+<div class="fn" id="constant-fs-path-separator">
+<h3><a class="self" href="#constant-fs-path-separator"><code>separator</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code>separator <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The path separator, <code>&quot;/&quot;</code>.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">separator</span>   <span class="tok-comment"># =&gt; &quot;/&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-path-join">
+<h3><a class="self" href="#function-fs-path-join"><code>join</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">join</span><span class="tok-punct">(</span>a<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> b<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a>
+<span class="tok-fn">join</span><span class="tok-punct">(</span>a<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> b<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Joins two path parts with a single separator and normalises the result.</p>
+<p>Repeated separators collapse, so <code>join(&quot;a/&quot;, &quot;/b&quot;)</code> is <code>&quot;a/b&quot;</code> and not <code>&quot;a//b&quot;</code>. An absolute second part does NOT restart the path, the way Ruby's <code>Pathname#join</code> would: use that part on its own if that is what you mean.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>a</code></dt><dd>the first part</dd></div>
+<div class="param"><dt><code>b</code></dt><dd>the second part</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the joined, normalised path</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;src/main.kex&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a/</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">/b</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>          <span class="tok-comment"># =&gt; &quot;a/b&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a/b</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">../c</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>       <span class="tok-comment"># =&gt; &quot;a/c&quot;</span></code></pre>
+<p class="caption"><em>Building a path under a base directory</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span>outputDir<span class="tok-punct">,</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">basename</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-path-joinall">
+<h3><a class="self" href="#function-fs-path-joinall"><code>joinAll</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">joinAll</span><span class="tok-punct">(</span>parts<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Joins any number of path parts, skipping empty ones, and normalises the result. An empty list gives <code>&quot;.&quot;</code>.</p>
+<p>The list form is <code>joinAll</code>, not another <code>join</code> overload: a list receiver already has <a class="xref" href="/prelude/0.4.0-beta.4-dev/list/#list-join"><code>List.join</code></a>, and a second one-argument <code>join</code> on the same receiver would be indistinguishable from it.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>parts</code></dt><dd>the parts to join</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the joined, normalised path</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">joinAll</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">c.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;a/b/c.txt&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">joinAll</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; &quot;a/b&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">joinAll</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>                    <span class="tok-comment"># =&gt; &quot;.&quot;</span></code></pre>
+<p class="caption"><em>Rebuilding a path from its segments</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">joinAll</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">segments</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">drop</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-path-normalize">
+<h3><a class="self" href="#function-fs-path-normalize"><code>normalize</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">normalize</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Resolves <code>.</code> and <code>..</code> in a path, lexically.</p>
+<p>Because it is lexical it never follows a symlink and never touches the disk. A leading <code>..</code> in a RELATIVE path is kept: there is no way to know what it escapes to, while one in an absolute path is dropped, since <code>/</code> has no parent.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to normalise</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the normalised path</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">normalize</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a/./b/../c</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;a/c&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">normalize</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">../a</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>         <span class="tok-comment"># =&gt; &quot;../a&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">normalize</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/a/../../b</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;/b&quot;</span></code></pre>
+<p class="caption"><em>Comparing two paths for equality</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">normalize</span><span class="tok-punct">(</span>a<span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">normalize</span><span class="tok-punct">(</span>b<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-path-segments">
+<h3><a class="self" href="#function-fs-path-segments"><code>segments</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">segments</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+<p>Returns the non-empty parts of the normalised path. The root <code>/</code> and the current directory <code>.</code> have none.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to split</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the segments, outermost first</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">segments</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/a/b/c</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">segments</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a/./b</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;]</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">segments</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; []</span></code></pre>
+<p class="caption"><em>How deep a path is</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">segments</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-path-absolute?">
+<h3><a class="self" href="#function-fs-path-absolute?"><code>absolute?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">absolute?</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the path starts at the root.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> for an absolute path</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">absolute?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/etc/hosts</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">absolute?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-path-relative?">
+<h3><a class="self" href="#function-fs-path-relative?"><code>relative?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">relative?</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the path does not start at the root. The opposite of <code>absolute?</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> for a relative path</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">relative?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">relative?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/etc/hosts</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-path-dirname">
+<h3><a class="self" href="#function-fs-path-dirname"><code>dirname</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">dirname</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the path's parent directory.</p>
+<p>A child of the root has <code>&quot;/&quot;</code> as its parent; a bare name has <code>&quot;.&quot;</code>, the current directory.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to take the parent of</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the parent directory</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">dirname</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/a/b/c.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;/a/b&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">dirname</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/c.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>       <span class="tok-comment"># =&gt; &quot;/&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">dirname</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">c.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; &quot;.&quot;</span></code></pre>
+<p class="caption"><em>Making sure a file's directory exists before writing</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">create</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">dirname</span><span class="tok-punct">(</span>target<span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-path-basename">
+<h3><a class="self" href="#function-fs-path-basename"><code>basename</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">basename</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the last segment of the path: the file or directory name.</p>
+<p>The root itself answers <code>&quot;/&quot;</code>, and an empty path answers <code>&quot;.&quot;</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to take the name of</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the last segment</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">basename</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/a/b/c.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;c.txt&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">basename</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/a/b</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>         <span class="tok-comment"># =&gt; &quot;b&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">basename</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>            <span class="tok-comment"># =&gt; &quot;/&quot;</span></code></pre>
+<p class="caption"><em>Listing names rather than paths</em></p>
+<pre class="code"><code>paths<span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">basename</span><span class="tok-punct">(</span>p<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-path-extension">
+<h3><a class="self" href="#function-fs-path-extension"><code>extension</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">extension</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the file extension, including its leading dot, or <code>&quot;&quot;</code> when there is none.</p>
+<p>Only the last extension counts, so <code>&quot;a.tar.gz&quot;</code> has <code>&quot;.gz&quot;</code>. A leading dot is part of the NAME rather than an extension, so <code>&quot;.gitignore&quot;</code> has none.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to inspect</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the extension, or <code>&quot;&quot;</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">extension</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;.kex&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">extension</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a/b.tar.gz</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; &quot;.gz&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">extension</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">README</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>         <span class="tok-comment"># =&gt; &quot;&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">extension</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">.gitignore</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; &quot;&quot;</span></code></pre>
+<p class="caption"><em>Selecting sources by extension</em></p>
+<pre class="code"><code>files<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>f<span class="tok-op">|</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">extension</span><span class="tok-punct">(</span>f<span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">.kex</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-path-stem">
+<h3><a class="self" href="#function-fs-path-stem"><code>stem</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">stem</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the basename with its extension removed.</p>
+<p>A name that IS its extension (<code>&quot;.gitignore&quot;</code>) keeps it, because it has none to drop.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to inspect</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the name without its extension</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">stem</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;main&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">stem</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a/b.tar.gz</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; &quot;b.tar&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">stem</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">.gitignore</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; &quot;.gitignore&quot;</span></code></pre>
+<p class="caption"><em>Deriving a module name from a filename</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">stem</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">capitalize</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-path-withextension">
+<h3><a class="self" href="#function-fs-path-withextension"><code>withExtension</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">withExtension</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> wanted<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the path with its extension replaced by <code>wanted</code>.</p>
+<p>The new extension may be written with or without its leading dot; an empty one removes the extension entirely.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to rewrite</dd></div>
+<div class="param"><dt><code>wanted</code></dt><dd>the new extension, with or without its dot</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the rewritten path</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">withExtension</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">beam</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; &quot;src/main.beam&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">withExtension</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">.beam</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;src/main.beam&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">withExtension</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; &quot;src/main&quot;</span></code></pre>
+<p class="caption"><em>Deriving an output path from a source path</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">withExtension</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span>outDir<span class="tok-punct">,</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">basename</span><span class="tok-punct">(</span>src<span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">o</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-path-relativeto">
+<h3><a class="self" href="#function-fs-path-relativeto"><code>relativeTo</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">relativeTo</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> base<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Expresses <code>path</code> relative to <code>base</code>, walking up with <code>..</code> as needed.</p>
+<p>Purely lexical, so it answers only when both sides are anchored the same way; a relative path against an absolute base, or the reverse, comes back unchanged. A path that IS the base answers <code>&quot;.&quot;</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to re-express</dd></div>
+<div class="param"><dt><code>base</code></dt><dd>the directory to express it against</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the relative path</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">relativeTo</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/a/b/c.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">/a/d</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;../b/c.txt&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">relativeTo</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/a/b/c.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">/a</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; &quot;b/c.txt&quot;</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">relativeTo</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/a/b</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">/a/b</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>         <span class="tok-comment"># =&gt; &quot;.&quot;</span></code></pre>
+<p class="caption"><em>Printing project-relative paths in a report</em></p>
+<pre class="code"><code>matches<span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">relativeTo</span><span class="tok-punct">(</span>p<span class="tok-punct">,</span> projectRoot<span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-fs-directory">
+<h2><span class="kind kind-module">module</span> <code>FS.Directory</code></h2>
+<p>Creating, listing and removing directories.</p>
+<p>Like <a class="xref" href="#module-fs-file"><code>FS.File</code></a>, everything here reaches the real filesystem and so is <code>foul</code>. Listings answer with an <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-optional"><code>Optional</code></a>, so a directory that cannot be read is a value you handle rather than an exception.</p>
+<div class="functions">
+<div class="fn" id="function-fs-directory-exists?">
+<h3><a class="self" href="#function-fs-directory-exists?"><code>exists?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">exists?</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when something exists at <code>path</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the path exists</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">exists?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-directory-directory?">
+<h3><a class="self" href="#function-fs-directory-directory?"><code>directory?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">directory?</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when <code>path</code> exists and is a directory.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> for a directory</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">directory?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">directory?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">README.md</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-directory-file?">
+<h3><a class="self" href="#function-fs-directory-file?"><code>file?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">file?</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when <code>path</code> exists and is a regular file.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> for a regular file</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">file?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">README.md</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-directory-create">
+<h3><a class="self" href="#function-fs-directory-create"><code>create</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">create</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Creates the directory at <code>path</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the directory to create</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the directory was created</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">create</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>Making sure an output directory is there</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">create</span><span class="tok-punct">(</span>outDir<span class="tok-punct">)</span> <span class="tok-keyword">if</span> <span class="tok-op">!</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">exists?</span><span class="tok-punct">(</span>outDir<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-directory-delete">
+<h3><a class="self" href="#function-fs-directory-delete"><code>delete</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">delete</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Removes the directory at <code>path</code>, which must be empty.</p>
+<p>Use <code>deleteAll</code> to remove a directory together with its contents.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the directory to remove</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the directory was removed</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">empty</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-directory-deleteall">
+<h3><a class="self" href="#function-fs-directory-deleteall"><code>deleteAll</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">deleteAll</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Removes the directory at <code>path</code> and everything inside it, recursively.</p>
+<p>This deletes data and cannot be undone: check the path before calling it, particularly when it was computed or came from user input.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the directory tree to remove</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the tree was removed</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">deleteAll</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>Rebuilding a scratch directory from clean</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">deleteAll</span><span class="tok-punct">(</span>tmpDir<span class="tok-punct">)</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">create</span><span class="tok-punct">(</span>tmpDir<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-directory-list">
+<h3><a class="self" href="#function-fs-directory-list"><code>list</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">list</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-op">?</span></code></pre>
+<p>Lists the names in <code>path</code>: both files and directories, one level deep.</p>
+<p>The results are bare names, not paths; join them with <code>path</code> to get something you can open. Answers <code>None</code> when the directory cannot be read.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the directory to list</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the entry names, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">list</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just([&quot;main.kex&quot;, &quot;lexer&quot;])</span></code></pre>
+<p class="caption"><em>Turning names into usable paths</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">list</span><span class="tok-punct">(</span>dir<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>name<span class="tok-op">|</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span>dir<span class="tok-punct">,</span> name<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-directory-files">
+<h3><a class="self" href="#function-fs-directory-files"><code>files</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">files</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-op">?</span></code></pre>
+<p>Lists only the regular files in <code>path</code>, one level deep.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the directory to list</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the file names, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">files</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just([&quot;main.kex&quot;])</span></code></pre>
+<p class="caption"><em>Every Kex source in a directory</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">files</span><span class="tok-punct">(</span>dir<span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>f<span class="tok-op">|</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">extension</span><span class="tok-punct">(</span>f<span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">.kex</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-directory-directories">
+<h3><a class="self" href="#function-fs-directory-directories"><code>directories</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">directories</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-op">?</span></code></pre>
+<p>Lists only the subdirectories of <code>path</code>, one level deep.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the directory to list</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the directory names, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">directories</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just([&quot;lexer&quot;, &quot;parser&quot;])</span></code></pre>
+<p class="caption"><em>Walking one level down</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">directories</span><span class="tok-punct">(</span>root<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>name<span class="tok-op">|</span>
+  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span>root<span class="tok-punct">,</span> name<span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-directory-current">
+<h3><a class="self" href="#function-fs-directory-current"><code>current</code></a></h3>
+<pre class="code sig"><code>current <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the process's current working directory, as an absolute path.</p>
+<p class="returns"><strong>Returns</strong> the current directory</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">current</span>   <span class="tok-comment"># =&gt; &quot;/home/ada/project&quot;</span></code></pre>
+<p class="caption"><em>Resolving a relative path by hand</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">current</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">build</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-directory-home">
+<h3><a class="self" href="#function-fs-directory-home"><code>home</code></a></h3>
+<pre class="code sig"><code>home <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
+<p>Returns the current user's home directory, or <code>None</code> when it cannot be determined.</p>
+<p class="returns"><strong>Returns</strong> the home directory, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">home</span>   <span class="tok-comment"># =&gt; Just(&quot;/home/ada&quot;)</span></code></pre>
+<p class="caption"><em>A per-user config path</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">home</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">.</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">.apprc</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-directory-temporary">
+<h3><a class="self" href="#function-fs-directory-temporary"><code>temporary</code></a></h3>
+<pre class="code sig"><code>temporary <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the directory this system puts temporary files in.</p>
+<p>Total, unlike <code>home</code>: it answers <code>TMPDIR</code> when the environment sets one (<code>TEMP</code> or <code>TMP</code> on Windows) and falls back to <code>/tmp</code>, so there is always somewhere to write. The path never ends in a separator, so it composes with <code>FS.Path.join</code> directly.</p>
+<p>The directory is shared with every other process on the machine, so pick a name unlikely to collide and delete it when you are done.</p>
+<p class="returns"><strong>Returns</strong> the temporary directory</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">temporary</span>   <span class="tok-comment"># =&gt; &quot;/tmp&quot;</span></code></pre>
+<p class="caption"><em>A scratch file that cleans up after itself</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> scratch <span class="tok-op">=</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">temporary</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">report.bin</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">writeBytes</span><span class="tok-punct">(</span>scratch<span class="tok-punct">,</span> payload<span class="tok-punct">)</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span>scratch<span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+
+
+        </article>
+      </main>
+      <aside class="toc" aria-label="On this page">
+        <nav><p class="toc-heading">On this page</p><ul><li><a href="#module-fs">FS</a></li><li class="toc-nested"><a href="#type-fs-filepath">FilePath</a></li><li class="toc-nested"><a href="#type-fs-filemodes">FileModes</a></li><li class="toc-nested"><a href="#type-fs-readpermission">ReadPermission</a></li><li class="toc-nested"><a href="#type-fs-writepermission">WritePermission</a></li><li class="toc-nested"><a href="#type-fs-fileerror">FileError</a></li><li class="toc-nested"><a href="#module-fs-file">FS.File</a></li><li class="toc-nested"><a href="#module-fs-path">FS.Path</a></li><li class="toc-nested"><a href="#module-fs-directory">FS.Directory</a></li></ul></nav>
+      </aside>
+    </div>
+    <footer class="foot">
+      <div class="wrap">Generated from source (<code>fs.kex</code>) · Built with Marqraft · <a href="https://kex.run">kex.run</a></div>
+    </footer>
+  </body>
+</html>

@@ -13,8 +13,6 @@ entities:
 
 # Algebra
 
-## trait `Monoid`
-
 Algebraic structures: combining values associatively.
 
 Kex traits do not inherit from one another, so concrete types explicitly implement every structure whose laws they satisfy.
@@ -29,22 +27,27 @@ Kex traits do not inherit from one another, so concrete types explicitly impleme
 
 Ordering and comparison (`Ordering`, `Comparable`) live in `comparable.kex`.
 
+## trait `Monoid`
+
 Types whose values combine associatively and have a neutral element.
 
 Implemented by `Integer` (addition), `String` and `List` (concatenation), `Map` and both `Set` flavours (union), and `Ordering` ("first decision wins" — declared beside `Ordering` in `comparable.kex`).
 
+Implemented by [`Integer`](#make-integer), [`String`](#make-string), [`[A]`](#make-list), [`Ordering`](comparable.md#make-ordering), [`Map<K, V>`](map.md#make-map), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack).
+
+### Required methods
 
 #### `identity`
-
-The neutral element: combining it with any value gives that value back.
-
-`combine` must be associative and `identity` neutral on both sides.
 
 ```kex
 identity : This
 ```
 
-**Returns**: `This` — the identity
+The neutral element: combining it with any value gives that value back.
+
+`combine` must be associative and `identity` neutral on both sides.
+
+**Returns**: the identity
 
 **Examples**
 
@@ -55,15 +58,19 @@ String.identity    # => ""
 
 #### `combine`
 
+```kex
+combine(other: This) -> This
+```
+
 Combines this value with `other`.
 
 Must be associative: `a.combine(b).combine(c)` and `a.combine(b.combine(c))` have to agree.
 
-```kex
-combine : This -> This
-```
+**Parameters**
 
-**Returns**: `This` — the combined value
+  - `other` — the value to combine with
+
+**Returns**: the combined value
 
 **Examples**
 
@@ -72,23 +79,30 @@ combine : This -> This
 "ab".combine("cd")    # => "abcd"
 [1].combine([2])      # => [1, 2]
 ```
+
 _Folding a list of values into one_
 
 ```kex
 parts.reduce(String.identity) { |acc, s| acc.combine(s) }
 ```
 
+### Provided methods
+
 #### `repeat`
+
+```kex
+repeat(n: Integer) -> This
+```
 
 Combines this value with itself `n` times.
 
 Repeating zero times gives the identity: `""` for a string, `0` for an integer, `[]` for a list. A negative count is invalid and ends the program.
 
-```kex
-repeat(0)
-```
+**Parameters**
 
-**Returns**: `This` — the repeated value
+  - `n` — how many copies to combine; must not be negative
+
+**Returns**: the repeated value
 
 **Examples**
 
@@ -98,11 +112,14 @@ repeat(0)
 5.repeat(3)      # => 15
 "x".repeat(0)    # => ""
 ```
+
 _Drawing a separator line_
 
 ```kex
 IO.printLine("-".repeat(40))
 ```
+
+
 
 ## trait `Group`
 
@@ -110,36 +127,39 @@ A `Monoid` in which every value has an inverse that combines with it to give the
 
 Implemented by `Integer`, where the inverse is negation.
 
+Implemented by [`Integer`](#make-integer).
+
+### Required methods
 
 #### `identity`
-
-The neutral element.
 
 ```kex
 identity : This
 ```
 
-**Returns**: `This` — the identity
+The neutral element.
+
+**Returns**: the identity
 
 #### `combine`
-
-Combines this value with `other`.
 
 ```kex
 combine : This -> This
 ```
 
-**Returns**: `This` — the combined value
+Combines this value with `other`.
+
+**Returns**: the combined value
 
 #### `inverse`
-
-The value that combines with this one to give the identity.
 
 ```kex
 inverse : This
 ```
 
-**Returns**: `This` — the inverse
+The value that combines with this one to give the identity.
+
+**Returns**: the inverse
 
 **Examples**
 
@@ -148,18 +168,19 @@ inverse : This
 5.combine(5.inverse)  # => 0
 ```
 
-## make `Integer` implements [Monoid](#trait-monoid), [Group](#trait-group)
+
+
+## extends `Integer`
+
+More methods of [`Integer`](number.md#make-integer), added by this module.
+
+Implements [`Monoid`](#trait-monoid), [`Group`](#trait-group).
 
 Implements `Monoid`, `Group` over `Integer` for addition.
 
-
-#### `identity`
+### `identity` (from Monoid, Group)
 
 `0`: the neutral element for addition.
-
-```kex
-identity : ?
-```
 
 **Returns**: `Integer` — zero
 
@@ -169,15 +190,19 @@ identity : ?
 Integer.identity   # => 0
 ```
 
-#### `combine`
+### `combine` (from Monoid, Group)
+
+```kex
+combine(other: This) -> This
+```
 
 Adds `other` to this integer. Addition is the monoid operation for `Integer`.
 
-```kex
-combine(other)
-```
+**Parameters**
 
-**Returns**: `This` — the sum
+  - `other` — the integer to add
+
+**Returns**: the sum
 
 **Examples**
 
@@ -185,15 +210,15 @@ combine(other)
 5.combine(3)   # => 8
 ```
 
-#### `inverse`
-
-The additive inverse: this integer negated.
+### `inverse` (from Group)
 
 ```kex
 inverse : This
 ```
 
-**Returns**: `This` — the negation
+The additive inverse: this integer negated.
+
+**Returns**: the negation
 
 **Examples**
 
@@ -202,18 +227,17 @@ inverse : This
 (-5).inverse # => 5
 ```
 
-## make `String` implements [Monoid](#trait-monoid)
+## extends `String`
+
+More methods of [`String`](string.md#make-string), added by this module.
+
+Implements [`Monoid`](#trait-monoid).
 
 Implements `Monoid` over `String` for concatenation.
 
-
-#### `identity`
+### `identity` (from Monoid)
 
 `""`: the neutral element for concatenation.
-
-```kex
-identity : ?
-```
 
 **Returns**: `String` — the empty string
 
@@ -223,15 +247,19 @@ identity : ?
 String.identity   # => ""
 ```
 
-#### `combine`
+### `combine` (from Monoid)
+
+```kex
+combine(other: This) -> This
+```
 
 Concatenates `other` onto this string. Concatenation is the monoid operation for `String`.
 
-```kex
-combine(other)
-```
+**Parameters**
 
-**Returns**: `This` — the concatenation
+  - `other` — the string to append
+
+**Returns**: the concatenation
 
 **Examples**
 
@@ -239,18 +267,17 @@ combine(other)
 "ab".combine("cd")   # => "abcd"
 ```
 
-## make `[A]` implements [Monoid](#trait-monoid)
+## extends `[A]`
+
+More methods of [`List`](list.md#type-list), added by this module.
+
+Implements [`Monoid`](#trait-monoid).
 
 Implements `Monoid` over `List<A>` for concatenation.
 
-
-#### `identity`
+### `identity` (from Monoid)
 
 `[]`: the neutral element for concatenation.
-
-```kex
-identity : ?
-```
 
 **Returns**: `[A]` — the empty list
 
@@ -260,21 +287,26 @@ identity : ?
 [1].combine(List.identity)   # => [1]
 ```
 
-#### `combine`
+### `combine` (from Monoid)
+
+```kex
+combine(other: This) -> This
+```
 
 Concatenates `other` onto this list. Concatenation is the monoid operation for `List`.
 
-```kex
-combine(other)
-```
+**Parameters**
 
-**Returns**: `This` — the concatenation
+  - `other` — the list to append
+
+**Returns**: the concatenation
 
 **Examples**
 
 ```kex
 [1].combine([2, 3])   # => [1, 2, 3]
 ```
+
 _Flattening a list of lists_
 
 ```kex

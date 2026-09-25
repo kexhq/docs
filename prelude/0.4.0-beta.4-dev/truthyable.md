@@ -34,16 +34,19 @@ When you want the "is there anything here" question instead, that is `Blankable`
 
 There is no NaN to consider: a float operation that would produce one raises instead, matching BEAM (see nonFiniteFloatError in src/interpreter/value.cxx).
 
+Implemented by [`Bool`](#make-bool), [`Integer`](#make-integer), [`Float`](#make-float), [`String`](#make-string), [`Optional<X>`](#make-optional), [`[X]`](#make-list), [`Map<K, V>`](#make-map).
+
+### Required methods
 
 #### `truthy?`
-
-Returns `true` when the value counts as true in a condition.
 
 ```kex
 truthy? : Bool
 ```
 
-**Returns**: `Bool` — `true` unless the value is `false`, `None` or `()`
+Returns `true` when the value counts as true in a condition.
+
+**Returns**: `true` unless the value is `false`, `None` or `()`
 
 **Examples**
 
@@ -52,18 +55,21 @@ truthy? : Bool
 None.truthy?     # => false
 ```
 
-## make `Bool` implements [Truthyable](#trait-truthyable)
 
 
-#### `truthy?`
+## type `Bool`
 
-Returns the boolean itself.
+Implements [`Blankable`](blankable.md#trait-blankable), [`Truthyable`](#trait-truthyable).
+
+### `truthy?` (from Truthyable)
 
 ```kex
 truthy? : Bool
 ```
 
-**Returns**: `Bool` — the value
+Returns the boolean itself.
+
+**Returns**: the value
 
 **Examples**
 
@@ -72,17 +78,17 @@ true.truthy?    # => true
 false.truthy?   # => false
 ```
 
-#### `not`
-
-Returns the negation of this boolean.
-
-`!flag` says the same thing, and is the spelling to reach for when the value is already to hand. This one exists for the position `!` cannot take: the end of a chain, where what is being negated is whatever the chain just produced. `falsy?` answers the same question for any `Truthyable` value; `not` is the one that both takes and answers a `Bool`.
+### `not`
 
 ```kex
 not : Bool
 ```
 
-**Returns**: `Bool` — `false` for `true`, and `true` for `false`
+Returns the negation of this boolean.
+
+`!flag` says the same thing, and is the spelling to reach for when the value is already to hand. This one exists for the position `!` cannot take: the end of a chain, where what is being negated is whatever the chain just produced. `falsy?` answers the same question for any `Truthyable` value; `not` is the one that both takes and answers a `Bool`.
+
+**Returns**: `false` for `true`, and `true` for `false`
 
 **Examples**
 
@@ -90,26 +96,34 @@ not : Bool
 true.not    # => false
 false.not   # => true
 ```
+
 _At the end of a chain_
 
 ```kex
 book.borrowed?.not
 ```
 
-## make `Integer` implements [Truthyable](#trait-truthyable)
+### Defined in other modules
 
+  - [Blankable](blankable.md#make-bool): [`blank?`](blankable.md#bool-blank?)
 
-#### `truthy?`
+## extends `Integer`
 
-Always `true`, including for zero.
+More methods of [`Integer`](number.md#make-integer), added by this module.
 
-Zero is a number, not an absence. Compare it explicitly when zero means something: `count == 0`.
+Implements [`Truthyable`](#trait-truthyable).
+
+### `truthy?` (from Truthyable)
 
 ```kex
 truthy? : Bool
 ```
 
-**Returns**: `Bool` — always `true`
+Always `true`, including for zero.
+
+Zero is a number, not an absence. Compare it explicitly when zero means something: `count == 0`.
+
+**Returns**: always `true`
 
 **Examples**
 
@@ -118,18 +132,21 @@ truthy? : Bool
 42.truthy?   # => true
 ```
 
-## make `Float` implements [Truthyable](#trait-truthyable)
+## extends `Float`
 
+More methods of [`Float`](number.md#make-float), added by this module.
 
-#### `truthy?`
+Implements [`Truthyable`](#trait-truthyable).
 
-Always `true`, including for zero.
+### `truthy?` (from Truthyable)
 
 ```kex
 truthy? : Bool
 ```
 
-**Returns**: `Bool` — always `true`
+Always `true`, including for zero.
+
+**Returns**: always `true`
 
 **Examples**
 
@@ -137,20 +154,23 @@ truthy? : Bool
 0.0.truthy?   # => true
 ```
 
-## make `String` implements [Truthyable](#trait-truthyable)
+## extends `String`
 
+More methods of [`String`](string.md#make-string), added by this module.
 
-#### `truthy?`
+Implements [`Truthyable`](#trait-truthyable).
 
-Always `true`, including for the empty string.
-
-Use `blank?` from `Blankable` when an empty or whitespace-only string should count as nothing.
+### `truthy?` (from Truthyable)
 
 ```kex
 truthy? : Bool
 ```
 
-**Returns**: `Bool` — always `true`
+Always `true`, including for the empty string.
+
+Use `blank?` from `Blankable` when an empty or whitespace-only string should count as nothing.
+
+**Returns**: always `true`
 
 **Examples**
 
@@ -159,20 +179,23 @@ truthy? : Bool
 "".blank?       # => true   (the question usually meant)
 ```
 
-## make `Optional<X>` implements [Truthyable](#trait-truthyable)
+## extends `Optional<X>`
 
+More methods of [`Optional`](optional.md#type-optional), added by this module.
 
-#### `truthy?`
+Implements [`Truthyable`](#trait-truthyable).
 
-Returns `true` for a `Just` and `false` for `None`.
-
-The one type where truthiness is genuinely about presence, which is what makes an optional usable directly as a condition.
+### `truthy?` (from Truthyable)
 
 ```kex
 truthy? : Bool
 ```
 
-**Returns**: `Bool` — `true` when a value is present
+Returns `true` for a `Just` and `false` for `None`.
+
+The one type where truthiness is genuinely about presence, which is what makes an optional usable directly as a condition.
+
+**Returns**: `true` when a value is present
 
 **Examples**
 
@@ -181,20 +204,23 @@ Just(0).truthy?    # => true
 None.truthy?       # => false
 ```
 
-## make `[X]` implements [Truthyable](#trait-truthyable)
+## extends `[X]`
 
+More methods of [`List`](list.md#type-list), added by this module.
 
-#### `truthy?`
+Implements [`Truthyable`](#trait-truthyable).
 
-Always `true`, including for the empty list.
-
-Use `empty?` or `blank?` when an empty list should count as nothing.
+### `truthy?` (from Truthyable)
 
 ```kex
 truthy? : Bool
 ```
 
-**Returns**: `Bool` — always `true`
+Always `true`, including for the empty list.
+
+Use `empty?` or `blank?` when an empty list should count as nothing.
+
+**Returns**: always `true`
 
 **Examples**
 
@@ -203,18 +229,21 @@ truthy? : Bool
 [].blank?    # => true   (the question usually meant)
 ```
 
-## make `Map<K, V>` implements [Truthyable](#trait-truthyable)
+## extends `Map<K, V>`
 
+More methods of [`Map`](map.md#type-map), added by this module.
 
-#### `truthy?`
+Implements [`Truthyable`](#trait-truthyable).
 
-Always `true`, including for the empty map.
+### `truthy?` (from Truthyable)
 
 ```kex
 truthy? : Bool
 ```
 
-**Returns**: `Bool` — always `true`
+Always `true`, including for the empty map.
+
+**Returns**: always `true`
 
 **Examples**
 

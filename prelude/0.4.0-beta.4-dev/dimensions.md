@@ -17,6 +17,44 @@ A base dimension is identified by the type of a marker value. Reuse that marker 
 
 Multiplication adds exponents, division subtracts them, and integer powers multiply them. Zero exponents are removed so cancellation is structural.
 
+### `one` (constant)
+
+```kex
+one : Dimension
+```
+
+The dimension with no remaining base factors.
+
+
+
+### `base`
+
+```kex
+base(marker: A) -> Dimension
+```
+
+Defines a base dimension using the nominal type of a marker value.
+
+**Parameters**
+
+  - `marker` — a value of a dedicated marker type
+
+**Returns**: that base dimension, raised to the first power
+
+### `fromPowers`
+
+```kex
+fromPowers(powers: {Type: Integer}) -> Dimension
+```
+
+Normalizes a map of base identities and powers.
+
+**Parameters**
+
+  - `powers` — the dimension's exponents
+
+**Returns**: the same dimension with zero exponents removed
+
 ## record `Dimension`
 
 A normalized map from base identities to integer exponents.
@@ -25,83 +63,72 @@ Construct dimensions with `Dimensions.base` and compose them with arithmetic. If
 
 **Fields**
 
-  - `powers` : {Type: Integer}
+  - `powers` : {[Type](type.md#record-type): [Integer](number.md#make-integer)}
 
-## constant `one`
-
-The dimension with no remaining base factors.
-
-
-
-## function `base`
-
-Defines a base dimension using the nominal type of a marker value.
-
-
-```kex
-base(marker)
-```
-
-
-## function `fromPowers`
-
-Normalizes a map of base identities and powers.
-
-
-```kex
-fromPowers(powers)
-```
-
-
-## make `Dimension`
-
+### Methods
 
 #### `dimensionless?`
-
-Whether every base factor has cancelled.
 
 ```kex
 dimensionless? : Bool
 ```
 
-**Returns**: `Bool` — true for a dimensionless quantity
+Whether every base factor has cancelled.
+
+**Returns**: true for a dimensionless quantity
 
 #### `exponentOf`
 
-The exponent of the supplied marker's dimension, or zero if absent.
-
 ```kex
-exponentOf(marker) : A -> Integer
+exponentOf(marker: A) -> Integer
 ```
 
-**Returns**: `Integer` — the base's exponent
+The exponent of the supplied marker's dimension, or zero if absent.
+
+**Parameters**
+
+  - `marker` — a value of the base marker type
+
+**Returns**: the base's exponent
 
 #### `*`
 
-Composes dimensions by adding their base exponents.
-
 ```kex
-*(other) : Dimension -> Dimension
+*(other: Dimension) -> Dimension
 ```
 
-**Returns**: `Dimension` — the normalized product
+Composes dimensions by adding their base exponents.
+
+**Parameters**
+
+  - `other` — the other factor
+
+**Returns**: the normalized product
 
 #### `/`
 
-Composes dimensions by subtracting the denominator's exponents.
-
 ```kex
-/(other) : Dimension -> Dimension
+/(other: Dimension) -> Dimension
 ```
 
-**Returns**: `Dimension` — the normalized quotient
+Composes dimensions by subtracting the denominator's exponents.
+
+**Parameters**
+
+  - `other` — the denominator's dimension
+
+**Returns**: the normalized quotient
 
 #### `^`
 
-Raises a dimension to an integer power, including zero and negatives.
-
 ```kex
-^(exponent) : Integer -> Dimension
+^(exponent: Integer) -> Dimension
 ```
 
-**Returns**: `Dimension` — the normalized powered dimension
+Raises a dimension to an integer power, including zero and negatives.
+
+**Parameters**
+
+  - `exponent` — the power
+
+**Returns**: the normalized powered dimension

@@ -13,8 +13,6 @@ entities:
 
 # Comparable
 
-## type `Ordering`
-
 Ordering and comparison: what a comparison answers, and the types that have a total order.
 
 Kex traits do not inherit from one another, so concrete types explicitly implement every structure whose laws they satisfy.
@@ -27,11 +25,11 @@ a.age.compare(b.age).thenBy { a.score.compare(b.score) }
 
 `Ordering` is also a `Monoid` under "first decision wins", which is what makes comparisons chain with `combine`; that conformance is declared here, beside the type it belongs to, rather than in `algebra.kex` with the `Monoid` trait.
 
+## type `Ordering`
+
 The result of a comparison: `Less`, `Equal` or `Greater`.
 
 Declared here rather than only inside the interpreter so that `Ordering`, `Less`, `Equal` and `Greater` reach the semantic layer the same way every other stdlib type does (through the collected interfaces) instead of existing solely as native environment bindings the type checker and name resolver cannot see.
-
-
 
 **Variants**
 
@@ -39,89 +37,9 @@ Declared here rather than only inside the interpreter so that `Ordering`, `Less`
   - `Equal`
   - `Greater`
 
-## trait `Comparable`
+Implements [`Monoid`](algebra.md#trait-monoid).
 
-Types that have a total order.
-
-Implemented by `Number`, which covers both `Integer` and `Float`, and by `String`.
-
-
-#### `compare`
-
-Compares this value with `other` and answers `Less`, `Equal` or `Greater`.
-
-`==` stays independent of this: a type may be equatable without being ordered.
-
-A total order: `compare` answers Less, Equal or Greater. `==` stays independent: a type may be Equatable without being ordered.
-
-```kex
-compare : This -> Ordering
-```
-
-**Returns**: `Ordering` — how this value orders against `other`
-
-**Examples**
-
-```kex
-1.compare(2)     # => Less
-2.compare(2)     # => Equal
-3.compare(2)     # => Greater
-```
-_Sorting with an explicit comparison_
-
-```kex
-people.sort { |a, b| a.age.compare(b.age) == Less }
-```
-
-## make `Number` implements [Comparable](#trait-comparable)
-
-Number carries the implementation, so Integer and Float both inherit it rather than repeating the same three comparisons. Mixed receivers work because `<` and `>` promote across the two (`1.compare(1.0)` is Equal).
-
-
-#### `compare`
-
-Compares two numbers, across the `Integer`/`Float` boundary.
-
-Mixed receivers work because `<` and `>` promote across the two, so `1.compare(1.0)` is `Equal`.
-
-```kex
-compare(other)
-```
-
-**Returns**: `Ordering` — how this number orders against `other`
-
-**Examples**
-
-```kex
-1.compare(2)      # => Less
-1.compare(1.0)    # => Equal
-2.5.compare(2)    # => Greater
-```
-
-## make `String` implements [Comparable](#trait-comparable)
-
-Strings order lexicographically, character by character, by code point — the same order `<` and `>` already give them.
-
-
-#### `compare`
-
-Compares this string with `other` lexicographically, the same order `<` and `>` give strings.
-
-```kex
-compare(other)
-```
-
-**Returns**: `Ordering` — how this string orders against `other`
-
-**Examples**
-
-```kex
-"apple".compare("banana")   # => Less
-"kex".compare("kex")        # => Equal
-"cherry".compare("apple")   # => Greater
-```
-
-## make `Ordering` implements [Monoid](algebra.md#trait-monoid)
+### Methods
 
 `Ordering` is a Monoid under "first decision wins", with Equal as identity. That is what makes multi-key comparison compose instead of nesting ifs:
 
@@ -131,28 +49,27 @@ a.name.compare(b.name).combine(a.age.compare(b.age))
 
 `combine` evaluates its argument eagerly, so the later comparison runs even when the earlier one already decided. Use `thenBy` when that matters.
 
-
-#### `identity`
+#### `identity` (from Monoid)
 
 `Equal` is the neutral element, since an undecided comparison lets the next one decide.
 
-```kex
-identity : ?
-```
-
 **Returns**: `Ordering` — `Equal`
 
-#### `combine`
+#### `combine` (from Monoid)
+
+```kex
+combine(other: Ordering, other: Ordering) -> Ordering
+```
 
 Returns the first decisive ordering: this one if it is not `Equal`, otherwise `other`.
 
 This is what makes multi-key comparison compose. Note that `other` is evaluated eagerly, so the later comparison runs even when the earlier one has already decided: use `thenBy` when that matters.
 
-```kex
-combine(@Equal, other)
-```
+**Parameters**
 
-**Returns**: `Ordering` — the first decisive ordering
+  - `other` — the tie-breaking ordering
+
+**Returns**: the first decisive ordering
 
 **Examples**
 
@@ -160,6 +77,7 @@ combine(@Equal, other)
 Equal.combine(Less)     # => Less
 Less.combine(Greater)   # => Less
 ```
+
 _Sorting by surname, then by first name_
 
 ```kex
@@ -168,15 +86,15 @@ a.last.compare(b.last).combine(a.first.compare(b.first))
 
 #### `reverse`
 
-Returns the opposite ordering: `Less` becomes `Greater`, `Greater` becomes `Less`, and `Equal` stays `Equal`.
-
-The one-word way to turn an ascending comparison into a descending one.
-
 ```kex
 reverse : Ordering
 ```
 
-**Returns**: `Ordering` — the reversed ordering
+Returns the opposite ordering: `Less` becomes `Greater`, `Greater` becomes `Less`, and `Equal` stays `Equal`.
+
+The one-word way to turn an ascending comparison into a descending one.
+
+**Returns**: the reversed ordering
 
 **Examples**
 
@@ -185,6 +103,7 @@ Less.reverse      # => Greater
 Greater.reverse   # => Less
 Equal.reverse     # => Equal
 ```
+
 _Sorting newest first_
 
 ```kex
@@ -193,15 +112,19 @@ a.created.compare(b.created).reverse
 
 #### `thenBy`
 
+```kex
+thenBy(tieBreaker: Block<Ordering>) -> Ordering
+```
+
 Returns this ordering if it is decisive, otherwise the result of calling `tieBreaker`.
 
 The short-circuiting form of `combine`: the block runs only when this comparison is `Equal`, so a tie-breaker costs nothing once the order is already decided. Prefer it whenever the tie-breaker is more than a field read.
 
-```kex
-thenBy : Block<Ordering> -> Ordering
-```
+**Parameters**
 
-**Returns**: `Ordering` — the first decisive ordering
+  - `tieBreaker` — evaluated only on a tie
+
+**Returns**: the first decisive ordering
 
 **Examples**
 
@@ -209,8 +132,119 @@ thenBy : Block<Ordering> -> Ordering
 Equal.thenBy { 2.compare(1) }   # => Greater
 Less.thenBy { 2.compare(1) }    # => Less
 ```
+
 _Sorting by age, then by an expensive score_
 
 ```kex
 a.age.compare(b.age).thenBy { score(a).compare(score(b)) }
+```
+
+### From [`Monoid`](algebra.md#trait-monoid)
+
+  - [`repeat`](algebra.md#monoid-repeat) — Combines this value with itself `n` times.
+
+## trait `Comparable`
+
+Types that have a total order.
+
+Implemented by `Number`, which covers both `Integer` and `Float`, and by `String`.
+
+Implemented by [`Number`](#make-number), [`String`](#make-string).
+
+### Required methods
+
+#### `compare`
+
+```kex
+compare(other: This) -> Ordering
+```
+
+Compares this value with `other` and answers `Less`, `Equal` or `Greater`.
+
+`==` stays independent of this: a type may be equatable without being ordered.
+
+A total order: `compare` answers Less, Equal or Greater. `==` stays independent: a type may be Equatable without being ordered.
+
+**Parameters**
+
+  - `other` — the value to compare against
+
+**Returns**: how this value orders against `other`
+
+**Examples**
+
+```kex
+1.compare(2)     # => Less
+2.compare(2)     # => Equal
+3.compare(2)     # => Greater
+```
+
+_Sorting with an explicit comparison_
+
+```kex
+people.sort { |a, b| a.age.compare(b.age) == Less }
+```
+
+
+
+## extends `Number`
+
+More methods of [`Number`](number.md#), added by this module.
+
+Implements [`Comparable`](#trait-comparable).
+
+Number carries the implementation, so Integer and Float both inherit it rather than repeating the same three comparisons. Mixed receivers work because `<` and `>` promote across the two (`1.compare(1.0)` is Equal).
+
+### `compare` (from Comparable)
+
+```kex
+compare(other: Number) -> Ordering
+```
+
+Compares two numbers, across the `Integer`/`Float` boundary.
+
+Mixed receivers work because `<` and `>` promote across the two, so `1.compare(1.0)` is `Equal`.
+
+**Parameters**
+
+  - `other` — the number to compare against
+
+**Returns**: how this number orders against `other`
+
+**Examples**
+
+```kex
+1.compare(2)      # => Less
+1.compare(1.0)    # => Equal
+2.5.compare(2)    # => Greater
+```
+
+## extends `String`
+
+More methods of [`String`](string.md#make-string), added by this module.
+
+Implements [`Comparable`](#trait-comparable).
+
+Strings order lexicographically, character by character, by code point — the same order `<` and `>` already give them.
+
+### `compare` (from Comparable)
+
+```kex
+compare(other: String) -> Ordering
+```
+
+Compares this string with `other` lexicographically, the same order `<` and `>` give strings.
+
+**Parameters**
+
+  - `other` — the string to compare against
+
+**Returns**: how this string orders against `other`
+
+**Examples**
+
+```kex
+"apple".compare("banana")   # => Less
+"kex".compare("kex")        # => Equal
+"cherry".compare("apple")   # => Greater
 ```

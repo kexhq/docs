@@ -11,63 +11,39 @@ entities:
 
 ## module `Tey.Semver`
 
-## record `SemanticVersion`
-
-**Fields**
-
-  - `major` : Integer
-  - `minor` : Integer
-  - `patch` : Integer
-  - `preRelease` : String (optional)
-
-## make `SemanticVersion` implements Comparable
-
-SemanticVersion is Comparable, so `a.compare(b)` answers Less/Equal/Greater like every other ordered type in the stdlib, and ordering reads as an ordering rather than as sign arithmetic on -1/0/1.
-
-
-#### `compare`
+### `parseVersion`
 
 ```kex
-compare(other)
+parseVersion(text: String) -> SemanticVersion?
 ```
 
-## function `parseVersion`
-
+### `release`
 
 ```kex
-parseVersion(text)
+release(text: String) -> String
 ```
-
-
-## function `release`
 
 The release a version belongs to: `0.4.0-rc.1` → `0.4.0`. Used where a pre-release should count as its eventual release.
 
+### `stable?`
 
 ```kex
-release(text)
+stable?(text: String) -> Bool
 ```
-
-
-## function `stable?`
 
 Whether a version is a full release rather than a pre-release. This is the question a download page asks: "what is the current stable Kex?".
 
+### `satisfies`
 
 ```kex
-stable?(text)
+satisfies(versionText: String, requirement: String) -> Bool
 ```
 
-
-## function `satisfies`
-
+### `intersect`
 
 ```kex
-satisfies(versionText, requirement)
+intersect(a: String, b: String) -> String
 ```
-
-
-## function `intersect`
 
 The requirement satisfied only by versions satisfying BOTH, for when two packages in one graph each ask for the same dependency.
 
@@ -75,76 +51,77 @@ Concatenation, because `satisfies` already reads a requirement as a list of spac
 
 An empty intersection is not detected here, and deliberately: `~> 0.1 ~> 0.2` is perfectly well formed and simply matches nothing. Emptiness is a fact about the versions a repository actually publishes, so it is discovered where the tags are (`highest`), where the error can also say what WAS available.
 
+### `intersectAll`
 
 ```kex
-intersect(a, b)
+intersectAll(requirements: [String]) -> String
 ```
-
-
-## function `intersectAll`
 
 Every constraint at once. `[]` and `[""]` both mean "no opinion", which is what a package with no version requirement expresses.
 
+### `versionOf`
 
 ```kex
-intersectAll(requirements)
+versionOf(ref: String) -> String
 ```
-
-
-## function `versionOf`
 
 The version inside a resolved ref: `refs/tags/v0.1.1` and `v0.1.1` both give `0.1.1`. A ref that carries no version (a branch name, a bare commit) gives "", which satisfies nothing and so never claims to meet a range.
 
+### `channelRank`
 
 ```kex
-versionOf(ref)
+channelRank(channel: String) -> Integer
 ```
-
-
-## function `channelRank`
 
 Channel precedence, lowest first: prealpha < alpha < beta < rc < release. Plain semver would order these alphabetically — putting `beta` BEFORE `prealpha` — which is not what the words mean, so the ranking is explicit.
 
+### `range?`
 
 ```kex
-channelRank(channel)
+range?(requested: String) -> Bool
 ```
-
-
-## function `range?`
 
 Whether a requested tag is a RANGE rather than one exact tag. `v1.2.0` is a name to look up; `~> 1.2` is a question to answer against everything the repository has.
 
+### `newer?`
 
 ```kex
-range?(requested)
+newer?(a: String, b: String) -> Bool
 ```
-
-
-## function `newer?`
 
 Descending semantic order, for picking the newest of anything. A tag that is not a version sorts after every tag that is, so a stray `nightly` can never displace a release.
 
+### `newestFirst`
 
 ```kex
-newer?(a, b)
+newestFirst(versions: [String]) -> [String]
 ```
 
-
-## function `newestFirst`
-
+### `highest`
 
 ```kex
-newestFirst(versions)
+highest(tags: [String], requirement: String) -> String?
 ```
-
-
-## function `highest`
 
 The highest tag that satisfies the requirement — the whole point of writing a range instead of a version. None when nothing does.
 
+## record `SemanticVersion`
+
+**Fields**
+
+  - `major` : [Integer](../../../prelude/0.4.0-beta.4-dev/number.md#make-integer)
+  - `minor` : [Integer](../../../prelude/0.4.0-beta.4-dev/number.md#make-integer)
+  - `patch` : [Integer](../../../prelude/0.4.0-beta.4-dev/number.md#make-integer)
+  - `preRelease` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+
+Implements `Comparable`.
+
+### Methods
+
+SemanticVersion is Comparable, so `a.compare(b)` answers Less/Equal/Greater like every other ordered type in the stdlib, and ordering reads as an ordering rather than as sign arithmetic on -1/0/1.
+
+#### `compare`
 
 ```kex
-highest(tags, requirement)
+compare(other: SemanticVersion) -> Ordering
 ```
-
