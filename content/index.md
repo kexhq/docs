@@ -4,7 +4,7 @@ title: "Kex documentation"
 description: "The Kex guide and the reference for its standard library and Tey."
 path: "/"
 draft: false
-template: "landing"
+template: "home"
 ---
 Kex is a functional language with Ruby-like syntax, immutability by default,
 and an Elixir-style process model.
