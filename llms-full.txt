@@ -29557,6 +29557,58 @@ install(without: String, packageName: String = …) -> Integer
 
 `--without dev` leaves a group's dependencies out of this install. The LOCKFILE still lists them — what is omitted is the fetching, so switching the flag off later needs no re-resolve.
 
+### `installWorkspace`
+
+```kex
+installWorkspace(without: String, packageName: String, force?: Bool) -> Integer
+```
+
+`install`, where `force?` lets targets replace programs Tey does not own (see Tey.Programs.refusal).
+
+### `installDependencies`
+
+```kex
+installDependencies(context: Context, without: String) -> Result<Void, String>
+```
+
+Resolves (or reuses) the workspace's lock, fetches and verifies what it names, approves plugins, and writes the lock back — everything `tey install` does before building.
+
+### `fetchAll`
+
+```kex
+fetchAll(dependencies: [Tey.Lockfile.Dependency]) -> Result<Void, String>
+```
+
+### `installProgram`
+
+```kex
+installProgram(argument: String, packageName: String, force?: Bool) -> Integer
+```
+
+`tey install <argument>`: a program, from a path for now. A Git URL and an installed program's name (reinstalling it) are the next steps of docs/plan_tey_global_install.md.
+
+### `installFromPath`
+
+```kex
+installFromPath(path: String, packageName: String, force?: Bool) -> Integer
+```
+
+Installs the program at `path` without touching it: the workspace around it is copied into a staging directory, which gets its own lock, dependencies and build, and only replaces the program's previous build tree once its programs are in place. The user's checkout gains no `ebin/`, no `tey.lock`, nothing.
+
+### `programMember`
+
+```kex
+programMember(context: Context, packageName: String) -> Result<Member, String>
+```
+
+The member of `context` a path install means: the one `--package` names, else the one the path is inside of.
+
+### `installStaged`
+
+```kex
+installStaged(context: Context, member: Member, staging: String, force?: Bool) -> Integer
+```
+
 ### `updateDependencies`
 
 ```kex
@@ -29597,29 +29649,49 @@ validateUpdateName(members: [Member], name: String) -> Result<Void, String>
 updateScopeMembers(context: Context) -> [Member]
 ```
 
-### `installTargets`
-
-```kex
-installTargets : Integer
-```
-
-Puts this package's `target(...)` executables where they can be run by name.
-
-`${TEY_HOME}/bin` is a directory Tey already owns and already asks people to put on PATH — it is how the `kex` shim gets there — so a package's programs land beside it rather than needing a second directory and a second instruction.
-
-Only packages that DECLARE a target are affected. A library has none, so `tey install` in one still means exactly what it meant before: fetch the dependencies.
-
 ### `installTargetsSelected`
 
 ```kex
-installTargetsSelected(context: Context, packageName: String) -> Integer
+installTargetsSelected(context: Context, packageName: String, force?: Bool = …) -> Integer
 ```
 
 ### `installMemberTargets`
 
 ```kex
-installMemberTargets(member: Member) -> Integer
+installMemberTargets(member: Member, force?: Bool = …) -> Integer
 ```
+
+Puts this package's `target(...)` executables where they can be run by name, and records them in the package's receipt (see Tey.Programs).
+
+`${TEY_HOME}/bin` is a directory Tey already owns and already asks people to put on PATH — it is how the `kex` shim gets there — so a package's programs land beside it rather than needing a second directory and a second instruction.
+
+Only packages that DECLARE a target are affected. A library has none, so `tey install` in one still means exactly what it meant before: fetch the dependencies.
+
+Every name is checked before anything is built, so a refused install costs nothing and changes nothing.
+
+### `installMemberTargetsFrom`
+
+```kex
+installMemberTargetsFrom(member: Member, force?: Bool, origin: Receipt) -> Integer
+```
+
+`installMemberTargets`, recording `origin`'s source fields in the receipt — a program built in a staging copy came from somewhere else.
+
+### `releaseTarget`
+
+```kex
+releaseTarget(owner: String, name: String) -> Result<Void, String>
+```
+
+Drops `name` from `owner`'s receipt after another package took it over with `--force`; a receipt left owning nothing is removed.
+
+### `recordInstall`
+
+```kex
+recordInstall(package: ManifestPackage, origin: Receipt, installed: [String], receipts: [Receipt], claims: [(String, Claim)]) -> Result<Void, String>
+```
+
+Writes the package's receipt and settles ownership around it: names taken over with `--force` leave the other package's receipt, and targets the previous receipt owned that this install no longer declares are removed from the bin directory rather than left behind unowned.
 
 ### `dependencyRoots`
 
@@ -29628,6 +29700,14 @@ dependencyRoots : [String]
 ```
 
 `--source-root` for every fetched dependency. Without these a dependency is just bytes in the cache: `using Greet` cannot find it, and the package that declared it does not compile. A dependency the lockfile names but the cache does not have is reported rather than quietly dropped — the answer is `tey install`, and silence would look like a broken `using`.
+
+### `dependencyRootsAt`
+
+```kex
+dependencyRootsAt(start: String) -> [String]
+```
+
+`dependencyRoots` for the workspace around `start` rather than around the working directory. A program being installed from a path is built in a staged copy while the user stands somewhere else entirely — possibly in another project, whose lockfile would otherwise supply the dependencies.
 
 ### `sourceRoots`
 
@@ -29691,6 +29771,14 @@ The `--` before the arguments plays the same role as in runPackage.
 
 ```kex
 list : Integer
+```
+
+The locked dependencies, then the programs Tey has installed. Outside a project there are no dependencies to show, so it is the programs alone rather than an error about a missing package.kex.
+
+### `listPrograms`
+
+```kex
+listPrograms(programs: [Receipt]) -> Void
 ```
 
 ### `build`
@@ -30357,6 +30445,213 @@ typedOptions(operation: Tey.Manifest.PluginOperation, supplied: {String: String}
 ---
 package: tey
 version: "0.2.0-dev"
+source: tey/programs.kex
+title: Tey.Programs
+entities:
+  - { kind: module, name: "Tey.Programs" }
+---
+
+# Tey.Programs
+
+## module `Tey.Programs`
+
+What Tey has put in `${TEY_HOME}/bin`, and who owns each file there.
+
+Every package whose targets Tey installs gets a receipt at `${TEY_HOME}/programs/<name>/receipt.json`. The receipt is the only authority for ownership: a file in the bin directory that no receipt lists is not Tey's to overwrite or delete. Without one, a second package declaring the same target name silently replaced the first package's program, and nothing could say what a file in there was or where it had come from.
+
+Keyed by PACKAGE, not by binary: one package may install several targets, and reinstalling or removing it acts on all of them together.
+
+### `reservedNames` (constant)
+
+```kex
+reservedNames : [String]
+```
+
+Names that are Tey's own and never a package's to take: the `kex` shim lives in this directory, and replacing it would change which compiler every shell runs.
+
+
+
+### `directory`
+
+```kex
+directory : String
+```
+
+### `classify`
+
+```kex
+classify(argument: String) -> ProgramSource
+```
+
+A path when it starts like one (`.`, `/`, `~`), a Git URL when it has a scheme or is scp-like (`git@host:owner/repo`), and otherwise the name of an installed program.
+
+### `buildDirectory`
+
+```kex
+buildDirectory(name: String) -> String
+```
+
+Where a program's staged build tree ends up once it is installed.
+
+### `stagingDirectory`
+
+```kex
+stagingDirectory : Result<String, String>
+```
+
+A fresh directory to build a program in before it is installed. Beside `programs/` rather than in it, so a half-built tree is never listed as a program, and on the same filesystem, so publishing it is a rename.
+
+### `stage`
+
+```kex
+stage(root: String, destination: String) -> Result<Void, String>
+```
+
+Copies the tree at `root` into `destination`: what a snapshot would hold, plus a committed `tey.lock` — the dependency versions the program's author tested, which a snapshot leaves out.
+
+### `copyInto`
+
+```kex
+copyInto(root: String, relative: String, destination: String) -> Bool
+```
+
+### `publishBuild`
+
+```kex
+publishBuild(name: String, staged: String) -> Result<Void, String>
+```
+
+Replaces a program's build tree with the one it was just installed from. The old tree is moved aside first and removed last, so a failure part way leaves one of the two in place.
+
+### `receiptPath`
+
+```kex
+receiptPath(name: String) -> String
+```
+
+### `encode`
+
+```kex
+encode(receipt: Receipt) -> String
+```
+
+### `decode`
+
+```kex
+decode(text: String) -> Result<Receipt, String>
+```
+
+### `claim`
+
+```kex
+claim(target: String, packageName: String, receipts: [Receipt], exists?: Bool, teyBuilt?: Bool) -> Claim
+```
+
+The decision for one target name, given every receipt and what is on disk. Pure, so the whole rule is testable without a bin directory.
+
+`teyBuilt?` covers the programs a project-local `tey install` put here before receipts existed: they are escripts Tey itself wrote, so taking them into a receipt loses nothing, where refusing would make every existing installation demand `--force` on its next reinstall.
+
+### `refusal`
+
+```kex
+refusal(target: String, claim: Claim, path: String, force?: Bool) -> String?
+```
+
+Why a claim stops the install, or None when it may go ahead. `--force` takes a name over from another package or from an unowned file, but never from Tey itself.
+
+### `load`
+
+```kex
+load(name: String) -> Receipt?
+```
+
+### `all`
+
+```kex
+all : [Receipt]
+```
+
+Every receipt, by package name. An unreadable one is reported rather than skipped silently: skipping it would make the files it owns look unowned.
+
+### `save`
+
+```kex
+save(receipt: Receipt) -> Result<Void, String>
+```
+
+Written beside the final file and renamed into place, so a reader never sees half a receipt and a failed write leaves the previous one intact.
+
+### `remove`
+
+```kex
+remove(name: String) -> Bool
+```
+
+### `teyBuilt?`
+
+```kex
+teyBuilt?(path: String) -> Bool
+```
+
+Whether `path` is an escript Tey's own target build wrote: its emulator line names `kex_main`, which every compiled Kex entry module is called.
+
+### `listLine`
+
+```kex
+listLine(receipt: Receipt) -> String
+```
+
+The line `tey list` prints for one installed program.
+
+## record `Receipt`
+
+**Fields**
+
+  - `name` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `version` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `sourceKind` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `sourcePath` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `sourceDigest` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `targets` : [[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)] (optional)
+  - `kex` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `otp` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `installedAt` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+
+
+
+## type `ProgramSource`
+
+What `tey install <argument>` names. `tey add` is how a dependency is added, so an argument to `tey install` always means a program.
+
+**Variants**
+
+  - `PathSource(String)`
+  - `GitSource(String)`
+  - `InstalledName(String)`
+
+
+
+## type `Claim`
+
+What installing one target name would do to the bin directory.
+
+**Variants**
+
+  - `Free`
+  - `Mine`
+  - `Adopt`
+  - `Reserved`
+  - `OwnedBy(String)`
+  - `Foreign`
+
+
+
+
+---
+
+---
+package: tey
+version: "0.2.0-dev"
 source: tey/resolver.kex
 title: Tey.Resolver
 entities:
@@ -30683,6 +30978,22 @@ cachedPath(dependency: Tey.Lockfile.Dependency) -> String
 ```kex
 verify(dependency: Tey.Lockfile.Dependency) -> Result<String, String>
 ```
+
+### `sourceFiles`
+
+```kex
+sourceFiles(root: String) -> [String]
+```
+
+The files a snapshot of `root` holds, relative to it: everything but VCS metadata, build output and `.teyignore` matches.
+
+### `contentDigest`
+
+```kex
+contentDigest(root: String) -> Result<String, String>
+```
+
+The content digest a snapshot of `root` is published under.
 
 
 ---

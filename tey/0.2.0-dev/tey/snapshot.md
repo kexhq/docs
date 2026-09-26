@@ -30,3 +30,19 @@ cachedPath(dependency: Tey.Lockfile.Dependency) -> String
 ```kex
 verify(dependency: Tey.Lockfile.Dependency) -> Result<String, String>
 ```
+
+### `sourceFiles`
+
+```kex
+sourceFiles(root: String) -> [String]
+```
+
+The files a snapshot of `root` holds, relative to it: everything but VCS metadata, build output and `.teyignore` matches.
+
+### `contentDigest`
+
+```kex
+contentDigest(root: String) -> Result<String, String>
+```
+
+The content digest a snapshot of `root` is published under.
