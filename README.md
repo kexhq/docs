@@ -24,6 +24,10 @@ git worktree add generated reference   # the reference (the mounts need it)
 marq dev .                             # http://localhost:4173
 ```
 
+`package.kex` declares the everyday commands, listed by `tey help`: `tey dev`
+runs `marq dev .`, `tey site` builds the whole site into `dist/` the way the
+publish workflow does, and `tey finish` writes only the site-wide files.
+
 Click text to edit it; pages, links and order are edited in the sidebar and
 header. Edits save to `content/` and `.marqraft/` as ordinary files — commit
 them like any change. The reference pages show inside the site but are
