@@ -4063,6 +4063,24 @@ A file operation that failed, carrying the path it failed on.
 
 
 
+## type `FileKind`
+
+What a path names, as `FS.File.info` reports it: a regular `:file`, a `:directory`, a `:symlink` (the link itself, never what it points at), or `:other` for devices, sockets and pipes.
+
+
+
+## record `FileInfo`
+
+What one `stat` of a path says about it.
+
+**Fields**
+
+  - `kind` : [FileKind](#type-fs-filekind)
+  - `size` : [Integer](number.md#make-integer)
+  - `modified` : [DateTime](time.md#record-datetime)
+
+
+
 ## module `FS.File`
 
 Reading and writing files.
@@ -4631,6 +4649,38 @@ Whether `path` is itself a symlink, without following it. A dangling link is sti
 
 ```kex
 FS.File.symlink?("current")   # => true
+```
+
+### `info`
+
+```kex
+info(path: FilePath) -> Result<FileInfo, FileError>
+```
+
+The kind, size and modification time of `path`, read in one `lstat`.
+
+One call answers what `file?`, `directory?`, `symlink?` and `size` would otherwise ask separately, which is what walking a tree or fingerprinting it for changes wants. A symlink is described as itself, not followed.
+
+**Parameters**
+
+  - `path` — the path to inspect
+
+**Returns**: what the path names, or
+
+**Examples**
+
+```kex
+FS.File.info("hello.txt").try.size   # => 6
+FS.File.info("src").try.kind         # => :directory
+FS.File.info("nowhere")              # => Error(ReadFailed("nowhere"))
+```
+
+_Noticing that a file changed_
+
+```kex
+let before = FS.File.info(path).try
+...
+let changed = FS.File.info(path).try != before
 ```
 
 ## module `FS.Path`
@@ -5913,6 +5963,72 @@ IO.printLine("built with Kex ${Kex.VERSION.number}")
 
 
 
+### `load`
+
+```kex
+load(path: String) -> Result<LoadedModule, String>
+```
+
+Loads the compiled module at `path`, replacing an older version of it that is already loaded. See `Kex.LoadedModule`.
+
+**Parameters**
+
+  - `path` — a `.beam` file written by `kex --compile`
+
+**Returns**: the module, or why it could not be
+
+**Examples**
+
+```kex
+let theme = Kex.load("build/kex_theme.beam").try
+```
+
+### `loaded`
+
+```kex
+loaded(name: Atom) -> LoadedModule?
+```
+
+The module already loaded under `name`, or `None` when there is none.
+
+**Parameters**
+
+  - `name` — the module's BEAM name
+
+**Returns**: the module
+
+**Examples**
+
+_Loading only once_
+
+```kex
+let theme = Kex.loaded(:kex_theme).or(Kex.load(path).try)
+```
+
+### `hash`
+
+```kex
+hash(value: Any) -> Integer
+```
+
+A non-cryptographic hash of any value: a non-negative `Integer` below 2^32, the same for equal values.
+
+Cheap to compute over a whole structure, with no string built along the way, which suits fingerprinting data to notice when it changed. It is stable only within one running program: the number differs between the interpreter and the BEAM, and may change between Kex versions, so never store it or send it anywhere. Use `Digest` for that, or for anything an adversary could choose collisions for.
+
+**Parameters**
+
+  - `value` — the value to hash
+
+**Returns**: the hash, from 0 up to 2^32 - 1
+
+**Examples**
+
+_Noticing that a project's files changed_
+
+```kex
+let stamp = Kex.hash(paths.map { |path| (path, FS.File.info(path).try) })
+```
+
 ## type `Backend`
 
 Which backend is executing the program: the tree-walking `Interpreter`, or the `Beam` virtual machine.
@@ -6074,6 +6190,50 @@ _Reporting the toolchain in a tool's output_
 
 ```kex
 IO.printLine("built with Kex ${Kex.VERSION.number}")
+```
+
+## record `LoadedModule`
+
+A compiled module loaded into the running program by `Kex.load`.
+
+For a program that decides at run time what code it needs: a site generator rendering a theme's templates, a plugin host. Compile the source with `kex --compile -o <dir>` once, then load the `.beam` and call it as often as needed, without starting another VM for every call (kexhq/kex#399).
+
+Every entry module is named after its file (`kex_<stem>.beam` for `<stem>.kex`), and so is everything declared at the top level of that file. A `let render = Template.html(Kex.embed(path))` written outside any `module` therefore lands in `kex_<stem>`, not in a module the file names; give each generated file a distinct name, or put the declaration inside a `module`, whose functions compile into `Kex.<Name>`.
+
+The BEAM backend only: under the interpreter, `Kex.load` answers an error.
+
+```kex
+let theme = Kex.load("cache/kex_theme_3f2a.beam").try
+let html = theme.call(:render, [context]).try
+```
+
+**Fields**
+
+  - `name` : [Atom](atom.md#make-atom)
+
+### Methods
+
+#### `call`
+
+```kex
+call(function: Atom, arguments: [Any]) -> Result<Any, String>
+```
+
+Calls the module's function `function` with `arguments`.
+
+A failure inside the call is an `Error` describing it, not a crash of the caller, and so is a function the module does not export with that many arguments. A `foul` function takes one argument more than it declares, its capabilities, so call pure functions this way.
+
+**Parameters**
+
+  - `function` — the function's name
+  - `arguments` — its arguments, in order
+
+**Returns**: what the function returned, or why the
+
+**Examples**
+
+```kex
+theme.call(:render, [context])   # => Ok("<html>...")
 ```
 
 ## module `Kex.Feature`
@@ -8319,6 +8479,12 @@ canonical(path)
 
 ```kex
 symlink?(path)
+```
+
+#### `info`
+
+```kex
+info(path)
 ```
 
 #### `open`
@@ -12581,6 +12747,81 @@ _Sending to a named process if it is there_
 Process.whereIs(:logger).map { |pid| pid.send(message) }
 ```
 
+## type `Shared<X>`
+
+A named, typed slot of state that every process can read without asking another process for it.
+
+State kept in a `serving` process is copied into the caller on every read, which is costly for a large value read by every request. A `Shared` value is stored once for the whole node (on the BEAM, in `persistent_term`): reading it copies nothing, however large it is.
+
+The price is on the other side: replacing a value makes the runtime scan every process for references to the old one. So it suits state that is read constantly and written rarely, such as configuration or a loaded site, and not a counter.
+
+Get a handle with `Process.Shared.named`. The slot is identified by its name alone, so two handles with the same name are the same slot; the type parameter is what a handle promises to store and read back, so give every handle on one name the same one.
+
+**Examples**
+
+_Loading once, reading from every request handler_
+
+```kex
+let site : Process.Shared<Site> = Process.Shared.named("site")
+site.put(loadSite(root))
+...
+let current = site.get.or(emptySite)
+```
+
+### Methods
+
+#### `put`
+
+```kex
+put(value: X) -> Void
+```
+
+Stores `value`, replacing whatever the slot held.
+
+Expensive: see `Process.Shared`.
+
+**Parameters**
+
+  - `value` — the value to store
+
+#### `get`
+
+```kex
+get : X?
+```
+
+The stored value, or `None` when nothing has been stored yet.
+
+Cheap, whatever the value's size.
+
+**Returns**: the stored value
+
+#### `delete`
+
+```kex
+delete : Bool
+```
+
+Empties the slot.
+
+**Returns**: `true` when it held a value
+
+## module `Process.Shared`
+
+### `named`
+
+```kex
+named(name: String) -> Process.Shared<X>
+```
+
+The handle on the slot called `name`. Nothing is stored or read until `put` or `get`.
+
+**Parameters**
+
+  - `name` — the slot's name
+
+**Returns**: a handle on the slot
+
 ## record `ProcessResult`
 
 What an external command left behind: its exit status and its output.
@@ -12701,7 +12942,7 @@ Random values for simulations, sampling, games, and reproducible tests.
 
 Import with `using Random`. Ordinary calls return a value directly; a `Random.Generator` returns `(value, nextGenerator)`. Reusing the same generator replays the same draw. Pass its returned state to continue.
 
-These generators are not cryptographic; do not use their output for secrets.
+These generators are not cryptographic; do not use their output for secrets. `Random.secureBytes` and `Random.token` are, and are what secrets come from.
 
 **Examples**
 
@@ -12839,6 +13080,52 @@ Returns a random permutation using fresh entropy.
   - `items` — values to shuffle
 
 **Returns**: shuffled copy
+
+### `secureBytes`
+
+```kex
+secureBytes(count: Integer) -> Binary
+```
+
+Returns `count` bytes from the operating system's cryptographically secure generator: the source for keys, session tokens and unguessable identifiers, which the generators above must never be used for.
+
+Nothing about it is reproducible, and there is no `Generator` form.
+
+**Parameters**
+
+  - `count` — how many bytes; zero or less gives an empty binary
+
+**Returns**: the random bytes
+
+**Examples**
+
+_A 256-bit key_
+
+```kex
+let key = Random.secureBytes(32)
+```
+
+### `token`
+
+```kex
+token(bytes: Integer = …) -> String
+```
+
+Returns an unguessable token: `bytes` secure random bytes, as lowercase hex, so the text is twice as long as `bytes`.
+
+**Parameters**
+
+  - `bytes` — how many random bytes the token carries
+
+**Returns**: the token
+
+**Examples**
+
+_A session identifier_
+
+```kex
+let session = Random.token(32)   # => "9f86d081884c7d65..." (64 characters)
+```
 
 ## record `Generator`
 
@@ -32021,13 +32308,37 @@ preludePath(model: PackageModel, name: String) -> [String]
 cardGrid(modules: [Tey.Docgen.Model.ModuleIndexEntry], top: [String]) -> String
 ```
 
+### `latestVersion`
+
+```kex
+latestVersion(packageName: String, versions: [VersionEntry]) -> VersionEntry?
+```
+
+The version a reader gets by default: the highest release by semantic version, never an unreleased `-dev` build while a release exists. versions.json is in BUILD order, newest build first, and tools/build-docs.sh builds the working tree last, so its first entry is usually the -dev build rather than the latest release.
+
+### `versionsNewestFirst`
+
+```kex
+versionsNewestFirst(packageName: String, versions: [VersionEntry]) -> [VersionEntry]
+```
+
+One package's versions, highest first by semantic version.
+
+### `packageRedirectHtml`
+
+```kex
+packageRedirectHtml(packageName: String, versions: [VersionEntry]) -> String
+```
+
+<pkg>/index.html: straight on to the latest version, so a link to a package lands on its reference rather than on a list of builds. Every other version stays one click away, at versions.html.
+
 ### `packageVersionsHtml`
 
 ```kex
 packageVersionsHtml(packageName: String, versions: [VersionEntry]) -> String
 ```
 
-<pkg>/index.html: the versions of one package, newest first — the page a reader lands on when they want a different release of what they are reading. What the ids MEAN is the package's own story: a library's own releases, the stdlib's Kex releases. The page does not need to know.
+<pkg>/versions.html: the versions of one package, newest first — the page a reader lands on when they want a different release of what they are reading. What the ids MEAN is the package's own story: a library's own releases, the stdlib's Kex releases. The page does not need to know.
 
 ### `versionCard`
 

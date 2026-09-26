@@ -145,13 +145,37 @@ preludePath(model: PackageModel, name: String) -> [String]
 cardGrid(modules: [Tey.Docgen.Model.ModuleIndexEntry], top: [String]) -> String
 ```
 
+### `latestVersion`
+
+```kex
+latestVersion(packageName: String, versions: [VersionEntry]) -> VersionEntry?
+```
+
+The version a reader gets by default: the highest release by semantic version, never an unreleased `-dev` build while a release exists. versions.json is in BUILD order, newest build first, and tools/build-docs.sh builds the working tree last, so its first entry is usually the -dev build rather than the latest release.
+
+### `versionsNewestFirst`
+
+```kex
+versionsNewestFirst(packageName: String, versions: [VersionEntry]) -> [VersionEntry]
+```
+
+One package's versions, highest first by semantic version.
+
+### `packageRedirectHtml`
+
+```kex
+packageRedirectHtml(packageName: String, versions: [VersionEntry]) -> String
+```
+
+<pkg>/index.html: straight on to the latest version, so a link to a package lands on its reference rather than on a list of builds. Every other version stays one click away, at versions.html.
+
 ### `packageVersionsHtml`
 
 ```kex
 packageVersionsHtml(packageName: String, versions: [VersionEntry]) -> String
 ```
 
-<pkg>/index.html: the versions of one package, newest first — the page a reader lands on when they want a different release of what they are reading. What the ids MEAN is the package's own story: a library's own releases, the stdlib's Kex releases. The page does not need to know.
+<pkg>/versions.html: the versions of one package, newest first — the page a reader lands on when they want a different release of what they are reading. What the ids MEAN is the package's own story: a library's own releases, the stdlib's Kex releases. The page does not need to know.
 
 ### `versionCard`
 

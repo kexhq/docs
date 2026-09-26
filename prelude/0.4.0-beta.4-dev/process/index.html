@@ -1441,6 +1441,67 @@ api<span class="tok-op">.</span><span class="tok-method">stop</span><span class=
 </div>
 </div>
 </section>
+<section class="entity" id="type-process-shared">
+<h2><span class="kind kind-type">type</span> <code>Shared&lt;X&gt;</code></h2>
+<p>A named, typed slot of state that every process can read without asking another process for it.</p>
+<p>State kept in a <code>serving</code> process is copied into the caller on every read, which is costly for a large value read by every request. A <a class="xref" href="#type-process-shared"><code>Shared</code></a> value is stored once for the whole node (on the BEAM, in <code>persistent_term</code>): reading it copies nothing, however large it is.</p>
+<p>The price is on the other side: replacing a value makes the runtime scan every process for references to the old one. So it suits state that is read constantly and written rarely, such as configuration or a loaded site, and not a counter.</p>
+<p>Get a handle with <code>Process.Shared.named</code>. The slot is identified by its name alone, so two handles with the same name are the same slot; the type parameter is what a handle promises to store and read back, so give every handle on one name the same one.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Loading once, reading from every request handler</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> site <span class="tok-op">:</span> <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-type">Shared</span><span class="tok-op">&lt;</span><span class="tok-type">Site</span><span class="tok-op">&gt;</span> <span class="tok-op">=</span> <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-type">Shared</span><span class="tok-op">.</span><span class="tok-method">named</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">site</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+site<span class="tok-op">.</span><span class="tok-method">put</span><span class="tok-punct">(</span><span class="tok-fn">loadSite</span><span class="tok-punct">(</span>root<span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-op">...</span>
+<span class="tok-keyword">let</span> current <span class="tok-op">=</span> site<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span>emptySite<span class="tok-punct">)</span></code></pre>
+<section class="members" id="make-shared">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="shared-put">
+<h4><a class="self" href="#shared-put"><code>put</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">put</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">X</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Stores <code>value</code>, replacing whatever the slot held.</p>
+<p>Expensive: see <code>Process.Shared</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the value to store</dd></div>
+</dl>
+
+</div>
+<div class="fn" id="shared-get">
+<h4><a class="self" href="#shared-get"><code>get</code></a></h4>
+<pre class="code sig"><code>get <span class="tok-op">:</span> <span class="tok-type">X?</span></code></pre>
+<p>The stored value, or <code>None</code> when nothing has been stored yet.</p>
+<p>Cheap, whatever the value's size.</p>
+<p class="returns"><strong>Returns</strong> the stored value</p>
+
+</div>
+<div class="fn" id="shared-delete">
+<h4><a class="self" href="#shared-delete"><code>delete</code></a></h4>
+<pre class="code sig"><code>delete <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Empties the slot.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> when it held a value</p>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="module-process-shared">
+<h2><span class="kind kind-module">module</span> <code>Process.Shared</code></h2>
+<div class="functions">
+<div class="fn" id="function-process-shared-named">
+<h3><a class="self" href="#function-process-shared-named"><code>named</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">named</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-process"><span class="tok-type">Process</span></a><span class="tok-op">.</span><a class="xref" href="#type-process-shared"><span class="tok-type">Shared</span></a><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-op">&gt;</span></code></pre>
+<p>The handle on the slot called <code>name</code>. Nothing is stored or read until <code>put</code> or <code>get</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code></dt><dd>the slot's name</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> a handle on the slot</p>
+
+</div>
+</div>
+</section>
 
 <section class="entity" id="record-processresult">
 <h2><span class="kind kind-record">record</span> <code>ProcessResult</code></h2>
@@ -1518,7 +1579,7 @@ t<span class="tok-op">.</span><span class="tok-method">await</span>   <span clas
         </article>
       </main>
       <aside class="toc" aria-label="On this page">
-        <nav><p class="toc-heading">On this page</p><ul><li><a href="#type-pid">Pid</a></li><li><a href="#type-task">Task</a></li><li><a href="#type-reference">Reference</a></li><li><a href="#type-process">Process</a></li><li><a href="#type-processexitreason">ProcessExitReason</a></li><li><a href="#record-reply">Reply</a></li><li><a href="#type-from">From</a></li><li><a href="#type-callerror">CallError</a></li><li><a href="#record-server">Server</a></li><li><a href="#module-process">Process</a></li><li><a href="#record-processresult">ProcessResult</a></li><li><a href="#module-task">Task</a></li><li><a href="#function-worker">worker</a></li></ul></nav>
+        <nav><p class="toc-heading">On this page</p><ul><li><a href="#type-pid">Pid</a></li><li><a href="#type-task">Task</a></li><li><a href="#type-reference">Reference</a></li><li><a href="#type-process">Process</a></li><li><a href="#type-processexitreason">ProcessExitReason</a></li><li><a href="#record-reply">Reply</a></li><li><a href="#type-from">From</a></li><li><a href="#type-callerror">CallError</a></li><li><a href="#record-server">Server</a></li><li><a href="#module-process">Process</a></li><li class="toc-nested"><a href="#type-process-shared">Shared</a></li><li class="toc-nested"><a href="#module-process-shared">Process.Shared</a></li><li><a href="#record-processresult">ProcessResult</a></li><li><a href="#module-task">Task</a></li><li><a href="#function-worker">worker</a></li></ul></nav>
       </aside>
     </div>
     <footer class="foot">

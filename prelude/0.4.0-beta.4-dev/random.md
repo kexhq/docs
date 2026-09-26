@@ -15,7 +15,7 @@ Random values for simulations, sampling, games, and reproducible tests.
 
 Import with `using Random`. Ordinary calls return a value directly; a `Random.Generator` returns `(value, nextGenerator)`. Reusing the same generator replays the same draw. Pass its returned state to continue.
 
-These generators are not cryptographic; do not use their output for secrets.
+These generators are not cryptographic; do not use their output for secrets. `Random.secureBytes` and `Random.token` are, and are what secrets come from.
 
 **Examples**
 
@@ -153,6 +153,52 @@ Returns a random permutation using fresh entropy.
   - `items` — values to shuffle
 
 **Returns**: shuffled copy
+
+### `secureBytes`
+
+```kex
+secureBytes(count: Integer) -> Binary
+```
+
+Returns `count` bytes from the operating system's cryptographically secure generator: the source for keys, session tokens and unguessable identifiers, which the generators above must never be used for.
+
+Nothing about it is reproducible, and there is no `Generator` form.
+
+**Parameters**
+
+  - `count` — how many bytes; zero or less gives an empty binary
+
+**Returns**: the random bytes
+
+**Examples**
+
+_A 256-bit key_
+
+```kex
+let key = Random.secureBytes(32)
+```
+
+### `token`
+
+```kex
+token(bytes: Integer = …) -> String
+```
+
+Returns an unguessable token: `bytes` secure random bytes, as lowercase hex, so the text is twice as long as `bytes`.
+
+**Parameters**
+
+  - `bytes` — how many random bytes the token carries
+
+**Returns**: the token
+
+**Examples**
+
+_A session identifier_
+
+```kex
+let session = Random.token(32)   # => "9f86d081884c7d65..." (64 characters)
+```
 
 ## record `Generator`
 

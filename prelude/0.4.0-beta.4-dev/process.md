@@ -712,6 +712,81 @@ _Sending to a named process if it is there_
 Process.whereIs(:logger).map { |pid| pid.send(message) }
 ```
 
+## type `Shared<X>`
+
+A named, typed slot of state that every process can read without asking another process for it.
+
+State kept in a `serving` process is copied into the caller on every read, which is costly for a large value read by every request. A `Shared` value is stored once for the whole node (on the BEAM, in `persistent_term`): reading it copies nothing, however large it is.
+
+The price is on the other side: replacing a value makes the runtime scan every process for references to the old one. So it suits state that is read constantly and written rarely, such as configuration or a loaded site, and not a counter.
+
+Get a handle with `Process.Shared.named`. The slot is identified by its name alone, so two handles with the same name are the same slot; the type parameter is what a handle promises to store and read back, so give every handle on one name the same one.
+
+**Examples**
+
+_Loading once, reading from every request handler_
+
+```kex
+let site : Process.Shared<Site> = Process.Shared.named("site")
+site.put(loadSite(root))
+...
+let current = site.get.or(emptySite)
+```
+
+### Methods
+
+#### `put`
+
+```kex
+put(value: X) -> Void
+```
+
+Stores `value`, replacing whatever the slot held.
+
+Expensive: see `Process.Shared`.
+
+**Parameters**
+
+  - `value` — the value to store
+
+#### `get`
+
+```kex
+get : X?
+```
+
+The stored value, or `None` when nothing has been stored yet.
+
+Cheap, whatever the value's size.
+
+**Returns**: the stored value
+
+#### `delete`
+
+```kex
+delete : Bool
+```
+
+Empties the slot.
+
+**Returns**: `true` when it held a value
+
+## module `Process.Shared`
+
+### `named`
+
+```kex
+named(name: String) -> Process.Shared<X>
+```
+
+The handle on the slot called `name`. Nothing is stored or read until `put` or `get`.
+
+**Parameters**
+
+  - `name` — the slot's name
+
+**Returns**: a handle on the slot
+
 ## record `ProcessResult`
 
 What an external command left behind: its exit status and its output.

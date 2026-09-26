@@ -1025,6 +1025,22 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 </ul>
 
 </section>
+<section class="entity" id="type-fs-filekind">
+<h2><span class="kind kind-type">type</span> <code>FileKind</code></h2>
+<p>What a path names, as <code>FS.File.info</code> reports it: a regular <code>:file</code>, a <code>:directory</code>, a <code>:symlink</code> (the link itself, never what it points at), or <code>:other</code> for devices, sockets and pipes.</p>
+
+</section>
+<section class="entity" id="record-fs-fileinfo">
+<h2><span class="kind kind-record">record</span> <code>FileInfo</code></h2>
+<p>What one <code>stat</code> of a path says about it.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>kind</code></dt><dd><code><a class="xref" href="#type-fs-filekind">FileKind</a></code></dd></div>
+<div class="field"><dt><code>size</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>modified</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#record-datetime">DateTime</a></code></dd></div>
+</dl>
+
+</section>
 <section class="entity" id="module-fs-file">
 <h2><span class="kind kind-module">module</span> <code>FS.File</code></h2>
 <p>Reading and writing files.</p>
@@ -1371,6 +1387,26 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <p class="returns"><strong>Returns</strong> <code>true</code> for a symlink</p>
 <h5>Examples</h5>
 <pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">symlink?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">current</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-info">
+<h3><a class="self" href="#function-fs-file-info"><code>info</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">info</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-fs-fileinfo"><span class="tok-type">FileInfo</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>The kind, size and modification time of <code>path</code>, read in one <code>lstat</code>.</p>
+<p>One call answers what <code>file?</code>, <code>directory?</code>, <code>symlink?</code> and <code>size</code> would otherwise ask separately, which is what walking a tree or fingerprinting it for changes wants. A symlink is described as itself, not followed.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path to inspect</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> what the path names, or</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">info</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-op">.</span><span class="tok-method">size</span>   <span class="tok-comment"># =&gt; 6</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">info</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-op">.</span><span class="tok-method">kind</span>         <span class="tok-comment"># =&gt; :directory</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">info</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">nowhere</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>              <span class="tok-comment"># =&gt; Error(ReadFailed(&quot;nowhere&quot;))</span></code></pre>
+<p class="caption"><em>Noticing that a file changed</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> before <span class="tok-op">=</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">info</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-op">...</span>
+<span class="tok-keyword">let</span> changed <span class="tok-op">=</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">info</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span> <span class="tok-op">!=</span> before</code></pre>
 
 </div>
 </div>
@@ -1792,7 +1828,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
         </article>
       </main>
       <aside class="toc" aria-label="On this page">
-        <nav><p class="toc-heading">On this page</p><ul><li><a href="#module-fs">FS</a></li><li class="toc-nested"><a href="#type-fs-filepath">FilePath</a></li><li class="toc-nested"><a href="#type-fs-filemodes">FileModes</a></li><li class="toc-nested"><a href="#type-fs-readpermission">ReadPermission</a></li><li class="toc-nested"><a href="#type-fs-writepermission">WritePermission</a></li><li class="toc-nested"><a href="#type-fs-fileerror">FileError</a></li><li class="toc-nested"><a href="#module-fs-file">FS.File</a></li><li class="toc-nested"><a href="#module-fs-path">FS.Path</a></li><li class="toc-nested"><a href="#module-fs-directory">FS.Directory</a></li></ul></nav>
+        <nav><p class="toc-heading">On this page</p><ul><li><a href="#module-fs">FS</a></li><li class="toc-nested"><a href="#type-fs-filepath">FilePath</a></li><li class="toc-nested"><a href="#type-fs-filemodes">FileModes</a></li><li class="toc-nested"><a href="#type-fs-readpermission">ReadPermission</a></li><li class="toc-nested"><a href="#type-fs-writepermission">WritePermission</a></li><li class="toc-nested"><a href="#type-fs-fileerror">FileError</a></li><li class="toc-nested"><a href="#type-fs-filekind">FileKind</a></li><li class="toc-nested"><a href="#record-fs-fileinfo">FileInfo</a></li><li class="toc-nested"><a href="#module-fs-file">FS.File</a></li><li class="toc-nested"><a href="#module-fs-path">FS.Path</a></li><li class="toc-nested"><a href="#module-fs-directory">FS.Directory</a></li></ul></nav>
       </aside>
     </div>
     <footer class="foot">

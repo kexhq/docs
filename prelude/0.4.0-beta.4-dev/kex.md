@@ -177,6 +177,72 @@ IO.printLine("built with Kex ${Kex.VERSION.number}")
 
 
 
+### `load`
+
+```kex
+load(path: String) -> Result<LoadedModule, String>
+```
+
+Loads the compiled module at `path`, replacing an older version of it that is already loaded. See `Kex.LoadedModule`.
+
+**Parameters**
+
+  - `path` — a `.beam` file written by `kex --compile`
+
+**Returns**: the module, or why it could not be
+
+**Examples**
+
+```kex
+let theme = Kex.load("build/kex_theme.beam").try
+```
+
+### `loaded`
+
+```kex
+loaded(name: Atom) -> LoadedModule?
+```
+
+The module already loaded under `name`, or `None` when there is none.
+
+**Parameters**
+
+  - `name` — the module's BEAM name
+
+**Returns**: the module
+
+**Examples**
+
+_Loading only once_
+
+```kex
+let theme = Kex.loaded(:kex_theme).or(Kex.load(path).try)
+```
+
+### `hash`
+
+```kex
+hash(value: Any) -> Integer
+```
+
+A non-cryptographic hash of any value: a non-negative `Integer` below 2^32, the same for equal values.
+
+Cheap to compute over a whole structure, with no string built along the way, which suits fingerprinting data to notice when it changed. It is stable only within one running program: the number differs between the interpreter and the BEAM, and may change between Kex versions, so never store it or send it anywhere. Use `Digest` for that, or for anything an adversary could choose collisions for.
+
+**Parameters**
+
+  - `value` — the value to hash
+
+**Returns**: the hash, from 0 up to 2^32 - 1
+
+**Examples**
+
+_Noticing that a project's files changed_
+
+```kex
+let stamp = Kex.hash(paths.map { |path| (path, FS.File.info(path).try) })
+```
+
 ## type `Backend`
 
 Which backend is executing the program: the tree-walking `Interpreter`, or the `Beam` virtual machine.
@@ -338,6 +404,50 @@ _Reporting the toolchain in a tool's output_
 
 ```kex
 IO.printLine("built with Kex ${Kex.VERSION.number}")
+```
+
+## record `LoadedModule`
+
+A compiled module loaded into the running program by `Kex.load`.
+
+For a program that decides at run time what code it needs: a site generator rendering a theme's templates, a plugin host. Compile the source with `kex --compile -o <dir>` once, then load the `.beam` and call it as often as needed, without starting another VM for every call (kexhq/kex#399).
+
+Every entry module is named after its file (`kex_<stem>.beam` for `<stem>.kex`), and so is everything declared at the top level of that file. A `let render = Template.html(Kex.embed(path))` written outside any `module` therefore lands in `kex_<stem>`, not in a module the file names; give each generated file a distinct name, or put the declaration inside a `module`, whose functions compile into `Kex.<Name>`.
+
+The BEAM backend only: under the interpreter, `Kex.load` answers an error.
+
+```kex
+let theme = Kex.load("cache/kex_theme_3f2a.beam").try
+let html = theme.call(:render, [context]).try
+```
+
+**Fields**
+
+  - `name` : [Atom](atom.md#make-atom)
+
+### Methods
+
+#### `call`
+
+```kex
+call(function: Atom, arguments: [Any]) -> Result<Any, String>
+```
+
+Calls the module's function `function` with `arguments`.
+
+A failure inside the call is an `Error` describing it, not a crash of the caller, and so is a function the module does not export with that many arguments. A `foul` function takes one argument more than it declares, its capabilities, so call pure functions this way.
+
+**Parameters**
+
+  - `function` — the function's name
+  - `arguments` — its arguments, in order
+
+**Returns**: what the function returned, or why the
+
+**Examples**
+
+```kex
+theme.call(:render, [context])   # => Ok("<html>...")
 ```
 
 ## module `Kex.Feature`

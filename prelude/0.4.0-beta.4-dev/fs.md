@@ -99,6 +99,24 @@ A file operation that failed, carrying the path it failed on.
 
 
 
+## type `FileKind`
+
+What a path names, as `FS.File.info` reports it: a regular `:file`, a `:directory`, a `:symlink` (the link itself, never what it points at), or `:other` for devices, sockets and pipes.
+
+
+
+## record `FileInfo`
+
+What one `stat` of a path says about it.
+
+**Fields**
+
+  - `kind` : [FileKind](#type-fs-filekind)
+  - `size` : [Integer](number.md#make-integer)
+  - `modified` : [DateTime](time.md#record-datetime)
+
+
+
 ## module `FS.File`
 
 Reading and writing files.
@@ -667,6 +685,38 @@ Whether `path` is itself a symlink, without following it. A dangling link is sti
 
 ```kex
 FS.File.symlink?("current")   # => true
+```
+
+### `info`
+
+```kex
+info(path: FilePath) -> Result<FileInfo, FileError>
+```
+
+The kind, size and modification time of `path`, read in one `lstat`.
+
+One call answers what `file?`, `directory?`, `symlink?` and `size` would otherwise ask separately, which is what walking a tree or fingerprinting it for changes wants. A symlink is described as itself, not followed.
+
+**Parameters**
+
+  - `path` — the path to inspect
+
+**Returns**: what the path names, or
+
+**Examples**
+
+```kex
+FS.File.info("hello.txt").try.size   # => 6
+FS.File.info("src").try.kind         # => :directory
+FS.File.info("nowhere")              # => Error(ReadFailed("nowhere"))
+```
+
+_Noticing that a file changed_
+
+```kex
+let before = FS.File.info(path).try
+...
+let changed = FS.File.info(path).try != before
 ```
 
 ## module `FS.Path`

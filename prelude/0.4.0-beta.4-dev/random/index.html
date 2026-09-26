@@ -957,7 +957,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <h2><span class="kind kind-module">module</span> <code>Random</code></h2>
 <p>Random values for simulations, sampling, games, and reproducible tests.</p>
 <p>Import with <code>using Random</code>. Ordinary calls return a value directly; a <a class="xref" href="#make-random-generator"><code>Random.Generator</code></a> returns <code>(value, nextGenerator)</code>. Reusing the same generator replays the same draw. Pass its returned state to continue.</p>
-<p>These generators are not cryptographic; do not use their output for secrets.</p>
+<p>These generators are not cryptographic; do not use their output for secrets. <code>Random.secureBytes</code> and <code>Random.token</code> are, and are what secrets come from.</p>
 <h5>Examples</h5>
 <p class="caption"><em>Roll a die or initialize a weight</em></p>
 <pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Random</span>
@@ -1058,6 +1058,35 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <div class="param"><dt><code>items</code></dt><dd>values to shuffle</dd></div>
 </dl>
 <p class="returns"><strong>Returns</strong> shuffled copy</p>
+
+</div>
+<div class="fn" id="function-random-securebytes">
+<h3><a class="self" href="#function-random-securebytes"><code>secureBytes</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">secureBytes</span><span class="tok-punct">(</span>count<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a></code></pre>
+<p>Returns <code>count</code> bytes from the operating system's cryptographically secure generator: the source for keys, session tokens and unguessable identifiers, which the generators above must never be used for.</p>
+<p>Nothing about it is reproducible, and there is no <a class="xref" href="#record-random-generator"><code>Generator</code></a> form.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>count</code></dt><dd>how many bytes; zero or less gives an empty binary</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the random bytes</p>
+<h5>Examples</h5>
+<p class="caption"><em>A 256-bit key</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> key <span class="tok-op">=</span> <span class="tok-type">Random</span><span class="tok-op">.</span><span class="tok-method">secureBytes</span><span class="tok-punct">(</span><span class="tok-number">32</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-random-token">
+<h3><a class="self" href="#function-random-token"><code>token</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">token</span><span class="tok-punct">(</span>bytes<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a> <span class="tok-op">=</span> …<span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns an unguessable token: <code>bytes</code> secure random bytes, as lowercase hex, so the text is twice as long as <code>bytes</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>bytes</code></dt><dd>how many random bytes the token carries</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the token</p>
+<h5>Examples</h5>
+<p class="caption"><em>A session identifier</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> session <span class="tok-op">=</span> <span class="tok-type">Random</span><span class="tok-op">.</span><span class="tok-method">token</span><span class="tok-punct">(</span><span class="tok-number">32</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;9f86d081884c7d65...&quot; (64 characters)</span></code></pre>
 
 </div>
 </div>

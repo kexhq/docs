@@ -1065,6 +1065,48 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">built with Kex </span><span class="tok-string">${</span><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">number</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </div>
+<div class="fn" id="function-kex-load">
+<h3><a class="self" href="#function-kex-load"><code>load</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">load</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-kex-loadedmodule"><span class="tok-type">LoadedModule</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Loads the compiled module at <code>path</code>, replacing an older version of it that is already loaded. See <a class="xref" href="#record-kex-loadedmodule"><code>Kex.LoadedModule</code></a>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>a <code>.beam</code> file written by <code>kex --compile</code></dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the module, or why it could not be</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> theme <span class="tok-op">=</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-method">load</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build/kex_theme.beam</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="function-kex-loaded">
+<h3><a class="self" href="#function-kex-loaded"><code>loaded</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">loaded</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">LoadedModule?</span></code></pre>
+<p>The module already loaded under <code>name</code>, or <code>None</code> when there is none.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code></dt><dd>the module's BEAM name</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the module</p>
+<h5>Examples</h5>
+<p class="caption"><em>Loading only once</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> theme <span class="tok-op">=</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-method">loaded</span><span class="tok-punct">(</span><span class="tok-op">:</span>kex_theme<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-method">load</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-kex-hash">
+<h3><a class="self" href="#function-kex-hash"><code>hash</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">hash</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">Any</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>A non-cryptographic hash of any value: a non-negative <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><code>Integer</code></a> below 2^32, the same for equal values.</p>
+<p>Cheap to compute over a whole structure, with no string built along the way, which suits fingerprinting data to notice when it changed. It is stable only within one running program: the number differs between the interpreter and the BEAM, and may change between Kex versions, so never store it or send it anywhere. Use <a class="xref" href="/prelude/0.4.0-beta.4-dev/digest/#module-digest"><code>Digest</code></a> for that, or for anything an adversary could choose collisions for.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the value to hash</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the hash, from 0 up to 2^32 - 1</p>
+<h5>Examples</h5>
+<p class="caption"><em>Noticing that a project's files changed</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> stamp <span class="tok-op">=</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-method">hash</span><span class="tok-punct">(</span>paths<span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>path<span class="tok-op">|</span> <span class="tok-punct">(</span>path<span class="tok-punct">,</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">info</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
+
+</div>
 </div>
 </section>
 <section class="entity" id="type-kex-backend">
@@ -1179,6 +1221,40 @@ major   <span class="tok-comment"># =&gt; 0</span></code></pre>
 </div>
 </section>
 </section>
+<section class="entity" id="record-kex-loadedmodule">
+<h2><span class="kind kind-record">record</span> <code>LoadedModule</code></h2>
+<p>A compiled module loaded into the running program by <code>Kex.load</code>.</p>
+<p>For a program that decides at run time what code it needs: a site generator rendering a theme's templates, a plugin host. Compile the source with <code>kex --compile -o &lt;dir&gt;</code> once, then load the <code>.beam</code> and call it as often as needed, without starting another VM for every call (kexhq/kex#399).</p>
+<p>Every entry module is named after its file (<code>kex_&lt;stem&gt;.beam</code> for <code>&lt;stem&gt;.kex</code>), and so is everything declared at the top level of that file. A <code>let render = Template.html(Kex.embed(path))</code> written outside any <code>module</code> therefore lands in <code>kex_&lt;stem&gt;</code>, not in a module the file names; give each generated file a distinct name, or put the declaration inside a <code>module</code>, whose functions compile into <code>Kex.&lt;Name&gt;</code>.</p>
+<p>The BEAM backend only: under the interpreter, <code>Kex.load</code> answers an error.</p>
+<pre class="code"><code><span class="tok-keyword">let</span> theme <span class="tok-op">=</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-method">load</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cache/kex_theme_3f2a.beam</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> html <span class="tok-op">=</span> theme<span class="tok-op">.</span><span class="tok-method">call</span><span class="tok-punct">(</span><span class="tok-op">:</span>render<span class="tok-punct">,</span> <span class="tok-punct">[</span>context<span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom">Atom</a></code></dd></div>
+</dl>
+<section class="members" id="make-loadedmodule">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="loadedmodule-call">
+<h4><a class="self" href="#loadedmodule-call"><code>call</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">call</span><span class="tok-punct">(</span>function<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">,</span> arguments<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">Any</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Any</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Calls the module's function <code>function</code> with <code>arguments</code>.</p>
+<p>A failure inside the call is an <a class="xref" href="/prelude/0.4.0-beta.4-dev/json/#type-json-error"><code>Error</code></a> describing it, not a crash of the caller, and so is a function the module does not export with that many arguments. A <code>foul</code> function takes one argument more than it declares, its capabilities, so call pure functions this way.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>function</code></dt><dd>the function's name</dd></div>
+<div class="param"><dt><code>arguments</code></dt><dd>its arguments, in order</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> what the function returned, or why the</p>
+<h5>Examples</h5>
+<pre class="code"><code>theme<span class="tok-op">.</span><span class="tok-method">call</span><span class="tok-punct">(</span><span class="tok-op">:</span>render<span class="tok-punct">,</span> <span class="tok-punct">[</span>context<span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(&quot;&lt;html&gt;...&quot;)</span></code></pre>
+
+</div>
+</div>
+</section>
+</section>
 <section class="entity" id="module-kex-feature">
 <h2><span class="kind kind-module">module</span> <code>Kex.Feature</code></h2>
 <p>Which optional capabilities this build includes.</p>
@@ -1271,7 +1347,7 @@ major   <span class="tok-comment"># =&gt; 0</span></code></pre>
         </article>
       </main>
       <aside class="toc" aria-label="On this page">
-        <nav><p class="toc-heading">On this page</p><ul><li><a href="#trait-inspectable">Inspectable</a></li><li><a href="#trait-showable">Showable</a></li><li><a href="#make-optional-showable">Optional&lt;Showable&gt;</a></li><li><a href="#make-result">Result&lt;X, E&gt;</a></li><li><a href="#module-kex">Kex</a></li><li class="toc-nested"><a href="#type-kex-backend">Backend</a></li><li class="toc-nested"><a href="#type-kex-feature">Feature</a></li><li class="toc-nested"><a href="#record-kex-version">Version</a></li><li class="toc-nested"><a href="#module-kex-feature">Kex.Feature</a></li><li><a href="#module-kex-interface">Kex.Interface</a></li><li><a href="#function-inspected">inspected</a></li><li><a href="#function-inspect">inspect</a></li></ul></nav>
+        <nav><p class="toc-heading">On this page</p><ul><li><a href="#trait-inspectable">Inspectable</a></li><li><a href="#trait-showable">Showable</a></li><li><a href="#make-optional-showable">Optional&lt;Showable&gt;</a></li><li><a href="#make-result">Result&lt;X, E&gt;</a></li><li><a href="#module-kex">Kex</a></li><li class="toc-nested"><a href="#type-kex-backend">Backend</a></li><li class="toc-nested"><a href="#type-kex-feature">Feature</a></li><li class="toc-nested"><a href="#record-kex-version">Version</a></li><li class="toc-nested"><a href="#record-kex-loadedmodule">LoadedModule</a></li><li class="toc-nested"><a href="#module-kex-feature">Kex.Feature</a></li><li><a href="#module-kex-interface">Kex.Interface</a></li><li><a href="#function-inspected">inspected</a></li><li><a href="#function-inspect">inspect</a></li></ul></nav>
       </aside>
     </div>
     <footer class="foot">

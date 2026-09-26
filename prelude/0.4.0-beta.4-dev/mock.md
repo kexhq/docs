@@ -137,6 +137,12 @@ canonical(path)
 symlink?(path)
 ```
 
+#### `info`
+
+```kex
+info(path)
+```
+
 #### `open`
 
 ```kex
