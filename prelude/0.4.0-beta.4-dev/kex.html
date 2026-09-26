@@ -1,0 +1,390 @@
+<section class="entity" id="trait-inspectable">
+<h2><span class="kind kind-trait">trait</span> <code>Inspectable</code></h2>
+<p>Types that can be rendered structurally, for a person reading output.</p>
+<p>The rendering shows the value's STRUCTURE: quotes on strings, <code>Just(...)</code> around an optional, which is what makes it right for debugging and wrong for user-facing text. <code>Showable</code> is the other half of that pair.</p>
+<p>Every type is inspectable through a structural fallback, so <code>inspected</code> and <code>IO.inspect</code> work on anything; a type that wants a different rendering overrides <code>inspectValue</code>.</p>
+<pre class="code"><code><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">inspected</span>       <span class="tok-comment"># =&gt; &quot;[1, 2]&quot;</span>
+<span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">inspected</span>   <span class="tok-comment"># =&gt; &quot;Just(\&quot;hi\&quot;)&quot;</span></code></pre>
+<p class="implements">Implemented by <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#make-binary"><code>Binary</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#make-period"><code>Period</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#make-date"><code>Date</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#make-time"><code>Time</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#make-datetime"><code>DateTime</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/uri/#make-uri"><code>URI</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/uri/#make-url"><code>URL</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/http/#make-headers"><code>Headers</code></a>.</p>
+<h3>Provided methods</h3>
+
+<div class="functions">
+<div class="fn" id="inspectable-inspectvalue">
+<h4><a class="self" href="#inspectable-inspectvalue"><code>inspectValue</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">inspectValue</span><span class="tok-punct">(</span>colors<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Renders the value structurally, with ANSI colors when <code>colors</code> is true.</p>
+<p><code>inspected</code> and <code>IO.inspect</code> call this for you, passing the console's own color setting: call it directly only when you need to force one.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>colors</code></dt><dd>whether to include ANSI color escapes</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the rendered value</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">inspectValue</span><span class="tok-punct">(</span><span class="tok-bool">false</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;[1, 2]&quot;</span></code></pre>
+
+</div>
+</div>
+
+</section>
+<section class="entity" id="trait-showable">
+<h2><span class="kind kind-trait">trait</span> <code>Showable</code></h2>
+<p>Types that have a concise, user-facing text representation.</p>
+<p><code>Showable</code> is used by interpolation, printing, and <code>to(String)</code>. Its output should describe the value itself rather than its implementation structure: a string is shown without quotes, <code>Just(x)</code> is shown as <code>x</code>, and <code>None</code> is shown as an empty string. Use <code>Inspectable</code> when debugging structure matters.</p>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">showValue</span>          <span class="tok-comment"># =&gt; &quot;hello&quot;</span>
+<span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">showValue</span>    <span class="tok-comment"># =&gt; &quot;hello&quot;</span>
+<span class="tok-bool">None</span><span class="tok-op">.</span><span class="tok-method">showValue</span>             <span class="tok-comment"># =&gt; &quot;&quot;</span></code></pre>
+<p class="implements">Implemented by <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#make-binary"><code>Binary</code></a>, <a class="xref" href="#make-optional-showable"><code>Optional&lt;Showable&gt;</code></a>, <a class="xref" href="#make-result"><code>Result&lt;X, E&gt;</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#make-period"><code>Period</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#make-date"><code>Date</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#make-time"><code>Time</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#make-datetime"><code>DateTime</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#make-measure"><code>Measure</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/uri/#make-uri"><code>URI</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/uri/#make-url"><code>URL</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/data/queue/#make-queue"><code>Queue&lt;A&gt;</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/data/set/#make-set"><code>Set&lt;A&gt;</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/data/set/#make-unorderedset"><code>UnorderedSet&lt;A&gt;</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/data/stack/#make-stack"><code>Stack&lt;A&gt;</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/http/#make-headers"><code>Headers</code></a>.</p>
+<h3>Provided methods</h3>
+
+<div class="functions">
+<div class="fn" id="showable-showvalue">
+<h4><a class="self" href="#showable-showvalue"><code>showValue</code></a></h4>
+<pre class="code sig"><code>showValue <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the value's user-facing text representation.</p>
+<p>Implement this for domain types whose useful presentation differs from their structural rendering. Keep the result free of ANSI styling so it is safe in files, logs, and interpolation as well as on a terminal.</p>
+<p class="returns"><strong>Returns</strong> the display text</p>
+
+</div>
+<div class="fn" id="showable-to">
+<h4><a class="self" href="#showable-to"><code>to</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">to</span><span class="tok-punct">(</span>_<span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+
+</section>
+<section class="entity" id="make-optional-showable">
+<h2><span class="kind kind-make">extends</span> <code>Optional&lt;Showable&gt;</code></h2>
+<p class="home-note">More methods of <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-optional"><code>Optional</code></a>, added by this module.</p>
+<p class="implements">Implements <a class="xref" href="#trait-showable"><code>Showable</code></a>.</p>
+
+<div class="functions">
+<div class="fn" id="optional-showable-showvalue">
+<h3><a class="self" href="#optional-showable-showvalue"><code>showValue</code></a> <a class="tag-trait" href="#showable-showvalue" title="Implements Showable.showValue">Showable</a></h3>
+<pre class="code sig"><code><span class="tok-fn">showValue</span><span class="tok-punct">(</span>_<span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="make-result">
+<h2><span class="kind kind-make">extends</span> <code>Result&lt;X, E&gt;</code></h2>
+<p class="home-note">More methods of <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><code>Result</code></a>, added by this module.</p>
+<p class="implements">Implements <a class="xref" href="#trait-showable"><code>Showable</code></a>.</p>
+<p>The same for Result, with one deliberate asymmetry: SHOWING a result shows what it carries, so <code>Ok(42)</code> reads as <code>42</code> rather than leaking the wrapper into text, but an <a class="xref" href="/prelude/0.4.0-beta.4-dev/json/#type-json-error"><code>Error</code></a> keeps its marker. Dropping it made a failure and a success print identically, and unlike <code>None</code> (which shows as &quot;&quot;, visibly not a value) there would be nothing left to tell them apart.</p>
+<p>The marker is spelled <code>Error(...)</code>, matching how the same value renders as an ELEMENT of a collection: <code>[1, Error(Bad(no))]</code>. Elements render structurally rather than through showValue (as in Ruby, where <code>nil.to_s</code> is &quot;&quot; but <code>[nil].to_s</code> is &quot;[nil]&quot;), so this is the one spelling that reads the same at both levels.</p>
+<p>What functions RETURN is unchanged: <code>Integer.parse</code> still answers with a Result, <code>IO.inspect</code> still shows <code>Ok(42)</code>, and both arms are still matchable.</p>
+
+<div class="functions">
+<div class="fn" id="result-showvalue">
+<h3><a class="self" href="#result-showvalue"><code>showValue</code></a> <a class="tag-trait" href="#showable-showvalue" title="Implements Showable.showValue">Showable</a></h3>
+<pre class="code sig"><code><span class="tok-fn">showValue</span><span class="tok-punct">(</span>_<span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="module-kex">
+<h2><span class="kind kind-module">module</span> <code>Kex</code></h2>
+<p>The running toolchain, which backend, which version, which features.</p>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">BACKEND</span>                  <span class="tok-comment"># =&gt; Interpreter</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">BACKEND</span><span class="tok-op">.</span><span class="tok-method">compiled?</span>        <span class="tok-comment"># =&gt; false</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">release</span>          <span class="tok-comment"># =&gt; &quot;0.4.0&quot;</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Feature</span><span class="tok-op">.</span><span class="tok-method">has?</span><span class="tok-punct">(</span><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">FileSystem</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<div class="functions">
+<div class="fn" id="constant-kex-backend">
+<h3><a class="self" href="#constant-kex-backend"><code>BACKEND</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><a class="xref" href="#constant-kex-backend"><span class="tok-type">BACKEND</span></a> <span class="tok-op">:</span> <a class="xref" href="#type-kex-backend"><span class="tok-type">Backend</span></a></code></pre>
+<p>Which backend is executing this program.</p>
+<p>Its <code>interpreted?</code>, <code>compiled?</code> and <code>beam?</code> are the readable way to ask.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">BACKEND</span>   <span class="tok-comment"># =&gt; Interpreter</span></code></pre>
+
+</div>
+<div class="fn" id="constant-kex-version">
+<h3><a class="self" href="#constant-kex-version"><code>VERSION</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><a class="xref" href="#constant-kex-version"><span class="tok-type">VERSION</span></a> <span class="tok-op">:</span> <a class="xref" href="#record-kex-version"><span class="tok-type">Version</span></a></code></pre>
+<p>This build's version.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">major</span>     <span class="tok-comment"># =&gt; 0</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">release</span>   <span class="tok-comment"># =&gt; &quot;0.4.0-alpha.2&quot;</span></code></pre>
+<p class="caption"><em>Reporting the version in a tool's output</em></p>
+<pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">built with Kex </span><span class="tok-string">${</span><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">number</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-kex-load">
+<h3><a class="self" href="#function-kex-load"><code>load</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">load</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-kex-loadedmodule"><span class="tok-type">LoadedModule</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Loads the compiled module at <code>path</code>, replacing an older version of it that is already loaded. See <a class="xref" href="#record-kex-loadedmodule"><code>Kex.LoadedModule</code></a>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>a <code>.beam</code> file written by <code>kex --compile</code></dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the module, or why it could not be</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> theme <span class="tok-op">=</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-method">load</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build/kex_theme.beam</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="function-kex-loaded">
+<h3><a class="self" href="#function-kex-loaded"><code>loaded</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">loaded</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">LoadedModule?</span></code></pre>
+<p>The module already loaded under <code>name</code>, or <code>None</code> when there is none.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code></dt><dd>the module's BEAM name</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the module</p>
+<h5>Examples</h5>
+<p class="caption"><em>Loading only once</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> theme <span class="tok-op">=</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-method">loaded</span><span class="tok-punct">(</span><span class="tok-op">:</span>kex_theme<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-method">load</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-kex-hash">
+<h3><a class="self" href="#function-kex-hash"><code>hash</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">hash</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">Any</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>A non-cryptographic hash of any value: a non-negative <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><code>Integer</code></a> below 2^32, the same for equal values.</p>
+<p>Cheap to compute over a whole structure, with no string built along the way, which suits fingerprinting data to notice when it changed. It is stable only within one running program: the number differs between the interpreter and the BEAM, and may change between Kex versions, so never store it or send it anywhere. Use <a class="xref" href="/prelude/0.4.0-beta.4-dev/digest/#module-digest"><code>Digest</code></a> for that, or for anything an adversary could choose collisions for.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the value to hash</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the hash, from 0 up to 2^32 - 1</p>
+<h5>Examples</h5>
+<p class="caption"><em>Noticing that a project's files changed</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> stamp <span class="tok-op">=</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-method">hash</span><span class="tok-punct">(</span>paths<span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>path<span class="tok-op">|</span> <span class="tok-punct">(</span>path<span class="tok-punct">,</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">info</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="type-kex-backend">
+<h2><span class="kind kind-type">type</span> <code>Backend</code></h2>
+<p>Which backend is executing the program: the tree-walking <code>Interpreter</code>, or the <code>Beam</code> virtual machine.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>Interpreter</code></li>
+<li><code>Beam</code></li>
+</ul>
+<section class="members" id="make-backend">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="backend-interpreted?">
+<h4><a class="self" href="#backend-interpreted?"><code>interpreted?</code></a></h4>
+<pre class="code sig"><code>interpreted? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Whether this is the tree-walking interpreter.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> for <code>Interpreter</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">BACKEND</span><span class="tok-op">.</span><span class="tok-method">interpreted?</span>   <span class="tok-comment"># =&gt; true under `kex -R file.kex`</span></code></pre>
+
+</div>
+<div class="fn" id="backend-compiled?">
+<h4><a class="self" href="#backend-compiled?"><code>compiled?</code></a></h4>
+<pre class="code sig"><code>compiled? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Whether this backend runs compiled code: today, the BEAM.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> for every backend but the interpreter</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">BACKEND</span><span class="tok-op">.</span><span class="tok-method">compiled?</span>   <span class="tok-comment"># =&gt; true under `kex file.kex`</span></code></pre>
+
+</div>
+<div class="fn" id="backend-beam?">
+<h4><a class="self" href="#backend-beam?"><code>beam?</code></a></h4>
+<pre class="code sig"><code>beam? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Whether this is the BEAM virtual machine. Processes, the web server and clustering need it.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> for <code>Beam</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">BACKEND</span><span class="tok-op">.</span><span class="tok-method">beam?</span>   <span class="tok-comment"># =&gt; true under `kex file.kex`</span></code></pre>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="type-kex-feature">
+<h2><span class="kind kind-type">type</span> <code>Feature</code></h2>
+<p>An optional capability a build may or may not include. Ask about one with <code>Kex.Feature.has?</code> before relying on it.</p>
+<p><code>FileSystem</code>: the program can read and write the host's files (<a class="xref" href="/prelude/0.4.0-beta.4-dev/fs/#module-fs"><code>FS</code></a>). <code>ExternalPrograms</code>: it can run other programs (<code>Process.run</code>, <code>Process.stream</code>), which the browser build cannot.</p>
+<p>Kex's own processes (<code>spawn</code>, <code>receive</code>) are not optional: every backend has them. Networking has its finer-grained report, <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#constant-net-support-current"><code>Net.Support.current</code></a>.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>FileSystem</code></li>
+<li><code>ExternalPrograms</code></li>
+</ul>
+
+</section>
+<section class="entity" id="record-kex-version">
+<h2><span class="kind kind-record">record</span> <code>Version</code></h2>
+<p>Build identity for the compiler and runtime executing this program: <a class="xref" href="#record-kex-version"><code>Version</code></a> and <a class="xref" href="#constant-kex-version"><code>VERSION</code></a> below.</p>
+<p>Useful in bug reports, generated artifacts, and compatibility checks where <a class="xref" href="#constant-kex-backend"><code>Kex.BACKEND</code></a> alone is not enough to identify the toolchain. The toolchain a program is running on. <code>kex --version</code> and the REPL banner report the same numbers.</p>
+<p><code>revision</code> is the git commit the compiler was built from: <code>None</code> when it was built from a source archive rather than a checkout, which is why it is an Optional rather than a String.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">major</span>        <span class="tok-comment"># =&gt; 0</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">revision</span>     <span class="tok-comment"># =&gt; Just(&quot;a1b2c3d&quot;)</span>
+<span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;0.3.0 (a1b2c3d)&quot;</span></code></pre>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>major</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>minor</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>patch</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>revision</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>?</code></dd></div>
+<div class="field"><dt><code>preRelease</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+<section class="members" id="make-version">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="version-tuple">
+<h4><a class="self" href="#version-tuple"><code>tuple</code></a></h4>
+<pre class="code sig"><code>tuple <span class="tok-op">:</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <span class="tok-type">String?</span><span class="tok-punct">)</span></code></pre>
+<p>The version's four values as a tuple, for destructuring.</p>
+<p>A tuple cannot carry accessors of its own: there is no named type for a <code>make</code> block to target, so the record is the value and this is the view.</p>
+<p class="returns"><strong>Returns</strong> major, minor, patch, revision</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> <span class="tok-punct">(</span>major<span class="tok-punct">,</span> minor<span class="tok-punct">,</span> patch<span class="tok-punct">,</span> revision<span class="tok-punct">)</span> <span class="tok-op">=</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">tuple</span>
+major   <span class="tok-comment"># =&gt; 0</span></code></pre>
+
+</div>
+<div class="fn" id="version-release">
+<h4><a class="self" href="#version-release"><code>release</code></a></h4>
+<pre class="code sig"><code>release <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The three numbers, plus the pre-release channel when there is one.</p>
+<p><code>0.4.0</code>, or <code>0.4.0-rc.1</code> on a pre-release build. What a version RANGE is matched against, so the channel has to be in it.</p>
+<p class="returns"><strong>Returns</strong> the release string</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">release</span>   <span class="tok-comment"># =&gt; &quot;0.4.0-alpha.2&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="version-number">
+<h4><a class="self" href="#version-number"><code>number</code></a></h4>
+<pre class="code sig"><code>number <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The release string with the build revision after it, when there is one.</p>
+<p>This is what <code>kex --version</code> and the REPL banner print.</p>
+<p><code>to(String)</code>: the language's conversion protocol, and what this should really be: is deliberately NOT defined here: a second <code>to(String)</code> implementation anywhere in the prelude breaks type-directed <code>to</code> dispatch for every prelude type on BEAM, so adding one here silently broke <code>3.kilo.watt.to(String)</code>. Pinned by spec/prelude_to_string_dispatch.kex; restore this as <code>to(String)</code> once that dispatcher is fixed.</p>
+<p class="returns"><strong>Returns</strong> the full version string</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">number</span>   <span class="tok-comment"># =&gt; &quot;0.4.0-alpha.2 (219e625)&quot;</span></code></pre>
+<p class="caption"><em>Reporting the toolchain in a tool's output</em></p>
+<pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">built with Kex </span><span class="tok-string">${</span><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">VERSION</span><span class="tok-op">.</span><span class="tok-method">number</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="record-kex-loadedmodule">
+<h2><span class="kind kind-record">record</span> <code>LoadedModule</code></h2>
+<p>A compiled module loaded into the running program by <code>Kex.load</code>.</p>
+<p>For a program that decides at run time what code it needs: a site generator rendering a theme's templates, a plugin host. Compile the source with <code>kex --compile -o &lt;dir&gt;</code> once, then load the <code>.beam</code> and call it as often as needed, without starting another VM for every call (kexhq/kex#399).</p>
+<p>Every entry module is named after its file (<code>kex_&lt;stem&gt;.beam</code> for <code>&lt;stem&gt;.kex</code>), and so is everything declared at the top level of that file. A <code>let render = Template.html(Kex.embed(path))</code> written outside any <code>module</code> therefore lands in <code>kex_&lt;stem&gt;</code>, not in a module the file names; give each generated file a distinct name, or put the declaration inside a <code>module</code>, whose functions compile into <code>Kex.&lt;Name&gt;</code>.</p>
+<p>The BEAM backend only: under the interpreter, <code>Kex.load</code> answers an error.</p>
+<pre class="code"><code><span class="tok-keyword">let</span> theme <span class="tok-op">=</span> <span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-method">load</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cache/kex_theme_3f2a.beam</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> html <span class="tok-op">=</span> theme<span class="tok-op">.</span><span class="tok-method">call</span><span class="tok-punct">(</span><span class="tok-op">:</span>render<span class="tok-punct">,</span> <span class="tok-punct">[</span>context<span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom">Atom</a></code></dd></div>
+</dl>
+<section class="members" id="make-loadedmodule">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="loadedmodule-call">
+<h4><a class="self" href="#loadedmodule-call"><code>call</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">call</span><span class="tok-punct">(</span>function<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">,</span> arguments<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">Any</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Any</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Calls the module's function <code>function</code> with <code>arguments</code>.</p>
+<p>A failure inside the call is an <a class="xref" href="/prelude/0.4.0-beta.4-dev/json/#type-json-error"><code>Error</code></a> describing it, not a crash of the caller, and so is a function the module does not export with that many arguments. A <code>foul</code> function takes one argument more than it declares, its capabilities, so call pure functions this way.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>function</code></dt><dd>the function's name</dd></div>
+<div class="param"><dt><code>arguments</code></dt><dd>its arguments, in order</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> what the function returned, or why the</p>
+<h5>Examples</h5>
+<pre class="code"><code>theme<span class="tok-op">.</span><span class="tok-method">call</span><span class="tok-punct">(</span><span class="tok-op">:</span>render<span class="tok-punct">,</span> <span class="tok-punct">[</span>context<span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(&quot;&lt;html&gt;...&quot;)</span></code></pre>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="module-kex-feature">
+<h2><span class="kind kind-module">module</span> <code>Kex.Feature</code></h2>
+<p>Which optional capabilities this build includes.</p>
+<p>Optional non-network capabilities in this build. Networking has its own granular opt-in <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#module-net-support"><code>Net.Support</code></a> report.</p>
+<div class="functions">
+<div class="fn" id="function-kex-feature-has?">
+<h3><a class="self" href="#function-kex-feature-has?"><code>has?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">has?</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <a class="xref" href="#type-kex-feature"><span class="tok-type">Feature</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when this build includes <code>f</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>f</code></dt><dd>the capability to ask about</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when it is available</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Feature</span><span class="tok-op">.</span><span class="tok-method">has?</span><span class="tok-punct">(</span><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">ExternalPrograms</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true, except in a browser</span></code></pre>
+
+</div>
+<div class="fn" id="constant-kex-feature-list">
+<h3><a class="self" href="#constant-kex-feature-list"><code>list</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code>list <span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#type-kex-feature"><span class="tok-type">Feature</span></a><span class="tok-punct">]</span></code></pre>
+<p>Every optional capability this build includes.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Feature</span><span class="tok-op">.</span><span class="tok-method">list</span>   <span class="tok-comment"># =&gt; [FileSystem, ExternalPrograms]</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-kex-interface">
+<h2><span class="kind kind-module">module</span> <code>Kex.Interface</code></h2>
+<p>Reading the typed public surface of a compiled Kex module.</p>
+<div class="functions">
+<div class="fn" id="function-kex-interface-read">
+<h3><a class="self" href="#function-kex-interface-read"><code>read</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">read</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/fs/#module-fs"><span class="tok-type">FS</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/fs/#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Any?</span></code></pre>
+<p>Reads the KexI interface chunk of a compiled Kex module: its typed public surface, and answers the decoded term, or None when the file has no such chunk, does not exist, or is not a BEAM artifact.</p>
+<p>The term is an ordinary tree of tuples, lists, atoms, integers and strings, so it is walked with normal pattern matching and <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#tuple-items"><code>Tuple.items</code></a>. This exists so that reading it needs no <code>BEAM.*</code> interop: it is the one intentional entry point rather than a general term decoder.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the compiled .beam file to read</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the decoded interface term, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-type">Interface</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build/runtime/beam/kex_prelude.beam</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="function-inspected">
+<h2><span class="kind kind-function">function</span> <code>inspected</code></h2>
+<pre class="code sig"><code><span class="tok-fn">inspected</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">Inspectable</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the pretty-printed representation of any value as a STRING: the same form the REPL echoes. Universal: reachable on every type through UFCS.</p>
+<p>Named apart from <code>inspect</code>, which prints and returns its INPUT so it can be dropped into a pipeline. Both spellings used to be called <code>inspect</code>, and which one a call reached depended on whether it was written <code>x.inspect</code> or <code>IO.inspect(x)</code>, so <code>[1, 2].inspect.count</code> answered 24, the length of the rendered string, rather than 2.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>any value</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> its rendered form</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">inspected</span>            <span class="tok-comment"># =&gt; &quot;[1, 2]&quot;</span>
+<span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">inspected</span>          <span class="tok-comment"># =&gt; &quot;{ a: 1 }&quot;</span>
+<span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">inspected</span>        <span class="tok-comment"># =&gt; &quot;{ \&quot;a\&quot;: 1 }&quot;</span>
+<span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">inspected</span>        <span class="tok-comment"># =&gt; &quot;Just(\&quot;hi\&quot;)&quot;</span></code></pre>
+<p class="caption"><em>Putting a rendering into a message</em></p>
+<pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">unexpected value: </span><span class="tok-string">${</span>value<span class="tok-op">.</span><span class="tok-method">inspected</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="function-inspect">
+<h2><span class="kind kind-function">function</span> <code>inspect</code></h2>
+<pre class="code sig"><code><span class="tok-fn">inspect</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span></code></pre>
+<p>Prints the pretty-printed form of <code>value</code> to stderr and returns <code>value</code> unchanged, so it can be dropped into any pipeline without changing what flows through it. The same operation as <code>IO.inspect</code>, reachable by UFCS.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the value to show</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the same value, unchanged</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n <span class="tok-op">*</span> <span class="tok-number">3</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">inspect</span><span class="tok-op">.</span><span class="tok-method">filter</span><span class="tok-punct">(</span><span class="tok-op">~</span>even?<span class="tok-punct">)</span>
+<span class="tok-comment"># stderr: [3, 6, 9, 12] : [Int]</span>
+<span class="tok-comment"># =&gt; [6, 12]</span></code></pre>
+
+</section>
+<h2 class="group">Submodules</h2>
+<ul class="prelude-list">
+<li><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/ast/">Kex.AST</a></code> <span class="prelude-note">Parses Kex source code into a structured AST, at run time.</span></li>
+</ul>

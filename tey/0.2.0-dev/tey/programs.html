@@ -1,0 +1,157 @@
+<section class="entity" id="module-tey-programs">
+<h2><span class="kind kind-module">module</span> <code>Tey.Programs</code></h2>
+<p>What Tey has put in <code>${TEY_HOME}/bin</code>, and who owns each file there.</p>
+<p>Every package whose targets Tey installs gets a receipt at <code>${TEY_HOME}/programs/&lt;name&gt;/receipt.json</code>. The receipt is the only authority for ownership: a file in the bin directory that no receipt lists is not Tey's to overwrite or delete. Without one, a second package declaring the same target name silently replaced the first package's program, and nothing could say what a file in there was or where it had come from.</p>
+<p>Keyed by PACKAGE, not by binary: one package may install several targets, and reinstalling or removing it acts on all of them together.</p>
+<div class="functions">
+<div class="fn" id="constant-tey-programs-reservednames">
+<h3><a class="self" href="#constant-tey-programs-reservednames"><code>reservedNames</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code>reservedNames <span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+<p>Names that are Tey's own and never a package's to take: the <code>kex</code> shim lives in this directory, and replacing it would change which compiler every shell runs.</p>
+
+</div>
+<div class="fn" id="function-tey-programs-directory">
+<h3><a class="self" href="#function-tey-programs-directory"><code>directory</code></a></h3>
+<pre class="code sig"><code>directory <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-programs-classify">
+<h3><a class="self" href="#function-tey-programs-classify"><code>classify</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">classify</span><span class="tok-punct">(</span>argument<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-tey-programs-programsource"><span class="tok-type">ProgramSource</span></a></code></pre>
+<p>A path when it starts like one (<code>.</code>, <code>/</code>, <code>~</code>), a Git URL when it has a scheme or is scp-like (<code>git@host:owner/repo</code>), and otherwise the name of an installed program.</p>
+
+</div>
+<div class="fn" id="function-tey-programs-builddirectory">
+<h3><a class="self" href="#function-tey-programs-builddirectory"><code>buildDirectory</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">buildDirectory</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Where a program's staged build tree ends up once it is installed.</p>
+
+</div>
+<div class="fn" id="function-tey-programs-stagingdirectory">
+<h3><a class="self" href="#function-tey-programs-stagingdirectory"><code>stagingDirectory</code></a></h3>
+<pre class="code sig"><code>stagingDirectory <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>A fresh directory to build a program in before it is installed. Beside <code>programs/</code> rather than in it, so a half-built tree is never listed as a program, and on the same filesystem, so publishing it is a rename.</p>
+
+</div>
+<div class="fn" id="function-tey-programs-stage">
+<h3><a class="self" href="#function-tey-programs-stage"><code>stage</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">stage</span><span class="tok-punct">(</span>root<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> destination<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Copies the tree at <code>root</code> into <code>destination</code>: what a snapshot would hold, plus a committed <code>tey.lock</code> — the dependency versions the program's author tested, which a snapshot leaves out.</p>
+
+</div>
+<div class="fn" id="function-tey-programs-copyinto">
+<h3><a class="self" href="#function-tey-programs-copyinto"><code>copyInto</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">copyInto</span><span class="tok-punct">(</span>root<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> relative<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> destination<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-programs-publishbuild">
+<h3><a class="self" href="#function-tey-programs-publishbuild"><code>publishBuild</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">publishBuild</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> staged<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Replaces a program's build tree with the one it was just installed from. The old tree is moved aside first and removed last, so a failure part way leaves one of the two in place.</p>
+
+</div>
+<div class="fn" id="function-tey-programs-receiptpath">
+<h3><a class="self" href="#function-tey-programs-receiptpath"><code>receiptPath</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">receiptPath</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-programs-encode">
+<h3><a class="self" href="#function-tey-programs-encode"><code>encode</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">encode</span><span class="tok-punct">(</span>receipt<span class="tok-op">:</span> <a class="xref" href="#record-tey-programs-receipt"><span class="tok-type">Receipt</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-programs-decode">
+<h3><a class="self" href="#function-tey-programs-decode"><code>decode</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">decode</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-tey-programs-receipt"><span class="tok-type">Receipt</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></code></pre>
+
+</div>
+<div class="fn" id="function-tey-programs-claim">
+<h3><a class="self" href="#function-tey-programs-claim"><code>claim</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">claim</span><span class="tok-punct">(</span>target<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> packageName<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> receipts<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-programs-receipt"><span class="tok-type">Receipt</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> exists?<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">,</span> teyBuilt?<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-tey-programs-claim"><span class="tok-type">Claim</span></a></code></pre>
+<p>The decision for one target name, given every receipt and what is on disk. Pure, so the whole rule is testable without a bin directory.</p>
+<p><code>teyBuilt?</code> covers the programs a project-local <code>tey install</code> put here before receipts existed: they are escripts Tey itself wrote, so taking them into a receipt loses nothing, where refusing would make every existing installation demand <code>--force</code> on its next reinstall.</p>
+
+</div>
+<div class="fn" id="function-tey-programs-refusal">
+<h3><a class="self" href="#function-tey-programs-refusal"><code>refusal</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">refusal</span><span class="tok-punct">(</span>target<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> claim<span class="tok-op">:</span> <a class="xref" href="#type-tey-programs-claim"><span class="tok-type">Claim</span></a><span class="tok-punct">,</span> path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> force?<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></code></pre>
+<p>Why a claim stops the install, or None when it may go ahead. <code>--force</code> takes a name over from another package or from an unowned file, but never from Tey itself.</p>
+
+</div>
+<div class="fn" id="function-tey-programs-load">
+<h3><a class="self" href="#function-tey-programs-load"><code>load</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">load</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Receipt?</span></code></pre>
+
+</div>
+<div class="fn" id="function-tey-programs-all">
+<h3><a class="self" href="#function-tey-programs-all"><code>all</code></a></h3>
+<pre class="code sig"><code>all <span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-programs-receipt"><span class="tok-type">Receipt</span></a><span class="tok-punct">]</span></code></pre>
+<p>Every receipt, by package name. An unreadable one is reported rather than skipped silently: skipping it would make the files it owns look unowned.</p>
+
+</div>
+<div class="fn" id="function-tey-programs-save">
+<h3><a class="self" href="#function-tey-programs-save"><code>save</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">save</span><span class="tok-punct">(</span>receipt<span class="tok-op">:</span> <a class="xref" href="#record-tey-programs-receipt"><span class="tok-type">Receipt</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Written beside the final file and renamed into place, so a reader never sees half a receipt and a failed write leaves the previous one intact.</p>
+
+</div>
+<div class="fn" id="function-tey-programs-remove">
+<h3><a class="self" href="#function-tey-programs-remove"><code>remove</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">remove</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-programs-teybuilt?">
+<h3><a class="self" href="#function-tey-programs-teybuilt?"><code>teyBuilt?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">teyBuilt?</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Whether <code>path</code> is an escript Tey's own target build wrote: its emulator line names <code>kex_main</code>, which every compiled Kex entry module is called.</p>
+
+</div>
+<div class="fn" id="function-tey-programs-listline">
+<h3><a class="self" href="#function-tey-programs-listline"><code>listLine</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">listLine</span><span class="tok-punct">(</span>receipt<span class="tok-op">:</span> <a class="xref" href="#record-tey-programs-receipt"><span class="tok-type">Receipt</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The line <code>tey list</code> prints for one installed program.</p>
+
+</div>
+</div>
+</section>
+<section class="entity" id="record-tey-programs-receipt">
+<h2><span class="kind kind-record">record</span> <code>Receipt</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>version</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>sourceKind</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>sourcePath</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>sourceDigest</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>targets</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>]</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>kex</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>otp</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>installedAt</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="type-tey-programs-programsource">
+<h2><span class="kind kind-type">type</span> <code>ProgramSource</code></h2>
+<p>What <code>tey install &lt;argument&gt;</code> names. <code>tey add</code> is how a dependency is added, so an argument to <code>tey install</code> always means a program.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>PathSource(String)</code></li>
+<li><code>GitSource(String)</code></li>
+<li><code>InstalledName(String)</code></li>
+</ul>
+
+</section>
+<section class="entity" id="type-tey-programs-claim">
+<h2><span class="kind kind-type">type</span> <code>Claim</code></h2>
+<p>What installing one target name would do to the bin directory.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>Free</code></li>
+<li><code>Mine</code></li>
+<li><code>Adopt</code></li>
+<li><code>Reserved</code></li>
+<li><code>OwnedBy(String)</code></li>
+<li><code>Foreign</code></li>
+</ul>
+
+</section>

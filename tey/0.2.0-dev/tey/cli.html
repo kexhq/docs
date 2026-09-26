@@ -1,0 +1,34 @@
+<section class="entity" id="module-tey-cli">
+<h2><span class="kind kind-module">module</span> <code>Tey.Cli</code></h2>
+<div class="functions">
+<div class="fn" id="function-tey-cli-parser">
+<h3><a class="self" href="#function-tey-cli-parser"><code>parser</code></a></h3>
+<pre class="code sig"><code>parser <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optionparser/#record-optionconfig"><span class="tok-type">OptionConfig</span></a></code></pre>
+<p>Options AND commands in one declaration: OptionParser matches the command words, strips them, and hands the handler what is left. Tey keeps no dispatcher of its own, so the help text and what actually runs cannot drift apart — they are read off the same list.</p>
+<p><code>foul</code> because the handlers do things.</p>
+
+</div>
+<div class="fn" id="function-tey-cli-cli">
+<h3><a class="self" href="#function-tey-cli-cli"><code>cli</code></a></h3>
+<pre class="code sig"><code>cli <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optionparser/#record-optionconfig"><span class="tok-type">OptionConfig</span></a></code></pre>
+<p>The parser Tey actually runs: the declared commands, plus one for every <code>command(...)</code> this package's manifest declares. Registering them here rather than in a fallback is what gets them into <code>tey help</code>, into the unknown-command message, and into argument stripping, for free.</p>
+<p>A package command can never shadow a built-in: the manifest reader refuses those names outright (Tey.Manifest.reservedCommands). They are listed under their own help heading regardless — &quot;unknown command&quot; should send a reader to package.kex or to Tey, and the two lists are written by different people.</p>
+
+</div>
+<div class="fn" id="function-tey-cli-dispatch">
+<h3><a class="self" href="#function-tey-cli-dispatch"><code>dispatch</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">dispatch</span><span class="tok-punct">(</span>args<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>The line is parsed once here to answer the two questions <code>run</code> cannot — is this <code>--version</code>, and does it name a command Tey already answers — and then handed to <code>run</code>, which parses it again and dispatches. A parse ERROR is left to <code>run</code> as well: reporting it with the help text is the one policy every tool built on OptionParser shares.</p>
+
+</div>
+<div class="fn" id="function-tey-cli-announcetoolchain">
+<h3><a class="self" href="#function-tey-cli-announcetoolchain"><code>announceToolchain</code></a></h3>
+<pre class="code sig"><code>announceToolchain <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p>Tells the rest of the process which compiler Tey selected.</p>
+<p><a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/ast/#module-kex-ast"><code>Kex.AST</code></a> — which is how a <code>package.kex</code> is read at all — shells out to the compiler named by <code>$KEX</code>, falling back to whatever <code>kex</code> PATH happens to hold. Tey is started by <code>erl</code>, not by <code>kex</code>, so nothing had set that: a manifest was parsed by an unrelated compiler if one was on PATH, and by none at all otherwise — which is why a package's commands silently vanished from <code>tey help</code> on a machine where <code>kex</code> was installed only inside the Tey home.</p>
+<p>An explicit <code>$KEX</code> is left alone: someone who set it means it, and that is the documented override the compiler itself honours.</p>
+
+</div>
+</div>
+</section>
+

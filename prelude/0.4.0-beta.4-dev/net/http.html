@@ -1,0 +1,688 @@
+<section class="entity" id="module-net-http">
+<h2><span class="kind kind-module">module</span> <code>Net.HTTP</code></h2>
+<p>Buffered HTTP clients, responses, and a small declaration-ordered server router. Requests never follow redirects or perform generic retries implicitly.</p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Net</span><span class="tok-op">.</span><span class="tok-type">HTTP</span>
+
+<span class="tok-keyword">let</span> response <span class="tok-op">=</span> <span class="tok-type">HTTP</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://example.test/</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+response<span class="tok-op">.</span><span class="tok-method">status</span><span class="tok-op">.</span><span class="tok-method">success?</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p>For connection reuse and statistics, own a client explicitly:</p>
+<pre class="code"><code><span class="tok-keyword">let</span> client <span class="tok-op">=</span> <span class="tok-type">Client</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> response <span class="tok-op">=</span> client<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://example.test/</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+client<span class="tok-op">.</span><span class="tok-method">close</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+</section>
+<section class="entity" id="record-net-http-headers">
+<h2><span class="kind kind-record">record</span> <code>Headers</code></h2>
+<p>An insertion-ordered HTTP field collection. Names compare case-insensitively and duplicate fields are preserved.</p>
+<p>A list of pairs rather than a <code>{String: String}</code> map, and deliberately so. A map cannot hold the same name twice, and <code>Set-Cookie</code> needs exactly that: RFC 6265 does not define it as a comma-separated list, so two cookies must travel as two fields and cannot be joined into one. A map interface would read as the obvious one right up to the first response that sets two cookies, then silently keep one — the same class of quiet data loss this module's <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><code>Result</code></a>-returning builders exist to avoid.</p>
+<p>Order is kept for the same reason. RFC 9110 makes order insignificant BETWEEN different names but significant between fields sharing a name, and a map has no order to keep.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>entries</code></dt><dd><code>[(<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>)]</code></dd></div>
+</dl>
+<p class="implements">Implements <a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#trait-showable"><code>Showable</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#trait-inspectable"><code>Inspectable</code></a>.</p>
+<section class="members" id="make-headers">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="headers-add">
+<h4><a class="self" href="#headers-add"><code>add</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">add</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-headers"><span class="tok-type">Headers</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Appends a field, keeping existing fields of the same name.</p>
+<p>Repeats are how <code>Set-Cookie</code> works: it is not a comma-separated list, so two cookies must be two fields. For replace-semantics, <code>remove</code> first.</p>
+<p>An invalid name or value is an <a class="xref" href="/prelude/0.4.0-beta.4-dev/json/#type-json-error"><code>Error</code></a>, not a silent drop. Rejecting <code>&quot;a\r\nX: y&quot;</code> is what stops response splitting, but dropping it quietly left the caller holding a valid <a class="xref" href="#record-net-http-headers"><code>Headers</code></a> that simply lacked the field it asked for, and a response with no <code>Content-Type</code> invites MIME sniffing. <code>from</code> and <code>parse</code> already answer with a <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><code>Result</code></a> for this same input.</p>
+<p class="returns"><strong>Returns</strong> the extended fields, or <code>Parse</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Two cookies on one response</em></p>
+<pre class="code"><code><span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span>
+  <span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Set-Cookie</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">session=abc; HttpOnly</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+  <span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Set-Cookie</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">theme=dark</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+<p class="caption"><em>Replacing a field</em></p>
+<pre class="code"><code>headers<span class="tok-op">.</span><span class="tok-method">remove</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="headers-remove">
+<h4><a class="self" href="#headers-remove"><code>remove</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">remove</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-headers"><span class="tok-type">Headers</span></a></code></pre>
+<p>Removes every field matching <code>name</code> case-insensitively.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Stripping hop-by-hop state before forwarding</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> forwarded <span class="tok-op">=</span> incoming<span class="tok-op">.</span><span class="tok-method">remove</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Connection</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="headers-get">
+<h4><a class="self" href="#headers-get"><code>get</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">get</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></code></pre>
+<p>Returns the first matching field value.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Selecting a response decoder</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> contentType <span class="tok-op">=</span> response<span class="tok-op">.</span><span class="tok-method">headers</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">application/octet-stream</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="headers-getall">
+<h4><a class="self" href="#headers-getall"><code>getAll</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">getAll</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+<p>Returns every matching value in insertion order.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Preserving every Set-Cookie field</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> cookies <span class="tok-op">=</span> response<span class="tok-op">.</span><span class="tok-method">headers</span><span class="tok-op">.</span><span class="tok-method">getAll</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Set-Cookie</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="headers-showvalue">
+<h4><a class="self" href="#headers-showvalue"><code>showValue</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/kex/#showable-showvalue" title="Implements Showable.showValue">Showable</a></h4>
+<pre class="code sig"><code>showValue <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Renders fields while replacing authorization and cookie values with <code>***</code>.</p>
+
+</div>
+<div class="fn" id="headers-inspectvalue">
+<h4><a class="self" href="#headers-inspectvalue"><code>inspectValue</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/kex/#inspectable-inspectvalue" title="Implements Inspectable.inspectValue">Inspectable</a></h4>
+<pre class="code sig"><code><span class="tok-fn">inspectValue</span><span class="tok-punct">(</span>colors<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Structural inspection uses the same credential-safe rendering.</p>
+
+</div>
+</div>
+</section><h3>From <a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#trait-showable"><code>Showable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#showable-to"><code>to</code></a></dt><dd></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-http-status">
+<h2><span class="kind kind-record">record</span> <code>Status</code></h2>
+<p>A validated HTTP status code in <code>100..599</code>.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>code</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+</dl>
+<section class="members" id="make-status">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="status-informational?">
+<h4><a class="self" href="#status-informational?"><code>informational?</code></a></h4>
+<pre class="code sig"><code>informational? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p class="returns"><strong>Returns</strong> whether the status is in <code>100..199</code></p>
+
+</div>
+<div class="fn" id="status-success?">
+<h4><a class="self" href="#status-success?"><code>success?</code></a></h4>
+<pre class="code sig"><code>success? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p class="returns"><strong>Returns</strong> whether the status is in <code>200..299</code></p>
+
+</div>
+<div class="fn" id="status-redirect?">
+<h4><a class="self" href="#status-redirect?"><code>redirect?</code></a></h4>
+<pre class="code sig"><code>redirect? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p class="returns"><strong>Returns</strong> whether the status is in <code>300..399</code></p>
+
+</div>
+<div class="fn" id="status-clienterror?">
+<h4><a class="self" href="#status-clienterror?"><code>clientError?</code></a></h4>
+<pre class="code sig"><code>clientError? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p class="returns"><strong>Returns</strong> whether the status is in <code>400..499</code></p>
+
+</div>
+<div class="fn" id="status-servererror?">
+<h4><a class="self" href="#status-servererror?"><code>serverError?</code></a></h4>
+<pre class="code sig"><code>serverError? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p class="returns"><strong>Returns</strong> whether the status is in <code>500..599</code></p>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="record-net-http-response">
+<h2><span class="kind kind-record">record</span> <code>Response&lt;B&gt;</code></h2>
+<p>A typed HTTP response envelope whose body representation is explicit.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>status</code></dt><dd><code><a class="xref" href="#record-net-http-status">Status</a></code></dd></div>
+<div class="field"><dt><code>headers</code></dt><dd><code><a class="xref" href="#record-net-http-headers">Headers</a></code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code>B</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-http-request">
+<h2><span class="kind kind-record">record</span> <code>Request&lt;B&gt;</code></h2>
+<p>A typed HTTP request envelope whose body representation is explicit.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>method</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>target</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/uri/#record-uri-uri">URI</a></code></dd></div>
+<div class="field"><dt><code>headers</code></dt><dd><code><a class="xref" href="#record-net-http-headers">Headers</a></code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code>B</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-http-routecontext">
+<h2><span class="kind kind-record">record</span> <code>RouteContext</code></h2>
+<p>Route captures decoded after path segmentation.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>parameters</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/map/#type-map">Map</a>&lt;<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>&gt;</code> <span class="opt">optional</span></dd></div>
+</dl>
+<section class="members" id="make-routecontext">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="routecontext-parameter">
+<h4><a class="self" href="#routecontext-parameter"><code>parameter</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">parameter</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Returns one decoded named or wildcard route capture.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code></dt><dd>the capture name declared in the route</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the capture, or <code>Parse</code> when absent</p>
+<h5>Examples</h5>
+<p class="caption"><em>Reading +:id+ from a +/users/:id+ route</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> id <span class="tok-op">=</span> context<span class="tok-op">.</span><span class="tok-method">parameter</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">id</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="record-net-http-context">
+<h2><span class="kind kind-record">record</span> <code>Context</code></h2>
+<p>Per-request server context.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>route</code></dt><dd><code><a class="xref" href="#record-net-http-routecontext">RouteContext</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="type-net-http-handler">
+<h2><span class="kind kind-type">type</span> <code>Handler</code></h2>
+<p>A buffered HTTP route handler. Handling a request is effectful: routes may read files, query a database, send messages, or perform other application IO.</p>
+
+</section>
+<section class="entity" id="record-net-http-route">
+<h2><span class="kind kind-record">record</span> <code>Route</code></h2>
+<p>One declared route; routers preserve declaration order.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>method</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>path</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>handler</code></dt><dd><code><a class="xref" href="#type-net-http-handler">Handler</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-http-router">
+<h2><span class="kind kind-record">record</span> <code>Router</code></h2>
+<p>An immutable, declaration-ordered HTTP router.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>routes</code></dt><dd><code>[<a class="xref" href="#record-net-http-route">Route</a>]</code> <span class="opt">optional</span></dd></div>
+</dl>
+<section class="members" id="make-router">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="router-route">
+<h4><a class="self" href="#router-route"><code>route</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">route</span><span class="tok-punct">(</span>method<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> handler<span class="tok-op">:</span> <a class="xref" href="#type-net-http-handler"><span class="tok-type">Handler</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a></code></pre>
+<p>Appends a route; earlier matching declarations win.</p>
+<p>Use this for a method without a convenience function. Paths may include named or wildcard captures, which the handler reads from <a class="xref" href="#record-net-http-routecontext"><code>RouteContext</code></a>.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Adding a custom method</em></p>
+<pre class="code"><code>router<span class="tok-op">.</span><span class="tok-method">route</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">PURGE</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">/cache/:key</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-op">~</span>purge<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="router-get">
+<h4><a class="self" href="#router-get"><code>get</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">get</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> handler<span class="tok-op">:</span> <a class="xref" href="#type-net-http-handler"><span class="tok-type">Handler</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a></code></pre>
+<p>Appends a GET route. GET also supplies automatic HEAD fallback.</p>
+
+</div>
+<div class="fn" id="router-head">
+<h4><a class="self" href="#router-head"><code>head</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">head</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> handler<span class="tok-op">:</span> <a class="xref" href="#type-net-http-handler"><span class="tok-type">Handler</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a></code></pre>
+<p>Appends an explicit HEAD route, overriding automatic GET fallback.</p>
+
+</div>
+<div class="fn" id="router-options">
+<h4><a class="self" href="#router-options"><code>options</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">options</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> handler<span class="tok-op">:</span> <a class="xref" href="#type-net-http-handler"><span class="tok-type">Handler</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a></code></pre>
+<p>Appends an explicit OPTIONS route, overriding generated OPTIONS.</p>
+
+</div>
+<div class="fn" id="router-post">
+<h4><a class="self" href="#router-post"><code>post</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">post</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> handler<span class="tok-op">:</span> <a class="xref" href="#type-net-http-handler"><span class="tok-type">Handler</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a></code></pre>
+<p>Appends a POST route.</p>
+
+</div>
+<div class="fn" id="router-put">
+<h4><a class="self" href="#router-put"><code>put</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">put</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> handler<span class="tok-op">:</span> <a class="xref" href="#type-net-http-handler"><span class="tok-type">Handler</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a></code></pre>
+<p>Appends a PUT route.</p>
+
+</div>
+<div class="fn" id="router-patch">
+<h4><a class="self" href="#router-patch"><code>patch</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">patch</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> handler<span class="tok-op">:</span> <a class="xref" href="#type-net-http-handler"><span class="tok-type">Handler</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a></code></pre>
+<p>Appends a PATCH route.</p>
+
+</div>
+<div class="fn" id="router-delete">
+<h4><a class="self" href="#router-delete"><code>delete</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">delete</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> handler<span class="tok-op">:</span> <a class="xref" href="#type-net-http-handler"><span class="tok-type">Handler</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a></code></pre>
+<p>Appends a DELETE route.</p>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="record-net-http-shutdownreport">
+<h2><span class="kind kind-record">record</span> <code>ShutdownReport</code></h2>
+<p>Counts and elapsed time from graceful server shutdown.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>completed</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>failed</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>forced</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>elapsedMilliseconds</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-http-serveroptions">
+<h2><span class="kind kind-record">record</span> <code>ServerOptions</code></h2>
+<p>Bounded HTTP server resources and default graceful-shutdown duration.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>maximumHandlers</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>backlog</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>gracefulShutdown</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#record-duration">Duration</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-http-pooloptions">
+<h2><span class="kind kind-record">record</span> <code>PoolOptions</code></h2>
+<p>HTTP connection-pool bounds and idle lifetime.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>perOrigin</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>total</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>queuedRequests</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>idleExpiryMilliseconds</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-http-clientoptions">
+<h2><span class="kind kind-record">record</span> <code>ClientOptions</code></h2>
+<p>Options owned by an explicit HTTP client.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>pool</code></dt><dd><code><a class="xref" href="#record-net-http-pooloptions">PoolOptions</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-http-clientstatistics">
+<h2><span class="kind kind-record">record</span> <code>ClientStatistics</code></h2>
+<p>Lifetime request/reuse counters plus current pooled connections.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>openConnections</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>requests</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>reusedConnections</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-http-clientclosereport">
+<h2><span class="kind kind-record">record</span> <code>ClientCloseReport</code></h2>
+<p>Resources released by <a class="xref" href="#client-close"><code>Client.close</code></a>.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>closedConnections</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="type-net-http-client">
+<h2><span class="kind kind-type">type</span> <code>Client</code></h2>
+<p>The pooled HTTP client. An opaque handle over the connection pool that owns it; <code>Client.open</code> makes one and <code>client.close</code> releases it.</p>
+<section class="members" id="make-client">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="client-request">
+<h4><a class="self" href="#client-request"><code>request</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">request</span><span class="tok-punct">(</span>method<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> headers<span class="tok-op">:</span> <a class="xref" href="#record-net-http-headers"><span class="tok-type">Headers</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends a buffered request. Redirects and generic retries are not implicit.</p>
+<p>This keeps policy with the caller: inspect a redirect before following it, and retry only methods and failures your application knows are safe.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Sending JSON with an idempotency key</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> headers <span class="tok-op">=</span> <span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span>
+  <span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+  <span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Idempotency-Key</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> requestId<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+client<span class="tok-op">.</span><span class="tok-method">request</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">POST</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> url<span class="tok-punct">,</span> headers<span class="tok-punct">,</span> <span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span>order<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Binary</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="client-get">
+<h4><a class="self" href="#client-get"><code>get</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">get</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends a buffered GET request.</p>
+
+</div>
+<div class="fn" id="client-post">
+<h4><a class="self" href="#client-post"><code>post</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">post</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends a buffered binary POST request.</p>
+
+</div>
+<div class="fn" id="client-put">
+<h4><a class="self" href="#client-put"><code>put</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">put</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends a buffered binary PUT request.</p>
+
+</div>
+<div class="fn" id="client-patch">
+<h4><a class="self" href="#client-patch"><code>patch</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">patch</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends a buffered binary PATCH request.</p>
+
+</div>
+<div class="fn" id="client-delete">
+<h4><a class="self" href="#client-delete"><code>delete</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">delete</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends a DELETE request with an empty body.</p>
+
+</div>
+<div class="fn" id="client-head">
+<h4><a class="self" href="#client-head"><code>head</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">head</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends a HEAD request; the returned body is empty.</p>
+
+</div>
+<div class="fn" id="client-options">
+<h4><a class="self" href="#client-options"><code>options</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">options</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends an OPTIONS request.</p>
+
+</div>
+<div class="fn" id="client-statistics">
+<h4><a class="self" href="#client-statistics"><code>statistics</code></a></h4>
+<pre class="code sig"><code>statistics <span class="tok-op">:</span> <a class="xref" href="#record-net-http-clientstatistics"><span class="tok-type">ClientStatistics</span></a></code></pre>
+<p>Reports current pool occupancy and lifetime request counters.</p>
+<p class="returns"><strong>Returns</strong> current pool and lifetime request counters</p>
+<h5>Examples</h5>
+<p class="caption"><em>Emitting client-pool diagnostics</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> stats <span class="tok-op">=</span> client<span class="tok-op">.</span><span class="tok-method">statistics</span>
+<span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">HTTP reuse: </span><span class="tok-string">${</span>stats<span class="tok-op">.</span><span class="tok-method">reusedConnections</span><span class="tok-string">}</span><span class="tok-string">/</span><span class="tok-string">${</span>stats<span class="tok-op">.</span><span class="tok-method">requests</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="client-close">
+<h4><a class="self" href="#client-close"><code>close</code></a></h4>
+<pre class="code sig"><code>close <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-clientclosereport"><span class="tok-type">ClientCloseReport</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Idempotently closes the client and every idle pooled connection.</p>
+<p>Further requests fail with <code>Closed</code>; a second close is harmless.</p>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="module-net-http-headers">
+<h2><span class="kind kind-module">module</span> <code>Net.HTTP.Headers</code></h2>
+<p>Construction and parsing of validated HTTP header collections.</p>
+<div class="functions">
+<div class="fn" id="constant-net-http-headers-empty">
+<h3><a class="self" href="#constant-net-http-headers-empty"><code>empty</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code>empty <span class="tok-op">:</span> <a class="xref" href="#record-net-http-headers"><span class="tok-type">Headers</span></a></code></pre>
+<p>Returns a field collection with no entries.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Building request headers immutably</em></p>
+<pre class="code"><code><span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span>
+  <span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Accept</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+  <span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">User-Agent</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">inventory-sync/1.0</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-http-headers-from">
+<h3><a class="self" href="#function-net-http-headers-from"><code>from</code></a></h3>
+<pre class="code sig"><code><span class="tok-keyword">from</span><span class="tok-punct">(</span>entries<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-headers"><span class="tok-type">Headers</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span>
+<span class="tok-keyword">from</span><span class="tok-punct">(</span>entries<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/map/#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-headers"><span class="tok-type">Headers</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Validates header names and values without folding duplicates.</p>
+<p>Duplicate fields stay in their original order. Invalid names and values containing line breaks are rejected instead of creating a malformed or injectable HTTP message.</p>
+<p class="returns"><strong>Returns</strong> validated fields, or <code>Parse</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Forwarding an explicitly selected set of request headers</em></p>
+<pre class="code"><code><span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span>
+  <span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Accept</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+  <span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">X-Request-ID</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> requestId<span class="tok-punct">)</span>
+<span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-http-headers-parse">
+<h3><a class="self" href="#function-net-http-headers-parse"><code>parse</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-headers"><span class="tok-type">Headers</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Parses CRLF- or LF-separated header fields.</p>
+<p>Use this at a protocol boundary when headers arrive as text. Application code normally builds them with <code>from</code>, <code>add</code>, and <code>set</code>.</p>
+<p class="returns"><strong>Returns</strong> fields in source order, or <code>Parse</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Parsing headers captured from a diagnostic fixture</em></p>
+<pre class="code"><code><span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type: text/plain\r\nX-Trace: abc\r\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-net-http-status">
+<h2><span class="kind kind-module">module</span> <code>Net.HTTP.Status</code></h2>
+<p>Validation for numeric HTTP status codes.</p>
+<div class="functions">
+<div class="fn" id="function-net-http-status-from">
+<h3><a class="self" href="#function-net-http-status-from"><code>from</code></a></h3>
+<pre class="code sig"><code><span class="tok-keyword">from</span><span class="tok-punct">(</span>code<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-status"><span class="tok-type">Status</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Validates an HTTP status code.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>code</code></dt><dd>a status in <code>100..599</code></dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the status, or <code>Parse</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Validating a configurable health-check success code</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> code <span class="tok-op">=</span> <span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">HEALTH_STATUS</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">flatMap</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>text<span class="tok-op">|</span> text<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Integer</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">204</span><span class="tok-punct">)</span>
+<span class="tok-keyword">let</span> expected <span class="tok-op">=</span> <span class="tok-type">Status</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span>code<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-net-http-response">
+<h2><span class="kind kind-module">module</span> <code>Net.HTTP.Response</code></h2>
+<p>Buffered response constructors for route handlers.</p>
+<div class="functions">
+<div class="fn" id="function-net-http-response-binary">
+<h3><a class="self" href="#function-net-http-response-binary"><code>binary</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">binary</span><span class="tok-punct">(</span>status<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">,</span> headers<span class="tok-op">:</span> <a class="xref" href="#record-net-http-headers"><span class="tok-type">Headers</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Builds a buffered binary response with validated headers.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Returning a downloaded file without decoding it as text</em></p>
+<pre class="code"><code><span class="tok-type">Response</span><span class="tok-op">.</span><span class="tok-method">binary</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">,</span> archive<span class="tok-punct">,</span> <span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">application/zip</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-http-response-text">
+<h3><a class="self" href="#function-net-http-response-text"><code>text</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">text</span><span class="tok-punct">(</span>status<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Builds a UTF-8 text response with an explicit text/plain content type.</p>
+<h5>Examples</h5>
+<p class="caption"><em>A small health endpoint</em></p>
+<pre class="code"><code><span class="tok-type">Response</span><span class="tok-op">.</span><span class="tok-method">text</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">ok</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-http-response-empty">
+<h3><a class="self" href="#function-net-http-response-empty"><code>empty</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">empty</span><span class="tok-punct">(</span>status<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Builds a response with an empty body.</p>
+<h5>Examples</h5>
+<p class="caption"><em>A successful DELETE endpoint</em></p>
+<pre class="code"><code><span class="tok-type">Response</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-punct">(</span><span class="tok-number">204</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-net-http-router">
+<h2><span class="kind kind-module">module</span> <code>Net.HTTP.Router</code></h2>
+<p>The empty starting point for an immutable route declaration chain.</p>
+<div class="functions">
+<div class="fn" id="constant-net-http-router-build">
+<h3><a class="self" href="#constant-net-http-router-build"><code>build</code></a> <span class="tag-kind">constant</span></h3>
+<h5>Examples</h5>
+<p class="caption"><em>+Router.build.get(&quot;/health&quot;, { |request, context| Response.text(200, &quot;ok&quot;) })+</em></p>
+<pre class="code"><code></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-net-http-server">
+<h2><span class="kind kind-module">module</span> <code>Net.HTTP.Server</code></h2>
+<p>Starting, observing, and gracefully stopping HTTP servers.</p>
+<div class="functions">
+<div class="fn" id="function-net-http-server-start">
+<h3><a class="self" href="#function-net-http-server-start"><code>start</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">start</span><span class="tok-punct">(</span>endpoint<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#module-net"><span class="tok-type">Net</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/net/socket/#type-net-socket-udp-socket"><span class="tok-type">Socket</span></a><span class="tok-op">.</span><span class="tok-type">TCP</span><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-punct">,</span> router<span class="tok-op">:</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a><span class="tok-punct">,</span> options<span class="tok-op">:</span> <a class="xref" href="#record-net-http-serveroptions"><span class="tok-type">ServerOptions</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-http-server-running"><span class="tok-type">Running</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Starts a server with conservative defaults and returns immediately.</p>
+<p>The returned handle owns the listener and active handlers. Use <code>start</code> when the process has other work to do; use <code>serve</code> for a foreground server whose main job is handling HTTP.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> router <span class="tok-op">=</span> <span class="tok-type">Router</span><span class="tok-op">.</span><span class="tok-method">build</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/health</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>request<span class="tok-punct">,</span> context<span class="tok-op">|</span>
+  <span class="tok-type">Response</span><span class="tok-op">.</span><span class="tok-method">text</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">ok</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span><span class="tok-punct">)</span>
+<span class="tok-keyword">let</span> endpoint <span class="tok-op">=</span> <span class="tok-type">Net</span><span class="tok-op">.</span><span class="tok-type">Socket</span><span class="tok-op">.</span><span class="tok-type">TCP</span><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-op">.</span><span class="tok-method">loopback</span><span class="tok-punct">(</span><span class="tok-type">Net</span><span class="tok-op">.</span><span class="tok-type">Port</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span>
+<span class="tok-keyword">let</span> server <span class="tok-op">=</span> <span class="tok-type">Server</span><span class="tok-op">.</span><span class="tok-method">start</span><span class="tok-punct">(</span>endpoint<span class="tok-punct">,</span> router<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-type">Server</span><span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span>server<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-http-server-serve">
+<h3><a class="self" href="#function-net-http-server-serve"><code>serve</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">serve</span><span class="tok-punct">(</span>endpoint<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#module-net"><span class="tok-type">Net</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/net/socket/#type-net-socket-udp-socket"><span class="tok-type">Socket</span></a><span class="tok-op">.</span><span class="tok-type">TCP</span><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-punct">,</span> router<span class="tok-op">:</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a><span class="tok-punct">,</span> options<span class="tok-op">:</span> <a class="xref" href="#record-net-http-serveroptions"><span class="tok-type">ServerOptions</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Starts with defaults and blocks until the server stops.</p>
+
+</div>
+<div class="fn" id="function-net-http-server-stop">
+<h3><a class="self" href="#function-net-http-server-stop"><code>stop</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">stop</span><span class="tok-punct">(</span>server<span class="tok-op">:</span> <a class="xref" href="#type-net-http-server-running"><span class="tok-type">Running</span></a><span class="tok-punct">,</span> grace<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#record-duration"><span class="tok-type">Duration</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-shutdownreport"><span class="tok-type">ShutdownReport</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Gracefully stops using the duration captured at start.</p>
+<p>New requests stop being accepted while in-flight handlers get their grace period to finish. The report says how much work completed or was forced down during shutdown.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Shutting down from an application lifecycle hook</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> report <span class="tok-op">=</span> <span class="tok-type">Server</span><span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span>server<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">closed after </span><span class="tok-string">${</span>report<span class="tok-op">.</span><span class="tok-method">completed</span><span class="tok-string">}</span><span class="tok-string"> requests</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-http-server-join">
+<h3><a class="self" href="#function-net-http-server-join"><code>join</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">join</span><span class="tok-punct">(</span>server<span class="tok-op">:</span> <a class="xref" href="#type-net-http-server-running"><span class="tok-type">Running</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Waits until the server owner exits.</p>
+
+</div>
+<div class="fn" id="function-net-http-server-running?">
+<h3><a class="self" href="#function-net-http-server-running?"><code>running?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">running?</span><span class="tok-punct">(</span>server<span class="tok-op">:</span> <a class="xref" href="#type-net-http-server-running"><span class="tok-type">Running</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p class="returns"><strong>Returns</strong> whether the server owner is alive</p>
+
+</div>
+<div class="fn" id="function-net-http-server-localaddress">
+<h3><a class="self" href="#function-net-http-server-localaddress"><code>localAddress</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">localAddress</span><span class="tok-punct">(</span>server<span class="tok-op">:</span> <a class="xref" href="#type-net-http-server-running"><span class="tok-type">Running</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#module-net"><span class="tok-type">Net</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/net/socket/#type-net-socket-udp-socket"><span class="tok-type">Socket</span></a><span class="tok-op">.</span><span class="tok-type">TCP</span><span class="tok-op">.</span><span class="tok-type">Endpoint</span></code></pre>
+<p>Returns the bound address, including an operating-system-assigned port.</p>
+<p class="returns"><strong>Returns</strong> the bound address</p>
+<h5>Examples</h5>
+<p class="caption"><em>Publishing the actual address of a test server</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> endpoint <span class="tok-op">=</span> <span class="tok-type">Server</span><span class="tok-op">.</span><span class="tok-method">localAddress</span><span class="tok-punct">(</span>server<span class="tok-punct">)</span>
+<span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">test server: http://</span><span class="tok-string">${</span>endpoint<span class="tok-op">.</span><span class="tok-method">host</span><span class="tok-string">}</span><span class="tok-string">:</span><span class="tok-string">${</span>endpoint<span class="tok-op">.</span><span class="tok-method">port</span><span class="tok-op">.</span><span class="tok-method">string</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="type-net-http-server-running">
+<h2><span class="kind kind-type">type</span> <code>Running</code></h2>
+<p>An opaque asynchronous HTTP server handle.</p>
+
+</section>
+<section class="entity" id="module-net-http-client">
+<h2><span class="kind kind-module">module</span> <code>Net.HTTP.Client</code></h2>
+<p>Constructors for explicitly owned, connection-pooling HTTP clients.</p>
+<div class="functions">
+<div class="fn" id="function-net-http-client-open">
+<h3><a class="self" href="#function-net-http-client-open"><code>open</code></a></h3>
+<pre class="code sig"><code>open <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-http-client"><span class="tok-type">Client</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span>
+<span class="tok-fn">open</span><span class="tok-punct">(</span>options<span class="tok-op">:</span> <span class="tok-type">ClientOptions</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-http-client"><span class="tok-type">Client</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Opens an explicit pooled client with conservative defaults.</p>
+<p>Reuse one client for related requests so keep-alive connections and DNS work can be reused. Close it when the owning service shuts down.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Fetching several pages through one connection pool</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> client <span class="tok-op">=</span> <span class="tok-type">Client</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> first <span class="tok-op">=</span> client<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://api.example.com/items?page=1</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> second <span class="tok-op">=</span> client<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://api.example.com/items?page=2</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+client<span class="tok-op">.</span><span class="tok-method">close</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-net-http-http">
+<h2><span class="kind kind-module">module</span> <code>Net.HTTP.HTTP</code></h2>
+<p>Stateless HTTP convenience calls for scripts and occasional requests.</p>
+<div class="functions">
+<div class="fn" id="function-net-http-http-request">
+<h3><a class="self" href="#function-net-http-http-request"><code>request</code></a></h3>
+<pre class="code sig"><code>request <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-headers"><span class="tok-type">Headers</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends one stateless buffered request with no redirect or hidden retry.</p>
+<p>Each call owns a short-lived client. This is convenient for scripts and occasional requests; use <a class="xref" href="#type-net-http-client"><code>Client</code></a> for a service making repeated calls.</p>
+<h5>Examples</h5>
+<p class="caption"><em>A one-off authenticated request in a command-line tool</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> headers <span class="tok-op">=</span> <span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Authorization</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">Bearer </span><span class="tok-string">${</span>token<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-type">HTTP</span><span class="tok-op">.</span><span class="tok-method">request</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">GET</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> url<span class="tok-punct">,</span> headers<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-http-http-get">
+<h3><a class="self" href="#function-net-http-http-get"><code>get</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">get</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends one stateless buffered GET.</p>
+<h5>Examples</h5>
+<p class="caption"><em>+HTTP.get(&quot;https://example.test/&quot;).try+</em></p>
+<pre class="code"><code></code></pre>
+
+</div>
+<div class="fn" id="function-net-http-http-delete">
+<h3><a class="self" href="#function-net-http-http-delete"><code>delete</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">delete</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends one stateless DELETE with an empty body.</p>
+
+</div>
+<div class="fn" id="function-net-http-http-head">
+<h3><a class="self" href="#function-net-http-http-head"><code>head</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">head</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends one stateless HEAD and returns an empty response body.</p>
+
+</div>
+<div class="fn" id="function-net-http-http-options">
+<h3><a class="self" href="#function-net-http-http-options"><code>options</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">options</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends one stateless OPTIONS request.</p>
+
+</div>
+<div class="fn" id="function-net-http-http-post">
+<h3><a class="self" href="#function-net-http-http-post"><code>post</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">post</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends one stateless buffered binary POST.</p>
+
+</div>
+<div class="fn" id="function-net-http-http-put">
+<h3><a class="self" href="#function-net-http-http-put"><code>put</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">put</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends one stateless buffered binary PUT.</p>
+
+</div>
+<div class="fn" id="function-net-http-http-patch">
+<h3><a class="self" href="#function-net-http-http-patch"><code>patch</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">patch</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends one stateless buffered binary PATCH.</p>
+
+</div>
+</div>
+</section>
+
+<h2 class="group">Submodules</h2>
+<ul class="prelude-list">
+<li><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/net/http/websocket/">Net.HTTP.WebSocket</a></code> <span class="prelude-note">High-level RFC 6455 client messages. The runtime handles fragmentation and ping/pong frames; reconnect and heartbeat policies remain application-owned.</span></li>
+</ul>

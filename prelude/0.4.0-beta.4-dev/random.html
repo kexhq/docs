@@ -1,0 +1,240 @@
+<section class="entity" id="module-random">
+<h2><span class="kind kind-module">module</span> <code>Random</code></h2>
+<p>Random values for simulations, sampling, games, and reproducible tests.</p>
+<p>Import with <code>using Random</code>. Ordinary calls return a value directly; a <a class="xref" href="#make-random-generator"><code>Random.Generator</code></a> returns <code>(value, nextGenerator)</code>. Reusing the same generator replays the same draw. Pass its returned state to continue.</p>
+<p>These generators are not cryptographic; do not use their output for secrets. <code>Random.secureBytes</code> and <code>Random.token</code> are, and are what secrets come from.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Roll a die or initialize a weight</em></p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Random</span>
+<span class="tok-keyword">let</span> roll <span class="tok-op">=</span> <span class="tok-type">Random</span><span class="tok-op">.</span><span class="tok-method">integer</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">6</span><span class="tok-punct">)</span>
+<span class="tok-keyword">let</span> weight <span class="tok-op">=</span> <span class="tok-type">Random</span><span class="tok-op">.</span><span class="tok-method">float</span><span class="tok-punct">(</span><span class="tok-op">-</span><span class="tok-number">1.0</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">1.0</span><span class="tok-punct">)</span></code></pre>
+<p class="caption"><em>Reproduce a sequence</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> generator <span class="tok-op">=</span> <span class="tok-type">Random</span><span class="tok-op">.</span><span class="tok-method">seeded</span><span class="tok-punct">(</span><span class="tok-number">42</span><span class="tok-punct">)</span>
+<span class="tok-keyword">let</span> <span class="tok-punct">(</span>first<span class="tok-punct">,</span> afterFirst<span class="tok-punct">)</span> <span class="tok-op">=</span> generator<span class="tok-op">.</span><span class="tok-method">integer</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">6</span><span class="tok-punct">)</span>
+<span class="tok-keyword">let</span> <span class="tok-punct">(</span>second<span class="tok-punct">,</span> afterSecond<span class="tok-punct">)</span> <span class="tok-op">=</span> afterFirst<span class="tok-op">.</span><span class="tok-method">integer</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">6</span><span class="tok-punct">)</span></code></pre>
+<div class="functions">
+<div class="fn" id="function-random-seeded">
+<h3><a class="self" href="#function-random-seeded"><code>seeded</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">seeded</span><span class="tok-punct">(</span>seed<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-random-generator"><span class="tok-type">Generator</span></a></code></pre>
+<p>Starts a deterministic sequence. Any Integer seed is reduced modulo 2^64.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>seed</code></dt><dd>reproducible seed, including negative or large values</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> initial state; no draw has been consumed</p>
+
+</div>
+<div class="fn" id="function-random-fresh">
+<h3><a class="self" href="#function-random-fresh"><code>fresh</code></a></h3>
+<pre class="code sig"><code>fresh <span class="tok-op">:</span> <a class="xref" href="#record-random-generator"><span class="tok-type">Generator</span></a></code></pre>
+<p>Starts a generator using fresh host entropy.</p>
+<p class="returns"><strong>Returns</strong> initial state for a sequence that varies between runs</p>
+
+</div>
+<div class="fn" id="function-random-integer">
+<h3><a class="self" href="#function-random-integer"><code>integer</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">integer</span><span class="tok-punct">(</span>range<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/range/#type-range"><span class="tok-type">Range</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Draws an integer from an inclusive range using fresh entropy.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>range</code></dt><dd>ascending inclusive bounds, span at most 2^64</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> drawn value</p>
+
+</div>
+<div class="fn" id="function-random-float">
+<h3><a class="self" href="#function-random-float"><code>float</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">float</span><span class="tok-punct">(</span>range<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/range/#type-range"><span class="tok-type">Range</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-float"><span class="tok-type">Float</span></a><span class="tok-op">&gt;</span> <span class="tok-op">=</span> …<span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-float"><span class="tok-type">Float</span></a></code></pre>
+<p>Draws a float; defaults to [0.0, 1.0). The upper bound is excluded.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>range</code></dt><dd>finite, strictly ascending bounds</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> drawn value</p>
+
+</div>
+<div class="fn" id="function-random-boolean">
+<h3><a class="self" href="#function-random-boolean"><code>boolean</code></a></h3>
+<pre class="code sig"><code>boolean <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Draws a fair coin flip using fresh entropy.</p>
+<p class="returns"><strong>Returns</strong> true or false with equal probability</p>
+
+</div>
+<div class="fn" id="function-random-chance?">
+<h3><a class="self" href="#function-random-chance?"><code>chance?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">chance?</span><span class="tok-punct">(</span>probability<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-float"><span class="tok-type">Float</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns true with the supplied probability using fresh entropy.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>probability</code></dt><dd>probability from 0.0 through 1.0</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> sampled outcome</p>
+
+</div>
+<div class="fn" id="function-random-choice">
+<h3><a class="self" href="#function-random-choice"><code>choice</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">choice</span><span class="tok-punct">(</span>items<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">X</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">X?</span></code></pre>
+<p>Chooses a position uniformly, returning None for an empty input.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>items</code></dt><dd>values to choose from</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> chosen value, if any</p>
+
+</div>
+<div class="fn" id="function-random-sample">
+<h3><a class="self" href="#function-random-sample"><code>sample</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">sample</span><span class="tok-punct">(</span>items<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">X</span><span class="tok-punct">]</span><span class="tok-punct">,</span> count<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">X</span><span class="tok-punct">]</span></code></pre>
+<p>Samples positions without replacement; duplicate values remain possible.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>items</code></dt><dd>population</dd></div>
+<div class="param"><dt><code>count</code></dt><dd>nonnegative count; capped at the input size</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> values selected in random order</p>
+
+</div>
+<div class="fn" id="function-random-shuffle">
+<h3><a class="self" href="#function-random-shuffle"><code>shuffle</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">shuffle</span><span class="tok-punct">(</span>items<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">X</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">X</span><span class="tok-punct">]</span></code></pre>
+<p>Returns a random permutation using fresh entropy.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>items</code></dt><dd>values to shuffle</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> shuffled copy</p>
+
+</div>
+<div class="fn" id="function-random-securebytes">
+<h3><a class="self" href="#function-random-securebytes"><code>secureBytes</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">secureBytes</span><span class="tok-punct">(</span>count<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a></code></pre>
+<p>Returns <code>count</code> bytes from the operating system's cryptographically secure generator: the source for keys, session tokens and unguessable identifiers, which the generators above must never be used for.</p>
+<p>Nothing about it is reproducible, and there is no <a class="xref" href="#record-random-generator"><code>Generator</code></a> form.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>count</code></dt><dd>how many bytes; zero or less gives an empty binary</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the random bytes</p>
+<h5>Examples</h5>
+<p class="caption"><em>A 256-bit key</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> key <span class="tok-op">=</span> <span class="tok-type">Random</span><span class="tok-op">.</span><span class="tok-method">secureBytes</span><span class="tok-punct">(</span><span class="tok-number">32</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-random-token">
+<h3><a class="self" href="#function-random-token"><code>token</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">token</span><span class="tok-punct">(</span>bytes<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a> <span class="tok-op">=</span> …<span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns an unguessable token: <code>bytes</code> secure random bytes, as lowercase hex, so the text is twice as long as <code>bytes</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>bytes</code></dt><dd>how many random bytes the token carries</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the token</p>
+<h5>Examples</h5>
+<p class="caption"><em>A session identifier</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> session <span class="tok-op">=</span> <span class="tok-type">Random</span><span class="tok-op">.</span><span class="tok-method">token</span><span class="tok-punct">(</span><span class="tok-number">32</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;9f86d081884c7d65...&quot; (64 characters)</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="record-random-generator">
+<h2><span class="kind kind-record">record</span> <code>Generator</code></h2>
+<p>Immutable state of a deterministic random sequence.</p>
+<p>Construct with <code>Random.seeded</code> or <code>Random.fresh</code>. Each draw returns its value first and the advanced generator second. Equal seeds reproduce equal sequences for the same operations on both backends.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>state</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="module-random-generator">
+<h2><span class="kind kind-module">module</span> <code>Random.Generator</code></h2>
+</section>
+<section class="entity" id="make-random-generator">
+<h2><span class="kind kind-type">type</span> <code>Random.Generator</code></h2>
+
+<div class="functions">
+<div class="fn" id="random-generator-integer">
+<h3><a class="self" href="#random-generator-integer"><code>integer</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">integer</span><span class="tok-punct">(</span>range<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/range/#type-range"><span class="tok-type">Range</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <a class="xref" href="#record-random-generator"><span class="tok-type">Generator</span></a><span class="tok-punct">)</span></code></pre>
+<p>Draws an integer between both endpoints, with the advanced generator. The range must be ascending and contain at most 2^64 integers. A singleton range is valid and still consumes a draw.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>range</code></dt><dd>inclusive integer bounds</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> drawn integer and advanced state</p>
+<h5>Examples</h5>
+<p class="caption"><em>A reproducible die roll</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> <span class="tok-punct">(</span>roll<span class="tok-punct">,</span> advanced<span class="tok-punct">)</span> <span class="tok-op">=</span> <span class="tok-type">Random</span><span class="tok-op">.</span><span class="tok-method">seeded</span><span class="tok-punct">(</span><span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">integer</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">6</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="random-generator-float">
+<h3><a class="self" href="#random-generator-float"><code>float</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">float</span><span class="tok-punct">(</span>range<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/range/#type-range"><span class="tok-type">Range</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-float"><span class="tok-type">Float</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-float"><span class="tok-type">Float</span></a><span class="tok-punct">,</span> <a class="xref" href="#record-random-generator"><span class="tok-type">Generator</span></a><span class="tok-punct">)</span></code></pre>
+<p>Draws a float from the lower bound inclusive to the upper bound exclusive. Defaults to <code>0.0..1.0</code>. Bounds must be finite and strictly ascending.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>range</code></dt><dd>half-open floating-point bounds</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> drawn float and advanced state</p>
+<h5>Examples</h5>
+<p class="caption"><em>Initialize a model weight</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> <span class="tok-punct">(</span>weight<span class="tok-punct">,</span> advanced<span class="tok-punct">)</span> <span class="tok-op">=</span> <span class="tok-type">Random</span><span class="tok-op">.</span><span class="tok-method">seeded</span><span class="tok-punct">(</span><span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">float</span><span class="tok-punct">(</span><span class="tok-op">-</span><span class="tok-number">1.0</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">1.0</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="random-generator-boolean">
+<h3><a class="self" href="#random-generator-boolean"><code>boolean</code></a></h3>
+<pre class="code sig"><code>boolean <span class="tok-op">:</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">,</span> <a class="xref" href="#record-random-generator"><span class="tok-type">Generator</span></a><span class="tok-punct">)</span></code></pre>
+<p>Draws a fair Boolean and returns the advanced generator.</p>
+<p class="returns"><strong>Returns</strong> coin flip and advanced state</p>
+
+</div>
+<div class="fn" id="random-generator-chance?">
+<h3><a class="self" href="#random-generator-chance?"><code>chance?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">chance?</span><span class="tok-punct">(</span>probability<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-float"><span class="tok-type">Float</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">,</span> <a class="xref" href="#record-random-generator"><span class="tok-type">Generator</span></a><span class="tok-punct">)</span></code></pre>
+<p>Draws true with the supplied probability. Consumes one draw even at 0 or 1.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>probability</code></dt><dd>probability from 0.0 through 1.0</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> outcome and advanced state</p>
+
+</div>
+<div class="fn" id="random-generator-choice">
+<h3><a class="self" href="#random-generator-choice"><code>choice</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">choice</span><span class="tok-punct">(</span>items<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">X</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-type">X?</span><span class="tok-punct">,</span> <a class="xref" href="#record-random-generator"><span class="tok-type">Generator</span></a><span class="tok-punct">)</span></code></pre>
+<p>Chooses an input position uniformly. Empty input returns None without a draw.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>items</code></dt><dd>values to choose from</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> optional value and advanced state</p>
+
+</div>
+<div class="fn" id="random-generator-sample">
+<h3><a class="self" href="#random-generator-sample"><code>sample</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">sample</span><span class="tok-punct">(</span>items<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">X</span><span class="tok-punct">]</span><span class="tok-punct">,</span> count<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-type">X</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <a class="xref" href="#record-random-generator"><span class="tok-type">Generator</span></a><span class="tok-punct">)</span></code></pre>
+<p>Selects input positions without replacement, in random order. Duplicate input values may appear more than once in the result. A count larger than the input selects every position; zero consumes no draws.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>items</code></dt><dd>population; unchanged by sampling</dd></div>
+<div class="param"><dt><code>count</code></dt><dd>nonnegative number of positions to select</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> selected values and advanced state</p>
+<h5>Examples</h5>
+<p class="caption"><em>Deal five cards reproducibly</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> <span class="tok-punct">(</span>hand<span class="tok-punct">,</span> advanced<span class="tok-punct">)</span> <span class="tok-op">=</span> <span class="tok-type">Random</span><span class="tok-op">.</span><span class="tok-method">seeded</span><span class="tok-punct">(</span><span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">sample</span><span class="tok-punct">(</span>cards<span class="tok-punct">,</span> count<span class="tok-op">:</span> <span class="tok-number">5</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="random-generator-shuffle">
+<h3><a class="self" href="#random-generator-shuffle"><code>shuffle</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">shuffle</span><span class="tok-punct">(</span>items<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">X</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-type">X</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <a class="xref" href="#record-random-generator"><span class="tok-type">Generator</span></a><span class="tok-punct">)</span></code></pre>
+<p>Returns a random permutation, preserving duplicates and the input itself. Empty input consumes no draws.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>items</code></dt><dd>values to shuffle</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> permutation and advanced state</p>
+
+</div>
+</div>
+</section>

@@ -1,0 +1,99 @@
+<section class="entity" id="module-tey-semver">
+<h2><span class="kind kind-module">module</span> <code>Tey.Semver</code></h2>
+<div class="functions">
+<div class="fn" id="function-tey-semver-parseversion">
+<h3><a class="self" href="#function-tey-semver-parseversion"><code>parseVersion</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">parseVersion</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">SemanticVersion?</span></code></pre>
+
+</div>
+<div class="fn" id="function-tey-semver-release">
+<h3><a class="self" href="#function-tey-semver-release"><code>release</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">release</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The release a version belongs to: <code>0.4.0-rc.1</code> → <code>0.4.0</code>. Used where a pre-release should count as its eventual release.</p>
+
+</div>
+<div class="fn" id="function-tey-semver-stable?">
+<h3><a class="self" href="#function-tey-semver-stable?"><code>stable?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">stable?</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Whether a version is a full release rather than a pre-release. This is the question a download page asks: &quot;what is the current stable Kex?&quot;.</p>
+
+</div>
+<div class="fn" id="function-tey-semver-satisfies">
+<h3><a class="self" href="#function-tey-semver-satisfies"><code>satisfies</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">satisfies</span><span class="tok-punct">(</span>versionText<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> requirement<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-semver-intersect">
+<h3><a class="self" href="#function-tey-semver-intersect"><code>intersect</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">intersect</span><span class="tok-punct">(</span>a<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> b<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The requirement satisfied only by versions satisfying BOTH, for when two packages in one graph each ask for the same dependency.</p>
+<p>Concatenation, because <code>satisfies</code> already reads a requirement as a list of space-separated clauses that must ALL hold: <code>~&gt; 0.1</code> and <code>&gt;= 0.1.5</code> intersect to <code>~&gt; 0.1 &gt;= 0.1.5</code>, which is exactly the question &quot;satisfies both&quot;. No interval arithmetic, no second implementation of the operators to keep in step with the first.</p>
+<p>An empty intersection is not detected here, and deliberately: <code>~&gt; 0.1 ~&gt; 0.2</code> is perfectly well formed and simply matches nothing. Emptiness is a fact about the versions a repository actually publishes, so it is discovered where the tags are (<code>highest</code>), where the error can also say what WAS available.</p>
+
+</div>
+<div class="fn" id="function-tey-semver-intersectall">
+<h3><a class="self" href="#function-tey-semver-intersectall"><code>intersectAll</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">intersectAll</span><span class="tok-punct">(</span>requirements<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Every constraint at once. <code>[]</code> and <code>[&quot;&quot;]</code> both mean &quot;no opinion&quot;, which is what a package with no version requirement expresses.</p>
+
+</div>
+<div class="fn" id="function-tey-semver-versionof">
+<h3><a class="self" href="#function-tey-semver-versionof"><code>versionOf</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">versionOf</span><span class="tok-punct">(</span>ref<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The version inside a resolved ref: <code>refs/tags/v0.1.1</code> and <code>v0.1.1</code> both give <code>0.1.1</code>. A ref that carries no version (a branch name, a bare commit) gives &quot;&quot;, which satisfies nothing and so never claims to meet a range.</p>
+
+</div>
+<div class="fn" id="function-tey-semver-channelrank">
+<h3><a class="self" href="#function-tey-semver-channelrank"><code>channelRank</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">channelRank</span><span class="tok-punct">(</span>channel<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Channel precedence, lowest first: prealpha &lt; alpha &lt; beta &lt; rc &lt; release. Plain semver would order these alphabetically — putting <code>beta</code> BEFORE <code>prealpha</code> — which is not what the words mean, so the ranking is explicit.</p>
+
+</div>
+<div class="fn" id="function-tey-semver-range?">
+<h3><a class="self" href="#function-tey-semver-range?"><code>range?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">range?</span><span class="tok-punct">(</span>requested<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Whether a requested tag is a RANGE rather than one exact tag. <code>v1.2.0</code> is a name to look up; <code>~&gt; 1.2</code> is a question to answer against everything the repository has.</p>
+
+</div>
+<div class="fn" id="function-tey-semver-newer?">
+<h3><a class="self" href="#function-tey-semver-newer?"><code>newer?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">newer?</span><span class="tok-punct">(</span>a<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> b<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Descending semantic order, for picking the newest of anything. A tag that is not a version sorts after every tag that is, so a stray <code>nightly</code> can never displace a release.</p>
+
+</div>
+<div class="fn" id="function-tey-semver-newestfirst">
+<h3><a class="self" href="#function-tey-semver-newestfirst"><code>newestFirst</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">newestFirst</span><span class="tok-punct">(</span>versions<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+
+</div>
+<div class="fn" id="function-tey-semver-highest">
+<h3><a class="self" href="#function-tey-semver-highest"><code>highest</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">highest</span><span class="tok-punct">(</span>tags<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> requirement<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></code></pre>
+<p>The highest tag that satisfies the requirement — the whole point of writing a range instead of a version. None when nothing does.</p>
+
+</div>
+</div>
+</section>
+<section class="entity" id="record-tey-semver-semanticversion">
+<h2><span class="kind kind-record">record</span> <code>SemanticVersion</code></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>major</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>minor</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>patch</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>preRelease</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+<p class="implements">Implements <code>Comparable</code>.</p>
+<section class="members" id="make-semanticversion">
+<h3>Methods</h3>
+<p>SemanticVersion is Comparable, so <code>a.compare(b)</code> answers Less/Equal/Greater like every other ordered type in the stdlib, and ordering reads as an ordering rather than as sign arithmetic on -1/0/1.</p>
+
+<div class="functions">
+<div class="fn" id="semanticversion-compare">
+<h4><a class="self" href="#semanticversion-compare"><code>compare</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">compare</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-tey-semver-semanticversion"><span class="tok-type">SemanticVersion</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/comparable/#type-ordering"><span class="tok-type">Ordering</span></a></code></pre>
+
+</div>
+</div>
+</section>
+</section>

@@ -1,0 +1,182 @@
+<section class="entity" id="type-feed">
+<h2><span class="kind kind-type">type</span> <code>Feed&lt;A&gt;</code></h2>
+<p>A one-shot sequence over a source that can only be read once.</p>
+<p>A feed is what <a class="xref" href="/prelude/0.4.0-beta.4-dev/stream/#type-stream"><code>Stream</code></a> is not: reading it CONSUMES it. Where a stream remembers its elements so it can be walked again, a feed keeps nothing, and that is the point: it is how to walk a file, a socket or a device larger than memory, which a stream cannot do while anything still holds its start.</p>
+<pre class="code"><code><span class="tok-keyword">foul</span> lines <span class="tok-op">=</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">huge.log</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-punct">)</span>
+lines<span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>line<span class="tok-punct">)</span> <span class="tok-keyword">if</span> line<span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">ERROR</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+<p><code>map</code>, <code>filter</code> and <code>drop</code> answer a feed over the SAME cursor rather than a second cursor over the same source, so a pipeline is one pass:</p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.log</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> line<span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">ERROR</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+  <span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-punct">)</span></code></pre>
+<p>Taking twice answers two different windows: the first ten, then the ten after them. That is the whole difference from <a class="xref" href="/prelude/0.4.0-beta.4-dev/stream/#type-stream"><code>Stream</code></a>, where taking twice answers the same ten. When you want the stream behaviour on a small source, <code>toStream</code> asks for it explicitly, at the cost of holding what it reads.</p>
+<section class="members" id="make-feed">
+<h3>Methods</h3>
+<p>Every method below is <code>let</code>, not <code>foul</code>, though reading a feed plainly is an effect. Two reasons, one principled and one practical.</p>
+<p>The effect is already tracked where it enters: a feed over anything outside the program comes from <code>FS.File.feed</code> or <code>handle.feed</code>, both foul, so a pure function cannot obtain one. What <code>Feed.Elements</code> and <a class="xref" href="/prelude/0.4.0-beta.4-dev/stream/#stream-tofeed"><code>Stream.toFeed</code></a> build from data in hand mutates only a cursor the caller just made.</p>
+<p>And a foul method takes the hidden capability context, which puts it one BEAM arity above the pure <code>take</code>/<code>map</code>/<code>filter</code> every other receiver has. A feed usually arrives with no static type: <code>FS.File.feed(p).or(Feed.empty)</code>, or a <code>Just(f) =&gt;</code> binding, and such a call has to go through the runtime dispatcher, which is built per arity and so could never reach a method one arity up. Marking these foul made every dynamically-typed feed call fail with &quot;Undefined method: take for Tuple&quot;.</p>
+
+<div class="functions">
+<div class="fn" id="feed-pull">
+<h4><a class="self" href="#feed-pull"><code>pull</code></a></h4>
+<pre class="code sig"><code>pull <span class="tok-op">:</span> <span class="tok-type">A?</span></code></pre>
+<p>Answers the next element and consumes it, or <code>None</code> once the source is spent.</p>
+<p>NOT named <code>next</code>: that is the loop-continue keyword, and the lexer reads it as one even after a dot, so a call to it silently swallows the rest of the enclosing block.</p>
+<p class="returns"><strong>Returns</strong> the next element, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> feed <span class="tok-op">=</span> <span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-type">Elements</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+feed<span class="tok-op">.</span><span class="tok-method">pull</span>   <span class="tok-comment"># =&gt; Just(1)</span>
+feed<span class="tok-op">.</span><span class="tok-method">pull</span>   <span class="tok-comment"># =&gt; Just(2)</span>
+feed<span class="tok-op">.</span><span class="tok-method">pull</span>   <span class="tok-comment"># =&gt; None</span></code></pre>
+
+</div>
+<div class="fn" id="feed-spent?">
+<h4><a class="self" href="#feed-spent?"><code>spent?</code></a></h4>
+<pre class="code sig"><code>spent? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Whether the source has run out.</p>
+<p><code>false</code> does not promise another element: only that the feed has not been told otherwise yet. The source is asked, and may end, on the next read.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> once the feed is spent</p>
+<h5>Examples</h5>
+<p class="caption"><em>Draining a feed a piece at a time</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> jobs <span class="tok-op">=</span> <span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-type">Elements</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">resize</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">index</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+jobs<span class="tok-op">.</span><span class="tok-method">spent?</span>   <span class="tok-comment"># =&gt; false</span>
+jobs<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span>
+jobs<span class="tok-op">.</span><span class="tok-method">spent?</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+<div class="fn" id="feed-take">
+<h4><a class="self" href="#feed-take"><code>take</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">take</span><span class="tok-punct">(</span>n<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p>Returns the next <code>n</code> elements as a list, consuming them.</p>
+<p>Answers fewer than <code>n</code> when the source ends first, and <code>[]</code> once it is spent. Unlike <a class="xref" href="/prelude/0.4.0-beta.4-dev/stream/#stream-take"><code>Stream.take</code></a>, calling it twice walks forward.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>n</code></dt><dd>how many elements to consume</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> up to <code>n</code> elements</p>
+<h5>Examples</h5>
+<p class="caption"><em>Two windows, not the same one twice</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> feed <span class="tok-op">=</span> <span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-type">Elements</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+feed<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [1, 2]</span>
+feed<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [3, 4]</span></code></pre>
+
+</div>
+<div class="fn" id="feed-drop">
+<h4><a class="self" href="#feed-drop"><code>drop</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">drop</span><span class="tok-punct">(</span>n<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-feed"><span class="tok-type">Feed</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Discards the next <code>n</code> elements and answers the feed.</p>
+<p>There is only ever one cursor, so this hands back the same feed rather than a second one positioned differently.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>n</code></dt><dd>how many elements to discard</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the same feed, advanced</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">log.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">drop</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="feed-map">
+<h4><a class="self" href="#feed-map"><code>map</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">map</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <span class="tok-type">B</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-feed"><span class="tok-type">Feed</span></a><span class="tok-op">&lt;</span><span class="tok-type">B</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a feed with <code>f</code> applied to each element.</p>
+<p><code>f</code> runs as elements are read, and only for those that are. The result draws from the same cursor, so reading it consumes the receiver too.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>f</code></dt><dd>applied to each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the mapped feed</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">log.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span><span class="tok-punct">(</span><span class="tok-op">~</span>trim<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="feed-filter">
+<h4><a class="self" href="#feed-filter"><code>filter</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">filter</span><span class="tok-punct">(</span>pred<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-feed"><span class="tok-type">Feed</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a feed of only the elements <code>pred</code> accepts.</p>
+<p>Reading one element of the result may consume many of the receiver's.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>pred</code></dt><dd>the test applied to each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the filtered feed</p>
+<h5>Examples</h5>
+<p class="caption"><em>The first ten errors in a long log</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.log</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> line<span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">ERROR</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+  <span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="feed-each">
+<h4><a class="self" href="#feed-each"><code>each</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">each</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Applies <code>f</code> to every remaining element, draining the feed.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>f</code></dt><dd>applied to each element</dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">log.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>line<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="feed-collect">
+<h4><a class="self" href="#feed-collect"><code>collect</code></a></h4>
+<pre class="code sig"><code>collect <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p>Drains the feed into a list.</p>
+<p>This is the operation that gives up constant space, which is why it is named rather than implicit: on a source too large to hold, use <code>each</code>.</p>
+<p class="returns"><strong>Returns</strong> every remaining element</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">short.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">collect</span></code></pre>
+<p class="caption"><em>Loading a small configuration file for repeated passes</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> rules <span class="tok-op">=</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">rules.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">map</span><span class="tok-punct">(</span><span class="tok-op">~</span>trim<span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">filter</span><span class="tok-punct">(</span><span class="tok-op">~</span>present?<span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">collect</span></code></pre>
+
+</div>
+<div class="fn" id="feed-tostream">
+<h4><a class="self" href="#feed-tostream"><code>toStream</code></a></h4>
+<pre class="code sig"><code>toStream <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/stream/#type-stream"><span class="tok-type">Stream</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a <a class="xref" href="/prelude/0.4.0-beta.4-dev/stream/#type-stream"><code>Stream</code></a> drawn from the feed.</p>
+<p>The stream remembers what it reads, so it can be walked again: at the cost of holding every element forced through it. Worth it for a source small enough to replay; the opposite of what a feed is for otherwise.</p>
+<p class="returns"><strong>Returns</strong> a replayable view of the remaining elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> lines <span class="tok-op">=</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">small.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">toStream</span>
+lines<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [&quot;one&quot;, &quot;two&quot;]</span>
+lines<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [&quot;one&quot;, &quot;two&quot;] : a stream, so the same two</span></code></pre>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="module-feed">
+<h2><span class="kind kind-module">module</span> <code>Feed</code></h2>
+<p>Constructors for <a class="xref" href="#type-feed"><code>Feed</code></a>.</p>
+<div class="functions">
+<div class="fn" id="constant-feed-empty">
+<h3><a class="self" href="#constant-feed-empty"><code>empty</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code>empty <span class="tok-op">:</span> <a class="xref" href="#type-feed"><span class="tok-type">Feed</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>A feed with nothing in it, already spent.</p>
+<p>Mostly the <code>or</code> half of a failed open: <code>FS.File.feed(path).or(Feed.empty)</code> reads nothing rather than stopping the program.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; []</span></code></pre>
+
+</div>
+<div class="fn" id="function-feed-elements">
+<h3><a class="self" href="#function-feed-elements"><code>Elements</code></a></h3>
+<pre class="code sig"><code><span class="tok-type">Elements</span><span class="tok-punct">(</span>xs<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-feed"><span class="tok-type">Feed</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>A feed over a list that is already in hand.</p>
+<p>The elements are there, so nothing is saved by feeding them: this is for standing in for a real source, in a test, with something that consumes the way the real one does.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>xs</code></dt><dd>the elements to feed</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> a feed over <code>xs</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> feed <span class="tok-op">=</span> <span class="tok-type">Feed</span><span class="tok-op">.</span><span class="tok-type">Elements</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">one</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">two</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+feed<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [&quot;one&quot;]</span>
+feed<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [&quot;two&quot;] : the first one is gone</span></code></pre>
+
+</div>
+</div>
+</section>
+
