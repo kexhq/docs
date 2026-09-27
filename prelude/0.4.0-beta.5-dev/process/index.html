@@ -965,8 +965,8 @@ a<span class="tok-op">.</span><span class="tok-method">await</span> <span class=
   remaining <span class="tok-op">:</span> <span class="tok-type">Integer</span>
 <span class="tok-keyword">end</span>
 
-serving <span class="tok-type">RateLimiter</span> <span class="tok-keyword">do</span>
-  slot allowed? <span class="tok-op">-&gt;</span> <span class="tok-type">Reply</span><span class="tok-op">&lt;</span><span class="tok-type">Bool</span><span class="tok-op">&gt;</span> <span class="tok-keyword">do</span>
+<span class="tok-keyword">serving</span> <span class="tok-type">RateLimiter</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">slot</span> allowed? <span class="tok-op">-&gt;</span> <span class="tok-type">Reply</span><span class="tok-op">&lt;</span><span class="tok-type">Bool</span><span class="tok-op">&gt;</span> <span class="tok-keyword">do</span>
     <span class="tok-keyword">let</span> allowed <span class="tok-op">=</span> <span class="tok-op">@</span><span class="tok-field">remaining</span> <span class="tok-op">&gt;</span> <span class="tok-number">0</span>
     new<span class="tok-op">.</span><span class="tok-method">remaining</span> <span class="tok-op">=</span> allowed <span class="tok-keyword">then</span> <span class="tok-op">@</span><span class="tok-field">remaining</span> <span class="tok-op">-</span> <span class="tok-number">1</span> <span class="tok-keyword">else</span> <span class="tok-op">@</span><span class="tok-field">remaining</span>
     <span class="tok-keyword">return</span> <span class="tok-punct">{</span> new<span class="tok-punct">,</span> reply<span class="tok-op">:</span> allowed <span class="tok-punct">}</span>
@@ -1070,7 +1070,7 @@ ref<span class="tok-op">.</span><span class="tok-method">demonitor</span></code>
 <h5>Examples</h5>
 <pre class="code"><code><span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-number">1</span> <span class="tok-op">+</span> <span class="tok-number">1</span> <span class="tok-keyword">end</span><span class="tok-op">.</span><span class="tok-method">await</span>   <span class="tok-comment"># =&gt; 2</span></code></pre>
 
-<pre class="code sig"><code><span class="tok-fn">await</span><span class="tok-punct">(</span>timeout<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">X</span></code></pre>
+<pre class="code sig"><code><span class="tok-fn">await</span><span class="tok-punct">(</span><span class="tok-keyword">timeout</span><span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">X</span></code></pre>
 <p>Waits for the task's result, giving up after <code>timeout</code> milliseconds.</p>
 <p>Answers <code>None</code> if the task has not finished in time. The task itself is not stopped.</p>
 <h5>Parameters</h5>
@@ -1175,13 +1175,13 @@ ref<span class="tok-op">.</span><span class="tok-method">demonitor</span></code>
 <h2><span class="kind kind-record">record</span> <code>Reply&lt;A&gt;</code></h2>
 <p>What a synchronous <code>slot</code> returns: an answer for the caller, and optionally a new state and a reason to stop.</p>
 <p><code>reply</code> answers the caller immediately. A slot may omit it only when it sends a deferred response with <code>from.reply(...)</code>. <code>new</code> installs the next serving state; omitting it preserves the current state. <code>stop</code> terminates the server after applying the transition. Within a <code>serving X</code> block, the checker narrows <code>new</code> from <code>Any?</code> to <code>X?</code>.</p>
-<pre class="code"><code>slot allowed? <span class="tok-op">-&gt;</span> <span class="tok-type">Reply</span><span class="tok-op">&lt;</span><span class="tok-type">Bool</span><span class="tok-op">&gt;</span> <span class="tok-keyword">do</span>
+<pre class="code"><code><span class="tok-keyword">slot</span> allowed? <span class="tok-op">-&gt;</span> <span class="tok-type">Reply</span><span class="tok-op">&lt;</span><span class="tok-type">Bool</span><span class="tok-op">&gt;</span> <span class="tok-keyword">do</span>
   <span class="tok-keyword">let</span> allowed <span class="tok-op">=</span> <span class="tok-op">@</span><span class="tok-field">remaining</span> <span class="tok-op">&gt;</span> <span class="tok-number">0</span>
   new<span class="tok-op">.</span><span class="tok-method">remaining</span> <span class="tok-op">=</span> allowed <span class="tok-keyword">then</span> <span class="tok-op">@</span><span class="tok-field">remaining</span> <span class="tok-op">-</span> <span class="tok-number">1</span> <span class="tok-keyword">else</span> <span class="tok-op">@</span><span class="tok-field">remaining</span>
   <span class="tok-keyword">return</span> <span class="tok-punct">{</span> new<span class="tok-punct">,</span> reply<span class="tok-op">:</span> allowed <span class="tok-punct">}</span>
 <span class="tok-keyword">end</span>
 
-slot stop <span class="tok-op">-&gt;</span> <span class="tok-type">Reply</span><span class="tok-op">&lt;</span><span class="tok-type">Integer</span><span class="tok-op">&gt;</span> <span class="tok-op">=</span> <span class="tok-punct">{</span> stop<span class="tok-op">:</span> <span class="tok-op">:</span>normal<span class="tok-punct">,</span> reply<span class="tok-op">:</span> <span class="tok-op">@</span><span class="tok-field">remaining</span> <span class="tok-punct">}</span></code></pre>
+<span class="tok-keyword">slot</span> stop <span class="tok-op">-&gt;</span> <span class="tok-type">Reply</span><span class="tok-op">&lt;</span><span class="tok-type">Integer</span><span class="tok-op">&gt;</span> <span class="tok-op">=</span> <span class="tok-punct">{</span> stop<span class="tok-op">:</span> <span class="tok-op">:</span>normal<span class="tok-punct">,</span> reply<span class="tok-op">:</span> <span class="tok-op">@</span><span class="tok-field">remaining</span> <span class="tok-punct">}</span></code></pre>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>reply</code></dt><dd><code>A</code></dd></div>
@@ -1249,7 +1249,7 @@ slot stop <span class="tok-op">-&gt;</span> <span class="tok-type">Reply</span><
 <div class="functions">
 <div class="fn" id="server-within">
 <h4><a class="self" href="#server-within"><code>within</code></a></h4>
-<pre class="code sig"><code><span class="tok-fn">within</span><span class="tok-punct">(</span>timeout<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-server"><span class="tok-type">Server</span></a><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-op">&gt;</span></code></pre>
+<pre class="code sig"><code><span class="tok-fn">within</span><span class="tok-punct">(</span><span class="tok-keyword">timeout</span><span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-server"><span class="tok-type">Server</span></a><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-op">&gt;</span></code></pre>
 <p>Returns the same server with a different default call timeout, in milliseconds.</p>
 <p>The server is untouched: this is a new view of it, so one slow call can be given more room without changing anything for other callers.</p>
 <h5>Parameters</h5>
