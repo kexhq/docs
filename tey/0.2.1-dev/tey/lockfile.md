@@ -65,19 +65,19 @@ decode(text: String) -> Result<LockState, String>
 
 **Fields**
 
-  - `name` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `version` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
-  - `source` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
-  - `git` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
-  - `resolved` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
-  - `commit` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
-  - `subdir` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
-  - `path` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
-  - `sha256` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
-  - `groups` : [[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)] (optional)
-  - `dependencies` : [[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)] (optional)
-  - `pluginFingerprints` : {[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string): [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)} (optional)
-  - `workspace?` : [Bool](../../../prelude/0.4.0-beta.4-dev/truthyable.md#make-bool) (optional)
+  - `name` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `version` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
+  - `source` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
+  - `git` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
+  - `resolved` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
+  - `commit` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
+  - `subdir` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
+  - `path` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
+  - `sha256` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
+  - `groups` : [[String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)] (optional)
+  - `dependencies` : [[String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)] (optional)
+  - `pluginFingerprints` : {[String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string): [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)} (optional)
+  - `workspace?` : [Bool](../../../prelude/0.4.0-beta.5-dev/truthyable.md#make-bool) (optional)
 
 
 
@@ -85,13 +85,13 @@ decode(text: String) -> Result<LockState, String>
 
 **Fields**
 
-  - `kexRequirement` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `kexVersion` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `otpRequirement` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
-  - `otpRelease` : [Integer](../../../prelude/0.4.0-beta.4-dev/number.md#make-integer) (optional)
-  - `workspaceMembers` : {[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string): [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)} (optional)
-  - `manifestFingerprint` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `kexRequirement` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `kexVersion` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `otpRequirement` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
+  - `otpRelease` : [Integer](../../../prelude/0.4.0-beta.5-dev/number.md#make-integer) (optional)
+  - `workspaceMembers` : {[String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string): [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)} (optional)
+  - `manifestFingerprint` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
   - `lockedDependencies` : [Dependency]
-  - `pluginApprovals` : {[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string): [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)} (optional)
+  - `pluginApprovals` : {[String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string): [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)} (optional)
 
 

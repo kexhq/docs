@@ -502,14 +502,14 @@ Accumulator entries: finished entities or functions still collecting.
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `annotations` : [[Kex.AST.AnnotationInfo](../../../../prelude/0.4.0-beta.4-dev/kex/ast.md#record-kex-ast-annotationinfo)]
+  - `name` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `annotations` : [[Kex.AST.AnnotationInfo](../../../../prelude/0.4.0-beta.5-dev/kex/ast.md#record-kex-ast-annotationinfo)]
   - `paramLists` : [[[ParamSig](#record-tey-docgen-extract-paramsig)]]
-  - `clauseCount` : [Integer](../../../../prelude/0.4.0-beta.4-dev/number.md#make-integer)
+  - `clauseCount` : [Integer](../../../../prelude/0.4.0-beta.5-dev/number.md#make-integer)
   - `doc` : [Doc](../../tey/docgen/model.md#record-tey-docgen-model-doc)
-  - `line` : [Integer](../../../../prelude/0.4.0-beta.4-dev/number.md#make-integer)
-  - `returnType` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `line` : [Integer](../../../../prelude/0.4.0-beta.5-dev/number.md#make-integer)
+  - `returnType` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
 
 
 
@@ -519,9 +519,9 @@ One parameter as a clause declares it. `named` is false for a pattern parameter 
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `typeName` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `named` : [Bool](../../../../prelude/0.4.0-beta.4-dev/truthyable.md#make-bool)
-  - `hasDefault` : [Bool](../../../../prelude/0.4.0-beta.4-dev/truthyable.md#make-bool)
+  - `name` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `typeName` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `named` : [Bool](../../../../prelude/0.4.0-beta.5-dev/truthyable.md#make-bool)
+  - `hasDefault` : [Bool](../../../../prelude/0.4.0-beta.5-dev/truthyable.md#make-bool)
 
 

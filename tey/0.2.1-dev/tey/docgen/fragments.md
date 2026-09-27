@@ -147,9 +147,9 @@ normalize(base: [String], rel: [String]) -> [String]
 
 **Fields**
 
-  - `title` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `anchor` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `kind` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `nested` : [Bool](../../../../prelude/0.4.0-beta.4-dev/truthyable.md#make-bool)
+  - `title` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `anchor` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `kind` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `nested` : [Bool](../../../../prelude/0.4.0-beta.5-dev/truthyable.md#make-bool)
 
 

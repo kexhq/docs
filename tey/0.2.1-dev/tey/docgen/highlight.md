@@ -199,7 +199,7 @@ startsWithChars(cs: [Char], s: String) -> Bool
 
 **Fields**
 
-  - `cls` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `text` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `cls` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `text` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
 
 

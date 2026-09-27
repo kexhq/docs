@@ -184,7 +184,7 @@ findClosingBracket(s: String, index: Integer, depth: Integer) -> Integer?
 
 **Fields**
 
-  - `content` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `rest` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `content` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `rest` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
 
 

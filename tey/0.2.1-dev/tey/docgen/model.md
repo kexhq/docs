@@ -135,9 +135,9 @@ baseTypeOf(target: String) -> String
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `typeName` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `description` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `name` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `typeName` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `description` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
 
 
 
@@ -145,8 +145,8 @@ baseTypeOf(target: String) -> String
 
 **Fields**
 
-  - `typeName` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `description` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `typeName` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `description` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
 
 
 
@@ -154,8 +154,8 @@ baseTypeOf(target: String) -> String
 
 **Fields**
 
-  - `caption` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `code` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `caption` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `code` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
 
 
 
@@ -163,11 +163,11 @@ baseTypeOf(target: String) -> String
 
 **Fields**
 
-  - `summary` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `summary` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
   - `params` : [[Param](#record-tey-docgen-model-param)]
   - `returns` : [Return](#record-tey-docgen-model-return)?
   - `examples` : [[Example](#record-tey-docgen-model-example)]
-  - `deprecated` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)?
+  - `deprecated` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)?
 
 
 
@@ -175,8 +175,8 @@ baseTypeOf(target: String) -> String
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `fields` : [[String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)]
+  - `name` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `fields` : [[String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)]
 
 
 
@@ -184,9 +184,9 @@ baseTypeOf(target: String) -> String
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `typeName` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `hasDefault` : [Bool](../../../../prelude/0.4.0-beta.4-dev/truthyable.md#make-bool)
+  - `name` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `typeName` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `hasDefault` : [Bool](../../../../prelude/0.4.0-beta.5-dev/truthyable.md#make-bool)
 
 
 
@@ -194,13 +194,13 @@ baseTypeOf(target: String) -> String
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `typeParams` : [[String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)]
-  - `parents` : [[String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)]
+  - `name` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `typeParams` : [[String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)]
+  - `parents` : [[String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)]
   - `variants` : [[VariantEntry](#record-tey-docgen-model-variantentry)]?
   - `doc` : [Doc](#record-tey-docgen-model-doc)
-  - `line` : [Integer](../../../../prelude/0.4.0-beta.4-dev/number.md#make-integer)
+  - `line` : [Integer](../../../../prelude/0.4.0-beta.5-dev/number.md#make-integer)
 
 
 
@@ -208,12 +208,12 @@ baseTypeOf(target: String) -> String
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `typeParams` : [[String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)]
+  - `name` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `typeParams` : [[String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)]
   - `fields` : [[FieldEntry](#record-tey-docgen-model-fieldentry)]
   - `doc` : [Doc](#record-tey-docgen-model-doc)
-  - `line` : [Integer](../../../../prelude/0.4.0-beta.4-dev/number.md#make-integer)
+  - `line` : [Integer](../../../../prelude/0.4.0-beta.5-dev/number.md#make-integer)
 
 
 
@@ -221,12 +221,12 @@ baseTypeOf(target: String) -> String
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `typeParams` : [[String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)]
+  - `name` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `typeParams` : [[String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)]
   - `functions` : [[FunctionEntry](#record-tey-docgen-model-functionentry)]
   - `doc` : [Doc](#record-tey-docgen-model-doc)
-  - `line` : [Integer](../../../../prelude/0.4.0-beta.4-dev/number.md#make-integer)
+  - `line` : [Integer](../../../../prelude/0.4.0-beta.5-dev/number.md#make-integer)
 
 
 
@@ -234,12 +234,12 @@ baseTypeOf(target: String) -> String
 
 **Fields**
 
-  - `target` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `isFinal` : [Bool](../../../../prelude/0.4.0-beta.4-dev/truthyable.md#make-bool)
-  - `implements` : [[String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)]
+  - `target` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `isFinal` : [Bool](../../../../prelude/0.4.0-beta.5-dev/truthyable.md#make-bool)
+  - `implements` : [[String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)]
   - `functions` : [[FunctionEntry](#record-tey-docgen-model-functionentry)]
   - `doc` : [Doc](#record-tey-docgen-model-doc)
-  - `line` : [Integer](../../../../prelude/0.4.0-beta.4-dev/number.md#make-integer)
+  - `line` : [Integer](../../../../prelude/0.4.0-beta.5-dev/number.md#make-integer)
 
 
 
@@ -247,11 +247,11 @@ baseTypeOf(target: String) -> String
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `name` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
   - `children` : [[Entity](#type-tey-docgen-model-entity)]
   - `doc` : [Doc](#record-tey-docgen-model-doc)
-  - `line` : [Integer](../../../../prelude/0.4.0-beta.4-dev/number.md#make-integer)
+  - `line` : [Integer](../../../../prelude/0.4.0-beta.5-dev/number.md#make-integer)
 
 
 
@@ -259,14 +259,14 @@ baseTypeOf(target: String) -> String
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `signatures` : [[String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)]
-  - `clauseCount` : [Integer](../../../../prelude/0.4.0-beta.4-dev/number.md#make-integer)
+  - `name` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `signatures` : [[String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)]
+  - `clauseCount` : [Integer](../../../../prelude/0.4.0-beta.5-dev/number.md#make-integer)
   - `doc` : [Doc](#record-tey-docgen-model-doc)
-  - `line` : [Integer](../../../../prelude/0.4.0-beta.4-dev/number.md#make-integer)
-  - `types` : [[String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)] (optional)
-  - `returnType` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `line` : [Integer](../../../../prelude/0.4.0-beta.5-dev/number.md#make-integer)
+  - `types` : [[String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)] (optional)
+  - `returnType` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
 
 
 
@@ -274,11 +274,11 @@ baseTypeOf(target: String) -> String
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `typeName` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `name` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `typeName` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
   - `doc` : [Doc](#record-tey-docgen-model-doc)
-  - `line` : [Integer](../../../../prelude/0.4.0-beta.4-dev/number.md#make-integer)
+  - `line` : [Integer](../../../../prelude/0.4.0-beta.5-dev/number.md#make-integer)
 
 
 
@@ -300,11 +300,11 @@ baseTypeOf(target: String) -> String
 
 **Fields**
 
-  - `source` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `urlPath` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `title` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `source` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `urlPath` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `title` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
   - `entities` : [[Entity](#type-tey-docgen-model-entity)]
-  - `intro` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `intro` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
 
 
 
@@ -314,12 +314,12 @@ One `make` block seen from the type it extends: where it is, what it adds, and w
 
 **Fields**
 
-  - `target` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `urlPath` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `pageTitle` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `anchor` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `implements` : [[String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)]
-  - `names` : [[String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)]
+  - `target` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `urlPath` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `pageTitle` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `anchor` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `implements` : [[String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)]
+  - `names` : [[String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)]
 
 
 
@@ -329,11 +329,11 @@ Everything the package says about one type, across files. `homePath` is the page
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `homePath` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `homeAnchor` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `name` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `homePath` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `homeAnchor` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
   - `extensions` : [[Extension](#record-tey-docgen-model-extension)]
-  - `traits` : [[String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)]
+  - `traits` : [[String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)]
 
 
 
@@ -343,10 +343,10 @@ A trait seen from the outside: where it is documented and which make blocks impl
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `urlPath` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `anchor` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `name` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `urlPath` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `anchor` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
   - `implementors` : [[Extension](#record-tey-docgen-model-extension)]
 
 
@@ -357,9 +357,9 @@ The navigation unit: one per module in the package, pointing at the page its ent
 
 **Fields**
 
-  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `summary` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `urlPath` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `summary` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `urlPath` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
   - `members` : [[MemberEntry](#record-tey-docgen-model-memberentry)]
 
 
@@ -370,8 +370,8 @@ One documented member of a module, with the anchor its section renders at — th
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `anchor` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `name` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `anchor` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
 
 
 
@@ -381,10 +381,10 @@ One row of the cross-link index: a name a type reference elsewhere in the packag
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `urlPath` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `anchor` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `kind` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `name` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `urlPath` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `anchor` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `kind` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
 
 
 
@@ -392,17 +392,17 @@ One row of the cross-link index: a name a type reference elsewhere in the packag
 
 **Fields**
 
-  - `package` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `version` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `label` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `baseUrl` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `generatedAt` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `package` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `version` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `label` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `baseUrl` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `generatedAt` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
   - `pages` : [[SourcePage](#record-tey-docgen-model-sourcepage)]
   - `modules` : [[ModuleIndexEntry](#record-tey-docgen-model-moduleindexentry)] (optional)
   - `links` : [[LinkEntry](#record-tey-docgen-model-linkentry)] (optional)
-  - `preludeModules` : [[String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)] (optional)
-  - `preludeSource` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
-  - `preludeDoc` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `preludeModules` : [[String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)] (optional)
+  - `preludeSource` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
+  - `preludeDoc` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
   - `types` : [[TypeFacts](#record-tey-docgen-model-typefacts)] (optional)
   - `traits` : [[TraitFacts](#record-tey-docgen-model-traitfacts)] (optional)
 
@@ -414,15 +414,15 @@ A flattened search row: one per entity (and per function inside traits, makes an
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `kind` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `signatures` : [[String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)]
-  - `types` : [[String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)] (optional)
-  - `summary` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `urlPath` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `anchor` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
-  - `line` : [Integer](../../../../prelude/0.4.0-beta.4-dev/number.md#make-integer)
+  - `name` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `qualifiedName` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `kind` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `signatures` : [[String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)]
+  - `types` : [[String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)] (optional)
+  - `summary` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `urlPath` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `anchor` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
+  - `line` : [Integer](../../../../prelude/0.4.0-beta.5-dev/number.md#make-integer)
 
 
 
@@ -432,9 +432,9 @@ One row of versions.json. The file accumulates across builds — the output dire
 
 **Fields**
 
-  - `id` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `label` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `generatedAt` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `package` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `id` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `label` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `generatedAt` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `package` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
 
 

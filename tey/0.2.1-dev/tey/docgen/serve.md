@@ -51,7 +51,7 @@ contentTypeFor(path: String) -> String
 
 **Fields**
 
-  - `route` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `path` : [String](../../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
+  - `route` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `path` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
 
 

@@ -29,17 +29,17 @@ typedOptions(operation: Tey.Manifest.PluginOperation, supplied: {String: String}
 
 **Fields**
 
-  - `invocationKind` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `invocationNamespace` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `invocationOperation` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `workspaceRoot` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)
-  - `currentMember` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)? (optional)
-  - `members` : {[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string): [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)} (optional)
+  - `invocationKind` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `invocationNamespace` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `invocationOperation` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `workspaceRoot` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `currentMember` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)? (optional)
+  - `members` : {[String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string): [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)} (optional)
   - `graph` : [[Tey.Lockfile.Dependency](../tey/lockfile.md#record-tey-lockfile-dependency)] (optional)
   - `lock` : [Tey.Lockfile.LockState](../tey/lockfile.md#record-tey-lockfile-lockstate)
   - `toolchain` : [Tey.Toolchain.ToolchainInfo](../tey/toolchain.md#record-tey-toolchain-toolchaininfo)
-  - `arguments` : [[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)] (optional)
-  - `options` : {[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string): Any} (optional)
-  - `environment` : {[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string): [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)} (optional)
+  - `arguments` : [[String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)] (optional)
+  - `options` : {[String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string): Any} (optional)
+  - `environment` : {[String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string): [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)} (optional)
 
 
