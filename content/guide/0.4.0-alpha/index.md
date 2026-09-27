@@ -7,4 +7,4 @@ draft: false
 template: "landing"
 version: "0.4.0-alpha"
 ---
-Read cover to cover, or jump in anywhere.
+<marqraft-code language="kex" filename="hello.kex" caption="Assigning a variable">let x = &quot;hello&quot;</marqraft-code>

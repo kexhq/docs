@@ -61,3 +61,29 @@ marq copy-collection /guide/0.4.0/ /guide/0.5.0/ . --title Guide --unlist
 the copy gets fresh page ids and its internal links point at the new
 version. Update the `version` setting (the header badge) under
 Theme → Site, and the Guide link on the landing page.
+
+## Verify the guide examples
+
+The current guide is `/guide/0.4.0-beta.4/`. Its executable Kex fences are
+checked directly from Markdown, so the tested code cannot drift from the
+published examples:
+
+```sh
+python3 scripts/check-guide-examples.py --kex /path/to/kex
+# During an edit:
+python3 scripts/check-guide-examples.py --page records
+```
+
+Use the beta.4 toolchain. The default runs semantic analysis and execution on
+both backends; pages marked `guide-backend: beam` run only on BEAM. The HTTP
+example opens a temporary loopback listener. The walkthrough also checks real
+input, invalid input, missing input, and usage output. The file-handle helper
+is exercised against populated, empty, and missing files. All generated programs
+and build artifacts live in a temporary directory.
+
+Kex blocks on one page form one program in reading order. Use
+`<!-- guide-example: name.kex -->` before each block in a multi-file example.
+Shell instructions and package-file excerpts use other fence languages and
+are not executed. Keep expected results as assertions. If the compiler needs
+an Erlang version other than the one on PATH, set `KEX_ERL` and `KEX_ERLC` to
+the matching runtime and compiler executables.
