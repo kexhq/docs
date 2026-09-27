@@ -26749,12 +26749,8 @@ The empty starting point for an immutable route declaration chain.
 
 ### `build` (constant)
 
-**Examples**
-
-_+Router.build.get("/health", { |request, context| Response.text(200, "ok") })+_
-
 ```kex
-
+build : Router
 ```
 
 
@@ -29560,7 +29556,7 @@ install(without: String, packageName: String = …) -> Integer
 ### `installWorkspace`
 
 ```kex
-installWorkspace(without: String, packageName: String, force?: Bool) -> Integer
+installWorkspace(without: String, packageName: String, force?: Bool, approveAll?: Bool) -> Integer
 ```
 
 `install`, where `force?` lets targets replace programs Tey does not own (see Tey.Programs.refusal).
@@ -29568,7 +29564,7 @@ installWorkspace(without: String, packageName: String, force?: Bool) -> Integer
 ### `installDependencies`
 
 ```kex
-installDependencies(context: Context, without: String) -> Result<Void, String>
+installDependencies(context: Context, without: String, approveAll?: Bool) -> Result<Void, String>
 ```
 
 Resolves (or reuses) the workspace's lock, fetches and verifies what it names, approves plugins, and writes the lock back — everything `tey install` does before building.
@@ -29579,21 +29575,65 @@ Resolves (or reuses) the workspace's lock, fetches and verifies what it names, a
 fetchAll(dependencies: [Tey.Lockfile.Dependency]) -> Result<Void, String>
 ```
 
+### `installPrograms`
+
+```kex
+installPrograms(arguments: [String], options: InstallOptions) -> Integer
+```
+
+`tey install <argument>...`: a program from a path or a Git URL, or installed programs updated by name. Several arguments must all be names — a source is one program, with its own options.
+
 ### `installProgram`
 
 ```kex
-installProgram(argument: String, packageName: String, force?: Bool) -> Integer
+installProgram(argument: String, options: InstallOptions) -> Integer
 ```
 
-`tey install <argument>`: a program, from a path for now. A Git URL and an installed program's name (reinstalling it) are the next steps of docs/plan_tey_global_install.md.
+### `reinstallProgram`
+
+```kex
+reinstallProgram(name: String, options: InstallOptions) -> Integer
+```
+
+`tey install <name>`: installs an installed program again from where its receipt says it came from — which is what updating it means. A tag or an exact commit stays pinned unless a new `--tag`/`--branch`/`--ref` is given; a branch (or HEAD) and a path are rebuilt only when their commit or content moved, unless `--rebuild` says to anyway (a new Erlang, a compiler fix).
+
+### `uninstallPrograms`
+
+```kex
+uninstallPrograms(names: [String]) -> Integer
+```
+
+`tey uninstall <name>...`: removes the programs each receipt owns, then the receipt and the build tree it came from. A program that has since been replaced by a file Tey did not write is left where it is, and said so.
+
+### `uninstallProgram`
+
+```kex
+uninstallProgram(name: String) -> Integer
+```
 
 ### `installFromPath`
 
 ```kex
-installFromPath(path: String, packageName: String, force?: Bool) -> Integer
+installFromPath(path: String, options: InstallOptions) -> Integer
 ```
 
 Installs the program at `path` without touching it: the workspace around it is copied into a staging directory, which gets its own lock, dependencies and build, and only replaces the program's previous build tree once its programs are in place. The user's checkout gains no `ebin/`, no `tey.lock`, nothing.
+
+### `installFromGit`
+
+```kex
+installFromGit(url: String, options: InstallOptions) -> Integer
+```
+
+Installs a program from a Git repository at the commit `--tag`, `--branch` or `--ref` names (the default branch's HEAD otherwise). The commit is fetched into the cache the way a dependency is, and installed from there as a path is — the cache checkout itself is never built in.
+
+### `previousApprovals`
+
+```kex
+previousApprovals(name: String) -> {String: String}
+```
+
+The plugin approvals the previous install of program `name` was built with: its build tree's lock. None for a first install.
 
 ### `programMember`
 
@@ -29601,12 +29641,20 @@ Installs the program at `path` without touching it: the workspace around it is c
 programMember(context: Context, packageName: String) -> Result<Member, String>
 ```
 
-The member of `context` a path install means: the one `--package` names, else the one the path is inside of.
+The member of `context` a program install means: the one `--package` names, else the one the path is inside of.
+
+### `installProgramMember`
+
+```kex
+installProgramMember(context: Context, member: Member, options: InstallOptions, origin: Receipt) -> Integer
+```
+
+The shared half of a path and a Git install, once the member is known: refuse a library, check `--target`, stage, build, publish.
 
 ### `installStaged`
 
 ```kex
-installStaged(context: Context, member: Member, staging: String, force?: Bool) -> Integer
+installStaged(context: Context, member: Member, staging: String, options: InstallOptions, origin: Receipt) -> Integer
 ```
 
 ### `updateDependencies`
@@ -29672,10 +29720,12 @@ Every name is checked before anything is built, so a refused install costs nothi
 ### `installMemberTargetsFrom`
 
 ```kex
-installMemberTargetsFrom(member: Member, force?: Bool, origin: Receipt) -> Integer
+installMemberTargetsFrom(member: Member, force?: Bool, origin: Receipt, selected: [String]) -> Integer
 ```
 
 `installMemberTargets`, recording `origin`'s source fields in the receipt — a program built in a staging copy came from somewhere else.
+
+`selected` limits the targets installed (`--target`); empty means all.
 
 ### `releaseTarget`
 
@@ -29956,6 +30006,14 @@ tags(url: String) -> Result<[String], String>
 ```
 
 Every version-shaped tag a repository publishes, newest first. Used to answer a range requirement, and to list installable Kex toolchains.
+
+### `commitId?`
+
+```kex
+commitId?(text: String) -> Bool
+```
+
+A full hexadecimal commit id. A short one is left to `ls-remote`: it could as well be a ref name.
 
 
 ---
@@ -30461,6 +30519,14 @@ Every package whose targets Tey installs gets a receipt at `${TEY_HOME}/programs
 
 Keyed by PACKAGE, not by binary: one package may install several targets, and reinstalling or removing it acts on all of them together.
 
+### `pinnedReason`
+
+```kex
+pinnedReason(receipt: Receipt, options: InstallOptions) -> String?
+```
+
+Why reinstalling `receipt` by name has nothing to do, or None when it must be rebuilt. A tag or an exact commit is a pin the user chose: it stays, with a pointer at moving it. Pure, so the whole rule is testable.
+
 ### `reservedNames` (constant)
 
 ```kex
@@ -30593,7 +30659,7 @@ remove(name: String) -> Bool
 teyBuilt?(path: String) -> Bool
 ```
 
-Whether `path` is an escript Tey's own target build wrote: its emulator line names `kex_main`, which every compiled Kex entry module is called.
+Whether `path` is an escript Tey's own target build wrote: its emulator line starts Kex's escript launcher, or names `kex_main` directly as an escript built before the launcher did.
 
 ### `listLine`
 
@@ -30602,6 +30668,14 @@ listLine(receipt: Receipt) -> String
 ```
 
 The line `tey list` prints for one installed program.
+
+### `pinText`
+
+```kex
+pinText(receipt: Receipt) -> String
+```
+
+`v0.4.0`, `main (3f9c1a2)`, or a short commit — what a Git install is pinned to, as `tey list` shows it.
 
 ## record `Receipt`
 
@@ -30612,10 +30686,34 @@ The line `tey list` prints for one installed program.
   - `sourceKind` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
   - `sourcePath` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
   - `sourceDigest` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `sourceSelector` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `sourceRequested` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `sourceCommit` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `selectedTargets` : [[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)] (optional)
   - `targets` : [[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)] (optional)
   - `kex` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
   - `otp` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
   - `installedAt` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+
+
+
+## record `InstallOptions`
+
+How `tey install <argument>` was asked to install a program: the workspace member (`--package`), the Git pin (`--tag`/`--branch`/`--ref`, "ref" of "HEAD" when none), which targets (`--target`, all when empty), whether to take over others' programs (`--force`), and whether to re-resolve rather than use the program's committed lock (`--fresh`).
+
+`pinned?` says a pin was given at all — reinstalling by name keeps the receipt's unless one is. `rebuild?` rebuilds even when nothing moved.
+
+**Fields**
+
+  - `packageName` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `force?` : [Bool](../../../prelude/0.4.0-beta.4-dev/truthyable.md#make-bool) (optional)
+  - `selector` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `requested` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `pinned?` : [Bool](../../../prelude/0.4.0-beta.4-dev/truthyable.md#make-bool) (optional)
+  - `targets` : [[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)] (optional)
+  - `fresh?` : [Bool](../../../prelude/0.4.0-beta.4-dev/truthyable.md#make-bool) (optional)
+  - `rebuild?` : [Bool](../../../prelude/0.4.0-beta.4-dev/truthyable.md#make-bool) (optional)
+  - `approvePlugins?` : [Bool](../../../prelude/0.4.0-beta.4-dev/truthyable.md#make-bool) (optional)
 
 
 
@@ -35535,7 +35633,7 @@ entities:
 
 # Tey.Docgen.Serve
 
-Serves a generated output directory over HTTP. Tey runs on the BEAM, so Web.Server is available wherever `tey docs -- serve` runs.
+Serves a generated output directory over HTTP. Tey runs on the BEAM, so Net.HTTP.Server is available wherever `tey docs -- serve` runs.
 
 ## module `Tey.Docgen.Serve`
 
@@ -35562,19 +35660,15 @@ collectServeFiles(dir: String, prefix: String) -> [ServedFile]
 ### `serveFile`
 
 ```kex
-serveFile(req: Web.Request, filePath: String) -> Web.Response
+serveFile(filePath: String, _request: Request<Binary>, _context: Context) -> Response<Binary>
 ```
+
+A route handler once `filePath` is applied: `~serveFile(path)`. Reads the file as bytes, not text: the site ships images and fonts beside its HTML, and decoding those as UTF-8 would turn them into a 404.
 
 ### `contentTypeFor`
 
 ```kex
 contentTypeFor(path: String) -> String
-```
-
-### `fileHandler`
-
-```kex
-fileHandler(filePath: String) -> Web.Request -> Web.Response
 ```
 
 ## record `ServedFile`

@@ -17,6 +17,14 @@ Every package whose targets Tey installs gets a receipt at `${TEY_HOME}/programs
 
 Keyed by PACKAGE, not by binary: one package may install several targets, and reinstalling or removing it acts on all of them together.
 
+### `pinnedReason`
+
+```kex
+pinnedReason(receipt: Receipt, options: InstallOptions) -> String?
+```
+
+Why reinstalling `receipt` by name has nothing to do, or None when it must be rebuilt. A tag or an exact commit is a pin the user chose: it stays, with a pointer at moving it. Pure, so the whole rule is testable.
+
 ### `reservedNames` (constant)
 
 ```kex
@@ -149,7 +157,7 @@ remove(name: String) -> Bool
 teyBuilt?(path: String) -> Bool
 ```
 
-Whether `path` is an escript Tey's own target build wrote: its emulator line names `kex_main`, which every compiled Kex entry module is called.
+Whether `path` is an escript Tey's own target build wrote: its emulator line starts Kex's escript launcher, or names `kex_main` directly as an escript built before the launcher did.
 
 ### `listLine`
 
@@ -158,6 +166,14 @@ listLine(receipt: Receipt) -> String
 ```
 
 The line `tey list` prints for one installed program.
+
+### `pinText`
+
+```kex
+pinText(receipt: Receipt) -> String
+```
+
+`v0.4.0`, `main (3f9c1a2)`, or a short commit — what a Git install is pinned to, as `tey list` shows it.
 
 ## record `Receipt`
 
@@ -168,10 +184,34 @@ The line `tey list` prints for one installed program.
   - `sourceKind` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
   - `sourcePath` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
   - `sourceDigest` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `sourceSelector` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `sourceRequested` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `sourceCommit` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `selectedTargets` : [[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)] (optional)
   - `targets` : [[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)] (optional)
   - `kex` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
   - `otp` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
   - `installedAt` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+
+
+
+## record `InstallOptions`
+
+How `tey install <argument>` was asked to install a program: the workspace member (`--package`), the Git pin (`--tag`/`--branch`/`--ref`, "ref" of "HEAD" when none), which targets (`--target`, all when empty), whether to take over others' programs (`--force`), and whether to re-resolve rather than use the program's committed lock (`--fresh`).
+
+`pinned?` says a pin was given at all — reinstalling by name keeps the receipt's unless one is. `rebuild?` rebuilds even when nothing moved.
+
+**Fields**
+
+  - `packageName` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `force?` : [Bool](../../../prelude/0.4.0-beta.4-dev/truthyable.md#make-bool) (optional)
+  - `selector` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `requested` : [String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string) (optional)
+  - `pinned?` : [Bool](../../../prelude/0.4.0-beta.4-dev/truthyable.md#make-bool) (optional)
+  - `targets` : [[String](../../../prelude/0.4.0-beta.4-dev/string.md#make-string)] (optional)
+  - `fresh?` : [Bool](../../../prelude/0.4.0-beta.4-dev/truthyable.md#make-bool) (optional)
+  - `rebuild?` : [Bool](../../../prelude/0.4.0-beta.4-dev/truthyable.md#make-bool) (optional)
+  - `approvePlugins?` : [Bool](../../../prelude/0.4.0-beta.4-dev/truthyable.md#make-bool) (optional)
 
 
 

@@ -9,7 +9,7 @@ entities:
 
 # Tey.Docgen.Serve
 
-Serves a generated output directory over HTTP. Tey runs on the BEAM, so Web.Server is available wherever `tey docs -- serve` runs.
+Serves a generated output directory over HTTP. Tey runs on the BEAM, so Net.HTTP.Server is available wherever `tey docs -- serve` runs.
 
 ## module `Tey.Docgen.Serve`
 
@@ -36,19 +36,15 @@ collectServeFiles(dir: String, prefix: String) -> [ServedFile]
 ### `serveFile`
 
 ```kex
-serveFile(req: Web.Request, filePath: String) -> Web.Response
+serveFile(filePath: String, _request: Request<Binary>, _context: Context) -> Response<Binary>
 ```
+
+A route handler once `filePath` is applied: `~serveFile(path)`. Reads the file as bytes, not text: the site ships images and fonts beside its HTML, and decoding those as UTF-8 would turn them into a 404.
 
 ### `contentTypeFor`
 
 ```kex
 contentTypeFor(path: String) -> String
-```
-
-### `fileHandler`
-
-```kex
-fileHandler(filePath: String) -> Web.Request -> Web.Response
 ```
 
 ## record `ServedFile`

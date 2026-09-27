@@ -698,12 +698,8 @@ The empty starting point for an immutable route declaration chain.
 
 ### `build` (constant)
 
-**Examples**
-
-_+Router.build.get("/health", { |request, context| Response.text(200, "ok") })+_
-
 ```kex
-
+build : Router
 ```
 
 

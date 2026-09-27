@@ -959,6 +959,12 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <p>Every package whose targets Tey installs gets a receipt at <code>${TEY_HOME}/programs/&lt;name&gt;/receipt.json</code>. The receipt is the only authority for ownership: a file in the bin directory that no receipt lists is not Tey's to overwrite or delete. Without one, a second package declaring the same target name silently replaced the first package's program, and nothing could say what a file in there was or where it had come from.</p>
 <p>Keyed by PACKAGE, not by binary: one package may install several targets, and reinstalling or removing it acts on all of them together.</p>
 <div class="functions">
+<div class="fn" id="function-tey-programs-pinnedreason">
+<h3><a class="self" href="#function-tey-programs-pinnedreason"><code>pinnedReason</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">pinnedReason</span><span class="tok-punct">(</span>receipt<span class="tok-op">:</span> <a class="xref" href="#record-tey-programs-receipt"><span class="tok-type">Receipt</span></a><span class="tok-punct">,</span> options<span class="tok-op">:</span> <a class="xref" href="#record-tey-programs-installoptions"><span class="tok-type">InstallOptions</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></code></pre>
+<p>Why reinstalling <code>receipt</code> by name has nothing to do, or None when it must be rebuilt. A tag or an exact commit is a pin the user chose: it stays, with a pointer at moving it. Pure, so the whole rule is testable.</p>
+
+</div>
 <div class="fn" id="constant-tey-programs-reservednames">
 <h3><a class="self" href="#constant-tey-programs-reservednames"><code>reservedNames</code></a> <span class="tag-kind">constant</span></h3>
 <pre class="code sig"><code>reservedNames <span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
@@ -1058,13 +1064,19 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <div class="fn" id="function-tey-programs-teybuilt?">
 <h3><a class="self" href="#function-tey-programs-teybuilt?"><code>teyBuilt?</code></a></h3>
 <pre class="code sig"><code><span class="tok-fn">teyBuilt?</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
-<p>Whether <code>path</code> is an escript Tey's own target build wrote: its emulator line names <code>kex_main</code>, which every compiled Kex entry module is called.</p>
+<p>Whether <code>path</code> is an escript Tey's own target build wrote: its emulator line starts Kex's escript launcher, or names <code>kex_main</code> directly as an escript built before the launcher did.</p>
 
 </div>
 <div class="fn" id="function-tey-programs-listline">
 <h3><a class="self" href="#function-tey-programs-listline"><code>listLine</code></a></h3>
 <pre class="code sig"><code><span class="tok-fn">listLine</span><span class="tok-punct">(</span>receipt<span class="tok-op">:</span> <a class="xref" href="#record-tey-programs-receipt"><span class="tok-type">Receipt</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
 <p>The line <code>tey list</code> prints for one installed program.</p>
+
+</div>
+<div class="fn" id="function-tey-programs-pintext">
+<h3><a class="self" href="#function-tey-programs-pintext"><code>pinText</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">pinText</span><span class="tok-punct">(</span>receipt<span class="tok-op">:</span> <a class="xref" href="#record-tey-programs-receipt"><span class="tok-type">Receipt</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p><code>v0.4.0</code>, <code>main (3f9c1a2)</code>, or a short commit — what a Git install is pinned to, as <code>tey list</code> shows it.</p>
 
 </div>
 </div>
@@ -1078,10 +1090,32 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <div class="field"><dt><code>sourceKind</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
 <div class="field"><dt><code>sourcePath</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
 <div class="field"><dt><code>sourceDigest</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>sourceSelector</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>sourceRequested</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>sourceCommit</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>selectedTargets</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>]</code> <span class="opt">optional</span></dd></div>
 <div class="field"><dt><code>targets</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>]</code> <span class="opt">optional</span></dd></div>
 <div class="field"><dt><code>kex</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
 <div class="field"><dt><code>otp</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
 <div class="field"><dt><code>installedAt</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-tey-programs-installoptions">
+<h2><span class="kind kind-record">record</span> <code>InstallOptions</code></h2>
+<p>How <code>tey install &lt;argument&gt;</code> was asked to install a program: the workspace member (<code>--package</code>), the Git pin (<code>--tag</code>/<code>--branch</code>/<code>--ref</code>, &quot;ref&quot; of &quot;HEAD&quot; when none), which targets (<code>--target</code>, all when empty), whether to take over others' programs (<code>--force</code>), and whether to re-resolve rather than use the program's committed lock (<code>--fresh</code>).</p>
+<p><code>pinned?</code> says a pin was given at all — reinstalling by name keeps the receipt's unless one is. <code>rebuild?</code> rebuilds even when nothing moved.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>packageName</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>force?</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>selector</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>requested</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>pinned?</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>targets</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>]</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>fresh?</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>rebuild?</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>approvePlugins?</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a></code> <span class="opt">optional</span></dd></div>
 </dl>
 
 </section>
@@ -1114,7 +1148,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
         </article>
       </main>
       <aside class="toc" aria-label="On this page">
-        <nav><p class="toc-heading">On this page</p><ul><li><a href="#module-tey-programs">Tey.Programs</a></li><li class="toc-nested"><a href="#record-tey-programs-receipt">Receipt</a></li><li class="toc-nested"><a href="#type-tey-programs-programsource">ProgramSource</a></li><li class="toc-nested"><a href="#type-tey-programs-claim">Claim</a></li></ul></nav>
+        <nav><p class="toc-heading">On this page</p><ul><li><a href="#module-tey-programs">Tey.Programs</a></li><li class="toc-nested"><a href="#record-tey-programs-receipt">Receipt</a></li><li class="toc-nested"><a href="#record-tey-programs-installoptions">InstallOptions</a></li><li class="toc-nested"><a href="#type-tey-programs-programsource">ProgramSource</a></li><li class="toc-nested"><a href="#type-tey-programs-claim">Claim</a></li></ul></nav>
       </aside>
     </div>
     <footer class="foot">

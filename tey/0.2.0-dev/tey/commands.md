@@ -46,7 +46,7 @@ install(without: String, packageName: String = …) -> Integer
 ### `installWorkspace`
 
 ```kex
-installWorkspace(without: String, packageName: String, force?: Bool) -> Integer
+installWorkspace(without: String, packageName: String, force?: Bool, approveAll?: Bool) -> Integer
 ```
 
 `install`, where `force?` lets targets replace programs Tey does not own (see Tey.Programs.refusal).
@@ -54,7 +54,7 @@ installWorkspace(without: String, packageName: String, force?: Bool) -> Integer
 ### `installDependencies`
 
 ```kex
-installDependencies(context: Context, without: String) -> Result<Void, String>
+installDependencies(context: Context, without: String, approveAll?: Bool) -> Result<Void, String>
 ```
 
 Resolves (or reuses) the workspace's lock, fetches and verifies what it names, approves plugins, and writes the lock back — everything `tey install` does before building.
@@ -65,21 +65,65 @@ Resolves (or reuses) the workspace's lock, fetches and verifies what it names, a
 fetchAll(dependencies: [Tey.Lockfile.Dependency]) -> Result<Void, String>
 ```
 
+### `installPrograms`
+
+```kex
+installPrograms(arguments: [String], options: InstallOptions) -> Integer
+```
+
+`tey install <argument>...`: a program from a path or a Git URL, or installed programs updated by name. Several arguments must all be names — a source is one program, with its own options.
+
 ### `installProgram`
 
 ```kex
-installProgram(argument: String, packageName: String, force?: Bool) -> Integer
+installProgram(argument: String, options: InstallOptions) -> Integer
 ```
 
-`tey install <argument>`: a program, from a path for now. A Git URL and an installed program's name (reinstalling it) are the next steps of docs/plan_tey_global_install.md.
+### `reinstallProgram`
+
+```kex
+reinstallProgram(name: String, options: InstallOptions) -> Integer
+```
+
+`tey install <name>`: installs an installed program again from where its receipt says it came from — which is what updating it means. A tag or an exact commit stays pinned unless a new `--tag`/`--branch`/`--ref` is given; a branch (or HEAD) and a path are rebuilt only when their commit or content moved, unless `--rebuild` says to anyway (a new Erlang, a compiler fix).
+
+### `uninstallPrograms`
+
+```kex
+uninstallPrograms(names: [String]) -> Integer
+```
+
+`tey uninstall <name>...`: removes the programs each receipt owns, then the receipt and the build tree it came from. A program that has since been replaced by a file Tey did not write is left where it is, and said so.
+
+### `uninstallProgram`
+
+```kex
+uninstallProgram(name: String) -> Integer
+```
 
 ### `installFromPath`
 
 ```kex
-installFromPath(path: String, packageName: String, force?: Bool) -> Integer
+installFromPath(path: String, options: InstallOptions) -> Integer
 ```
 
 Installs the program at `path` without touching it: the workspace around it is copied into a staging directory, which gets its own lock, dependencies and build, and only replaces the program's previous build tree once its programs are in place. The user's checkout gains no `ebin/`, no `tey.lock`, nothing.
+
+### `installFromGit`
+
+```kex
+installFromGit(url: String, options: InstallOptions) -> Integer
+```
+
+Installs a program from a Git repository at the commit `--tag`, `--branch` or `--ref` names (the default branch's HEAD otherwise). The commit is fetched into the cache the way a dependency is, and installed from there as a path is — the cache checkout itself is never built in.
+
+### `previousApprovals`
+
+```kex
+previousApprovals(name: String) -> {String: String}
+```
+
+The plugin approvals the previous install of program `name` was built with: its build tree's lock. None for a first install.
 
 ### `programMember`
 
@@ -87,12 +131,20 @@ Installs the program at `path` without touching it: the workspace around it is c
 programMember(context: Context, packageName: String) -> Result<Member, String>
 ```
 
-The member of `context` a path install means: the one `--package` names, else the one the path is inside of.
+The member of `context` a program install means: the one `--package` names, else the one the path is inside of.
+
+### `installProgramMember`
+
+```kex
+installProgramMember(context: Context, member: Member, options: InstallOptions, origin: Receipt) -> Integer
+```
+
+The shared half of a path and a Git install, once the member is known: refuse a library, check `--target`, stage, build, publish.
 
 ### `installStaged`
 
 ```kex
-installStaged(context: Context, member: Member, staging: String, force?: Bool) -> Integer
+installStaged(context: Context, member: Member, staging: String, options: InstallOptions, origin: Receipt) -> Integer
 ```
 
 ### `updateDependencies`
@@ -158,10 +210,12 @@ Every name is checked before anything is built, so a refused install costs nothi
 ### `installMemberTargetsFrom`
 
 ```kex
-installMemberTargetsFrom(member: Member, force?: Bool, origin: Receipt) -> Integer
+installMemberTargetsFrom(member: Member, force?: Bool, origin: Receipt, selected: [String]) -> Integer
 ```
 
 `installMemberTargets`, recording `origin`'s source fields in the receipt — a program built in a staging copy came from somewhere else.
+
+`selected` limits the targets installed (`--target`); empty means all.
 
 ### `releaseTarget`
 
