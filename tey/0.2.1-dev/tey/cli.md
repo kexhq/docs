@@ -39,6 +39,14 @@ dispatch(args: [String]) -> Integer
 
 The line is parsed once here to answer the two questions `run` cannot — is this `--version`, and does it name a command Tey already answers — and then handed to `run`, which parses it again and dispatches. A parse ERROR is left to `run` as well: reporting it with the help text is the one policy every tool built on OptionParser shares.
 
+### `relayColors`
+
+```kex
+relayColors : Void
+```
+
+`kex` colors only a terminal, and every `kex` Tey starts — `tey test`, `tey run`, a package command — writes through a pipe (`Process.stream` is a port), even when that pipe ends on this same terminal. So when Tey itself is coloring, it tells its children to as well. NO_COLOR, when set, is left to win in every child; `Kex.AST` passes `--no-colors`, which outranks this, so nothing Tey parses back picks up escape codes.
+
 ### `announceToolchain`
 
 ```kex

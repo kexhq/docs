@@ -231,15 +231,21 @@ selectionHealthy? : Bool
 
 Whether the selected toolchain is actually there. A `current` naming a version somebody deleted leaves every command failing on a path that does not exist, which reads like a broken Tey rather than a missing Kex.
 
+### `startupProblem`
+
+```kex
+startupProblem(prefix: String) -> String?
+```
+
+Installs a released version by name. The published archive for this machine is the fast path — unpacking one takes seconds where building takes minutes, and it needs no compiler, which is the point: whatever installs Tey should not also have to be able to build Kex.
+
+Falling back to a source build rather than failing keeps the platforms without a published archive working, and covers a release whose upload is incomplete. Why an installed toolchain's `kex` cannot start on this machine, or None when it runs. A release archive is a prebuilt binary that loads readline, GMP, PCRE2 and OpenSSL from the system (and needs glibc 2.38+ on Linux); "installed" followed by a loader error on the first `kex` is the worst way to learn one of those is missing.
+
 ### `installRelease`
 
 ```kex
 installRelease(version: String) -> Result<String, String>
 ```
-
-Installs a released version by name. The published archive for this machine is the fast path — unpacking one takes seconds where building takes minutes, and it needs no compiler, which is the point: whatever installs Tey should not also have to be able to build Kex.
-
-Falling back to a source build rather than failing keeps the platforms without a published archive working, and covers a release whose upload is incomplete.
 
 ### `releaseBase`
 
@@ -360,5 +366,6 @@ Why a published archive could not be installed. The distinction is the point: on
 
   - `Unavailable(String)`
   - `Corrupt(String)`
+  - `Unreachable(String)`
 
 

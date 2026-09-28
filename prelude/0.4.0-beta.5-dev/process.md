@@ -553,7 +553,7 @@ Process.run("false", [])   # => Ok(ProcessResult { exitCode: 1, ... })
 _A command that does not exist is an Error_
 
 ```kex
-Process.run("no-such-command", [])   # => Error("executable not found")
+Process.run("no-such-command", [])   # => Error("executable not found: no-such-command")
 ```
 
 _Reading a command's output as data_

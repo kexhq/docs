@@ -77,6 +77,20 @@ tagFor(tags: [String], version: String) -> String?
 
 The tag naming a Kex version, resolved against a tag list read once — `Tey.Toolchain.releaseTag` answers the same question but re-lists the tags on every call, which a pinned-version scan cannot afford.
 
+### `firstSelfUpgrading` (constant)
+
+The oldest Tey with an `upgrade` command. Pinning an older one would strand the install — 0.2.0 cannot run `tey upgrade` to come back — so it is refused, with the installer as the deliberate way there.
+
+
+
+### `installedVersion`
+
+```kex
+installedVersion(prefix: String) -> String
+```
+
+The version of the Tey installed at `prefix`, which is not always the one running: with a Kex selected whose own Tey is unpacked beside it (see `installPaired`), the launcher runs that one instead. Comparing the running version against a release then answers "already the newest" while the install itself stays old. The installed launcher is asked directly, pointed at its own runtime; if that cannot be read, the running version is the answer — the behaviour before, and never a reason to downgrade.
+
 ### `upgradeLatest`
 
 ```kex
