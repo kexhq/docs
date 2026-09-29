@@ -21,7 +21,7 @@ Types as values.
 Type.of(42)                     # Type { name: "Integer", args: [] }
 Type.of([1, 2]).to(String)        # "[Integer]"
 Type.of(x) == Type.of(y)        # structural equality, like any record
-Type.of(due).fields             # ["year", "month", "day"]
+Type.of(due).fieldNames         # ["year", "month", "day"]
 ```
 
 The answer comes from the compiler where it can: a checked expression knows things a value cannot carry, such as the unused half of a `Result` or the element type of an empty list. Where the checker has no concrete answer: gradual code, `--no-check`, a value arriving from another process: the value itself is asked instead. That fallback is honest but lossy: an empty list has no element to inspect, and a `Result` only ever holds one side.
@@ -39,49 +39,91 @@ Everything else is a METHOD, not a module function: a module function is only re
 #### `fields`
 
 ```kex
-fields : [String]
+fields : [Type.Field]
 ```
 
-Returns a record type's field names, in declaration order. Anything that is not a record answers with an empty list.
+Returns a record type's fields, in declaration order: each one's name, declared type, and whether a value may leave it out. Anything that is not a record answers with an empty list.
 
-Reads the layout the compiler already ships to the runtime for display; there is no separate metadata to keep in step.
+The types are the DECLARED ones, as written: `Integer?` is `Type { name: "Option", args: [Integer] }` and a type parameter keeps its own name. That is what a decoder derived from a record needs: which parser each field takes, and which fields it may skip.
+
+**Returns**: the fields, or `[]`
+
+**Examples**
+
+```kex
+Type.of(Point { x: 1, y: 2 }).fields.map(&.name)   # => ["x", "y"]
+Type.of(Point { x: 1, y: 2 }).fields.first.map { |f| f.valueType.name }
+# => Just("Integer")
+Type.of(42).fields                                 # => []
+```
+
+_The fields a decoder may leave out_
+
+```kex
+Type.of(user).fields.filter { |f| f.optional? || f.default? }.map(&.name)
+```
+
+#### `fieldNames`
+
+```kex
+fieldNames : [String]
+```
+
+Returns a record type's field names, in declaration order: `fields` when only the names matter. Anything that is not a record answers with an empty list.
 
 **Returns**: the field names, or `[]`
 
 **Examples**
 
 ```kex
-Type.of(Point { x: 1, y: 2 }).fields   # => ["x", "y"]
-Type.of(42).fields                     # => []
+Type.of(Point { x: 1, y: 2 }).fieldNames   # => ["x", "y"]
+Type.of(due).fieldNames                    # => ["year", "month", "day"]
 ```
 
 _Rendering a record generically_
 
 ```kex
-Type.of(value).fields.map { |name| "${name}: ..." }.join(", ")
+Type.of(value).fieldNames.map { |name| "${name}: ..." }.join(", ")
 ```
 
 #### `constructors`
 
 ```kex
-constructors : [String]
+constructors : [Type.Constructor]
 ```
 
-Returns an ADT's constructor names. Anything that is not an ADT answers with an empty list.
+Returns a sum type's constructors, in declaration order: each one's name and the declared types of its arguments. Anything that is not a sum type answers with an empty list.
+
+**Returns**: the constructors, or `[]`
+
+**Examples**
+
+```kex
+Type.of(Circle(1.0)).constructors.map(&.name)    # => ["Circle", "Square"]
+Type.of(Circle(1.0)).constructors.map(&.arity)   # => [1, 2]
+Type.of(42).constructors                         # => []
+```
+
+#### `constructorNames`
+
+```kex
+constructorNames : [String]
+```
+
+Returns a sum type's constructor names, in declaration order: `constructors` when only the names matter. Anything that is not a sum type answers with an empty list.
 
 **Returns**: the constructor names, or `[]`
 
 **Examples**
 
 ```kex
-Type.of(Circle(1)).constructors   # => ["Circle", "Square"]
-Type.of(42).constructors          # => []
+Type.of(Circle(1.0)).constructorNames   # => ["Circle", "Square"]
 ```
 
 _Listing what a sum type can be_
 
 ```kex
-IO.printLine("one of: ${Type.of(shape).constructors.join(", ")}")
+IO.printLine("one of: ${Type.of(shape).constructorNames.join(", ")}")
 ```
 
 #### `record?`
@@ -271,3 +313,28 @@ Named functions only. A lambda or a function VALUE carries no signature at runti
 ```kex
 Type.returnedBy(Date.parse).to(String)   # => "Result<Date, TimeError>"
 ```
+
+## record `Field`
+
+A record field, as `Type.fields` describes it.
+
+**Fields**
+
+  - `name` : [String](string.md#make-string)
+  - `valueType` : [Type](#record-type)
+  - `optional?` : [Bool](truthyable.md#make-bool)
+  - `default?` : [Bool](truthyable.md#make-bool)
+
+
+
+## record `Constructor`
+
+A sum type's constructor, as `Type.constructors` describes it.
+
+**Fields**
+
+  - `name` : [String](string.md#make-string)
+  - `arity` : [Integer](number.md#make-integer)
+  - `argTypes` : [[Type](#record-type)]
+
+

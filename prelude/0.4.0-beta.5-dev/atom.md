@@ -72,4 +72,21 @@ Returns the atom's name as text, without the leading colon. Total, like `Char.st
 :"b@host.example.com".string  # => "b@host.example.com"
 ```
 
+### `to`
+
+```kex
+to(_) -> String?
+```
+
+Returns the atom's name as text, like `string`, through the universal conversion. The name, not the displayed form: `:ok` converts to `"ok"`, not `":ok"`, so `text.to(Atom)` and this are inverses.
+
+**Returns**: the name, always `Just`
+
+**Examples**
+
+```kex
+:hello.to(String)                       # => Just("hello")
+"hello".to(Atom).flatMap { |a| a.to(String) }   # => Just("hello")
+```
+
 

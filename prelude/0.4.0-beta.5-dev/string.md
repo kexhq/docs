@@ -1128,6 +1128,12 @@ paths.filter { |p| p.endsWith?(".kex") }
 
   - [`repeat`](algebra.md#monoid-repeat) — Combines this value with itself `n` times.
 
+### From [`Comparable`](comparable.md#trait-comparable)
+
+  - [`max`](comparable.md#comparable-max) — What every ordered type gets from `compare` alone.
+  - [`min`](comparable.md#comparable-min) — Returns the smaller of this value and `other`; this value when they are equal.
+  - [`clamp`](comparable.md#comparable-clamp) — Returns this value limited to the range `low` to `high`: `low` when it is below, `high` when it is above, and itself otherwise.
+
 ### From [`Enumerable`](enumerable.md#trait-enumerable)
 
   - [`map`](enumerable.md#enumerable-map) — Applies `f` to each item and collects the results into a list.

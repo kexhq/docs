@@ -185,6 +185,76 @@ _Sorting with an explicit comparison_
 people.sort { |a, b| a.age.compare(b.age) == Less }
 ```
 
+### Provided methods
+
+#### `max`
+
+```kex
+max(other: This) -> This
+```
+
+What every ordered type gets from `compare` alone. Returns the larger of this value and `other`; this value when they are equal.
+
+Written either way round, since a call and a method are the same thing: `max(3, 7)` is `3.max(7)`.
+
+**Parameters**
+
+  - `other` — the value to compare against
+
+**Returns**: the larger of the two
+
+**Examples**
+
+```kex
+max(3, 7)             # => 7
+1.5.max(2.5)          # => 2.5
+"pear".max("apple")   # => "pear"
+```
+
+#### `min`
+
+```kex
+min(other: This) -> This
+```
+
+Returns the smaller of this value and `other`; this value when they are equal.
+
+**Parameters**
+
+  - `other` — the value to compare against
+
+**Returns**: the smaller of the two
+
+**Examples**
+
+```kex
+min(3, 7)             # => 3
+"pear".min("apple")   # => "apple"
+```
+
+#### `clamp`
+
+```kex
+clamp(low: This, high: This) -> This
+```
+
+Returns this value limited to the range `low` to `high`: `low` when it is below, `high` when it is above, and itself otherwise.
+
+**Parameters**
+
+  - `low` — the smallest value allowed
+  - `high` — the largest value allowed
+
+**Returns**: the value, clamped into `low` to `high`
+
+**Examples**
+
+```kex
+15.clamp(0, 10)      # => 10
+(-3).clamp(0, 10)    # => 0
+0.5.clamp(0.0, 1.0)  # => 0.5
+```
+
 
 
 ## extends `Number`
