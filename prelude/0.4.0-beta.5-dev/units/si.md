@@ -19,13 +19,13 @@ Opt-in: nothing here is in scope until `using Units.SI`.
 using Units.SI
 
 main do
-  IO.printLine(3.kilo.watt.to(String))          # prints: 3000.0 W
+  IO.printLine(3.kilowatt.to(String))           # prints: 3.0 kW
   IO.printLine(5000.meter.kilo.to(String))      # prints: 5.0 km
-  IO.printLine((100.meter / 10.sec).to(String)) # prints: 10.0 m/s
+  IO.printLine((100.meter / 10.second).to(String)) # prints: 10.0 m/s
 end
 ```
 
-Every value is a `Measure` from the prelude, so the arithmetic, conversion and comparison described there apply unchanged. What this module adds is the SI vocabulary, the prefixes, and a table of which dimension results from multiplying or dividing two others, so `2.newton * 3.meter` answers in joules and `100.meter / 10.sec` in metres per second.
+Every value is a `Measure` from the prelude, so the arithmetic, conversion and comparison described there apply unchanged. What this module adds is the SI vocabulary, the prefixes, and a table of which dimension results from multiplying or dividing two others, so `2.newton * 3.meter` answers in joules and `100.meter / 10.second` in metres per second.
 
 ### `meter`
 
@@ -66,26 +66,6 @@ gram(value: Number) -> Measure
 
 ```kex
 500.gram.to(String)   # => "500.0 g"
-```
-
-### `kilogram`
-
-```kex
-kilogram(value: Number) -> Measure
-```
-
-`value` kilograms, as a `Measure`.
-
-**Parameters**
-
-  - `value` — the quantity
-
-**Returns**: the mass
-
-**Examples**
-
-```kex
-1.kilogram.to(String)   # => "1.0 kg"
 ```
 
 ### `kelvin`
@@ -187,14 +167,14 @@ watt(value: Number) -> Measure
 **Examples**
 
 ```kex
-3.kilo.watt.to(String)                 # => "3000.0 W"
+3.kilowatt.to(String)                  # => "3.0 kW"
 1500.watt.to(String, in: Kilo(Watt))   # => Just("1.5 kW")
 ```
 
 _Power times time is energy_
 
 ```kex
-(3.kilo.watt * 2.hour).to(String)   # => "21600000.0 J"
+(3.kilowatt * 2.hour).to(String)   # => "21600000.0 J"
 ```
 
 ### `volt`
@@ -390,7 +370,7 @@ per(measure: Measure, other: Measure) -> Measure
 
 Divides one measure by another, naming the resulting dimension.
 
-The spelled-out form of `/`: `100.meter.per(10.sec)` and `100.meter / 10.sec` are the same call. Metres over seconds is speed, energy over time is power, force over area is pressure: the dimension table decides, and the symbol follows it.
+The spelled-out form of `/`: `100.meter.per(10.second)` and `100.meter / 10.second` are the same call. Metres over seconds is speed, energy over time is power, force over area is pressure: the dimension table decides, and the symbol follows it.
 
 **Parameters**
 
@@ -402,7 +382,7 @@ The spelled-out form of `/`: `100.meter.per(10.sec)` and `100.meter / 10.sec` ar
 **Examples**
 
 ```kex
-100.meter.per(10.sec).to(String)   # => "10.0 m/s"
+100.meter.per(10.second).to(String)   # => "10.0 m/s"
 ```
 
 ### `times`
@@ -439,7 +419,6 @@ Each carries its dimension (`:length`, `:mass`, `:power`, …) and its symbol, w
 
   - `Meter`
   - `Gram`
-  - `Kilogram`
   - `Kelvin`
   - `Liter`
   - `Newton`
@@ -456,7 +435,9 @@ Implements [`Unit`](../units.md#trait-unit).
 
 #### `factor` (from Unit)
 
-
+```kex
+factor(_)
+```
 
 #### `kind` (from Unit)
 
@@ -539,7 +520,7 @@ Implements [`Unit`](../units.md#trait-unit).
 
 More methods of [`Measure`](../units.md#record-measure), added by this module.
 
-Prefixes work both on an existing measure (`5000.meter.kilo`) and at the beginning of a postfix unit expression (`3.kilo.watt`).
+Prefixes on an existing measure select its display unit.
 
 ### `factor`
 
@@ -621,24 +602,4 @@ productSymbol(_, left, right)
 
 ```kex
 quotientSymbol(_, left, right)
-```
-
-## extends `Integer`
-
-More methods of [`Integer`](../number.md#make-integer), added by this module.
-
-### `kilo`
-
-```kex
-kilo : Float
-```
-
-## extends `Float`
-
-More methods of [`Float`](../number.md#make-float), added by this module.
-
-### `kilo`
-
-```kex
-kilo : Float
 ```

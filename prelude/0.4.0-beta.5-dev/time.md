@@ -45,7 +45,7 @@ Period    a calendar step, resolved by the calendar (1.months, 2.years)
 
 `36.hours` is always 129600 seconds; `1.months` is however long that particular month turns out to be. So `date + 1.months` clamps January 31st to the last day of February, while `date + 30.days` counts thirty days.
 
-A time `Measure` such as `5.sec` is a third thing and deliberately NOT a Duration: a Measure describes a measurement, a Duration describes elapsed time. The plural `5.seconds` builds the Duration.
+A time `Measure` such as `5.second` is a third thing and deliberately NOT a Duration: a Measure describes a measurement, a Duration describes elapsed time. The plural `5.seconds` builds the Duration.
 
 Values are built through their own module and used through methods:
 
@@ -2599,7 +2599,19 @@ let elapsedMs = (DateTime.epochNanos() - started) / 1000000
 
 More methods of [`Integer`](number.md#make-integer), added by this module.
 
-The plural spellings build a Duration; the singular ones from units.kex build a time Measure. `5.seconds` is an elapsed span, `5.sec` a measurement.
+The plural spellings build a Duration; the singular ones from units.kex build a time Measure. `5.seconds` is an elapsed span, `5.second` a measurement.
+
+### `nanoseconds`
+
+```kex
+nanoseconds : Duration
+```
+
+### `microseconds`
+
+```kex
+microseconds : Duration
+```
 
 ### `milliseconds`
 
@@ -2625,7 +2637,7 @@ seconds : Duration
 
 This many seconds, as a `Duration`.
 
-Note the plural: `5.seconds` is an elapsed span, while `5.sec` from `units.kex` is a measurement.
+Note the plural: `5.seconds` is an elapsed span, while `5.second` from `units.kex` is a measurement.
 
 **Returns**: the elapsed span
 
@@ -2747,6 +2759,18 @@ More methods of [`Float`](number.md#make-float), added by this module.
 
 The same `Duration` constructors on `Float`, for fractional spans: `1.5.hours`, `0.25.seconds`.
 
+### `nanoseconds`
+
+```kex
+nanoseconds : Duration
+```
+
+### `microseconds`
+
+```kex
+microseconds : Duration
+```
+
 ### `milliseconds`
 
 ```kex
@@ -2822,6 +2846,18 @@ This many weeks, as a `Duration`: a fixed 604800 seconds each.
 ## extends `Duration`
 
 More methods of [`Duration`](units.md#record-duration), added by this module.
+
+### `wholeNanoseconds`
+
+```kex
+wholeNanoseconds : Integer
+```
+
+### `wholeMicroseconds`
+
+```kex
+wholeMicroseconds : Integer
+```
 
 ### `+`
 
@@ -3184,6 +3220,18 @@ A span of no time at all. Also the UTC offset.
 ```kex
 Duration.zero().zero?   # => true
 date.at(time, Duration.zero()).iso   # => "...T09:00:00Z"
+```
+
+### `nanoseconds`
+
+```kex
+nanoseconds(count: Number) -> Duration
+```
+
+### `microseconds`
+
+```kex
+microseconds(count: Number) -> Duration
 ```
 
 ### `milliseconds`

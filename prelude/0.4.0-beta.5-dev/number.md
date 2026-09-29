@@ -273,10 +273,9 @@ Returns the integer unchanged. The `Integer` counterpart of `Float.round`.
 
   - [Algebra](algebra.md#make-integer): [`identity`](algebra.md#integer-identity), [`combine`](algebra.md#integer-combine), [`inverse`](algebra.md#integer-inverse)
   - [Blankable](blankable.md#make-integer): [`blank?`](blankable.md#integer-blank?)
-  - [Time](time.md#make-integer): [`milliseconds`](time.md#integer-milliseconds), [`seconds`](time.md#integer-seconds), [`minutes`](time.md#integer-minutes), [`hours`](time.md#integer-hours), [`days`](time.md#integer-days), [`weeks`](time.md#integer-weeks), [`months`](time.md#integer-months), [`years`](time.md#integer-years)
+  - [Time](time.md#make-integer): [`nanoseconds`](time.md#integer-nanoseconds), [`microseconds`](time.md#integer-microseconds), [`milliseconds`](time.md#integer-milliseconds), [`seconds`](time.md#integer-seconds), [`minutes`](time.md#integer-minutes), [`hours`](time.md#integer-hours), [`days`](time.md#integer-days), [`weeks`](time.md#integer-weeks), [`months`](time.md#integer-months), [`years`](time.md#integer-years)
   - [Truthyable](truthyable.md#make-integer): [`truthy?`](truthyable.md#integer-truthy?)
-  - [Units](units.md#make-integer): [`nanosecond`](units.md#integer-nanosecond), [`microsecond`](units.md#integer-microsecond), [`millisecond`](units.md#integer-millisecond), [`sec`](units.md#integer-sec), [`minute`](units.md#integer-minute), [`hour`](units.md#integer-hour), [`day`](units.md#integer-day), [`week`](units.md#integer-week), [`timeMeasure`](units.md#integer-timemeasure)
-  - [Units.SI](units/si.md#make-integer): [`kilo`](units/si.md#integer-kilo)
+  - [Units](units.md#make-integer): [`nanosecond`](units.md#integer-nanosecond), [`microsecond`](units.md#integer-microsecond), [`millisecond`](units.md#integer-millisecond), [`second`](units.md#integer-second), [`minute`](units.md#integer-minute), [`hour`](units.md#integer-hour), [`day`](units.md#integer-day), [`week`](units.md#integer-week), [`timeMeasure`](units.md#integer-timemeasure)
 
 ## type `Float`
 
@@ -437,10 +436,9 @@ Truncates toward zero and returns the result as an `Integer`: it drops the fract
 ### Defined in other modules
 
   - [Blankable](blankable.md#make-float): [`blank?`](blankable.md#float-blank?)
-  - [Time](time.md#make-float): [`milliseconds`](time.md#float-milliseconds), [`seconds`](time.md#float-seconds), [`minutes`](time.md#float-minutes), [`hours`](time.md#float-hours), [`days`](time.md#float-days), [`weeks`](time.md#float-weeks)
+  - [Time](time.md#make-float): [`nanoseconds`](time.md#float-nanoseconds), [`microseconds`](time.md#float-microseconds), [`milliseconds`](time.md#float-milliseconds), [`seconds`](time.md#float-seconds), [`minutes`](time.md#float-minutes), [`hours`](time.md#float-hours), [`days`](time.md#float-days), [`weeks`](time.md#float-weeks)
   - [Truthyable](truthyable.md#make-float): [`truthy?`](truthyable.md#float-truthy?)
-  - [Units](units.md#make-float): [`nanosecond`](units.md#float-nanosecond), [`microsecond`](units.md#float-microsecond), [`millisecond`](units.md#float-millisecond), [`sec`](units.md#float-sec), [`minute`](units.md#float-minute), [`hour`](units.md#float-hour), [`day`](units.md#float-day), [`week`](units.md#float-week), [`timeMeasure`](units.md#float-timemeasure)
-  - [Units.SI](units/si.md#make-float): [`kilo`](units/si.md#float-kilo)
+  - [Units](units.md#make-float): [`nanosecond`](units.md#float-nanosecond), [`microsecond`](units.md#float-microsecond), [`millisecond`](units.md#float-millisecond), [`second`](units.md#float-second), [`minute`](units.md#float-minute), [`hour`](units.md#float-hour), [`day`](units.md#float-day), [`week`](units.md#float-week), [`timeMeasure`](units.md#float-timemeasure)
 
 ## module `Integer`
 

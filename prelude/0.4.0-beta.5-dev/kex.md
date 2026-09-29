@@ -390,7 +390,7 @@ The release string with the build revision after it, when there is one.
 
 This is what `kex --version` and the REPL banner print.
 
-`to(String)`: the language's conversion protocol, and what this should really be: is deliberately NOT defined here: a second `to(String)` implementation anywhere in the prelude breaks type-directed `to` dispatch for every prelude type on BEAM, so adding one here silently broke `3.kilo.watt.to(String)`. Pinned by spec/prelude_to_string_dispatch.kex; restore this as `to(String)` once that dispatcher is fixed.
+`to(String)`: the language's conversion protocol, and what this should really be: is deliberately NOT defined here: a second `to(String)` implementation anywhere in the prelude breaks type-directed `to` dispatch for every prelude type on BEAM, so adding one here silently broke `3.kilowatt.to(String)`. Pinned by spec/prelude_to_string_dispatch.kex; restore this as `to(String)` once that dispatcher is fixed.
 
 **Returns**: the full version string
 

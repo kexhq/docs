@@ -24,10 +24,10 @@ entities:
 
 Numbers that carry a unit.
 
-Writing `5.sec` or `90.minute` gives you a `Measure`: a number, the unit it was written in, and the same quantity in that dimension's base unit. Adding, subtracting and converting all go through the canonical value, so the arithmetic is right regardless of which units the operands were written in, and mixing dimensions is an `Error` rather than a silently wrong number.
+Writing `5.second` or `90.minute` gives you a `Measure`: a number, the unit it was written in, and the same quantity in that dimension's base unit. Adding, subtracting and converting all go through the canonical value, so the arithmetic is right regardless of which units the operands were written in, and mixing dimensions is an `Error` rather than a silently wrong number.
 
 ```kex
-5.sec.to(String)                     # => "5.0 s"
+5.second.to(String)                     # => "5.0 s"
 1.5.hour.to(String)                  # => "1.5 h"
 (1.hour + 30.minute).map(~to(String))  # => Ok("1.5 h")
 90.minute.convert(Hour)              # => Ok(1.5 h)
@@ -35,7 +35,7 @@ Writing `5.sec` or `90.minute` gives you a `Measure`: a number, the unit it was 
 
 The time units (`nanosecond` through `week`) are in the prelude. Other dimensions live in opt-in modules under `Units`, and every one of them measures against the same machinery here.
 
-A `Measure` is a measurement, not an elapsed span: `5.sec` describes a quantity, while `Duration` is what `Time` and `Date` use for a span between two moments.
+A `Measure` is a measurement, not an elapsed span: `5.second` describes a quantity, while `Duration` is what `Time` and `Date` use for a span between two moments.
 
 ## trait `Unit`
 
@@ -112,7 +112,7 @@ The dimension a measure belongs to.
 **Examples**
 
 ```kex
-measureKind(5.sec)   # => :time
+measureKind(5.second)   # => :time
 ```
 
 ## function `measureSymbol`
@@ -271,7 +271,7 @@ The unit is unchanged, so this scales a quantity rather than converting it: thre
 **Examples**
 
 ```kex
-2.sec.scale(3).to(String)     # => "6.0 s"
+2.second.scale(3).to(String)     # => "6.0 s"
 1.hour.scale(0.5).to(String)  # => "0.5 h"
 ```
 
@@ -294,7 +294,7 @@ Raising a measure preserves its display unit while applying the power to its can
 **Examples**
 
 ```kex
-(2.sec ^ 2).to(String)   # => "4.0 s^2"
+(2.second ^ 2).to(String)   # => "4.0 s^2"
 ```
 
 #### `convertTo`
@@ -396,7 +396,7 @@ Like +++, the result is displayed in the left operand's unit, and mixing dimensi
 
 An elapsed span of time, in seconds.
 
-Duration is an elapsed span used by Time, Date, and DateTime. A time Measure is deliberately not a Duration: `5.sec` describes a measurement.
+Duration is an elapsed span used by Time, Date, and DateTime. A time Measure is deliberately not a Duration: `5.second` describes a measurement.
 
 **Fields**
 
@@ -404,7 +404,7 @@ Duration is an elapsed span used by Time, Date, and DateTime. A time Measure is 
 
 ### Defined in other modules
 
-  - [Time](time.md#make-duration): [`+`](time.md#duration-op-plus), [`-`](time.md#duration-op-minus), [`negated`](time.md#duration-negated), [`*`](time.md#duration-op-times), [`/`](time.md#duration-op-div), [`abs`](time.md#duration-abs), [`zero?`](time.md#duration-zero?), [`negative?`](time.md#duration-negative?), [`positive?`](time.md#duration-positive?), [`shorterThan?`](time.md#duration-shorterthan?), [`longerThan?`](time.md#duration-longerthan?), [`wholeMilliseconds`](time.md#duration-wholemilliseconds), [`wholeSeconds`](time.md#duration-wholeseconds), [`wholeMinutes`](time.md#duration-wholeminutes), [`wholeHours`](time.md#duration-wholehours), [`wholeDays`](time.md#duration-wholedays), [`wholeWeeks`](time.md#duration-wholeweeks), [`compareTo`](time.md#duration-compareto)
+  - [Time](time.md#make-duration): [`wholeNanoseconds`](time.md#duration-wholenanoseconds), [`wholeMicroseconds`](time.md#duration-wholemicroseconds), [`+`](time.md#duration-op-plus), [`-`](time.md#duration-op-minus), [`negated`](time.md#duration-negated), [`*`](time.md#duration-op-times), [`/`](time.md#duration-op-div), [`abs`](time.md#duration-abs), [`zero?`](time.md#duration-zero?), [`negative?`](time.md#duration-negative?), [`positive?`](time.md#duration-positive?), [`shorterThan?`](time.md#duration-shorterthan?), [`longerThan?`](time.md#duration-longerthan?), [`wholeMilliseconds`](time.md#duration-wholemilliseconds), [`wholeSeconds`](time.md#duration-wholeseconds), [`wholeMinutes`](time.md#duration-wholeminutes), [`wholeHours`](time.md#duration-wholehours), [`wholeDays`](time.md#duration-wholedays), [`wholeWeeks`](time.md#duration-wholeweeks), [`compareTo`](time.md#duration-compareto)
 
 ## type `TimeUnit`
 
@@ -445,7 +445,7 @@ symbol(_)
 
 More methods of [`Integer`](number.md#make-integer), added by this module.
 
-Time-unit constructors on `Integer`: `5.sec`, `90.minute`, `2.week`.
+Time-unit constructors on `Integer`: `5.second`, `90.minute`, `2.week`.
 
 Each answers a `Measure` whose display unit is the one you named, so `90.minute` prints as minutes even though it is stored as 5400 seconds.
 
@@ -497,10 +497,10 @@ This many milliseconds, as a `Measure`.
 500.millisecond.to(String)   # => "500.0 ms"
 ```
 
-### `sec`
+### `second`
 
 ```kex
-sec : Measure
+second : Measure
 ```
 
 This many seconds, as a `Measure`. Seconds are the base unit of time, so this is the one everything else converts through.
@@ -510,7 +510,7 @@ This many seconds, as a `Measure`. Seconds are the base unit of time, so this is
 **Examples**
 
 ```kex
-5.sec.to(String)   # => "5.0 s"
+5.second.to(String)   # => "5.0 s"
 ```
 
 ### `minute`
@@ -587,7 +587,7 @@ timeMeasure(unit: TimeUnit) -> Measure
 
 More methods of [`Float`](number.md#make-float), added by this module.
 
-The same time-unit constructors on `Float`, for fractional quantities: `1.5.hour`, `0.25.sec`.
+The same time-unit constructors on `Float`, for fractional quantities: `1.5.hour`, `0.25.second`.
 
 ### `nanosecond`
 
@@ -625,10 +625,10 @@ This many milliseconds, as a `Measure`.
 2.5.millisecond.to(String)   # => "2.5 ms"
 ```
 
-### `sec`
+### `second`
 
 ```kex
-sec : Measure
+second : Measure
 ```
 
 This many seconds, as a `Measure`.
@@ -638,7 +638,7 @@ This many seconds, as a `Measure`.
 **Examples**
 
 ```kex
-0.25.sec.to(String)   # => "0.25 s"
+0.25.second.to(String)   # => "0.25 s"
 ```
 
 ### `minute`
