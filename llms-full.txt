@@ -12141,7 +12141,7 @@ entities:
   - { kind: make, name: "From<X>" }
   - { kind: module, name: "Task" }
   - { kind: make, name: "Task" }
-  - { kind: function, name: "worker" }
+  - { kind: module, name: "Supervisor" }
   - { kind: make, name: "Reference" }
 ---
 
@@ -12993,19 +12993,87 @@ _Fanning work out over a list_
 let results = Task.awaitAll(paths.map { |p| Task.start do process(p) end })
 ```
 
-## function `worker`
+## module `Supervisor`
+
+Supervision trees: processes that restart the processes under them when they crash.
+
+### `start`
 
 ```kex
-worker(block: Block<Pid>) -> (Atom, Block<Pid>)
+start(restart: Atom, children: Block<[(Atom, Block<Pid>)]>) -> Result<Pid, Any>
+start(restart: Atom, children: [(Atom, Block<Pid>)]) -> Result<Pid, Any>
 ```
 
-Wraps a spawn block into a worker spec for `Supervisor.start`.
+Starts a supervisor over the children its block lists, one per line — +Supervisor.worker+s and nested +Supervisor.supervisor+s. When a child crashes, `restart` decides which of its siblings restart with it:
+
+- `:only_crashed` — just the crashed child - `:crashed_and_newer` — it and the children listed after it - `:all` — every child
+
+The interpreter supports `:only_crashed` without nesting only.
 
 **Parameters**
 
-  - `block` — the block that spawns the worker
+  - `restart` — the restart strategy
+  - `children` — the block listing the children
+
+**Returns**: the supervisor, or why it failed to start
+
+**Examples**
+
+```kex
+using Supervisor
+start(restart: :only_crashed) do
+  worker { startCache() }
+  supervisor(restart: :all) do
+    worker { startPool() }
+    worker { startListener() }
+  end
+end
+```
+
+### `worker`
+
+```kex
+worker(start: Block<Pid>) -> (Atom, Block<Pid>)
+```
+
+A child that runs the block to start, and again to restart. The block must spawn the worker and return its `Pid`.
+
+**Parameters**
+
+  - `start` — the block that spawns the worker
 
 **Returns**: the worker spec
+
+**Examples**
+
+```kex
+Supervisor.worker { spawn do cacheLoop([]) end }
+```
+
+### `supervisor`
+
+```kex
+supervisor(restart: Atom, children: Block<[(Atom, Block<Pid>)]>) -> (Atom, Block<Pid>)
+supervisor(restart: Atom, children: [(Atom, Block<Pid>)]) -> (Atom, Block<Pid>)
+```
+
+A child that is itself a supervisor over the children its block lists, one per line. Its parent starts it, and restarts it — with all its children — when the parent's restart strategy says so. Takes the same `restart:` strategies as `Supervisor.start`. BEAM backend only.
+
+**Parameters**
+
+  - `restart` — `:only_crashed`, `:all` or `:crashed_and_newer`
+  - `children` — the block listing its children
+
+**Returns**: the supervisor spec
+
+**Examples**
+
+```kex
+Supervisor.supervisor(restart: :all) do
+  Supervisor.worker { startPool() }
+  Supervisor.worker { startListener() }
+end
+```
 
 
 ---

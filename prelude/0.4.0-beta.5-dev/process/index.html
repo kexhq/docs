@@ -1564,22 +1564,75 @@ t<span class="tok-op">.</span><span class="tok-method">await</span>   <span clas
 </div>
 </section>
 
-<section class="entity" id="function-worker">
-<h2><span class="kind kind-function">function</span> <code>worker</code></h2>
-<pre class="code sig"><code><span class="tok-fn">worker</span><span class="tok-punct">(</span>block<span class="tok-op">:</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><a class="xref" href="#type-pid"><span class="tok-type">Pid</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.5-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">,</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><a class="xref" href="#type-pid"><span class="tok-type">Pid</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span></code></pre>
-<p>Wraps a spawn block into a worker spec for <code>Supervisor.start</code>.</p>
+<section class="entity" id="module-supervisor">
+<h2><span class="kind kind-module">module</span> <code>Supervisor</code></h2>
+<p>Supervision trees: processes that restart the processes under them when they crash.</p>
+<div class="functions">
+<div class="fn" id="function-supervisor-start">
+<h3><a class="self" href="#function-supervisor-start"><code>start</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">start</span><span class="tok-punct">(</span>restart<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">,</span> children<span class="tok-op">:</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-punct">[</span><span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.5-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">,</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><a class="xref" href="#type-pid"><span class="tok-type">Pid</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-pid"><span class="tok-type">Pid</span></a><span class="tok-punct">,</span> <span class="tok-type">Any</span><span class="tok-op">&gt;</span>
+<span class="tok-fn">start</span><span class="tok-punct">(</span>restart<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">,</span> children<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.5-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">,</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><a class="xref" href="#type-pid"><span class="tok-type">Pid</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-pid"><span class="tok-type">Pid</span></a><span class="tok-punct">,</span> <span class="tok-type">Any</span><span class="tok-op">&gt;</span></code></pre>
+<p>Starts a supervisor over the children its block lists, one per line — +Supervisor.worker+s and nested +Supervisor.supervisor+s. When a child crashes, <code>restart</code> decides which of its siblings restart with it:</p>
+<ul>
+<li><code>:only_crashed</code> — just the crashed child - <code>:crashed_and_newer</code> — it and the children listed after it - <code>:all</code> — every child</li>
+</ul>
+<p>The interpreter supports <code>:only_crashed</code> without nesting only.</p>
 <h5>Parameters</h5>
 <dl class="params">
-<div class="param"><dt><code>block</code></dt><dd>the block that spawns the worker</dd></div>
+<div class="param"><dt><code>restart</code></dt><dd>the restart strategy</dd></div>
+<div class="param"><dt><code>children</code></dt><dd>the block listing the children</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the supervisor, or why it failed to start</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Supervisor</span>
+<span class="tok-fn">start</span><span class="tok-punct">(</span>restart<span class="tok-op">:</span> <span class="tok-op">:</span>only_crashed<span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  worker <span class="tok-punct">{</span> <span class="tok-fn">startCache</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+  <span class="tok-fn">supervisor</span><span class="tok-punct">(</span>restart<span class="tok-op">:</span> <span class="tok-op">:</span>all<span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+    worker <span class="tok-punct">{</span> <span class="tok-fn">startPool</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    worker <span class="tok-punct">{</span> <span class="tok-fn">startListener</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="function-supervisor-worker">
+<h3><a class="self" href="#function-supervisor-worker"><code>worker</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">worker</span><span class="tok-punct">(</span>start<span class="tok-op">:</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><a class="xref" href="#type-pid"><span class="tok-type">Pid</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.5-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">,</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><a class="xref" href="#type-pid"><span class="tok-type">Pid</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span></code></pre>
+<p>A child that runs the block to start, and again to restart. The block must spawn the worker and return its <a class="xref" href="#type-pid"><code>Pid</code></a>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>start</code></dt><dd>the block that spawns the worker</dd></div>
 </dl>
 <p class="returns"><strong>Returns</strong> the worker spec</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Supervisor</span><span class="tok-op">.</span><span class="tok-method">worker</span> <span class="tok-punct">{</span> <span class="tok-keyword">spawn</span> <span class="tok-keyword">do</span> <span class="tok-fn">cacheLoop</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-keyword">end</span> <span class="tok-punct">}</span></code></pre>
 
+</div>
+<div class="fn" id="function-supervisor-supervisor">
+<h3><a class="self" href="#function-supervisor-supervisor"><code>supervisor</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">supervisor</span><span class="tok-punct">(</span>restart<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">,</span> children<span class="tok-op">:</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-punct">[</span><span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.5-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">,</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><a class="xref" href="#type-pid"><span class="tok-type">Pid</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.5-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">,</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><a class="xref" href="#type-pid"><span class="tok-type">Pid</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span>
+<span class="tok-fn">supervisor</span><span class="tok-punct">(</span>restart<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">,</span> children<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.5-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">,</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><a class="xref" href="#type-pid"><span class="tok-type">Pid</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.5-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">,</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><a class="xref" href="#type-pid"><span class="tok-type">Pid</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span></code></pre>
+<p>A child that is itself a supervisor over the children its block lists, one per line. Its parent starts it, and restarts it — with all its children — when the parent's restart strategy says so. Takes the same <code>restart:</code> strategies as <code>Supervisor.start</code>. BEAM backend only.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>restart</code></dt><dd><code>:only_crashed</code>, <code>:all</code> or <code>:crashed_and_newer</code></dd></div>
+<div class="param"><dt><code>children</code></dt><dd>the block listing its children</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the supervisor spec</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Supervisor</span><span class="tok-op">.</span><span class="tok-method">supervisor</span><span class="tok-punct">(</span>restart<span class="tok-op">:</span> <span class="tok-op">:</span>all<span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">Supervisor</span><span class="tok-op">.</span><span class="tok-method">worker</span> <span class="tok-punct">{</span> <span class="tok-fn">startPool</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+  <span class="tok-type">Supervisor</span><span class="tok-op">.</span><span class="tok-method">worker</span> <span class="tok-punct">{</span> <span class="tok-fn">startListener</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+</div>
 </section>
+
 
         </article>
       </main>
       <aside class="toc" aria-label="On this page">
-        <nav><p class="toc-heading">On this page</p><ul><li><a href="#type-pid">Pid</a></li><li><a href="#type-task">Task</a></li><li><a href="#type-reference">Reference</a></li><li><a href="#type-process">Process</a></li><li><a href="#type-processexitreason">ProcessExitReason</a></li><li><a href="#record-reply">Reply</a></li><li><a href="#type-from">From</a></li><li><a href="#type-callerror">CallError</a></li><li><a href="#record-server">Server</a></li><li><a href="#module-process">Process</a></li><li class="toc-nested"><a href="#type-process-shared">Shared</a></li><li class="toc-nested"><a href="#module-process-shared">Process.Shared</a></li><li><a href="#record-processresult">ProcessResult</a></li><li><a href="#module-task">Task</a></li><li><a href="#function-worker">worker</a></li></ul></nav>
+        <nav><p class="toc-heading">On this page</p><ul><li><a href="#type-pid">Pid</a></li><li><a href="#type-task">Task</a></li><li><a href="#type-reference">Reference</a></li><li><a href="#type-process">Process</a></li><li><a href="#type-processexitreason">ProcessExitReason</a></li><li><a href="#record-reply">Reply</a></li><li><a href="#type-from">From</a></li><li><a href="#type-callerror">CallError</a></li><li><a href="#record-server">Server</a></li><li><a href="#module-process">Process</a></li><li class="toc-nested"><a href="#type-process-shared">Shared</a></li><li class="toc-nested"><a href="#module-process-shared">Process.Shared</a></li><li><a href="#record-processresult">ProcessResult</a></li><li><a href="#module-task">Task</a></li><li><a href="#module-supervisor">Supervisor</a></li></ul></nav>
       </aside>
     </div>
     <footer class="foot">
