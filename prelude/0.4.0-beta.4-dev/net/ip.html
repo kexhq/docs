@@ -1,0 +1,197 @@
+<section class="entity" id="module-net-ip">
+<h2><span class="kind kind-module">module</span> <code>Net.IP</code></h2>
+<p>Validated, canonical IP addresses and CIDR networks.</p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Net</span><span class="tok-op">.</span><span class="tok-type">IP</span>
+
+<span class="tok-keyword">let</span> address <span class="tok-op">=</span> <span class="tok-type">Address</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">192.0.2.42</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> network <span class="tok-op">=</span> <span class="tok-type">Network</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">192.0.2.0/24</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+network<span class="tok-op">.</span><span class="tok-method">contains</span><span class="tok-punct">(</span>address<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+</section>
+<section class="entity" id="record-net-ip-address">
+<h2><span class="kind kind-record">record</span> <code>Address</code></h2>
+<p>A canonical IPv4 or IPv6 address.</p>
+<p>The stored spelling is normalized, so addresses that arrived in different forms compare and print consistently. Zone identifiers such as <code>%en0</code> are properties of socket endpoints and do not belong here.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>source</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+</dl>
+<section class="members" id="make-address">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="address-string">
+<h4><a class="self" href="#address-string"><code>string</code></a></h4>
+<pre class="code sig"><code>string <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the canonical text form of the address.</p>
+<p class="returns"><strong>Returns</strong> canonical address text</p>
+<h5>Examples</h5>
+<p class="caption"><em>Normalizing an IPv6 address for a log or cache key</em></p>
+<pre class="code"><code><span class="tok-type">Address</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2001:0db8:0:0::42</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-op">.</span><span class="tok-method">string</span>   <span class="tok-comment"># =&gt; &quot;2001:db8::42&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="address-version">
+<h4><a class="self" href="#address-version"><code>version</code></a></h4>
+<pre class="code sig"><code>version <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Returns the address family as <code>4</code> or <code>6</code>.</p>
+<p class="returns"><strong>Returns</strong> <code>4</code> for IPv4 or <code>6</code> for IPv6</p>
+<h5>Examples</h5>
+<p class="caption"><em>Selecting a family-specific socket policy</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> family <span class="tok-op">=</span> address<span class="tok-op">.</span><span class="tok-method">version</span> <span class="tok-op">==</span> <span class="tok-number">6</span> <span class="tok-keyword">then</span> <span class="tok-op">:</span>ipv6 <span class="tok-keyword">else</span> <span class="tok-op">:</span>ipv4</code></pre>
+
+</div>
+<div class="fn" id="address-loopback?">
+<h4><a class="self" href="#address-loopback?"><code>loopback?</code></a></h4>
+<pre class="code sig"><code>loopback? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> for an address that routes back to this host.</p>
+<p>This covers the IPv4 <code>127.0.0.0/8</code> block as well as IPv6 <code>::1</code>; it is not limited to the familiar <code>127.0.0.1</code> spelling.</p>
+<p class="returns"><strong>Returns</strong> whether this is a loopback address</p>
+<h5>Examples</h5>
+<p class="caption"><em>Refusing to expose a development service beyond this machine</em></p>
+<pre class="code"><code><span class="tok-fn">die</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">development server must use loopback</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">if</span> <span class="tok-op">!</span>address<span class="tok-op">.</span><span class="tok-method">loopback?</span></code></pre>
+
+</div>
+<div class="fn" id="address-private?">
+<h4><a class="self" href="#address-private?"><code>private?</code></a></h4>
+<pre class="code sig"><code>private? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> for an address reserved for private networks.</p>
+<p>Use this as one signal in a network policy, not as proof that a peer is trusted: private addresses can still belong to another machine.</p>
+<p class="returns"><strong>Returns</strong> whether this is a private-use address</p>
+<h5>Examples</h5>
+<p class="caption"><em>Rejecting a public target in an internal-only configuration</em></p>
+<pre class="code"><code><span class="tok-bool">Error</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">target must be private</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">if</span> <span class="tok-op">!</span>target<span class="tok-op">.</span><span class="tok-method">private?</span></code></pre>
+
+</div>
+<div class="fn" id="address-unspecified?">
+<h4><a class="self" href="#address-unspecified?"><code>unspecified?</code></a></h4>
+<pre class="code sig"><code>unspecified? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> for the all-zero address: <code>0.0.0.0</code> or <code>::</code>.</p>
+<p>On a listening endpoint this usually means &quot;all local interfaces&quot;. It is not a usable remote destination.</p>
+<p class="returns"><strong>Returns</strong> whether every address bit is zero</p>
+<h5>Examples</h5>
+<p class="caption"><em>Warning before binding a service on every interface</em></p>
+<pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">warn</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">service will be publicly reachable</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">if</span> bind<span class="tok-op">.</span><span class="tok-method">unspecified?</span></code></pre>
+
+</div>
+<div class="fn" id="address-multicast?">
+<h4><a class="self" href="#address-multicast?"><code>multicast?</code></a></h4>
+<pre class="code sig"><code>multicast? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the address names a multicast group.</p>
+<p class="returns"><strong>Returns</strong> whether this is a multicast address</p>
+<h5>Examples</h5>
+<p class="caption"><em>Choosing multicast-specific socket setup</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> mode <span class="tok-op">=</span> destination<span class="tok-op">.</span><span class="tok-method">multicast?</span> <span class="tok-keyword">then</span> <span class="tok-op">:</span>group <span class="tok-keyword">else</span> <span class="tok-op">:</span>unicast</code></pre>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="record-net-ip-network">
+<h2><span class="kind kind-record">record</span> <code>Network</code></h2>
+<p>A canonical CIDR network with host bits cleared.</p>
+<p>Parsing <code>192.0.2.9/24</code> therefore produces <code>192.0.2.0/24</code>. This makes a <a class="xref" href="#record-net-ip-network"><code>Network</code></a> suitable for access-control rules and routing tables: its identity is the range, not whichever host address happened to describe it.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>source</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+</dl>
+<section class="members" id="make-network">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="network-string">
+<h4><a class="self" href="#network-string"><code>string</code></a></h4>
+<pre class="code sig"><code>string <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns canonical CIDR text, including the prefix length.</p>
+<p class="returns"><strong>Returns</strong> canonical CIDR text</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Network</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">192.0.2.99/24</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-op">.</span><span class="tok-method">string</span>   <span class="tok-comment"># =&gt; &quot;192.0.2.0/24&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="network-contains">
+<h4><a class="self" href="#network-contains"><code>contains</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">contains</span><span class="tok-punct">(</span>address<span class="tok-op">:</span> <a class="xref" href="#record-net-ip-address"><span class="tok-type">Address</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when <code>address</code> falls within this network.</p>
+<p>An address from the other family is simply outside the network; callers do not need to compare <code>version</code> first.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>address</code></dt><dd>the address to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> whether <code>address</code> belongs to this network</p>
+<h5>Examples</h5>
+<p class="caption"><em>Checking an application allowlist</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> office <span class="tok-op">=</span> <span class="tok-type">Network</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">198.51.100.0/24</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> allowed? <span class="tok-op">=</span> office<span class="tok-op">.</span><span class="tok-method">contains</span><span class="tok-punct">(</span>requestAddress<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="network-prefix">
+<h4><a class="self" href="#network-prefix"><code>prefix</code></a></h4>
+<pre class="code sig"><code>prefix <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Returns the number of fixed leading address bits.</p>
+<p class="returns"><strong>Returns</strong> the prefix length</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Network</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">10.0.0.0/8</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-op">.</span><span class="tok-method">prefix</span>   <span class="tok-comment"># =&gt; 8</span></code></pre>
+
+</div>
+<div class="fn" id="network-first">
+<h4><a class="self" href="#network-first"><code>first</code></a></h4>
+<pre class="code sig"><code>first <span class="tok-op">:</span> <a class="xref" href="#record-net-ip-address"><span class="tok-type">Address</span></a></code></pre>
+<p>Returns the first address in the range: the address with all host bits cleared.</p>
+<p class="returns"><strong>Returns</strong> the first address in the range</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Network</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">192.0.2.9/24</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-op">.</span><span class="tok-method">first</span><span class="tok-op">.</span><span class="tok-method">string</span>   <span class="tok-comment"># =&gt; &quot;192.0.2.0&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="network-last">
+<h4><a class="self" href="#network-last"><code>last</code></a></h4>
+<pre class="code sig"><code>last <span class="tok-op">:</span> <a class="xref" href="#record-net-ip-address"><span class="tok-type">Address</span></a></code></pre>
+<p>Returns the last address in the range: the address with all host bits set.</p>
+<p>This is the IPv4 broadcast-shaped endpoint of the mathematical range; the API does not decide whether a protocol permits assigning it to a host.</p>
+<p class="returns"><strong>Returns</strong> the last address in the range</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Network</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">192.0.2.9/24</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-op">.</span><span class="tok-method">last</span><span class="tok-op">.</span><span class="tok-method">string</span>   <span class="tok-comment"># =&gt; &quot;192.0.2.255&quot;</span></code></pre>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="module-net-ip-address">
+<h2><span class="kind kind-module">module</span> <code>Net.IP.Address</code></h2>
+<p>Strict parsing and canonicalization of individual IP addresses.</p>
+<div class="functions">
+<div class="fn" id="function-net-ip-address-parse">
+<h3><a class="self" href="#function-net-ip-address-parse"><code>parse</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-ip-address"><span class="tok-type">Address</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Parses IPv4 or IPv6 text and canonicalizes its spelling.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code></dt><dd>an IPv4 dotted quad or IPv6 address</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the address, or <code>Parse</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>+Address.parse(&quot;2001:db8::42&quot;).try.string+.</em></p>
+<pre class="code"><code></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-net-ip-network">
+<h2><span class="kind kind-module">module</span> <code>Net.IP.Network</code></h2>
+<p>Strict parsing and canonicalization of CIDR networks.</p>
+<div class="functions">
+<div class="fn" id="function-net-ip-network-parse">
+<h3><a class="self" href="#function-net-ip-network-parse"><code>parse</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-ip-network"><span class="tok-type">Network</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Parses a CIDR and clears host bits.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code></dt><dd>an address followed by a prefix length</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the network, or <code>Parse</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>+Network.parse(&quot;192.0.2.9/24&quot;).try.string+ is +&quot;192.0.2.0/24&quot;+.</em></p>
+<pre class="code"><code></code></pre>
+
+</div>
+</div>
+</section>
+

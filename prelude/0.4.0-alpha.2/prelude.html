@@ -1,0 +1,43 @@
+
+<p>The prelude is the part of the standard library every Kex file can see without asking for it. The modules listed below need no import — <code>List</code>, <code>Map</code>, <code>String</code>, <code>IO</code> and the rest are simply there, and so are the traits that make ordinary syntax work on your own types (<code>Enumerable</code> behind <code>.map</code>, <code>Truthyable</code> behind <code>if</code>, <code>Errorable</code> behind <code>.try</code>).</p>
+<p>What is NOT here is deliberate, for either of two reasons.</p>
+<p>A library that reaches outside the program — the filesystem (<code>FS</code>), regular expressions (<code>Regex</code>), JSON (<code>JSON</code>), the parser combinators (<code>Parsing</code>) — stays one <code>using</code> away, so a file's imports say what it touches.</p>
+<p>So does a library most files simply do not need, however pure it is: bit twiddling (<code>Bits</code>), sets and other containers (<code>Data.Set</code>), hashing (<code>Digest</code>), command lines (<code>OptionParser</code>), the sandboxed evaluator (<code>Evaluator</code>). The prelude is a global scope, and every name in it is a name every program has to route around — so the bar is &quot;nearly every file wants this&quot;, not &quot;this is useful&quot;.</p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">FS</span>
+
+<span class="tok-keyword">main</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">config.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># IO is free, FS is asked for</span>
+<span class="tok-keyword">end</span></code></pre>
+<p>Keep this file declarative: each bare <code>using</code> names a sibling stdlib source file, and the toolchain expands them in order when it builds or loads the prelude.</p>
+
+<h2 class="group">Modules in the prelude</h2>
+<p class="group-note">27 module(s), visible in every file with no import.</p>
+<ul class="prelude-list">
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/algebra/">Algebra</a></code></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/binary/">Binary</a></code></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/blankable/">Blankable</a></code></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/console/">Console</a></code> <span class="prelude-note">ANSI terminal styling: colors, text attributes, and cursor control.</span></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/enumerable/">Enumerable</a></code></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/env/">Env</a></code></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/errorable/">Errorable</a></code></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/feed/">Feed</a></code> <span class="prelude-note">Constructors for <code>Feed</code>.</span></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/filehandle/">FileHandle</a></code></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/io/">IO</a></code> <span class="prelude-note">Console input and output.</span></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/kex/">Kex</a></code> <span class="prelude-note">The running toolchain: which backend, which version, which features.</span></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/list/">List</a></code></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/map/">Map</a></code></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/math/">Math</a></code> <span class="prelude-note">Mathematical constants and functions.</span></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/number/">Number</a></code> <span class="prelude-note">Reading a number out of text without deciding in advance which half of the numeric tower it belongs to.</span></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/optional/">Optional</a></code></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/process/">Process</a></code> <span class="prelude-note">Spawning servers, running external commands, and the ambient process operations.</span></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/range/">Range</a></code></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/stream/">Stream</a></code> <span class="prelude-note">Constructors for <code>Stream</code>.</span></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/string/">String</a></code> <span class="prelude-note">Constructors for <code>String</code> values that are built from something other than text — a Unicode codepoint, or raw UTF-8 bytes.</span></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/system/">System</a></code> <span class="prelude-note">The running process and the machine under it: exiting, and asking what platform this is.</span></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/time/">Time</a></code> <span class="prelude-note">Building times of day, controlling the clock in tests, and the calendar arithmetic the rest of this file is written on.</span></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/test/">Test</a></code></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/taggedvalidation/">TaggedValidation</a></code> <span class="prelude-note">Diagnostics returned by compile-time validators for tagged literals.</span></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/truthyable/">Truthyable</a></code></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/type/">Type</a></code> <span class="prelude-note">Building and obtaining <code>Type</code> values.</span></li>
+<li><code><a class="xref" href="/prelude/0.4.0-alpha.2/units/">Units</a></code> <span class="prelude-note">The time units are prelude-global, because every unit module measures against the same dimensions — <code>Units.SI</code> defines <code>Watt * Hour</code> with the <code>Hour</code> declared above, and future domains do the same. That makes <code>Hour</code> correct but not obviously located, so the same constructors are reachable under <code>Units</code> too, for call sites that would rather name where a unit comes from. These are aliases, not copies: each binds the identical constructor, so <code>Units.Hour</code> and <code>Hour</code> match the same patterns and compare equal.</span></li>
+</ul>

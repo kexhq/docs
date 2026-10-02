@@ -1,0 +1,496 @@
+<section class="entity" id="type-reader">
+<h2><span class="kind kind-type">type</span> <code>Reader</code></h2>
+<p>Mock: deterministic stand-ins for the world outside the program: the filesystem, environment, and console. Networking mocks live under Mock.Net.</p>
+<p>These are STATEFUL: <code>Mock.FS.File(path, content)</code> writes into a store the real <a class="xref" href="/prelude/0.4.0-beta.4-dev/fs/#module-fs-file"><code>FS.File</code></a> then reads back, so a test can write and read again, and <code>clear()</code> undoes it. That state is global and lives until cleared, which is what makes hook ordering and write/read round trips testable, and also what makes two tests able to interfere.</p>
+<p>When a test only needs canned ANSWERS, replacing the capability is the better tool: <code>with FS.File = MyFake { ... } do ... end</code> swaps the implementation for one lexical region, holds no global state, needs no clearing, and cannot leak into another test. See spec/capability_stdlib_fs.kex for the shape of a stand-in (kexhq/kex#143).</p>
+<p>Opt-in on purpose (issue #144): this module used to ride along inside a prelude networking file, so importing the prelude made every Mock.* reachable from every program without anyone asking for it. Reachable is still not callable: the runtime denies the mock intrinsics outside spec files, the REPL, and --allow-mocks, but it should also not be in scope by accident. A qualified <code>Mock.FS.File(...)</code> auto-loads this file like any other opt-in module.</p>
+<p>All Mock.* sub-modules live in a single <code>module Mock</code> block so merged compilation units never see duplicate top-level <a class="xref" href="#module-mock"><code>Mock</code></a> modules. A stand-in's read hook: a path in, its content or <code>None</code> out.</p>
+
+</section>
+<section class="entity" id="type-lookup">
+<h2><span class="kind kind-type">type</span> <code>Lookup</code></h2>
+<p>An environment stand-in's lookup hook: a name in, its value or <code>None</code> out.</p>
+
+</section>
+<section class="entity" id="type-writer">
+<h2><span class="kind kind-type">type</span> <code>Writer</code></h2>
+<p>An environment stand-in's WRITE hook: the name and the value a program set. A <a class="xref" href="#record-mock-env"><code>Mock.Env</code></a> is an immutable record, so a write cannot land in its <code>vars</code>, and it must not reach the real environment, or a test would leak a variable into the next one and into anything the suite starts. The hook is how a test observes the write instead: record it, assert on it, or ignore it, which is what <code>None</code> does.</p>
+
+</section>
+<section class="entity" id="module-mock">
+<h2><span class="kind kind-module">module</span> <code>Mock</code></h2>
+</section>
+<section class="entity" id="record-mock-files">
+<h2><span class="kind kind-record">record</span> <code>Files</code></h2>
+<p>A stand-in for the <a class="xref" href="/prelude/0.4.0-beta.4-dev/fs/#module-fs-file"><code>FS.File</code></a> capability, for <code>with FS.File = ...</code>. Unlike the <code>Mock.*</code> functions below it holds no global state, needs no <code>clear()</code>, and cannot leak past its block. What it cannot do is change: <code>write</code> then <code>read</code> back is not something a value does, so a test needing that round trip still wants <a class="xref" href="#module-mock-fs"><code>Mock.FS</code></a> (kexhq/kex#143).</p>
+<pre class="code"><code><span class="tok-keyword">with</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span> <span class="tok-op">=</span> <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Files</span> <span class="tok-punct">{</span> files<span class="tok-op">:</span> <span class="tok-punct">{</span><span class="tok-string">&quot;</span><span class="tok-string">kex.toml</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">name = \&quot;demo\&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">}</span> <span class="tok-punct">}</span> <span class="tok-keyword">do</span>
+  <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-fn">loadConfig</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">demo</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+<p><code>onRead</code> takes over when a test needs an ANSWER rather than a fixture: content derived from the path, a failure on the third call, a record of what was asked for. It is consulted first and its <code>None</code> means &quot;no such file&quot;, so a callback can model absence too.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>files</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/map/#type-map">Map</a>&lt;<a class="xref" href="/prelude/0.4.0-beta.4-dev/fs/#type-fs-filepath">FS.FilePath</a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>&gt;</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>onRead</code></dt><dd><code><a class="xref" href="#type-reader">Reader</a>?</code> <span class="opt">optional</span></dd></div>
+</dl>
+<p class="implements">Implements <code>FS.File</code>.</p>
+<section class="members" id="make-files">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="files-cannedread">
+<h4><a class="self" href="#files-cannedread"><code>cannedRead</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">cannedRead</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+<p>Named apart from <code>read</code>: <code>this.read(path)</code> would bind to the capability's own <code>read : FilePath -&gt; String?</code>, not to this method.</p>
+
+</div>
+<div class="fn" id="files-read">
+<h4><a class="self" href="#files-read"><code>read</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">read</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="files-readbytes">
+<h4><a class="self" href="#files-readbytes"><code>readBytes</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">readBytes</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="files-readlines">
+<h4><a class="self" href="#files-readlines"><code>readLines</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">readLines</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="files-feed">
+<h4><a class="self" href="#files-feed"><code>feed</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">feed</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="files-size">
+<h4><a class="self" href="#files-size"><code>size</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">size</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="files-exists?">
+<h4><a class="self" href="#files-exists?"><code>exists?</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">exists?</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="files-file?">
+<h4><a class="self" href="#files-file?"><code>file?</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">file?</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="files-directory?">
+<h4><a class="self" href="#files-directory?"><code>directory?</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">directory?</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="files-absolute">
+<h4><a class="self" href="#files-absolute"><code>absolute</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">absolute</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="files-canonical">
+<h4><a class="self" href="#files-canonical"><code>canonical</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">canonical</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="files-symlink?">
+<h4><a class="self" href="#files-symlink?"><code>symlink?</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">symlink?</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="files-info">
+<h4><a class="self" href="#files-info"><code>info</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">info</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="files-open">
+<h4><a class="self" href="#files-open"><code>open</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">open</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> mode<span class="tok-punct">)</span></code></pre>
+<p>A fake is a value, so there is nowhere for a write to go. Refusing is the honest answer and the useful one: a test that did not expect a write sees it fail rather than silently succeed.</p>
+
+</div>
+<div class="fn" id="files-write">
+<h4><a class="self" href="#files-write"><code>write</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">write</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> content<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="files-writebytes">
+<h4><a class="self" href="#files-writebytes"><code>writeBytes</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">writeBytes</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> content<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="files-append">
+<h4><a class="self" href="#files-append"><code>append</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">append</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> content<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="files-delete">
+<h4><a class="self" href="#files-delete"><code>delete</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">delete</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="files-copy">
+<h4><a class="self" href="#files-copy"><code>copy</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">copy</span><span class="tok-punct">(</span>src<span class="tok-punct">,</span> dst<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="files-rename">
+<h4><a class="self" href="#files-rename"><code>rename</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">rename</span><span class="tok-punct">(</span>src<span class="tok-punct">,</span> dst<span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="record-mock-env">
+<h2><span class="kind kind-record">record</span> <code>Env</code></h2>
+<p>A stand-in for the <a class="xref" href="/prelude/0.4.0-beta.4-dev/env/#module-env"><code>ENV</code></a> capability. A name simply left out of <code>vars</code> reads as unset, which is the whole reason <code>Mock.ENV.unset</code> exists: absence is an answer programs act on. <code>onGet</code> answers instead of the map when a test wants a rule rather than a fixture.</p>
+<pre class="code"><code><span class="tok-keyword">with</span> <span class="tok-type">ENV</span> <span class="tok-op">=</span> <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Env</span> <span class="tok-punct">{</span> vars<span class="tok-op">:</span> <span class="tok-punct">{</span><span class="tok-string">&quot;</span><span class="tok-string">HOME</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">/fake</span><span class="tok-string">&quot;</span><span class="tok-punct">}</span> <span class="tok-punct">}</span> <span class="tok-keyword">do</span>
+  <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-fn">configHome</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">/fake/.config</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>vars</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/map/#type-map">Map</a>&lt;<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>&gt;</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>onGet</code></dt><dd><code><a class="xref" href="#type-lookup">Lookup</a>?</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>onSet</code></dt><dd><code><a class="xref" href="#type-writer">Writer</a>?</code> <span class="opt">optional</span></dd></div>
+</dl>
+<p class="implements">Implements <code>ENV</code>.</p>
+<section class="members" id="make-env">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="env-lookup">
+<h4><a class="self" href="#env-lookup"><code>lookup</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">lookup</span><span class="tok-punct">(</span>key<span class="tok-punct">)</span></code></pre>
+<p>Named apart from <code>get</code>: <code>this.get(key)</code> would bind to the capability's own <code>get</code>, not to this method.</p>
+
+</div>
+<div class="fn" id="env-get">
+<h4><a class="self" href="#env-get"><code>get</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">get</span><span class="tok-punct">(</span>key<span class="tok-punct">,</span> default<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="env-has?">
+<h4><a class="self" href="#env-has?"><code>has?</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">has?</span><span class="tok-punct">(</span>key<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="env-keys">
+<h4><a class="self" href="#env-keys"><code>keys</code></a></h4>
+<pre class="code sig"><code>keys</code></pre>
+
+</div>
+<div class="fn" id="env-values">
+<h4><a class="self" href="#env-values"><code>values</code></a></h4>
+<pre class="code sig"><code>values</code></pre>
+
+</div>
+<div class="fn" id="env-count">
+<h4><a class="self" href="#env-count"><code>count</code></a></h4>
+<pre class="code sig"><code>count</code></pre>
+
+</div>
+<div class="fn" id="env-each">
+<h4><a class="self" href="#env-each"><code>each</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">each</span><span class="tok-punct">(</span>f<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="env-entries">
+<h4><a class="self" href="#env-entries"><code>entries</code></a></h4>
+<pre class="code sig"><code>entries</code></pre>
+
+</div>
+<div class="fn" id="env-set">
+<h4><a class="self" href="#env-set"><code>set</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">set</span><span class="tok-punct">(</span>name<span class="tok-punct">,</span> value<span class="tok-punct">)</span></code></pre>
+<p>A write goes to <code>onSet</code> or nowhere. It must NOT reach the real environment: a substituted ENV is the whole point of the mock, and a test that set a variable would otherwise leak it into the next one and into every process the suite starts. <code>vars</code> cannot take it either: a record is immutable, so a test that cares about writes supplies the hook, and one that does not gets a write that goes quietly nowhere.</p>
+
+</div>
+<div class="fn" id="env-unset">
+<h4><a class="self" href="#env-unset"><code>unset</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">unset</span><span class="tok-punct">(</span>name<span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="module-mock-fs">
+<h2><span class="kind kind-module">module</span> <code>Mock.FS</code></h2>
+<p>A stateful stand-in for the filesystem: files a test declares, that the real <a class="xref" href="/prelude/0.4.0-beta.4-dev/fs/#module-fs-file"><code>FS.File</code></a> then reads back.</p>
+<p>The store is global and lives until <code>clear</code>, which is what makes a write followed by a read testable, and what makes two tests able to interfere. Clear it in an <code>after</code> hook.</p>
+<pre class="code"><code>describe <span class="tok-string">&quot;</span><span class="tok-string">the config loader</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+  before <span class="tok-keyword">do</span>
+    <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">files</span><span class="tok-punct">(</span><span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">app.conf</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">port = 8080\n</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+
+  after <span class="tok-keyword">do</span>
+    <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+
+  it <span class="tok-string">&quot;</span><span class="tok-string">reads the port</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+    <span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-fn">loadPort</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">8080</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span></code></pre>
+<div class="functions">
+<div class="fn" id="function-mock-fs-file">
+<h3><a class="self" href="#function-mock-fs-file"><code>File</code></a></h3>
+<pre class="code sig"><code><span class="tok-type">File</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/fs/#module-fs"><span class="tok-type">FS</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/fs/#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> content<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Declares one file and its content.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path the file appears at</dd></div>
+<div class="param"><dt><code>content</code></dt><dd>its contents</dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.conf</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">port = 8080\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-mock-fs-directory">
+<h3><a class="self" href="#function-mock-fs-directory"><code>Directory</code></a></h3>
+<pre class="code sig"><code><span class="tok-type">Directory</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/fs/#module-fs"><span class="tok-type">FS</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/fs/#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Declares a directory at <code>path</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the directory to declare</dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-mock-fs-clear">
+<h3><a class="self" href="#function-mock-fs-clear"><code>clear</code></a></h3>
+<pre class="code sig"><code>clear <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p>Empties the store, so nothing declared so far is visible any more.</p>
+<p>Call it in an <code>after</code> hook: the store is global, and what one test leaves behind the next one sees.</p>
+<h5>Examples</h5>
+<pre class="code"><code>after <span class="tok-keyword">do</span>
+  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="function-mock-fs-files">
+<h3><a class="self" href="#function-mock-fs-files"><code>files</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">files</span><span class="tok-punct">(</span>entries<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/map/#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/fs/#module-fs"><span class="tok-type">FS</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/fs/#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Declares the whole fixture in one call.</p>
+<p>The same shape <code>Mock.Files { files: ... }</code> takes: one line instead of one per file (kexhq/kex#143).</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>entries</code></dt><dd>paths to their contents</dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">files</span><span class="tok-punct">(</span><span class="tok-punct">{</span>
+  <span class="tok-string">&quot;</span><span class="tok-string">app.conf</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">port = 8080\n</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span>
+  <span class="tok-string">&quot;</span><span class="tok-string">hosts</span><span class="tok-string">&quot;</span><span class="tok-op">:</span>    <span class="tok-string">&quot;</span><span class="tok-string">localhost\n</span><span class="tok-string">&quot;</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-mock-fs-onread">
+<h3><a class="self" href="#function-mock-fs-onread"><code>onRead</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">onRead</span><span class="tok-punct">(</span>reader<span class="tok-op">:</span> <a class="xref" href="#type-reader"><span class="tok-type">Reader</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Answers reads by RULE rather than from a fixture.</p>
+<p>Content derived from the path, a failure on the third call, a record of what was asked for. Consulted before the map, and returning <code>None</code> means &quot;no such file&quot;, so absence is expressible too.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>reader</code></dt><dd>the rule to answer reads with</dd></div>
+</dl>
+<h5>Examples</h5>
+<p class="caption"><em>Every .txt path has content, nothing else exists</em></p>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">onRead</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>path<span class="tok-op">|</span>
+  path<span class="tok-op">.</span><span class="tok-method">endsWith?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">then</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">stub</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">else</span> <span class="tok-bool">None</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-mock-env">
+<h2><span class="kind kind-module">module</span> <code>Mock.ENV</code></h2>
+<p>Overlays the process environment, so a test can say what <a class="xref" href="/prelude/0.4.0-beta.4-dev/env/#module-env"><code>ENV</code></a> holds instead of depending on how it was launched.</p>
+<p>The overlay is global and lives until <code>clear</code>: clear it in an <code>after</code> hook.</p>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">vars</span><span class="tok-punct">(</span><span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">HOME</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">/fake</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">LOG_LEVEL</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">debug</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-fn">configPath</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">/fake/.config</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
+<div class="functions">
+<div class="fn" id="function-mock-env-set">
+<h3><a class="self" href="#function-mock-env-set"><code>set</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">set</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Sets one variable in the overlay.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code></dt><dd>the variable name</dd></div>
+<div class="param"><dt><code>value</code></dt><dd>its value</dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">set</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">LOG_LEVEL</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">debug</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-mock-env-unset">
+<h3><a class="self" href="#function-mock-env-unset"><code>unset</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">unset</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Removes one variable from the overlay, so it reads as unset.</p>
+<p>Separate from <code>set</code> because a variable being ABSENT is an answer programs act on, and there is no value that means it.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code></dt><dd>the variable to remove</dd></div>
+</dl>
+<h5>Examples</h5>
+<p class="caption"><em>Testing the unset path</em></p>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">unset</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">HOME</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-fn">configPath</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">.</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-mock-env-clear">
+<h3><a class="self" href="#function-mock-env-clear"><code>clear</code></a></h3>
+<pre class="code sig"><code>clear <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p>Removes the whole overlay, restoring the real environment.</p>
+<h5>Examples</h5>
+<pre class="code"><code>after <span class="tok-keyword">do</span>
+  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="function-mock-env-vars">
+<h3><a class="self" href="#function-mock-env-vars"><code>vars</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">vars</span><span class="tok-punct">(</span>entries<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/map/#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Declares the whole overlay in one call.</p>
+<p>The same shape <code>Mock.Env { vars: ... }</code> takes (kexhq/kex#143). There is no <code>onGet</code> here: global <a class="xref" href="/prelude/0.4.0-beta.4-dev/env/#module-env"><code>ENV</code></a> is a materialised Map, so there is nothing for a callback to intercept: use <code>with ENV = Mock.Env { onGet: ... }</code> when a rule is what you want.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>entries</code></dt><dd>variable names to their values</dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">vars</span><span class="tok-punct">(</span><span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">HOME</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">/fake</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">LOG_LEVEL</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">debug</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-mock-io">
+<h2><span class="kind kind-module">module</span> <code>Mock.IO</code></h2>
+<p>A stateful stand-in for the console: captures what a program prints, and feeds it lines as if they had been typed.</p>
+<p>The way to test a program that talks to a person without one being there.</p>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">input</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Ada</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">42</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-fn">greet</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">output</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">hello, Ada\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
+<div class="functions">
+<div class="fn" id="function-mock-io-start">
+<h3><a class="self" href="#function-mock-io-start"><code>start</code></a></h3>
+<pre class="code sig"><code>start <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p>Starts capturing output and serving queued input.</p>
+<h5>Examples</h5>
+<pre class="code"><code>before <span class="tok-keyword">do</span>
+  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="function-mock-io-stop">
+<h3><a class="self" href="#function-mock-io-stop"><code>stop</code></a></h3>
+<pre class="code sig"><code>stop <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p>Stops capturing, and restores the real console.</p>
+<h5>Examples</h5>
+<pre class="code"><code>after <span class="tok-keyword">do</span>
+  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="function-mock-io-output">
+<h3><a class="self" href="#function-mock-io-output"><code>output</code></a></h3>
+<pre class="code sig"><code>output <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Everything the program has printed since capturing started.</p>
+<p>Newlines are included, so a single <code>IO.printLine(&quot;hi&quot;)</code> gives <code>&quot;hi\n&quot;</code>.</p>
+<p class="returns"><strong>Returns</strong> the captured output</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">output</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">hello\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-mock-io-clear">
+<h3><a class="self" href="#function-mock-io-clear"><code>clear</code></a></h3>
+<pre class="code sig"><code>clear <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p>Discards the captured output, while continuing to capture.</p>
+<p>Useful between phases of one test, when only the later output matters.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-fn">setUpNoisily</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-fn">theThingUnderTest</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">output</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">done\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-mock-io-input">
+<h3><a class="self" href="#function-mock-io-input"><code>input</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">input</span><span class="tok-punct">(</span>first<span class="tok-punct">,</span> second<span class="tok-punct">,</span> third<span class="tok-punct">,</span> fourth<span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Queues the lines <code>IO.getLine</code> will return, in order.</p>
+<p>Takes a list, or up to four lines as separate arguments. Once they run out, <code>IO.getLine</code> answers <code>None</code>: end of input, exactly as a closed stdin would.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>lines</code></dt><dd>the lines to serve, in order</dd></div>
+</dl>
+<h5>Examples</h5>
+<p class="caption"><em>A list of lines</em></p>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">input</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">Ada</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">42</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
+<p class="caption"><em>The same, as separate arguments</em></p>
+<pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">input</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Ada</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">42</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-mock-net">
+<h2><span class="kind kind-module">module</span> <code>Mock.Net</code></h2>
+<p>Scriptable networking values are namespaced so importing Mock does not recreate any of the removed global HTTP types.</p>
+</section>
+<section class="entity" id="module-mock-net-http">
+<h2><span class="kind kind-module">module</span> <code>Mock.Net.HTTP</code></h2>
+<p>Canned HTTP transport state for networking specifications.</p>
+</section>
+<section class="entity" id="record-mock-net-http-transport">
+<h2><span class="kind kind-record">record</span> <code>Transport</code></h2>
+<p>Responses returned in order by a scripted transport.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>responses</code></dt><dd><code>[Any]</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="module-mock-net-dns">
+<h2><span class="kind kind-module">module</span> <code>Mock.Net.DNS</code></h2>
+<p>Canned DNS resolver state for networking specifications.</p>
+</section>
+<section class="entity" id="record-mock-net-dns-resolverscript">
+<h2><span class="kind kind-record">record</span> <code>ResolverScript</code></h2>
+<p>Hostname-to-address answers supplied without touching the network.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>answers</code></dt><dd><code>{<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>: [<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>]}</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="module-mock-net-socket">
+<h2><span class="kind kind-module">module</span> <code>Mock.Net.Socket</code></h2>
+<p>Canned byte-stream state for socket specifications.</p>
+</section>
+<section class="entity" id="record-mock-net-socket-script">
+<h2><span class="kind kind-record">record</span> <code>Script</code></h2>
+<p>Binary chunks delivered in order as incoming socket data.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>incoming</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary">Binary</a>]</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="module-mock-net-websocket">
+<h2><span class="kind kind-module">module</span> <code>Mock.Net.WebSocket</code></h2>
+<p>Canned message state for WebSocket specifications.</p>
+</section>
+<section class="entity" id="record-mock-net-websocket-script">
+<h2><span class="kind kind-record">record</span> <code>Script</code></h2>
+<p>High-level messages delivered in order by a scripted connection.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>incoming</code></dt><dd><code>[Any]</code></dd></div>
+</dl>
+
+</section>

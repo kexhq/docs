@@ -1,0 +1,90 @@
+<section class="entity" id="record-type">
+<h2><span class="kind kind-record">record</span> <code>Type</code></h2>
+<p>Types as values.</p>
+<p><code>Type.of(x)</code> answers what a value IS, as something you can hold, print, compare, and take apart:</p>
+<pre class="code"><code><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">42</span><span class="tok-punct">)</span>                     <span class="tok-comment"># Type { name: &quot;Integer&quot;, args: [] }</span>
+<span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">toString</span>        <span class="tok-comment"># &quot;[Integer]&quot;</span>
+<span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span>x<span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span>y<span class="tok-punct">)</span>        <span class="tok-comment"># structural equality, like any record</span>
+<span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span>due<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">fields</span>             <span class="tok-comment"># [&quot;year&quot;, &quot;month&quot;, &quot;day&quot;]</span></code></pre>
+<p>The answer comes from the compiler where it can: a checked expression knows things a value cannot carry, such as the unused half of a <a class="xref" href="/prelude/0.4.0-alpha/optional/#type-result"><code>Result</code></a> or the element type of an empty list. Where the checker has no concrete answer — gradual code, <code>--no-check</code>, a value arriving from another process — the value itself is asked instead. That fallback is honest but lossy: an empty list has no element to inspect, and a <a class="xref" href="/prelude/0.4.0-alpha/optional/#type-result"><code>Result</code></a> only ever holds one side.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-alpha/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>args</code></dt><dd><code>[<a class="xref" href="#record-type">Type</a>]</code></dd></div>
+<div class="field"><dt><code>pure</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool">Bool</a></code></dd></div>
+</dl>
+<section class="members" id="make-type">
+<h3>Methods</h3>
+<p>Everything else is a METHOD, not a module function: a module function is only reachable through UFCS in the interpreter, so <code>Type.of(x).fields</code> worked there and raised on BEAM.</p>
+
+<div class="functions">
+<div class="fn" id="type-fields">
+<h4><a class="self" href="#type-fields"><code>fields</code></a></h4>
+<pre class="code sig"><code>fields <span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-alpha/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+<p>The field names of a record type, in declaration order, or [] for anything else. Reads the layout the compiler already ships to the runtime for display; no separate metadata.</p>
+
+</div>
+<div class="fn" id="type-constructors">
+<h4><a class="self" href="#type-constructors"><code>constructors</code></a></h4>
+<pre class="code sig"><code>constructors <span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-alpha/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+<p>The constructor names of an ADT, or [] for anything else.</p>
+
+</div>
+<div class="fn" id="type-record?">
+<h4><a class="self" href="#type-record?"><code>record?</code></a></h4>
+<pre class="code sig"><code>record? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>&quot;does this have fields&quot; and &quot;does this have constructors&quot;.</p>
+
+</div>
+<div class="fn" id="type-adt?">
+<h4><a class="self" href="#type-adt?"><code>adt?</code></a></h4>
+<pre class="code sig"><code>adt? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+
+</div>
+<div class="fn" id="type-tostring">
+<h4><a class="self" href="#type-tostring"><code>toString</code></a></h4>
+<pre class="code sig"><code>toString <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The type as it is written in SOURCE, not as it is stored: a list is <code>[Integer]</code>, a tuple <code>(Integer, String)</code>, an optional <code>String?</code>.</p>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="module-type">
+<h2><span class="kind kind-module">module</span> <code>Type</code></h2>
+<div class="functions">
+<div class="fn" id="function-type-of">
+<h3><a class="self" href="#function-type-of"><code>of</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">of</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">Any</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-type"><span class="tok-type">Type</span></a></code></pre>
+<p>What this value is. Prefer this over matching on the record directly.</p>
+
+</div>
+<div class="fn" id="function-type-named">
+<h3><a class="self" href="#function-type-named"><code>named</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">named</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-type"><span class="tok-type">Type</span></a></code></pre>
+<p>Builds a type by name, for comparing against something you already know: <code>Type.of(x) == Type.named(&quot;Date&quot;)</code>.</p>
+
+</div>
+<div class="fn" id="function-type-generic">
+<h3><a class="self" href="#function-type-generic"><code>generic</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">generic</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> args<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#record-type"><span class="tok-type">Type</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-type"><span class="tok-type">Type</span></a></code></pre>
+<p>The same, for a type that takes arguments: <code>Type.of([1]) == Type.generic(&quot;List&quot;, [Type.named(&quot;Integer&quot;)])</code>. Renamed from <code>Type.with</code> when <code>with</code> became the capability-substitution keyword (kexhq/kex#143).</p>
+
+</div>
+<div class="fn" id="function-type-function">
+<h3><a class="self" href="#function-type-function"><code>function</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">function</span><span class="tok-punct">(</span>params<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#record-type"><span class="tok-type">Type</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> result<span class="tok-op">:</span> <a class="xref" href="#record-type"><span class="tok-type">Type</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-type"><span class="tok-type">Type</span></a></code></pre>
+<p>A function type: parameters followed by the result, the way a signature is written — <code>Type.function([Type.named(&quot;String&quot;)], Type.named(&quot;String&quot;))</code>.</p>
+
+</div>
+<div class="fn" id="function-type-returnedby">
+<h3><a class="self" href="#function-type-returnedby"><code>returnedBy</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">returnedBy</span><span class="tok-punct">(</span>function<span class="tok-op">:</span> <span class="tok-type">Any</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-type"><span class="tok-type">Type</span></a></code></pre>
+<p>The type a named function returns, answered by the compiler:</p>
+<pre class="code"><code><span class="tok-type">Type</span><span class="tok-op">.</span><span class="tok-method">returnedBy</span><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">toString</span>   <span class="tok-comment"># &quot;Result&lt;Date, TimeError&gt;&quot;</span></code></pre>
+<p>Named functions only. A lambda or a function VALUE carries no signature at runtime, and an overloaded name has no single answer — both are compile errors rather than a guess.</p>
+
+</div>
+</div>
+</section>
+
