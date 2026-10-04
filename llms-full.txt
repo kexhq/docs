@@ -29885,6 +29885,36 @@ dispatch(args: [String]) -> Integer
 
 The line is parsed once here to answer the two questions `run` cannot — is this `--version`, and does it name a command Tey already answers — and then handed to `run`, which parses it again and dispatches. A parse ERROR is left to `run` as well: reporting it with the help text is the one policy every tool built on OptionParser shares.
 
+### `colorFlag?`
+
+```kex
+colorFlag?(argument: String) -> Bool
+```
+
+Whether an argument turns colors off. `--no-colors` is how `kex` spells it, and somebody switching between the two tools should not have to remember which one takes the `s`.
+
+### `plain?`
+
+```kex
+plain?(args: [String]) -> Bool
+```
+
+Whether the line asks for plain output. Only Tey's own arguments count: past a bare `--` they belong to the program being run, which may well have a `--no-color` of its own.
+
+### `withoutColorFlags`
+
+```kex
+withoutColorFlags(args: [String]) -> [String]
+```
+
+The line without the color flags, which are answered before parsing — by setting NO_COLOR, the one switch `Console`, every child `kex`, and this parser's own error text all read. Taking them out here rather than leaving them to the parser is what makes the flag work wherever it is written: `tey docs` is a passthrough command whose own parser has never heard of it.
+
+### `dispatchArguments`
+
+```kex
+dispatchArguments(args: [String]) -> Integer
+```
+
 ### `relayColors`
 
 ```kex
