@@ -966,9 +966,7 @@ lines<span class="tok-op">.</span><span class="tok-method">each</span> <span cla
 <p>Taking twice answers two different windows: the first ten, then the ten after them. That is the whole difference from <a class="xref" href="/prelude/0.4.0-beta.5-dev/stream/#type-stream"><code>Stream</code></a>, where taking twice answers the same ten. When you want the stream behaviour on a small source, <code>toStream</code> asks for it explicitly, at the cost of holding what it reads.</p>
 <section class="members" id="make-feed">
 <h3>Methods</h3>
-<p>Every method below is <code>let</code>, not <code>foul</code>, though reading a feed plainly is an effect. Two reasons, one principled and one practical.</p>
-<p>The effect is already tracked where it enters: a feed over anything outside the program comes from <code>FS.File.feed</code> or <code>handle.feed</code>, both foul, so a pure function cannot obtain one. What <code>Feed.Elements</code> and <a class="xref" href="/prelude/0.4.0-beta.5-dev/stream/#stream-tofeed"><code>Stream.toFeed</code></a> build from data in hand mutates only a cursor the caller just made.</p>
-<p>And a foul method takes the hidden capability context, which puts it one BEAM arity above the pure <code>take</code>/<code>map</code>/<code>filter</code> every other receiver has. A feed usually arrives with no static type: <code>FS.File.feed(p).or(Feed.empty)</code>, or a <code>Just(f) =&gt;</code> binding, and such a call has to go through the runtime dispatcher, which is built per arity and so could never reach a method one arity up. Marking these foul made every dynamically-typed feed call fail with &quot;Undefined method: take for Tuple&quot;.</p>
+<p>Reading a feed consumes its cursor. Obtain a new feed when you need to traverse the same data again. Opening a file-backed feed is <code>foul</code>; consuming an existing feed does not require another capability.</p>
 
 <div class="functions">
 <div class="fn" id="feed-pull">

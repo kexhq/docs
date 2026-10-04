@@ -382,7 +382,7 @@ Why a source file could not be parsed.
 
 One token of a lossless syntax tree, exactly as written.
 
-Where `parse` gives a program's meaning, `parseSyntax` gives its text: nothing is normalised or dropped, so `toSource` reprints the file byte for byte. It is the tree a formatter or a linter works on (kexhq/kex#136).
+Where `parse` gives a program's meaning, `parseSyntax` gives its text: nothing is normalised or dropped, so `toSource` reprints the file byte for byte. Use it when building a formatter or a linter.
 
 **Fields**
 

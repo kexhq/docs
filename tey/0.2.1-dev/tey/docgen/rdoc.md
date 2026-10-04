@@ -142,6 +142,12 @@ A blank line inside a verbatim block ends a paragraph but not the block, so adja
 classifyBlocks(blocks: [[String]], summary: String, params: [Param], returns: Return?, examples: [Example], deprecated: String?) -> Doc?
 ```
 
+### `directiveBody`
+
+```kex
+directiveBody(lines: [String], prefixLength: Integer) -> String
+```
+
 ### `parseParam`
 
 ```kex

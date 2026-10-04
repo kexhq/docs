@@ -272,10 +272,10 @@ Parses IPv4 or IPv6 text and canonicalizes its spelling.
 
 **Examples**
 
-_+Address.parse("2001:db8::42").try.string+._
+_Canonicalize an IPv6 address_
 
 ```kex
-
+Address.parse("2001:db8::42").try.string   # => "2001:db8::42"
 ```
 
 ## module `Net.IP.Network`
@@ -298,8 +298,8 @@ Parses a CIDR and clears host bits.
 
 **Examples**
 
-_+Network.parse("192.0.2.9/24").try.string+ is +"192.0.2.0/24"+._
+_Normalize a host address to its network_
 
 ```kex
-
+Network.parse("192.0.2.9/24").try.string   # => "192.0.2.0/24"
 ```

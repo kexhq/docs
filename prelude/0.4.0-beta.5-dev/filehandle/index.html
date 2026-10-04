@@ -956,7 +956,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
           <section class="entity" id="type-readerror">
 <h2><span class="kind kind-type">type</span> <code>ReadError</code></h2>
 <p>Why a read failed.</p>
-<p><code>ReadFailed</code> means the source refused the read. <code>InvalidUtf8</code> means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U+FFFD: use <code>readBytes</code> to recover the payload verbatim.</p>
+<p><code>ReadFailed</code> means the source refused the read. <code>InvalidUtf8</code> means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U+FFFD: use <code>readBytes</code> instead of a text read when you need the original bytes.</p>
 <h3>Variants</h3>
 <ul class="variants">
 <li><code>ReadFailed</code></li>
@@ -967,9 +967,9 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <section class="entity" id="trait-readable">
 <h2><span class="kind kind-trait">trait</span> <code>Readable</code></h2>
 <p><a class="xref" href="#trait-readable"><code>Readable</code></a>: a source that yields text.</p>
-<p>Named so that anything can be one, not just a file: the vocabulary <code>FileHandle&lt;CanRead, W&gt;</code> already carried was an abstraction without a name, so nothing else could implement it and <a class="xref" href="/prelude/0.4.0-beta.5-dev/io/#module-io"><code>IO</code></a> did not go through it (kexhq/kex#139). <a class="xref" href="/prelude/0.4.0-beta.5-dev/io/#constant-io-in"><code>IO.in</code></a> is a <a class="xref" href="#trait-readable"><code>Readable</code></a>; so is any handle opened for reading.</p>
+<p><a class="xref" href="/prelude/0.4.0-beta.5-dev/io/#constant-io-in"><code>IO.in</code></a> and file handles opened for reading are <a class="xref" href="#trait-readable"><code>Readable</code></a>. Accept this trait when your function should work with either source.</p>
 <pre class="code"><code><span class="tok-keyword">foul</span> <span class="tok-fn">firstLine</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <span class="tok-type">Readable</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-keyword">do</span>
-  source<span class="tok-op">.</span><span class="tok-method">getLine</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">(empty)</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  source<span class="tok-op">.</span><span class="tok-method">getLine</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">(empty)</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
 <span class="tok-keyword">end</span>
 
 <span class="tok-fn">firstLine</span><span class="tok-punct">(</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-keyword">in</span><span class="tok-punct">)</span>
@@ -983,7 +983,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <h4><a class="self" href="#readable-getline"><code>getLine</code></a></h4>
 <pre class="code sig"><code>getLine <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">String?</span><span class="tok-punct">,</span> <a class="xref" href="#type-readerror"><span class="tok-type">ReadError</span></a><span class="tok-op">&gt;</span></code></pre>
 <p>Reads the next line, without its newline.</p>
-<p class="returns"><strong>Returns</strong> the next line, <code>Ok(None)</code> at end of</p>
+<p class="returns"><strong>Returns</strong> the next line, <code>Ok(None)</code> at end of input, or the failure</p>
 
 </div>
 <div class="fn" id="readable-get">
@@ -991,14 +991,14 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <pre class="code sig"><code>get <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">String?</span><span class="tok-punct">,</span> <a class="xref" href="#type-readerror"><span class="tok-type">ReadError</span></a><span class="tok-op">&gt;</span></code></pre>
 <p>Reads a single character, as a one-character <a class="xref" href="/prelude/0.4.0-beta.5-dev/string/#make-string"><code>String</code></a>.</p>
 <p>Reads one complete Unicode scalar, not one byte.</p>
-<p class="returns"><strong>Returns</strong> the next character, <code>Ok(None)</code> at end</p>
+<p class="returns"><strong>Returns</strong> the next character, <code>Ok(None)</code> at end of input, or the failure</p>
 
 </div>
 <div class="fn" id="readable-readline">
 <h4><a class="self" href="#readable-readline"><code>readLine</code></a></h4>
 <pre class="code sig"><code>readLine <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">String?</span><span class="tok-punct">,</span> <a class="xref" href="#type-readerror"><span class="tok-type">ReadError</span></a><span class="tok-op">&gt;</span></code></pre>
 <p>Reads the next line, without its newline. The same as <code>getLine</code>.</p>
-<p class="returns"><strong>Returns</strong> the next line, <code>Ok(None)</code> at end of</p>
+<p class="returns"><strong>Returns</strong> the next line, <code>Ok(None)</code> at end of input, or the failure</p>
 
 </div>
 <div class="fn" id="readable-read">
@@ -1013,7 +1013,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <h4><a class="self" href="#readable-readbytes"><code>readBytes</code></a></h4>
 <pre class="code sig"><code>readBytes <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-readerror"><span class="tok-type">ReadError</span></a><span class="tok-op">&gt;</span></code></pre>
 <p>Reads everything remaining as raw bytes, without decoding it as text.</p>
-<p>The byte counterpart of <code>read</code>: it never validates UTF-8, so it recovers the payload of a source that is not text, or one <code>read</code> has just rejected. Draining an exhausted source answers <code>Ok(Binary.fromBytes([]))</code>.</p>
+<p>The byte counterpart of <code>read</code>: it returns the remaining bytes without validating UTF-8. Bytes consumed by a failed text read are not returned by a subsequent <code>readBytes</code> call. Draining an exhausted source answers <code>Ok(Binary.fromBytes([]))</code>.</p>
 <p class="returns"><strong>Returns</strong> the remaining bytes, or the failure</p>
 
 </div>
@@ -1037,7 +1037,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <section class="entity" id="trait-writable">
 <h2><span class="kind kind-trait">trait</span> <code>Writable</code></h2>
 <p><a class="xref" href="#trait-writable"><code>Writable</code></a>: a sink that accepts text.</p>
-<p>The payoff of naming it is that a sink becomes a VALUE a library can accept, rather than a global switch it can only sit underneath: output from one library can go to a buffer while another's goes to the terminal (kexhq/kex#139).</p>
+<p>Accept a <a class="xref" href="#trait-writable"><code>Writable</code></a> parameter to let callers choose standard output, standard error, or a file as the destination.</p>
 <pre class="code"><code><span class="tok-keyword">foul</span> <span class="tok-fn">report</span><span class="tok-punct">(</span>out<span class="tok-op">:</span> <span class="tok-type">Writable</span><span class="tok-punct">,</span> lines<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span> <span class="tok-keyword">do</span>
   lines<span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> out<span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>line<span class="tok-punct">)</span> <span class="tok-punct">}</span>
 <span class="tok-keyword">end</span>
@@ -1045,10 +1045,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <span class="tok-fn">report</span><span class="tok-punct">(</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">out</span><span class="tok-punct">,</span> results<span class="tok-punct">)</span>
 <span class="tok-fn">report</span><span class="tok-punct">(</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">error</span><span class="tok-punct">,</span> warnings<span class="tok-punct">)</span>
 <span class="tok-fn">report</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">report.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Write</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">,</span> results<span class="tok-punct">)</span></code></pre>
-<p>Two deliberate choices, both settled in kexhq/kex#139:</p>
-<ul>
-<li>The argument is <code>Showable</code>, not <a class="xref" href="/prelude/0.4.0-beta.5-dev/string/#make-string"><code>String</code></a>. <code>IO.printLine</code> always took a   <code>Showable</code> while the handle methods took a <a class="xref" href="/prelude/0.4.0-beta.5-dev/string/#make-string"><code>String</code></a>; the wider one is   right, and it is what makes <code>IO.printLine(x)</code> and <code>IO.out.printLine(x)</code>   the same call. - The result is <code>Void</code>, not <a class="xref" href="/prelude/0.4.0-beta.5-dev/truthyable/#make-bool"><code>Bool</code></a>. A boolean nobody checks is not an error   channel, and <code>Result&lt;Void, IOError&gt;</code> on every print is miserable to use.   Erlang's answer is the one taken here: the call says <code>ok</code>, and failure   belongs to the device rather than to the call site.</li>
-</ul>
+<p>Write methods accept any <code>Showable</code> value and return <code>Void</code>.</p>
 <p class="implements">Implemented by <a class="xref" href="#make-filehandle-canwrite"><code>FileHandle&lt;R, CanWrite&gt;</code></a>.</p>
 <h3>Required methods</h3>
 <p class="group-note">An implementor writes these.</p>
@@ -1151,9 +1148,9 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <p>Moves the handle's cursor to an absolute byte offset from the start of the file. Read and write share one cursor, so this repositions both — a <code>readLine</code> right after <code>seek(0)</code> starts over from the top, and a <code>write</code> right after does too, overwriting from that point.</p>
 <h5>Parameters</h5>
 <dl class="params">
-<div class="param"><dt><code>offset</code></dt><dd>the byte offset to seek to, from the start of</dd></div>
+<div class="param"><dt><code>offset</code></dt><dd>the byte offset to seek to, from the start of the file</dd></div>
 </dl>
-<p class="returns"><strong>Returns</strong> <code>Ok</code> on success, or why the seek</p>
+<p class="returns"><strong>Returns</strong> <code>Ok</code> on success, or why the seek failed</p>
 <h5>Examples</h5>
 <p class="caption"><em>Reading a length-prefixed record, then rewinding past it</em></p>
 <pre class="code"><code><span class="tok-keyword">let</span> length <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">readLine</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">0</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Integer</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span>
@@ -1165,7 +1162,7 @@ handle<span class="tok-op">.</span><span class="tok-method">seek</span><span cla
 <h4><a class="self" href="#filehandle-reset"><code>reset</code></a></h4>
 <pre class="code sig"><code>reset <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="#type-readerror"><span class="tok-type">ReadError</span></a><span class="tok-op">&gt;</span></code></pre>
 <p>Moves the handle's cursor back to the start of the file — the same as <code>seek(0)</code>, for the common case of re-reading a handle from the top.</p>
-<p class="returns"><strong>Returns</strong> <code>Ok</code> on success, or why the reset</p>
+<p class="returns"><strong>Returns</strong> <code>Ok</code> on success, or why the reset failed</p>
 <h5>Examples</h5>
 <p class="caption"><em>Reading a file twice</em></p>
 <pre class="code"><code><span class="tok-keyword">let</span> firstPass <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>

@@ -960,7 +960,6 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <h3><a class="self" href="#function-regex-regex"><code>regex</code></a></h3>
 <pre class="code sig"><code><span class="tok-fn">regex</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Regex</span><span class="tok-punct">,</span> <a class="xref" href="#record-regex-regexerror"><span class="tok-type">RegexError</span></a><span class="tok-op">&gt;</span>
 <span class="tok-fn">regex</span><span class="tok-punct">(</span>parts<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> values<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">Any</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Regex</span></code></pre>
-<p>NOTE: deliberately does NOT <code>implement: Errorable</code>, even though the trait exists for exactly this shape. Declaring a <code>message</code> method alongside the <code>message</code> field makes <code>e.message</code> dispatch to the method instead of reading the field, which fails with <code>undef</code> on the BEAM backend. <code>ParseError</code>: the prelude's equivalent error record: carries a bare <code>message</code> field for the same reason; nothing in the tree implements Errorable today.</p>
 <p>Compiles <code>source</code> into a <code>Regex</code>.</p>
 <p>Answers a <a class="xref" href="/prelude/0.4.0-beta.5-dev/optional/#type-result"><code>Result</code></a> because an arbitrary string may not be a valid pattern. Use this form when the pattern is built at run time: from a config file, from user input. For a pattern you write yourself, the tag form <code></code> regex<code>\d+</code> <code></code> is checked at compile time and hands back a bare <code>Regex</code>.</p>
 <h5>Parameters</h5>
@@ -1125,7 +1124,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <p>Splits <code>s</code> on <code>re</code>, capping the number of fields.</p>
 <p>A positive <code>limit</code> caps the field count, leaving the remainder unsplit in the last field; a negative <code>limit</code> keeps trailing empty fields instead of dropping them.</p>
 <p>Plain <code>s.split(re)</code> needs no function here at all: it resolves to <a class="xref" href="/prelude/0.4.0-beta.5-dev/string/#string-split"><code>String.split</code></a>, which dispatches to this engine when handed a Regex (in both backends), and follows Ruby's semantics: trailing empty fields are dropped, leading ones are kept, and capture groups are interleaved into the result.</p>
-<p>Only the limit form needs a name, and it deliberately is NOT <code>split</code>: this module must not export that name. On BEAM, a module in scope via <code>using</code> captures a method name for EVERY receiver, so exporting <code>split</code> here would route <code>&quot;a,b&quot;.split(&quot;,&quot;)</code> and even the no-argument <code>&quot;hi&quot;.split</code> through this module and break them.</p>
+<p>Use <code>Regex.splitWithLimit</code> to control the number of fields.</p>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>s</code></dt><dd>the text to split</dd></div>
@@ -1154,7 +1153,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <span class="tok-keyword">main</span> <span class="tok-keyword">do</span>
   <span class="tok-keyword">let</span> line <span class="tok-op">=</span> <span class="tok-string">&quot;</span><span class="tok-string">order #4271 shipped</span><span class="tok-string">&quot;</span>
   <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>line<span class="tok-op">.</span><span class="tok-method">matches?</span><span class="tok-punct">(</span>re`<span class="tok-comment">#\d+`))                     # =&gt; true</span>
-  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>line<span class="tok-op">.</span><span class="tok-method">matches</span><span class="tok-punct">(</span>re`<span class="tok-comment">#(\d+)`).map { |m| m.get(1) })  # =&gt; 4271</span>
+  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>line<span class="tok-op">.</span><span class="tok-method">matches</span><span class="tok-punct">(</span>re`<span class="tok-comment">#(\d+)`).flatMap { |m| m.get(1) }.or(&quot;&quot;))  # =&gt; 4271</span>
 <span class="tok-keyword">end</span></code></pre>
 <p>The call form takes a pattern built at run time and answers a <a class="xref" href="/prelude/0.4.0-beta.5-dev/optional/#type-result"><code>Result</code></a>, because an arbitrary string may not be a valid pattern:</p>
 <pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-fn">regex</span><span class="tok-punct">(</span>userSupplied<span class="tok-punct">)</span> <span class="tok-keyword">do</span>
@@ -1163,7 +1162,9 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <span class="tok-keyword">end</span></code></pre>
 <p>The operations are <code>matches?</code> (is it there), <code>matches</code> (find the first), <code>scan</code> (find them all), <code>replace</code>, and <code>split</code>.</p>
 <p>A compiled regular expression.</p>
-<p><code>Regex</code> carries only its pattern source. The compiled engine object lives in a runtime cache keyed by that source, deliberately: a compiled pattern bakes in the host's PCRE version and must never be embedded in a distributed artifact, so the source string is the value's identity.</p>
+<p>Create one with a <code>re</code> tagged literal or <code>regex(source)</code>.</p>
+<pre class="code"><code><span class="tok-keyword">let</span> digits <span class="tok-op">=</span> re`<span class="tok-punct">[</span><span class="tok-number">0</span><span class="tok-op">-</span><span class="tok-number">9</span><span class="tok-punct">]</span><span class="tok-op">+</span>`
+<span class="tok-string">&quot;</span><span class="tok-string">item 42</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">matches</span><span class="tok-punct">(</span>digits<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">flatMap</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Just(&quot;42&quot;)</span></code></pre>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>source</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.5-dev/string/#make-string">String</a></code></dd></div>
@@ -1196,7 +1197,6 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 </dl>
 <section class="members" id="make-match">
 <h3>Methods</h3>
-<p>NOTE: the accessor is <code>get</code>, not <code>get</code>. A <code>make</code> block on a user type that defines a method name the prelude also uses breaks that name's dispatch for every OTHER type on the BEAM backend: with <code>get</code> here, merely saying <code>using Regex</code> made a plain <code>someMap.get(k)</code> fail with function_clause. <code>get</code> also matches Python's <code>m.get(1)</code> and Java's <code>matcher.get(1)</code>. A plain Map's <code>get</code> is unaffected: resolution picks a local method by receiver type, name and arity.</p>
 
 <div class="functions">
 <div class="fn" id="match-get">

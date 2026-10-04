@@ -14,7 +14,7 @@ entities:
 
 A span between two bounds, written `(1..10)` or `('a'..'z')`.
 
-A range stores its endpoints on both backends without building a list. Integer and character ranges can be enumerated with both ends included. Float ranges describe continuous bounds, for example `(-1.0..1.0)` for random sampling; they cannot be enumerated without an explicit step.
+A range stores its endpoints on both backends without building a list. Integer and character ranges can be enumerated with both ends included. Float ranges describe continuous bounds, for example `(-1.0..1.0)` for random sampling; `items` and traversal methods cannot enumerate them. A range whose lower endpoint exceeds its upper endpoint enumerates as an empty list.
 
 ```kex
 (1..5).items          # => [1, 2, 3, 4, 5]
@@ -88,9 +88,9 @@ Returns the product of the range's elements.
 contains?(value: A) -> Bool
 ```
 
-Returns `true` when `value` falls inside the range, endpoints included.
+Returns `true` when `value` is one of the enumerated elements.
 
-`5.in?(1..10)` says the same thing from the value's side, and often reads better.
+This method materializes the range and supports integer and character ranges only. For continuous bounds, compare the value with each endpoint: `value >= lower && value <= upper`.
 
 **Parameters**
 

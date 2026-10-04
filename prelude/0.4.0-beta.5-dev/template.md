@@ -154,9 +154,7 @@ Template.scan("Hi <%= name")
 escapeHtml(text: String) -> String
 ```
 
-Escapes the five characters HTML gives special meaning: what `Template.html` (kexhq/kex#171 M3) wraps every `<%= %>` hole in, so an interpolated value can never inject markup or break out of an attribute. `<%== %>` opts out.
-
-`&` first, deliberately: escaping it after `<`/`>` would re-escape the `&` those just introduced (`&lt;` -> `&amp;lt;`).
+Escapes `&`, `<`, `>`, double quotes and single quotes for HTML text and quoted attribute values. `Template.html` escapes `<%= %>` holes this way; `<%== %>` inserts text without escaping. This does not validate URLs or escape JavaScript or CSS.
 
 **Parameters**
 
@@ -177,16 +175,16 @@ Template.escapeHtml("<b>Tom & Jerry</b>")
 renderParsed(parsed: Parsed, context: {String: String}) -> Result<String, TemplateError>
 ```
 
-Renders an already-scanned template's holes from a runtime `context`, `<%= %>` HTML-escaped and `<%== %>` raw, same as `Template.html`/ `Template.text` do at compile time — but there is no runtime evaluator for `<% ... %>` CONTROL regions here. Evaluating a `<% if … %>`/`<% match … %>`/ a block loop chosen at run time means evaluating arbitrary Kex source picked at run time, which is its own design decision (kexhq/kex#335) and not what this covers: a template using one reports `UnsupportedControl` with the region's text rather than silently doing nothing with it, so the gap is loud, not a template that quietly renders wrong.
+Fills an already-scanned template from a runtime `context` map.
 
-This is for what `Template.html(Kex.embed(path))` cannot do at all — a template file chosen while the program is running, not baked in at compile time — for the shape of template that does not need control flow: a subject line, a notification body, a plain-text substitution. A template with real control flow still needs compiling in (`Kex.embed`), or a hole it does not have: turning `Parsed#nodes` into a fuller runtime evaluator is further work this only lays the groundwork for.
+`<%= %>` inserts HTML-escaped text and `<%== %>` inserts raw text. Runtime rendering supports substitutions only: a `<% ... %>` control region returns `UnsupportedControl`. Use `Template.html` or `Template.text` for templates with Kex control flow that are known at compile time.
 
-`<%= %>`/`<%== %>` names are looked up VERBATIM (trimmed of surrounding whitespace) in `context` — `dep.name` in a template needs a `"dep.name"` key, not field access into a `dep` key's value. Splitting a dotted hole into a real field path is, again, further work.
+Hole names are trimmed and looked up as complete keys. A hole written `<%= dep.name %>` reads the `"dep.name"` key, rather than a field of a value stored under `"dep"`.
 
 **Parameters**
 
   - `parsed` — a template already scanned by `Template.scan`
-  - `context` — a value for every `<%= %>`/`<%== %>`
+  - `context` — a value for every `<%= %>`/`<%== %>` hole the template uses, keyed by the hole's exact (trimmed) text
 
 **Returns**: the rendered text, or why not
 

@@ -19,7 +19,7 @@ entities:
 
 Why a read failed.
 
-`ReadFailed` means the source refused the read. `InvalidUtf8` means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U+FFFD: use `readBytes` to recover the payload verbatim.
+`ReadFailed` means the source refused the read. `InvalidUtf8` means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U+FFFD: use `readBytes` instead of a text read when you need the original bytes.
 
 **Variants**
 
@@ -32,11 +32,11 @@ Why a read failed.
 
 `Readable`: a source that yields text.
 
-Named so that anything can be one, not just a file: the vocabulary `FileHandle<CanRead, W>` already carried was an abstraction without a name, so nothing else could implement it and `IO` did not go through it (kexhq/kex#139). `IO.in` is a `Readable`; so is any handle opened for reading.
+`IO.in` and file handles opened for reading are `Readable`. Accept this trait when your function should work with either source.
 
 ```kex
 foul firstLine(source: Readable) -> String do
-  source.getLine.or("(empty)")
+  source.getLine.try.or("(empty)")
 end
 
 firstLine(IO.in)
@@ -55,7 +55,7 @@ getLine : Result<String?, ReadError>
 
 Reads the next line, without its newline.
 
-**Returns**: the next line, `Ok(None)` at end of
+**Returns**: the next line, `Ok(None)` at end of input, or the failure
 
 #### `get`
 
@@ -67,7 +67,7 @@ Reads a single character, as a one-character `String`.
 
 Reads one complete Unicode scalar, not one byte.
 
-**Returns**: the next character, `Ok(None)` at end
+**Returns**: the next character, `Ok(None)` at end of input, or the failure
 
 #### `readLine`
 
@@ -77,7 +77,7 @@ readLine : Result<String?, ReadError>
 
 Reads the next line, without its newline. The same as `getLine`.
 
-**Returns**: the next line, `Ok(None)` at end of
+**Returns**: the next line, `Ok(None)` at end of input, or the failure
 
 #### `read`
 
@@ -99,7 +99,7 @@ readBytes : Result<Binary, ReadError>
 
 Reads everything remaining as raw bytes, without decoding it as text.
 
-The byte counterpart of `read`: it never validates UTF-8, so it recovers the payload of a source that is not text, or one `read` has just rejected. Draining an exhausted source answers `Ok(Binary.fromBytes([]))`.
+The byte counterpart of `read`: it returns the remaining bytes without validating UTF-8. Bytes consumed by a failed text read are not returned by a subsequent `readBytes` call. Draining an exhausted source answers `Ok(Binary.fromBytes([]))`.
 
 **Returns**: the remaining bytes, or the failure
 
@@ -129,7 +129,7 @@ Returns `true` when the source has reached its end. The same as `eof?`.
 
 `Writable`: a sink that accepts text.
 
-The payoff of naming it is that a sink becomes a VALUE a library can accept, rather than a global switch it can only sit underneath: output from one library can go to a buffer while another's goes to the terminal (kexhq/kex#139).
+Accept a `Writable` parameter to let callers choose standard output, standard error, or a file as the destination.
 
 ```kex
 foul report(out: Writable, lines: [String]) -> Void do
@@ -141,9 +141,7 @@ report(IO.error, warnings)
 report(FS.File.open("report.txt", Write).try, results)
 ```
 
-Two deliberate choices, both settled in kexhq/kex#139:
-
-- The argument is `Showable`, not `String`. `IO.printLine` always took a   `Showable` while the handle methods took a `String`; the wider one is   right, and it is what makes `IO.printLine(x)` and `IO.out.printLine(x)`   the same call. - The result is `Void`, not `Bool`. A boolean nobody checks is not an error   channel, and `Result<Void, IOError>` on every print is miserable to use.   Erlang's answer is the one taken here: the call says `ok`, and failure   belongs to the device rather than to the call site.
+Write methods accept any `Showable` value and return `Void`.
 
 Implemented by [`FileHandle<R, CanWrite>`](#make-filehandle-canwrite).
 
@@ -273,9 +271,9 @@ Moves the handle's cursor to an absolute byte offset from the start of the file.
 
 **Parameters**
 
-  - `offset` — the byte offset to seek to, from the start of
+  - `offset` — the byte offset to seek to, from the start of the file
 
-**Returns**: `Ok` on success, or why the seek
+**Returns**: `Ok` on success, or why the seek failed
 
 **Examples**
 
@@ -295,7 +293,7 @@ reset : Result<Void, ReadError>
 
 Moves the handle's cursor back to the start of the file — the same as `seek(0)`, for the common case of re-reading a handle from the top.
 
-**Returns**: `Ok` on success, or why the reset
+**Returns**: `Ok` on success, or why the reset failed
 
 **Examples**
 

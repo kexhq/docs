@@ -50,11 +50,11 @@ A time `Measure` such as `5.second` is a third thing and deliberately NOT a Dura
 Values are built through their own module and used through methods:
 
 ```kex
-let due = Date.of(2026, 7, 30).try           # Result<Date, TimeError>
+let due = Date.of(2026, 7, 30).try           # Date
 due.weekday.name                             # "Thursday"
 (due + 10.days).iso                          # "2026-08-09"
 (due + 1.months).iso                         # "2026-08-30"
-Time.now().iso                               # "2026-07-30T14:03:00+02:00"
+Time.now().iso                            # e.g. "14:03:00"
 ```
 
 Anything that reads the clock is mockable: see the test clock section in `module Time` for `Time.frozenAt`.
@@ -1790,7 +1790,7 @@ Not nestable: `release` restores the HOST clock, not whatever control was in eff
   - `moment` — the instant to pin the clock to
   - `body` — what to run with the clock frozen
 
-**Returns**: whatever `body` returned, or why the clock could not be set
+**Returns**: whatever `body` returned, or why the clock could not be set  Time.frozenAt(DateTime.parse("2026-07-30T14:03:00Z").try) do Date.utcToday().iso                     # "2026-07-30" end.try
 
 ### `travellingFrom`
 
@@ -1903,7 +1903,7 @@ The number of days in a month.
 
 Year first, matching `Date.of(year, month, day)` and every other date-shaped signature in this file.
 
-A month outside 1..12 has no answer, so this is a Result rather than an Integer: the old version fell through its month tests and returned 28, which quietly turned `Time.daysInMonth(1, 2026)`: the arguments the wrong way round: into a plausible-looking wrong number.
+Returns `Error(InvalidDate(year, month, 1))` when the month is outside 1 through 12.
 
 **Parameters**
 

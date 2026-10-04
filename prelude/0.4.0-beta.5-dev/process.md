@@ -572,7 +572,7 @@ stream(command: String, args: [String]) -> Result<Integer, String>
 
 Runs an executable with the CALLER's stdout and stderr, so its output appears as it is produced rather than in one block when it exits.
 
-Answers the exit code; nothing is captured: that is the trade, and it is what a long-running child a person is watching needs (kexhq/kex#187).
+Answers the exit code; nothing is captured: that is the trade, and it is useful for commands whose progress should appear in the terminal.
 
 `run` remains the one to use when the output is data to be READ.
 
@@ -886,7 +886,9 @@ start(restart: Atom, children: [(Atom, Block<Pid>)]) -> Result<Pid, Any>
 
 Starts a supervisor over the children its block lists, one per line — +Supervisor.worker+s and nested +Supervisor.supervisor+s. When a child crashes, `restart` decides which of its siblings restart with it:
 
-- `:only_crashed` — just the crashed child - `:crashed_and_newer` — it and the children listed after it - `:all` — every child
+- `:only_crashed` — just the crashed child
+- `:crashed_and_newer` — it and the children listed after it
+- `:all` — every child
 
 The interpreter supports `:only_crashed` without nesting only.
 

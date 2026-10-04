@@ -953,13 +953,15 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
         <nav class="crumbs"><a href="/prelude/">Standard Library</a> <span class="sep">/</span> <span>Mock</span></nav>
         <article class="prose">
           <h1>Mock</h1>
-          <section class="entity" id="type-reader">
-<h2><span class="kind kind-type">type</span> <code>Reader</code></h2>
+          <div class="intro">
 <p>Mock: deterministic stand-ins for the world outside the program: the filesystem, environment, and console. Networking mocks live under Mock.Net.</p>
 <p>These are STATEFUL: <code>Mock.FS.File(path, content)</code> writes into a store the real <a class="xref" href="/prelude/0.4.0-beta.5-dev/fs/#module-fs-file"><code>FS.File</code></a> then reads back, so a test can write and read again, and <code>clear()</code> undoes it. That state is global and lives until cleared, which is what makes hook ordering and write/read round trips testable, and also what makes two tests able to interfere.</p>
-<p>When a test only needs canned ANSWERS, replacing the capability is the better tool: <code>with FS.File = MyFake { ... } do ... end</code> swaps the implementation for one lexical region, holds no global state, needs no clearing, and cannot leak into another test. See spec/capability_stdlib_fs.kex for the shape of a stand-in (kexhq/kex#143).</p>
-<p>Opt-in on purpose (issue #144): this module used to ride along inside a prelude networking file, so importing the prelude made every Mock.* reachable from every program without anyone asking for it. Reachable is still not callable: the runtime denies the mock intrinsics outside spec files, the REPL, and --allow-mocks, but it should also not be in scope by accident. A qualified <code>Mock.FS.File(...)</code> auto-loads this file like any other opt-in module.</p>
-<p>All Mock.* sub-modules live in a single <code>module Mock</code> block so merged compilation units never see duplicate top-level <a class="xref" href="#module-mock"><code>Mock</code></a> modules. A stand-in's read hook: a path in, its content or <code>None</code> out.</p>
+<p>Use <code>with FS.File = MyFake { ... } do ... end</code> for a replacement limited to one block. Use mocks when a test needs state shared across several calls, and clear that state between tests.</p>
+<p>Import with <code>using Mock</code>. Mock operations are allowed in spec files, the REPL, and programs run with <code>--allow-mocks</code>.</p>
+</div>
+<section class="entity" id="type-reader">
+<h2><span class="kind kind-type">type</span> <code>Reader</code></h2>
+<p>A stand-in's read hook: a path in, its content or <code>None</code> out.</p>
 
 </section>
 <section class="entity" id="type-lookup">
@@ -977,7 +979,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 </section>
 <section class="entity" id="record-mock-files">
 <h2><span class="kind kind-record">record</span> <code>Files</code></h2>
-<p>A stand-in for the <a class="xref" href="/prelude/0.4.0-beta.5-dev/fs/#module-fs-file"><code>FS.File</code></a> capability, for <code>with FS.File = ...</code>. Unlike the <code>Mock.*</code> functions below it holds no global state, needs no <code>clear()</code>, and cannot leak past its block. What it cannot do is change: <code>write</code> then <code>read</code> back is not something a value does, so a test needing that round trip still wants <a class="xref" href="#module-mock-fs"><code>Mock.FS</code></a> (kexhq/kex#143).</p>
+<p>A stand-in for the <a class="xref" href="/prelude/0.4.0-beta.5-dev/fs/#module-fs-file"><code>FS.File</code></a> capability, for <code>with FS.File = ...</code>. Unlike the <code>Mock.*</code> functions below it holds no global state, needs no <code>clear()</code>, and cannot leak past its block. What it cannot do is change: <code>write</code> then <code>read</code> back is not something a value does, so a test needing that round trip uses <a class="xref" href="#module-mock-fs"><code>Mock.FS</code></a>.</p>
 <pre class="code"><code><span class="tok-keyword">with</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span> <span class="tok-op">=</span> <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Files</span> <span class="tok-punct">{</span> files<span class="tok-op">:</span> <span class="tok-punct">{</span><span class="tok-string">&quot;</span><span class="tok-string">kex.toml</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">name = \&quot;demo\&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">}</span> <span class="tok-punct">}</span> <span class="tok-keyword">do</span>
   <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-fn">loadConfig</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">demo</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
 <span class="tok-keyword">end</span></code></pre>
@@ -1227,7 +1229,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <h3><a class="self" href="#function-mock-fs-files"><code>files</code></a></h3>
 <pre class="code sig"><code><span class="tok-fn">files</span><span class="tok-punct">(</span>entries<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/map/#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.5-dev/fs/#module-fs"><span class="tok-type">FS</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-beta.5-dev/fs/#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
 <p>Declares the whole fixture in one call.</p>
-<p>The same shape <code>Mock.Files { files: ... }</code> takes: one line instead of one per file (kexhq/kex#143).</p>
+<p>The same shape <code>Mock.Files { files: ... }</code> takes: one line instead of one per file.</p>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>entries</code></dt><dd>paths to their contents</dd></div>
@@ -1308,7 +1310,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <h3><a class="self" href="#function-mock-env-vars"><code>vars</code></a></h3>
 <pre class="code sig"><code><span class="tok-fn">vars</span><span class="tok-punct">(</span>entries<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/map/#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
 <p>Declares the whole overlay in one call.</p>
-<p>The same shape <code>Mock.Env { vars: ... }</code> takes (kexhq/kex#143). There is no <code>onGet</code> here: global <a class="xref" href="/prelude/0.4.0-beta.5-dev/env/#module-env"><code>ENV</code></a> is a materialised Map, so there is nothing for a callback to intercept: use <code>with ENV = Mock.Env { onGet: ... }</code> when a rule is what you want.</p>
+<p>Supply a map of variable names to their values. Use <code>with ENV = Mock.Env { onGet: ... }</code> when a callback should decide the value for each lookup instead.</p>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>entries</code></dt><dd>variable names to their values</dd></div>
@@ -1395,7 +1397,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 
 <section class="entity" id="module-mock-net">
 <h2><span class="kind kind-module">module</span> <code>Mock.Net</code></h2>
-<p>Scriptable networking values are namespaced so importing Mock does not recreate any of the removed global HTTP types.</p>
+<p>Scriptable networking values for testing HTTP, DNS, sockets and WebSockets.</p>
 </section>
 <section class="entity" id="module-mock-net-http">
 <h2><span class="kind kind-module">module</span> <code>Mock.Net.HTTP</code></h2>

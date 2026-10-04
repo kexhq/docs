@@ -140,7 +140,7 @@ Resolves a URI reference against this absolute base.
 
   - `reference` — the relative or absolute reference
 
-**Returns**: the resolved URI, or `NotAbsolute` when
+**Returns**: the resolved URI, or `NotAbsolute` when this receiver cannot serve as a base
 
 **Examples**
 

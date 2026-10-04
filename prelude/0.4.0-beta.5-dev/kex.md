@@ -189,7 +189,7 @@ Loads the compiled module at `path`, replacing an older version of it that is al
 
   - `path` — a `.beam` file written by `kex --compile`
 
-**Returns**: the module, or why it could not be
+**Returns**: the module, or why it could not be loaded
 
 **Examples**
 
@@ -390,8 +390,6 @@ The release string with the build revision after it, when there is one.
 
 This is what `kex --version` and the REPL banner print.
 
-`to(String)`: the language's conversion protocol, and what this should really be: is deliberately NOT defined here: a second `to(String)` implementation anywhere in the prelude breaks type-directed `to` dispatch for every prelude type on BEAM, so adding one here silently broke `3.kilowatt.to(String)`. Pinned by spec/prelude_to_string_dispatch.kex; restore this as `to(String)` once that dispatcher is fixed.
-
 **Returns**: the full version string
 
 **Examples**
@@ -410,7 +408,7 @@ IO.printLine("built with Kex ${Kex.VERSION.number}")
 
 A compiled module loaded into the running program by `Kex.load`.
 
-For a program that decides at run time what code it needs: a site generator rendering a theme's templates, a plugin host. Compile the source with `kex --compile -o <dir>` once, then load the `.beam` and call it as often as needed, without starting another VM for every call (kexhq/kex#399).
+For a program that decides at run time what code it needs: a site generator rendering a theme's templates, a plugin host. Compile the source with `kex --compile -o <dir>` once, then load the `.beam` and call it as often as needed in the same running VM.
 
 Every entry module is named after its file (`kex_<stem>.beam` for `<stem>.kex`), and so is everything declared at the top level of that file. A `let render = Template.html(Kex.embed(path))` written outside any `module` therefore lands in `kex_<stem>`, not in a module the file names; give each generated file a distinct name, or put the declaration inside a `module`, whose functions compile into `Kex.<Name>`.
 
@@ -442,7 +440,7 @@ A failure inside the call is an `Error` describing it, not a crash of the caller
   - `function` — the function's name
   - `arguments` — its arguments, in order
 
-**Returns**: what the function returned, or why the
+**Returns**: what the function returned, or why the call failed
 
 **Examples**
 
@@ -526,7 +524,7 @@ inspected(value: Inspectable) -> String
 
 Returns the pretty-printed representation of any value as a STRING: the same form the REPL echoes. Universal: reachable on every type through UFCS.
 
-Named apart from `inspect`, which prints and returns its INPUT so it can be dropped into a pipeline. Both spellings used to be called `inspect`, and which one a call reached depended on whether it was written `x.inspect` or `IO.inspect(x)`, so `[1, 2].inspect.count` answered 24, the length of the rendered string, rather than 2.
+Use `inspected` to obtain text, and `IO.inspect` to print a value and return it unchanged in a pipeline.
 
 **Parameters**
 

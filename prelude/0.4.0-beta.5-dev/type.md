@@ -34,7 +34,7 @@ The answer comes from the compiler where it can: a checked expression knows thin
 
 ### Methods
 
-Everything else is a METHOD, not a module function: a module function is only reachable through UFCS in the interpreter, so `Type.of(x).fields` worked there and raised on BEAM.
+Reflection methods on runtime type values.
 
 #### `fields`
 
@@ -254,8 +254,6 @@ generic(name: String, args: [Type]) -> Type
 ```
 
 Builds a type that takes arguments, from its name and those arguments.
-
-Renamed from `Type.with` when `with` became the capability-substitution keyword (kexhq/kex#143).
 
 **Parameters**
 

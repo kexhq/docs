@@ -230,7 +230,14 @@ Timing and attempt limits for `run`.
 
 Defaults: three attempts, starting with a 100 ms wait, doubling up to 5 seconds, with 20% jitter. All fields are optional. A schedule holds settings. Reusing it starts each run from attempt one.
 
-* `attempts`: maximum executions, including the first; default 3. * `delay`: initial base wait; default 100 milliseconds. * `backoff`: base-delay multiplier; default 2.0, or 1.0 for fixed waits. * `maximumDelay`: cap on each actual wait, including jitter; default 5 seconds. * `jitter`: symmetric proportional variation; default 0.2, or 0.0 to disable. * `maximumTotalDelay`: cumulative sleep allowance; default `None`.   Operation execution time is excluded. A wait that exceeds the remaining   allowance ends the run without sleeping or calling the operation again.
+* `attempts`: maximum executions, including the first; default 3.
+* `delay`: initial base wait; default 100 milliseconds.
+* `backoff`: base-delay multiplier; default 2.0, or 1.0 for fixed waits.
+* `maximumDelay`: cap on each actual wait, including jitter; default 5 seconds.
+* `jitter`: symmetric proportional variation; default 0.2, or 0.0 to disable.
+* `maximumTotalDelay`: cumulative sleep allowance; default `None`.
+  Operation execution time is excluded. A wait that exceeds the remaining
+  allowance ends the run without sleeping or calling the operation again.
 
 **Fields**
 
@@ -260,7 +267,13 @@ Progress passed to `onRetry` before the next wait.
 
 The callback runs only when another attempt is allowed. It does not run for the first call, a successful result, `done`, or exhaustion. Durations count scheduled sleep; they exclude time spent in the operation.
 
-* `attempt`: the just-completed attempt, starting at 1. * `nextAttempt`: the attempt that follows the upcoming wait. * `maximumAttempts`: total permitted executions, including the first. * `remainingAttempts`: executions remaining, including the upcoming one. * `delay`: actual upcoming wait, after jitter and the delay cap. * `totalDelay`: sleep already performed, excluding the upcoming wait. * `result`: the last `Error` or `Again`, including its application payload.
+* `attempt`: the just-completed attempt, starting at 1.
+* `nextAttempt`: the attempt that follows the upcoming wait.
+* `maximumAttempts`: total permitted executions, including the first.
+* `remainingAttempts`: executions remaining, including the upcoming one.
+* `delay`: actual upcoming wait, after jitter and the delay cap.
+* `totalDelay`: sleep already performed, excluding the upcoming wait.
+* `result`: the last `Error` or `Again`, including its application payload.
 
 **Fields**
 

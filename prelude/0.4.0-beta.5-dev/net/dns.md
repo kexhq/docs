@@ -317,7 +317,7 @@ This does not inherit the machine's search domains or nameservers. It is useful 
 
 **Parameters**
 
-  - `options` — nameservers, search domains, retry count,
+  - `options` — nameservers, search domains, retry count, per-query timeout, and cache bounds
 
 **Returns**: a resolver, or `Parse`
 

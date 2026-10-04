@@ -121,7 +121,7 @@ What one `stat` of a path says about it.
 
 Reading and writing files.
 
-A capability: every member reaches the real filesystem, so a test can replace the whole thing for a lexical region with `with FS.File = ...` instead of mutating global mock state (kexhq/kex#143). The boundary is here rather than on `FS`, because `FS.Path` below is pure string work with no implementation to substitute.
+A capability: every member reaches the real filesystem, so a test can replace the whole thing for a lexical region with `with FS.File = ...` to test file operations without touching the filesystem. `FS.Path` operations only manipulate path strings.
 
 ### `open`
 
@@ -625,8 +625,6 @@ Resolves `path` against the process's current directory and returns the absolute
 
 This is the one path operation that is not in `FS.Path`, because it is not lexical: it asks the process where it is.
 
-Path manipulation lives in FS.Path: `basename`, `dirname`, `extension` and `join` used to be here too, but a name cannot sit in both modules: FilePath IS String, so two same-named receiver functions on it are indistinguishable at every call site. `absolute` stays because it is not lexical: it asks the process where it is.
-
 **Parameters**
 
   - `path` — the path to resolve
@@ -701,7 +699,7 @@ One call answers what `file?`, `directory?`, `symlink?` and `size` would otherwi
 
   - `path` — the path to inspect
 
-**Returns**: what the path names, or
+**Returns**: what the path names, or `ReadFailed` when it cannot be read
 
 **Examples**
 

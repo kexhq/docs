@@ -745,8 +745,6 @@ Splits the string into its individual characters, as one-character strings.
 
 Use `chars` instead when you want `Char` values rather than strings.
 
-Separator-less: one part per character, as the example above shows. Only the intrinsic had this form, so the walker answered `"hi".split` with "'this' used outside of a method context" while BEAM returned the parts. Declared BEFORE the separator form, as `sort` is in list.kex: the walker resolves a no-argument call against the first clause of that name.
-
 **Returns**: one string per character
 
 **Examples**

@@ -18,8 +18,6 @@ regex(source: String) -> Result<Regex, RegexError>
 regex(parts: [String], values: [Any]) -> Regex
 ```
 
-NOTE: deliberately does NOT `implement: Errorable`, even though the trait exists for exactly this shape. Declaring a `message` method alongside the `message` field makes `e.message` dispatch to the method instead of reading the field, which fails with `undef` on the BEAM backend. `ParseError`: the prelude's equivalent error record: carries a bare `message` field for the same reason; nothing in the tree implements Errorable today.
-
 Compiles `source` into a `Regex`.
 
 Answers a `Result` because an arbitrary string may not be a valid pattern. Use this form when the pattern is built at run time: from a config file, from user input. For a pattern you write yourself, the tag form `` regex`\d+` `` is checked at compile time and hands back a bare `Regex`.
@@ -280,7 +278,7 @@ A positive `limit` caps the field count, leaving the remainder unsplit in the la
 
 Plain `s.split(re)` needs no function here at all: it resolves to `String.split`, which dispatches to this engine when handed a Regex (in both backends), and follows Ruby's semantics: trailing empty fields are dropped, leading ones are kept, and capture groups are interleaved into the result.
 
-Only the limit form needs a name, and it deliberately is NOT `split`: this module must not export that name. On BEAM, a module in scope via `using` captures a method name for EVERY receiver, so exporting `split` here would route `"a,b".split(",")` and even the no-argument `"hi".split` through this module and break them.
+Use `Regex.splitWithLimit` to control the number of fields.
 
 **Parameters**
 
@@ -324,7 +322,7 @@ using Regex
 main do
   let line = "order #4271 shipped"
   IO.printLine(line.matches?(re`#\d+`))                     # => true
-  IO.printLine(line.matches(re`#(\d+)`).map { |m| m.get(1) })  # => 4271
+  IO.printLine(line.matches(re`#(\d+)`).flatMap { |m| m.get(1) }.or(""))  # => 4271
 end
 ```
 
@@ -341,7 +339,12 @@ The operations are `matches?` (is it there), `matches` (find the first), `scan` 
 
 A compiled regular expression.
 
-`Regex` carries only its pattern source. The compiled engine object lives in a runtime cache keyed by that source, deliberately: a compiled pattern bakes in the host's PCRE version and must never be embedded in a distributed artifact, so the source string is the value's identity.
+Create one with a `re` tagged literal or `regex(source)`.
+
+```kex
+let digits = re`[0-9]+`
+"item 42".matches(digits).flatMap { |m| m.get(0) }   # => Just("42")
+```
 
 **Fields**
 
@@ -382,8 +385,6 @@ A group that did not participate is an absent key, so `get` answers `None`. This
   - `captures` : [Map](map.md#type-map)<Any, [String](string.md#make-string)>
 
 ### Methods
-
-NOTE: the accessor is `get`, not `get`. A `make` block on a user type that defines a method name the prelude also uses breaks that name's dispatch for every OTHER type on the BEAM backend: with `get` here, merely saying `using Regex` made a plain `someMap.get(k)` fail with function_clause. `get` also matches Python's `m.get(1)` and Java's `matcher.get(1)`. A plain Map's `get` is unaffected: resolution picks a local method by receiver type, name and arity.
 
 #### `get`
 

@@ -134,10 +134,10 @@ The delimiter is included in the returned bytes. An empty delimiter is a `Parse`
 
 **Examples**
 
-_+connection.receiveUntil("\r\n\r\n".to(Binary).try, 65536).try+_
+_Read through the end of an HTTP header section_
 
 ```kex
-
+connection.receiveUntil("\r\n\r\n".to(Binary).try, 65536).try
 ```
 
 ### `receiveLine`
@@ -619,10 +619,10 @@ Receives through `delimiter`, including it, within an explicit bound.
 
 **Examples**
 
-_+connection.receiveUntil("\n".to(Binary).try, 4096).try+_
+_Read through the next newline_
 
 ```kex
-
+connection.receiveUntil("\n".to(Binary).try, 4096).try
 ```
 
 ### `receiveLine`

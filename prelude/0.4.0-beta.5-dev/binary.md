@@ -374,7 +374,7 @@ Strict, so that decoding is the exact inverse of `base64`: the URL-safe alphabet
 
   - `text` — the base64 text
 
-**Returns**: the bytes, or `None` when the text is not canonical
+**Returns**: the bytes, or `None` when the text is not canonical base64
 
 **Examples**
 

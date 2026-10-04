@@ -851,7 +851,7 @@ Strict, so that decoding is the exact inverse of `base64`: the URL-safe alphabet
 
   - `text` — the base64 text
 
-**Returns**: the bytes, or `None` when the text is not canonical
+**Returns**: the bytes, or `None` when the text is not canonical base64
 
 **Examples**
 
@@ -3199,11 +3199,7 @@ Taking twice answers two different windows: the first ten, then the ten after th
 
 ### Methods
 
-Every method below is `let`, not `foul`, though reading a feed plainly is an effect. Two reasons, one principled and one practical.
-
-The effect is already tracked where it enters: a feed over anything outside the program comes from `FS.File.feed` or `handle.feed`, both foul, so a pure function cannot obtain one. What `Feed.Elements` and `Stream.toFeed` build from data in hand mutates only a cursor the caller just made.
-
-And a foul method takes the hidden capability context, which puts it one BEAM arity above the pure `take`/`map`/`filter` every other receiver has. A feed usually arrives with no static type: `FS.File.feed(p).or(Feed.empty)`, or a `Just(f) =>` binding, and such a call has to go through the runtime dispatcher, which is built per arity and so could never reach a method one arity up. Marking these foul made every dynamically-typed feed call fail with "Undefined method: take for Tuple".
+Reading a feed consumes its cursor. Obtain a new feed when you need to traverse the same data again. Opening a file-backed feed is `foul`; consuming an existing feed does not require another capability.
 
 #### `pull`
 
@@ -3481,7 +3477,7 @@ entities:
 
 Why a read failed.
 
-`ReadFailed` means the source refused the read. `InvalidUtf8` means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U+FFFD: use `readBytes` to recover the payload verbatim.
+`ReadFailed` means the source refused the read. `InvalidUtf8` means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U+FFFD: use `readBytes` instead of a text read when you need the original bytes.
 
 **Variants**
 
@@ -3494,11 +3490,11 @@ Why a read failed.
 
 `Readable`: a source that yields text.
 
-Named so that anything can be one, not just a file: the vocabulary `FileHandle<CanRead, W>` already carried was an abstraction without a name, so nothing else could implement it and `IO` did not go through it (kexhq/kex#139). `IO.in` is a `Readable`; so is any handle opened for reading.
+`IO.in` and file handles opened for reading are `Readable`. Accept this trait when your function should work with either source.
 
 ```kex
 foul firstLine(source: Readable) -> String do
-  source.getLine.or("(empty)")
+  source.getLine.try.or("(empty)")
 end
 
 firstLine(IO.in)
@@ -3517,7 +3513,7 @@ getLine : Result<String?, ReadError>
 
 Reads the next line, without its newline.
 
-**Returns**: the next line, `Ok(None)` at end of
+**Returns**: the next line, `Ok(None)` at end of input, or the failure
 
 #### `get`
 
@@ -3529,7 +3525,7 @@ Reads a single character, as a one-character `String`.
 
 Reads one complete Unicode scalar, not one byte.
 
-**Returns**: the next character, `Ok(None)` at end
+**Returns**: the next character, `Ok(None)` at end of input, or the failure
 
 #### `readLine`
 
@@ -3539,7 +3535,7 @@ readLine : Result<String?, ReadError>
 
 Reads the next line, without its newline. The same as `getLine`.
 
-**Returns**: the next line, `Ok(None)` at end of
+**Returns**: the next line, `Ok(None)` at end of input, or the failure
 
 #### `read`
 
@@ -3561,7 +3557,7 @@ readBytes : Result<Binary, ReadError>
 
 Reads everything remaining as raw bytes, without decoding it as text.
 
-The byte counterpart of `read`: it never validates UTF-8, so it recovers the payload of a source that is not text, or one `read` has just rejected. Draining an exhausted source answers `Ok(Binary.fromBytes([]))`.
+The byte counterpart of `read`: it returns the remaining bytes without validating UTF-8. Bytes consumed by a failed text read are not returned by a subsequent `readBytes` call. Draining an exhausted source answers `Ok(Binary.fromBytes([]))`.
 
 **Returns**: the remaining bytes, or the failure
 
@@ -3591,7 +3587,7 @@ Returns `true` when the source has reached its end. The same as `eof?`.
 
 `Writable`: a sink that accepts text.
 
-The payoff of naming it is that a sink becomes a VALUE a library can accept, rather than a global switch it can only sit underneath: output from one library can go to a buffer while another's goes to the terminal (kexhq/kex#139).
+Accept a `Writable` parameter to let callers choose standard output, standard error, or a file as the destination.
 
 ```kex
 foul report(out: Writable, lines: [String]) -> Void do
@@ -3603,9 +3599,7 @@ report(IO.error, warnings)
 report(FS.File.open("report.txt", Write).try, results)
 ```
 
-Two deliberate choices, both settled in kexhq/kex#139:
-
-- The argument is `Showable`, not `String`. `IO.printLine` always took a   `Showable` while the handle methods took a `String`; the wider one is   right, and it is what makes `IO.printLine(x)` and `IO.out.printLine(x)`   the same call. - The result is `Void`, not `Bool`. A boolean nobody checks is not an error   channel, and `Result<Void, IOError>` on every print is miserable to use.   Erlang's answer is the one taken here: the call says `ok`, and failure   belongs to the device rather than to the call site.
+Write methods accept any `Showable` value and return `Void`.
 
 Implemented by [`FileHandle<R, CanWrite>`](#make-filehandle-canwrite).
 
@@ -3735,9 +3729,9 @@ Moves the handle's cursor to an absolute byte offset from the start of the file.
 
 **Parameters**
 
-  - `offset` — the byte offset to seek to, from the start of
+  - `offset` — the byte offset to seek to, from the start of the file
 
-**Returns**: `Ok` on success, or why the seek
+**Returns**: `Ok` on success, or why the seek failed
 
 **Examples**
 
@@ -3757,7 +3751,7 @@ reset : Result<Void, ReadError>
 
 Moves the handle's cursor back to the start of the file — the same as `seek(0)`, for the common case of re-reading a handle from the top.
 
-**Returns**: `Ok` on success, or why the reset
+**Returns**: `Ok` on success, or why the reset failed
 
 **Examples**
 
@@ -4172,7 +4166,7 @@ What one `stat` of a path says about it.
 
 Reading and writing files.
 
-A capability: every member reaches the real filesystem, so a test can replace the whole thing for a lexical region with `with FS.File = ...` instead of mutating global mock state (kexhq/kex#143). The boundary is here rather than on `FS`, because `FS.Path` below is pure string work with no implementation to substitute.
+A capability: every member reaches the real filesystem, so a test can replace the whole thing for a lexical region with `with FS.File = ...` to test file operations without touching the filesystem. `FS.Path` operations only manipulate path strings.
 
 ### `open`
 
@@ -4676,8 +4670,6 @@ Resolves `path` against the process's current directory and returns the absolute
 
 This is the one path operation that is not in `FS.Path`, because it is not lexical: it asks the process where it is.
 
-Path manipulation lives in FS.Path: `basename`, `dirname`, `extension` and `join` used to be here too, but a name cannot sit in both modules: FilePath IS String, so two same-named receiver functions on it are indistinguishable at every call site. `absolute` stays because it is not lexical: it asks the process where it is.
-
 **Parameters**
 
   - `path` — the path to resolve
@@ -4752,7 +4744,7 @@ One call answers what `file?`, `directory?`, `symlink?` and `size` would otherwi
 
   - `path` — the path to inspect
 
-**Returns**: what the path names, or
+**Returns**: what the path names, or `ReadFailed` when it cannot be read
 
 **Examples**
 
@@ -5696,11 +5688,11 @@ out : FileHandle<CannotRead, CanWrite>
 
 The three standard streams, as ordinary handle VALUES.
 
-`IO.printLine(x)` and `IO.out.printLine(x)` are the same call: the convenience spelling stays, and the handle behind it is now something a program can name, pass and substitute. That is what `Mock.IO` cannot do: it is one global switch, so output from one library cannot go to a buffer while another's goes to the terminal, and a library cannot ACCEPT a sink (kexhq/kex#139).
+`IO.printLine(x)` and `IO.out.printLine(x)` both write to standard output. Pass a handle to a function that accepts a sink to choose where it writes.
 
 Typestate says what each one permits: writing to `IO.in`, or reading from `IO.out`, is a compile error, exactly as it is for a file opened `Read`.
 
-These three are PURE, so they are not part of the capability interface a stand-in must implement: naming a device performs no effect, writing THROUGH it does, and the handle methods are the `foul` ones. That also draws the seam between the two ways to redirect output: `with IO = ...` replaces the CALLS, so it does not touch a handle obtained here, while `Mock.IO` replaces the DEVICE (a group leader, kexhq/kex#141) and so captures `IO.out.printLine(x)` and `IO.printLine(x)` alike.
+Obtaining a standard-stream handle is pure; reading or writing through it is `foul`. `Mock.IO` captures writes through both `IO.out` and `IO.printLine`. A `with IO = ...` override replaces module calls only.
 
 **Examples**
 
@@ -6062,7 +6054,7 @@ Loads the compiled module at `path`, replacing an older version of it that is al
 
   - `path` — a `.beam` file written by `kex --compile`
 
-**Returns**: the module, or why it could not be
+**Returns**: the module, or why it could not be loaded
 
 **Examples**
 
@@ -6263,8 +6255,6 @@ The release string with the build revision after it, when there is one.
 
 This is what `kex --version` and the REPL banner print.
 
-`to(String)`: the language's conversion protocol, and what this should really be: is deliberately NOT defined here: a second `to(String)` implementation anywhere in the prelude breaks type-directed `to` dispatch for every prelude type on BEAM, so adding one here silently broke `3.kilowatt.to(String)`. Pinned by spec/prelude_to_string_dispatch.kex; restore this as `to(String)` once that dispatcher is fixed.
-
 **Returns**: the full version string
 
 **Examples**
@@ -6283,7 +6273,7 @@ IO.printLine("built with Kex ${Kex.VERSION.number}")
 
 A compiled module loaded into the running program by `Kex.load`.
 
-For a program that decides at run time what code it needs: a site generator rendering a theme's templates, a plugin host. Compile the source with `kex --compile -o <dir>` once, then load the `.beam` and call it as often as needed, without starting another VM for every call (kexhq/kex#399).
+For a program that decides at run time what code it needs: a site generator rendering a theme's templates, a plugin host. Compile the source with `kex --compile -o <dir>` once, then load the `.beam` and call it as often as needed in the same running VM.
 
 Every entry module is named after its file (`kex_<stem>.beam` for `<stem>.kex`), and so is everything declared at the top level of that file. A `let render = Template.html(Kex.embed(path))` written outside any `module` therefore lands in `kex_<stem>`, not in a module the file names; give each generated file a distinct name, or put the declaration inside a `module`, whose functions compile into `Kex.<Name>`.
 
@@ -6315,7 +6305,7 @@ A failure inside the call is an `Error` describing it, not a crash of the caller
   - `function` — the function's name
   - `arguments` — its arguments, in order
 
-**Returns**: what the function returned, or why the
+**Returns**: what the function returned, or why the call failed
 
 **Examples**
 
@@ -6399,7 +6389,7 @@ inspected(value: Inspectable) -> String
 
 Returns the pretty-printed representation of any value as a STRING: the same form the REPL echoes. Universal: reachable on every type through UFCS.
 
-Named apart from `inspect`, which prints and returns its INPUT so it can be dropped into a pipeline. Both spellings used to be called `inspect`, and which one a call reached depended on whether it was written `x.inspect` or `IO.inspect(x)`, so `[1, 2].inspect.count` answered 24, the length of the rendered string, rather than 2.
+Use `inspected` to obtain text, and `IO.inspect` to print a value and return it unchanged in a pipeline.
 
 **Parameters**
 
@@ -8443,17 +8433,17 @@ entities:
 
 # Mock
 
-## type `Reader`
-
 Mock: deterministic stand-ins for the world outside the program: the filesystem, environment, and console. Networking mocks live under Mock.Net.
 
 These are STATEFUL: `Mock.FS.File(path, content)` writes into a store the real `FS.File` then reads back, so a test can write and read again, and `clear()` undoes it. That state is global and lives until cleared, which is what makes hook ordering and write/read round trips testable, and also what makes two tests able to interfere.
 
-When a test only needs canned ANSWERS, replacing the capability is the better tool: `with FS.File = MyFake { ... } do ... end` swaps the implementation for one lexical region, holds no global state, needs no clearing, and cannot leak into another test. See spec/capability_stdlib_fs.kex for the shape of a stand-in (kexhq/kex#143).
+Use `with FS.File = MyFake { ... } do ... end` for a replacement limited to one block. Use mocks when a test needs state shared across several calls, and clear that state between tests.
 
-Opt-in on purpose (issue #144): this module used to ride along inside a prelude networking file, so importing the prelude made every Mock.* reachable from every program without anyone asking for it. Reachable is still not callable: the runtime denies the mock intrinsics outside spec files, the REPL, and --allow-mocks, but it should also not be in scope by accident. A qualified `Mock.FS.File(...)` auto-loads this file like any other opt-in module.
+Import with `using Mock`. Mock operations are allowed in spec files, the REPL, and programs run with `--allow-mocks`.
 
-All Mock.* sub-modules live in a single `module Mock` block so merged compilation units never see duplicate top-level `Mock` modules. A stand-in's read hook: a path in, its content or `None` out.
+## type `Reader`
+
+A stand-in's read hook: a path in, its content or `None` out.
 
 
 
@@ -8475,7 +8465,7 @@ An environment stand-in's WRITE hook: the name and the value a program set. A `M
 
 ## record `Files`
 
-A stand-in for the `FS.File` capability, for `with FS.File = ...`. Unlike the `Mock.*` functions below it holds no global state, needs no `clear()`, and cannot leak past its block. What it cannot do is change: `write` then `read` back is not something a value does, so a test needing that round trip still wants `Mock.FS` (kexhq/kex#143).
+A stand-in for the `FS.File` capability, for `with FS.File = ...`. Unlike the `Mock.*` functions below it holds no global state, needs no `clear()`, and cannot leak past its block. What it cannot do is change: `write` then `read` back is not something a value does, so a test needing that round trip uses `Mock.FS`.
 
 ```kex
 with FS.File = Mock.Files { files: {"kex.toml": "name = \"demo\""} } do
@@ -8787,7 +8777,7 @@ files(entries: Map<FS.FilePath, String>) -> Void
 
 Declares the whole fixture in one call.
 
-The same shape `Mock.Files { files: ... }` takes: one line instead of one per file (kexhq/kex#143).
+The same shape `Mock.Files { files: ... }` takes: one line instead of one per file.
 
 **Parameters**
 
@@ -8904,7 +8894,7 @@ vars(entries: Map<String, String>) -> Void
 
 Declares the whole overlay in one call.
 
-The same shape `Mock.Env { vars: ... }` takes (kexhq/kex#143). There is no `onGet` here: global `ENV` is a materialised Map, so there is nothing for a callback to intercept: use `with ENV = Mock.Env { onGet: ... }` when a rule is what you want.
+Supply a map of variable names to their values. Use `with ENV = Mock.Env { onGet: ... }` when a callback should decide the value for each lookup instead.
 
 **Parameters**
 
@@ -9031,7 +9021,7 @@ Mock.IO.input("Ada", "42")
 
 ## module `Mock.Net`
 
-Scriptable networking values are namespaced so importing Mock does not recreate any of the removed global HTTP types.
+Scriptable networking values for testing HTTP, DNS, sockets and WebSockets.
 
 
 
@@ -12692,7 +12682,7 @@ stream(command: String, args: [String]) -> Result<Integer, String>
 
 Runs an executable with the CALLER's stdout and stderr, so its output appears as it is produced rather than in one block when it exits.
 
-Answers the exit code; nothing is captured: that is the trade, and it is what a long-running child a person is watching needs (kexhq/kex#187).
+Answers the exit code; nothing is captured: that is the trade, and it is useful for commands whose progress should appear in the terminal.
 
 `run` remains the one to use when the output is data to be READ.
 
@@ -13006,7 +12996,9 @@ start(restart: Atom, children: [(Atom, Block<Pid>)]) -> Result<Pid, Any>
 
 Starts a supervisor over the children its block lists, one per line — +Supervisor.worker+s and nested +Supervisor.supervisor+s. When a child crashes, `restart` decides which of its siblings restart with it:
 
-- `:only_crashed` — just the crashed child - `:crashed_and_newer` — it and the children listed after it - `:all` — every child
+- `:only_crashed` — just the crashed child
+- `:crashed_and_newer` — it and the children listed after it
+- `:all` — every child
 
 The interpreter supports `:only_crashed` without nesting only.
 
@@ -13438,7 +13430,7 @@ entities:
 
 A span between two bounds, written `(1..10)` or `('a'..'z')`.
 
-A range stores its endpoints on both backends without building a list. Integer and character ranges can be enumerated with both ends included. Float ranges describe continuous bounds, for example `(-1.0..1.0)` for random sampling; they cannot be enumerated without an explicit step.
+A range stores its endpoints on both backends without building a list. Integer and character ranges can be enumerated with both ends included. Float ranges describe continuous bounds, for example `(-1.0..1.0)` for random sampling; `items` and traversal methods cannot enumerate them. A range whose lower endpoint exceeds its upper endpoint enumerates as an empty list.
 
 ```kex
 (1..5).items          # => [1, 2, 3, 4, 5]
@@ -13512,9 +13504,9 @@ Returns the product of the range's elements.
 contains?(value: A) -> Bool
 ```
 
-Returns `true` when `value` falls inside the range, endpoints included.
+Returns `true` when `value` is one of the enumerated elements.
 
-`5.in?(1..10)` says the same thing from the value's side, and often reads better.
+This method materializes the range and supports integer and character ranges only. For continuous bounds, compare the value with each endpoint: `value >= lower && value <= upper`.
 
 **Parameters**
 
@@ -14046,8 +14038,6 @@ regex(source: String) -> Result<Regex, RegexError>
 regex(parts: [String], values: [Any]) -> Regex
 ```
 
-NOTE: deliberately does NOT `implement: Errorable`, even though the trait exists for exactly this shape. Declaring a `message` method alongside the `message` field makes `e.message` dispatch to the method instead of reading the field, which fails with `undef` on the BEAM backend. `ParseError`: the prelude's equivalent error record: carries a bare `message` field for the same reason; nothing in the tree implements Errorable today.
-
 Compiles `source` into a `Regex`.
 
 Answers a `Result` because an arbitrary string may not be a valid pattern. Use this form when the pattern is built at run time: from a config file, from user input. For a pattern you write yourself, the tag form `` regex`\d+` `` is checked at compile time and hands back a bare `Regex`.
@@ -14308,7 +14298,7 @@ A positive `limit` caps the field count, leaving the remainder unsplit in the la
 
 Plain `s.split(re)` needs no function here at all: it resolves to `String.split`, which dispatches to this engine when handed a Regex (in both backends), and follows Ruby's semantics: trailing empty fields are dropped, leading ones are kept, and capture groups are interleaved into the result.
 
-Only the limit form needs a name, and it deliberately is NOT `split`: this module must not export that name. On BEAM, a module in scope via `using` captures a method name for EVERY receiver, so exporting `split` here would route `"a,b".split(",")` and even the no-argument `"hi".split` through this module and break them.
+Use `Regex.splitWithLimit` to control the number of fields.
 
 **Parameters**
 
@@ -14352,7 +14342,7 @@ using Regex
 main do
   let line = "order #4271 shipped"
   IO.printLine(line.matches?(re`#\d+`))                     # => true
-  IO.printLine(line.matches(re`#(\d+)`).map { |m| m.get(1) })  # => 4271
+  IO.printLine(line.matches(re`#(\d+)`).flatMap { |m| m.get(1) }.or(""))  # => 4271
 end
 ```
 
@@ -14369,7 +14359,12 @@ The operations are `matches?` (is it there), `matches` (find the first), `scan` 
 
 A compiled regular expression.
 
-`Regex` carries only its pattern source. The compiled engine object lives in a runtime cache keyed by that source, deliberately: a compiled pattern bakes in the host's PCRE version and must never be embedded in a distributed artifact, so the source string is the value's identity.
+Create one with a `re` tagged literal or `regex(source)`.
+
+```kex
+let digits = re`[0-9]+`
+"item 42".matches(digits).flatMap { |m| m.get(0) }   # => Just("42")
+```
 
 **Fields**
 
@@ -14410,8 +14405,6 @@ A group that did not participate is an absent key, so `get` answers `None`. This
   - `captures` : [Map](map.md#type-map)<Any, [String](string.md#make-string)>
 
 ### Methods
-
-NOTE: the accessor is `get`, not `get`. A `make` block on a user type that defines a method name the prelude also uses breaks that name's dispatch for every OTHER type on the BEAM backend: with `get` here, merely saying `using Regex` made a plain `someMap.get(k)` fail with function_clause. `get` also matches Python's `m.get(1)` and Java's `matcher.get(1)`. A plain Map's `get` is unaffected: resolution picks a local method by receiver type, name and arity.
 
 #### `get`
 
@@ -15486,8 +15479,6 @@ Splits the string into its individual characters, as one-character strings.
 
 Use `chars` instead when you want `Char` values rather than strings.
 
-Separator-less: one part per character, as the example above shows. Only the intrinsic had this form, so the walker answered `"hi".split` with "'this' used outside of a method context" while BEAM returned the parts. Declared BEFORE the separator form, as `sort` is in list.kex: the walker resolves a no-argument call against the first clause of that name.
-
 **Returns**: one string per character
 
 **Examples**
@@ -16279,8 +16270,6 @@ System.posix?      # => true
 System.exit(1)     # ends the program with status 1
 ```
 
-Deliberately NOT a capability, and `OS`/`BITWIDTH` stay pure. Faking the reported OS only exercises a program's branching, not the platform behaviour behind it: the file semantics, path rules and process handling that actually differ are unaffected by the atom. Testing those means running on the platform, which CI does across macOS, Ubuntu and Alpine. `Mock.System` existed for this and had exactly one caller: the spec that tested it (kexhq/kex#143).
-
 ### `exit`
 
 ```kex
@@ -16843,9 +16832,7 @@ Template.scan("Hi <%= name")
 escapeHtml(text: String) -> String
 ```
 
-Escapes the five characters HTML gives special meaning: what `Template.html` (kexhq/kex#171 M3) wraps every `<%= %>` hole in, so an interpolated value can never inject markup or break out of an attribute. `<%== %>` opts out.
-
-`&` first, deliberately: escaping it after `<`/`>` would re-escape the `&` those just introduced (`&lt;` -> `&amp;lt;`).
+Escapes `&`, `<`, `>`, double quotes and single quotes for HTML text and quoted attribute values. `Template.html` escapes `<%= %>` holes this way; `<%== %>` inserts text without escaping. This does not validate URLs or escape JavaScript or CSS.
 
 **Parameters**
 
@@ -16866,16 +16853,16 @@ Template.escapeHtml("<b>Tom & Jerry</b>")
 renderParsed(parsed: Parsed, context: {String: String}) -> Result<String, TemplateError>
 ```
 
-Renders an already-scanned template's holes from a runtime `context`, `<%= %>` HTML-escaped and `<%== %>` raw, same as `Template.html`/ `Template.text` do at compile time — but there is no runtime evaluator for `<% ... %>` CONTROL regions here. Evaluating a `<% if … %>`/`<% match … %>`/ a block loop chosen at run time means evaluating arbitrary Kex source picked at run time, which is its own design decision (kexhq/kex#335) and not what this covers: a template using one reports `UnsupportedControl` with the region's text rather than silently doing nothing with it, so the gap is loud, not a template that quietly renders wrong.
+Fills an already-scanned template from a runtime `context` map.
 
-This is for what `Template.html(Kex.embed(path))` cannot do at all — a template file chosen while the program is running, not baked in at compile time — for the shape of template that does not need control flow: a subject line, a notification body, a plain-text substitution. A template with real control flow still needs compiling in (`Kex.embed`), or a hole it does not have: turning `Parsed#nodes` into a fuller runtime evaluator is further work this only lays the groundwork for.
+`<%= %>` inserts HTML-escaped text and `<%== %>` inserts raw text. Runtime rendering supports substitutions only: a `<% ... %>` control region returns `UnsupportedControl`. Use `Template.html` or `Template.text` for templates with Kex control flow that are known at compile time.
 
-`<%= %>`/`<%== %>` names are looked up VERBATIM (trimmed of surrounding whitespace) in `context` — `dep.name` in a template needs a `"dep.name"` key, not field access into a `dep` key's value. Splitting a dotted hole into a real field path is, again, further work.
+Hole names are trimmed and looked up as complete keys. A hole written `<%= dep.name %>` reads the `"dep.name"` key, rather than a field of a value stored under `"dep"`.
 
 **Parameters**
 
   - `parsed` — a template already scanned by `Template.scan`
-  - `context` — a value for every `<%= %>`/`<%== %>`
+  - `context` — a value for every `<%= %>`/`<%== %>` hole the template uses, keyed by the hole's exact (trimmed) text
 
 **Returns**: the rendered text, or why not
 
@@ -17433,11 +17420,11 @@ A time `Measure` such as `5.second` is a third thing and deliberately NOT a Dura
 Values are built through their own module and used through methods:
 
 ```kex
-let due = Date.of(2026, 7, 30).try           # Result<Date, TimeError>
+let due = Date.of(2026, 7, 30).try           # Date
 due.weekday.name                             # "Thursday"
 (due + 10.days).iso                          # "2026-08-09"
 (due + 1.months).iso                         # "2026-08-30"
-Time.now().iso                               # "2026-07-30T14:03:00+02:00"
+Time.now().iso                            # e.g. "14:03:00"
 ```
 
 Anything that reads the clock is mockable: see the test clock section in `module Time` for `Time.frozenAt`.
@@ -19173,7 +19160,7 @@ Not nestable: `release` restores the HOST clock, not whatever control was in eff
   - `moment` — the instant to pin the clock to
   - `body` — what to run with the clock frozen
 
-**Returns**: whatever `body` returned, or why the clock could not be set
+**Returns**: whatever `body` returned, or why the clock could not be set  Time.frozenAt(DateTime.parse("2026-07-30T14:03:00Z").try) do Date.utcToday().iso                     # "2026-07-30" end.try
 
 ### `travellingFrom`
 
@@ -19286,7 +19273,7 @@ The number of days in a month.
 
 Year first, matching `Date.of(year, month, day)` and every other date-shaped signature in this file.
 
-A month outside 1..12 has no answer, so this is a Result rather than an Integer: the old version fell through its month tests and returned 28, which quietly turned `Time.daysInMonth(1, 2026)`: the arguments the wrong way round: into a plausible-looking wrong number.
+Returns `Error(InvalidDate(year, month, 1))` when the month is outside 1 through 12.
 
 **Parameters**
 
@@ -21186,7 +21173,7 @@ The answer comes from the compiler where it can: a checked expression knows thin
 
 ### Methods
 
-Everything else is a METHOD, not a module function: a module function is only reachable through UFCS in the interpreter, so `Type.of(x).fields` worked there and raised on BEAM.
+Reflection methods on runtime type values.
 
 #### `fields`
 
@@ -21406,8 +21393,6 @@ generic(name: String, args: [Type]) -> Type
 ```
 
 Builds a type that takes arguments, from its name and those arguments.
-
-Renamed from `Type.with` when `with` became the capability-substitution keyword (kexhq/kex#143).
 
 **Parameters**
 
@@ -21803,7 +21788,7 @@ Converts the measure to another unit of the same dimension.
 
 Answers `Error` when the dimensions differ: you cannot express seconds in bytes, and this says so rather than producing a wrong number.
 
-Convert through the Unit trait so units from opt-in modules (SI, Data, and future domains) remain interchangeable with prelude time units.
+Units from opt-in modules such as `Units.SI` and `Units.Data` can be used here too, provided their dimension matches.
 
 **Parameters**
 
@@ -22191,7 +22176,13 @@ timeMeasure(unit: TimeUnit) -> Measure
 
 ## module `Units`
 
-The time units are prelude-global, because every unit module measures against the same dimensions: `Units.SI` defines `Watt * Hour` with the `Hour` declared above, and future domains do the same. That makes `Hour` correct but not obviously located, so the same constructors are reachable under `Units` too, for call sites that would rather name where a unit comes from. These are aliases, not copies: each binds the identical constructor, so `Units.Hour` and `Hour` match the same patterns and compare equal.
+Time-unit constructors, also available directly from the prelude.
+
+`Units.Hour` and `Hour` name the same constructor: they match the same patterns and compare equal. Use the qualified spelling to make the unit family explicit.
+
+```kex
+90.minute.convert(Units.Hour)   # => Ok(1.5 h)
+```
 
 ### `Nanosecond` (constant)
 
@@ -22370,7 +22361,7 @@ Resolves a URI reference against this absolute base.
 
   - `reference` — the relative or absolute reference
 
-**Returns**: the resolved URI, or `NotAbsolute` when
+**Returns**: the resolved URI, or `NotAbsolute` when this receiver cannot serve as a base
 
 **Examples**
 
@@ -23045,7 +23036,14 @@ Timing and attempt limits for `run`.
 
 Defaults: three attempts, starting with a 100 ms wait, doubling up to 5 seconds, with 20% jitter. All fields are optional. A schedule holds settings. Reusing it starts each run from attempt one.
 
-* `attempts`: maximum executions, including the first; default 3. * `delay`: initial base wait; default 100 milliseconds. * `backoff`: base-delay multiplier; default 2.0, or 1.0 for fixed waits. * `maximumDelay`: cap on each actual wait, including jitter; default 5 seconds. * `jitter`: symmetric proportional variation; default 0.2, or 0.0 to disable. * `maximumTotalDelay`: cumulative sleep allowance; default `None`.   Operation execution time is excluded. A wait that exceeds the remaining   allowance ends the run without sleeping or calling the operation again.
+* `attempts`: maximum executions, including the first; default 3.
+* `delay`: initial base wait; default 100 milliseconds.
+* `backoff`: base-delay multiplier; default 2.0, or 1.0 for fixed waits.
+* `maximumDelay`: cap on each actual wait, including jitter; default 5 seconds.
+* `jitter`: symmetric proportional variation; default 0.2, or 0.0 to disable.
+* `maximumTotalDelay`: cumulative sleep allowance; default `None`.
+  Operation execution time is excluded. A wait that exceeds the remaining
+  allowance ends the run without sleeping or calling the operation again.
 
 **Fields**
 
@@ -23075,7 +23073,13 @@ Progress passed to `onRetry` before the next wait.
 
 The callback runs only when another attempt is allowed. It does not run for the first call, a successful result, `done`, or exhaustion. Durations count scheduled sleep; they exclude time spent in the operation.
 
-* `attempt`: the just-completed attempt, starting at 1. * `nextAttempt`: the attempt that follows the upcoming wait. * `maximumAttempts`: total permitted executions, including the first. * `remainingAttempts`: executions remaining, including the upcoming one. * `delay`: actual upcoming wait, after jitter and the delay cap. * `totalDelay`: sleep already performed, excluding the upcoming wait. * `result`: the last `Error` or `Again`, including its application payload.
+* `attempt`: the just-completed attempt, starting at 1.
+* `nextAttempt`: the attempt that follows the upcoming wait.
+* `maximumAttempts`: total permitted executions, including the first.
+* `remainingAttempts`: executions remaining, including the upcoming one.
+* `delay`: actual upcoming wait, after jitter and the delay cap.
+* `totalDelay`: sleep already performed, excluding the upcoming wait.
+* `result`: the last `Error` or `Again`, including its application payload.
 
 **Fields**
 
@@ -23491,11 +23495,7 @@ UnorderedSet  hash-backed, so membership does not pay for ordering and
 
 Reach for `Set` when you will read the elements back out, and for `UnorderedSet` when the set exists to answer `contains?` quickly.
 
-`==` between two sets needs no overload of its own: each flavour keeps its backing canonical (sorted and duplicate free, or a map) so comparing the records structurally already IS set equality.
-
-Both wrap structures the runtime already has (a list and a map), so no set is opaque: `.items` is always a real list you can hand to anything.
-
-Those two backings are also the ones the BEAM's own set libraries use: a `Set` is laid out exactly like an `ordsets` term and an `UnorderedSet` exactly like a `sets` v2 term, so the operations here can be routed to the native BIFs later without changing what a set IS. What rules out adopting `gb_sets` instead is the other backend: a tree-walk interpreter cannot produce an opaque BEAM term, and a set that only one backend can build is not a set the prelude can offer.
+Sets compare by their elements. Use `items` to obtain a list; `UnorderedSet.items` has no guaranteed order.
 
 
 
@@ -25353,7 +25353,7 @@ Why a source file could not be parsed.
 
 One token of a lossless syntax tree, exactly as written.
 
-Where `parse` gives a program's meaning, `parseSyntax` gives its text: nothing is normalised or dropped, so `toSource` reprints the file byte for byte. It is the tree a formatter or a linter works on (kexhq/kex#136).
+Where `parse` gives a program's meaning, `parseSyntax` gives its text: nothing is normalised or dropped, so `toSource` reprints the file byte for byte. Use it when building a formatter or a linter.
 
 **Fields**
 
@@ -26273,7 +26273,7 @@ This does not inherit the machine's search domains or nameservers. It is useful 
 
 **Parameters**
 
-  - `options` — nameservers, search domains, retry count,
+  - `options` — nameservers, search domains, retry count, per-query timeout, and cache bounds
 
 **Returns**: a resolver, or `Parse`
 
@@ -26341,7 +26341,7 @@ Buffered HTTP clients, responses, and a small declaration-ordered server router.
 ```kex
 using Net.HTTP
 
-let response = HTTP.get("https://example.test/").try
+let response = Net.HTTP.HTTP.get("https://example.test/").try
 response.status.success?   # => true
 ```
 
@@ -27168,7 +27168,7 @@ _A one-off authenticated request in a command-line tool_
 
 ```kex
 let headers = Headers.empty.add("Authorization", "Bearer ${token}").try
-HTTP.request("GET", url, headers).try
+Net.HTTP.HTTP.request("GET", url, headers).try
 ```
 
 ### `get`
@@ -27181,10 +27181,8 @@ Sends one stateless buffered GET.
 
 **Examples**
 
-_+HTTP.get("https://example.test/").try+_
-
 ```kex
-
+Net.HTTP.HTTP.get("https://example.test/").try
 ```
 
 ### `delete`
@@ -27512,10 +27510,10 @@ Parses IPv4 or IPv6 text and canonicalizes its spelling.
 
 **Examples**
 
-_+Address.parse("2001:db8::42").try.string+._
+_Canonicalize an IPv6 address_
 
 ```kex
-
+Address.parse("2001:db8::42").try.string   # => "2001:db8::42"
 ```
 
 ## module `Net.IP.Network`
@@ -27538,10 +27536,10 @@ Parses a CIDR and clears host bits.
 
 **Examples**
 
-_+Network.parse("192.0.2.9/24").try.string+ is +"192.0.2.0/24"+._
+_Normalize a host address to its network_
 
 ```kex
-
+Network.parse("192.0.2.9/24").try.string   # => "192.0.2.0/24"
 ```
 
 
@@ -27683,10 +27681,10 @@ The delimiter is included in the returned bytes. An empty delimiter is a `Parse`
 
 **Examples**
 
-_+connection.receiveUntil("\r\n\r\n".to(Binary).try, 65536).try+_
+_Read through the end of an HTTP header section_
 
 ```kex
-
+connection.receiveUntil("\r\n\r\n".to(Binary).try, 65536).try
 ```
 
 ### `receiveLine`
@@ -28168,10 +28166,10 @@ Receives through `delimiter`, including it, within an explicit bound.
 
 **Examples**
 
-_+connection.receiveUntil("\n".to(Binary).try, 4096).try+_
+_Read through the next newline_
 
 ```kex
-
+connection.receiveUntil("\n".to(Binary).try, 4096).try
 ```
 
 ### `receiveLine`
@@ -28605,7 +28603,7 @@ Call from a route handler and return the result directly — it types as an ordi
   - `request` — the route handler's own request
   - `decide` — the accept/reject decision
 
-**Returns**: the handler's response — an upgrade in
+**Returns**: the handler's response — an upgrade in disguise on `Accept`, sent as given on `Reject`
 
 **Examples**
 
@@ -35835,6 +35833,12 @@ A blank line inside a verbatim block ends a paragraph but not the block, so adja
 
 ```kex
 classifyBlocks(blocks: [[String]], summary: String, params: [Param], returns: Return?, examples: [Example], deprecated: String?) -> Doc?
+```
+
+### `directiveBody`
+
+```kex
+directiveBody(lines: [String], prefixLength: Integer) -> String
 ```
 
 ### `parseParam`

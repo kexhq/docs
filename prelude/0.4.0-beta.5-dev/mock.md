@@ -12,17 +12,17 @@ entities:
 
 # Mock
 
-## type `Reader`
-
 Mock: deterministic stand-ins for the world outside the program: the filesystem, environment, and console. Networking mocks live under Mock.Net.
 
 These are STATEFUL: `Mock.FS.File(path, content)` writes into a store the real `FS.File` then reads back, so a test can write and read again, and `clear()` undoes it. That state is global and lives until cleared, which is what makes hook ordering and write/read round trips testable, and also what makes two tests able to interfere.
 
-When a test only needs canned ANSWERS, replacing the capability is the better tool: `with FS.File = MyFake { ... } do ... end` swaps the implementation for one lexical region, holds no global state, needs no clearing, and cannot leak into another test. See spec/capability_stdlib_fs.kex for the shape of a stand-in (kexhq/kex#143).
+Use `with FS.File = MyFake { ... } do ... end` for a replacement limited to one block. Use mocks when a test needs state shared across several calls, and clear that state between tests.
 
-Opt-in on purpose (issue #144): this module used to ride along inside a prelude networking file, so importing the prelude made every Mock.* reachable from every program without anyone asking for it. Reachable is still not callable: the runtime denies the mock intrinsics outside spec files, the REPL, and --allow-mocks, but it should also not be in scope by accident. A qualified `Mock.FS.File(...)` auto-loads this file like any other opt-in module.
+Import with `using Mock`. Mock operations are allowed in spec files, the REPL, and programs run with `--allow-mocks`.
 
-All Mock.* sub-modules live in a single `module Mock` block so merged compilation units never see duplicate top-level `Mock` modules. A stand-in's read hook: a path in, its content or `None` out.
+## type `Reader`
+
+A stand-in's read hook: a path in, its content or `None` out.
 
 
 
@@ -44,7 +44,7 @@ An environment stand-in's WRITE hook: the name and the value a program set. A `M
 
 ## record `Files`
 
-A stand-in for the `FS.File` capability, for `with FS.File = ...`. Unlike the `Mock.*` functions below it holds no global state, needs no `clear()`, and cannot leak past its block. What it cannot do is change: `write` then `read` back is not something a value does, so a test needing that round trip still wants `Mock.FS` (kexhq/kex#143).
+A stand-in for the `FS.File` capability, for `with FS.File = ...`. Unlike the `Mock.*` functions below it holds no global state, needs no `clear()`, and cannot leak past its block. What it cannot do is change: `write` then `read` back is not something a value does, so a test needing that round trip uses `Mock.FS`.
 
 ```kex
 with FS.File = Mock.Files { files: {"kex.toml": "name = \"demo\""} } do
@@ -356,7 +356,7 @@ files(entries: Map<FS.FilePath, String>) -> Void
 
 Declares the whole fixture in one call.
 
-The same shape `Mock.Files { files: ... }` takes: one line instead of one per file (kexhq/kex#143).
+The same shape `Mock.Files { files: ... }` takes: one line instead of one per file.
 
 **Parameters**
 
@@ -473,7 +473,7 @@ vars(entries: Map<String, String>) -> Void
 
 Declares the whole overlay in one call.
 
-The same shape `Mock.Env { vars: ... }` takes (kexhq/kex#143). There is no `onGet` here: global `ENV` is a materialised Map, so there is nothing for a callback to intercept: use `with ENV = Mock.Env { onGet: ... }` when a rule is what you want.
+Supply a map of variable names to their values. Use `with ENV = Mock.Env { onGet: ... }` when a callback should decide the value for each lookup instead.
 
 **Parameters**
 
@@ -600,7 +600,7 @@ Mock.IO.input("Ada", "42")
 
 ## module `Mock.Net`
 
-Scriptable networking values are namespaced so importing Mock does not recreate any of the removed global HTTP types.
+Scriptable networking values for testing HTTP, DNS, sockets and WebSockets.
 
 
 

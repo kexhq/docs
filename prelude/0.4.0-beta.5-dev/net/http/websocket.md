@@ -219,7 +219,7 @@ Call from a route handler and return the result directly — it types as an ordi
   - `request` — the route handler's own request
   - `decide` — the accept/reject decision
 
-**Returns**: the handler's response — an upgrade in
+**Returns**: the handler's response — an upgrade in disguise on `Accept`, sent as given on `Reject`
 
 **Examples**
 
