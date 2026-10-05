@@ -16,7 +16,7 @@ Buffered HTTP clients, responses, and a small declaration-ordered server router.
 ```kex
 using Net.HTTP
 
-let response = Net.HTTP.HTTP.get("https://example.test/").try
+let response = HTTP.get("https://example.test/").try
 response.status.success?   # => true
 ```
 
@@ -843,7 +843,7 @@ _A one-off authenticated request in a command-line tool_
 
 ```kex
 let headers = Headers.empty.add("Authorization", "Bearer ${token}").try
-Net.HTTP.HTTP.request("GET", url, headers).try
+HTTP.request("GET", url, headers).try
 ```
 
 ### `get`
@@ -857,7 +857,7 @@ Sends one stateless buffered GET.
 **Examples**
 
 ```kex
-Net.HTTP.HTTP.get("https://example.test/").try
+HTTP.get("https://example.test/").try
 ```
 
 ### `delete`
