@@ -36,7 +36,7 @@ There is no NaN to consider: a float operation that would produce one raises ins
 
 Implemented by [`Bool`](#make-bool), [`Integer`](#make-integer), [`Float`](#make-float), [`String`](#make-string), [`Optional<X>`](#make-optional), [`[X]`](#make-list), [`Map<K, V>`](#make-map).
 
-### Required methods
+### Required functions
 
 #### `truthy?`
 
@@ -109,7 +109,7 @@ book.borrowed?.not
 
 ## extends `Integer`
 
-More methods of [`Integer`](number.md#make-integer), added by this module.
+More functions for [`Integer`](number.md#make-integer), added by this module.
 
 Implements [`Truthyable`](#trait-truthyable).
 
@@ -134,7 +134,7 @@ Zero is a number, not an absence. Compare it explicitly when zero means somethin
 
 ## extends `Float`
 
-More methods of [`Float`](number.md#make-float), added by this module.
+More functions for [`Float`](number.md#make-float), added by this module.
 
 Implements [`Truthyable`](#trait-truthyable).
 
@@ -156,7 +156,7 @@ Always `true`, including for zero.
 
 ## extends `String`
 
-More methods of [`String`](string.md#make-string), added by this module.
+More functions for [`String`](string.md#make-string), added by this module.
 
 Implements [`Truthyable`](#trait-truthyable).
 
@@ -181,7 +181,7 @@ Use `blank?` from `Blankable` when an empty or whitespace-only string should cou
 
 ## extends `Optional<X>`
 
-More methods of [`Optional`](optional.md#type-optional), added by this module.
+More functions for [`Optional`](optional.md#type-optional), added by this module.
 
 Implements [`Truthyable`](#trait-truthyable).
 
@@ -206,7 +206,7 @@ None.truthy?       # => false
 
 ## extends `[X]`
 
-More methods of [`List`](list.md#type-list), added by this module.
+More functions for [`List`](list.md#type-list), added by this module.
 
 Implements [`Truthyable`](#trait-truthyable).
 
@@ -231,7 +231,7 @@ Use `empty?` or `blank?` when an empty list should count as nothing.
 
 ## extends `Map<K, V>`
 
-More methods of [`Map`](map.md#type-map), added by this module.
+More functions for [`Map`](map.md#type-map), added by this module.
 
 Implements [`Truthyable`](#trait-truthyable).
 

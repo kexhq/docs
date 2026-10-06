@@ -14,7 +14,7 @@ entities:
 
 A span between two bounds, written `(1..10)` or `('a'..'z')`.
 
-A range stores its endpoints on both backends without building a list. Integer and character ranges can be enumerated with both ends included. Float ranges describe continuous bounds, for example `(-1.0..1.0)` for random sampling; `items` and traversal methods cannot enumerate them. A range whose lower endpoint exceeds its upper endpoint enumerates as an empty list.
+A range stores its endpoints on both backends without building a list. Integer and character ranges can be enumerated with both ends included. Float ranges describe continuous bounds, for example `(-1.0..1.0)` for random sampling; `items` and traversal functions cannot enumerate them. A range whose lower endpoint exceeds its upper endpoint enumerates as an empty list.
 
 ```kex
 (1..5).items          # => [1, 2, 3, 4, 5]
@@ -23,7 +23,7 @@ A range stores its endpoints on both backends without building a list. Integer a
 ('a'..'e').items      # => ['a', 'b', 'c', 'd', 'e']
 ```
 
-It is `Enumerable` and `Foldable`, so the traversal methods work directly, and the list operations below answer in list terms. Use `items` when you want a real list to hand to something else.
+It is `Enumerable` and `Foldable`, so the traversal functions work directly, and the list operations below answer in list terms. Use `items` when you want a real list to hand to something else.
 
 ```kex
 (1..10).items.filter(~even?)   # => [2, 4, 6, 8, 10]
@@ -32,7 +32,7 @@ It is `Enumerable` and `Foldable`, so the traversal methods work directly, and t
 
 Implements [`Enumerable`](enumerable.md#trait-enumerable), [`Foldable`](enumerable.md#trait-foldable).
 
-### Methods
+### Functions
 
 #### `reduce` (from Enumerable, Foldable)
 
@@ -42,7 +42,7 @@ reduce(acc: A, f: (A -> B -> A)) -> A
 
 Folds over the range's elements in ascending order.
 
-This is `Range`'s `Enumerable` primitive; the traversal methods are built on it. A range stays structurally minimal, so the fold runs over its materialized items.
+This is `Range`'s `Enumerable` primitive; the traversal functions are built on it. A range stays structurally minimal, so the fold runs over its materialized items.
 
 **Parameters**
 
@@ -90,7 +90,7 @@ contains?(value: A) -> Bool
 
 Returns `true` when `value` is one of the enumerated elements.
 
-This method materializes the range and supports integer and character ranges only. For continuous bounds, compare the value with each endpoint: `value >= lower && value <= upper`.
+This function materializes the range and supports integer and character ranges only. For continuous bounds, compare the value with each endpoint: `value >= lower && value <= upper`.
 
 **Parameters**
 

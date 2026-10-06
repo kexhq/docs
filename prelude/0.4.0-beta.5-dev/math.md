@@ -23,7 +23,7 @@ Math.hypot(3.0, 4.0)        # => 5.0
 Math.sin(Math.PI / 2.0)     # => 1.0
 ```
 
-The everyday operations on a single number: `abs`, `floor`, `ceil`, `round`, `sqrt`: are also methods on `Integer` and `Float`, which usually reads better in a chain: `x.abs` over `Math.abs(x)`.
+The everyday operations on a single number: `abs`, `floor`, `ceil`, `round`, `sqrt`: can also be called with `Integer` and `Float` receivers, which usually reads better in a chain: `x.abs` over `Math.abs(x)`.
 
 ### `PI` (constant)
 
@@ -479,7 +479,7 @@ abs(x: Number) -> Number
 
 Returns the magnitude of `x`, discarding its sign. The type is preserved: an `Integer` in gives an `Integer` out.
 
-`x.abs` is the same thing as a method, and usually reads better.
+You can also write `x.abs` using UFCS.
 
 **Parameters**
 

@@ -37,7 +37,7 @@ fields.all? { |name, value| value.present? }
 
 Implemented by [`Bool`](#make-bool), [`Integer`](#make-integer), [`Float`](#make-float), [`String`](#make-string), [`Optional<X>`](#make-optional), [`[X]`](#make-list), [`Map<K, V>`](map.md#make-map), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack).
 
-### Required methods
+### Required functions
 
 #### `blank?`
 
@@ -63,7 +63,7 @@ What that means is up to each type: whitespace-only for a string, no elements fo
 
 ## extends `Bool`
 
-More methods of [`Bool`](truthyable.md#make-bool), added by this module.
+More functions for [`Bool`](truthyable.md#make-bool), added by this module.
 
 Implements [`Blankable`](#trait-blankable).
 
@@ -86,7 +86,7 @@ true.blank?    # => false
 
 ## extends `Integer`
 
-More methods of [`Integer`](number.md#make-integer), added by this module.
+More functions for [`Integer`](number.md#make-integer), added by this module.
 
 Implements [`Blankable`](#trait-blankable).
 
@@ -109,7 +109,7 @@ Always `false`: every integer is a value, including zero.
 
 ## extends `Float`
 
-More methods of [`Float`](number.md#make-float), added by this module.
+More functions for [`Float`](number.md#make-float), added by this module.
 
 Implements [`Blankable`](#trait-blankable).
 
@@ -131,7 +131,7 @@ Always `false`: every float is a value, including zero.
 
 ## extends `String`
 
-More methods of [`String`](string.md#make-string), added by this module.
+More functions for [`String`](string.md#make-string), added by this module.
 
 Implements [`Blankable`](#trait-blankable).
 
@@ -167,7 +167,7 @@ end
 
 ## extends `Optional<X>`
 
-More methods of [`Optional`](optional.md#type-optional), added by this module.
+More functions for [`Optional`](optional.md#type-optional), added by this module.
 
 Implements [`Blankable`](#trait-blankable).
 
@@ -193,7 +193,7 @@ Just("").blank?    # => false
 
 ## extends `[X]`
 
-More methods of [`List`](list.md#type-list), added by this module.
+More functions for [`List`](list.md#type-list), added by this module.
 
 Implements [`Blankable`](#trait-blankable).
 

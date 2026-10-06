@@ -14,7 +14,7 @@ entities:
 
 Traversal operations that every foldable collection gets for free.
 
-A type becomes `Foldable` by implementing one method, `reduce`; the rest: `each`, `all?`, `any?`, `find`, `count`: are derived from it. `List`, `String`, `Map`, `Range` and both flavours of `Set` all implement it, so these methods read the same whatever you point them at.
+A type becomes `Foldable` by implementing one function, `reduce`; the rest: `each`, `all?`, `any?`, `find`, `count`: are derived from it. `List`, `String`, `Map`, `Range` and both flavours of `Set` all implement it, so these functions read the same whatever you point them at.
 
 ```kex
 [1, 2, 3].all? { |n| n > 0 }        # => true
@@ -26,7 +26,7 @@ Blocks are applied via Kex.Intrinsic.Fun.applyItem, which auto-splats a pair ite
 
 Implemented by [`[X]`](list.md#make-list), [`Map<K, V>`](map.md#make-map), [`Range`](range.md#make-range), [`String`](string.md#make-string), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack).
 
-### Required methods
+### Required functions
 
 #### `reduce`
 
@@ -49,7 +49,7 @@ Folds the collection from the left. The one operation a `Foldable` type must def
 [1, 2, 3].reduce(0) { |sum, n| sum + n }   # => 6
 ```
 
-### Provided methods
+### Provided functions
 
 #### `each`
 
@@ -231,7 +231,7 @@ Like `Foldable`, a type joins by implementing `reduce` alone. The defaults here 
 
 Implemented by [`[X]`](list.md#make-list), [`Map<K, V>`](map.md#make-map), [`Range`](range.md#make-range), [`String`](string.md#make-string), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack).
 
-### Required methods
+### Required functions
 
 #### `reduce`
 
@@ -254,7 +254,7 @@ Folds the collection from the left. The one operation an `Enumerable` type must 
 [1, 2, 3].reduce(1) { |product, n| product * n }   # => 6
 ```
 
-### Provided methods
+### Provided functions
 
 #### `map`
 
@@ -264,7 +264,7 @@ map(f: (T -> B)) -> [B]
 
 Applies `f` to each item and collects the results into a list.
 
-The single most useful method here: it describes what each item becomes, and leaves the walking of the collection implied.
+The single most useful function here: it describes what each item becomes, and leaves the walking of the collection implied.
 
 **Parameters**
 

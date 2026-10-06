@@ -98,7 +98,7 @@ Implemented by `Integer` (addition), `String` and `List` (concatenation), `Map` 
 
 Implemented by [`Integer`](#make-integer), [`String`](#make-string), [`[A]`](#make-list), [`Ordering`](comparable.md#make-ordering), [`Map<K, V>`](map.md#make-map), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack).
 
-### Required methods
+### Required functions
 
 #### `identity`
 
@@ -149,7 +149,7 @@ _Folding a list of values into one_
 parts.reduce(String.identity) { |acc, s| acc.combine(s) }
 ```
 
-### Provided methods
+### Provided functions
 
 #### `repeat`
 
@@ -192,7 +192,7 @@ Implemented by `Integer`, where the inverse is negation.
 
 Implemented by [`Integer`](#make-integer).
 
-### Required methods
+### Required functions
 
 #### `identity`
 
@@ -235,7 +235,7 @@ The value that combines with this one to give the identity.
 
 ## extends `Integer`
 
-More methods of [`Integer`](number.md#make-integer), added by this module.
+More functions for [`Integer`](number.md#make-integer), added by this module.
 
 Implements [`Monoid`](#trait-monoid), [`Group`](#trait-group).
 
@@ -292,7 +292,7 @@ The additive inverse: this integer negated.
 
 ## extends `String`
 
-More methods of [`String`](string.md#make-string), added by this module.
+More functions for [`String`](string.md#make-string), added by this module.
 
 Implements [`Monoid`](#trait-monoid).
 
@@ -332,7 +332,7 @@ Concatenates `other` onto this string. Concatenation is the monoid operation for
 
 ## extends `[A]`
 
-More methods of [`List`](list.md#type-list), added by this module.
+More functions for [`List`](list.md#type-list), added by this module.
 
 Implements [`Monoid`](#trait-monoid).
 
@@ -393,23 +393,31 @@ entities:
 
 ## module `Atom`
 
-Atoms: the `:name` values. An atom is its own name — two atoms with the same text are the same value, and comparing them is as cheap as comparing numbers.
+Atoms are named values such as `:ok`, `:error`, and `:reset`. Use them for labels, statuses, and message tags. Atoms with the same name are equal; an atom and a string are different values.
 
 ```kex
-:ok
-:b@localhost                  # an interior `@` is part of a bare atom
-:"b@host.example.com"         # the quoted form spells any text
+:ok == :ok                    # => true
+:ok == :error                 # => false
+:ok.string                    # => "ok"
 ```
 
-Most atoms are written in the source. From text:
+Write atoms with a leading colon. Node names can include `@`; use quotes for names containing spaces or punctuation:
 
 ```kex
-"hello".as(Atom)     # at compile time, from a literal
-Atom.from(text)      # at run time, making the atom — a node name, say
-text.to(Atom)        # at run time, only an atom that already exists: Atom?
+:app@localhost
+:"app@host.example.com"
+:"two words"
 ```
 
-and `string` gives the text back.
+To convert text to an atom:
+
+```kex
+"hello".as(Atom)     # converts a string literal at compile time
+Atom.from("hello")  # creates or finds an atom at run time
+"hello".to(Atom)    # finds an existing atom: Just(:hello), or None
+```
+
+On the BEAM, atoms are never freed. Use `text.to(Atom)` for external input to avoid creating an unbounded number of atoms.
 
 ### `from`
 
@@ -442,7 +450,7 @@ Atom.from("app@${host}")              # => :"app@myhost"
 string : String
 ```
 
-Returns the atom's name as text, without the leading colon. Total, like `Char.string`: every atom has a name.
+Returns the atom's name as a string, without the leading colon.
 
 **Returns**: the name
 
@@ -513,7 +521,7 @@ Binary.fromBytes([255]).to(String)  # => None
 
 Implements [`Showable`](kex.md#trait-showable), [`Inspectable`](kex.md#trait-inspectable).
 
-### Methods
+### Functions
 
 #### `bytes`
 
@@ -1230,7 +1238,7 @@ fields.all? { |name, value| value.present? }
 
 Implemented by [`Bool`](#make-bool), [`Integer`](#make-integer), [`Float`](#make-float), [`String`](#make-string), [`Optional<X>`](#make-optional), [`[X]`](#make-list), [`Map<K, V>`](map.md#make-map), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack).
 
-### Required methods
+### Required functions
 
 #### `blank?`
 
@@ -1256,7 +1264,7 @@ What that means is up to each type: whitespace-only for a string, no elements fo
 
 ## extends `Bool`
 
-More methods of [`Bool`](truthyable.md#make-bool), added by this module.
+More functions for [`Bool`](truthyable.md#make-bool), added by this module.
 
 Implements [`Blankable`](#trait-blankable).
 
@@ -1279,7 +1287,7 @@ true.blank?    # => false
 
 ## extends `Integer`
 
-More methods of [`Integer`](number.md#make-integer), added by this module.
+More functions for [`Integer`](number.md#make-integer), added by this module.
 
 Implements [`Blankable`](#trait-blankable).
 
@@ -1302,7 +1310,7 @@ Always `false`: every integer is a value, including zero.
 
 ## extends `Float`
 
-More methods of [`Float`](number.md#make-float), added by this module.
+More functions for [`Float`](number.md#make-float), added by this module.
 
 Implements [`Blankable`](#trait-blankable).
 
@@ -1324,7 +1332,7 @@ Always `false`: every float is a value, including zero.
 
 ## extends `String`
 
-More methods of [`String`](string.md#make-string), added by this module.
+More functions for [`String`](string.md#make-string), added by this module.
 
 Implements [`Blankable`](#trait-blankable).
 
@@ -1360,7 +1368,7 @@ end
 
 ## extends `Optional<X>`
 
-More methods of [`Optional`](optional.md#type-optional), added by this module.
+More functions for [`Optional`](optional.md#type-optional), added by this module.
 
 Implements [`Blankable`](#trait-blankable).
 
@@ -1386,7 +1394,7 @@ Just("").blank?    # => false
 
 ## extends `[X]`
 
-More methods of [`List`](list.md#type-list), added by this module.
+More functions for [`List`](list.md#type-list), added by this module.
 
 Implements [`Blankable`](#trait-blankable).
 
@@ -1459,7 +1467,7 @@ Declared here rather than only inside the interpreter so that `Ordering`, `Less`
 
 Implements [`Monoid`](algebra.md#trait-monoid).
 
-### Methods
+### Functions
 
 `Ordering` is a Monoid under "first decision wins", with Equal as identity. That is what makes multi-key comparison compose instead of nesting ifs:
 
@@ -1571,7 +1579,7 @@ Implemented by `Number`, which covers both `Integer` and `Float`, and by `String
 
 Implemented by [`Number`](#make-number), [`String`](#make-string).
 
-### Required methods
+### Required functions
 
 #### `compare`
 
@@ -1605,7 +1613,7 @@ _Sorting with an explicit comparison_
 people.sort { |a, b| a.age.compare(b.age) == Less }
 ```
 
-### Provided methods
+### Provided functions
 
 #### `max`
 
@@ -1615,7 +1623,7 @@ max(other: This) -> This
 
 What every ordered type gets from `compare` alone. Returns the larger of this value and `other`; this value when they are equal.
 
-Written either way round, since a call and a method are the same thing: `max(3, 7)` is `3.max(7)`.
+UFCS lets you put the first argument before the dot: `max(3, 7)` is `3.max(7)`.
 
 **Parameters**
 
@@ -1679,7 +1687,7 @@ Returns this value limited to the range `low` to `high`: `low` when it is below,
 
 ## extends `Number`
 
-More methods of [`Number`](number.md#), added by this module.
+More functions for [`Number`](number.md#), added by this module.
 
 Implements [`Comparable`](#trait-comparable).
 
@@ -1711,7 +1719,7 @@ Mixed receivers work because `<` and `>` promote across the two, so `1.compare(1
 
 ## extends `String`
 
-More methods of [`String`](string.md#make-string), added by this module.
+More functions for [`String`](string.md#make-string), added by this module.
 
 Implements [`Comparable`](#trait-comparable).
 
@@ -2258,7 +2266,7 @@ Construct dimensions with `Dimensions.base` and compose them with arithmetic. If
 
   - `powers` : {[Type](type.md#record-type): [Integer](number.md#make-integer)}
 
-### Methods
+### Functions
 
 #### `dimensionless?`
 
@@ -2345,7 +2353,7 @@ entities:
 
 Traversal operations that every foldable collection gets for free.
 
-A type becomes `Foldable` by implementing one method, `reduce`; the rest: `each`, `all?`, `any?`, `find`, `count`: are derived from it. `List`, `String`, `Map`, `Range` and both flavours of `Set` all implement it, so these methods read the same whatever you point them at.
+A type becomes `Foldable` by implementing one function, `reduce`; the rest: `each`, `all?`, `any?`, `find`, `count`: are derived from it. `List`, `String`, `Map`, `Range` and both flavours of `Set` all implement it, so these functions read the same whatever you point them at.
 
 ```kex
 [1, 2, 3].all? { |n| n > 0 }        # => true
@@ -2357,7 +2365,7 @@ Blocks are applied via Kex.Intrinsic.Fun.applyItem, which auto-splats a pair ite
 
 Implemented by [`[X]`](list.md#make-list), [`Map<K, V>`](map.md#make-map), [`Range`](range.md#make-range), [`String`](string.md#make-string), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack).
 
-### Required methods
+### Required functions
 
 #### `reduce`
 
@@ -2380,7 +2388,7 @@ Folds the collection from the left. The one operation a `Foldable` type must def
 [1, 2, 3].reduce(0) { |sum, n| sum + n }   # => 6
 ```
 
-### Provided methods
+### Provided functions
 
 #### `each`
 
@@ -2562,7 +2570,7 @@ Like `Foldable`, a type joins by implementing `reduce` alone. The defaults here 
 
 Implemented by [`[X]`](list.md#make-list), [`Map<K, V>`](map.md#make-map), [`Range`](range.md#make-range), [`String`](string.md#make-string), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack).
 
-### Required methods
+### Required functions
 
 #### `reduce`
 
@@ -2585,7 +2593,7 @@ Folds the collection from the left. The one operation an `Enumerable` type must 
 [1, 2, 3].reduce(1) { |product, n| product * n }   # => 6
 ```
 
-### Provided methods
+### Provided functions
 
 #### `map`
 
@@ -2595,7 +2603,7 @@ map(f: (T -> B)) -> [B]
 
 Applies `f` to each item and collects the results into a list.
 
-The single most useful method here: it describes what each item becomes, and leaves the walking of the collection implied.
+The single most useful function here: it describes what each item becomes, and leaves the walking of the collection implied.
 
 **Parameters**
 
@@ -3005,7 +3013,7 @@ foul report(e: Errorable) -> Void do
 end
 ```
 
-### Required methods
+### Required functions
 
 #### `message`
 
@@ -3197,7 +3205,7 @@ FS.File.feed("app.log").or(Feed.empty)
 
 Taking twice answers two different windows: the first ten, then the ten after them. That is the whole difference from `Stream`, where taking twice answers the same ten. When you want the stream behaviour on a small source, `toStream` asks for it explicitly, at the cost of holding what it reads.
 
-### Methods
+### Functions
 
 Reading a feed consumes its cursor. Obtain a new feed when you need to traverse the same data again. Opening a file-backed feed is `foul`; consuming an existing feed does not require another capability.
 
@@ -3503,7 +3511,7 @@ firstLine(FS.File.open("notes.txt", Read).try)
 
 Implemented by [`FileHandle<CanRead, W>`](#make-filehandle-canread).
 
-### Required methods
+### Required functions
 
 #### `getLine`
 
@@ -3599,11 +3607,11 @@ report(IO.error, warnings)
 report(FS.File.open("report.txt", Write).try, results)
 ```
 
-Write methods accept any `Showable` value and return `Void`.
+Write functions accept any `Showable` value and return `Void`.
 
 Implemented by [`FileHandle<R, CanWrite>`](#make-filehandle-canwrite).
 
-### Required methods
+### Required functions
 
 #### `printLine`
 
@@ -3691,11 +3699,11 @@ end
 
 Reach for a handle when you want to walk a large file a line at a time, or make many small writes. When a file fits comfortably in memory, `FS.File.read` and `FS.File.write` are shorter and need no closing. To be rid of the closing entirely, pass `FS.File.open` a block.
 
-The handle methods are `foul`: obtaining a handle is not an effect, but reading or writing through one is, so a function that does so is `foul` no matter where the handle came from. Injection makes a thing substitutable, not pure.
+The handle functions are `foul`: obtaining a handle is not an effect, but reading or writing through one is, so a function that does so is `foul` no matter where the handle came from. Injection makes a thing substitutable, not pure.
 
 Implements [`Readable`](#trait-readable), [`Writable`](#trait-writable).
 
-### Methods
+### Functions
 
 #### `close`
 
@@ -3924,7 +3932,7 @@ Lines are read on demand off the handle's own position, so this is how to look a
 
 The feed ends at the last line, so taking more lines than the file has answers just the lines there are.
 
-NOT part of `Readable`: a feed is neither pure nor reusable, so requiring it of every `Readable` would put a foul, one-shot operation on types that have no such cursor to offer. It stays a FileHandle method.
+NOT part of `Readable`: a feed is neither pure nor reusable, so requiring it of every `Readable` would put a foul, one-shot operation on types that have no such cursor to offer. It stays a FileHandle function.
 
 **Returns**: the lines as a feed, or `None`
 
@@ -4087,7 +4095,7 @@ Most read operations answer with an `Optional` and most write operations with a 
 
 ## type `FilePath`
 
-A filesystem path. An alias for `String`, so every `String` method applies to one; `FS.Path` adds the path-aware operations.
+A filesystem path. An alias for `String`, so every `String` function applies to one; `FS.Path` adds the path-aware operations.
 
 **Variants**
 
@@ -5898,7 +5906,7 @@ Just("hi").inspected   # => "Just(\"hi\")"
 
 Implemented by [`Binary`](binary.md#make-binary), [`Period`](time.md#make-period), [`Date`](time.md#make-date), [`Time`](time.md#make-time), [`DateTime`](time.md#make-datetime), [`URI`](uri.md#make-uri), [`URL`](uri.md#make-url), [`Headers`](net/http.md#make-headers).
 
-### Provided methods
+### Provided functions
 
 #### `inspectValue`
 
@@ -5938,7 +5946,7 @@ None.showValue             # => ""
 
 Implemented by [`Binary`](binary.md#make-binary), [`Optional<Showable>`](#make-optional-showable), [`Result<X, E>`](#make-result), [`Period`](time.md#make-period), [`Date`](time.md#make-date), [`Time`](time.md#make-time), [`DateTime`](time.md#make-datetime), [`Measure`](units.md#make-measure), [`URI`](uri.md#make-uri), [`URL`](uri.md#make-url), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack), [`Headers`](net/http.md#make-headers).
 
-### Provided methods
+### Provided functions
 
 #### `showValue`
 
@@ -5962,7 +5970,7 @@ to(_)
 
 ## extends `Optional<Showable>`
 
-More methods of [`Optional`](optional.md#type-optional), added by this module.
+More functions for [`Optional`](optional.md#type-optional), added by this module.
 
 Implements [`Showable`](#trait-showable).
 
@@ -5974,7 +5982,7 @@ showValue(_)
 
 ## extends `Result<X, E>`
 
-More methods of [`Result`](optional.md#type-result), added by this module.
+More functions for [`Result`](optional.md#type-result), added by this module.
 
 Implements [`Showable`](#trait-showable).
 
@@ -6117,7 +6125,7 @@ Which backend is executing the program: the tree-walking `Interpreter`, or the `
   - `Interpreter`
   - `Beam`
 
-### Methods
+### Functions
 
 #### `interpreted?`
 
@@ -6206,7 +6214,7 @@ Kex.VERSION.to(String)   # => "0.3.0 (a1b2c3d)"
   - `revision` : [String](string.md#make-string)?
   - `preRelease` : [String](string.md#make-string) (optional)
 
-### Methods
+### Functions
 
 #### `tuple`
 
@@ -6288,7 +6296,7 @@ let html = theme.call(:render, [context]).try
 
   - `name` : [Atom](atom.md#make-atom)
 
-### Methods
+### Functions
 
 #### `call`
 
@@ -6486,7 +6494,7 @@ users
 
 Implements [`Monoid`](algebra.md#trait-monoid), [`Blankable`](blankable.md#trait-blankable), [`Enumerable`](enumerable.md#trait-enumerable), [`Foldable`](enumerable.md#trait-foldable), [`Truthyable`](truthyable.md#trait-truthyable).
 
-### Methods
+### Functions
 
 #### `first`
 
@@ -7209,7 +7217,7 @@ entities:
 
 An immutable key-value store, written `{key: value}`.
 
-Keys are compared by structural equality and may be of any type; atom keys get the shorthand `{name: "Ada"}`, string keys are written out in full as `{"name": "Ada"}`. Every method answers with a new map: the `!` forms (`put!`, `delete!`) build a new map and rebind the receiver variable, they do not modify anything in place.
+Keys are compared by structural equality and may be of any type; atom keys get the shorthand `{name: "Ada"}`, string keys are written out in full as `{"name": "Ada"}`. Updates return a new map: the `!` forms (`put!`, `delete!`) build a new map and rebind the receiver variable, they do not modify anything in place.
 
 Entries come back in canonical key order, not insertion order, so `keys`, `values`, `entries` and any traversal are stable and comparable across equal maps.
 
@@ -7233,7 +7241,7 @@ Declared for the same reason list.kex declares `type List<X> = [X]`: it gives th
 
 Implements [`Enumerable`](enumerable.md#trait-enumerable), [`Foldable`](enumerable.md#trait-foldable), [`Monoid`](algebra.md#trait-monoid), [`Blankable`](blankable.md#trait-blankable), [`Truthyable`](truthyable.md#trait-truthyable).
 
-### Methods
+### Functions
 
 #### `reduce` (from Enumerable, Foldable)
 
@@ -7537,7 +7545,7 @@ entries : [(K, V)]
 
 Returns the map's entries as a list of `(key, value)` tuples, in canonical key order.
 
-This is the bridge to the `List` methods a map does not have of its own, and the form the two-parameter blocks elsewhere are splatting from.
+This is the bridge to the `List` functions a map does not have of its own, and the form the two-parameter blocks elsewhere are splatting from.
 
 **Returns**: the entries
 
@@ -7875,7 +7883,7 @@ Math.hypot(3.0, 4.0)        # => 5.0
 Math.sin(Math.PI / 2.0)     # => 1.0
 ```
 
-The everyday operations on a single number: `abs`, `floor`, `ceil`, `round`, `sqrt`: are also methods on `Integer` and `Float`, which usually reads better in a chain: `x.abs` over `Math.abs(x)`.
+The everyday operations on a single number: `abs`, `floor`, `ceil`, `round`, `sqrt`: can also be called with `Integer` and `Float` receivers, which usually reads better in a chain: `x.abs` over `Math.abs(x)`.
 
 ### `PI` (constant)
 
@@ -8331,7 +8339,7 @@ abs(x: Number) -> Number
 
 Returns the magnitude of `x`, discarding its sign. The type is preserved: an `Integer` in gives an `Integer` out.
 
-`x.abs` is the same thing as a method, and usually reads better.
+You can also write `x.abs` using UFCS.
 
 **Parameters**
 
@@ -8482,7 +8490,7 @@ end
 
 Implements `FS.File`.
 
-### Methods
+### Functions
 
 #### `cannedRead`
 
@@ -8490,7 +8498,7 @@ Implements `FS.File`.
 cannedRead(path)
 ```
 
-Named apart from `read`: `this.read(path)` would bind to the capability's own `read : FilePath -> String?`, not to this method.
+Named apart from `read`: `this.read(path)` would bind to the capability's own `read : FilePath -> String?`, not to this function.
 
 #### `read`
 
@@ -8626,7 +8634,7 @@ end
 
 Implements `ENV`.
 
-### Methods
+### Functions
 
 #### `lookup`
 
@@ -8634,7 +8642,7 @@ Implements `ENV`.
 lookup(key)
 ```
 
-Named apart from `get`: `this.get(key)` would bind to the capability's own `get`, not to this method.
+Named apart from `get`: `this.get(key)` would bind to the capability's own `get`, not to this function.
 
 #### `get`
 
@@ -9126,7 +9134,7 @@ Use `Port.from` at input boundaries. Port zero requests an ephemeral port where 
 
   - `value` : [Integer](number.md#make-integer)
 
-### Methods
+### Functions
 
 #### `string`
 
@@ -9321,7 +9329,7 @@ end
 
 Node names are atoms: `:b@myhost` for a short name, the quoted `:"b@host.example.com"` for one with dots, or `Atom.from(text)` for one built at runtime.
 
-Both nodes need the same compiled code for anything that carries a function, like a lambda or a record whose methods the receiver calls; `Node.spawn` sends its block's code along. Plain data — numbers, strings, lists, tuples, records — needs nothing.
+Both nodes need the same compiled code for anything that carries a function, like a lambda or a record used as an argument to functions on the remote node; `Node.spawn` sends its block's code along. Plain data — numbers, strings, lists, tuples, records — needs nothing.
 
 Backed by Kex.Intrinsic.Node on the BEAM. The tree-walk interpreter is always a single, unnamed node.
 
@@ -9795,6 +9803,7 @@ Returns the integer unchanged. The `Integer` counterpart of `Float.round`.
   - [Time](time.md#make-integer): [`nanoseconds`](time.md#integer-nanoseconds), [`microseconds`](time.md#integer-microseconds), [`milliseconds`](time.md#integer-milliseconds), [`seconds`](time.md#integer-seconds), [`minutes`](time.md#integer-minutes), [`hours`](time.md#integer-hours), [`days`](time.md#integer-days), [`weeks`](time.md#integer-weeks), [`months`](time.md#integer-months), [`years`](time.md#integer-years)
   - [Truthyable](truthyable.md#make-integer): [`truthy?`](truthyable.md#integer-truthy?)
   - [Units](units.md#make-integer): [`nanosecond`](units.md#integer-nanosecond), [`microsecond`](units.md#integer-microsecond), [`millisecond`](units.md#integer-millisecond), [`second`](units.md#integer-second), [`minute`](units.md#integer-minute), [`hour`](units.md#integer-hour), [`day`](units.md#integer-day), [`week`](units.md#integer-week), [`timeMeasure`](units.md#integer-timemeasure)
+  - [Units.Data](units/data.md#make-integer): [`<`](units/data.md#integer-op-lt), [`>`](units/data.md#integer-op-gt), [`<=`](units/data.md#integer-op-lt-eq), [`>=`](units/data.md#integer-op-gt-eq)
 
 ## type `Float`
 
@@ -10477,7 +10486,7 @@ end
 
 Implements [`Blankable`](blankable.md#trait-blankable), [`Showable`](kex.md#trait-showable), [`Optionable`](#trait-optionable), [`Truthyable`](truthyable.md#trait-truthyable).
 
-### Methods
+### Functions
 
 #### `set?` (from Optionable)
 
@@ -10653,7 +10662,7 @@ end
 
 Implements [`Showable`](kex.md#trait-showable), [`Resultable`](#trait-resultable).
 
-### Methods
+### Functions
 
 #### `ok?` (from Resultable)
 
@@ -10840,7 +10849,7 @@ end
 
 Implements [`Eitherable`](#trait-eitherable).
 
-### Methods
+### Functions
 
 #### `either` (from Eitherable)
 
@@ -10908,11 +10917,11 @@ Left(1).right?    # => false
 
 A value that may be absent. Constrain a generic parameter with it when a function accepts any optional value.
 
-The two operations below are what make the constraint worth having: an empty trait would accept a value and then let you do nothing with it, since there would be no method to call. `map` is deliberately NOT required — its result type differs per implementer (`Y?` here, `Result<Y, E>` for `Resultable`), which needs a higher-kinded parameter Kex does not have.
+The two operations below are what make the constraint worth having: an empty trait would accept a value and then let you do nothing with it, since there would be no function to call. `map` is deliberately NOT required — its result type differs per implementer (`Y?` here, `Result<Y, E>` for `Resultable`), which needs a higher-kinded parameter Kex does not have.
 
 Implemented by [`Optional<X>`](#make-optional).
 
-### Required methods
+### Required functions
 
 #### `set?`
 
@@ -10964,7 +10973,7 @@ A value that either succeeded or failed with a reason. Constrain a generic param
 
 Implemented by [`Result<X, E>`](#make-result).
 
-### Required methods
+### Required functions
 
 #### `ok?`
 
@@ -11014,7 +11023,7 @@ One of two values, neither meaning failure. Constrain a generic parameter with i
 
 Implemented by [`Either<L, R>`](#make-either).
 
-### Required methods
+### Required functions
 
 #### `either`
 
@@ -11178,7 +11187,7 @@ One declared command. Built for you by the `OptionConfig.command` builders.
 
 A tool's whole command-line interface: its name, its options, and its commands.
 
-Build one with `OptionParser.define` and add to it with the chainable `string`, `integer`, `flag` and `command` methods. Each returns a new `OptionConfig`, so the chain reads as one declaration.
+Build one with `OptionParser.define` and add to it with the chainable `string`, `integer`, `flag` and `command` functions. Each returns a new `OptionConfig`, so the chain reads as one declaration.
 
 **Fields**
 
@@ -11187,7 +11196,7 @@ Build one with `OptionParser.define` and add to it with the chainable `string`, 
   - `options` : [[OptionSpec](#record-optionspec)] (optional)
   - `commands` : [[CommandSpec](#record-commandspec)] (optional)
 
-### Methods
+### Functions
 
 #### `string`
 
@@ -11436,7 +11445,7 @@ The result of a successful parse: the option values, and the words that were not
   - `values` : {[String](string.md#make-string): [String](string.md#make-string)}
   - `arguments` : [[String](string.md#make-string)]
 
-### Methods
+### Functions
 
 #### `value`
 
@@ -11751,7 +11760,7 @@ Create one with `Input { input: text }` and pass it to a parser. Every operation
   - `input` : [String](string.md#make-string)
   - `pos` : [Integer](number.md#make-integer) (optional)
 
-### Methods
+### Functions
 
 #### `peek`
 
@@ -12182,7 +12191,7 @@ An opaque BEAM process identifier.
 
 Obtained from `Process.self` or `Process.whereIs`. Send it messages, link to it, monitor it, or ask whether it is still alive.
 
-### Methods
+### Functions
 
 #### `send`
 
@@ -12296,7 +12305,7 @@ A handle on work running in another process, with a result you can await.
 
 Created by `Task.start`.
 
-### Methods
+### Functions
 
 #### `await`
 
@@ -12339,7 +12348,7 @@ t.await(1000)
 
 A monitor reference, returned by `monitor` and passed back to `demonitor`.
 
-### Methods
+### Functions
 
 #### `demonitor`
 
@@ -12360,7 +12369,7 @@ ref.demonitor
 
 A typed process handle: like a `Pid`, but it remembers what kind of message the process accepts.
 
-### Methods
+### Functions
 
 A spawned Process<X> is a typed process handle backed by the same runtime pid. It therefore supports the ordinary pid lifecycle operations without erasing its message type.
 
@@ -12462,7 +12471,7 @@ slot stop -> Reply<Integer> = { stop: :normal, reply: @remaining }
 
 The identity of a pending caller, for a slot that answers later rather than immediately. Hand it `reply` when the answer is ready.
 
-### Methods
+### Functions
 
 #### `reply`
 
@@ -12514,14 +12523,14 @@ Why a call into a server failed: it took too long, the process is gone, or it cr
 
 A running server and the default timeout for calls into it.
 
-Returned by `Process.spawn`. Every `slot` declared in the type's `serving` block becomes a method on it, answering a `Result`.
+Returned by `Process.spawn`. Every `slot` declared in the type's `serving` block exposes a function taking this `Server` as its receiver and returning a `Result`.
 
 **Fields**
 
   - `process` : [Process](#type-process)<X>
   - `timeout` : [Integer](number.md#make-integer) (optional)
 
-### Methods
+### Functions
 
 #### `within`
 
@@ -12607,7 +12616,7 @@ spawn(state: X) -> Server<X>
 
 Starts a process running the `serving` implementation attached to `state`'s type, and returns a handle on it.
 
-The state you pass is the server's initial state. Every `slot` in the `serving` block becomes a method on the returned `Server`, and each answers a `Result`: a call can time out or find the process gone.
+The state you pass is the server's initial state. Every `slot` in the `serving` block exposes a function taking the returned `Server` as its receiver. Each returns a `Result`: a call can time out or find the process gone.
 
 **Parameters**
 
@@ -12843,7 +12852,7 @@ site.put(loadSite(root))
 let current = site.get.or(emptySite)
 ```
 
-### Methods
+### Functions
 
 #### `put`
 
@@ -13430,7 +13439,7 @@ entities:
 
 A span between two bounds, written `(1..10)` or `('a'..'z')`.
 
-A range stores its endpoints on both backends without building a list. Integer and character ranges can be enumerated with both ends included. Float ranges describe continuous bounds, for example `(-1.0..1.0)` for random sampling; `items` and traversal methods cannot enumerate them. A range whose lower endpoint exceeds its upper endpoint enumerates as an empty list.
+A range stores its endpoints on both backends without building a list. Integer and character ranges can be enumerated with both ends included. Float ranges describe continuous bounds, for example `(-1.0..1.0)` for random sampling; `items` and traversal functions cannot enumerate them. A range whose lower endpoint exceeds its upper endpoint enumerates as an empty list.
 
 ```kex
 (1..5).items          # => [1, 2, 3, 4, 5]
@@ -13439,7 +13448,7 @@ A range stores its endpoints on both backends without building a list. Integer a
 ('a'..'e').items      # => ['a', 'b', 'c', 'd', 'e']
 ```
 
-It is `Enumerable` and `Foldable`, so the traversal methods work directly, and the list operations below answer in list terms. Use `items` when you want a real list to hand to something else.
+It is `Enumerable` and `Foldable`, so the traversal functions work directly, and the list operations below answer in list terms. Use `items` when you want a real list to hand to something else.
 
 ```kex
 (1..10).items.filter(~even?)   # => [2, 4, 6, 8, 10]
@@ -13448,7 +13457,7 @@ It is `Enumerable` and `Foldable`, so the traversal methods work directly, and t
 
 Implements [`Enumerable`](enumerable.md#trait-enumerable), [`Foldable`](enumerable.md#trait-foldable).
 
-### Methods
+### Functions
 
 #### `reduce` (from Enumerable, Foldable)
 
@@ -13458,7 +13467,7 @@ reduce(acc: A, f: (A -> B -> A)) -> A
 
 Folds over the range's elements in ascending order.
 
-This is `Range`'s `Enumerable` primitive; the traversal methods are built on it. A range stays structurally minimal, so the fold runs over its materialized items.
+This is `Range`'s `Enumerable` primitive; the traversal functions are built on it. A range stays structurally minimal, so the fold runs over its materialized items.
 
 **Parameters**
 
@@ -13506,7 +13515,7 @@ contains?(value: A) -> Bool
 
 Returns `true` when `value` is one of the enumerated elements.
 
-This method materializes the range and supports integer and character ranges only. For continuous bounds, compare the value with each endpoint: `value >= lower && value <= upper`.
+This function materializes the range and supports integer and character ranges only. For continuous bounds, compare the value with each endpoint: `value >= lower && value <= upper`.
 
 **Parameters**
 
@@ -14404,7 +14413,7 @@ A group that did not participate is an absent key, so `get` answers `None`. This
 
   - `captures` : [Map](map.md#type-map)<Any, [String](string.md#make-string)>
 
-### Methods
+### Functions
 
 #### `get`
 
@@ -14472,7 +14481,7 @@ naturals.filter { |n| n.even? }.take(3)       # => [0, 2, 4]
 
 Streams are best for generated sequences you may revisit. A file or socket is different: it can only be consumed once, so those APIs return a `Feed`. Convert a small feed with `toStream` only when replaying it is worth keeping every value already read.
 
-### Methods
+### Functions
 
 #### `take`
 
@@ -14750,7 +14759,7 @@ entities:
 
 Implements [`Monoid`](algebra.md#trait-monoid), [`Blankable`](blankable.md#trait-blankable), [`Comparable`](comparable.md#trait-comparable), [`Enumerable`](enumerable.md#trait-enumerable), [`Foldable`](enumerable.md#trait-foldable), [`Truthyable`](truthyable.md#trait-truthyable).
 
-Text. A `String` is a sequence of Unicode characters, immutable like every other Kex value: every method here answers with a new string rather than changing the receiver.
+Text. A `String` is a sequence of Unicode characters, immutable like every other Kex value. Operations that transform text return a new string rather than changing the receiver.
 
 A `String` is its own type, not a list of characters. It is `Enumerable`, so `each`, `reduce`, `find` and friends walk it one `Char` at a time, and the sequence operations that could reasonably answer in either currency pick the useful one: `take`, `drop` and `sort` hand back a `String`, while `first` and `last` hand back a `Char`. Use `chars` to cross over to a real list.
 
@@ -15352,7 +15361,7 @@ chars : [Char]
 
 Returns the string's characters as a list.
 
-The bridge from `String` to the `List` methods that a string does not have of its own. Join back with `.join("")`.
+The bridge from `String` to the `List` functions that a string does not have of its own. Join back with `.join("")`.
 
 **Returns**: the characters, in order
 
@@ -15892,7 +15901,7 @@ paths.filter { |p| p.endsWith?(".kex") }
 
 A single Unicode character.
 
-Character literals are written with single quotes (`'a'`) and are a different type from the one-character string `"a"`. The classification methods (`digit?`, `alpha?`, `space?` and the rest) are what most character code needs; `codepoint` and `String.fromCodepoint` are the escape hatch to raw Unicode values.
+Character literals are written with single quotes (`'a'`) and are a different type from the one-character string `"a"`. The classification functions (`digit?`, `alpha?`, `space?` and the rest) are what most character code needs; `codepoint` and `String.fromCodepoint` are the escape hatch to raw Unicode values.
 
 ```kex
 "hello world".chars.count(~alpha?)   # => 10
@@ -16210,7 +16219,7 @@ String.fromBytes("héllo".bytes)   # => Just("héllo")
 
 ## type `Tuple`
 
-A fixed-size group of values, written `(a, b)`. Unlike a list, a tuple's size and the type of each position are part of its type, so the `List` methods do not apply to it: destructure it, match on it, or convert it with `items`.
+A fixed-size group of values, written `(a, b)`. Unlike a list, a tuple's size and the type of each position are part of its type, so the `List` functions do not apply to it: destructure it, match on it, or convert it with `items`.
 
 ```kex
 let (name, age) = ("Ada", 36)
@@ -16225,7 +16234,7 @@ items : [Any]
 
 Returns the tuple's elements as a list.
 
-A tuple is not a list (its arity is part of its type) so the `List` methods do not apply to it. This is the explicit conversion, and it loses the per-position typing in exchange.
+A tuple is not a list (its arity is part of its type) so the `List` functions do not apply to it. This is the explicit conversion, and it loses the per-position typing in exchange.
 
 Destructuring is usually clearer when you know the shape: `let (a, b) = pair`.
 
@@ -16983,7 +16992,7 @@ A scanned template: its frontmatter tags, and its body as a node list.
   - `frontmatter` : {[String](string.md#make-string): [Tag](#type-template-tag)}
   - `nodes` : [Node]
 
-### Methods
+### Functions
 
 #### `parameters`
 
@@ -17417,7 +17426,7 @@ Period    a calendar step, resolved by the calendar (1.months, 2.years)
 
 A time `Measure` such as `5.second` is a third thing and deliberately NOT a Duration: a Measure describes a measurement, a Duration describes elapsed time. The plural `5.seconds` builds the Duration.
 
-Values are built through their own module and used through methods:
+Values are built through their own module and used through functions:
 
 ```kex
 let due = Date.of(2026, 7, 30).try           # Date
@@ -17482,7 +17491,7 @@ Build one with `Date.of`, which validates, rather than with the record literal, 
 
 Implements [`Inspectable`](kex.md#trait-inspectable), [`Showable`](kex.md#trait-showable).
 
-### Methods
+### Functions
 
 #### `inspectValue` (from Inspectable)
 
@@ -17693,7 +17702,7 @@ Date.of(2026, 7, 30).try.addWeeks(2).iso   # => "2026-08-13"
 addMonths(count: Integer) -> Date
 ```
 
-No `date.tomorrow`/`date.yesterday` methods: on BEAM a make-block method flattens onto the same name as the `Date.tomorrow()`/`Date.yesterday()` module functions above and one of the two has to win. The module functions win: `Date.tomorrow()` is the spelling people reach for, and `date.addDays(1)` already says the rest.
+No `date.tomorrow`/`date.yesterday` functions: on BEAM a make-block function flattens onto the same name as the `Date.tomorrow()`/`Date.yesterday()` module functions above and one of the two has to win. The module functions win: `Date.tomorrow()` is the spelling people reach for, and `date.addDays(1)` already says the rest.
 
 The date `count` calendar months later, with the day clamped into the target month.
 
@@ -18054,7 +18063,7 @@ Arithmetic wraps within the day: there is no date to carry into. Reach for `Date
 
 Implements [`Inspectable`](kex.md#trait-inspectable), [`Showable`](kex.md#trait-showable).
 
-### Methods
+### Functions
 
 #### `inspectValue` (from Inspectable)
 
@@ -18330,7 +18339,7 @@ Two `DateTime` values that name the same instant compare equal whatever offsets 
 
 Implements [`Inspectable`](kex.md#trait-inspectable), [`Showable`](kex.md#trait-showable).
 
-### Methods
+### Functions
 
 #### `inspectValue` (from Inspectable)
 
@@ -18394,7 +18403,7 @@ weekday : Weekday
 
 The day of the week this instant falls on, at its own offset.
 
-No `year`/`hour`/... shorthands here: a method named after a record field makes `value.year` inside a module function dispatch to it on BEAM and fail with function_clause. Reach through `.date` and `.time`.
+No `year`/`hour`/... shorthands here: a function named after a record field makes `value.year` inside a module function dispatch to it on BEAM and fail with function_clause. Reach through `.date` and `.time`.
 
 **Returns**: the day of the week
 
@@ -18712,7 +18721,7 @@ Use a Duration for elapsed time (`36.hours` is always 129600 seconds) and a Peri
 
 Implements [`Inspectable`](kex.md#trait-inspectable), [`Showable`](kex.md#trait-showable).
 
-### Methods
+### Functions
 
 #### `inspectValue` (from Inspectable)
 
@@ -19074,7 +19083,7 @@ Time.release()
 
 The clock is global, not per-process: a frozen clock stays frozen inside spawned processes, which is the only behavior that matches a real one. `release` is not automatic, so a test that freezes must also release: otherwise every later test in the run inherits the frozen clock.
 
-Nanoseconds since the Unix epoch for a civil datetime. A plain function rather than a `DateTime` method: on BEAM a method named `epochNanos` flattens onto the same name as the `DateTime.epochNanos()` module function, and the arity-0 one wins: silently, answering for the host clock instead of for `moment`.
+Nanoseconds since the Unix epoch for a civil datetime. A plain function rather than a `DateTime` function: on BEAM a function named `epochNanos` flattens onto the same name as the `DateTime.epochNanos()` module function, and the arity-0 one wins: silently, answering for the host clock instead of for `moment`.
 
 ### `CLOCK_MIN_NANOS` (constant)
 
@@ -19431,7 +19440,7 @@ errorMessage(error: TimeError) -> String
 
 Renders a `TimeError` as a sentence for the user.
 
-A plain function rather than an `Errorable` implementation: a `message` method here joins the same BEAM dispatcher as ParseError's `message` FIELD and breaks it (spec/record_field_method_collision.kex).
+A plain function rather than an `Errorable` implementation: a `message` function here joins the same BEAM dispatcher as ParseError's `message` FIELD and breaks it (spec/record_field_method_collision.kex).
 
 **Parameters**
 
@@ -19967,7 +19976,7 @@ let elapsedMs = (DateTime.epochNanos() - started) / 1000000
 
 ## extends `Integer`
 
-More methods of [`Integer`](number.md#make-integer), added by this module.
+More functions for [`Integer`](number.md#make-integer), added by this module.
 
 The plural spellings build a Duration; the singular ones from units.kex build a time Measure. `5.seconds` is an elapsed span, `5.second` a measurement.
 
@@ -20125,7 +20134,7 @@ This many calendar years, as a `Period`.
 
 ## extends `Float`
 
-More methods of [`Float`](number.md#make-float), added by this module.
+More functions for [`Float`](number.md#make-float), added by this module.
 
 The same `Duration` constructors on `Float`, for fractional spans: `1.5.hours`, `0.25.seconds`.
 
@@ -20215,7 +20224,7 @@ This many weeks, as a `Duration`: a fixed 604800 seconds each.
 
 ## extends `Duration`
 
-More methods of [`Duration`](units.md#record-duration), added by this module.
+More functions for [`Duration`](units.md#record-duration), added by this module.
 
 ### `wholeNanoseconds`
 
@@ -20918,7 +20927,7 @@ There is no NaN to consider: a float operation that would produce one raises ins
 
 Implemented by [`Bool`](#make-bool), [`Integer`](#make-integer), [`Float`](#make-float), [`String`](#make-string), [`Optional<X>`](#make-optional), [`[X]`](#make-list), [`Map<K, V>`](#make-map).
 
-### Required methods
+### Required functions
 
 #### `truthy?`
 
@@ -20991,7 +21000,7 @@ book.borrowed?.not
 
 ## extends `Integer`
 
-More methods of [`Integer`](number.md#make-integer), added by this module.
+More functions for [`Integer`](number.md#make-integer), added by this module.
 
 Implements [`Truthyable`](#trait-truthyable).
 
@@ -21016,7 +21025,7 @@ Zero is a number, not an absence. Compare it explicitly when zero means somethin
 
 ## extends `Float`
 
-More methods of [`Float`](number.md#make-float), added by this module.
+More functions for [`Float`](number.md#make-float), added by this module.
 
 Implements [`Truthyable`](#trait-truthyable).
 
@@ -21038,7 +21047,7 @@ Always `true`, including for zero.
 
 ## extends `String`
 
-More methods of [`String`](string.md#make-string), added by this module.
+More functions for [`String`](string.md#make-string), added by this module.
 
 Implements [`Truthyable`](#trait-truthyable).
 
@@ -21063,7 +21072,7 @@ Use `blank?` from `Blankable` when an empty or whitespace-only string should cou
 
 ## extends `Optional<X>`
 
-More methods of [`Optional`](optional.md#type-optional), added by this module.
+More functions for [`Optional`](optional.md#type-optional), added by this module.
 
 Implements [`Truthyable`](#trait-truthyable).
 
@@ -21088,7 +21097,7 @@ None.truthy?       # => false
 
 ## extends `[X]`
 
-More methods of [`List`](list.md#type-list), added by this module.
+More functions for [`List`](list.md#type-list), added by this module.
 
 Implements [`Truthyable`](#trait-truthyable).
 
@@ -21113,7 +21122,7 @@ Use `empty?` or `blank?` when an empty list should count as nothing.
 
 ## extends `Map<K, V>`
 
-More methods of [`Map`](map.md#type-map), added by this module.
+More functions for [`Map`](map.md#type-map), added by this module.
 
 Implements [`Truthyable`](#trait-truthyable).
 
@@ -21171,9 +21180,9 @@ The answer comes from the compiler where it can: a checked expression knows thin
   - `args` : [[Type](#record-type)]
   - `pure` : [Bool](truthyable.md#make-bool)
 
-### Methods
+### Functions
 
-Reflection methods on runtime type values.
+Reflection functions on runtime type values.
 
 #### `fields`
 
@@ -21524,7 +21533,7 @@ The trait a unit implements: how it converts to its dimension's base unit, which
 
 Implemented by [`UnitDefinition`](#make-unitdefinition), [`TimeUnit`](#make-timeunit), [`DataUnit`](units/data.md#make-dataunit), [`UnitDefinition`](units/data.md#make-unitdefinition), [`SIPrefix`](units/si.md#make-siprefix), [`SIUnit`](units/si.md#make-siunit), [`UnitDefinition`](units/si.md#make-unitdefinition).
 
-### Required methods
+### Required functions
 
 #### `factor`
 
@@ -21650,7 +21659,7 @@ Runtime-defined units are used for prefixes and units derived by arithmetic: `s^
 
 Implements [`Unit`](#trait-unit).
 
-### Methods
+### Functions
 
 #### `factor` (from Unit)
 
@@ -21689,7 +21698,7 @@ A Measure is shared by every unit module. `canonical` stores the value in that d
 
 Implements [`Showable`](kex.md#trait-showable).
 
-### Methods
+### Functions
 
 #### `factor`
 
@@ -21870,7 +21879,7 @@ Like +++, the result is displayed in the left operand's unit, and mixing dimensi
 
 ### Defined in other modules
 
-  - [Units.Data](units/data.md#make-measure): [`factor`](units/data.md#measure-factor), [`kind`](units/data.md#measure-kind), [`symbol`](units/data.md#measure-symbol)
+  - [Units.Data](units/data.md#make-measure): [`factor`](units/data.md#measure-factor), [`kind`](units/data.md#measure-kind), [`symbol`](units/data.md#measure-symbol), [`<`](units/data.md#measure-op-lt), [`>`](units/data.md#measure-op-gt), [`<=`](units/data.md#measure-op-lt-eq), [`>=`](units/data.md#measure-op-gt-eq)
   - [Units.SI](units/si.md#make-measure): [`factor`](units/si.md#measure-factor), [`kind`](units/si.md#measure-kind), [`symbol`](units/si.md#measure-symbol), [`kilo`](units/si.md#measure-kilo), [`*`](units/si.md#measure-op-times), [`/`](units/si.md#measure-op-div), [`product`](units/si.md#measure-product), [`quotient`](units/si.md#measure-quotient), [`productKind`](units/si.md#measure-productkind), [`quotientKind`](units/si.md#measure-quotientkind), [`productSymbol`](units/si.md#measure-productsymbol), [`quotientSymbol`](units/si.md#measure-quotientsymbol)
 
 ## record `Duration`
@@ -21904,7 +21913,7 @@ The time units, from nanoseconds to weeks. The base unit is the second.
 
 Implements [`Unit`](#trait-unit).
 
-### Methods
+### Functions
 
 #### `factor` (from Unit)
 
@@ -21924,7 +21933,7 @@ symbol(_)
 
 ## extends `Integer`
 
-More methods of [`Integer`](number.md#make-integer), added by this module.
+More functions for [`Integer`](number.md#make-integer), added by this module.
 
 Time-unit constructors on `Integer`: `5.second`, `90.minute`, `2.week`.
 
@@ -22066,7 +22075,7 @@ timeMeasure(unit: TimeUnit) -> Measure
 
 ## extends `Float`
 
-More methods of [`Float`](number.md#make-float), added by this module.
+More functions for [`Float`](number.md#make-float), added by this module.
 
 The same time-unit constructors on `Float`, for fractional quantities: `1.5.hour`, `0.25.second`.
 
@@ -22302,7 +22311,7 @@ A parsed RFC 3986 URI reference. Construction is strict; use `parse` rather than
 
 Implements [`Showable`](kex.md#trait-showable), [`Inspectable`](kex.md#trait-inspectable).
 
-### Methods
+### Functions
 
 #### `string`
 
@@ -22435,7 +22444,7 @@ An absolute hierarchical URI with an authority component, such as an HTTP URL. U
 
 Implements [`Showable`](kex.md#trait-showable), [`Inspectable`](kex.md#trait-inspectable).
 
-### Methods
+### Functions
 
 #### `string`
 
@@ -22566,7 +22575,7 @@ Order and duplicates matter in real APIs: `tag=kex&tag=beam` must not become a m
 
   - `entries` : [([String](string.md#make-string), [String](string.md#make-string)?)]
 
-### Methods
+### Functions
 
 #### `encode`
 
@@ -22594,7 +22603,7 @@ This is deliberately separate from `Query`: HTML forms encode spaces as plus sig
 
   - `entries` : [([String](string.md#make-string), [String](string.md#make-string)?)]
 
-### Methods
+### Functions
 
 #### `encode`
 
@@ -23128,9 +23137,9 @@ q.peek                # => Just(1)
 
 `items` is +@front + @back.reverse+, so the queue is not opaque: it is always a real list you can hand to anything, the same promise `Data.Set` makes.
 
-Unlike a set, a queue's representation is NOT canonical: `Queue.from([1,2])` and `Queue.from([1]).enqueue(2)` hold the same elements in different `front`/`back` splits, so they are structurally unequal even though they answer the same to every method. `==` is therefore overloaded to compare `items` rather than the record fields directly, but that overload only reaches ordinary `==` calls. Two such queues used as map keys, or matched against each other as record patterns, still compare structurally on both backends, and can disagree with `==`.
+Unlike a set, a queue's representation is NOT canonical: `Queue.from([1,2])` and `Queue.from([1]).enqueue(2)` hold the same elements in different `front`/`back` splits, so they are structurally unequal even though they answer the same to every function. `==` is therefore overloaded to compare `items` rather than the record fields directly, but that overload only reaches ordinary `==` calls. Two such queues used as map keys, or matched against each other as record patterns, still compare structurally on both backends, and can disagree with `==`.
 
-Every method answers with a new queue rather than changing the receiver. `enqueue!` and `dequeue!` come free from the `!` rebinding form.
+Updates return a new queue rather than changing the receiver. `enqueue!` and `dequeue!` come free from the `!` rebinding form.
 
 
 
@@ -23147,7 +23156,7 @@ Build one with `Queue.from` rather than by hand.
 
 Implements [`Enumerable`](../enumerable.md#trait-enumerable), [`Foldable`](../enumerable.md#trait-foldable), [`Monoid`](../algebra.md#trait-monoid), [`Showable`](../kex.md#trait-showable), [`Blankable`](../blankable.md#trait-blankable).
 
-### Methods
+### Functions
 
 #### `reduce` (from Enumerable, Foldable)
 
@@ -23474,7 +23483,7 @@ Opt-in: nothing here is in scope until `using Data.Set`, which brings both flavo
 using Data.Set
 ```
 
-Membership is decided by structural equality: the same equality `==` and map keys use, so records and tuples are compared by value, not identity. Every method answers with a new set; the `!` forms (`add!`, `delete!`) build a new set and rebind the receiver variable rather than modifying anything in place.
+Membership is decided by structural equality: the same equality `==` and map keys use, so records and tuples are compared by value, not identity. Updates return a new set; the `!` forms (`add!`, `delete!`) build a new set and rebind the receiver variable rather than modifying anything in place.
 
 ```kex
 let tags = Set.from(["kex", "beam", "kex"])
@@ -23503,7 +23512,7 @@ Sets compare by their elements. Use `items` to obtain a list; `UnorderedSet.item
 
 A set whose elements are kept sorted and duplicate free.
 
-Build one with `Set.from` rather than by hand: the record literal does no deduplication and no sorting, and every method here relies on both. Reading `items` back is the field itself, so handing a set's elements to list code costs nothing.
+Build one with `Set.from` rather than by hand: the record literal does no deduplication and no sorting, and every function here relies on both. Reading `items` back is the field itself, so handing a set's elements to list code costs nothing.
 
 ```kex
 Set.from([3, 1, 2]).items   # => [1, 2, 3]
@@ -23515,7 +23524,7 @@ Set.from([3, 1, 2]).items   # => [1, 2, 3]
 
 Implements [`Enumerable`](../enumerable.md#trait-enumerable), [`Foldable`](../enumerable.md#trait-foldable), [`Monoid`](../algebra.md#trait-monoid), [`Showable`](../kex.md#trait-showable), [`Blankable`](../blankable.md#trait-blankable).
 
-### Methods
+### Functions
 
 #### `reduce` (from Enumerable, Foldable)
 
@@ -23885,7 +23894,7 @@ allowList.disjoint?(denyList)
 
 Unions with another set, or with a plain list.
 
-The list form is the everyday way to add one element without naming a method: +s + [x]+.
+The list form is the everyday way to add one element without naming a function: +s + [x]+.
 
 **Parameters**
 
@@ -24062,7 +24071,7 @@ UnorderedSet.from([3, 1, 2]).contains?(2)   # => true
 
 Implements [`Enumerable`](../enumerable.md#trait-enumerable), [`Foldable`](../enumerable.md#trait-foldable), [`Monoid`](../algebra.md#trait-monoid), [`Showable`](../kex.md#trait-showable), [`Blankable`](../blankable.md#trait-blankable).
 
-### Methods
+### Functions
 
 #### `reduce` (from Enumerable, Foldable)
 
@@ -24663,7 +24672,7 @@ s.pop                 # => Just((3, Stack(1, 2)))
 Stack.empty.pop       # => None
 ```
 
-Every method answers with a new stack rather than changing the receiver. `push!` and `pop!` come free from the `!` rebinding form, the same as `add!`/`delete!` do for `Data.Set`: they build a new stack and rebind the receiver variable rather than modifying anything in place.
+Updates return a new stack rather than changing the receiver. `push!` and `pop!` come free from the `!` rebinding form, the same as `add!`/`delete!` do for `Data.Set`: they build a new stack and rebind the receiver variable rather than modifying anything in place.
 
 
 
@@ -24683,7 +24692,7 @@ Stack.from([1, 2, 3]).items   # => [1, 2, 3]
 
 Implements [`Enumerable`](../enumerable.md#trait-enumerable), [`Foldable`](../enumerable.md#trait-foldable), [`Monoid`](../algebra.md#trait-monoid), [`Showable`](../kex.md#trait-showable), [`Blankable`](../blankable.md#trait-blankable).
 
-### Methods
+### Functions
 
 #### `reduce` (from Enumerable, Foldable)
 
@@ -25463,7 +25472,7 @@ One field inside a record or map-shaped pattern.
 
 Structured representation of expression AST nodes.
 
-Expressions retain syntax-level distinctions that matter to tools: a method call is not flattened into a generic call, `var` is distinct from `let`, and a trailing `if` remains recognizable. Walk these constructors when writing a linter or code search; use `Evaluator` when the goal is to execute an expression rather than inspect it.
+Expressions retain syntax-level distinctions that matter to tools: a receiver call is not flattened into a generic call, `var` is distinct from `let`, and a trailing `if` remains recognizable. Walk these constructors when writing a linter or code search; use `Evaluator` when the goal is to execute an expression rather than inspect it.
 
 **Variants**
 
@@ -25690,9 +25699,9 @@ A named function and all of its pattern-matching clauses.
 
 ## record `AnnotationInfo`
 
-A standalone function or method type signature.
+A standalone function type signature.
 
-`implicitThis` distinguishes `:>` methods from module-level `:` functions without making a tool inspect punctuation in the original source.
+`implicitThis` distinguishes `:>` receiver signatures from module-level `:` signatures without making a tool inspect punctuation in the original source.
 
 **Fields**
 
@@ -25760,7 +25769,7 @@ A record declaration with fields in source order.
 
 ## record `TraitInfo`
 
-A trait declaration and the signatures or default methods in its body.
+A trait declaration and the signatures or default functions in its body.
 
 **Fields**
 
@@ -25776,7 +25785,7 @@ A trait declaration and the signatures or default methods in its body.
 
 A `make` implementation block.
 
-`target` is the receiver type, `implements` lists explicit traits, and `body` retains methods and visibility sections in declaration order.
+`target` is the receiver type, `implements` lists explicit traits, and `body` retains functions and visibility sections in declaration order.
 
 **Fields**
 
@@ -26109,7 +26118,7 @@ Compare `hits` with `misses` when tuning `entries` or TTL bounds. A rising `evic
 
 An opaque, process-safe resolver that owns its cache.
 
-### Methods
+### Functions
 
 #### `addresses`
 
@@ -26369,7 +26378,7 @@ Order is kept for the same reason. RFC 9110 makes order insignificant BETWEEN di
 
 Implements [`Showable`](../kex.md#trait-showable), [`Inspectable`](../kex.md#trait-inspectable).
 
-### Methods
+### Functions
 
 #### `add`
 
@@ -26477,7 +26486,7 @@ A validated HTTP status code in `100..599`.
 
   - `code` : [Integer](../number.md#make-integer)
 
-### Methods
+### Functions
 
 #### `informational?`
 
@@ -26552,7 +26561,7 @@ Route captures decoded after path segmentation.
 
   - `parameters` : [Map](../map.md#type-map)<[String](../string.md#make-string), [String](../string.md#make-string)> (optional)
 
-### Methods
+### Functions
 
 #### `parameter`
 
@@ -26612,7 +26621,7 @@ An immutable, declaration-ordered HTTP router.
 
   - `routes` : [[Route](#record-net-http-route)] (optional)
 
-### Methods
+### Functions
 
 #### `route`
 
@@ -26762,7 +26771,7 @@ Resources released by `Client.close`.
 
 The pooled HTTP client. An opaque handle over the connection pool that owns it; `Client.open` makes one and `client.close` releases it.
 
-### Methods
+### Functions
 
 #### `request`
 
@@ -27271,7 +27280,7 @@ The stored spelling is normalized, so addresses that arrived in different forms 
 
   - `source` : [String](../string.md#make-string)
 
-### Methods
+### Functions
 
 #### `string`
 
@@ -27397,7 +27406,7 @@ Parsing `192.0.2.9/24` therefore produces `192.0.2.0/24`. This makes a `Network`
 
   - `source` : [String](../string.md#make-string)
 
-### Methods
+### Functions
 
 #### `string`
 
@@ -28451,7 +28460,7 @@ Negotiated handshake information. The subprotocol is `None` when the server sele
 
 An opaque RFC 6455 connection, client- or server-side. It does not reconnect automatically.
 
-### Methods
+### Functions
 
 #### `send`
 
@@ -28477,7 +28486,7 @@ connection.send(Text(JSON.stringify({ action: "subscribe", topic: topic }))).try
 receiveMessage(timeout: Duration?) -> Result<Message, NetError>
 ```
 
-`receive` is a Kex process keyword, so the public method spells out the operation while preserving the plan's high-level message semantics. Reassembles fragments, validates UTF-8, and automatically answers pings.
+`receive` is a Kex process keyword, so the public function spells out the operation while preserving the plan's high-level message semantics. Reassembles fragments, validates UTF-8, and automatically answers pings.
 
 A `CloseMessage` is returned once so the application can inspect the peer's reason. Subsequent reads fail with `Closed`.
 
@@ -28645,14 +28654,39 @@ Opt-in: nothing here is in scope until `using Units.Data`.
 using Units.Data
 
 main do
-  IO.printLine(1500.megabytes.to(String))              # prints: 1500.0 MB
+  IO.printLine(1500.megabyte.to(String))              # prints: 1500.0 MB
   IO.printLine(1500000000.byteSize.to(String, in: Giga)) # prints: 1.5 GB
 end
 ```
 
-Both families are here and they are not the same: `KB` is 1000 bytes, `KiB` is 1024. Values built from either convert freely, because both are counted in bytes underneath, so `1.gibibytes.convertTo(MiB)` answers 1024 MiB.
+Both families are here and they are not the same: `KB` is 1000 bytes, `KiB` is 1024. Values built from either convert freely, because both are counted in bytes underneath, so `1.gibibyte.convertTo(MiB)` answers 1024 MiB.
 
-Every value is a `Measure` from the prelude, so its arithmetic, comparison and `to(String)` apply unchanged.
+Numeric constructors use singular names, as in `Units.SI`: `5.megabyte` and `2.mebibyte`. `byteSize` is an alias for `byte`.
+
+File and payload APIs return integer byte counts. Wrap those counts with `byte` to convert or display them as measurements:
+
+```kex
+FS.File.size("report.pdf").map { |n| n.byte.to(String) }
+Binary.fromBytes([104, 105]).length.byte.to(String)  # => "2.0 B"
+"é".bytes.count.byte.to(String)                    # => "2.0 B"
+```
+
+To display binary units, convert to `KiB`, `MiB`, `GiB`, or `TiB`:
+
+```kex
+1048576.byte.convertTo(MiB).map { |m| m.to(String) } # => Ok("1.0 MiB")
+```
+
+Compare an integer byte count directly with a data-size threshold:
+
+```kex
+30000001 > 30.megabyte   # => true
+1048576 <= 1.mebibyte    # => true
+```
+
+`<`, `>`, `<=`, and `>=` work with the count on either side. A time or SI measure is not a byte threshold and raises an error.
+
+Every value is a `Measure` from the prelude, so its arithmetic and `to(String)` apply unchanged.
 
 ### `size`
 
@@ -28662,7 +28696,7 @@ size(value: Number, unit: DataUnit) -> Measure
 
 `value` of the given data unit, as a `Measure`.
 
-The general constructor the named ones below are written on. Reach for `megabytes`, `kibibytes` and friends when the unit is known at the call site.
+The general constructor the named ones below are written on. Reach for `megabyte`, `kibibyte` and friends when the unit is known at the call site.
 
 **Parameters**
 
@@ -28698,8 +28732,8 @@ Decimal and binary units convert freely, because both are counted in bytes under
 **Examples**
 
 ```kex
-1.gibibytes.convertTo(MiB).map { |m| m.to(String) }   # => Ok("1024.0 MiB")
-2.gigabytes.convertTo(MB).map { |m| m.to(String) }    # => Ok("2000.0 MB")
+1.gibibyte.convertTo(MiB).map { |m| m.to(String) }   # => Ok("1024.0 MiB")
+2.gigabyte.convertTo(MB).map { |m| m.to(String) }    # => Ok("2000.0 MB")
 ```
 
 ### `to`
@@ -28751,13 +28785,38 @@ Named `byteSize` rather than `bytes`, which `String` already uses for its UTF-8 
 _Reporting a file's size_
 
 ```kex
-FS.File.size(path).map { |n| n.byteSize.to(String, in: Mega) }
+FS.File.size("report.pdf").map { |n| n.byte.to(String) }
 ```
 
-### `kilobytes`
+### `byte`
 
 ```kex
-kilobytes(value: Number) -> Measure
+byte(value: Number) -> Measure
+```
+
+`value` bytes, as a `Measure`.
+
+Use this with byte counts from `FS.File.size` or `Binary.length`.
+
+**Parameters**
+
+  - `value` — the byte count
+
+**Returns**: the size
+
+**Examples**
+
+_A binary payload's size_
+
+```kex
+let payload = Binary.fromBytes([104, 105])
+payload.length.byte.to(String)   # => "2.0 B"
+```
+
+### `kilobyte`
+
+```kex
+kilobyte(value: Number) -> Measure
 ```
 
 `value` kilobytes, 1000 bytes each.
@@ -28771,13 +28830,13 @@ kilobytes(value: Number) -> Measure
 **Examples**
 
 ```kex
-5.kilobytes.to(String)   # => "5.0 KB"
+5.kilobyte.to(String)   # => "5.0 KB"
 ```
 
-### `megabytes`
+### `megabyte`
 
 ```kex
-megabytes(value: Number) -> Measure
+megabyte(value: Number) -> Measure
 ```
 
 `value` megabytes, 1000000 bytes each.
@@ -28791,13 +28850,13 @@ megabytes(value: Number) -> Measure
 **Examples**
 
 ```kex
-1500.megabytes.to(String)   # => "1500.0 MB"
+1500.megabyte.to(String)   # => "1500.0 MB"
 ```
 
-### `gigabytes`
+### `gigabyte`
 
 ```kex
-gigabytes(value: Number) -> Measure
+gigabyte(value: Number) -> Measure
 ```
 
 `value` gigabytes, 10^9 bytes each.
@@ -28811,13 +28870,13 @@ gigabytes(value: Number) -> Measure
 **Examples**
 
 ```kex
-2.gigabytes.convertTo(MB).map { |m| m.to(String) }   # => Ok("2000.0 MB")
+2.gigabyte.convertTo(MB).map { |m| m.to(String) }   # => Ok("2000.0 MB")
 ```
 
-### `terabytes`
+### `terabyte`
 
 ```kex
-terabytes(value: Number) -> Measure
+terabyte(value: Number) -> Measure
 ```
 
 `value` terabytes, 10^12 bytes each.
@@ -28831,13 +28890,13 @@ terabytes(value: Number) -> Measure
 **Examples**
 
 ```kex
-2.terabytes.to(String)   # => "2.0 TB"
+2.terabyte.to(String)   # => "2.0 TB"
 ```
 
-### `kibibytes`
+### `kibibyte`
 
 ```kex
-kibibytes(value: Number) -> Measure
+kibibyte(value: Number) -> Measure
 ```
 
 `value` kibibytes, 1024 bytes each.
@@ -28851,13 +28910,13 @@ kibibytes(value: Number) -> Measure
 **Examples**
 
 ```kex
-1024.kibibytes.to(String)   # => "1024.0 KiB"
+1024.kibibyte.to(String)   # => "1024.0 KiB"
 ```
 
-### `mebibytes`
+### `mebibyte`
 
 ```kex
-mebibytes(value: Number) -> Measure
+mebibyte(value: Number) -> Measure
 ```
 
 `value` mebibytes, 1024^2 bytes each.
@@ -28871,13 +28930,13 @@ mebibytes(value: Number) -> Measure
 **Examples**
 
 ```kex
-3.mebibytes.to(String)   # => "3.0 MiB"
+3.mebibyte.to(String)   # => "3.0 MiB"
 ```
 
-### `gibibytes`
+### `gibibyte`
 
 ```kex
-gibibytes(value: Number) -> Measure
+gibibyte(value: Number) -> Measure
 ```
 
 `value` gibibytes, 1024^3 bytes each.
@@ -28891,13 +28950,13 @@ gibibytes(value: Number) -> Measure
 **Examples**
 
 ```kex
-1.gibibytes.convertTo(MiB).map { |m| m.to(String) }   # => Ok("1024.0 MiB")
+1.gibibyte.convertTo(MiB).map { |m| m.to(String) }   # => Ok("1024.0 MiB")
 ```
 
-### `tebibytes`
+### `tebibyte`
 
 ```kex
-tebibytes(value: Number) -> Measure
+tebibyte(value: Number) -> Measure
 ```
 
 `value` tebibytes, 1024^4 bytes each.
@@ -28911,7 +28970,7 @@ tebibytes(value: Number) -> Measure
 **Examples**
 
 ```kex
-1.tebibytes.to(String)   # => "1.0 TiB"
+1.tebibyte.to(String)   # => "1.0 TiB"
 ```
 
 ## type `DataUnit`
@@ -28919,8 +28978,8 @@ tebibytes(value: Number) -> Measure
 The data units this module names: decimal (`KB`, `MB`, `GB`, `TB`) and binary (`KiB`, `MiB`, `GiB`, `TiB`), plus the plain byte `B`.
 
 ```kex
-1.KB   # 1000 bytes
-1.KiB  # 1024 bytes
+size(1, KB).canonical    # => 1000.0 bytes
+size(1, KiB).canonical   # => 1024.0 bytes
 ```
 
 **Variants**
@@ -28937,7 +28996,7 @@ The data units this module names: decimal (`KB`, `MB`, `GB`, `TB`) and binary (`
 
 Implements [`Unit`](../units.md#trait-unit).
 
-### Methods
+### Functions
 
 #### `factor` (from Unit)
 
@@ -28971,7 +29030,7 @@ Data prefixes select their standard decimal byte unit, so `Mega` is MB rather th
 
 ## extends `UnitDefinition`
 
-More methods of [`UnitDefinition`](../units.md#record-unitdefinition), added by this module.
+More functions for [`UnitDefinition`](../units.md#record-unitdefinition), added by this module.
 
 Implements [`Unit`](../units.md#trait-unit).
 
@@ -28989,7 +29048,9 @@ Implements [`Unit`](../units.md#trait-unit).
 
 ## extends `Measure`
 
-More methods of [`Measure`](../units.md#record-measure), added by this module.
+More functions for [`Measure`](../units.md#record-measure), added by this module.
+
+The same comparison with the data-size threshold on the left.
 
 ### `factor`
 
@@ -29007,6 +29068,76 @@ kind : Atom
 
 ```kex
 symbol : String
+```
+
+### `<`
+
+```kex
+<(other: Integer) -> Bool
+```
+
+### `>`
+
+```kex
+>(other: Integer) -> Bool
+```
+
+### `<=`
+
+```kex
+<=(other: Integer) -> Bool
+```
+
+### `>=`
+
+```kex
+>=(other: Integer) -> Bool
+```
+
+## extends `Integer`
+
+More functions for [`Integer`](../number.md#make-integer), added by this module.
+
+Compares an integer byte count with a data-size threshold.
+
+File and binary sizes stay integers. Import this module to use data units directly in comparisons; only data measures are accepted as thresholds.
+
+**Examples**
+
+_Rejecting an oversized file_
+
+```kex
+FS.File.size("report.pdf").map { |count| count > 30.megabyte }
+```
+
+_Checking a payload_
+
+```kex
+Binary.fromBytes([104, 105]).length < 1.kibibyte  # => true
+```
+
+### `<`
+
+```kex
+<(other: Measure) -> Bool
+```
+
+### `>`
+
+```kex
+>(other: Measure) -> Bool
+```
+
+### `<=`
+
+```kex
+<=(other: Measure) -> Bool
+```
+
+### `>=`
+
+```kex
+>=(other: Measure) -> Bool
 ```
 
 
@@ -29051,7 +29182,7 @@ Build a quantity in its preferred display unit.
   - `dimension` : [Dimension](../dimensions.md#record-dimensions-dimension)
   - `notation` : [String](../string.md#make-string)
 
-### Methods
+### Functions
 
 #### `*`
 
@@ -29092,7 +29223,7 @@ scaled(factor: Float, notation: String) -> Result<DynamicUnit, UnitError>
   - `canonical` : [Float](../number.md#make-float)
   - `unit` : [DynamicUnit](#record-units-dynamic-dynamicunit)
 
-### Methods
+### Functions
 
 #### `value`
 
@@ -29604,7 +29735,7 @@ Each carries its dimension (`:length`, `:mass`, `:power`, …) and its symbol, w
 
 Implements [`Unit`](../units.md#trait-unit).
 
-### Methods
+### Functions
 
 #### `factor` (from Unit)
 
@@ -29651,7 +29782,7 @@ A display prefix carries the unit it will display, for example `Kilo(Watt * Hour
 
 Implements [`Unit`](../units.md#trait-unit).
 
-### Methods
+### Functions
 
 #### `factor` (from Unit)
 
@@ -29673,7 +29804,7 @@ symbol(_)
 
 ## extends `UnitDefinition`
 
-More methods of [`UnitDefinition`](../units.md#record-unitdefinition), added by this module.
+More functions for [`UnitDefinition`](../units.md#record-unitdefinition), added by this module.
 
 Implements [`Unit`](../units.md#trait-unit).
 
@@ -29691,7 +29822,7 @@ Implements [`Unit`](../units.md#trait-unit).
 
 ## extends `Measure`
 
-More methods of [`Measure`](../units.md#record-measure), added by this module.
+More functions for [`Measure`](../units.md#record-measure), added by this module.
 
 Prefixes on an existing measure select its display unit.
 
@@ -31525,7 +31656,7 @@ The highest tag that satisfies the requirement — the whole point of writing a 
 
 Implements `Comparable`.
 
-### Methods
+### Functions
 
 SemanticVersion is Comparable, so `a.compare(b)` answers Less/Equal/Greater like every other ordered type in the stdlib, and ordering reads as an ordering rather than as sign arithmetic on -1/0/1.
 
@@ -33334,7 +33465,7 @@ moduleCard(m: Tey.Docgen.Model.ModuleIndexEntry, top: Bool) -> String
 entitiesHtml(entities: [Entity], page: SourcePage, model: PackageModel) -> String
 ```
 
-A page's declarations in source order — except that a type's `make` blocks on the same page are pulled into the type's own section, so `List` reads as one thing (the type, then its methods, grouped by the receiver they need) rather than a type followed by three loose "make" sections.
+A page's declarations in source order — except that a type's `make` blocks on the same page are pulled into the type's own section, so `List` reads as one thing (the type, then its functions, grouped by the receiver they need) rather than a type followed by three loose "make" sections.
 
 ### `sectionEntities`
 
@@ -33418,7 +33549,7 @@ recordSection(e: RecordEntry, makes: [MakeEntry], page: SourcePage, model: Packa
 typeBodyHtml(name: String, makes: [MakeEntry], page: SourcePage, model: PackageModel) -> String
 ```
 
-Everything about a type beyond its declaration: the traits it implements (from every file), its methods grouped by receiver, the methods it gets from those traits for free, and the other modules that add methods to it.
+Everything about a type beyond its declaration: the traits it implements (from every file), its functions grouped by receiver, the functions it gets from those traits for free, and the other modules that add functions to it.
 
 ### `makeGroupHtml`
 
@@ -33426,7 +33557,7 @@ Everything about a type beyond its declaration: the traits it implements (from e
 makeGroupHtml(m: MakeEntry, base: String, page: SourcePage, model: PackageModel) -> String
 ```
 
-"Methods" for the plain receiver, "On `[Number]`" for a specialised one.
+"Functions" for the plain receiver, "On `[Number]`" for a specialised one.
 
 ### `genericReceiver?`
 
@@ -33456,7 +33587,7 @@ traitLinks(traits: [String], page: SourcePage, model: PackageModel) -> String
 providedHtml(name: String, page: SourcePage, model: PackageModel) -> String
 ```
 
-The trait methods a type gets without writing them: a trait's provided methods, minus any the type defines itself somewhere. This is the answer to "where does `List.eachIndexed` come from?".
+The trait functions a type gets without writing them: a trait's provided functions, minus any the type defines itself somewhere. This is the answer to "where does `List.eachIndexed` come from?".
 
 ### `providedFromHtml`
 
@@ -33470,7 +33601,7 @@ providedFromHtml(written: String, own: [String], page: SourcePage, model: Packag
 elsewhereHtml(name: String, page: SourcePage, model: PackageModel) -> String
 ```
 
-Other modules that add methods to this type: `make Integer` in time.kex is where `5.seconds` comes from.
+Other modules that add functions to this type: `make Integer` in time.kex is where `5.seconds` comes from.
 
 ### `fieldRow`
 
@@ -33534,7 +33665,7 @@ homeNote(base: String, facts: Tey.Docgen.Model.TypeFacts?, page: SourcePage, mod
 moduleSection(e: ModuleEntry, page: SourcePage, model: PackageModel) -> String
 ```
 
-A module's own functions and constants are its API, listed under it (h3) like a type's methods. Types, traits and nested modules it declares stand as sections of their own after that.
+A module's own functions and constants are its API, listed under it (h3) like a type's functions. Types, traits and nested modules it declares stand as sections of their own after that.
 
 ### `memberEntity?`
 
@@ -33566,7 +33697,7 @@ constantSection(e: ConstantEntry, page: SourcePage, model: PackageModel) -> Stri
 functionsHtml(functions: [FunctionEntry], owner: String, level: Integer, implements: [String], page: SourcePage, model: PackageModel) -> String
 ```
 
-Members of a trait or make block, one heading per NAME: overloads (`count` and `count(pred)`) are one method with several signatures, not two unrelated entries. `owner` scopes the anchors; `implements` lets a member that fulfils a trait method say which trait.
+Members of a trait or make block, one heading per NAME: overloads (`count` and `count(pred)`) are one function with several signatures, not two unrelated entries. `owner` scopes the anchors; `implements` lets a member that fulfils a trait function say which trait.
 
 ### `functionGroupHtml`
 
@@ -33580,7 +33711,7 @@ functionGroupHtml(fs: [FunctionEntry], name: String, owner: String, level: Integ
 traitTag(name: String, implements: [String], page: SourcePage, model: PackageModel) -> String
 ```
 
-"from Enumerable": this member is the type's own version of a method the trait declares, linked to the trait's description of it.
+"from Enumerable": this member is the type's own version of a function the trait declares, linked to the trait's description of it.
 
 ### `overloadHtml`
 
@@ -33608,7 +33739,7 @@ docHtml(doc: Doc, page: SourcePage, model: PackageModel) -> String
 entityDocHtml(doc: Doc, page: SourcePage, model: PackageModel) -> String
 ```
 
-A declaration's doc: prose, then its examples and any deprecation — a type's @example is as much a part of it as a method's.
+A declaration's doc: prose, then its examples and any deprecation — a type's @example is as much a part of it as a function's.
 
 ### `plainDocHtml`
 

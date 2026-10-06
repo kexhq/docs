@@ -33,7 +33,7 @@ The stored spelling is normalized, so addresses that arrived in different forms 
 
   - `source` : [String](../string.md#make-string)
 
-### Methods
+### Functions
 
 #### `string`
 
@@ -159,7 +159,7 @@ Parsing `192.0.2.9/24` therefore produces `192.0.2.0/24`. This makes a `Network`
 
   - `source` : [String](../string.md#make-string)
 
-### Methods
+### Functions
 
 #### `string`
 

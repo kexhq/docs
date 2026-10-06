@@ -153,7 +153,7 @@ Compare `hits` with `misses` when tuning `entries` or TTL bounds. A rising `evic
 
 An opaque, process-safe resolver that owns its cache.
 
-### Methods
+### Functions
 
 #### `addresses`
 

@@ -37,7 +37,7 @@ Build a quantity in its preferred display unit.
   - `dimension` : [Dimension](../dimensions.md#record-dimensions-dimension)
   - `notation` : [String](../string.md#make-string)
 
-### Methods
+### Functions
 
 #### `*`
 
@@ -78,7 +78,7 @@ scaled(factor: Float, notation: String) -> Result<DynamicUnit, UnitError>
   - `canonical` : [Float](../number.md#make-float)
   - `unit` : [DynamicUnit](#record-units-dynamic-dynamicunit)
 
-### Methods
+### Functions
 
 #### `value`
 

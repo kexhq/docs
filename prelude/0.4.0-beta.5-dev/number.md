@@ -276,6 +276,7 @@ Returns the integer unchanged. The `Integer` counterpart of `Float.round`.
   - [Time](time.md#make-integer): [`nanoseconds`](time.md#integer-nanoseconds), [`microseconds`](time.md#integer-microseconds), [`milliseconds`](time.md#integer-milliseconds), [`seconds`](time.md#integer-seconds), [`minutes`](time.md#integer-minutes), [`hours`](time.md#integer-hours), [`days`](time.md#integer-days), [`weeks`](time.md#integer-weeks), [`months`](time.md#integer-months), [`years`](time.md#integer-years)
   - [Truthyable](truthyable.md#make-integer): [`truthy?`](truthyable.md#integer-truthy?)
   - [Units](units.md#make-integer): [`nanosecond`](units.md#integer-nanosecond), [`microsecond`](units.md#integer-microsecond), [`millisecond`](units.md#integer-millisecond), [`second`](units.md#integer-second), [`minute`](units.md#integer-minute), [`hour`](units.md#integer-hour), [`day`](units.md#integer-day), [`week`](units.md#integer-week), [`timeMeasure`](units.md#integer-timemeasure)
+  - [Units.Data](units/data.md#make-integer): [`<`](units/data.md#integer-op-lt), [`>`](units/data.md#integer-op-gt), [`<=`](units/data.md#integer-op-lt-eq), [`>=`](units/data.md#integer-op-gt-eq)
 
 ## type `Float`
 

@@ -36,7 +36,7 @@ Binary.fromBytes([255]).to(String)  # => None
 
 Implements [`Showable`](kex.md#trait-showable), [`Inspectable`](kex.md#trait-inspectable).
 
-### Methods
+### Functions
 
 #### `bytes`
 

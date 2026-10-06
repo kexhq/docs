@@ -28,7 +28,7 @@ end
 
 Node names are atoms: `:b@myhost` for a short name, the quoted `:"b@host.example.com"` for one with dots, or `Atom.from(text)` for one built at runtime.
 
-Both nodes need the same compiled code for anything that carries a function, like a lambda or a record whose methods the receiver calls; `Node.spawn` sends its block's code along. Plain data — numbers, strings, lists, tuples, records — needs nothing.
+Both nodes need the same compiled code for anything that carries a function, like a lambda or a record used as an argument to functions on the remote node; `Node.spawn` sends its block's code along. Plain data — numbers, strings, lists, tuples, records — needs nothing.
 
 Backed by Kex.Intrinsic.Node on the BEAM. The tree-walk interpreter is always a single, unnamed node.
 

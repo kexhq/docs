@@ -44,7 +44,7 @@ Order is kept for the same reason. RFC 9110 makes order insignificant BETWEEN di
 
 Implements [`Showable`](../kex.md#trait-showable), [`Inspectable`](../kex.md#trait-inspectable).
 
-### Methods
+### Functions
 
 #### `add`
 
@@ -152,7 +152,7 @@ A validated HTTP status code in `100..599`.
 
   - `code` : [Integer](../number.md#make-integer)
 
-### Methods
+### Functions
 
 #### `informational?`
 
@@ -227,7 +227,7 @@ Route captures decoded after path segmentation.
 
   - `parameters` : [Map](../map.md#type-map)<[String](../string.md#make-string), [String](../string.md#make-string)> (optional)
 
-### Methods
+### Functions
 
 #### `parameter`
 
@@ -287,7 +287,7 @@ An immutable, declaration-ordered HTTP router.
 
   - `routes` : [[Route](#record-net-http-route)] (optional)
 
-### Methods
+### Functions
 
 #### `route`
 
@@ -437,7 +437,7 @@ Resources released by `Client.close`.
 
 The pooled HTTP client. An opaque handle over the connection pool that owns it; `Client.open` makes one and `client.close` releases it.
 
-### Methods
+### Functions
 
 #### `request`
 

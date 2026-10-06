@@ -35,7 +35,7 @@ Implemented by `Integer` (addition), `String` and `List` (concatenation), `Map` 
 
 Implemented by [`Integer`](#make-integer), [`String`](#make-string), [`[A]`](#make-list), [`Ordering`](comparable.md#make-ordering), [`Map<K, V>`](map.md#make-map), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack).
 
-### Required methods
+### Required functions
 
 #### `identity`
 
@@ -86,7 +86,7 @@ _Folding a list of values into one_
 parts.reduce(String.identity) { |acc, s| acc.combine(s) }
 ```
 
-### Provided methods
+### Provided functions
 
 #### `repeat`
 
@@ -129,7 +129,7 @@ Implemented by `Integer`, where the inverse is negation.
 
 Implemented by [`Integer`](#make-integer).
 
-### Required methods
+### Required functions
 
 #### `identity`
 
@@ -172,7 +172,7 @@ The value that combines with this one to give the identity.
 
 ## extends `Integer`
 
-More methods of [`Integer`](number.md#make-integer), added by this module.
+More functions for [`Integer`](number.md#make-integer), added by this module.
 
 Implements [`Monoid`](#trait-monoid), [`Group`](#trait-group).
 
@@ -229,7 +229,7 @@ The additive inverse: this integer negated.
 
 ## extends `String`
 
-More methods of [`String`](string.md#make-string), added by this module.
+More functions for [`String`](string.md#make-string), added by this module.
 
 Implements [`Monoid`](#trait-monoid).
 
@@ -269,7 +269,7 @@ Concatenates `other` onto this string. Concatenation is the monoid operation for
 
 ## extends `[A]`
 
-More methods of [`List`](list.md#type-list), added by this module.
+More functions for [`List`](list.md#type-list), added by this module.
 
 Implements [`Monoid`](#trait-monoid).
 

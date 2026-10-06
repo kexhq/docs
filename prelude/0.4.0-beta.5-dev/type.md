@@ -32,9 +32,9 @@ The answer comes from the compiler where it can: a checked expression knows thin
   - `args` : [[Type](#record-type)]
   - `pure` : [Bool](truthyable.md#make-bool)
 
-### Methods
+### Functions
 
-Reflection methods on runtime type values.
+Reflection functions on runtime type values.
 
 #### `fields`
 

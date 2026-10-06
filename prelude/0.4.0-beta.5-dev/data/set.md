@@ -19,7 +19,7 @@ Opt-in: nothing here is in scope until `using Data.Set`, which brings both flavo
 using Data.Set
 ```
 
-Membership is decided by structural equality: the same equality `==` and map keys use, so records and tuples are compared by value, not identity. Every method answers with a new set; the `!` forms (`add!`, `delete!`) build a new set and rebind the receiver variable rather than modifying anything in place.
+Membership is decided by structural equality: the same equality `==` and map keys use, so records and tuples are compared by value, not identity. Updates return a new set; the `!` forms (`add!`, `delete!`) build a new set and rebind the receiver variable rather than modifying anything in place.
 
 ```kex
 let tags = Set.from(["kex", "beam", "kex"])
@@ -48,7 +48,7 @@ Sets compare by their elements. Use `items` to obtain a list; `UnorderedSet.item
 
 A set whose elements are kept sorted and duplicate free.
 
-Build one with `Set.from` rather than by hand: the record literal does no deduplication and no sorting, and every method here relies on both. Reading `items` back is the field itself, so handing a set's elements to list code costs nothing.
+Build one with `Set.from` rather than by hand: the record literal does no deduplication and no sorting, and every function here relies on both. Reading `items` back is the field itself, so handing a set's elements to list code costs nothing.
 
 ```kex
 Set.from([3, 1, 2]).items   # => [1, 2, 3]
@@ -60,7 +60,7 @@ Set.from([3, 1, 2]).items   # => [1, 2, 3]
 
 Implements [`Enumerable`](../enumerable.md#trait-enumerable), [`Foldable`](../enumerable.md#trait-foldable), [`Monoid`](../algebra.md#trait-monoid), [`Showable`](../kex.md#trait-showable), [`Blankable`](../blankable.md#trait-blankable).
 
-### Methods
+### Functions
 
 #### `reduce` (from Enumerable, Foldable)
 
@@ -430,7 +430,7 @@ allowList.disjoint?(denyList)
 
 Unions with another set, or with a plain list.
 
-The list form is the everyday way to add one element without naming a method: +s + [x]+.
+The list form is the everyday way to add one element without naming a function: +s + [x]+.
 
 **Parameters**
 
@@ -607,7 +607,7 @@ UnorderedSet.from([3, 1, 2]).contains?(2)   # => true
 
 Implements [`Enumerable`](../enumerable.md#trait-enumerable), [`Foldable`](../enumerable.md#trait-foldable), [`Monoid`](../algebra.md#trait-monoid), [`Showable`](../kex.md#trait-showable), [`Blankable`](../blankable.md#trait-blankable).
 
-### Methods
+### Functions
 
 #### `reduce` (from Enumerable, Foldable)
 

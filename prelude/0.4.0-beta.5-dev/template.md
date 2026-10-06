@@ -305,7 +305,7 @@ A scanned template: its frontmatter tags, and its body as a node list.
   - `frontmatter` : {[String](string.md#make-string): [Tag](#type-template-tag)}
   - `nodes` : [Node]
 
-### Methods
+### Functions
 
 #### `parameters`
 

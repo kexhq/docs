@@ -72,7 +72,7 @@ An opaque BEAM process identifier.
 
 Obtained from `Process.self` or `Process.whereIs`. Send it messages, link to it, monitor it, or ask whether it is still alive.
 
-### Methods
+### Functions
 
 #### `send`
 
@@ -186,7 +186,7 @@ A handle on work running in another process, with a result you can await.
 
 Created by `Task.start`.
 
-### Methods
+### Functions
 
 #### `await`
 
@@ -229,7 +229,7 @@ t.await(1000)
 
 A monitor reference, returned by `monitor` and passed back to `demonitor`.
 
-### Methods
+### Functions
 
 #### `demonitor`
 
@@ -250,7 +250,7 @@ ref.demonitor
 
 A typed process handle: like a `Pid`, but it remembers what kind of message the process accepts.
 
-### Methods
+### Functions
 
 A spawned Process<X> is a typed process handle backed by the same runtime pid. It therefore supports the ordinary pid lifecycle operations without erasing its message type.
 
@@ -352,7 +352,7 @@ slot stop -> Reply<Integer> = { stop: :normal, reply: @remaining }
 
 The identity of a pending caller, for a slot that answers later rather than immediately. Hand it `reply` when the answer is ready.
 
-### Methods
+### Functions
 
 #### `reply`
 
@@ -404,14 +404,14 @@ Why a call into a server failed: it took too long, the process is gone, or it cr
 
 A running server and the default timeout for calls into it.
 
-Returned by `Process.spawn`. Every `slot` declared in the type's `serving` block becomes a method on it, answering a `Result`.
+Returned by `Process.spawn`. Every `slot` declared in the type's `serving` block exposes a function taking this `Server` as its receiver and returning a `Result`.
 
 **Fields**
 
   - `process` : [Process](#type-process)<X>
   - `timeout` : [Integer](number.md#make-integer) (optional)
 
-### Methods
+### Functions
 
 #### `within`
 
@@ -497,7 +497,7 @@ spawn(state: X) -> Server<X>
 
 Starts a process running the `serving` implementation attached to `state`'s type, and returns a handle on it.
 
-The state you pass is the server's initial state. Every `slot` in the `serving` block becomes a method on the returned `Server`, and each answers a `Result`: a call can time out or find the process gone.
+The state you pass is the server's initial state. Every `slot` in the `serving` block exposes a function taking the returned `Server` as its receiver. Each returns a `Result`: a call can time out or find the process gone.
 
 **Parameters**
 
@@ -733,7 +733,7 @@ site.put(loadSite(root))
 let current = site.get.or(emptySite)
 ```
 
-### Methods
+### Functions
 
 #### `put`
 

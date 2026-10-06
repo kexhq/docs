@@ -42,7 +42,7 @@ Most read operations answer with an `Optional` and most write operations with a 
 
 ## type `FilePath`
 
-A filesystem path. An alias for `String`, so every `String` method applies to one; `FS.Path` adds the path-aware operations.
+A filesystem path. An alias for `String`, so every `String` function applies to one; `FS.Path` adds the path-aware operations.
 
 **Variants**
 

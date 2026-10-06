@@ -32,7 +32,7 @@ FS.File.feed("app.log").or(Feed.empty)
 
 Taking twice answers two different windows: the first ten, then the ten after them. That is the whole difference from `Stream`, where taking twice answers the same ten. When you want the stream behaviour on a small source, `toStream` asks for it explicitly, at the cost of holding what it reads.
 
-### Methods
+### Functions
 
 Reading a feed consumes its cursor. Obtain a new feed when you need to traverse the same data again. Opening a file-backed feed is `foul`; consuming an existing feed does not require another capability.
 

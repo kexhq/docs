@@ -29,7 +29,7 @@ s.pop                 # => Just((3, Stack(1, 2)))
 Stack.empty.pop       # => None
 ```
 
-Every method answers with a new stack rather than changing the receiver. `push!` and `pop!` come free from the `!` rebinding form, the same as `add!`/`delete!` do for `Data.Set`: they build a new stack and rebind the receiver variable rather than modifying anything in place.
+Updates return a new stack rather than changing the receiver. `push!` and `pop!` come free from the `!` rebinding form, the same as `add!`/`delete!` do for `Data.Set`: they build a new stack and rebind the receiver variable rather than modifying anything in place.
 
 
 
@@ -49,7 +49,7 @@ Stack.from([1, 2, 3]).items   # => [1, 2, 3]
 
 Implements [`Enumerable`](../enumerable.md#trait-enumerable), [`Foldable`](../enumerable.md#trait-foldable), [`Monoid`](../algebra.md#trait-monoid), [`Showable`](../kex.md#trait-showable), [`Blankable`](../blankable.md#trait-blankable).
 
-### Methods
+### Functions
 
 #### `reduce` (from Enumerable, Foldable)
 

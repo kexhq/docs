@@ -16,7 +16,7 @@ entities:
 
 Implements [`Monoid`](algebra.md#trait-monoid), [`Blankable`](blankable.md#trait-blankable), [`Comparable`](comparable.md#trait-comparable), [`Enumerable`](enumerable.md#trait-enumerable), [`Foldable`](enumerable.md#trait-foldable), [`Truthyable`](truthyable.md#trait-truthyable).
 
-Text. A `String` is a sequence of Unicode characters, immutable like every other Kex value: every method here answers with a new string rather than changing the receiver.
+Text. A `String` is a sequence of Unicode characters, immutable like every other Kex value. Operations that transform text return a new string rather than changing the receiver.
 
 A `String` is its own type, not a list of characters. It is `Enumerable`, so `each`, `reduce`, `find` and friends walk it one `Char` at a time, and the sequence operations that could reasonably answer in either currency pick the useful one: `take`, `drop` and `sort` hand back a `String`, while `first` and `last` hand back a `Char`. Use `chars` to cross over to a real list.
 
@@ -618,7 +618,7 @@ chars : [Char]
 
 Returns the string's characters as a list.
 
-The bridge from `String` to the `List` methods that a string does not have of its own. Join back with `.join("")`.
+The bridge from `String` to the `List` functions that a string does not have of its own. Join back with `.join("")`.
 
 **Returns**: the characters, in order
 
@@ -1158,7 +1158,7 @@ paths.filter { |p| p.endsWith?(".kex") }
 
 A single Unicode character.
 
-Character literals are written with single quotes (`'a'`) and are a different type from the one-character string `"a"`. The classification methods (`digit?`, `alpha?`, `space?` and the rest) are what most character code needs; `codepoint` and `String.fromCodepoint` are the escape hatch to raw Unicode values.
+Character literals are written with single quotes (`'a'`) and are a different type from the one-character string `"a"`. The classification functions (`digit?`, `alpha?`, `space?` and the rest) are what most character code needs; `codepoint` and `String.fromCodepoint` are the escape hatch to raw Unicode values.
 
 ```kex
 "hello world".chars.count(~alpha?)   # => 10
@@ -1476,7 +1476,7 @@ String.fromBytes("héllo".bytes)   # => Just("héllo")
 
 ## type `Tuple`
 
-A fixed-size group of values, written `(a, b)`. Unlike a list, a tuple's size and the type of each position are part of its type, so the `List` methods do not apply to it: destructure it, match on it, or convert it with `items`.
+A fixed-size group of values, written `(a, b)`. Unlike a list, a tuple's size and the type of each position are part of its type, so the `List` functions do not apply to it: destructure it, match on it, or convert it with `items`.
 
 ```kex
 let (name, age) = ("Ada", 36)
@@ -1491,7 +1491,7 @@ items : [Any]
 
 Returns the tuple's elements as a list.
 
-A tuple is not a list (its arity is part of its type) so the `List` methods do not apply to it. This is the explicit conversion, and it loses the per-position typing in exchange.
+A tuple is not a list (its arity is part of its type) so the `List` functions do not apply to it. This is the explicit conversion, and it loses the per-position typing in exchange.
 
 Destructuring is usually clearer when you know the shape: `let (a, b) = pair`.
 

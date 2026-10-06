@@ -63,7 +63,7 @@ Create one with `Input { input: text }` and pass it to a parser. Every operation
   - `input` : [String](string.md#make-string)
   - `pos` : [Integer](number.md#make-integer) (optional)
 
-### Methods
+### Functions
 
 #### `peek`
 

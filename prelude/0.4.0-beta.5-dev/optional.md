@@ -49,7 +49,7 @@ end
 
 Implements [`Blankable`](blankable.md#trait-blankable), [`Showable`](kex.md#trait-showable), [`Optionable`](#trait-optionable), [`Truthyable`](truthyable.md#trait-truthyable).
 
-### Methods
+### Functions
 
 #### `set?` (from Optionable)
 
@@ -225,7 +225,7 @@ end
 
 Implements [`Showable`](kex.md#trait-showable), [`Resultable`](#trait-resultable).
 
-### Methods
+### Functions
 
 #### `ok?` (from Resultable)
 
@@ -412,7 +412,7 @@ end
 
 Implements [`Eitherable`](#trait-eitherable).
 
-### Methods
+### Functions
 
 #### `either` (from Eitherable)
 
@@ -480,11 +480,11 @@ Left(1).right?    # => false
 
 A value that may be absent. Constrain a generic parameter with it when a function accepts any optional value.
 
-The two operations below are what make the constraint worth having: an empty trait would accept a value and then let you do nothing with it, since there would be no method to call. `map` is deliberately NOT required — its result type differs per implementer (`Y?` here, `Result<Y, E>` for `Resultable`), which needs a higher-kinded parameter Kex does not have.
+The two operations below are what make the constraint worth having: an empty trait would accept a value and then let you do nothing with it, since there would be no function to call. `map` is deliberately NOT required — its result type differs per implementer (`Y?` here, `Result<Y, E>` for `Resultable`), which needs a higher-kinded parameter Kex does not have.
 
 Implemented by [`Optional<X>`](#make-optional).
 
-### Required methods
+### Required functions
 
 #### `set?`
 
@@ -536,7 +536,7 @@ A value that either succeeded or failed with a reason. Constrain a generic param
 
 Implemented by [`Result<X, E>`](#make-result).
 
-### Required methods
+### Required functions
 
 #### `ok?`
 
@@ -586,7 +586,7 @@ One of two values, neither meaning failure. Constrain a generic parameter with i
 
 Implemented by [`Either<L, R>`](#make-either).
 
-### Required methods
+### Required functions
 
 #### `either`
 

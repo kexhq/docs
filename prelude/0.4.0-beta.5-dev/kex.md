@@ -33,7 +33,7 @@ Just("hi").inspected   # => "Just(\"hi\")"
 
 Implemented by [`Binary`](binary.md#make-binary), [`Period`](time.md#make-period), [`Date`](time.md#make-date), [`Time`](time.md#make-time), [`DateTime`](time.md#make-datetime), [`URI`](uri.md#make-uri), [`URL`](uri.md#make-url), [`Headers`](net/http.md#make-headers).
 
-### Provided methods
+### Provided functions
 
 #### `inspectValue`
 
@@ -73,7 +73,7 @@ None.showValue             # => ""
 
 Implemented by [`Binary`](binary.md#make-binary), [`Optional<Showable>`](#make-optional-showable), [`Result<X, E>`](#make-result), [`Period`](time.md#make-period), [`Date`](time.md#make-date), [`Time`](time.md#make-time), [`DateTime`](time.md#make-datetime), [`Measure`](units.md#make-measure), [`URI`](uri.md#make-uri), [`URL`](uri.md#make-url), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack), [`Headers`](net/http.md#make-headers).
 
-### Provided methods
+### Provided functions
 
 #### `showValue`
 
@@ -97,7 +97,7 @@ to(_)
 
 ## extends `Optional<Showable>`
 
-More methods of [`Optional`](optional.md#type-optional), added by this module.
+More functions for [`Optional`](optional.md#type-optional), added by this module.
 
 Implements [`Showable`](#trait-showable).
 
@@ -109,7 +109,7 @@ showValue(_)
 
 ## extends `Result<X, E>`
 
-More methods of [`Result`](optional.md#type-result), added by this module.
+More functions for [`Result`](optional.md#type-result), added by this module.
 
 Implements [`Showable`](#trait-showable).
 
@@ -252,7 +252,7 @@ Which backend is executing the program: the tree-walking `Interpreter`, or the `
   - `Interpreter`
   - `Beam`
 
-### Methods
+### Functions
 
 #### `interpreted?`
 
@@ -341,7 +341,7 @@ Kex.VERSION.to(String)   # => "0.3.0 (a1b2c3d)"
   - `revision` : [String](string.md#make-string)?
   - `preRelease` : [String](string.md#make-string) (optional)
 
-### Methods
+### Functions
 
 #### `tuple`
 
@@ -423,7 +423,7 @@ let html = theme.call(:render, [context]).try
 
   - `name` : [Atom](atom.md#make-atom)
 
-### Methods
+### Functions
 
 #### `call`
 

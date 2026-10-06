@@ -81,7 +81,7 @@ A parsed RFC 3986 URI reference. Construction is strict; use `parse` rather than
 
 Implements [`Showable`](kex.md#trait-showable), [`Inspectable`](kex.md#trait-inspectable).
 
-### Methods
+### Functions
 
 #### `string`
 
@@ -214,7 +214,7 @@ An absolute hierarchical URI with an authority component, such as an HTTP URL. U
 
 Implements [`Showable`](kex.md#trait-showable), [`Inspectable`](kex.md#trait-inspectable).
 
-### Methods
+### Functions
 
 #### `string`
 
@@ -345,7 +345,7 @@ Order and duplicates matter in real APIs: `tag=kex&tag=beam` must not become a m
 
   - `entries` : [([String](string.md#make-string), [String](string.md#make-string)?)]
 
-### Methods
+### Functions
 
 #### `encode`
 
@@ -373,7 +373,7 @@ This is deliberately separate from `Query`: HTML forms encode spaces as plus sig
 
   - `entries` : [([String](string.md#make-string), [String](string.md#make-string)?)]
 
-### Methods
+### Functions
 
 #### `encode`
 

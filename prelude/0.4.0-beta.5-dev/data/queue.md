@@ -30,9 +30,9 @@ q.peek                # => Just(1)
 
 `items` is +@front + @back.reverse+, so the queue is not opaque: it is always a real list you can hand to anything, the same promise `Data.Set` makes.
 
-Unlike a set, a queue's representation is NOT canonical: `Queue.from([1,2])` and `Queue.from([1]).enqueue(2)` hold the same elements in different `front`/`back` splits, so they are structurally unequal even though they answer the same to every method. `==` is therefore overloaded to compare `items` rather than the record fields directly, but that overload only reaches ordinary `==` calls. Two such queues used as map keys, or matched against each other as record patterns, still compare structurally on both backends, and can disagree with `==`.
+Unlike a set, a queue's representation is NOT canonical: `Queue.from([1,2])` and `Queue.from([1]).enqueue(2)` hold the same elements in different `front`/`back` splits, so they are structurally unequal even though they answer the same to every function. `==` is therefore overloaded to compare `items` rather than the record fields directly, but that overload only reaches ordinary `==` calls. Two such queues used as map keys, or matched against each other as record patterns, still compare structurally on both backends, and can disagree with `==`.
 
-Every method answers with a new queue rather than changing the receiver. `enqueue!` and `dequeue!` come free from the `!` rebinding form.
+Updates return a new queue rather than changing the receiver. `enqueue!` and `dequeue!` come free from the `!` rebinding form.
 
 
 
@@ -49,7 +49,7 @@ Build one with `Queue.from` rather than by hand.
 
 Implements [`Enumerable`](../enumerable.md#trait-enumerable), [`Foldable`](../enumerable.md#trait-foldable), [`Monoid`](../algebra.md#trait-monoid), [`Showable`](../kex.md#trait-showable), [`Blankable`](../blankable.md#trait-blankable).
 
-### Methods
+### Functions
 
 #### `reduce` (from Enumerable, Foldable)
 

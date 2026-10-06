@@ -384,7 +384,7 @@ A group that did not participate is an absent key, so `get` answers `None`. This
 
   - `captures` : [Map](map.md#type-map)<Any, [String](string.md#make-string)>
 
-### Methods
+### Functions
 
 #### `get`
 

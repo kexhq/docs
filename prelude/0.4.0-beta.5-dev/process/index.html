@@ -984,7 +984,7 @@ api<span class="tok-op">.</span><span class="tok-method">allowed?</span><span cl
 <p>An opaque BEAM process identifier.</p>
 <p>Obtained from <code>Process.self</code> or <code>Process.whereIs</code>. Send it messages, link to it, monitor it, or ask whether it is still alive.</p>
 <section class="members" id="make-pid">
-<h3>Methods</h3>
+<h3>Functions</h3>
 
 <div class="functions">
 <div class="fn" id="pid-send">
@@ -1059,7 +1059,7 @@ ref<span class="tok-op">.</span><span class="tok-method">demonitor</span></code>
 <p>A handle on work running in another process, with a result you can await.</p>
 <p>Created by <code>Task.start</code>.</p>
 <section class="members" id="make-task">
-<h3>Methods</h3>
+<h3>Functions</h3>
 
 <div class="functions">
 <div class="fn" id="task-await">
@@ -1090,7 +1090,7 @@ t<span class="tok-op">.</span><span class="tok-method">await</span><span class="
 <h2><span class="kind kind-type">type</span> <code>Reference</code></h2>
 <p>A monitor reference, returned by <code>monitor</code> and passed back to <code>demonitor</code>.</p>
 <section class="members" id="make-reference">
-<h3>Methods</h3>
+<h3>Functions</h3>
 
 <div class="functions">
 <div class="fn" id="reference-demonitor">
@@ -1109,7 +1109,7 @@ ref<span class="tok-op">.</span><span class="tok-method">demonitor</span></code>
 <h2><span class="kind kind-type">type</span> <code>Process&lt;A&gt;</code></h2>
 <p>A typed process handle: like a <a class="xref" href="#type-pid"><code>Pid</code></a>, but it remembers what kind of message the process accepts.</p>
 <section class="members" id="make-process">
-<h3>Methods</h3>
+<h3>Functions</h3>
 <p>A spawned Process&lt;X&gt; is a typed process handle backed by the same runtime pid. It therefore supports the ordinary pid lifecycle operations without erasing its message type.</p>
 
 <div class="functions">
@@ -1194,7 +1194,7 @@ ref<span class="tok-op">.</span><span class="tok-method">demonitor</span></code>
 <h2><span class="kind kind-type">type</span> <code>From&lt;A&gt;</code></h2>
 <p>The identity of a pending caller, for a slot that answers later rather than immediately. Hand it <code>reply</code> when the answer is ready.</p>
 <section class="members" id="make-from">
-<h3>Methods</h3>
+<h3>Functions</h3>
 
 <div class="functions">
 <div class="fn" id="from-reply">
@@ -1237,14 +1237,14 @@ ref<span class="tok-op">.</span><span class="tok-method">demonitor</span></code>
 <section class="entity" id="record-server">
 <h2><span class="kind kind-record">record</span> <code>Server&lt;X&gt;</code></h2>
 <p>A running server and the default timeout for calls into it.</p>
-<p>Returned by <code>Process.spawn</code>. Every <code>slot</code> declared in the type's <code>serving</code> block becomes a method on it, answering a <a class="xref" href="/prelude/0.4.0-beta.5-dev/optional/#type-result"><code>Result</code></a>.</p>
+<p>Returned by <code>Process.spawn</code>. Every <code>slot</code> declared in the type's <code>serving</code> block exposes a function taking this <a class="xref" href="#record-server"><code>Server</code></a> as its receiver and returning a <a class="xref" href="/prelude/0.4.0-beta.5-dev/optional/#type-result"><code>Result</code></a>.</p>
 <h3>Fields</h3>
 <dl class="fields">
 <div class="field"><dt><code>process</code></dt><dd><code><a class="xref" href="#type-process">Process</a>&lt;X&gt;</code></dd></div>
 <div class="field"><dt><code>timeout</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.5-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
 </dl>
 <section class="members" id="make-server">
-<h3>Methods</h3>
+<h3>Functions</h3>
 
 <div class="functions">
 <div class="fn" id="server-within">
@@ -1303,7 +1303,7 @@ ref<span class="tok-op">.</span><span class="tok-method">demonitor</span></code>
 <h3><a class="self" href="#function-process-spawn"><code>spawn</code></a></h3>
 <pre class="code sig"><code><span class="tok-keyword">spawn</span><span class="tok-punct">(</span>state<span class="tok-op">:</span> <span class="tok-type">X</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-server"><span class="tok-type">Server</span></a><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-op">&gt;</span></code></pre>
 <p>Starts a process running the <code>serving</code> implementation attached to <code>state</code>'s type, and returns a handle on it.</p>
-<p>The state you pass is the server's initial state. Every <code>slot</code> in the <code>serving</code> block becomes a method on the returned <a class="xref" href="#record-server"><code>Server</code></a>, and each answers a <a class="xref" href="/prelude/0.4.0-beta.5-dev/optional/#type-result"><code>Result</code></a>: a call can time out or find the process gone.</p>
+<p>The state you pass is the server's initial state. Every <code>slot</code> in the <code>serving</code> block exposes a function taking the returned <a class="xref" href="#record-server"><code>Server</code></a> as its receiver. Each returns a <a class="xref" href="/prelude/0.4.0-beta.5-dev/optional/#type-result"><code>Result</code></a>: a call can time out or find the process gone.</p>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>state</code></dt><dd>the server's initial state</dd></div>
@@ -1454,7 +1454,7 @@ site<span class="tok-op">.</span><span class="tok-method">put</span><span class=
 <span class="tok-op">...</span>
 <span class="tok-keyword">let</span> current <span class="tok-op">=</span> site<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span>emptySite<span class="tok-punct">)</span></code></pre>
 <section class="members" id="make-shared">
-<h3>Methods</h3>
+<h3>Functions</h3>
 
 <div class="functions">
 <div class="fn" id="shared-put">

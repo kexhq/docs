@@ -22,7 +22,7 @@ foul report(e: Errorable) -> Void do
 end
 ```
 
-### Required methods
+### Required functions
 
 #### `message`
 

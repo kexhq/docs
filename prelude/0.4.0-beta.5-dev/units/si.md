@@ -431,7 +431,7 @@ Each carries its dimension (`:length`, `:mass`, `:power`, …) and its symbol, w
 
 Implements [`Unit`](../units.md#trait-unit).
 
-### Methods
+### Functions
 
 #### `factor` (from Unit)
 
@@ -478,7 +478,7 @@ A display prefix carries the unit it will display, for example `Kilo(Watt * Hour
 
 Implements [`Unit`](../units.md#trait-unit).
 
-### Methods
+### Functions
 
 #### `factor` (from Unit)
 
@@ -500,7 +500,7 @@ symbol(_)
 
 ## extends `UnitDefinition`
 
-More methods of [`UnitDefinition`](../units.md#record-unitdefinition), added by this module.
+More functions for [`UnitDefinition`](../units.md#record-unitdefinition), added by this module.
 
 Implements [`Unit`](../units.md#trait-unit).
 
@@ -518,7 +518,7 @@ Implements [`Unit`](../units.md#trait-unit).
 
 ## extends `Measure`
 
-More methods of [`Measure`](../units.md#record-measure), added by this module.
+More functions for [`Measure`](../units.md#record-measure), added by this module.
 
 Prefixes on an existing measure select its display unit.
 

@@ -47,7 +47,7 @@ Period    a calendar step, resolved by the calendar (1.months, 2.years)
 
 A time `Measure` such as `5.second` is a third thing and deliberately NOT a Duration: a Measure describes a measurement, a Duration describes elapsed time. The plural `5.seconds` builds the Duration.
 
-Values are built through their own module and used through methods:
+Values are built through their own module and used through functions:
 
 ```kex
 let due = Date.of(2026, 7, 30).try           # Date
@@ -112,7 +112,7 @@ Build one with `Date.of`, which validates, rather than with the record literal, 
 
 Implements [`Inspectable`](kex.md#trait-inspectable), [`Showable`](kex.md#trait-showable).
 
-### Methods
+### Functions
 
 #### `inspectValue` (from Inspectable)
 
@@ -323,7 +323,7 @@ Date.of(2026, 7, 30).try.addWeeks(2).iso   # => "2026-08-13"
 addMonths(count: Integer) -> Date
 ```
 
-No `date.tomorrow`/`date.yesterday` methods: on BEAM a make-block method flattens onto the same name as the `Date.tomorrow()`/`Date.yesterday()` module functions above and one of the two has to win. The module functions win: `Date.tomorrow()` is the spelling people reach for, and `date.addDays(1)` already says the rest.
+No `date.tomorrow`/`date.yesterday` functions: on BEAM a make-block function flattens onto the same name as the `Date.tomorrow()`/`Date.yesterday()` module functions above and one of the two has to win. The module functions win: `Date.tomorrow()` is the spelling people reach for, and `date.addDays(1)` already says the rest.
 
 The date `count` calendar months later, with the day clamped into the target month.
 
@@ -684,7 +684,7 @@ Arithmetic wraps within the day: there is no date to carry into. Reach for `Date
 
 Implements [`Inspectable`](kex.md#trait-inspectable), [`Showable`](kex.md#trait-showable).
 
-### Methods
+### Functions
 
 #### `inspectValue` (from Inspectable)
 
@@ -960,7 +960,7 @@ Two `DateTime` values that name the same instant compare equal whatever offsets 
 
 Implements [`Inspectable`](kex.md#trait-inspectable), [`Showable`](kex.md#trait-showable).
 
-### Methods
+### Functions
 
 #### `inspectValue` (from Inspectable)
 
@@ -1024,7 +1024,7 @@ weekday : Weekday
 
 The day of the week this instant falls on, at its own offset.
 
-No `year`/`hour`/... shorthands here: a method named after a record field makes `value.year` inside a module function dispatch to it on BEAM and fail with function_clause. Reach through `.date` and `.time`.
+No `year`/`hour`/... shorthands here: a function named after a record field makes `value.year` inside a module function dispatch to it on BEAM and fail with function_clause. Reach through `.date` and `.time`.
 
 **Returns**: the day of the week
 
@@ -1342,7 +1342,7 @@ Use a Duration for elapsed time (`36.hours` is always 129600 seconds) and a Peri
 
 Implements [`Inspectable`](kex.md#trait-inspectable), [`Showable`](kex.md#trait-showable).
 
-### Methods
+### Functions
 
 #### `inspectValue` (from Inspectable)
 
@@ -1704,7 +1704,7 @@ Time.release()
 
 The clock is global, not per-process: a frozen clock stays frozen inside spawned processes, which is the only behavior that matches a real one. `release` is not automatic, so a test that freezes must also release: otherwise every later test in the run inherits the frozen clock.
 
-Nanoseconds since the Unix epoch for a civil datetime. A plain function rather than a `DateTime` method: on BEAM a method named `epochNanos` flattens onto the same name as the `DateTime.epochNanos()` module function, and the arity-0 one wins: silently, answering for the host clock instead of for `moment`.
+Nanoseconds since the Unix epoch for a civil datetime. A plain function rather than a `DateTime` function: on BEAM a function named `epochNanos` flattens onto the same name as the `DateTime.epochNanos()` module function, and the arity-0 one wins: silently, answering for the host clock instead of for `moment`.
 
 ### `CLOCK_MIN_NANOS` (constant)
 
@@ -2061,7 +2061,7 @@ errorMessage(error: TimeError) -> String
 
 Renders a `TimeError` as a sentence for the user.
 
-A plain function rather than an `Errorable` implementation: a `message` method here joins the same BEAM dispatcher as ParseError's `message` FIELD and breaks it (spec/record_field_method_collision.kex).
+A plain function rather than an `Errorable` implementation: a `message` function here joins the same BEAM dispatcher as ParseError's `message` FIELD and breaks it (spec/record_field_method_collision.kex).
 
 **Parameters**
 
@@ -2597,7 +2597,7 @@ let elapsedMs = (DateTime.epochNanos() - started) / 1000000
 
 ## extends `Integer`
 
-More methods of [`Integer`](number.md#make-integer), added by this module.
+More functions for [`Integer`](number.md#make-integer), added by this module.
 
 The plural spellings build a Duration; the singular ones from units.kex build a time Measure. `5.seconds` is an elapsed span, `5.second` a measurement.
 
@@ -2755,7 +2755,7 @@ This many calendar years, as a `Period`.
 
 ## extends `Float`
 
-More methods of [`Float`](number.md#make-float), added by this module.
+More functions for [`Float`](number.md#make-float), added by this module.
 
 The same `Duration` constructors on `Float`, for fractional spans: `1.5.hours`, `0.25.seconds`.
 
@@ -2845,7 +2845,7 @@ This many weeks, as a `Duration`: a fixed 604800 seconds each.
 
 ## extends `Duration`
 
-More methods of [`Duration`](units.md#record-duration), added by this module.
+More functions for [`Duration`](units.md#record-duration), added by this module.
 
 ### `wholeNanoseconds`
 

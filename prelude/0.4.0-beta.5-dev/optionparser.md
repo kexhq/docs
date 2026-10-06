@@ -96,7 +96,7 @@ One declared command. Built for you by the `OptionConfig.command` builders.
 
 A tool's whole command-line interface: its name, its options, and its commands.
 
-Build one with `OptionParser.define` and add to it with the chainable `string`, `integer`, `flag` and `command` methods. Each returns a new `OptionConfig`, so the chain reads as one declaration.
+Build one with `OptionParser.define` and add to it with the chainable `string`, `integer`, `flag` and `command` functions. Each returns a new `OptionConfig`, so the chain reads as one declaration.
 
 **Fields**
 
@@ -105,7 +105,7 @@ Build one with `OptionParser.define` and add to it with the chainable `string`, 
   - `options` : [[OptionSpec](#record-optionspec)] (optional)
   - `commands` : [[CommandSpec](#record-commandspec)] (optional)
 
-### Methods
+### Functions
 
 #### `string`
 
@@ -354,7 +354,7 @@ The result of a successful parse: the option values, and the words that were not
   - `values` : {[String](string.md#make-string): [String](string.md#make-string)}
   - `arguments` : [[String](string.md#make-string)]
 
-### Methods
+### Functions
 
 #### `value`
 

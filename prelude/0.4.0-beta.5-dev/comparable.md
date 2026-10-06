@@ -39,7 +39,7 @@ Declared here rather than only inside the interpreter so that `Ordering`, `Less`
 
 Implements [`Monoid`](algebra.md#trait-monoid).
 
-### Methods
+### Functions
 
 `Ordering` is a Monoid under "first decision wins", with Equal as identity. That is what makes multi-key comparison compose instead of nesting ifs:
 
@@ -151,7 +151,7 @@ Implemented by `Number`, which covers both `Integer` and `Float`, and by `String
 
 Implemented by [`Number`](#make-number), [`String`](#make-string).
 
-### Required methods
+### Required functions
 
 #### `compare`
 
@@ -185,7 +185,7 @@ _Sorting with an explicit comparison_
 people.sort { |a, b| a.age.compare(b.age) == Less }
 ```
 
-### Provided methods
+### Provided functions
 
 #### `max`
 
@@ -195,7 +195,7 @@ max(other: This) -> This
 
 What every ordered type gets from `compare` alone. Returns the larger of this value and `other`; this value when they are equal.
 
-Written either way round, since a call and a method are the same thing: `max(3, 7)` is `3.max(7)`.
+UFCS lets you put the first argument before the dot: `max(3, 7)` is `3.max(7)`.
 
 **Parameters**
 
@@ -259,7 +259,7 @@ Returns this value limited to the range `low` to `high`: `low` when it is below,
 
 ## extends `Number`
 
-More methods of [`Number`](number.md#), added by this module.
+More functions for [`Number`](number.md#), added by this module.
 
 Implements [`Comparable`](#trait-comparable).
 
@@ -291,7 +291,7 @@ Mixed receivers work because `<` and `>` promote across the two, so `1.compare(1
 
 ## extends `String`
 
-More methods of [`String`](string.md#make-string), added by this module.
+More functions for [`String`](string.md#make-string), added by this module.
 
 Implements [`Comparable`](#trait-comparable).
 

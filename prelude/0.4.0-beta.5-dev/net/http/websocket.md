@@ -67,7 +67,7 @@ Negotiated handshake information. The subprotocol is `None` when the server sele
 
 An opaque RFC 6455 connection, client- or server-side. It does not reconnect automatically.
 
-### Methods
+### Functions
 
 #### `send`
 
@@ -93,7 +93,7 @@ connection.send(Text(JSON.stringify({ action: "subscribe", topic: topic }))).try
 receiveMessage(timeout: Duration?) -> Result<Message, NetError>
 ```
 
-`receive` is a Kex process keyword, so the public method spells out the operation while preserving the plan's high-level message semantics. Reassembles fragments, validates UTF-8, and automatically answers pings.
+`receive` is a Kex process keyword, so the public function spells out the operation while preserving the plan's high-level message semantics. Reassembles fragments, validates UTF-8, and automatically answers pings.
 
 A `CloseMessage` is returned once so the application can inspect the peer's reason. Subsequent reads fail with `Closed`.
 

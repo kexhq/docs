@@ -12,7 +12,7 @@ entities:
 
 An immutable key-value store, written `{key: value}`.
 
-Keys are compared by structural equality and may be of any type; atom keys get the shorthand `{name: "Ada"}`, string keys are written out in full as `{"name": "Ada"}`. Every method answers with a new map: the `!` forms (`put!`, `delete!`) build a new map and rebind the receiver variable, they do not modify anything in place.
+Keys are compared by structural equality and may be of any type; atom keys get the shorthand `{name: "Ada"}`, string keys are written out in full as `{"name": "Ada"}`. Updates return a new map: the `!` forms (`put!`, `delete!`) build a new map and rebind the receiver variable, they do not modify anything in place.
 
 Entries come back in canonical key order, not insertion order, so `keys`, `values`, `entries` and any traversal are stable and comparable across equal maps.
 
@@ -36,7 +36,7 @@ Declared for the same reason list.kex declares `type List<X> = [X]`: it gives th
 
 Implements [`Enumerable`](enumerable.md#trait-enumerable), [`Foldable`](enumerable.md#trait-foldable), [`Monoid`](algebra.md#trait-monoid), [`Blankable`](blankable.md#trait-blankable), [`Truthyable`](truthyable.md#trait-truthyable).
 
-### Methods
+### Functions
 
 #### `reduce` (from Enumerable, Foldable)
 
@@ -340,7 +340,7 @@ entries : [(K, V)]
 
 Returns the map's entries as a list of `(key, value)` tuples, in canonical key order.
 
-This is the bridge to the `List` methods a map does not have of its own, and the form the two-parameter blocks elsewhere are splatting from.
+This is the bridge to the `List` functions a map does not have of its own, and the form the two-parameter blocks elsewhere are splatting from.
 
 **Returns**: the entries
 

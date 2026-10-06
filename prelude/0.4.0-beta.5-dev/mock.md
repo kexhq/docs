@@ -61,7 +61,7 @@ end
 
 Implements `FS.File`.
 
-### Methods
+### Functions
 
 #### `cannedRead`
 
@@ -69,7 +69,7 @@ Implements `FS.File`.
 cannedRead(path)
 ```
 
-Named apart from `read`: `this.read(path)` would bind to the capability's own `read : FilePath -> String?`, not to this method.
+Named apart from `read`: `this.read(path)` would bind to the capability's own `read : FilePath -> String?`, not to this function.
 
 #### `read`
 
@@ -205,7 +205,7 @@ end
 
 Implements `ENV`.
 
-### Methods
+### Functions
 
 #### `lookup`
 
@@ -213,7 +213,7 @@ Implements `ENV`.
 lookup(key)
 ```
 
-Named apart from `get`: `this.get(key)` would bind to the capability's own `get`, not to this method.
+Named apart from `get`: `this.get(key)` would bind to the capability's own `get`, not to this function.
 
 #### `get`
 

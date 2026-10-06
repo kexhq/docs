@@ -65,7 +65,7 @@ Construct dimensions with `Dimensions.base` and compose them with arithmetic. If
 
   - `powers` : {[Type](type.md#record-type): [Integer](number.md#make-integer)}
 
-### Methods
+### Functions
 
 #### `dimensionless?`
 

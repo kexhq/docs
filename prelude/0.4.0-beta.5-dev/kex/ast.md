@@ -492,7 +492,7 @@ One field inside a record or map-shaped pattern.
 
 Structured representation of expression AST nodes.
 
-Expressions retain syntax-level distinctions that matter to tools: a method call is not flattened into a generic call, `var` is distinct from `let`, and a trailing `if` remains recognizable. Walk these constructors when writing a linter or code search; use `Evaluator` when the goal is to execute an expression rather than inspect it.
+Expressions retain syntax-level distinctions that matter to tools: a receiver call is not flattened into a generic call, `var` is distinct from `let`, and a trailing `if` remains recognizable. Walk these constructors when writing a linter or code search; use `Evaluator` when the goal is to execute an expression rather than inspect it.
 
 **Variants**
 
@@ -719,9 +719,9 @@ A named function and all of its pattern-matching clauses.
 
 ## record `AnnotationInfo`
 
-A standalone function or method type signature.
+A standalone function type signature.
 
-`implicitThis` distinguishes `:>` methods from module-level `:` functions without making a tool inspect punctuation in the original source.
+`implicitThis` distinguishes `:>` receiver signatures from module-level `:` signatures without making a tool inspect punctuation in the original source.
 
 **Fields**
 
@@ -789,7 +789,7 @@ A record declaration with fields in source order.
 
 ## record `TraitInfo`
 
-A trait declaration and the signatures or default methods in its body.
+A trait declaration and the signatures or default functions in its body.
 
 **Fields**
 
@@ -805,7 +805,7 @@ A trait declaration and the signatures or default methods in its body.
 
 A `make` implementation block.
 
-`target` is the receiver type, `implements` lists explicit traits, and `body` retains methods and visibility sections in declaration order.
+`target` is the receiver type, `implements` lists explicit traits, and `body` retains functions and visibility sections in declaration order.
 
 **Fields**
 

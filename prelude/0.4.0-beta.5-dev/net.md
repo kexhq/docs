@@ -32,7 +32,7 @@ Use `Port.from` at input boundaries. Port zero requests an ephemeral port where 
 
   - `value` : [Integer](number.md#make-integer)
 
-### Methods
+### Functions
 
 #### `string`
 

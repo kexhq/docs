@@ -45,7 +45,7 @@ firstLine(FS.File.open("notes.txt", Read).try)
 
 Implemented by [`FileHandle<CanRead, W>`](#make-filehandle-canread).
 
-### Required methods
+### Required functions
 
 #### `getLine`
 
@@ -141,11 +141,11 @@ report(IO.error, warnings)
 report(FS.File.open("report.txt", Write).try, results)
 ```
 
-Write methods accept any `Showable` value and return `Void`.
+Write functions accept any `Showable` value and return `Void`.
 
 Implemented by [`FileHandle<R, CanWrite>`](#make-filehandle-canwrite).
 
-### Required methods
+### Required functions
 
 #### `printLine`
 
@@ -233,11 +233,11 @@ end
 
 Reach for a handle when you want to walk a large file a line at a time, or make many small writes. When a file fits comfortably in memory, `FS.File.read` and `FS.File.write` are shorter and need no closing. To be rid of the closing entirely, pass `FS.File.open` a block.
 
-The handle methods are `foul`: obtaining a handle is not an effect, but reading or writing through one is, so a function that does so is `foul` no matter where the handle came from. Injection makes a thing substitutable, not pure.
+The handle functions are `foul`: obtaining a handle is not an effect, but reading or writing through one is, so a function that does so is `foul` no matter where the handle came from. Injection makes a thing substitutable, not pure.
 
 Implements [`Readable`](#trait-readable), [`Writable`](#trait-writable).
 
-### Methods
+### Functions
 
 #### `close`
 
@@ -466,7 +466,7 @@ Lines are read on demand off the handle's own position, so this is how to look a
 
 The feed ends at the last line, so taking more lines than the file has answers just the lines there are.
 
-NOT part of `Readable`: a feed is neither pure nor reusable, so requiring it of every `Readable` would put a foul, one-shot operation on types that have no such cursor to offer. It stays a FileHandle method.
+NOT part of `Readable`: a feed is neither pure nor reusable, so requiring it of every `Readable` would put a foul, one-shot operation on types that have no such cursor to offer. It stays a FileHandle function.
 
 **Returns**: the lines as a feed, or `None`
 

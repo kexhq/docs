@@ -116,7 +116,7 @@ The highest tag that satisfies the requirement — the whole point of writing a 
 
 Implements `Comparable`.
 
-### Methods
+### Functions
 
 SemanticVersion is Comparable, so `a.compare(b)` answers Less/Equal/Greater like every other ordered type in the stdlib, and ordering reads as an ordering rather than as sign arithmetic on -1/0/1.
 

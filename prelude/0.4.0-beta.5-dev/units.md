@@ -43,7 +43,7 @@ The trait a unit implements: how it converts to its dimension's base unit, which
 
 Implemented by [`UnitDefinition`](#make-unitdefinition), [`TimeUnit`](#make-timeunit), [`DataUnit`](units/data.md#make-dataunit), [`UnitDefinition`](units/data.md#make-unitdefinition), [`SIPrefix`](units/si.md#make-siprefix), [`SIUnit`](units/si.md#make-siunit), [`UnitDefinition`](units/si.md#make-unitdefinition).
 
-### Required methods
+### Required functions
 
 #### `factor`
 
@@ -169,7 +169,7 @@ Runtime-defined units are used for prefixes and units derived by arithmetic: `s^
 
 Implements [`Unit`](#trait-unit).
 
-### Methods
+### Functions
 
 #### `factor` (from Unit)
 
@@ -208,7 +208,7 @@ A Measure is shared by every unit module. `canonical` stores the value in that d
 
 Implements [`Showable`](kex.md#trait-showable).
 
-### Methods
+### Functions
 
 #### `factor`
 
@@ -389,7 +389,7 @@ Like +++, the result is displayed in the left operand's unit, and mixing dimensi
 
 ### Defined in other modules
 
-  - [Units.Data](units/data.md#make-measure): [`factor`](units/data.md#measure-factor), [`kind`](units/data.md#measure-kind), [`symbol`](units/data.md#measure-symbol)
+  - [Units.Data](units/data.md#make-measure): [`factor`](units/data.md#measure-factor), [`kind`](units/data.md#measure-kind), [`symbol`](units/data.md#measure-symbol), [`<`](units/data.md#measure-op-lt), [`>`](units/data.md#measure-op-gt), [`<=`](units/data.md#measure-op-lt-eq), [`>=`](units/data.md#measure-op-gt-eq)
   - [Units.SI](units/si.md#make-measure): [`factor`](units/si.md#measure-factor), [`kind`](units/si.md#measure-kind), [`symbol`](units/si.md#measure-symbol), [`kilo`](units/si.md#measure-kilo), [`*`](units/si.md#measure-op-times), [`/`](units/si.md#measure-op-div), [`product`](units/si.md#measure-product), [`quotient`](units/si.md#measure-quotient), [`productKind`](units/si.md#measure-productkind), [`quotientKind`](units/si.md#measure-quotientkind), [`productSymbol`](units/si.md#measure-productsymbol), [`quotientSymbol`](units/si.md#measure-quotientsymbol)
 
 ## record `Duration`
@@ -423,7 +423,7 @@ The time units, from nanoseconds to weeks. The base unit is the second.
 
 Implements [`Unit`](#trait-unit).
 
-### Methods
+### Functions
 
 #### `factor` (from Unit)
 
@@ -443,7 +443,7 @@ symbol(_)
 
 ## extends `Integer`
 
-More methods of [`Integer`](number.md#make-integer), added by this module.
+More functions for [`Integer`](number.md#make-integer), added by this module.
 
 Time-unit constructors on `Integer`: `5.second`, `90.minute`, `2.week`.
 
@@ -585,7 +585,7 @@ timeMeasure(unit: TimeUnit) -> Measure
 
 ## extends `Float`
 
-More methods of [`Float`](number.md#make-float), added by this module.
+More functions for [`Float`](number.md#make-float), added by this module.
 
 The same time-unit constructors on `Float`, for fractional quantities: `1.5.hour`, `0.25.second`.
 

@@ -261,7 +261,7 @@ moduleCard(m: Tey.Docgen.Model.ModuleIndexEntry, top: Bool) -> String
 entitiesHtml(entities: [Entity], page: SourcePage, model: PackageModel) -> String
 ```
 
-A page's declarations in source order — except that a type's `make` blocks on the same page are pulled into the type's own section, so `List` reads as one thing (the type, then its methods, grouped by the receiver they need) rather than a type followed by three loose "make" sections.
+A page's declarations in source order — except that a type's `make` blocks on the same page are pulled into the type's own section, so `List` reads as one thing (the type, then its functions, grouped by the receiver they need) rather than a type followed by three loose "make" sections.
 
 ### `sectionEntities`
 
@@ -345,7 +345,7 @@ recordSection(e: RecordEntry, makes: [MakeEntry], page: SourcePage, model: Packa
 typeBodyHtml(name: String, makes: [MakeEntry], page: SourcePage, model: PackageModel) -> String
 ```
 
-Everything about a type beyond its declaration: the traits it implements (from every file), its methods grouped by receiver, the methods it gets from those traits for free, and the other modules that add methods to it.
+Everything about a type beyond its declaration: the traits it implements (from every file), its functions grouped by receiver, the functions it gets from those traits for free, and the other modules that add functions to it.
 
 ### `makeGroupHtml`
 
@@ -353,7 +353,7 @@ Everything about a type beyond its declaration: the traits it implements (from e
 makeGroupHtml(m: MakeEntry, base: String, page: SourcePage, model: PackageModel) -> String
 ```
 
-"Methods" for the plain receiver, "On `[Number]`" for a specialised one.
+"Functions" for the plain receiver, "On `[Number]`" for a specialised one.
 
 ### `genericReceiver?`
 
@@ -383,7 +383,7 @@ traitLinks(traits: [String], page: SourcePage, model: PackageModel) -> String
 providedHtml(name: String, page: SourcePage, model: PackageModel) -> String
 ```
 
-The trait methods a type gets without writing them: a trait's provided methods, minus any the type defines itself somewhere. This is the answer to "where does `List.eachIndexed` come from?".
+The trait functions a type gets without writing them: a trait's provided functions, minus any the type defines itself somewhere. This is the answer to "where does `List.eachIndexed` come from?".
 
 ### `providedFromHtml`
 
@@ -397,7 +397,7 @@ providedFromHtml(written: String, own: [String], page: SourcePage, model: Packag
 elsewhereHtml(name: String, page: SourcePage, model: PackageModel) -> String
 ```
 
-Other modules that add methods to this type: `make Integer` in time.kex is where `5.seconds` comes from.
+Other modules that add functions to this type: `make Integer` in time.kex is where `5.seconds` comes from.
 
 ### `fieldRow`
 
@@ -461,7 +461,7 @@ homeNote(base: String, facts: Tey.Docgen.Model.TypeFacts?, page: SourcePage, mod
 moduleSection(e: ModuleEntry, page: SourcePage, model: PackageModel) -> String
 ```
 
-A module's own functions and constants are its API, listed under it (h3) like a type's methods. Types, traits and nested modules it declares stand as sections of their own after that.
+A module's own functions and constants are its API, listed under it (h3) like a type's functions. Types, traits and nested modules it declares stand as sections of their own after that.
 
 ### `memberEntity?`
 
@@ -493,7 +493,7 @@ constantSection(e: ConstantEntry, page: SourcePage, model: PackageModel) -> Stri
 functionsHtml(functions: [FunctionEntry], owner: String, level: Integer, implements: [String], page: SourcePage, model: PackageModel) -> String
 ```
 
-Members of a trait or make block, one heading per NAME: overloads (`count` and `count(pred)`) are one method with several signatures, not two unrelated entries. `owner` scopes the anchors; `implements` lets a member that fulfils a trait method say which trait.
+Members of a trait or make block, one heading per NAME: overloads (`count` and `count(pred)`) are one function with several signatures, not two unrelated entries. `owner` scopes the anchors; `implements` lets a member that fulfils a trait function say which trait.
 
 ### `functionGroupHtml`
 
@@ -507,7 +507,7 @@ functionGroupHtml(fs: [FunctionEntry], name: String, owner: String, level: Integ
 traitTag(name: String, implements: [String], page: SourcePage, model: PackageModel) -> String
 ```
 
-"from Enumerable": this member is the type's own version of a method the trait declares, linked to the trait's description of it.
+"from Enumerable": this member is the type's own version of a function the trait declares, linked to the trait's description of it.
 
 ### `overloadHtml`
 
@@ -535,7 +535,7 @@ docHtml(doc: Doc, page: SourcePage, model: PackageModel) -> String
 entityDocHtml(doc: Doc, page: SourcePage, model: PackageModel) -> String
 ```
 
-A declaration's doc: prose, then its examples and any deprecation — a type's @example is as much a part of it as a method's.
+A declaration's doc: prose, then its examples and any deprecation — a type's @example is as much a part of it as a function's.
 
 ### `plainDocHtml`
 

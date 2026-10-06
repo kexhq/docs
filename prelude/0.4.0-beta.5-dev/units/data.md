@@ -19,14 +19,39 @@ Opt-in: nothing here is in scope until `using Units.Data`.
 using Units.Data
 
 main do
-  IO.printLine(1500.megabytes.to(String))              # prints: 1500.0 MB
+  IO.printLine(1500.megabyte.to(String))              # prints: 1500.0 MB
   IO.printLine(1500000000.byteSize.to(String, in: Giga)) # prints: 1.5 GB
 end
 ```
 
-Both families are here and they are not the same: `KB` is 1000 bytes, `KiB` is 1024. Values built from either convert freely, because both are counted in bytes underneath, so `1.gibibytes.convertTo(MiB)` answers 1024 MiB.
+Both families are here and they are not the same: `KB` is 1000 bytes, `KiB` is 1024. Values built from either convert freely, because both are counted in bytes underneath, so `1.gibibyte.convertTo(MiB)` answers 1024 MiB.
 
-Every value is a `Measure` from the prelude, so its arithmetic, comparison and `to(String)` apply unchanged.
+Numeric constructors use singular names, as in `Units.SI`: `5.megabyte` and `2.mebibyte`. `byteSize` is an alias for `byte`.
+
+File and payload APIs return integer byte counts. Wrap those counts with `byte` to convert or display them as measurements:
+
+```kex
+FS.File.size("report.pdf").map { |n| n.byte.to(String) }
+Binary.fromBytes([104, 105]).length.byte.to(String)  # => "2.0 B"
+"é".bytes.count.byte.to(String)                    # => "2.0 B"
+```
+
+To display binary units, convert to `KiB`, `MiB`, `GiB`, or `TiB`:
+
+```kex
+1048576.byte.convertTo(MiB).map { |m| m.to(String) } # => Ok("1.0 MiB")
+```
+
+Compare an integer byte count directly with a data-size threshold:
+
+```kex
+30000001 > 30.megabyte   # => true
+1048576 <= 1.mebibyte    # => true
+```
+
+`<`, `>`, `<=`, and `>=` work with the count on either side. A time or SI measure is not a byte threshold and raises an error.
+
+Every value is a `Measure` from the prelude, so its arithmetic and `to(String)` apply unchanged.
 
 ### `size`
 
@@ -36,7 +61,7 @@ size(value: Number, unit: DataUnit) -> Measure
 
 `value` of the given data unit, as a `Measure`.
 
-The general constructor the named ones below are written on. Reach for `megabytes`, `kibibytes` and friends when the unit is known at the call site.
+The general constructor the named ones below are written on. Reach for `megabyte`, `kibibyte` and friends when the unit is known at the call site.
 
 **Parameters**
 
@@ -72,8 +97,8 @@ Decimal and binary units convert freely, because both are counted in bytes under
 **Examples**
 
 ```kex
-1.gibibytes.convertTo(MiB).map { |m| m.to(String) }   # => Ok("1024.0 MiB")
-2.gigabytes.convertTo(MB).map { |m| m.to(String) }    # => Ok("2000.0 MB")
+1.gibibyte.convertTo(MiB).map { |m| m.to(String) }   # => Ok("1024.0 MiB")
+2.gigabyte.convertTo(MB).map { |m| m.to(String) }    # => Ok("2000.0 MB")
 ```
 
 ### `to`
@@ -125,13 +150,38 @@ Named `byteSize` rather than `bytes`, which `String` already uses for its UTF-8 
 _Reporting a file's size_
 
 ```kex
-FS.File.size(path).map { |n| n.byteSize.to(String, in: Mega) }
+FS.File.size("report.pdf").map { |n| n.byte.to(String) }
 ```
 
-### `kilobytes`
+### `byte`
 
 ```kex
-kilobytes(value: Number) -> Measure
+byte(value: Number) -> Measure
+```
+
+`value` bytes, as a `Measure`.
+
+Use this with byte counts from `FS.File.size` or `Binary.length`.
+
+**Parameters**
+
+  - `value` — the byte count
+
+**Returns**: the size
+
+**Examples**
+
+_A binary payload's size_
+
+```kex
+let payload = Binary.fromBytes([104, 105])
+payload.length.byte.to(String)   # => "2.0 B"
+```
+
+### `kilobyte`
+
+```kex
+kilobyte(value: Number) -> Measure
 ```
 
 `value` kilobytes, 1000 bytes each.
@@ -145,13 +195,13 @@ kilobytes(value: Number) -> Measure
 **Examples**
 
 ```kex
-5.kilobytes.to(String)   # => "5.0 KB"
+5.kilobyte.to(String)   # => "5.0 KB"
 ```
 
-### `megabytes`
+### `megabyte`
 
 ```kex
-megabytes(value: Number) -> Measure
+megabyte(value: Number) -> Measure
 ```
 
 `value` megabytes, 1000000 bytes each.
@@ -165,13 +215,13 @@ megabytes(value: Number) -> Measure
 **Examples**
 
 ```kex
-1500.megabytes.to(String)   # => "1500.0 MB"
+1500.megabyte.to(String)   # => "1500.0 MB"
 ```
 
-### `gigabytes`
+### `gigabyte`
 
 ```kex
-gigabytes(value: Number) -> Measure
+gigabyte(value: Number) -> Measure
 ```
 
 `value` gigabytes, 10^9 bytes each.
@@ -185,13 +235,13 @@ gigabytes(value: Number) -> Measure
 **Examples**
 
 ```kex
-2.gigabytes.convertTo(MB).map { |m| m.to(String) }   # => Ok("2000.0 MB")
+2.gigabyte.convertTo(MB).map { |m| m.to(String) }   # => Ok("2000.0 MB")
 ```
 
-### `terabytes`
+### `terabyte`
 
 ```kex
-terabytes(value: Number) -> Measure
+terabyte(value: Number) -> Measure
 ```
 
 `value` terabytes, 10^12 bytes each.
@@ -205,13 +255,13 @@ terabytes(value: Number) -> Measure
 **Examples**
 
 ```kex
-2.terabytes.to(String)   # => "2.0 TB"
+2.terabyte.to(String)   # => "2.0 TB"
 ```
 
-### `kibibytes`
+### `kibibyte`
 
 ```kex
-kibibytes(value: Number) -> Measure
+kibibyte(value: Number) -> Measure
 ```
 
 `value` kibibytes, 1024 bytes each.
@@ -225,13 +275,13 @@ kibibytes(value: Number) -> Measure
 **Examples**
 
 ```kex
-1024.kibibytes.to(String)   # => "1024.0 KiB"
+1024.kibibyte.to(String)   # => "1024.0 KiB"
 ```
 
-### `mebibytes`
+### `mebibyte`
 
 ```kex
-mebibytes(value: Number) -> Measure
+mebibyte(value: Number) -> Measure
 ```
 
 `value` mebibytes, 1024^2 bytes each.
@@ -245,13 +295,13 @@ mebibytes(value: Number) -> Measure
 **Examples**
 
 ```kex
-3.mebibytes.to(String)   # => "3.0 MiB"
+3.mebibyte.to(String)   # => "3.0 MiB"
 ```
 
-### `gibibytes`
+### `gibibyte`
 
 ```kex
-gibibytes(value: Number) -> Measure
+gibibyte(value: Number) -> Measure
 ```
 
 `value` gibibytes, 1024^3 bytes each.
@@ -265,13 +315,13 @@ gibibytes(value: Number) -> Measure
 **Examples**
 
 ```kex
-1.gibibytes.convertTo(MiB).map { |m| m.to(String) }   # => Ok("1024.0 MiB")
+1.gibibyte.convertTo(MiB).map { |m| m.to(String) }   # => Ok("1024.0 MiB")
 ```
 
-### `tebibytes`
+### `tebibyte`
 
 ```kex
-tebibytes(value: Number) -> Measure
+tebibyte(value: Number) -> Measure
 ```
 
 `value` tebibytes, 1024^4 bytes each.
@@ -285,7 +335,7 @@ tebibytes(value: Number) -> Measure
 **Examples**
 
 ```kex
-1.tebibytes.to(String)   # => "1.0 TiB"
+1.tebibyte.to(String)   # => "1.0 TiB"
 ```
 
 ## type `DataUnit`
@@ -293,8 +343,8 @@ tebibytes(value: Number) -> Measure
 The data units this module names: decimal (`KB`, `MB`, `GB`, `TB`) and binary (`KiB`, `MiB`, `GiB`, `TiB`), plus the plain byte `B`.
 
 ```kex
-1.KB   # 1000 bytes
-1.KiB  # 1024 bytes
+size(1, KB).canonical    # => 1000.0 bytes
+size(1, KiB).canonical   # => 1024.0 bytes
 ```
 
 **Variants**
@@ -311,7 +361,7 @@ The data units this module names: decimal (`KB`, `MB`, `GB`, `TB`) and binary (`
 
 Implements [`Unit`](../units.md#trait-unit).
 
-### Methods
+### Functions
 
 #### `factor` (from Unit)
 
@@ -345,7 +395,7 @@ Data prefixes select their standard decimal byte unit, so `Mega` is MB rather th
 
 ## extends `UnitDefinition`
 
-More methods of [`UnitDefinition`](../units.md#record-unitdefinition), added by this module.
+More functions for [`UnitDefinition`](../units.md#record-unitdefinition), added by this module.
 
 Implements [`Unit`](../units.md#trait-unit).
 
@@ -363,7 +413,9 @@ Implements [`Unit`](../units.md#trait-unit).
 
 ## extends `Measure`
 
-More methods of [`Measure`](../units.md#record-measure), added by this module.
+More functions for [`Measure`](../units.md#record-measure), added by this module.
+
+The same comparison with the data-size threshold on the left.
 
 ### `factor`
 
@@ -381,4 +433,74 @@ kind : Atom
 
 ```kex
 symbol : String
+```
+
+### `<`
+
+```kex
+<(other: Integer) -> Bool
+```
+
+### `>`
+
+```kex
+>(other: Integer) -> Bool
+```
+
+### `<=`
+
+```kex
+<=(other: Integer) -> Bool
+```
+
+### `>=`
+
+```kex
+>=(other: Integer) -> Bool
+```
+
+## extends `Integer`
+
+More functions for [`Integer`](../number.md#make-integer), added by this module.
+
+Compares an integer byte count with a data-size threshold.
+
+File and binary sizes stay integers. Import this module to use data units directly in comparisons; only data measures are accepted as thresholds.
+
+**Examples**
+
+_Rejecting an oversized file_
+
+```kex
+FS.File.size("report.pdf").map { |count| count > 30.megabyte }
+```
+
+_Checking a payload_
+
+```kex
+Binary.fromBytes([104, 105]).length < 1.kibibyte  # => true
+```
+
+### `<`
+
+```kex
+<(other: Measure) -> Bool
+```
+
+### `>`
+
+```kex
+>(other: Measure) -> Bool
+```
+
+### `<=`
+
+```kex
+<=(other: Measure) -> Bool
+```
+
+### `>=`
+
+```kex
+>=(other: Measure) -> Bool
 ```

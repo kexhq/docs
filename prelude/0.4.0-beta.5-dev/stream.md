@@ -28,7 +28,7 @@ naturals.filter { |n| n.even? }.take(3)       # => [0, 2, 4]
 
 Streams are best for generated sequences you may revisit. A file or socket is different: it can only be consumed once, so those APIs return a `Feed`. Convert a small feed with `toStream` only when replaying it is worth keeping every value already read.
 
-### Methods
+### Functions
 
 #### `take`
 
