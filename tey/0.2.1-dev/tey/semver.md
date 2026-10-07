@@ -109,10 +109,10 @@ The highest tag that satisfies the requirement — the whole point of writing a 
 
 **Fields**
 
-  - `major` : [Integer](../../../prelude/0.4.0-beta.5-dev/number.md#make-integer)
-  - `minor` : [Integer](../../../prelude/0.4.0-beta.5-dev/number.md#make-integer)
-  - `patch` : [Integer](../../../prelude/0.4.0-beta.5-dev/number.md#make-integer)
-  - `preRelease` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
+  - `major` : [Integer](../../../prelude/0.4.0-rc.1-dev/number.md#make-integer)
+  - `minor` : [Integer](../../../prelude/0.4.0-rc.1-dev/number.md#make-integer)
+  - `patch` : [Integer](../../../prelude/0.4.0-rc.1-dev/number.md#make-integer)
+  - `preRelease` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string) (optional)
 
 Implements `Comparable`.
 

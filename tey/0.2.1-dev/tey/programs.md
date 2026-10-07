@@ -179,19 +179,19 @@ pinText(receipt: Receipt) -> String
 
 **Fields**
 
-  - `name` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
-  - `version` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
-  - `sourceKind` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
-  - `sourcePath` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
-  - `sourceDigest` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
-  - `sourceSelector` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
-  - `sourceRequested` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
-  - `sourceCommit` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
-  - `selectedTargets` : [[String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)] (optional)
-  - `targets` : [[String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)] (optional)
-  - `kex` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
-  - `otp` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
-  - `installedAt` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
+  - `name` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string)
+  - `version` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string) (optional)
+  - `sourceKind` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string) (optional)
+  - `sourcePath` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string) (optional)
+  - `sourceDigest` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string) (optional)
+  - `sourceSelector` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string) (optional)
+  - `sourceRequested` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string) (optional)
+  - `sourceCommit` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string) (optional)
+  - `selectedTargets` : [[String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string)] (optional)
+  - `targets` : [[String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string)] (optional)
+  - `kex` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string) (optional)
+  - `otp` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string) (optional)
+  - `installedAt` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string) (optional)
 
 
 
@@ -203,15 +203,15 @@ How `tey install <argument>` was asked to install a program: the workspace membe
 
 **Fields**
 
-  - `packageName` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
-  - `force?` : [Bool](../../../prelude/0.4.0-beta.5-dev/truthyable.md#make-bool) (optional)
-  - `selector` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
-  - `requested` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
-  - `pinned?` : [Bool](../../../prelude/0.4.0-beta.5-dev/truthyable.md#make-bool) (optional)
-  - `targets` : [[String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)] (optional)
-  - `fresh?` : [Bool](../../../prelude/0.4.0-beta.5-dev/truthyable.md#make-bool) (optional)
-  - `rebuild?` : [Bool](../../../prelude/0.4.0-beta.5-dev/truthyable.md#make-bool) (optional)
-  - `approvePlugins?` : [Bool](../../../prelude/0.4.0-beta.5-dev/truthyable.md#make-bool) (optional)
+  - `packageName` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string) (optional)
+  - `force?` : [Bool](../../../prelude/0.4.0-rc.1-dev/truthyable.md#make-bool) (optional)
+  - `selector` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string) (optional)
+  - `requested` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string) (optional)
+  - `pinned?` : [Bool](../../../prelude/0.4.0-rc.1-dev/truthyable.md#make-bool) (optional)
+  - `targets` : [[String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string)] (optional)
+  - `fresh?` : [Bool](../../../prelude/0.4.0-rc.1-dev/truthyable.md#make-bool) (optional)
+  - `rebuild?` : [Bool](../../../prelude/0.4.0-rc.1-dev/truthyable.md#make-bool) (optional)
+  - `approvePlugins?` : [Bool](../../../prelude/0.4.0-rc.1-dev/truthyable.md#make-bool) (optional)
 
 
 

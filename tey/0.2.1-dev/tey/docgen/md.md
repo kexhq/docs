@@ -457,9 +457,9 @@ A document's frontmatter: the keys the prose pipeline reads. Unknown keys are pa
 
 **Fields**
 
-  - `title` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
-  - `description` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string) (optional)
-  - `order` : [Integer](../../../../prelude/0.4.0-beta.5-dev/number.md#make-integer) (optional)
+  - `title` : [String](../../../../prelude/0.4.0-rc.1-dev/string.md#make-string) (optional)
+  - `description` : [String](../../../../prelude/0.4.0-rc.1-dev/string.md#make-string) (optional)
+  - `order` : [Integer](../../../../prelude/0.4.0-rc.1-dev/number.md#make-integer) (optional)
 
 
 
@@ -469,7 +469,7 @@ One item of a list: its own inline text, plus any blocks nested under it.
 
 **Fields**
 
-  - `text` : [String](../../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `text` : [String](../../../../prelude/0.4.0-rc.1-dev/string.md#make-string)
   - `children` : [[MdBlock](#type-tey-docgen-md-mdblock)]
 
 

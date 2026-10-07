@@ -51,7 +51,7 @@ memberDependencies(member: Member) -> [String]
 
 **Fields**
 
-  - `memberRoot` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `memberRoot` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string)
   - `memberManifest` : [ManifestPackage](../tey/manifest.md#record-tey-manifest-manifestpackage)
 
 
@@ -60,9 +60,9 @@ memberDependencies(member: Member) -> [String]
 
 **Fields**
 
-  - `workspaceRoot` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `workspaceRoot` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string)
   - `members` : [[Member](#record-tey-workspace-member)] (optional)
   - `currentMember` : [Member](#record-tey-workspace-member)? (optional)
-  - `warnings` : [[String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)] (optional)
+  - `warnings` : [[String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string)] (optional)
 
 

@@ -39,9 +39,9 @@ validateAgainstLock(overrides: [Override], lock: Tey.Lockfile.LockState) -> Resu
 
 **Fields**
 
-  - `overrideName` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
-  - `overridePath` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
-  - `overrideFile` : [String](../../../prelude/0.4.0-beta.5-dev/string.md#make-string)
+  - `overrideName` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string)
+  - `overridePath` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string)
+  - `overrideFile` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string)
   - `overrideManifest` : [ManifestPackage](../tey/manifest.md#record-tey-manifest-manifestpackage)
 
 
