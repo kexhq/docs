@@ -187,6 +187,18 @@ copy(src, dst)
 rename(src, dst)
 ```
 
+#### `changePermission`
+
+```kex
+changePermission(path, permissions)
+```
+
+#### `changeMode`
+
+```kex
+changeMode(path, mode)
+```
+
 ## record `Env`
 
 A stand-in for the `ENV` capability. A name simply left out of `vars` reads as unset, which is the whole reason `Mock.ENV.unset` exists: absence is an answer programs act on. `onGet` answers instead of the map when a test wants a rule rather than a fixture.

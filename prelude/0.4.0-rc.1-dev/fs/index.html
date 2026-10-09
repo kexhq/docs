@@ -971,6 +971,21 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span>        pure path arithmetic<span class="tok-punct">,</span> <span class="tok-keyword">with</span> no filesystem access at all</code></pre>
 <p>The first two are capabilities: everything in them touches the real filesystem, so they can only be called from <code>foul</code> code, and a test can replace the whole of <a class="xref" href="#module-fs-file"><code>FS.File</code></a> for a lexical region rather than mutating global state. <a class="xref" href="#module-fs-path"><code>FS.Path</code></a> is ordinary pure code.</p>
 <p>Most read operations answer with an <a class="xref" href="/prelude/0.4.0-rc.1-dev/optional/#type-optional"><code>Optional</code></a> and most write operations with a <a class="xref" href="/prelude/0.4.0-rc.1-dev/truthyable/#make-bool"><code>Bool</code></a>, so a missing file or a failed write is an ordinary value you handle rather than an exception you catch.</p>
+<div class="functions">
+<div class="fn" id="function-fs-permissionmode">
+<h3><a class="self" href="#function-fs-permissionmode"><code>permissionMode</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">permissionMode</span><span class="tok-punct">(</span>permissions<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#type-fs-permission"><span class="tok-type">Permission</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>The POSIX mode <code>FS.File.changePermission</code> gives a file: the owner gets every listed permission, everyone else gets them without <a class="xref" href="/prelude/0.4.0-rc.1-dev/filehandle/#trait-writable"><code>Writable</code></a>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>permissions</code></dt><dd>everything the file should allow</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the permission bits</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">permissionMode</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Readable</span><span class="tok-punct">,</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Writable</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 420, which is 0o644</span></code></pre>
+
+</div>
+</div>
 </section>
 <section class="entity" id="type-fs-filepath">
 <h2><span class="kind kind-type">type</span> <code>FilePath</code></h2>
@@ -1010,6 +1025,17 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <ul class="variants">
 <li><code>CanWrite</code></li>
 <li><code>CannotWrite</code></li>
+</ul>
+
+</section>
+<section class="entity" id="type-fs-permission">
+<h2><span class="kind kind-type">type</span> <code>Permission</code></h2>
+<p>Something a file may allow, for <code>FS.File.changePermission</code>. Named for the intent rather than for POSIX bits, so the same list means the right thing on every system.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>Readable</code></li>
+<li><code>Writable</code></li>
+<li><code>Executable</code></li>
 </ul>
 
 </section>
@@ -1279,6 +1305,42 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <p class="caption"><em>Writing to a temporary file, then swapping it in</em></p>
 <pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>path<span class="tok-string">}</span><span class="tok-string">.tmp</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> content<span class="tok-punct">)</span>
 <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">rename</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>path<span class="tok-string">}</span><span class="tok-string">.tmp</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> path<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-changepermission">
+<h3><a class="self" href="#function-fs-file-changepermission"><code>changePermission</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">changePermission</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> permissions<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#type-fs-permission"><span class="tok-type">Permission</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Sets what may be done with the file at <code>path</code>, portably.</p>
+<p>The file ends up with exactly the listed permissions: anything left out is taken away. The owner gets all of them; everyone else gets the same without <a class="xref" href="/prelude/0.4.0-rc.1-dev/filehandle/#trait-writable"><code>Writable</code></a>. On POSIX that is <code>0o755</code> for all three, <code>0o644</code> for <code>[Readable, Writable]</code> and <code>0o444</code> for <code>[Readable]</code>. On Windows only <a class="xref" href="/prelude/0.4.0-rc.1-dev/filehandle/#trait-writable"><code>Writable</code></a> has an effect, as the read-only attribute: files there are always readable, and whether one runs is decided by its extension.</p>
+<p>Use <code>changeMode</code> when you need exact POSIX bits, such as a file only its owner may read.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the file whose permissions to change</dd></div>
+<div class="param"><dt><code>permissions</code></dt><dd>everything the file should allow</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the permissions were changed</p>
+<h5>Examples</h5>
+<p class="caption"><em>Making a file read-only</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">changePermission</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">report.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Readable</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>Writing a script and running it</em></p>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span>script<span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">#!/bin/sh\necho hello\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">changePermission</span><span class="tok-punct">(</span>script<span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Readable</span><span class="tok-punct">,</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Writable</span><span class="tok-punct">,</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Executable</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+<span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span>script<span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-fs-file-changemode">
+<h3><a class="self" href="#function-fs-file-changemode"><code>changeMode</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">changeMode</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> mode<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Sets the POSIX permission bits of the file at <code>path</code> to <code>mode</code>: what <code>chmod</code> does with a numeric mode.</p>
+<p><code>mode</code> is most readably written in octal: <code>0o600</code> is a file only its owner may read and write. The bits are replaced, not added to, and a mode outside <code>0o0000..0o7777</code> is refused. This is the POSIX escape hatch: on Windows only the owner-write bit means anything. Prefer <code>changePermission</code>, which says what you want rather than how POSIX spells it.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the file whose mode to change</dd></div>
+<div class="param"><dt><code>mode</code></dt><dd>the permission bits, as in <code>chmod</code></dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the mode was changed</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">changeMode</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">secrets.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-number">0</span>o600<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
 
 </div>
 <div class="fn" id="function-fs-file-readlines">
@@ -1820,6 +1882,24 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span>scratch<span class="tok-punct">)</span></code></pre>
 
 </div>
+<div class="fn" id="function-fs-directory-createtemporary">
+<h3><a class="self" href="#function-fs-directory-createtemporary"><code>createTemporary</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">createTemporary</span><span class="tok-punct">(</span>prefix<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">FilePath?</span></code></pre>
+<p>Creates a fresh, empty directory under <code>temporary</code> and returns its path.</p>
+<p>The name is <code>prefix</code> followed by a random suffix, so concurrent callers using the same prefix each get their own directory. Nothing removes it for you: <code>deleteAll</code> it when you are done.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>prefix</code></dt><dd>the start of the directory name, to say whose it is</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the new directory, or <code>None</code> when it could not be created</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">createTemporary</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">report</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(&quot;/tmp/report-9f2c41d07ab35e68&quot;)</span></code></pre>
+<p class="caption"><em>A scratch directory that cleans up after itself</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> scratch <span class="tok-op">=</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">createTemporary</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-fn">die</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">no temporary directory</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span>scratch<span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">out.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> text<span class="tok-punct">)</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">deleteAll</span><span class="tok-punct">(</span>scratch<span class="tok-punct">)</span></code></pre>
+
+</div>
 </div>
 </section>
 
@@ -1827,7 +1907,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
         </article>
       </main>
       <aside class="toc" aria-label="On this page">
-        <nav><p class="toc-heading">On this page</p><ul><li><a href="#module-fs">FS</a></li><li class="toc-nested"><a href="#type-fs-filepath">FilePath</a></li><li class="toc-nested"><a href="#type-fs-filemodes">FileModes</a></li><li class="toc-nested"><a href="#type-fs-readpermission">ReadPermission</a></li><li class="toc-nested"><a href="#type-fs-writepermission">WritePermission</a></li><li class="toc-nested"><a href="#type-fs-fileerror">FileError</a></li><li class="toc-nested"><a href="#type-fs-filekind">FileKind</a></li><li class="toc-nested"><a href="#record-fs-fileinfo">FileInfo</a></li><li class="toc-nested"><a href="#module-fs-file">FS.File</a></li><li class="toc-nested"><a href="#module-fs-path">FS.Path</a></li><li class="toc-nested"><a href="#module-fs-directory">FS.Directory</a></li></ul></nav>
+        <nav><p class="toc-heading">On this page</p><ul><li><a href="#module-fs">FS</a></li><li class="toc-nested"><a href="#type-fs-filepath">FilePath</a></li><li class="toc-nested"><a href="#type-fs-filemodes">FileModes</a></li><li class="toc-nested"><a href="#type-fs-readpermission">ReadPermission</a></li><li class="toc-nested"><a href="#type-fs-writepermission">WritePermission</a></li><li class="toc-nested"><a href="#type-fs-permission">Permission</a></li><li class="toc-nested"><a href="#type-fs-fileerror">FileError</a></li><li class="toc-nested"><a href="#type-fs-filekind">FileKind</a></li><li class="toc-nested"><a href="#record-fs-fileinfo">FileInfo</a></li><li class="toc-nested"><a href="#module-fs-file">FS.File</a></li><li class="toc-nested"><a href="#module-fs-path">FS.Path</a></li><li class="toc-nested"><a href="#module-fs-directory">FS.Directory</a></li></ul></nav>
       </aside>
     </div>
     <footer class="foot">

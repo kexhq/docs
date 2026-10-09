@@ -4091,7 +4091,25 @@ The first two are capabilities: everything in them touches the real filesystem, 
 
 Most read operations answer with an `Optional` and most write operations with a `Bool`, so a missing file or a failed write is an ordinary value you handle rather than an exception you catch.
 
+### `permissionMode`
 
+```kex
+permissionMode(permissions: [Permission]) -> Integer
+```
+
+The POSIX mode `FS.File.changePermission` gives a file: the owner gets every listed permission, everyone else gets them without `Writable`.
+
+**Parameters**
+
+  - `permissions` — everything the file should allow
+
+**Returns**: the permission bits
+
+**Examples**
+
+```kex
+FS.permissionMode([FS.Readable, FS.Writable])   # => 420, which is 0o644
+```
 
 ## type `FilePath`
 
@@ -4135,6 +4153,18 @@ Whether a `FileHandle` may be written to. Part of the handle's type, so writing 
 
   - `CanWrite`
   - `CannotWrite`
+
+
+
+## type `Permission`
+
+Something a file may allow, for `FS.File.changePermission`. Named for the intent rather than for POSIX bits, so the same list means the right thing on every system.
+
+**Variants**
+
+  - `Readable`
+  - `Writable`
+  - `Executable`
 
 
 
@@ -4559,6 +4589,64 @@ _Writing to a temporary file, then swapping it in_
 ```kex
 FS.File.write("${path}.tmp", content)
 FS.File.rename("${path}.tmp", path)
+```
+
+### `changePermission`
+
+```kex
+changePermission(path: FilePath, permissions: [Permission]) -> Bool
+```
+
+Sets what may be done with the file at `path`, portably.
+
+The file ends up with exactly the listed permissions: anything left out is taken away. The owner gets all of them; everyone else gets the same without `Writable`. On POSIX that is `0o755` for all three, `0o644` for `[Readable, Writable]` and `0o444` for `[Readable]`. On Windows only `Writable` has an effect, as the read-only attribute: files there are always readable, and whether one runs is decided by its extension.
+
+Use `changeMode` when you need exact POSIX bits, such as a file only its owner may read.
+
+**Parameters**
+
+  - `path` — the file whose permissions to change
+  - `permissions` — everything the file should allow
+
+**Returns**: `true` when the permissions were changed
+
+**Examples**
+
+_Making a file read-only_
+
+```kex
+FS.File.changePermission("report.txt", [FS.Readable])   # => true
+```
+
+_Writing a script and running it_
+
+```kex
+FS.File.write(script, "#!/bin/sh\necho hello\n")
+FS.File.changePermission(script, [FS.Readable, FS.Writable, FS.Executable])
+Process.run(script, [])
+```
+
+### `changeMode`
+
+```kex
+changeMode(path: FilePath, mode: Integer) -> Bool
+```
+
+Sets the POSIX permission bits of the file at `path` to `mode`: what `chmod` does with a numeric mode.
+
+`mode` is most readably written in octal: `0o600` is a file only its owner may read and write. The bits are replaced, not added to, and a mode outside `0o0000..0o7777` is refused. This is the POSIX escape hatch: on Windows only the owner-write bit means anything. Prefer `changePermission`, which says what you want rather than how POSIX spells it.
+
+**Parameters**
+
+  - `path` — the file whose mode to change
+  - `mode` — the permission bits, as in `chmod`
+
+**Returns**: `true` when the mode was changed
+
+**Examples**
+
+```kex
+FS.File.changeMode("secrets.txt", 0o600)   # => true
 ```
 
 ### `readLines`
@@ -5441,6 +5529,36 @@ _A scratch file that cleans up after itself_
 let scratch = FS.Path.join(FS.Directory.temporary, "report.bin")
 FS.File.writeBytes(scratch, payload)
 FS.File.delete(scratch)
+```
+
+### `createTemporary`
+
+```kex
+createTemporary(prefix: String) -> FilePath?
+```
+
+Creates a fresh, empty directory under `temporary` and returns its path.
+
+The name is `prefix` followed by a random suffix, so concurrent callers using the same prefix each get their own directory. Nothing removes it for you: `deleteAll` it when you are done.
+
+**Parameters**
+
+  - `prefix` — the start of the directory name, to say whose it is
+
+**Returns**: the new directory, or `None` when it could not be created
+
+**Examples**
+
+```kex
+FS.Directory.createTemporary("report")   # => Just("/tmp/report-9f2c41d07ab35e68")
+```
+
+_A scratch directory that cleans up after itself_
+
+```kex
+let scratch = FS.Directory.createTemporary("build").or(die("no temporary directory"))
+FS.File.write(FS.Path.join(scratch, "out.txt"), text)
+FS.Directory.deleteAll(scratch)
 ```
 
 
@@ -8614,6 +8732,18 @@ copy(src, dst)
 
 ```kex
 rename(src, dst)
+```
+
+#### `changePermission`
+
+```kex
+changePermission(path, permissions)
+```
+
+#### `changeMode`
+
+```kex
+changeMode(path, mode)
 ```
 
 ## record `Env`
