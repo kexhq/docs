@@ -957,7 +957,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <p>Mock: deterministic stand-ins for the world outside the program: the filesystem, environment, and console. Networking mocks live under Mock.Net.</p>
 <p>These are STATEFUL: <code>Mock.FS.File(path, content)</code> writes into a store the real <a class="xref" href="/prelude/0.4.0-rc.1-dev/fs/#module-fs-file"><code>FS.File</code></a> then reads back, so a test can write and read again, and <code>clear()</code> undoes it. That state is global and lives until cleared, which is what makes hook ordering and write/read round trips testable, and also what makes two tests able to interfere.</p>
 <p>Use <code>with FS.File = MyFake { ... } do ... end</code> for a replacement limited to one block. Use mocks when a test needs state shared across several calls, and clear that state between tests.</p>
-<p>Import with <code>using Mock</code>. Mock operations are allowed in spec files, the REPL, and programs run with <code>--allow-mocks</code>.</p>
+<p>Import with <code>using Mock</code>. Everything here is test-only: the mock operations and the stand-in records (<a class="xref" href="#record-mock-files"><code>Mock.Files</code></a>, <a class="xref" href="#record-mock-env"><code>Mock.Env</code></a>, <a class="xref" href="#record-mock-clock"><code>Mock.Clock</code></a>) alike are allowed in spec files and the REPL, and need <code>--allow-mocks</code> anywhere else.</p>
 </div>
 <section class="entity" id="type-reader">
 <h2><span class="kind kind-type">type</span> <code>Reader</code></h2>
@@ -967,6 +967,15 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <section class="entity" id="type-lookup">
 <h2><span class="kind kind-type">type</span> <code>Lookup</code></h2>
 <p>An environment stand-in's lookup hook: a name in, its value or <code>None</code> out.</p>
+
+</section>
+<section class="entity" id="type-tick">
+<h2><span class="kind kind-type">type</span> <code>Tick</code></h2>
+<p>A clock stand-in's reading hook: nothing in, the instant out.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>Block(DateTime)</code></li>
+</ul>
 
 </section>
 <section class="entity" id="type-writer">
@@ -1176,6 +1185,37 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <div class="fn" id="env-unset">
 <h4><a class="self" href="#env-unset"><code>unset</code></a></h4>
 <pre class="code sig"><code><span class="tok-fn">unset</span><span class="tok-punct">(</span>name<span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="record-mock-clock">
+<h2><span class="kind kind-record">record</span> <code>Clock</code></h2>
+<p>A stand-in for the <a class="xref" href="/prelude/0.4.0-rc.1-dev/time/#module-time-clock"><code>Time.Clock</code></a> capability. Every reading in the region (<code>Time.now</code>, <code>Date.today</code>, <code>DateTime.utcNow</code>) answers from it.</p>
+<pre class="code"><code><span class="tok-keyword">with</span> <span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-type">Clock</span> <span class="tok-op">=</span> <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Clock</span> <span class="tok-punct">{</span> at<span class="tok-op">:</span> <span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30T14:03:00Z</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span> <span class="tok-punct">}</span> <span class="tok-keyword">do</span>
+  <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">today</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">2026-07-30</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+<p>The clock is frozen: every reading is <code>at</code>, zone included, so <code>Date.today()</code> is the date in the zone you wrote and not in the zone of the machine running the test.</p>
+<p><code>onNow</code> answers instead when a test wants a rule rather than a fixture. A block keeps the clock of the region it was written in, so a rule written outside the <code>with</code> reads the real one. That is how to get a clock that still runs, which code measuring elapsed time needs: a frozen clock makes every interval zero.</p>
+<pre class="code"><code><span class="tok-keyword">with</span> <span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-type">Clock</span> <span class="tok-op">=</span> <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Clock</span> <span class="tok-punct">{</span> onNow<span class="tok-op">:</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-punct">{</span> <span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">now</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">+</span> <span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-method">days</span> <span class="tok-punct">}</span><span class="tok-punct">)</span> <span class="tok-punct">}</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">let</span> started <span class="tok-op">=</span> <span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">epochNanos</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+  <span class="tok-fn">runTheThing</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+  <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">epochNanos</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">&gt;</span> started<span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>at</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.1-dev/time/#record-datetime">DateTime</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>onNow</code></dt><dd><code><a class="xref" href="#type-tick">Tick</a>?</code> <span class="opt">optional</span></dd></div>
+</dl>
+<p class="implements">Implements <code>Time.Clock</code>.</p>
+<section class="members" id="make-clock">
+<h3>Functions</h3>
+
+<div class="functions">
+<div class="fn" id="clock-now">
+<h4><a class="self" href="#clock-now"><code>now</code></a></h4>
+<pre class="code sig"><code>now</code></pre>
 
 </div>
 </div>
@@ -1465,7 +1505,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
         </article>
       </main>
       <aside class="toc" aria-label="On this page">
-        <nav><p class="toc-heading">On this page</p><ul><li><a href="#type-reader">Reader</a></li><li><a href="#type-lookup">Lookup</a></li><li><a href="#type-writer">Writer</a></li><li><a href="#module-mock">Mock</a></li><li class="toc-nested"><a href="#record-mock-files">Files</a></li><li class="toc-nested"><a href="#record-mock-env">Env</a></li><li class="toc-nested"><a href="#module-mock-fs">Mock.FS</a></li><li class="toc-nested"><a href="#module-mock-env">Mock.ENV</a></li><li class="toc-nested"><a href="#module-mock-io">Mock.IO</a></li><li class="toc-nested"><a href="#module-mock-net">Mock.Net</a></li><li class="toc-nested"><a href="#module-mock-net-http">Mock.Net.HTTP</a></li><li class="toc-nested"><a href="#record-mock-net-http-transport">Transport</a></li><li class="toc-nested"><a href="#module-mock-net-dns">Mock.Net.DNS</a></li><li class="toc-nested"><a href="#record-mock-net-dns-resolverscript">ResolverScript</a></li><li class="toc-nested"><a href="#module-mock-net-socket">Mock.Net.Socket</a></li><li class="toc-nested"><a href="#record-mock-net-socket-script">Script</a></li><li class="toc-nested"><a href="#module-mock-net-websocket">Mock.Net.WebSocket</a></li><li class="toc-nested"><a href="#record-mock-net-websocket-script">Script</a></li></ul></nav>
+        <nav><p class="toc-heading">On this page</p><ul><li><a href="#type-reader">Reader</a></li><li><a href="#type-lookup">Lookup</a></li><li><a href="#type-tick">Tick</a></li><li><a href="#type-writer">Writer</a></li><li><a href="#module-mock">Mock</a></li><li class="toc-nested"><a href="#record-mock-files">Files</a></li><li class="toc-nested"><a href="#record-mock-env">Env</a></li><li class="toc-nested"><a href="#record-mock-clock">Clock</a></li><li class="toc-nested"><a href="#module-mock-fs">Mock.FS</a></li><li class="toc-nested"><a href="#module-mock-env">Mock.ENV</a></li><li class="toc-nested"><a href="#module-mock-io">Mock.IO</a></li><li class="toc-nested"><a href="#module-mock-net">Mock.Net</a></li><li class="toc-nested"><a href="#module-mock-net-http">Mock.Net.HTTP</a></li><li class="toc-nested"><a href="#record-mock-net-http-transport">Transport</a></li><li class="toc-nested"><a href="#module-mock-net-dns">Mock.Net.DNS</a></li><li class="toc-nested"><a href="#record-mock-net-dns-resolverscript">ResolverScript</a></li><li class="toc-nested"><a href="#module-mock-net-socket">Mock.Net.Socket</a></li><li class="toc-nested"><a href="#record-mock-net-socket-script">Script</a></li><li class="toc-nested"><a href="#module-mock-net-websocket">Mock.Net.WebSocket</a></li><li class="toc-nested"><a href="#record-mock-net-websocket-script">Script</a></li></ul></nav>
       </aside>
     </div>
     <footer class="foot">

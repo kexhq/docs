@@ -6,6 +6,7 @@ title: Mock
 entities:
   - { kind: type, name: "Reader" }
   - { kind: type, name: "Lookup" }
+  - { kind: type, name: "Tick" }
   - { kind: type, name: "Writer" }
   - { kind: module, name: "Mock" }
 ---
@@ -18,7 +19,7 @@ These are STATEFUL: `Mock.FS.File(path, content)` writes into a store the real `
 
 Use `with FS.File = MyFake { ... } do ... end` for a replacement limited to one block. Use mocks when a test needs state shared across several calls, and clear that state between tests.
 
-Import with `using Mock`. Mock operations are allowed in spec files, the REPL, and programs run with `--allow-mocks`.
+Import with `using Mock`. Everything here is test-only: the mock operations and the stand-in records (`Mock.Files`, `Mock.Env`, `Mock.Clock`) alike are allowed in spec files and the REPL, and need `--allow-mocks` anywhere else.
 
 ## type `Reader`
 
@@ -29,6 +30,16 @@ A stand-in's read hook: a path in, its content or `None` out.
 ## type `Lookup`
 
 An environment stand-in's lookup hook: a name in, its value or `None` out.
+
+
+
+## type `Tick`
+
+A clock stand-in's reading hook: nothing in, the instant out.
+
+**Variants**
+
+  - `Block(DateTime)`
 
 
 
@@ -281,6 +292,43 @@ A write goes to `onSet` or nowhere. It must NOT reach the real environment: a su
 
 ```kex
 unset(name)
+```
+
+## record `Clock`
+
+A stand-in for the `Time.Clock` capability. Every reading in the region (`Time.now`, `Date.today`, `DateTime.utcNow`) answers from it.
+
+```kex
+with Time.Clock = Mock.Clock { at: DateTime.parse("2026-07-30T14:03:00Z").try } do
+  assert(Date.today().iso == "2026-07-30")
+end
+```
+
+The clock is frozen: every reading is `at`, zone included, so `Date.today()` is the date in the zone you wrote and not in the zone of the machine running the test.
+
+`onNow` answers instead when a test wants a rule rather than a fixture. A block keeps the clock of the region it was written in, so a rule written outside the `with` reads the real one. That is how to get a clock that still runs, which code measuring elapsed time needs: a frozen clock makes every interval zero.
+
+```kex
+with Time.Clock = Mock.Clock { onNow: Just({ DateTime.now() + 3.days }) } do
+  let started = DateTime.epochNanos()
+  runTheThing()
+  assert(DateTime.epochNanos() > started)
+end
+```
+
+**Fields**
+
+  - `at` : [DateTime](time.md#record-datetime) (optional)
+  - `onNow` : [Tick](#type-tick)? (optional)
+
+Implements `Time.Clock`.
+
+### Functions
+
+#### `now`
+
+```kex
+now
 ```
 
 ## module `Mock.FS`

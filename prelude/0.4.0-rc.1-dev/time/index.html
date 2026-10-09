@@ -970,7 +970,7 @@ due<span class="tok-op">.</span><span class="tok-method">weekday</span><span cla
 <span class="tok-punct">(</span>due <span class="tok-op">+</span> <span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-method">days</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>                          <span class="tok-comment"># &quot;2026-08-09&quot;</span>
 <span class="tok-punct">(</span>due <span class="tok-op">+</span> <span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">months</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>                         <span class="tok-comment"># &quot;2026-08-30&quot;</span>
 <span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">now</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>                            <span class="tok-comment"># e.g. &quot;14:03:00&quot;</span></code></pre>
-<p>Anything that reads the clock is mockable: see the test clock section in <code>module Time</code> for <code>Time.frozenAt</code>.</p>
+<p>Anything that reads the clock is replaceable: <a class="xref" href="#module-time-clock"><code>Time.Clock</code></a> is a capability, and <code>with Time.Clock = Mock.Clock { at: ... }</code> pins it for a block.</p>
 <p>Zones are fixed offsets: UTC, an explicit <code>+02:00</code>, or whatever this machine's zone resolves to at a given instant. Named IANA zones and their DST rules are not modeled: <code>Time.now()</code> asks the host for the offset in effect at that moment, so it is right now, but it cannot say what the offset WILL be for some future local time.</p>
 <p>The records and the two ADTs stay at file level so <code>make</code> blocks, callers, and every module here can see them.</p>
 </div>
@@ -2004,7 +2004,7 @@ m<span class="tok-op">.</span><span class="tok-method">utc</span><span class="to
 <h3><a class="self" href="#function-time-now"><code>now</code></a></h3>
 <pre class="code sig"><code>now <span class="tok-op">:</span> <a class="xref" href="#record-time"><span class="tok-type">Time</span></a></code></pre>
 <p>The current time of day, in this machine's zone.</p>
-<p>Reads the same clock primitive everything else here does, so it is pinned by <code>Time.frozenAt</code> in a test.</p>
+<p>Reads <a class="xref" href="#module-time-clock"><code>Time.Clock</code></a> like everything else here does, so it is pinned by replacing that capability in a test.</p>
 <p class="returns"><strong>Returns</strong> the current time of day</p>
 <h5>Examples</h5>
 <pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">now</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;14:03:00&quot;</span></code></pre>
@@ -2034,123 +2034,21 @@ m<span class="tok-op">.</span><span class="tok-method">utc</span><span class="to
 <span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">parseOffset</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Z</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>d<span class="tok-op">|</span> d<span class="tok-op">.</span><span class="tok-method">wholeSeconds</span> <span class="tok-punct">}</span>        <span class="tok-comment"># =&gt; Ok(0)</span></code></pre>
 
 </div>
+<div class="fn" id="function-time-momentat">
+<h3><a class="self" href="#function-time-momentat"><code>momentAt</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">momentAt</span><span class="tok-punct">(</span>nanos<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-datetime"><span class="tok-type">DateTime</span></a></code></pre>
+<p>The civil instant <code>nanos</code> after the Unix epoch, in this machine's zone as it stands at that instant. Foul because the zone is ambient.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>nanos</code></dt><dd>nanoseconds since the Unix epoch</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> that instant, in the local zone</p>
+
+</div>
 <div class="fn" id="function-time-nanosof">
 <h3><a class="self" href="#function-time-nanosof"><code>nanosOf</code></a></h3>
 <pre class="code sig"><code><span class="tok-fn">nanosOf</span><span class="tok-punct">(</span>moment<span class="tok-op">:</span> <a class="xref" href="#record-datetime"><span class="tok-type">DateTime</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
-<p>Anything that asks what time it is: <code>Time.now</code>, <code>Date.today</code>, <code>DateTime.utcNow</code>: reads one primitive, so pinning that primitive pins the whole calendar. This is what makes code that calls <code>Date.today()</code> testable: freeze the clock, assert against a date you chose.</p>
-<pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">freeze</span><span class="tok-punct">(</span><span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30T14:03:00Z</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span>
-<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">today</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>                            <span class="tok-comment"># &quot;2026-07-30&quot;: always</span>
-<span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">release</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
-<p>The clock is global, not per-process: a frozen clock stays frozen inside spawned processes, which is the only behavior that matches a real one. <code>release</code> is not automatic, so a test that freezes must also release: otherwise every later test in the run inherits the frozen clock.</p>
 <p>Nanoseconds since the Unix epoch for a civil datetime. A plain function rather than a <a class="xref" href="#record-datetime"><code>DateTime</code></a> function: on BEAM a function named <code>epochNanos</code> flattens onto the same name as the <code>DateTime.epochNanos()</code> module function, and the arity-0 one wins: silently, answering for the host clock instead of for <code>moment</code>.</p>
-
-</div>
-<div class="fn" id="constant-time-clock_min_nanos">
-<h3><a class="self" href="#constant-time-clock_min_nanos"><code>CLOCK_MIN_NANOS</code></a> <span class="tag-kind">constant</span></h3>
-<p>The clock counts nanoseconds in a 64-bit integer, on both backends and in the host clock they stand in for. That is the whole of the instants it can name: 1677-09-21 to 2262-04-11. A Kex Integer keeps going past that: it promotes to arbitrary precision, so a date outside the range produces a number the clock cannot hold, and the check below is what stops it being truncated into some other instant entirely.</p>
-
-</div>
-<div class="fn" id="constant-time-clock_max_nanos">
-<h3><a class="self" href="#constant-time-clock_max_nanos"><code>CLOCK_MAX_NANOS</code></a> <span class="tag-kind">constant</span></h3>
-
-</div>
-<div class="fn" id="function-time-settable?">
-<h3><a class="self" href="#function-time-settable?"><code>settable?</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">settable?</span><span class="tok-punct">(</span>moment<span class="tok-op">:</span> <a class="xref" href="#record-datetime"><span class="tok-type">DateTime</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
-
-</div>
-<div class="fn" id="function-time-freeze">
-<h3><a class="self" href="#function-time-freeze"><code>freeze</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">freeze</span><span class="tok-punct">(</span>moment<span class="tok-op">:</span> <a class="xref" href="#record-datetime"><span class="tok-type">DateTime</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-datetime"><span class="tok-type">DateTime</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-timeerror"><span class="tok-type">TimeError</span></a><span class="tok-op">&gt;</span></code></pre>
-<p>Pins the clock: every reading returns this exact instant until <code>release</code>.</p>
-<p>This is what makes code that calls <code>Date.today()</code> testable. Returns the moment it pinned, so <code>Time.freeze(m).try</code> both sets the clock and fails loudly on an instant the clock cannot represent.</p>
-<p>Prefer <code>Time.frozenAt</code>, which releases for you: a test that fails between a <code>freeze</code> and its <code>release</code> leaves the clock frozen for everything after it.</p>
-<h5>Parameters</h5>
-<dl class="params">
-<div class="param"><dt><code>moment</code></dt><dd>the instant to pin the clock to</dd></div>
-</dl>
-<p class="returns"><strong>Returns</strong> the pinned moment, or why it could not be</p>
-<h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">freeze</span><span class="tok-punct">(</span><span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30T14:03:00Z</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span>
-<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">utcToday</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-07-30&quot;, always</span>
-<span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">release</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
-
-</div>
-<div class="fn" id="function-time-travel">
-<h3><a class="self" href="#function-time-travel"><code>travel</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">travel</span><span class="tok-punct">(</span>moment<span class="tok-op">:</span> <a class="xref" href="#record-datetime"><span class="tok-type">DateTime</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-datetime"><span class="tok-type">DateTime</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-timeerror"><span class="tok-type">TimeError</span></a><span class="tok-op">&gt;</span></code></pre>
-<p>Moves the clock to an instant and lets it run from there.</p>
-<p>Readings advance normally, they just start somewhere else. Use this over <code>freeze</code> when the code under test measures elapsed time: a frozen clock makes every interval zero.</p>
-<h5>Parameters</h5>
-<dl class="params">
-<div class="param"><dt><code>moment</code></dt><dd>the instant to start the clock from</dd></div>
-</dl>
-<p class="returns"><strong>Returns</strong> the moment set, or why it could not be</p>
-<h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">travel</span><span class="tok-punct">(</span><span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30T14:03:00Z</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span>
-<span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">release</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
-
-</div>
-<div class="fn" id="function-time-frozenat">
-<h3><a class="self" href="#function-time-frozenat"><code>frozenAt</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">frozenAt</span><span class="tok-punct">(</span>moment<span class="tok-op">:</span> <a class="xref" href="#record-datetime"><span class="tok-type">DateTime</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <span class="tok-type">Block</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-punct">,</span> <a class="xref" href="#type-timeerror"><span class="tok-type">TimeError</span></a><span class="tok-op">&gt;</span></code></pre>
-<p>Freezes the clock for the length of <code>body</code>, then releases it.</p>
-<p>This is the form to reach for: <code>freeze</code> and <code>release</code> have to be paired by hand, and a test that returns early (or fails an assertion) between them leaves the clock frozen for every test that runs after it.</p>
-<p>Result carries whatever <code>body</code> returned. An instant the clock cannot represent is an Error, and then the clock is never touched and the body never runs.</p>
-<p>Not nestable: <code>release</code> restores the HOST clock, not whatever control was in effect on entry, so an inner scope ending un-freezes the outer one too.</p>
-<h5>Parameters</h5>
-<dl class="params">
-<div class="param"><dt><code>moment</code></dt><dd>the instant to pin the clock to</dd></div>
-<div class="param"><dt><code>body</code></dt><dd>what to run with the clock frozen</dd></div>
-</dl>
-<p class="returns"><strong>Returns</strong> whatever <code>body</code> returned, or why the clock could not be set  Time.frozenAt(DateTime.parse(&quot;2026-07-30T14:03:00Z&quot;).try) do Date.utcToday().iso                     # &quot;2026-07-30&quot; end.try</p>
-
-</div>
-<div class="fn" id="function-time-travellingfrom">
-<h3><a class="self" href="#function-time-travellingfrom"><code>travellingFrom</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">travellingFrom</span><span class="tok-punct">(</span>moment<span class="tok-op">:</span> <a class="xref" href="#record-datetime"><span class="tok-type">DateTime</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <span class="tok-type">Block</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-punct">,</span> <a class="xref" href="#type-timeerror"><span class="tok-type">TimeError</span></a><span class="tok-op">&gt;</span></code></pre>
-<p>Runs <code>body</code> with the clock started at <code>moment</code>, then releases it.</p>
-<p>The same scoping as <code>frozenAt</code>, for <code>travel</code>: readings start at <code>moment</code> and advance normally, and the clock is released when <code>body</code> ends.</p>
-<h5>Parameters</h5>
-<dl class="params">
-<div class="param"><dt><code>moment</code></dt><dd>the instant to start the clock from</dd></div>
-<div class="param"><dt><code>body</code></dt><dd>what to run with the clock moved</dd></div>
-</dl>
-<p class="returns"><strong>Returns</strong> whatever <code>body</code> returned, or why the clock could not be set</p>
-<h5>Examples</h5>
-<p class="caption"><em>Measuring elapsed time from a known start</em></p>
-<pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">travellingFrom</span><span class="tok-punct">(</span><span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30T14:03:00Z</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
-  <span class="tok-fn">runTheThing</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
-<span class="tok-keyword">end</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre>
-
-</div>
-<div class="fn" id="function-time-release">
-<h3><a class="self" href="#function-time-release"><code>release</code></a></h3>
-<pre class="code sig"><code>release <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
-<p>Returns the clock to the host's.</p>
-<p>Not automatic: a test that froze the clock must also release it, or every later test in the run inherits the frozen clock. <code>frozenAt</code> and <code>travellingFrom</code> do this for you.</p>
-<h5>Examples</h5>
-<pre class="code"><code><span class="tok-keyword">after</span> <span class="tok-keyword">do</span>
-  <span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">release</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
-<span class="tok-keyword">end</span></code></pre>
-
-</div>
-<div class="fn" id="function-time-controlled?">
-<h3><a class="self" href="#function-time-controlled?"><code>controlled?</code></a></h3>
-<pre class="code sig"><code>controlled? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
-<p>Returns <code>true</code> while <code>freeze</code> or <code>travel</code> is in effect.</p>
-<p class="returns"><strong>Returns</strong> <code>true</code> when the clock is under test control</p>
-<h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">controlled?</span><span class="tok-punct">(</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; false on the host clock</span></code></pre>
-
-</div>
-<div class="fn" id="function-time-frozen?">
-<h3><a class="self" href="#function-time-frozen?"><code>frozen?</code></a></h3>
-<pre class="code sig"><code>frozen? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
-<p>Returns <code>true</code> while <code>freeze</code> is in effect: not merely <code>travel</code>.</p>
-<p class="returns"><strong>Returns</strong> <code>true</code> when the clock is frozen</p>
-<h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">frozen?</span><span class="tok-punct">(</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; false on the host clock</span></code></pre>
 
 </div>
 <div class="fn" id="function-time-leapyear?">
@@ -2380,6 +2278,25 @@ m<span class="tok-op">.</span><span class="tok-method">utc</span><span class="to
 </div>
 </div>
 </section>
+<section class="entity" id="module-time-clock">
+<h2><span class="kind kind-module">module</span> <code>Time.Clock</code></h2>
+<p>The clock: the one place the current instant comes from.</p>
+<p>Anything that asks what time it is (<code>Time.now</code>, <code>Date.today</code>, <code>DateTime.utcNow</code>) reads this, so replacing it replaces the whole calendar. It is a capability, so the replacement is for a lexical region: it reaches every call made from the region and every process spawned in it, it nests, and it cannot outlive its block. This is what makes code that calls <code>Date.today()</code> testable:</p>
+<pre class="code"><code><span class="tok-keyword">with</span> <span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-type">Clock</span> <span class="tok-op">=</span> <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Clock</span> <span class="tok-punct">{</span> at<span class="tok-op">:</span> <span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30T14:03:00Z</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span> <span class="tok-punct">}</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">today</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># &quot;2026-07-30&quot;, always</span>
+<span class="tok-keyword">end</span></code></pre>
+<p><code>now</code> is the whole interface. Its answer carries the zone as its offset, so one member covers both ambient inputs: what time it is, and where. <a class="xref" href="/prelude/0.4.0-rc.1-dev/mock/#record-mock-clock"><code>Mock.Clock</code></a> is the ready-made stand-in; any record that implements <code>now</code> is one too.</p>
+<div class="functions">
+<div class="fn" id="function-time-clock-now">
+<h3><a class="self" href="#function-time-clock-now"><code>now</code></a></h3>
+<pre class="code sig"><code>now <span class="tok-op">:</span> <a class="xref" href="#record-datetime"><span class="tok-type">DateTime</span></a></code></pre>
+<p>The current instant, in this machine's zone as it stands right now.</p>
+<p class="returns"><strong>Returns</strong> the current instant</p>
+
+</div>
+</div>
+</section>
+
 <section class="entity" id="make-weekday">
 <h2><span class="kind kind-type">type</span> <code>Weekday</code></h2>
 
@@ -2485,14 +2402,14 @@ m<span class="tok-op">.</span><span class="tok-method">utc</span><span class="to
 <h3><a class="self" href="#function-date-today"><code>today</code></a></h3>
 <pre class="code sig"><code>today <span class="tok-op">:</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></code></pre>
 <p>Today's date, in this machine's zone.</p>
-<p>Pinned by <code>Time.frozenAt</code> in a test, like everything else that reads the clock.</p>
+<p>Pinned by replacing <a class="xref" href="#module-time-clock"><code>Time.Clock</code></a> in a test, like everything else that reads the clock.</p>
 <p class="returns"><strong>Returns</strong> today's date</p>
 <h5>Examples</h5>
 <pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">today</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-07-30&quot;</span></code></pre>
 <p class="caption"><em>Testing code that depends on today</em></p>
-<pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">frozenAt</span><span class="tok-punct">(</span><span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30T00:00:00Z</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
-  <span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">utcToday</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">2026-07-30</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-<span class="tok-keyword">end</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre>
+<pre class="code"><code><span class="tok-keyword">with</span> <span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-type">Clock</span> <span class="tok-op">=</span> <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Clock</span> <span class="tok-punct">{</span> at<span class="tok-op">:</span> <span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30T00:00:00Z</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span> <span class="tok-punct">}</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">today</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">2026-07-30</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 
 </div>
 <div class="fn" id="function-date-tomorrow">
@@ -2618,7 +2535,7 @@ m<span class="tok-op">.</span><span class="tok-method">utc</span><span class="to
 <h3><a class="self" href="#function-datetime-epochnanos"><code>epochNanos</code></a></h3>
 <pre class="code sig"><code>epochNanos <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
 <p>Nanoseconds since the Unix epoch, straight from the clock.</p>
-<p>The rawest reading available, and the right one for measuring a short interval: no calendar work happens on the way.</p>
+<p>The right reading for measuring a short interval: a plain integer, with no zone to disagree about.</p>
 <p class="returns"><strong>Returns</strong> nanoseconds since the Unix epoch</p>
 <h5>Examples</h5>
 <p class="caption"><em>Timing a piece of work</em></p>
@@ -3220,7 +3137,7 @@ date<span class="tok-op">.</span><span class="tok-method">at</span><span class="
         </article>
       </main>
       <aside class="toc" aria-label="On this page">
-        <nav><p class="toc-heading">On this page</p><ul><li><a href="#type-weekday">Weekday</a></li><li><a href="#type-timeerror">TimeError</a></li><li><a href="#record-date">Date</a></li><li><a href="#record-time">Time</a></li><li><a href="#record-datetime">DateTime</a></li><li><a href="#record-period">Period</a></li><li><a href="#module-time">Time</a></li><li class="toc-nested"><a href="#make-weekday">Weekday</a></li><li><a href="#module-date">Date</a></li><li><a href="#module-datetime">DateTime</a></li><li><a href="#make-integer">Integer</a></li><li><a href="#make-float">Float</a></li><li><a href="#make-duration">Duration</a></li><li><a href="#module-duration">Duration</a></li><li><a href="#module-period">Period</a></li></ul></nav>
+        <nav><p class="toc-heading">On this page</p><ul><li><a href="#type-weekday">Weekday</a></li><li><a href="#type-timeerror">TimeError</a></li><li><a href="#record-date">Date</a></li><li><a href="#record-time">Time</a></li><li><a href="#record-datetime">DateTime</a></li><li><a href="#record-period">Period</a></li><li><a href="#module-time">Time</a></li><li class="toc-nested"><a href="#module-time-clock">Time.Clock</a></li><li class="toc-nested"><a href="#make-weekday">Weekday</a></li><li><a href="#module-date">Date</a></li><li><a href="#module-datetime">DateTime</a></li><li><a href="#make-integer">Integer</a></li><li><a href="#make-float">Float</a></li><li><a href="#make-duration">Duration</a></li><li><a href="#module-duration">Duration</a></li><li><a href="#module-period">Period</a></li></ul></nav>
       </aside>
     </div>
     <footer class="foot">
