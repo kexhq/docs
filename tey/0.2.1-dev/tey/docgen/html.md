@@ -213,6 +213,20 @@ Package names in first-seen order of their newest entry: versions arrive newest-
 packageCard(name: String, versions: [VersionEntry]) -> String
 ```
 
+### `chrome`
+
+```kex
+chrome(title: String, root: String, script: Bool, nav: String, content: String) -> String
+```
+
+What every full page shares: the <head>, and the top bar with the brand on the left and `nav` on the right. `root` is the relative path back to the site root, and `script` says whether the page loads assets/site.js.
+
+### `backLink`
+
+```kex
+backLink(href: String, text: String) -> String
+```
+
 ### `layout`
 
 ```kex

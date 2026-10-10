@@ -34,20 +34,34 @@ options : OptionParser.OptionConfig
 
 A function rather than a module-level constant: on BEAM, calling a make-method (`.parse`, `.help`) on a module-level constant fails with "Undefined function" — the dispatcher doesn't resolve the constant.
 
+The three subcommands are declared here, the way Tey declares its own, so `tey docs` help is generated from the same definitions that parse the line and reads like `tey help` does.
+
 ### `dispatch`
 
 ```kex
 dispatch(args: [String]) -> Integer
 ```
 
-### `runCommand`
+### `strict`
 
 ```kex
-runCommand(parsed: OptionParser.ParsedOptions) -> Integer
+strict(parsed: OptionParser.ParsedOptions) -> Bool
 ```
+
+After a command word, OptionParser hands an option it does not know on to the command as an argument, for commands with a vocabulary of their own. These three have none beyond the options above, so one left over is a typo — and `--sorce src` silently documenting the wrong directory is worse than an error.
 
 ### `printUsage`
 
 ```kex
 printUsage : Integer
 ```
+
+The generated help, then what a build leaves behind — the one part of this command's story that no option or subcommand declares.
+
+### `outputsHelp`
+
+```kex
+outputsHelp : String
+```
+
+Styled like OptionParser's own blocks: a bold heading, then one aligned row per entry, padded on the unstyled name.
