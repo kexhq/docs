@@ -1,0 +1,143 @@
+<section class="entity" id="module-node">
+<h2><span class="kind kind-module">module</span> <code>Node</code></h2>
+<p>Distributed Kex: this BEAM node, and the other nodes it is connected to.</p>
+<p>A node is one running BEAM VM with a name. Once two nodes share a cookie and are connected, a <a class="xref" href="/prelude/0.4.0-beta.4-dev/process/#type-pid"><code>Pid</code></a> from one works on the other: <code>send</code>, <code>link</code> and <code>monitor</code> cross the network unchanged, and so do typed <a class="xref" href="/prelude/0.4.0-beta.4-dev/process/#type-process"><code>Process</code></a> and <a class="xref" href="/prelude/0.4.0-beta.4-dev/process/#record-server"><code>Server</code></a> handles.</p>
+<p>Name a node when starting it (<code>kex --sname a --cookie secret app.kex</code>), or from inside the program with <code>Node.start</code>:</p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Node</span>
+
+<span class="tok-keyword">main</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">Node</span><span class="tok-op">.</span><span class="tok-method">connect</span><span class="tok-punct">(</span><span class="tok-op">:</span>b<span class="tok-op">@</span><span class="tok-field">myhost</span><span class="tok-punct">)</span>
+  <span class="tok-type">Node</span><span class="tok-op">.</span><span class="tok-method">send</span><span class="tok-punct">(</span><span class="tok-op">:</span>b<span class="tok-op">@</span><span class="tok-field">myhost</span><span class="tok-punct">,</span> <span class="tok-op">:</span>logger<span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-op">:</span>hello<span class="tok-punct">,</span> <span class="tok-type">Node</span><span class="tok-op">.</span><span class="tok-method">self</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+<p>Node names are atoms: <code>:b@myhost</code> for a short name, the quoted <code>:&quot;b@host.example.com&quot;</code> for one with dots, or <code>Atom.from(text)</code> for one built at runtime.</p>
+<p>Both nodes need the same compiled code for anything that carries a function, like a lambda or a record whose methods the receiver calls; <code>Node.spawn</code> sends its block's code along. Plain data — numbers, strings, lists, tuples, records — needs nothing.</p>
+<p>Backed by Kex.Intrinsic.Node on the BEAM. The tree-walk interpreter is always a single, unnamed node.</p>
+<div class="functions">
+<div class="fn" id="function-node-self">
+<h3><a class="self" href="#function-node-self"><code>self</code></a></h3>
+<pre class="code sig"><code>self <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a></code></pre>
+<p>This node's name, or <code>:nonode@nohost</code> when it is not distributed.</p>
+<p class="returns"><strong>Returns</strong> the node name</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Node</span><span class="tok-op">.</span><span class="tok-method">self</span>   <span class="tok-comment"># =&gt; :a@myhost</span></code></pre>
+
+</div>
+<div class="fn" id="function-node-alive?">
+<h3><a class="self" href="#function-node-alive?"><code>alive?</code></a></h3>
+<pre class="code sig"><code>alive? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Whether this node is distributed — started with a name, so other nodes can connect to it.</p>
+<p class="returns"><strong>Returns</strong> true once the node has a name</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Node</span><span class="tok-op">.</span><span class="tok-method">alive?</span>   <span class="tok-comment"># =&gt; false, unless started with --sname or Node.start</span></code></pre>
+
+</div>
+<div class="fn" id="function-node-list">
+<h3><a class="self" href="#function-node-list"><code>list</code></a></h3>
+<pre class="code sig"><code>list <span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">]</span></code></pre>
+<p>The nodes this one is currently connected to, not including itself.</p>
+<p class="returns"><strong>Returns</strong> the connected node names</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Node</span><span class="tok-op">.</span><span class="tok-method">list</span>   <span class="tok-comment"># =&gt; [:b@myhost]</span></code></pre>
+
+</div>
+<div class="fn" id="function-node-start">
+<h3><a class="self" href="#function-node-start"><code>start</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">start</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Makes this node distributed under <code>name</code>, as <code>--sname</code>/<code>--name</code> would at startup. A <code>name</code> whose host has a dot (<code>:&quot;app@host.example.com&quot;</code>) uses long names; anything else uses short names.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code></dt><dd>the node name, like <code>:app</code> or <code>:app@myhost</code></dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the full node name, or why it could not start</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Node</span><span class="tok-op">.</span><span class="tok-method">start</span><span class="tok-punct">(</span><span class="tok-op">:</span>app<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(:app@myhost)</span></code></pre>
+
+</div>
+<div class="fn" id="function-node-stop">
+<h3><a class="self" href="#function-node-stop"><code>stop</code></a></h3>
+<pre class="code sig"><code>stop <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Stops distribution: the node drops its name and every connection.</p>
+<p class="returns"><strong>Returns</strong> whether it was distributed and has now stopped</p>
+
+</div>
+<div class="fn" id="function-node-connect">
+<h3><a class="self" href="#function-node-connect"><code>connect</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">connect</span><span class="tok-punct">(</span>node<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Connects to the node named <code>node</code>. Both nodes must share a cookie.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>node</code></dt><dd>the node to connect to</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> whether the connection is up</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Node</span><span class="tok-op">.</span><span class="tok-method">connect</span><span class="tok-punct">(</span><span class="tok-op">:</span>b<span class="tok-op">@</span><span class="tok-field">myhost</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+<div class="fn" id="function-node-disconnect">
+<h3><a class="self" href="#function-node-disconnect"><code>disconnect</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">disconnect</span><span class="tok-punct">(</span>node<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Drops the connection to <code>node</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>node</code></dt><dd>the node to disconnect from</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> whether a connection was dropped</p>
+
+</div>
+<div class="fn" id="function-node-setcookie">
+<h3><a class="self" href="#function-node-setcookie"><code>setCookie</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">setCookie</span><span class="tok-punct">(</span>cookie<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Sets the cookie this node presents when connecting. Nodes connect only when their cookies match.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>cookie</code></dt><dd>the shared secret</dd></div>
+</dl>
+
+</div>
+<div class="fn" id="function-node-send">
+<h3><a class="self" href="#function-node-send"><code>send</code></a></h3>
+<pre class="code sig"><code>send <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a> <span class="tok-op">-&gt;</span> <span class="tok-type">X</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Sends <code>message</code> to the process registered as <code>name</code> on <code>node</code>, unchanged. Like <a class="xref" href="/prelude/0.4.0-beta.4-dev/process/#pid-send"><code>Pid.send</code></a>, it never blocks and never fails.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>node</code></dt><dd>the node the process runs on</dd></div>
+<div class="param"><dt><code>name</code></dt><dd>the name it was registered under</dd></div>
+<div class="param"><dt><code>message</code></dt><dd>the message</dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Node</span><span class="tok-op">.</span><span class="tok-method">send</span><span class="tok-punct">(</span><span class="tok-op">:</span>b<span class="tok-op">@</span><span class="tok-field">myhost</span><span class="tok-punct">,</span> <span class="tok-op">:</span>logger<span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-op">:</span>info<span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">started</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-node-whereis">
+<h3><a class="self" href="#function-node-whereis"><code>whereIs</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">whereIs</span><span class="tok-punct">(</span>node<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">,</span> name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Pid?</span></code></pre>
+<p>The <a class="xref" href="/prelude/0.4.0-beta.4-dev/process/#type-pid"><code>Pid</code></a> registered as <code>name</code> on <code>node</code>, or <code>None</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>node</code></dt><dd>the node to ask</dd></div>
+<div class="param"><dt><code>name</code></dt><dd>the registered name</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the process, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Node</span><span class="tok-op">.</span><span class="tok-method">whereIs</span><span class="tok-punct">(</span><span class="tok-op">:</span>b<span class="tok-op">@</span><span class="tok-field">myhost</span><span class="tok-punct">,</span> <span class="tok-op">:</span>logger<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>pid<span class="tok-op">|</span> pid<span class="tok-op">.</span><span class="tok-method">send</span><span class="tok-punct">(</span><span class="tok-op">:</span>flush<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="function-node-spawn">
+<h3><a class="self" href="#function-node-spawn"><code>spawn</code></a></h3>
+<pre class="code sig"><code><span class="tok-keyword">spawn</span><span class="tok-punct">(</span>node<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">,</span> block<span class="tok-op">:</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/process/#type-pid"><span class="tok-type">Pid</span></a></code></pre>
+<p>Runs <code>block</code> in a new process on <code>node</code> and returns its <a class="xref" href="/prelude/0.4.0-beta.4-dev/process/#type-pid"><code>Pid</code></a>.</p>
+<p>The block is a function of THIS program. When <code>node</code> has not loaded the module it belongs to, that module's compiled code is sent over and loaded first. A module <code>node</code> already has is left as it is.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>node</code></dt><dd>where to run it</dd></div>
+<div class="param"><dt><code>block</code></dt><dd>the work</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the new process</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> me <span class="tok-op">=</span> <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">self</span>
+<span class="tok-type">Node</span><span class="tok-op">.</span><span class="tok-keyword">spawn</span><span class="tok-punct">(</span><span class="tok-op">:</span>b<span class="tok-op">@</span><span class="tok-field">myhost</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span> me<span class="tok-op">.</span><span class="tok-method">send</span><span class="tok-punct">(</span><span class="tok-type">Node</span><span class="tok-op">.</span><span class="tok-method">self</span><span class="tok-punct">)</span> <span class="tok-keyword">end</span></code></pre>
+
+</div>
+</div>
+</section>
+

@@ -1,0 +1,51 @@
+<section class="entity" id="module-tey-sandbox">
+<h2><span class="kind kind-module">module</span> <code>Tey.Sandbox</code></h2>
+<div class="functions">
+<div class="fn" id="constant-tey-sandbox-tool">
+<h3><a class="self" href="#constant-tey-sandbox-tool"><code>TOOL</code></a> <span class="tag-kind">constant</span></h3>
+<p>macOS's <code>sandbox-exec</code>. The only mechanism supported so far; on any other system <code>available?</code> is false and the caller has to refuse or be told to run unconfined.</p>
+
+</div>
+<div class="fn" id="function-tey-sandbox-available?">
+<h3><a class="self" href="#function-tey-sandbox-available?"><code>available?</code></a></h3>
+<pre class="code sig"><code>available? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+
+</div>
+<div class="fn" id="function-tey-sandbox-scratch">
+<h3><a class="self" href="#function-tey-sandbox-scratch"><code>scratch</code></a></h3>
+<pre class="code sig"><code>scratch <span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.1-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+<p>The directories a Kex child always needs to write to: where the compiler puts its scratch files and its run cache.</p>
+
+</div>
+<div class="fn" id="function-tey-sandbox-profile">
+<h3><a class="self" href="#function-tey-sandbox-profile"><code>profile</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">profile</span><span class="tok-punct">(</span>limits<span class="tok-op">:</span> <a class="xref" href="#record-tey-sandbox-limits"><span class="tok-type">Limits</span></a><span class="tok-punct">,</span> home<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The sandbox profile for <code>limits</code>. Later rules win, so: allow by default, deny the dangerous classes, then allow back the exceptions.</p>
+
+</div>
+<div class="fn" id="function-tey-sandbox-prefix">
+<h3><a class="self" href="#function-tey-sandbox-prefix"><code>prefix</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">prefix</span><span class="tok-punct">(</span>limits<span class="tok-op">:</span> <a class="xref" href="#record-tey-sandbox-limits"><span class="tok-type">Limits</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.1-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>The words to put in front of a command line to run it under <code>limits</code>: <code>sandbox-exec -f &lt;profile file&gt;</code>. The profile file is left for the caller to delete once the child has exited.</p>
+
+</div>
+</div>
+</section>
+<section class="entity" id="record-tey-sandbox-limits">
+<h2><span class="kind kind-record">record</span> <code>Limits</code></h2>
+<p>What a plugin process is allowed to do beyond reading files and computing.</p>
+<p>A plugin is code from a dependency, run on the user's machine. Approval says the user accepts what the plugin *asked* for; this is what makes the answer true, by running the child inside the operating system's sandbox:</p>
+<ul>
+<li>it can write only under <code>writable</code> (always the temporary directories and the Kex cache, which compiling and running its entrypoint need);</li>
+<li>it can use the network only when <code>network?</code>;</li>
+<li>it cannot read the places credentials are usually kept.</li>
+</ul>
+<p>Everything the child starts inherits the same limits.</p>
+<p>What this does NOT do, and must not be mistaken for: <code>Process.Run([...])</code> is not enforced — the child can start any program, though that program is held to the same limits — and <code>Net.Connect([...])</code> opens the network as a whole rather than to the listed hosts, because the sandbox filters by address and not by name.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>writable</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-rc.1-dev/string/#make-string">String</a>]</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>network?</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.1-dev/truthyable/#make-bool">Bool</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
