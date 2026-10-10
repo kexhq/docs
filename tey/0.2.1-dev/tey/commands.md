@@ -307,13 +307,31 @@ A `.kex` script is run through the SELECTED toolchain with this package's source
 
 The `--` before the arguments plays the same role as in runPackage.
 
+### `generate`
+
+```kex
+generate(arguments: [String]) -> Integer
+```
+
+The locked dependencies, then the programs Tey has installed. Outside a project there are no dependencies to show, so it is the programs alone rather than an error about a missing package.kex. `tey generate <namespace>:<generator> [--option value ...] [--force]`
+
+Runs a generator a direct dependency declares in its `plugin` block. The plugin is a child process: it is handed the invocation as one line of JSON on stdin and answers with the files it wants written, which Tey — not the plugin — then writes, inside the workspace and asking before it replaces anything (`--force` answers yes). The child itself runs in the operating system's sandbox: it cannot write outside scratch space or use the network (`--unconfined` lifts that, with a warning).
+
+### `pluginCommand`
+
+```kex
+pluginCommand(arguments: [String]) -> Integer
+```
+
+`tey plugin <namespace>:<command> [--option value ...]`
+
+Runs a command a direct dependency declares in its `plugin` block, confined to what the plugin declared and the user approved.
+
 ### `list`
 
 ```kex
 list : Integer
 ```
-
-The locked dependencies, then the programs Tey has installed. Outside a project there are no dependencies to show, so it is the programs alone rather than an error about a missing package.kex.
 
 ### `listPrograms`
 

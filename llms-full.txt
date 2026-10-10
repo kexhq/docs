@@ -29973,6 +29973,78 @@ entities:
 ---
 package: tey
 version: "0.2.1-dev"
+source: tey/broker.kex
+title: Tey.Broker
+entities:
+  - { kind: module, name: "Tey.Broker" }
+---
+
+# Tey.Broker
+
+## module `Tey.Broker`
+
+### `grants`
+
+```kex
+grants(plugin: Plugin, workspaceRoot: String) -> Grants
+```
+
+### `answered`
+
+```kex
+answered(grants: Grants, line: String) -> String
+```
+
+One request line in, one response line out. Never raises: a request that cannot be read or is refused is answered, so the plugin can say why.
+
+### `host`
+
+```kex
+host(url: String) -> Result<String, String>
+```
+
+The host name of an http(s) URL, lower-cased; an error for anything else, or for a URL that hides its host behind user information.
+
+## record `Grants`
+
+The plugin host's side of a command's conversation.
+
+A plugin command runs in a sandbox where it can write nothing and reach no network. Whatever it wants done in the world it asks for, one JSON object per line on its stdout, and waits for the answer on its stdin:
+
+```kex
+{"op":"print","text":"…"}
+{"op":"read","path":"README.md"}
+{"op":"write","path":".github/workflows/ci.yml","content":"…"}
+{"op":"delete","path":"old.yml"}
+{"op":"run","command":"git","arguments":["status","--short"]}
+{"op":"fetch","method":"GET","url":"https://api.github.com/…","body":""}
+```
+
+Each request is checked here against what the plugin declared and the user approved, then carried out by Tey or refused:
+
+```kex
+{"ok":true, …}        {"ok":false,"error":"…"}
+```
+
+So `Process.Run(["git"])` means git and nothing else, and `Net.Connect(["api.github.com"])` means that host and no other — the plugin never runs a program with the user's access or opens a socket; Tey does, on its behalf, after looking.
+
+What a plugin was approved for.
+
+**Fields**
+
+  - `workspaceRoot` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string)
+  - `writes?` : [Bool](../../../prelude/0.4.0-rc.1-dev/truthyable.md#make-bool) (optional)
+  - `commands` : [[String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string)] (optional)
+  - `hosts` : [[String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string)] (optional)
+
+
+
+
+---
+
+---
+package: tey
+version: "0.2.1-dev"
 source: tey/cache.kex
 title: Tey.Cache
 entities:
@@ -30421,13 +30493,31 @@ A `.kex` script is run through the SELECTED toolchain with this package's source
 
 The `--` before the arguments plays the same role as in runPackage.
 
+### `generate`
+
+```kex
+generate(arguments: [String]) -> Integer
+```
+
+The locked dependencies, then the programs Tey has installed. Outside a project there are no dependencies to show, so it is the programs alone rather than an error about a missing package.kex. `tey generate <namespace>:<generator> [--option value ...] [--force]`
+
+Runs a generator a direct dependency declares in its `plugin` block. The plugin is a child process: it is handed the invocation as one line of JSON on stdin and answers with the files it wants written, which Tey — not the plugin — then writes, inside the workspace and asking before it replaces anything (`--force` answers yes). The child itself runs in the operating system's sandbox: it cannot write outside scratch space or use the network (`--unconfined` lifts that, with a warning).
+
+### `pluginCommand`
+
+```kex
+pluginCommand(arguments: [String]) -> Integer
+```
+
+`tey plugin <namespace>:<command> [--option value ...]`
+
+Runs a command a direct dependency declares in its `plugin` block, confined to what the plugin declared and the user approved.
+
 ### `list`
 
 ```kex
 list : Integer
 ```
-
-The locked dependencies, then the programs Tey has installed. Outside a project there are no dependencies to show, so it is the programs alone rather than an error about a missing package.kex.
 
 ### `listPrograms`
 
@@ -31439,6 +31529,80 @@ The caller may already have inspected the selected compiler while deciding wheth
 ```kex
 resolvePackage(manifest: ManifestPackage) -> Result<LockState, String>
 ```
+
+
+---
+
+---
+package: tey
+version: "0.2.1-dev"
+source: tey/sandbox.kex
+title: Tey.Sandbox
+entities:
+  - { kind: module, name: "Tey.Sandbox" }
+---
+
+# Tey.Sandbox
+
+## module `Tey.Sandbox`
+
+### `TOOL` (constant)
+
+macOS's `sandbox-exec`. The only mechanism supported so far; on any other system `available?` is false and the caller has to refuse or be told to run unconfined.
+
+
+
+### `available?`
+
+```kex
+available? : Bool
+```
+
+### `scratch`
+
+```kex
+scratch : [String]
+```
+
+The directories a Kex child always needs to write to: where the compiler puts its scratch files and its run cache.
+
+### `profile`
+
+```kex
+profile(limits: Limits, home: String) -> String
+```
+
+The sandbox profile for `limits`. Later rules win, so: allow by default, deny the dangerous classes, then allow back the exceptions.
+
+### `prefix`
+
+```kex
+prefix(limits: Limits) -> Result<([String], String), String>
+```
+
+The words to put in front of a command line to run it under `limits`: `sandbox-exec -f <profile file>`. The profile file is left for the caller to delete once the child has exited.
+
+## record `Limits`
+
+What a plugin process is allowed to do beyond reading files and computing.
+
+A plugin is code from a dependency, run on the user's machine. Approval says the user accepts what the plugin *asked* for; this is what makes the answer true, by running the child inside the operating system's sandbox:
+
+- it can write only under `writable` (always the temporary directories and
+  the Kex cache, which compiling and running its entrypoint need);
+- it can use the network only when `network?`;
+- it cannot read the places credentials are usually kept.
+
+Everything the child starts inherits the same limits.
+
+What this does NOT do, and must not be mistaken for: `Process.Run([...])` is not enforced — the child can start any program, though that program is held to the same limits — and `Net.Connect([...])` opens the network as a whole rather than to the listed hosts, because the sandbox filters by address and not by name.
+
+**Fields**
+
+  - `writable` : [[String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string)] (optional)
+  - `network?` : [Bool](../../../prelude/0.4.0-rc.1-dev/truthyable.md#make-bool) (optional)
+
+
 
 
 ---
