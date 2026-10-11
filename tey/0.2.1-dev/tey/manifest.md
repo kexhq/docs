@@ -11,13 +11,19 @@ entities:
 
 ## module `Tey.Manifest`
 
+### `sourceFolder?`
+
+```kex
+sourceFolder?(name: String) -> Bool
+```
+
+The command names Tey answers itself. A `command(...)` may not take one of them: `tey test` must mean the same thing in every checkout, so a manifest that tries to redefine it is an error at read time rather than a silent shadow. Kept here because the READER is what enforces it, and Tey.Cli cannot be asked: it is built on this module, so reading the list off its declared commands would be a cycle. The two have to be kept in step by hand — one `.command(...)` in Tey.Cli, one name here (the first word is enough: `kex` covers every `kex ...` subcommand). Whether a name can be a source folder: one directory at the package's top, by its plain name. Not a path — its name is the first part of every module in it — and nothing hidden.
+
 ### `reservedCommands` (constant)
 
 ```kex
 reservedCommands : [String]
 ```
-
-The command names Tey answers itself. A `command(...)` may not take one of them: `tey test` must mean the same thing in every checkout, so a manifest that tries to redefine it is an error at read time rather than a silent shadow. Kept here because the READER is what enforces it, and Tey.Cli cannot be asked: it is built on this module, so reading the list off its declared commands would be a cycle. The two have to be kept in step by hand — one `.command(...)` in Tey.Cli, one name here (the first word is enough: `kex` covers every `kex ...` subcommand).
 
 
 
@@ -171,6 +177,7 @@ Fields are prefixed like Command's: a bare `compiler` would be read as a method 
   - `packageKexRequirement` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string) (optional)
   - `packageOtpRequirement` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string) (optional)
   - `entrypoint` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string) (optional)
+  - `sourceFolders` : [[String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string)] (optional)
   - `manifestDependencies` : [Dependency] (optional)
   - `targets` : [[Target](#record-tey-manifest-target)] (optional)
   - `commands` : [[Command](#record-tey-manifest-command)] (optional)

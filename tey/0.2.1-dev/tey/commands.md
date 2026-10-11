@@ -249,13 +249,37 @@ dependencyRootsAt(start: String) -> [String]
 
 `dependencyRoots` for the workspace around `start` rather than around the working directory. A program being installed from a path is built in a staged copy while the user stands somewhere else entirely — possibly in another project, whose lockfile would otherwise supply the dependencies.
 
+### `sourceDirectoryAt`
+
+```kex
+sourceDirectoryAt(packageRoot: String) -> String
+```
+
+The directory a package's module names are resolved against, relative to it: `src`, or the package itself when its package.kex names the folders at its top that hold modules (`sources(["app", "config", "db"])` — then `App.Models.User` is `./app/models/user.kex`). A manifest that cannot be read means `src`; every caller reports that in its own way soon enough.
+
+### `sourceUnit`
+
+```kex
+sourceUnit(directory: String, path: String) -> String
+```
+
+A file of a package's source directory, as the compiler is to be given it: relative to the package. A root of "." adds nothing in front.
+
+### `sourceUnit?`
+
+```kex
+sourceUnit?(path: String) -> Bool
+```
+
+Whether a file directly under the source directory is a module to compile. With the package itself as the root, its manifests sit there too, and are not modules.
+
 ### `sourceRoots`
 
 ```kex
 sourceRoots : [String]
 ```
 
-Every `--source-root` a compile of THIS package needs: its own `src/` first, then each dependency's. Own-first is deliberate — a package that shadows a dependency's module name means its own, the same way `--source-root` order already decides that for dependencies among themselves.
+Every `--source-root` a compile of THIS package needs: its own source directory first (`src/`, or the package itself when it declares `sources`), then each dependency's. Own-first is deliberate — a package that shadows a dependency's module name means its own, the same way `--source-root` order already decides that for dependencies among themselves.
 
 ### `sourceRootsAt`
 
@@ -269,7 +293,7 @@ sourceRootsAt(packageRoot: String) -> [String]
 librarySources : [String]
 ```
 
-A library's compilable units: every `.kex` directly under `src/`. Not a recursive walk — a nested module is reached by the file that declares it, and compiling it twice by name is how you get a duplicate-module error out of a perfectly good package.
+A library's compilable units: every `.kex` directly under its source directory (`src/`, or the package's top when it declares `sources`). Not a recursive walk — a nested module is reached by the file that declares it, and compiling it twice by name is how you get a duplicate-module error out of a perfectly good package.
 
 ### `librarySourcesAt`
 

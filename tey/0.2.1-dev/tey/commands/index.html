@@ -1139,10 +1139,28 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <p><code>dependencyRoots</code> for the workspace around <code>start</code> rather than around the working directory. A program being installed from a path is built in a staged copy while the user stands somewhere else entirely — possibly in another project, whose lockfile would otherwise supply the dependencies.</p>
 
 </div>
+<div class="fn" id="function-tey-commands-sourcedirectoryat">
+<h3><a class="self" href="#function-tey-commands-sourcedirectoryat"><code>sourceDirectoryAt</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">sourceDirectoryAt</span><span class="tok-punct">(</span>packageRoot<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>The directory a package's module names are resolved against, relative to it: <code>src</code>, or the package itself when its package.kex names the folders at its top that hold modules (<code>sources([&quot;app&quot;, &quot;config&quot;, &quot;db&quot;])</code> — then <code>App.Models.User</code> is <code>./app/models/user.kex</code>). A manifest that cannot be read means <code>src</code>; every caller reports that in its own way soon enough.</p>
+
+</div>
+<div class="fn" id="function-tey-commands-sourceunit">
+<h3><a class="self" href="#function-tey-commands-sourceunit"><code>sourceUnit</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">sourceUnit</span><span class="tok-punct">(</span>directory<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>A file of a package's source directory, as the compiler is to be given it: relative to the package. A root of &quot;.&quot; adds nothing in front.</p>
+
+</div>
+<div class="fn" id="function-tey-commands-sourceunit?">
+<h3><a class="self" href="#function-tey-commands-sourceunit?"><code>sourceUnit?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">sourceUnit?</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Whether a file directly under the source directory is a module to compile. With the package itself as the root, its manifests sit there too, and are not modules.</p>
+
+</div>
 <div class="fn" id="function-tey-commands-sourceroots">
 <h3><a class="self" href="#function-tey-commands-sourceroots"><code>sourceRoots</code></a></h3>
 <pre class="code sig"><code>sourceRoots <span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.1-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
-<p>Every <code>--source-root</code> a compile of THIS package needs: its own <code>src/</code> first, then each dependency's. Own-first is deliberate — a package that shadows a dependency's module name means its own, the same way <code>--source-root</code> order already decides that for dependencies among themselves.</p>
+<p>Every <code>--source-root</code> a compile of THIS package needs: its own source directory first (<code>src/</code>, or the package itself when it declares <code>sources</code>), then each dependency's. Own-first is deliberate — a package that shadows a dependency's module name means its own, the same way <code>--source-root</code> order already decides that for dependencies among themselves.</p>
 
 </div>
 <div class="fn" id="function-tey-commands-sourcerootsat">
@@ -1153,7 +1171,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <div class="fn" id="function-tey-commands-librarysources">
 <h3><a class="self" href="#function-tey-commands-librarysources"><code>librarySources</code></a></h3>
 <pre class="code sig"><code>librarySources <span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.1-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
-<p>A library's compilable units: every <code>.kex</code> directly under <code>src/</code>. Not a recursive walk — a nested module is reached by the file that declares it, and compiling it twice by name is how you get a duplicate-module error out of a perfectly good package.</p>
+<p>A library's compilable units: every <code>.kex</code> directly under its source directory (<code>src/</code>, or the package's top when it declares <code>sources</code>). Not a recursive walk — a nested module is reached by the file that declares it, and compiling it twice by name is how you get a duplicate-module error out of a perfectly good package.</p>
 
 </div>
 <div class="fn" id="function-tey-commands-librarysourcesat">
