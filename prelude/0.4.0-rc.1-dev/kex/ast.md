@@ -438,6 +438,7 @@ A type as it was written in source.
   - `RecordType([(String, TypeRef)])`
   - `NullableType(TypeRef)`
   - `BlockType(TypeRef)`
+  - `ParameterBlockType([TypeRef], TypeRef)`
   - `AtomType(String)`
   - `TypeQuery(String, Expression)`
   - `TypeVar(String)`
