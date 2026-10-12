@@ -60,9 +60,9 @@ What a plugin was approved for.
 
 **Fields**
 
-  - `workspaceRoot` : [String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string)
-  - `writes?` : [Bool](../../../prelude/0.4.0-rc.1-dev/truthyable.md#make-bool) (optional)
-  - `commands` : [[String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string)] (optional)
-  - `hosts` : [[String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string)] (optional)
+  - `workspaceRoot` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
+  - `writes?` : [Bool](../../../prelude/0.4.0-rc.2-dev/truthyable.md#make-bool) (optional)
+  - `commands` : [[String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)] (optional)
+  - `hosts` : [[String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)] (optional)
 
 

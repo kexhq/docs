@@ -64,7 +64,7 @@ What this does NOT do, and must not be mistaken for: `Process.Run([...])` is not
 
 **Fields**
 
-  - `writable` : [[String](../../../prelude/0.4.0-rc.1-dev/string.md#make-string)] (optional)
-  - `network?` : [Bool](../../../prelude/0.4.0-rc.1-dev/truthyable.md#make-bool) (optional)
+  - `writable` : [[String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)] (optional)
+  - `network?` : [Bool](../../../prelude/0.4.0-rc.2-dev/truthyable.md#make-bool) (optional)
 
 
