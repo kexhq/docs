@@ -1,0 +1,241 @@
+<div class="intro">
+<p>The built-in testing DSL: <code>describe</code>, <code>it</code>, <code>before</code>, <code>after</code>, and assertion helpers.</p>
+<p>Everything here is always in scope: no import, and no separate test runner. Write a test file and run it with <code>kex</code>:</p>
+<pre class="code"><code>describe <span class="tok-string">&quot;</span><span class="tok-string">arithmetic</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+  it <span class="tok-string">&quot;</span><span class="tok-string">adds numbers</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+    <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-number">1</span> <span class="tok-op">+</span> <span class="tok-number">1</span> <span class="tok-op">==</span> <span class="tok-number">2</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+
+  it <span class="tok-string">&quot;</span><span class="tok-string">multiplies numbers</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+    <span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-number">3</span> <span class="tok-op">*</span> <span class="tok-number">4</span><span class="tok-punct">,</span> <span class="tok-number">12</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span>
+
+$ kex my_test<span class="tok-op">.</span><span class="tok-method">kex</span>
+arithmetic
+  ✓ adds numbers
+  ✓ multiplies numbers</code></pre>
+<p>Output uses ✓ / ✗ markers and nests by <code>describe</code> depth. A failing <code>assert</code> marks its test failed and moves on; the rest of the suite still runs.</p>
+<p>A file named <code>&lt;name&gt;.spec.kex</code> automatically loads the declarations of <code>&lt;name&gt;.kex</code> beside it, so a spec needs no import and no <code>main</code> wrapper.</p>
+</div>
+<section class="entity" id="function-describe">
+<h2><span class="kind kind-function">function</span> <code>describe</code></h2>
+<pre class="code sig"><code><span class="tok-fn">describe</span><span class="tok-punct">(</span>label<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> block<span class="tok-op">:</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Groups related test cases under a label, and runs them.</p>
+<p>The block is called immediately. <code>describe</code> blocks nest, and the output is indented to match. This is a foul function: it prints.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>label</code></dt><dd>what this group is about</dd></div>
+<div class="param"><dt><code>block</code></dt><dd>the tests, and any nested groups</dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code>describe <span class="tok-string">&quot;</span><span class="tok-string">String</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+  describe <span class="tok-string">&quot;</span><span class="tok-string">count</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+    it <span class="tok-string">&quot;</span><span class="tok-string">returns the character count</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+      <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">count</span> <span class="tok-op">==</span> <span class="tok-number">5</span><span class="tok-punct">)</span>
+    <span class="tok-keyword">end</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</section>
+<section class="entity" id="function-it">
+<h2><span class="kind kind-function">function</span> <code>it</code></h2>
+<pre class="code sig"><code><span class="tok-fn">it</span><span class="tok-punct">(</span>label<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> block<span class="tok-op">:</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Defines a single test case, and runs it.</p>
+<p>The block runs, and anything thrown inside it: typically a failed <code>assert</code>: marks the test failed without aborting the rest of the suite. This is a foul function: it prints.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>label</code></dt><dd>what this case establishes, phrased as a claim</dd></div>
+<div class="param"><dt><code>block</code></dt><dd>the case body</dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code>it <span class="tok-string">&quot;</span><span class="tok-string">returns true for even numbers</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+  <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">even?</span><span class="tok-punct">)</span>
+  <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-op">!</span><span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-method">even?</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+<p class="caption"><em>One behaviour per case reads better than one big case</em></p>
+<pre class="code"><code>it <span class="tok-string">&quot;</span><span class="tok-string">trims leading whitespace</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">  hi</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">trim</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span>
+
+it <span class="tok-string">&quot;</span><span class="tok-string">trims trailing whitespace</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hi  </span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">trim</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</section>
+<section class="entity" id="function-before">
+<h2><span class="kind kind-function">function</span> <code>before</code></h2>
+<pre class="code sig"><code><span class="tok-fn">before</span><span class="tok-punct">(</span>block<span class="tok-op">:</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span>
+<span class="tok-fn">before</span><span class="tok-punct">(</span>block<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Registers setup to run before the current group's tests.</p>
+<p><code>before { ... }</code> and <code>before(:each) { ... }</code> run before every test in the group; <code>before(:all) { ... }</code> runs once before the group's first test, following RSpec's scope convention.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>block</code></dt><dd>the setup to run</dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code>describe <span class="tok-string">&quot;</span><span class="tok-string">the parser</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+  before <span class="tok-keyword">do</span>
+    <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">file</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">input.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">one\ntwo\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+
+  it <span class="tok-string">&quot;</span><span class="tok-string">reads two lines</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+    <span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">readLines</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">input.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</section>
+<section class="entity" id="function-after">
+<h2><span class="kind kind-function">function</span> <code>after</code></h2>
+<pre class="code sig"><code><span class="tok-fn">after</span><span class="tok-punct">(</span>block<span class="tok-op">:</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span>
+<span class="tok-fn">after</span><span class="tok-punct">(</span>block<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Registers cleanup to run after the current group's tests.</p>
+<p>Defaults to <code>:each</code>. Cleanup is unconditional: it runs whether the test passed or failed, and inner per-test hooks run before outer hooks.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>block</code></dt><dd>the cleanup to run</dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code>after <span class="tok-keyword">do</span>
+  <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">tmp/out.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</section>
+<section class="entity" id="function-assert">
+<h2><span class="kind kind-function">function</span> <code>assert</code></h2>
+<pre class="code sig"><code><span class="tok-fn">assert</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a>
+<span class="tok-fn">assert</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Fails the enclosing <code>it</code> when <code>value</code> is falsy.</p>
+<p>The primitive every other assertion is built on. Prefer the <a class="xref" href="#module-assert"><code>Assert</code></a> helpers where one fits: they report what was expected and what arrived, which a bare <code>assert</code> cannot.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the condition that must hold</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the value, when it held</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-number">42</span> <span class="tok-op">==</span> <span class="tok-number">42</span><span class="tok-punct">)</span>
+<span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">count</span> <span class="tok-op">==</span> <span class="tok-number">5</span><span class="tok-punct">)</span></code></pre>
+
+</section>
+<section class="entity" id="module-assert">
+<h2><span class="kind kind-module">module</span> <code>Assert</code></h2>
+<p>Focused assertions, each reporting what was expected and what arrived.</p>
+<p>These are ordinary Kex stdlib functions layered on the primitive <code>assert</code>, so adding another helper does not require compiler or runtime work.</p>
+<pre class="code"><code><span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">upperCase</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">HI</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">some</span><span class="tok-punct">(</span>users<span class="tok-op">.</span><span class="tok-method">first</span><span class="tok-punct">)</span>
+<span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">ok</span><span class="tok-punct">(</span><span class="tok-type">Integer</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">42</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+<div class="functions">
+<div class="fn" id="function-assert-equal">
+<h3><a class="self" href="#function-assert-equal"><code>equal</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">equal</span><span class="tok-punct">(</span>actual<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">,</span> expected<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Fails unless <code>actual</code> equals <code>expected</code>, reporting both.</p>
+<p>The assertion to reach for by default: a failure tells you what arrived, which <code>assert(a == b)</code> does not.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>actual</code></dt><dd>the value produced</dd></div>
+<div class="param"><dt><code>expected</code></dt><dd>the value it should equal</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when they are equal</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">upperCase</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">HI</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">sum</span><span class="tok-punct">,</span> <span class="tok-number">6</span><span class="tok-punct">)</span>
+<span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span>config<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-op">:</span>port<span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-number">8080</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-assert-notequal">
+<h3><a class="self" href="#function-assert-notequal"><code>notEqual</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">notEqual</span><span class="tok-punct">(</span>actual<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">,</span> expected<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Fails when <code>actual</code> equals <code>expected</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>actual</code></dt><dd>the value produced</dd></div>
+<div class="param"><dt><code>expected</code></dt><dd>the value it should differ from</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when they differ</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">notEqual</span><span class="tok-punct">(</span>newId<span class="tok-punct">,</span> oldId<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-assert-truthy">
+<h3><a class="self" href="#function-assert-truthy"><code>truthy</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">truthy</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Fails unless <code>value</code> is truthy: anything except <code>false</code>, <code>None</code> and <code>()</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the value to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the value is truthy</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">truthy</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">ell</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-assert-falsy">
+<h3><a class="self" href="#function-assert-falsy"><code>falsy</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">falsy</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Fails unless <code>value</code> is falsy: <code>false</code>, <code>None</code> or <code>()</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the value to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the value is falsy</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">falsy</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">any?</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>x<span class="tok-op">|</span> x <span class="tok-op">&gt;</span> <span class="tok-number">0</span> <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-assert-some">
+<h3><a class="self" href="#function-assert-some"><code>some</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">some</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">A?</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Fails unless <code>value</code> is a <code>Just</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the optional to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when a value is present</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">some</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">first</span><span class="tok-punct">)</span>
+<span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">some</span><span class="tok-punct">(</span>config<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-op">:</span>host<span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-assert-none">
+<h3><a class="self" href="#function-assert-none"><code>none</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">none</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">A?</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Fails unless <code>value</code> is <code>None</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the optional to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when there is no value</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">none</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">first</span><span class="tok-punct">)</span>
+<span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">none</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Integer</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-assert-ok">
+<h3><a class="self" href="#function-assert-ok"><code>ok</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">ok</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/math/#constant-math-e"><span class="tok-type">E</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Fails unless <code>value</code> is an <code>Ok</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the result to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the result succeeded</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">ok</span><span class="tok-punct">(</span><span class="tok-type">Integer</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">42</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-assert-error">
+<h3><a class="self" href="#function-assert-error"><code>error</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">error</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/math/#constant-math-e"><span class="tok-type">E</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Fails unless <code>value</code> is an <a class="xref" href="/prelude/0.4.0-beta.4-dev/json/#type-json-error"><code>Error</code></a>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the result to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the result failed</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">error</span><span class="tok-punct">(</span><span class="tok-type">Integer</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">4x</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+
