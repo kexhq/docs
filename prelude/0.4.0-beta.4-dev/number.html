@@ -1,0 +1,602 @@
+<section class="entity" id="make-integer">
+<h2><span class="kind kind-type">type</span> <code>Integer</code></h2>
+<p class="implements">Implements <a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#trait-monoid"><code>Monoid</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#trait-group"><code>Group</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/blankable/#trait-blankable"><code>Blankable</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#trait-truthyable"><code>Truthyable</code></a>.</p>
+<p>Whole numbers, of arbitrary size.</p>
+<p><a class="xref" href="#make-integer"><code>Integer</code></a> has no width limit: factorials and cryptographic moduli are ordinary values, not a special big-number type you have to opt into.</p>
+<p><a class="xref" href="#make-integer"><code>Integer</code></a> and <a class="xref" href="#make-float"><code>Float</code></a> are one numeric tower: they compare and order across the boundary, so <code>0 == 0.0</code> is <code>true</code> and <code>[1, 2.5, 3].sort</code> works. What differs is the arithmetic. <code>/</code> on two integers is integer division, and <code>sqrt</code> answers a <a class="xref" href="#make-float"><code>Float</code></a> because a square root generally is one.</p>
+<pre class="code"><code><span class="tok-number">7</span> <span class="tok-op">/</span> <span class="tok-number">2</span>          <span class="tok-comment"># =&gt; 3      (integer division)</span>
+<span class="tok-number">7.0</span> <span class="tok-op">/</span> <span class="tok-number">2.0</span>      <span class="tok-comment"># =&gt; 3.5</span>
+<span class="tok-number">16</span><span class="tok-op">.</span><span class="tok-method">sqrt</span>        <span class="tok-comment"># =&gt; 4.0    (a Float, even from an Integer)</span>
+<span class="tok-punct">(</span><span class="tok-op">-</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">modulo</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span> <span class="tok-comment"># =&gt; 2      (mathematical modulo, not C remainder)</span></code></pre>
+
+<div class="functions">
+<div class="fn" id="integer-even?">
+<h3><a class="self" href="#integer-even?"><code>even?</code></a></h3>
+<pre class="code sig"><code>even? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the integer is divisible by two. Zero is even, and negative numbers follow the same rule.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> for an even integer</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">4</span><span class="tok-op">.</span><span class="tok-method">even?</span>      <span class="tok-comment"># =&gt; true</span>
+<span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-method">even?</span>      <span class="tok-comment"># =&gt; false</span>
+<span class="tok-punct">(</span><span class="tok-op">-</span><span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">even?</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>Splitting a list into evens and odds</em></p>
+<pre class="code"><code><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">partition</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n<span class="tok-op">.</span><span class="tok-method">even?</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; ([2, 4], [1, 3])</span></code></pre>
+
+</div>
+<div class="fn" id="integer-odd?">
+<h3><a class="self" href="#integer-odd?"><code>odd?</code></a></h3>
+<pre class="code sig"><code>odd? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the integer is not divisible by two. The opposite of <code>even?</code>.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> for an odd integer</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-method">odd?</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-number">4</span><span class="tok-op">.</span><span class="tok-method">odd?</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="integer-abs">
+<h3><a class="self" href="#integer-abs"><code>abs</code></a></h3>
+<pre class="code sig"><code>abs <span class="tok-op">:</span> <a class="xref" href="#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Returns the magnitude of the integer, discarding its sign.</p>
+<p class="returns"><strong>Returns</strong> the absolute value</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-op">-</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">abs</span>   <span class="tok-comment"># =&gt; 5</span>
+<span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">abs</span>      <span class="tok-comment"># =&gt; 5</span></code></pre>
+<p class="caption"><em>Distance between two positions</em></p>
+<pre class="code"><code><span class="tok-punct">(</span>a <span class="tok-op">-</span> b<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">abs</span></code></pre>
+
+</div>
+<div class="fn" id="integer-sqrt">
+<h3><a class="self" href="#integer-sqrt"><code>sqrt</code></a></h3>
+<pre class="code sig"><code>sqrt <span class="tok-op">:</span> <a class="xref" href="#make-float"><span class="tok-type">Float</span></a></code></pre>
+<p>Returns the square root as a <a class="xref" href="#make-float"><code>Float</code></a>.</p>
+<p>The result is a <a class="xref" href="#make-float"><code>Float</code></a> even when the root is exact, because in general it is not. Round or floor it when you need an integer back.</p>
+<p class="returns"><strong>Returns</strong> the square root</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">16</span><span class="tok-op">.</span><span class="tok-method">sqrt</span>          <span class="tok-comment"># =&gt; 4.0</span>
+<span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">sqrt</span>           <span class="tok-comment"># =&gt; 1.4142135623730951</span>
+<span class="tok-number">16</span><span class="tok-op">.</span><span class="tok-method">sqrt</span><span class="tok-op">.</span><span class="tok-method">round</span>    <span class="tok-comment"># =&gt; 4</span></code></pre>
+
+</div>
+<div class="fn" id="integer-modulo">
+<h3><a class="self" href="#integer-modulo"><code>modulo</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">modulo</span><span class="tok-punct">(</span>n<span class="tok-op">:</span> <a class="xref" href="#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Returns <code>this</code> modulo <code>n</code>.</p>
+<p>The result takes the sign of <code>n</code>, which is mathematical modulo rather than the C-style remainder other languages give. That is what makes it safe for wrapping an index that may have gone negative.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>n</code></dt><dd>the modulus</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the remainder, with the sign of <code>n</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">7</span><span class="tok-op">.</span><span class="tok-method">modulo</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; 1</span>
+<span class="tok-punct">(</span><span class="tok-op">-</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">modulo</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 2</span></code></pre>
+<p class="caption"><em>Wrapping an index around a list</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> items <span class="tok-op">=</span> <span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">c</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span>
+items<span class="tok-op">.</span><span class="tok-method">at</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-op">-</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">modulo</span><span class="tok-punct">(</span>items<span class="tok-op">.</span><span class="tok-method">count</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(&quot;c&quot;)</span></code></pre>
+
+</div>
+<div class="fn" id="integer-in?">
+<h3><a class="self" href="#integer-in?"><code>in?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">in?</span><span class="tok-punct">(</span>range<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/range/#type-range"><span class="tok-type">Range</span></a><span class="tok-op">&lt;</span><a class="xref" href="#make-integer"><span class="tok-type">Integer</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the integer falls inside <code>range</code>, endpoints included.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>range</code></dt><dd>the inclusive range</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the integer is in range</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">in?</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; true</span>
+<span class="tok-number">11</span><span class="tok-op">.</span><span class="tok-method">in?</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+<p class="caption"><em>Validating a port number</em></p>
+<pre class="code"><code>port<span class="tok-op">.</span><span class="tok-method">in?</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">65535</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="integer-times">
+<h3><a class="self" href="#integer-times"><code>times</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">times</span><span class="tok-punct">(</span>block<span class="tok-op">:</span> <span class="tok-punct">(</span><a class="xref" href="#make-integer"><span class="tok-type">Integer</span></a> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span>
+<span class="tok-fn">times</span><span class="tok-punct">(</span>block<span class="tok-op">:</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Calls <code>f</code> exactly <code>this</code> times, passing the 0-based iteration index.</p>
+<p>This is the counting loop. When you want the numbers themselves rather than a count of repetitions, <code>(1..n).items.each</code> often reads better.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>f</code></dt><dd>called once per iteration with the index</dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-method">times</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>i<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>i<span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># prints 0, then 1, then 2</span></code></pre>
+<p class="caption"><em>Repeating an action</em></p>
+<pre class="code"><code>retries<span class="tok-op">.</span><span class="tok-method">times</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>_<span class="tok-op">|</span> attemptConnection <span class="tok-punct">}</span></code></pre>
+<p class="caption"><em>Repeating an action that needs no index</em></p>
+<pre class="code"><code><span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-method">times</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="integer-floor">
+<h3><a class="self" href="#integer-floor"><code>floor</code></a></h3>
+<pre class="code sig"><code>floor <span class="tok-op">:</span> <a class="xref" href="#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Returns the integer unchanged. Present so that code written against <a class="xref" href="#"><code>Number</code></a> works whichever half of the tower it is handed.</p>
+<p class="returns"><strong>Returns</strong> the same integer</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">7</span><span class="tok-op">.</span><span class="tok-method">floor</span>   <span class="tok-comment"># =&gt; 7</span></code></pre>
+
+</div>
+<div class="fn" id="integer-ceil">
+<h3><a class="self" href="#integer-ceil"><code>ceil</code></a></h3>
+<pre class="code sig"><code>ceil <span class="tok-op">:</span> <a class="xref" href="#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Returns the integer unchanged. The <a class="xref" href="#make-integer"><code>Integer</code></a> counterpart of <a class="xref" href="#float-ceil"><code>Float.ceil</code></a>.</p>
+<p class="returns"><strong>Returns</strong> the same integer</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">7</span><span class="tok-op">.</span><span class="tok-method">ceil</span>   <span class="tok-comment"># =&gt; 7</span></code></pre>
+
+</div>
+<div class="fn" id="integer-round">
+<h3><a class="self" href="#integer-round"><code>round</code></a></h3>
+<pre class="code sig"><code>round <span class="tok-op">:</span> <a class="xref" href="#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Returns the integer unchanged. The <a class="xref" href="#make-integer"><code>Integer</code></a> counterpart of <a class="xref" href="#float-round"><code>Float.round</code></a>.</p>
+<p class="returns"><strong>Returns</strong> the same integer</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">7</span><span class="tok-op">.</span><span class="tok-method">round</span>   <span class="tok-comment"># =&gt; 7</span></code></pre>
+
+</div>
+</div><h3>From <a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#trait-monoid"><code>Monoid</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#monoid-repeat"><code>repeat</code></a></dt><dd>Combines this value with itself <code>n</code> times.</dd></div>
+</dl>
+<h3>Defined in other modules</h3>
+<dl class="params elsewhere">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#make-integer">Algebra</a></dt><dd><a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#integer-identity"><code>identity</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#integer-combine"><code>combine</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#integer-inverse"><code>inverse</code></a></dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/blankable/#make-integer">Blankable</a></dt><dd><a class="xref" href="/prelude/0.4.0-beta.4-dev/blankable/#integer-blank?"><code>blank?</code></a></dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#make-integer">Time</a></dt><dd><a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#integer-milliseconds"><code>milliseconds</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#integer-seconds"><code>seconds</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#integer-minutes"><code>minutes</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#integer-hours"><code>hours</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#integer-days"><code>days</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#integer-weeks"><code>weeks</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#integer-months"><code>months</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#integer-years"><code>years</code></a></dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-integer">Truthyable</a></dt><dd><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#integer-truthy?"><code>truthy?</code></a></dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#make-integer">Units</a></dt><dd><a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#integer-nanosecond"><code>nanosecond</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#integer-microsecond"><code>microsecond</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#integer-millisecond"><code>millisecond</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#integer-sec"><code>sec</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#integer-minute"><code>minute</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#integer-hour"><code>hour</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#integer-day"><code>day</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#integer-week"><code>week</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#integer-timemeasure"><code>timeMeasure</code></a></dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/units/si/#make-integer">Units.SI</a></dt><dd><a class="xref" href="/prelude/0.4.0-beta.4-dev/units/si/#integer-kilo"><code>kilo</code></a></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="make-float">
+<h2><span class="kind kind-type">type</span> <code>Float</code></h2>
+<p class="implements">Implements <a class="xref" href="/prelude/0.4.0-beta.4-dev/blankable/#trait-blankable"><code>Blankable</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#trait-truthyable"><code>Truthyable</code></a>.</p>
+<p>Double-precision floating-point numbers.</p>
+<p>A Kex <a class="xref" href="#make-float"><code>Float</code></a> is always finite. An operation that would produce <code>NaN</code> or <code>Infinity</code> raises instead: the same rule the BEAM enforces, where those two values cannot exist at all. So a <a class="xref" href="#make-float"><code>Float</code></a> you are holding is always a real number, and there is no <code>nan?</code> to check for.</p>
+<p><a class="xref" href="#make-float"><code>Float</code></a> and <a class="xref" href="#make-integer"><code>Integer</code></a> compare and order across the boundary; see <a class="xref" href="#make-integer"><code>Integer</code></a> for the rest of the numeric tower.</p>
+<pre class="code"><code><span class="tok-number">3.7</span><span class="tok-op">.</span><span class="tok-method">floor</span>      <span class="tok-comment"># =&gt; 3</span>
+<span class="tok-number">3.7</span><span class="tok-op">.</span><span class="tok-method">round</span>      <span class="tok-comment"># =&gt; 4</span>
+<span class="tok-punct">(</span><span class="tok-op">-</span><span class="tok-number">3.7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">toInteger</span>  <span class="tok-comment"># =&gt; -3   (truncates toward zero)</span></code></pre>
+
+<div class="functions">
+<div class="fn" id="float-abs">
+<h3><a class="self" href="#float-abs"><code>abs</code></a></h3>
+<pre class="code sig"><code>abs <span class="tok-op">:</span> <a class="xref" href="#make-float"><span class="tok-type">Float</span></a></code></pre>
+<p>Returns the magnitude of the float, discarding its sign.</p>
+<p class="returns"><strong>Returns</strong> the absolute value</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-op">-</span><span class="tok-number">3.14</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">abs</span>   <span class="tok-comment"># =&gt; 3.14</span>
+<span class="tok-number">3.14</span><span class="tok-op">.</span><span class="tok-method">abs</span>      <span class="tok-comment"># =&gt; 3.14</span></code></pre>
+<p class="caption"><em>An approximate-equality test</em></p>
+<pre class="code"><code><span class="tok-punct">(</span>a <span class="tok-op">-</span> b<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">abs</span> <span class="tok-op">&lt;</span> <span class="tok-number">0.0001</span></code></pre>
+
+</div>
+<div class="fn" id="float-sqrt">
+<h3><a class="self" href="#float-sqrt"><code>sqrt</code></a></h3>
+<pre class="code sig"><code>sqrt <span class="tok-op">:</span> <a class="xref" href="#make-float"><span class="tok-type">Float</span></a></code></pre>
+<p>Returns the square root. Raises for a negative receiver, which has no real root.</p>
+<p class="returns"><strong>Returns</strong> the square root</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">25.0</span><span class="tok-op">.</span><span class="tok-method">sqrt</span>   <span class="tok-comment"># =&gt; 5.0</span>
+<span class="tok-number">2.0</span><span class="tok-op">.</span><span class="tok-method">sqrt</span>    <span class="tok-comment"># =&gt; 1.4142135623730951</span></code></pre>
+
+</div>
+<div class="fn" id="float-in?">
+<h3><a class="self" href="#float-in?"><code>in?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">in?</span><span class="tok-punct">(</span>range<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/range/#type-range"><span class="tok-type">Range</span></a><span class="tok-op">&lt;</span><a class="xref" href="#make-float"><span class="tok-type">Float</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the float falls inside <code>range</code>, endpoints included.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>range</code></dt><dd>the inclusive range</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the float is in range</p>
+<h5>Examples</h5>
+<p class="caption"><em>Comparing directly is usually clearer for floats</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> ratio <span class="tok-op">=</span> <span class="tok-number">0.75</span>
+ratio <span class="tok-op">&gt;=</span> <span class="tok-number">0.0</span> <span class="tok-op">&amp;&amp;</span> ratio <span class="tok-op">&lt;=</span> <span class="tok-number">1.0</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+<div class="fn" id="float-floor">
+<h3><a class="self" href="#float-floor"><code>floor</code></a></h3>
+<pre class="code sig"><code>floor <span class="tok-op">:</span> <a class="xref" href="#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Returns the largest integer that is not greater than the float: it always rounds toward negative infinity, which is what separates it from <code>toInteger</code> for negative values.</p>
+<p class="returns"><strong>Returns</strong> the floor</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">3.7</span><span class="tok-op">.</span><span class="tok-method">floor</span>      <span class="tok-comment"># =&gt; 3</span>
+<span class="tok-number">3.2</span><span class="tok-op">.</span><span class="tok-method">floor</span>      <span class="tok-comment"># =&gt; 3</span>
+<span class="tok-punct">(</span><span class="tok-op">-</span><span class="tok-number">3.2</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">floor</span>   <span class="tok-comment"># =&gt; -4</span></code></pre>
+
+</div>
+<div class="fn" id="float-ceil">
+<h3><a class="self" href="#float-ceil"><code>ceil</code></a></h3>
+<pre class="code sig"><code>ceil <span class="tok-op">:</span> <a class="xref" href="#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Returns the smallest integer that is not less than the float: it always rounds toward positive infinity.</p>
+<p class="returns"><strong>Returns</strong> the ceiling</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">3.2</span><span class="tok-op">.</span><span class="tok-method">ceil</span>       <span class="tok-comment"># =&gt; 4</span>
+<span class="tok-number">3.0</span><span class="tok-op">.</span><span class="tok-method">ceil</span>       <span class="tok-comment"># =&gt; 3</span>
+<span class="tok-punct">(</span><span class="tok-op">-</span><span class="tok-number">3.7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">ceil</span>    <span class="tok-comment"># =&gt; -3</span></code></pre>
+<p class="caption"><em>How many pages of a fixed size a list needs</em></p>
+<pre class="code"><code><span class="tok-punct">(</span>items<span class="tok-op">.</span><span class="tok-method">count</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Float</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">0.0</span><span class="tok-punct">)</span> <span class="tok-op">/</span> <span class="tok-number">20.0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">ceil</span></code></pre>
+
+</div>
+<div class="fn" id="float-round">
+<h3><a class="self" href="#float-round"><code>round</code></a></h3>
+<pre class="code sig"><code>round <span class="tok-op">:</span> <a class="xref" href="#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Returns the nearest integer, with halves rounding away from zero.</p>
+<p class="returns"><strong>Returns</strong> the rounded value</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">3.2</span><span class="tok-op">.</span><span class="tok-method">round</span>    <span class="tok-comment"># =&gt; 3</span>
+<span class="tok-number">3.5</span><span class="tok-op">.</span><span class="tok-method">round</span>    <span class="tok-comment"># =&gt; 4</span>
+<span class="tok-number">3.7</span><span class="tok-op">.</span><span class="tok-method">round</span>    <span class="tok-comment"># =&gt; 4</span></code></pre>
+
+</div>
+<div class="fn" id="float-tointeger">
+<h3><a class="self" href="#float-tointeger"><code>toInteger</code></a></h3>
+<pre class="code sig"><code>toInteger <span class="tok-op">:</span> <a class="xref" href="#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Truncates toward zero and returns the result as an <a class="xref" href="#make-integer"><code>Integer</code></a>: it drops the fractional part rather than rounding, so it differs from both <code>floor</code> and <code>round</code> for negative values.</p>
+<p class="returns"><strong>Returns</strong> the truncated value</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">3.7</span><span class="tok-op">.</span><span class="tok-method">toInteger</span>      <span class="tok-comment"># =&gt; 3</span>
+<span class="tok-punct">(</span><span class="tok-op">-</span><span class="tok-number">3.7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">toInteger</span>   <span class="tok-comment"># =&gt; -3   (floor would give -4)</span></code></pre>
+
+</div>
+</div><h3>Defined in other modules</h3>
+<dl class="params elsewhere">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/blankable/#make-float">Blankable</a></dt><dd><a class="xref" href="/prelude/0.4.0-beta.4-dev/blankable/#float-blank?"><code>blank?</code></a></dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#make-float">Time</a></dt><dd><a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#float-milliseconds"><code>milliseconds</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#float-seconds"><code>seconds</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#float-minutes"><code>minutes</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#float-hours"><code>hours</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#float-days"><code>days</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/time/#float-weeks"><code>weeks</code></a></dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-float">Truthyable</a></dt><dd><a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#float-truthy?"><code>truthy?</code></a></dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#make-float">Units</a></dt><dd><a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#float-nanosecond"><code>nanosecond</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#float-microsecond"><code>microsecond</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#float-millisecond"><code>millisecond</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#float-sec"><code>sec</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#float-minute"><code>minute</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#float-hour"><code>hour</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#float-day"><code>day</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#float-week"><code>week</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#float-timemeasure"><code>timeMeasure</code></a></dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/units/si/#make-float">Units.SI</a></dt><dd><a class="xref" href="/prelude/0.4.0-beta.4-dev/units/si/#float-kilo"><code>kilo</code></a></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="module-integer">
+<h2><span class="kind kind-module">module</span> <code>Integer</code></h2>
+<p>Reading integers out of text.</p>
+<p>Use <code>parse</code> when a failure needs explaining and <code>&quot;42&quot;.to(Integer)</code> when it does not: <code>to</code> answers a plain <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-optional"><code>Optional</code></a>, <code>parse</code> answers a <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><code>Result</code></a> carrying a <code>ParseError</code> that says where it stopped and what it had read so far.</p>
+<div class="functions">
+<div class="fn" id="function-integer-parse">
+<h3><a class="self" href="#function-integer-parse"><code>parse</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>s<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span>
+<span class="tok-fn">parse</span><span class="tok-punct">(</span>s<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> radix<span class="tok-op">:</span> <a class="xref" href="#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span></code></pre>
+<p>Parses the whole string as a base-10 integer.</p>
+<p>The string must be entirely consumed: leading or trailing characters make it an <a class="xref" href="/prelude/0.4.0-beta.4-dev/json/#type-json-error"><code>Error</code></a>, with a <code>ParseError</code> describing where parsing stopped. Use <code>parsePrefix</code> when a trailing remainder is expected.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>s</code></dt><dd>the text to parse</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the integer, or a described failure</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Integer</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">42</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; Ok(42)</span>
+<span class="tok-type">Integer</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">-7</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; Ok(-7)</span>
+<span class="tok-type">Integer</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">4x</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; Error(ParseError { ... rest: &quot;x&quot; ... })</span></code></pre>
+<p class="caption"><em>Reading a setting with a fallback</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> port <span class="tok-op">=</span> <span class="tok-type">Integer</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span>raw<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">8080</span><span class="tok-punct">)</span></code></pre>
+<p class="caption"><em>Reporting why the input was rejected</em></p>
+<pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">Integer</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span>raw<span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>n<span class="tok-punct">)</span>    <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">port </span><span class="tok-string">${</span>n<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">bad port: </span><span class="tok-string">${</span>e<span class="tok-op">.</span><span class="tok-method">message</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="function-integer-parseprefix">
+<h3><a class="self" href="#function-integer-parseprefix"><code>parsePrefix</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">parsePrefix</span><span class="tok-punct">(</span>s<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span><span class="tok-op">?</span></code></pre>
+<p>Parses an integer from the front of the string and returns it together with whatever text was left over.</p>
+<p>This is the building block for hand-written scanners: parse a number, keep going from the remainder. Answers <code>None</code> when the string does not begin with a number at all.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>s</code></dt><dd>the text to parse from</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the value and the unconsumed remainder</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Integer</span><span class="tok-op">.</span><span class="tok-method">parsePrefix</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">42abc</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just((42, &quot;abc&quot;))</span>
+<span class="tok-type">Integer</span><span class="tok-op">.</span><span class="tok-method">parsePrefix</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; None</span></code></pre>
+<p class="caption"><em>Reading a leading count off a line</em></p>
+<pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">Integer</span><span class="tok-op">.</span><span class="tok-method">parsePrefix</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">3 items</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Just</span><span class="tok-punct">(</span>pair<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">do</span>
+    <span class="tok-keyword">let</span> <span class="tok-punct">(</span>count<span class="tok-punct">,</span> rest<span class="tok-punct">)</span> <span class="tok-op">=</span> pair
+    <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>count<span class="tok-string">}</span><span class="tok-string"> of</span><span class="tok-string">${</span>rest<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># prints: 3 of items</span>
+  <span class="tok-keyword">end</span>
+  <span class="tok-bool">None</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">no leading count</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-float">
+<h2><span class="kind kind-module">module</span> <code>Float</code></h2>
+<p>Reading floating-point numbers out of text.</p>
+<div class="functions">
+<div class="fn" id="function-float-parse">
+<h3><a class="self" href="#function-float-parse"><code>parse</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>s<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#make-float"><span class="tok-type">Float</span></a><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span></code></pre>
+<p>Parses the whole string as a float.</p>
+<p>The string must be entirely consumed; anything left over makes it an <a class="xref" href="/prelude/0.4.0-beta.4-dev/json/#type-json-error"><code>Error</code></a> carrying a <code>ParseError</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>s</code></dt><dd>the text to parse</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the float, or a described failure</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Float</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">3.5</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; Ok(3.5)</span>
+<span class="tok-type">Float</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">-0.25</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(-0.25)</span>
+<span class="tok-type">Float</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">3.5m</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; Error(ParseError { ... rest: &quot;m&quot; ... })</span></code></pre>
+<p class="caption"><em>Averaging a column of text values</em></p>
+<pre class="code"><code>rows<span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>r<span class="tok-op">|</span> <span class="tok-type">Float</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span>r<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">0.0</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">sum</span> <span class="tok-op">/</span> rows<span class="tok-op">.</span><span class="tok-method">count</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Float</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">1.0</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-float-parseprefix">
+<h3><a class="self" href="#function-float-parseprefix"><code>parsePrefix</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">parsePrefix</span><span class="tok-punct">(</span>s<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="#make-float"><span class="tok-type">Float</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span><span class="tok-op">?</span></code></pre>
+<p>Parses a float from the front of the string and returns it together with the unconsumed remainder. Answers <code>None</code> when the string does not begin with a number.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>s</code></dt><dd>the text to parse from</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the value and the remainder</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Float</span><span class="tok-op">.</span><span class="tok-method">parsePrefix</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">3.5rest</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just((3.5, &quot;rest&quot;))</span>
+<span class="tok-type">Float</span><span class="tok-op">.</span><span class="tok-method">parsePrefix</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">rest</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; None</span></code></pre>
+<p class="caption"><em>Splitting a measurement from its unit</em></p>
+<pre class="code"><code><span class="tok-type">Float</span><span class="tok-op">.</span><span class="tok-method">parsePrefix</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">12.5kg</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just((12.5, &quot;kg&quot;))</span></code></pre>
+
+</div>
+<div class="fn" id="constant-float-max">
+<h3><a class="self" href="#constant-float-max"><code>MAX</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MAX</span> <span class="tok-op">:</span> <a class="xref" href="#make-float"><span class="tok-type">Float</span></a></code></pre>
+<p>The largest finite <a class="xref" href="#make-float"><code>Float</code></a>.</p>
+<p>A Kex <a class="xref" href="#make-float"><code>Float</code></a> is always finite, so there is no infinity to start from: this is the bound to use instead, say as the first &quot;smallest so far&quot;.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> smallest <span class="tok-op">=</span> readings<span class="tok-op">.</span><span class="tok-method">reduce</span><span class="tok-punct">(</span><span class="tok-type">Float</span><span class="tok-op">.</span><span class="tok-type">MAX</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>low<span class="tok-punct">,</span> x<span class="tok-op">|</span> x <span class="tok-op">&lt;</span> low <span class="tok-keyword">then</span> x <span class="tok-keyword">else</span> low <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="constant-float-min">
+<h3><a class="self" href="#constant-float-min"><code>MIN</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MIN</span> <span class="tok-op">:</span> <a class="xref" href="#make-float"><span class="tok-type">Float</span></a></code></pre>
+<p>The most negative finite <a class="xref" href="#make-float"><code>Float</code></a>: <code>-Float.MAX</code>. Not the smallest positive one, which some languages call MIN.</p>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-float32">
+<h2><span class="kind kind-module">module</span> <code>Float32</code></h2>
+<p>The bounds of the sized numeric types: <a class="xref" href="#constant-int8-max"><code>Int8.MAX</code></a>, <a class="xref" href="#constant-uint64-max"><code>UInt64.MAX</code></a>, <a class="xref" href="#constant-float32-min"><code>Float32.MIN</code></a> and so on. <a class="xref" href="#make-integer"><code>Integer</code></a> has none: it is arbitrary-precision. For a float type, <code>MIN</code> is the most negative finite value, not the smallest positive one.</p>
+<p>The range of a 32-bit float.</p>
+<div class="functions">
+<div class="fn" id="constant-float32-max">
+<h3><a class="self" href="#constant-float32-max"><code>MAX</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MAX</span> <span class="tok-op">:</span> <a class="xref" href="#module-float32"><span class="tok-type">Float32</span></a></code></pre>
+<p>The largest Float32: 3.4028234663852886e38.</p>
+
+</div>
+<div class="fn" id="constant-float32-min">
+<h3><a class="self" href="#constant-float32-min"><code>MIN</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MIN</span> <span class="tok-op">:</span> <a class="xref" href="#module-float32"><span class="tok-type">Float32</span></a></code></pre>
+<p>The most negative finite Float32: -3.4028234663852886e38.</p>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-float64">
+<h2><span class="kind kind-module">module</span> <code>Float64</code></h2>
+<p>The range of a 64-bit float, the same as a <a class="xref" href="#make-float"><code>Float</code></a>.</p>
+<div class="functions">
+<div class="fn" id="constant-float64-max">
+<h3><a class="self" href="#constant-float64-max"><code>MAX</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MAX</span> <span class="tok-op">:</span> <a class="xref" href="#module-float64"><span class="tok-type">Float64</span></a></code></pre>
+<p>The largest Float64: 1.7976931348623157e308.</p>
+
+</div>
+<div class="fn" id="constant-float64-min">
+<h3><a class="self" href="#constant-float64-min"><code>MIN</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MIN</span> <span class="tok-op">:</span> <a class="xref" href="#module-float64"><span class="tok-type">Float64</span></a></code></pre>
+<p>The most negative finite Float64: -1.7976931348623157e308.</p>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-int8">
+<h2><span class="kind kind-module">module</span> <code>Int8</code></h2>
+<p>The range of a signed 8-bit integer.</p>
+<div class="functions">
+<div class="fn" id="constant-int8-max">
+<h3><a class="self" href="#constant-int8-max"><code>MAX</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MAX</span> <span class="tok-op">:</span> <a class="xref" href="#module-int8"><span class="tok-type">Int8</span></a></code></pre>
+<p>The largest Int8: 127.</p>
+
+</div>
+<div class="fn" id="constant-int8-min">
+<h3><a class="self" href="#constant-int8-min"><code>MIN</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MIN</span> <span class="tok-op">:</span> <a class="xref" href="#module-int8"><span class="tok-type">Int8</span></a></code></pre>
+<p>The smallest Int8: -128.</p>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-int16">
+<h2><span class="kind kind-module">module</span> <code>Int16</code></h2>
+<p>The range of a signed 16-bit integer.</p>
+<div class="functions">
+<div class="fn" id="constant-int16-max">
+<h3><a class="self" href="#constant-int16-max"><code>MAX</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MAX</span> <span class="tok-op">:</span> <a class="xref" href="#module-int16"><span class="tok-type">Int16</span></a></code></pre>
+<p>The largest Int16: 32767.</p>
+
+</div>
+<div class="fn" id="constant-int16-min">
+<h3><a class="self" href="#constant-int16-min"><code>MIN</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MIN</span> <span class="tok-op">:</span> <a class="xref" href="#module-int16"><span class="tok-type">Int16</span></a></code></pre>
+<p>The smallest Int16: -32768.</p>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-int32">
+<h2><span class="kind kind-module">module</span> <code>Int32</code></h2>
+<p>The range of a signed 32-bit integer.</p>
+<div class="functions">
+<div class="fn" id="constant-int32-max">
+<h3><a class="self" href="#constant-int32-max"><code>MAX</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MAX</span> <span class="tok-op">:</span> <a class="xref" href="#module-int32"><span class="tok-type">Int32</span></a></code></pre>
+<p>The largest Int32: 2147483647.</p>
+
+</div>
+<div class="fn" id="constant-int32-min">
+<h3><a class="self" href="#constant-int32-min"><code>MIN</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MIN</span> <span class="tok-op">:</span> <a class="xref" href="#module-int32"><span class="tok-type">Int32</span></a></code></pre>
+<p>The smallest Int32: -2147483648.</p>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-int64">
+<h2><span class="kind kind-module">module</span> <code>Int64</code></h2>
+<p>The range of a signed 64-bit integer.</p>
+<div class="functions">
+<div class="fn" id="constant-int64-max">
+<h3><a class="self" href="#constant-int64-max"><code>MAX</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MAX</span> <span class="tok-op">:</span> <a class="xref" href="#module-int64"><span class="tok-type">Int64</span></a></code></pre>
+<p>The largest Int64: 9223372036854775807.</p>
+
+</div>
+<div class="fn" id="constant-int64-min">
+<h3><a class="self" href="#constant-int64-min"><code>MIN</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MIN</span> <span class="tok-op">:</span> <a class="xref" href="#module-int64"><span class="tok-type">Int64</span></a></code></pre>
+<p>The smallest Int64: -9223372036854775808.</p>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-uint8">
+<h2><span class="kind kind-module">module</span> <code>UInt8</code></h2>
+<p>The range of an unsigned 8-bit integer: <a class="xref" href="#module-uint8"><code>UInt8</code></a> is another name for <a class="xref" href="#module-byte"><code>Byte</code></a>.</p>
+<div class="functions">
+<div class="fn" id="constant-uint8-max">
+<h3><a class="self" href="#constant-uint8-max"><code>MAX</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MAX</span> <span class="tok-op">:</span> <a class="xref" href="#module-uint8"><span class="tok-type">UInt8</span></a></code></pre>
+<p>The largest UInt8: 255.</p>
+
+</div>
+<div class="fn" id="constant-uint8-min">
+<h3><a class="self" href="#constant-uint8-min"><code>MIN</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MIN</span> <span class="tok-op">:</span> <a class="xref" href="#module-uint8"><span class="tok-type">UInt8</span></a></code></pre>
+<p>The smallest UInt8: 0.</p>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-uint16">
+<h2><span class="kind kind-module">module</span> <code>UInt16</code></h2>
+<p>The range of an unsigned 16-bit integer.</p>
+<div class="functions">
+<div class="fn" id="constant-uint16-max">
+<h3><a class="self" href="#constant-uint16-max"><code>MAX</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MAX</span> <span class="tok-op">:</span> <a class="xref" href="#module-uint16"><span class="tok-type">UInt16</span></a></code></pre>
+<p>The largest UInt16: 65535.</p>
+
+</div>
+<div class="fn" id="constant-uint16-min">
+<h3><a class="self" href="#constant-uint16-min"><code>MIN</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MIN</span> <span class="tok-op">:</span> <a class="xref" href="#module-uint16"><span class="tok-type">UInt16</span></a></code></pre>
+<p>The smallest UInt16: 0.</p>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-uint32">
+<h2><span class="kind kind-module">module</span> <code>UInt32</code></h2>
+<p>The range of an unsigned 32-bit integer.</p>
+<div class="functions">
+<div class="fn" id="constant-uint32-max">
+<h3><a class="self" href="#constant-uint32-max"><code>MAX</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MAX</span> <span class="tok-op">:</span> <a class="xref" href="#module-uint32"><span class="tok-type">UInt32</span></a></code></pre>
+<p>The largest UInt32: 4294967295.</p>
+
+</div>
+<div class="fn" id="constant-uint32-min">
+<h3><a class="self" href="#constant-uint32-min"><code>MIN</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MIN</span> <span class="tok-op">:</span> <a class="xref" href="#module-uint32"><span class="tok-type">UInt32</span></a></code></pre>
+<p>The smallest UInt32: 0.</p>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-uint64">
+<h2><span class="kind kind-module">module</span> <code>UInt64</code></h2>
+<p>The range of an unsigned 64-bit integer.</p>
+<div class="functions">
+<div class="fn" id="constant-uint64-max">
+<h3><a class="self" href="#constant-uint64-max"><code>MAX</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MAX</span> <span class="tok-op">:</span> <a class="xref" href="#module-uint64"><span class="tok-type">UInt64</span></a></code></pre>
+<p>The largest UInt64: 18446744073709551615.</p>
+
+</div>
+<div class="fn" id="constant-uint64-min">
+<h3><a class="self" href="#constant-uint64-min"><code>MIN</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MIN</span> <span class="tok-op">:</span> <a class="xref" href="#module-uint64"><span class="tok-type">UInt64</span></a></code></pre>
+<p>The smallest UInt64: 0.</p>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-byte">
+<h2><span class="kind kind-module">module</span> <code>Byte</code></h2>
+<p>The range of a <a class="xref" href="#module-byte"><code>Byte</code></a>, Kex's unsigned 8-bit integer (also called <a class="xref" href="#module-uint8"><code>UInt8</code></a>).</p>
+<div class="functions">
+<div class="fn" id="constant-byte-max">
+<h3><a class="self" href="#constant-byte-max"><code>MAX</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MAX</span> <span class="tok-op">:</span> <a class="xref" href="#module-byte"><span class="tok-type">Byte</span></a></code></pre>
+<p>The largest Byte: 255.</p>
+
+</div>
+<div class="fn" id="constant-byte-min">
+<h3><a class="self" href="#constant-byte-min"><code>MIN</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code><span class="tok-type">MIN</span> <span class="tok-op">:</span> <a class="xref" href="#module-byte"><span class="tok-type">Byte</span></a></code></pre>
+<p>The smallest Byte: 0.</p>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-number">
+<h2><span class="kind kind-module">module</span> <code>Number</code></h2>
+<p>Reading a number out of text without deciding in advance which half of the numeric tower it belongs to.</p>
+<div class="functions">
+<div class="fn" id="function-number-parse">
+<h3><a class="self" href="#function-number-parse"><code>parse</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>s<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#"><span class="tok-type">Number</span></a><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span></code></pre>
+<p>Parses the whole string as an <a class="xref" href="#make-integer"><code>Integer</code></a> or a <a class="xref" href="#make-float"><code>Float</code></a>, whichever the text describes.</p>
+<p>Use it when the input's shape is not known ahead of time: a config value, a CSV column that may hold either.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>s</code></dt><dd>the text to parse</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the number, or a described failure</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Number</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">42</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; Ok(42)</span>
+<span class="tok-type">Number</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">3.5</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; Ok(3.5)</span>
+<span class="tok-type">Number</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">x</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; Error(ParseError { ... })</span></code></pre>
+
+</div>
+</div>
+</section>
+

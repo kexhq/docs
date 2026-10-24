@@ -1,0 +1,400 @@
+<section class="entity" id="type-readerror">
+<h2><span class="kind kind-type">type</span> <code>ReadError</code></h2>
+<p>Why a read failed.</p>
+<p><code>ReadFailed</code> means the source refused the read. <code>InvalidUtf8</code> means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U+FFFD: use <code>readBytes</code> to recover the payload verbatim.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>ReadFailed</code></li>
+<li><code>InvalidUtf8(Integer)</code></li>
+</ul>
+
+</section>
+<section class="entity" id="trait-readable">
+<h2><span class="kind kind-trait">trait</span> <code>Readable</code></h2>
+<p><a class="xref" href="#trait-readable"><code>Readable</code></a>: a source that yields text.</p>
+<p>Named so that anything can be one, not just a file: the vocabulary <code>FileHandle&lt;CanRead, W&gt;</code> already carried was an abstraction without a name, so nothing else could implement it and <a class="xref" href="/prelude/0.4.0-beta.4-dev/io/#module-io"><code>IO</code></a> did not go through it (kexhq/kex#139). <a class="xref" href="/prelude/0.4.0-beta.4-dev/io/#constant-io-in"><code>IO.in</code></a> is a <a class="xref" href="#trait-readable"><code>Readable</code></a>; so is any handle opened for reading.</p>
+<pre class="code"><code><span class="tok-keyword">foul</span> <span class="tok-fn">firstLine</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <span class="tok-type">Readable</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-keyword">do</span>
+  source<span class="tok-op">.</span><span class="tok-method">getLine</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">(empty)</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span>
+
+<span class="tok-fn">firstLine</span><span class="tok-punct">(</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-keyword">in</span><span class="tok-punct">)</span>
+<span class="tok-fn">firstLine</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">notes.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Read</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span></code></pre>
+<p class="implements">Implemented by <a class="xref" href="#make-filehandle-canread"><code>FileHandle&lt;CanRead, W&gt;</code></a>.</p>
+<h3>Required methods</h3>
+<p class="group-note">An implementor writes these.</p>
+
+<div class="functions">
+<div class="fn" id="readable-getline">
+<h4><a class="self" href="#readable-getline"><code>getLine</code></a></h4>
+<pre class="code sig"><code>getLine <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">String?</span><span class="tok-punct">,</span> <a class="xref" href="#type-readerror"><span class="tok-type">ReadError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Reads the next line, without its newline.</p>
+<p class="returns"><strong>Returns</strong> the next line, <code>Ok(None)</code> at end of</p>
+
+</div>
+<div class="fn" id="readable-get">
+<h4><a class="self" href="#readable-get"><code>get</code></a></h4>
+<pre class="code sig"><code>get <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">String?</span><span class="tok-punct">,</span> <a class="xref" href="#type-readerror"><span class="tok-type">ReadError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Reads a single character, as a one-character <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><code>String</code></a>.</p>
+<p>Reads one complete Unicode scalar, not one byte.</p>
+<p class="returns"><strong>Returns</strong> the next character, <code>Ok(None)</code> at end</p>
+
+</div>
+<div class="fn" id="readable-readline">
+<h4><a class="self" href="#readable-readline"><code>readLine</code></a></h4>
+<pre class="code sig"><code>readLine <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">String?</span><span class="tok-punct">,</span> <a class="xref" href="#type-readerror"><span class="tok-type">ReadError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Reads the next line, without its newline. The same as <code>getLine</code>.</p>
+<p class="returns"><strong>Returns</strong> the next line, <code>Ok(None)</code> at end of</p>
+
+</div>
+<div class="fn" id="readable-read">
+<h4><a class="self" href="#readable-read"><code>read</code></a></h4>
+<pre class="code sig"><code>read <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-readerror"><span class="tok-type">ReadError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Reads everything remaining, as one <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><code>String</code></a>.</p>
+<p>Draining an exhausted source answers <code>Ok(&quot;&quot;)</code>.</p>
+<p class="returns"><strong>Returns</strong> the remaining contents, or the failure</p>
+
+</div>
+<div class="fn" id="readable-readbytes">
+<h4><a class="self" href="#readable-readbytes"><code>readBytes</code></a></h4>
+<pre class="code sig"><code>readBytes <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-readerror"><span class="tok-type">ReadError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Reads everything remaining as raw bytes, without decoding it as text.</p>
+<p>The byte counterpart of <code>read</code>: it never validates UTF-8, so it recovers the payload of a source that is not text, or one <code>read</code> has just rejected. Draining an exhausted source answers <code>Ok(Binary.fromBytes([]))</code>.</p>
+<p class="returns"><strong>Returns</strong> the remaining bytes, or the failure</p>
+
+</div>
+<div class="fn" id="readable-eof?">
+<h4><a class="self" href="#readable-eof?"><code>eof?</code></a></h4>
+<pre class="code sig"><code>eof? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the source has reached its end.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> at end of input</p>
+
+</div>
+<div class="fn" id="readable-atend?">
+<h4><a class="self" href="#readable-atend?"><code>atEnd?</code></a></h4>
+<pre class="code sig"><code>atEnd? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the source has reached its end. The same as <code>eof?</code>.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> at end of input</p>
+
+</div>
+</div>
+
+</section>
+<section class="entity" id="trait-writable">
+<h2><span class="kind kind-trait">trait</span> <code>Writable</code></h2>
+<p><a class="xref" href="#trait-writable"><code>Writable</code></a>: a sink that accepts text.</p>
+<p>The payoff of naming it is that a sink becomes a VALUE a library can accept, rather than a global switch it can only sit underneath: output from one library can go to a buffer while another's goes to the terminal (kexhq/kex#139).</p>
+<pre class="code"><code><span class="tok-keyword">foul</span> <span class="tok-fn">report</span><span class="tok-punct">(</span>out<span class="tok-op">:</span> <span class="tok-type">Writable</span><span class="tok-punct">,</span> lines<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">String</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span> <span class="tok-keyword">do</span>
+  lines<span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> out<span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>line<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-keyword">end</span>
+
+<span class="tok-fn">report</span><span class="tok-punct">(</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">out</span><span class="tok-punct">,</span> results<span class="tok-punct">)</span>
+<span class="tok-fn">report</span><span class="tok-punct">(</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">error</span><span class="tok-punct">,</span> warnings<span class="tok-punct">)</span>
+<span class="tok-fn">report</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">report.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Write</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">,</span> results<span class="tok-punct">)</span></code></pre>
+<p>Two deliberate choices, both settled in kexhq/kex#139:</p>
+<ul>
+<li>The argument is <code>Showable</code>, not <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><code>String</code></a>. <code>IO.printLine</code> always took a   <code>Showable</code> while the handle methods took a <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><code>String</code></a>; the wider one is   right, and it is what makes <code>IO.printLine(x)</code> and <code>IO.out.printLine(x)</code>   the same call. - The result is <code>Void</code>, not <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><code>Bool</code></a>. A boolean nobody checks is not an error   channel, and <code>Result&lt;Void, IOError&gt;</code> on every print is miserable to use.   Erlang's answer is the one taken here: the call says <code>ok</code>, and failure   belongs to the device rather than to the call site.</li>
+</ul>
+<p class="implements">Implemented by <a class="xref" href="#make-filehandle-canwrite"><code>FileHandle&lt;R, CanWrite&gt;</code></a>.</p>
+<h3>Required methods</h3>
+<p class="group-note">An implementor writes these.</p>
+
+<div class="functions">
+<div class="fn" id="writable-printline">
+<h4><a class="self" href="#writable-printline"><code>printLine</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">printLine</span><span class="tok-punct">(</span>content<span class="tok-op">:</span> <span class="tok-type">Showable</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Writes <code>content</code> followed by a newline.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>content</code></dt><dd>the value to write</dd></div>
+</dl>
+
+</div>
+<div class="fn" id="writable-print">
+<h4><a class="self" href="#writable-print"><code>print</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">print</span><span class="tok-punct">(</span>content<span class="tok-op">:</span> <span class="tok-type">Showable</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Writes <code>content</code> with no trailing newline.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>content</code></dt><dd>the value to write</dd></div>
+</dl>
+
+</div>
+<div class="fn" id="writable-writeline">
+<h4><a class="self" href="#writable-writeline"><code>writeLine</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">writeLine</span><span class="tok-punct">(</span>content<span class="tok-op">:</span> <span class="tok-type">Showable</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Writes <code>content</code> followed by a newline. The same as <code>printLine</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>content</code></dt><dd>the value to write</dd></div>
+</dl>
+
+</div>
+<div class="fn" id="writable-write">
+<h4><a class="self" href="#writable-write"><code>write</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">write</span><span class="tok-punct">(</span>content<span class="tok-op">:</span> <span class="tok-type">Showable</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Writes <code>content</code> with no trailing newline. The same as <code>print</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>content</code></dt><dd>the value to write</dd></div>
+</dl>
+
+</div>
+<div class="fn" id="writable-writebytes">
+<h4><a class="self" href="#writable-writebytes"><code>writeBytes</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">writeBytes</span><span class="tok-punct">(</span>content<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Writes <code>content</code> as raw bytes, with no trailing newline.</p>
+<p>The byte counterpart of <code>write</code>: the payload goes to the sink exactly as given. It never renders the value, so a <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><code>Binary</code></a> reaches the sink as its bytes rather than as the <code>#Binary&lt;N bytes&gt;</code> that <code>Showable</code> would print.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>content</code></dt><dd>the bytes to write</dd></div>
+</dl>
+
+</div>
+</div>
+
+</section>
+<section class="entity" id="type-filehandle">
+<h2><span class="kind kind-type">type</span> <code>FileHandle&lt;R, W&gt;</code></h2>
+<p>An open file, obtained from <code>FS.File.open</code>.</p>
+<p>The two type parameters record what the handle is allowed to do: <code>R</code> is <code>CanRead</code> or <code>CannotRead</code>, <code>W</code> is <code>CanWrite</code> or <code>CannotWrite</code>. <code>FS.File.open</code> picks them from the mode you pass, so calling <code>write</code> on a handle opened <code>Read</code> is a compile error rather than a run-time failure.</p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">FS</span>
+
+<span class="tok-keyword">main</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">match</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">notes.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Read</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+    <span class="tok-bool">Ok</span><span class="tok-punct">(</span>handle<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">do</span>
+      <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>handle<span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+      handle<span class="tok-op">.</span><span class="tok-method">close</span>
+    <span class="tok-keyword">end</span>
+    <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cannot open: </span><span class="tok-string">${</span>e<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span></code></pre>
+<p>Reach for a handle when you want to walk a large file a line at a time, or make many small writes. When a file fits comfortably in memory, <code>FS.File.read</code> and <code>FS.File.write</code> are shorter and need no closing. To be rid of the closing entirely, pass <code>FS.File.open</code> a block.</p>
+<p>The handle methods are <code>foul</code>: obtaining a handle is not an effect, but reading or writing through one is, so a function that does so is <code>foul</code> no matter where the handle came from. Injection makes a thing substitutable, not pure.</p>
+<p class="implements">Implements <a class="xref" href="#trait-readable"><code>Readable</code></a>, <a class="xref" href="#trait-writable"><code>Writable</code></a>.</p>
+<section class="members" id="make-filehandle">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="filehandle-close">
+<h4><a class="self" href="#filehandle-close"><code>close</code></a></h4>
+<pre class="code sig"><code>close <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p>Closes the handle, flushing anything still buffered.</p>
+<p>Close every handle you open. A written file is not guaranteed to be complete on disk until its handle is closed. Passing <code>FS.File.open</code> a block closes the handle for you.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">out.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Write</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>handle<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">do</span>
+    handle<span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+    handle<span class="tok-op">.</span><span class="tok-method">close</span>
+  <span class="tok-keyword">end</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span>_<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cannot open out.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="filehandle-seek">
+<h4><a class="self" href="#filehandle-seek"><code>seek</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">seek</span><span class="tok-punct">(</span>offset<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="#type-readerror"><span class="tok-type">ReadError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Moves the handle's cursor to an absolute byte offset from the start of the file. Read and write share one cursor, so this repositions both — a <code>readLine</code> right after <code>seek(0)</code> starts over from the top, and a <code>write</code> right after does too, overwriting from that point.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>offset</code></dt><dd>the byte offset to seek to, from the start of</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>Ok</code> on success, or why the seek</p>
+<h5>Examples</h5>
+<p class="caption"><em>Reading a length-prefixed record, then rewinding past it</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> length <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">readLine</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">0</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Integer</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span>
+<span class="tok-keyword">let</span> <span class="tok-keyword">record</span> <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">readBytes</span><span class="tok-op">.</span><span class="tok-method">try</span>
+handle<span class="tok-op">.</span><span class="tok-method">seek</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="filehandle-reset">
+<h4><a class="self" href="#filehandle-reset"><code>reset</code></a></h4>
+<pre class="code sig"><code>reset <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="#type-readerror"><span class="tok-type">ReadError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Moves the handle's cursor back to the start of the file — the same as <code>seek(0)</code>, for the common case of re-reading a handle from the top.</p>
+<p class="returns"><strong>Returns</strong> <code>Ok</code> on success, or why the reset</p>
+<h5>Examples</h5>
+<p class="caption"><em>Reading a file twice</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> firstPass <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+handle<span class="tok-op">.</span><span class="tok-method">reset</span>
+<span class="tok-keyword">let</span> secondPass <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="members" id="make-filehandle-canread">
+<h3>On <code>FileHandle&lt;CanRead, W&gt;</code></h3>
+
+<div class="functions">
+<div class="fn" id="filehandle-canread-getline">
+<h4><a class="self" href="#filehandle-canread-getline"><code>getLine</code></a> <a class="tag-trait" href="#readable-getline" title="Implements Readable.getLine">Readable</a></h4>
+<pre class="code sig"><code>getLine <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">String?</span><span class="tok-punct">,</span> <a class="xref" href="#type-readerror"><span class="tok-type">ReadError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Reads the next line from the handle, without its newline.</p>
+<p>Answers <code>None</code> at end of file, which is what makes it usable as a loop condition. The same operation as <code>readLine</code>, under the name <code>IO.getLine</code> uses.</p>
+<p class="returns"><strong>Returns</strong> the next line, or <code>None</code> at end of file</p>
+<h5>Examples</h5>
+<p class="caption"><em>Walking a file line by line</em></p>
+<pre class="code"><code><span class="tok-keyword">foul</span> <span class="tok-fn">echo</span><span class="tok-punct">(</span>handle<span class="tok-op">:</span> <span class="tok-type">FileHandle</span><span class="tok-op">&lt;</span><span class="tok-type">CanRead</span><span class="tok-punct">,</span> <span class="tok-type">W</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">match</span> handle<span class="tok-op">.</span><span class="tok-method">getLine</span> <span class="tok-keyword">do</span>
+    <span class="tok-bool">Just</span><span class="tok-punct">(</span>line<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">do</span>
+      <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>line<span class="tok-punct">)</span>
+      <span class="tok-fn">echo</span><span class="tok-punct">(</span>handle<span class="tok-punct">)</span>
+    <span class="tok-keyword">end</span>
+    <span class="tok-bool">None</span> <span class="tok-op">=&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="filehandle-canread-get">
+<h4><a class="self" href="#filehandle-canread-get"><code>get</code></a> <a class="tag-trait" href="#readable-get" title="Implements Readable.get">Readable</a></h4>
+<pre class="code sig"><code>get <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">String?</span><span class="tok-punct">,</span> <a class="xref" href="#type-readerror"><span class="tok-type">ReadError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Reads a single character from the handle, as a one-character <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><code>String</code></a>.</p>
+<p>Answers <code>None</code> at end of file.</p>
+<p class="returns"><strong>Returns</strong> the next character, or <code>None</code> at end of file</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> firstChar <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="filehandle-canread-readline">
+<h4><a class="self" href="#filehandle-canread-readline"><code>readLine</code></a> <a class="tag-trait" href="#readable-readline" title="Implements Readable.readLine">Readable</a></h4>
+<pre class="code sig"><code>readLine <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">String?</span><span class="tok-punct">,</span> <a class="xref" href="#type-readerror"><span class="tok-type">ReadError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Reads the next line from the handle, without its newline. The same as <code>getLine</code>, named for reading from a file rather than from a console.</p>
+<p class="returns"><strong>Returns</strong> the next line, or <code>None</code> at end of file</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> header <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">readLine</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<p class="caption"><em>Reading the first three lines</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> head <span class="tok-op">=</span> <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>_<span class="tok-op">|</span> handle<span class="tok-op">.</span><span class="tok-method">readLine</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="filehandle-canread-read">
+<h4><a class="self" href="#filehandle-canread-read"><code>read</code></a> <a class="tag-trait" href="#readable-read" title="Implements Readable.read">Readable</a></h4>
+<pre class="code sig"><code>read <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-readerror"><span class="tok-type">ReadError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Reads everything remaining in the file and returns it as one <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><code>String</code></a>.</p>
+<p>Reads from the current position, so calling it after a <code>readLine</code> gives the rest of the file rather than the whole of it.</p>
+<p class="returns"><strong>Returns</strong> the remaining contents</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> body <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+<p class="caption"><em>Skipping a header line, then taking the rest</em></p>
+<pre class="code"><code>handle<span class="tok-op">.</span><span class="tok-method">readLine</span>
+<span class="tok-keyword">let</span> body <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="filehandle-canread-readbytes">
+<h4><a class="self" href="#filehandle-canread-readbytes"><code>readBytes</code></a> <a class="tag-trait" href="#readable-readbytes" title="Implements Readable.readBytes">Readable</a></h4>
+<pre class="code sig"><code>readBytes <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-readerror"><span class="tok-type">ReadError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Reads all remaining bytes from the handle without decoding them.</p>
+<p>Unlike <code>read</code>, this accepts arbitrary binary data and cannot fail because the input is not valid UTF-8. It starts at the handle's current position.</p>
+<p class="returns"><strong>Returns</strong> the remaining bytes</p>
+<h5>Examples</h5>
+<p class="caption"><em>Reading a file with an unknown encoding</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> payload <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">readBytes</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="filehandle-canread-eof?">
+<h4><a class="self" href="#filehandle-canread-eof?"><code>eof?</code></a> <a class="tag-trait" href="#readable-eof?" title="Implements Readable.eof?">Readable</a></h4>
+<pre class="code sig"><code>eof? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the handle has reached the end of the file.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> at end of file</p>
+<h5>Examples</h5>
+<pre class="code"><code>handle<span class="tok-op">.</span><span class="tok-method">eof?</span>   <span class="tok-comment"># =&gt; false, before anything has been read</span></code></pre>
+
+</div>
+<div class="fn" id="filehandle-canread-atend?">
+<h4><a class="self" href="#filehandle-canread-atend?"><code>atEnd?</code></a> <a class="tag-trait" href="#readable-atend?" title="Implements Readable.atEnd?">Readable</a></h4>
+<pre class="code sig"><code>atEnd? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the handle has reached the end of the file. The same as <code>eof?</code>, spelled out.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> at end of file</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">if</span> <span class="tok-op">!</span>handle<span class="tok-op">.</span><span class="tok-method">atEnd?</span>
+  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>handle<span class="tok-op">.</span><span class="tok-method">readLine</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="filehandle-canread-feed">
+<h4><a class="self" href="#filehandle-canread-feed"><code>feed</code></a></h4>
+<pre class="code sig"><code>feed <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/feed/#type-feed"><span class="tok-type">Feed</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span><span class="tok-op">?</span></code></pre>
+<p>Returns the handle's remaining lines as a lazy <a class="xref" href="/prelude/0.4.0-beta.4-dev/feed/#type-feed"><code>Feed</code></a>.</p>
+<p>Lines are read on demand off the handle's own position, so this is how to look at the start of a very large file, or process one without holding it all in memory. The feed shares the handle's cursor: interleaving <code>readLine</code> with it advances one position through one open file.</p>
+<p>The feed ends at the last line, so taking more lines than the file has answers just the lines there are.</p>
+<p>NOT part of <a class="xref" href="#trait-readable"><code>Readable</code></a>: a feed is neither pure nor reusable, so requiring it of every <a class="xref" href="#trait-readable"><code>Readable</code></a> would put a foul, one-shot operation on types that have no such cursor to offer. It stays a FileHandle method.</p>
+<p class="returns"><strong>Returns</strong> the lines as a feed, or <code>None</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>The first ten lines of a large file</em></p>
+<pre class="code"><code>handle<span class="tok-op">.</span><span class="tok-method">feed</span>
+  <span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>lines<span class="tok-op">|</span> lines<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+  <span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="members" id="make-filehandle-canwrite">
+<h3>On <code>FileHandle&lt;R, CanWrite&gt;</code></h3>
+
+<div class="functions">
+<div class="fn" id="filehandle-canwrite-writebytes">
+<h4><a class="self" href="#filehandle-canwrite-writebytes"><code>writeBytes</code></a> <a class="tag-trait" href="#writable-writebytes" title="Implements Writable.writeBytes">Writable</a></h4>
+<pre class="code sig"><code><span class="tok-fn">writeBytes</span><span class="tok-punct">(</span>content<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Writes <code>content</code> verbatim, without text encoding or a trailing newline.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>content</code></dt><dd>the bytes to write</dd></div>
+</dl>
+<h5>Examples</h5>
+<p class="caption"><em>Copying an opaque payload</em></p>
+<pre class="code"><code>destination<span class="tok-op">.</span><span class="tok-method">writeBytes</span><span class="tok-punct">(</span>source<span class="tok-op">.</span><span class="tok-method">readBytes</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="filehandle-canwrite-printline">
+<h4><a class="self" href="#filehandle-canwrite-printline"><code>printLine</code></a> <a class="tag-trait" href="#writable-printline" title="Implements Writable.printLine">Writable</a></h4>
+<pre class="code sig"><code><span class="tok-fn">printLine</span><span class="tok-punct">(</span>content<span class="tok-op">:</span> <span class="tok-type">Showable</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Writes <code>content</code> followed by a newline.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>content</code></dt><dd>the value to write</dd></div>
+</dl>
+<h5>Examples</h5>
+<p class="caption"><em>Writing a report line by line</em></p>
+<pre class="code"><code>rows<span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>row<span class="tok-op">|</span> handle<span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>row<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="filehandle-canwrite-print">
+<h4><a class="self" href="#filehandle-canwrite-print"><code>print</code></a> <a class="tag-trait" href="#writable-print" title="Implements Writable.print">Writable</a></h4>
+<pre class="code sig"><code><span class="tok-fn">print</span><span class="tok-punct">(</span>content<span class="tok-op">:</span> <span class="tok-type">Showable</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Writes <code>content</code> with no trailing newline.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>content</code></dt><dd>the value to write</dd></div>
+</dl>
+<h5>Examples</h5>
+<p class="caption"><em>Building a line from pieces</em></p>
+<pre class="code"><code>handle<span class="tok-op">.</span><span class="tok-method">print</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">name,</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+handle<span class="tok-op">.</span><span class="tok-method">print</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">age</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+handle<span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="filehandle-canwrite-writeline">
+<h4><a class="self" href="#filehandle-canwrite-writeline"><code>writeLine</code></a> <a class="tag-trait" href="#writable-writeline" title="Implements Writable.writeLine">Writable</a></h4>
+<pre class="code sig"><code><span class="tok-fn">writeLine</span><span class="tok-punct">(</span>content<span class="tok-op">:</span> <span class="tok-type">Showable</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Writes <code>content</code> followed by a newline. The same as <code>printLine</code>, named for writing to a file rather than to a console.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>content</code></dt><dd>the value to write</dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code>handle<span class="tok-op">.</span><span class="tok-method">writeLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">done</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="filehandle-canwrite-write">
+<h4><a class="self" href="#filehandle-canwrite-write"><code>write</code></a> <a class="tag-trait" href="#writable-write" title="Implements Writable.write">Writable</a></h4>
+<pre class="code sig"><code><span class="tok-fn">write</span><span class="tok-punct">(</span>content<span class="tok-op">:</span> <span class="tok-type">Showable</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Writes <code>content</code> with no trailing newline. The same as <code>print</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>content</code></dt><dd>the value to write</dd></div>
+</dl>
+<h5>Examples</h5>
+<p class="caption"><em>Writing a whole document in one call</em></p>
+<pre class="code"><code>handle<span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span>rendered<span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+</section>
