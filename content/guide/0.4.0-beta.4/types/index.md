@@ -8,6 +8,15 @@ template: "page"
 ---
 Kex checks types before running a program. Inference keeps local code light; annotations make boundaries explicit and improve diagnostics when an implementation changes.
 
+
+
+## Primitive types
+
+| Name |  |  |
+| --- | --- | --- |
+|  |  |  |
+|  |  |  |
+
 ## Read a type
 
 | Type | Meaning |

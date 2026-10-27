@@ -12,15 +12,15 @@ This page targets **Kex 0.4.0-beta.4**. It distinguishes longstanding Elixir syn
 
 ## At a glance
 
-| Idea | Elixir | Kex |  |
-| --- | --- | --- | --- |
-| Function declaration | `def` or `defp` inside a module | Pure `let` or effectful `foul` |  |
-| Composition | \`value | \> function(args)\` | `value.function(args)` through UFCS |
-| Rebinding | A variable may be rebound; values remain immutable | `let` prevents rebinding; `var` permits it |  |
-| Structured data | Structs and maps | Records and maps |  |
-| Result convention | Often `{:ok, value}` / `{:error, reason}` | `Ok(value)` / `Error(reason)` |  |
-| Server behavior | `GenServer` callbacks and public wrapper functions | `serving` slots on record state |  |
-| Process interface | Pids and message conventions | `Process<Message>` and typed server handles |  |
+| Idea | Elixir | Kex |
+| --- | --- | --- |
+| Function declaration | `def` or `defp` inside a module | Pure `let` or effectful `foul` |
+| Composition | \`value | \> function(args)\` |
+| Rebinding | A variable may be rebound; values remain immutable | `let` prevents rebinding; `var` permits it |
+| Structured data | Structs and maps | Records and maps |
+| Result convention | Often `{:ok, value}` / `{:error, reason}` | `Ok(value)` / `Error(reason)` |
+| Server behavior | `GenServer` callbacks and public wrapper functions | `serving` slots on record state |
+| Process interface | Pids and message conventions | `Process<Message>` and typed server handles |
 
 Elixir is incorporating gradual set-theoretic analysis into its compiler. Its current documentation describes inference and diagnostics from existing code, with user-provided signatures planned separately. Existing `@spec` declarations and Dialyzer also have their own role. Therefore, “Elixir has no type checking” is not a sound comparison. Kex's relevant distinction here is its checked annotations, declared alternatives, and typed receiver/message interfaces. [Elixir compiler types](https://elixir.hexdocs.pm/gradual-set-theoretic-types.html), [Elixir typespecs](https://elixir.hexdocs.pm/1.17/typespecs.html)
 
