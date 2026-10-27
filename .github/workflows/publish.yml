@@ -93,6 +93,23 @@ jobs:
         working-directory: .marqraft-cli
         run: |
           tey install
+          # Marqraft uses Headers.add, removed from Kex; build against the
+          # current validated Headers.from API.
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("src/marqraft/server.kex")
+          source = path.read_text()
+          replacements = {
+              'Net.HTTP.Headers.empty.add("Cache-Control", "no-store").try.add("X-Content-Type-Options", "nosniff").try': 'Net.HTTP.Headers.from([("Cache-Control", "no-store"), ("X-Content-Type-Options", "nosniff")]).try',
+              'noCache.add("Content-Type", "text/javascript; charset=utf-8").try': 'Net.HTTP.Headers.from([("Cache-Control", "no-store"), ("X-Content-Type-Options", "nosniff"), ("Content-Type", "text/javascript; charset=utf-8")]).try',
+              'noCache.add("Content-Type", "text/css; charset=utf-8").try': 'Net.HTTP.Headers.from([("Cache-Control", "no-store"), ("X-Content-Type-Options", "nosniff"), ("Content-Type", "text/css; charset=utf-8")]).try',
+          }
+          for old, new in replacements.items():
+              if source.count(old) != 1:
+                  raise SystemExit(f"expected exactly one occurrence of {old!r}")
+              source = source.replace(old, new)
+          path.write_text(source)
+          PY
           tey build
 
       # marq renders theme templates with the `kex` on PATH (or TEY_KEX).
