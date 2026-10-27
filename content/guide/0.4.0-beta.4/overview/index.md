@@ -6,7 +6,13 @@ path: "/guide/0.4.0-beta.4/overview/"
 draft: false
 template: "page"
 ---
-Kex is a functional language with Ruby-like syntax and a static type checker. It runs on the BEAM virtual machine by default and also has a tree-walk interpreter. Its core building blocks are immutable values, functions, typed data, and isolated processes.
+**Kex** is a [functional language](https://en.wikipedia.org/wiki/Functional_programming) with [Ruby](https://en.wikipedia.org/wiki/Ruby_(programming_language))-like syntax and a static type checker. It runs on the [BEAM virtual machine](https://en.wikipedia.org/wiki/BEAM_(Erlang_virtual_machine)) by default and also has a C++-based interpreter.
+
+### Philosophy
+
+The core idea behind the language was to make it powerful and immutable, yet highly readable and easy to extend, which makes building highly scalable BEAM software easy.
+
+Not all algorithms are best suited for functional constructs so 
 
 ## Transform values
 

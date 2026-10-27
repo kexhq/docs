@@ -7,9 +7,14 @@ draft: false
 template: "landing"
 version: "0.4.0-beta.4"
 ---
-This guide teaches Kex **0.4.0-beta.4**. It starts with a small program and builds toward data modeling, reliable IO, packages, and concurrent services. You need some familiarity with programming, but no experience with functional languages or Erlang.
+This guide introduces you to Kex version **0.4.0** It starts with a small program and builds toward data modeling, IO, packages, and concurrent services.
 
-Kex is still changing before 1.0. Use the compiler version for this edition when following examples. The [standard library](/prelude/) and [Tey reference](/tey/) provide individual API signatures; this guide explains how to put the pieces together.
+You need some familiarity with programming, but no experience with [functional languages](https://en.wikipedia.org/wiki/Functional_programming) or [Erlang](https://en.wikipedia.org/wiki/Erlang_(programming_language)).
+
+> [!IMPORTANT]
+> Keep in mind that the language, including its syntax, semantics and standard library are still under active development and can include major changes version to version.
+>
+> **Currently no compatibility will be attempted before the first planned stable production version Kex 1.0.**
 
 ## Start here
 
@@ -54,6 +59,6 @@ Read [Kex vs Haskell](kex-vs-haskell/), [Kex vs Ruby](kex-vs-ruby/), or [Kex vs 
 
 ## Working with examples
 
-Unless identified as a project file or an excerpt, the Kex blocks on a page form one runnable program in reading order. Save them together in a `.kex` file. Testing examples use `.spec.kex`. Comments and `assert` calls make expected behavior explicit.
+Unless identified as a project file or an excerpt, the Kex blocks on a page form one runnable program in reading order. Save them together in a `.kex` file or use the read-eval-print loop (**REPL**) provided in the `kex` command-line program. Some examples could also be tried in the [online REPL](https://www.kex.run/repl/) or [web-based playground](https://www.kex.run/playground/).
 
-The repository's `scripts/check-guide-examples.py` extracts and verifies those programs. The walkthrough is checked with a real input fixture, and the HTTP example uses a local server. Installation, publishing, and remote-service commands are instructions for you to run deliberately, not operations performed by the example checker.
+By convention, test files are named  `*.spec.kex`, for instance the file `list.kex` would be tested by its `list.spec.kex` counterpart. Comments and `assert` calls make expected behavior explicit.

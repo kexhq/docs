@@ -36,14 +36,41 @@ example :: [Integer]
 example = squaresOfEvens [1, 2, 3, 4] -- [4, 16]
 ```
 
-In Kex:
+In Kex using standalone type declarations:
+
+```kex
+squaresOfEvens : [Integer] -> [Integer]
+let squaresOfEvens(values) do
+  values.filter { |n| n % 2 == 0 }.map { |n| n * n }
+end
+
+assert(squaresOfEvens([1, 2, 3, 4]) == [4, 16])
+```
+
+This form is more useful when we use pattern matching, with multiple function bodies:
+
+```kex
+factorial : Integer -> Integer
+let factorial(1) = 1
+let factorial(n) = n * factorial(n - 1)
+```
+
+Since the function body is a one-liner, this can be further simplified to:
+
+```kex
+squaresOfEvens : [Integer] -> [Integer]
+let squaresOfEvens(values) = values.filter { |n| n % 2 == 0 }.map { |n| n * n }
+```
+
+However, since in this instance we can move declarations into the function:
 
 ```kex
 let squaresOfEvens(values: [Integer]) -> [Integer] do
   values.filter { |n| n % 2 == 0 }.map { |n| n * n }
 end
-assert(squaresOfEvens([1, 2, 3, 4]) == [4, 16])
 ```
+
+
 
 The Kex chain reads in traversal order. UFCS lets the receiver supply the first argument; a dot does not mean an object is being mutated. The list pipeline is eager. For an unbounded sequence, choose a stream and bound consumption:
 
