@@ -341,8 +341,8 @@ Facts reported by the compiler Tey selected for this project. This is deliberate
 
 **Fields**
 
-  - `version` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
-  - `reportedRuntimeOtpFloor` : [Integer](../../../prelude/0.4.0-rc.2-dev/number.md#make-integer)? (optional)
+  - `version` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
+  - `reportedRuntimeOtpFloor` : [Integer](../../../prelude/0.4.0-rc.3-dev/number.md#make-integer)? (optional)
 
 
 
@@ -352,9 +352,9 @@ One selectable Kex: the version `tey kex use` names it by, the binary that runs 
 
 **Fields**
 
-  - `version` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
-  - `binary` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
-  - `bundled?` : [Bool](../../../prelude/0.4.0-rc.2-dev/truthyable.md#make-bool) (optional)
+  - `version` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
+  - `binary` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
+  - `bundled?` : [Bool](../../../prelude/0.4.0-rc.3-dev/truthyable.md#make-bool) (optional)
 
 
 

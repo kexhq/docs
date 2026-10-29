@@ -65,9 +65,9 @@ readLocal(text: String) -> Result<[LocalOverride], String>
 
 **Fields**
 
-  - `manifestName` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
+  - `manifestName` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
   - `manifestSource` : [DependencySource](#type-tey-manifest-dependencysource)
-  - `manifestGroups` : [[String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)] (optional)
+  - `manifestGroups` : [[String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)] (optional)
 
 
 
@@ -75,7 +75,7 @@ readLocal(text: String) -> Result<[LocalOverride], String>
 
 **Fields**
 
-  - `memberPatterns` : [[String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)] (optional)
+  - `memberPatterns` : [[String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)] (optional)
 
 
 
@@ -83,8 +83,8 @@ readLocal(text: String) -> Result<[LocalOverride], String>
 
 **Fields**
 
-  - `localName` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
-  - `localPath` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
+  - `localName` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
+  - `localPath` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
 
 
 
@@ -92,8 +92,8 @@ readLocal(text: String) -> Result<[LocalOverride], String>
 
 **Fields**
 
-  - `name` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
-  - `entrypoint` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
+  - `name` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
+  - `entrypoint` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
 
 
 
@@ -101,8 +101,8 @@ readLocal(text: String) -> Result<[LocalOverride], String>
 
 **Fields**
 
-  - `capabilityKind` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
-  - `capabilityValues` : [[String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)] (optional)
+  - `capabilityKind` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
+  - `capabilityValues` : [[String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)] (optional)
 
 
 
@@ -110,8 +110,8 @@ readLocal(text: String) -> Result<[LocalOverride], String>
 
 **Fields**
 
-  - `optionName` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
-  - `optionType` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
+  - `optionName` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
+  - `optionType` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
 
 
 
@@ -119,8 +119,8 @@ readLocal(text: String) -> Result<[LocalOverride], String>
 
 **Fields**
 
-  - `operationName` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
-  - `operationEntrypoint` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
+  - `operationName` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
+  - `operationEntrypoint` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
   - `operationOptions` : [[PluginOption](#record-tey-manifest-pluginoption)] (optional)
 
 
@@ -129,8 +129,8 @@ readLocal(text: String) -> Result<[LocalOverride], String>
 
 **Fields**
 
-  - `pluginNamespace` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
-  - `pluginTeyRequirement` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
+  - `pluginNamespace` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
+  - `pluginTeyRequirement` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
   - `pluginCapabilities` : [[PluginCapability](#record-tey-manifest-plugincapability)] (optional)
   - `pluginCommands` : [[PluginOperation](#record-tey-manifest-pluginoperation)] (optional)
   - `pluginGenerators` : [[PluginOperation](#record-tey-manifest-pluginoperation)] (optional)
@@ -145,9 +145,9 @@ A name is one word, grouped with a colon: `db:migrate`, `assets:build`.
 
 **Fields**
 
-  - `commandName` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
-  - `commandRun` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
-  - `commandDescription` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string) (optional)
+  - `commandName` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
+  - `commandRun` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
+  - `commandDescription` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string) (optional)
 
 
 
@@ -159,10 +159,10 @@ Fields are prefixed like Command's: a bare `compiler` would be read as a method 
 
 **Fields**
 
-  - `toolchainName` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
-  - `toolchainCompiler` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string) (optional)
-  - `toolchainRuntime` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string) (optional)
-  - `toolchainStdlib` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string) (optional)
+  - `toolchainName` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
+  - `toolchainCompiler` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string) (optional)
+  - `toolchainRuntime` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string) (optional)
+  - `toolchainStdlib` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string) (optional)
 
 
 
@@ -170,14 +170,14 @@ Fields are prefixed like Command's: a bare `compiler` would be read as a method 
 
 **Fields**
 
-  - `name` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
-  - `version` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string) (optional)
-  - `description` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string) (optional)
-  - `license` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string) (optional)
-  - `packageKexRequirement` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string) (optional)
-  - `packageOtpRequirement` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string) (optional)
-  - `entrypoint` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string) (optional)
-  - `sourceFolders` : [[String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)] (optional)
+  - `name` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
+  - `version` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string) (optional)
+  - `description` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string) (optional)
+  - `license` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string) (optional)
+  - `packageKexRequirement` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string) (optional)
+  - `packageOtpRequirement` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string) (optional)
+  - `entrypoint` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string) (optional)
+  - `sourceFolders` : [[String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)] (optional)
   - `manifestDependencies` : [Dependency] (optional)
   - `targets` : [[Target](#record-tey-manifest-target)] (optional)
   - `commands` : [[Command](#record-tey-manifest-command)] (optional)

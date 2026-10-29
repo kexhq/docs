@@ -276,6 +276,7 @@ One declared route; routers preserve declaration order.
   - `method` : [String](../string.md#make-string)
   - `path` : [String](../string.md#make-string)
   - `handler` : [Handler](#type-net-http-handler)
+  - `maximumBodyBytes` : [Integer](../number.md#make-integer)? (optional)
 
 
 
@@ -292,7 +293,7 @@ An immutable, declaration-ordered HTTP router.
 #### `route`
 
 ```kex
-route(method: String, path: String, handler: Handler) -> Router
+route(method: String, path: String, handler: Handler, maximumBodyBytes: Integer) -> Router
 ```
 
 Appends a route; earlier matching declarations win.
@@ -310,7 +311,7 @@ router.route("PURGE", "/cache/:key", ~purge)
 #### `get`
 
 ```kex
-get(path: String, handler: Handler) -> Router
+get(path: String, handler: Handler, maximumBodyBytes: Integer) -> Router
 ```
 
 Appends a GET route. GET also supplies automatic HEAD fallback.
@@ -334,7 +335,7 @@ Appends an explicit OPTIONS route, overriding generated OPTIONS.
 #### `post`
 
 ```kex
-post(path: String, handler: Handler) -> Router
+post(path: String, handler: Handler, maximumBodyBytes: Integer) -> Router
 ```
 
 Appends a POST route.
@@ -342,7 +343,7 @@ Appends a POST route.
 #### `put`
 
 ```kex
-put(path: String, handler: Handler) -> Router
+put(path: String, handler: Handler, maximumBodyBytes: Integer) -> Router
 ```
 
 Appends a PUT route.
@@ -350,7 +351,7 @@ Appends a PUT route.
 #### `patch`
 
 ```kex
-patch(path: String, handler: Handler) -> Router
+patch(path: String, handler: Handler, maximumBodyBytes: Integer) -> Router
 ```
 
 Appends a PATCH route.
@@ -362,6 +363,12 @@ delete(path: String, handler: Handler) -> Router
 ```
 
 Appends a DELETE route.
+
+#### `limited`
+
+```kex
+limited(method: String, path: String, handler: Handler, maximumBodyBytes: Integer?) -> Router
+```
 
 ## record `ShutdownReport`
 
@@ -378,13 +385,37 @@ Counts and elapsed time from graceful server shutdown.
 
 ## record `ServerOptions`
 
-Bounded HTTP server resources and default graceful-shutdown duration.
+Bounded HTTP server resources, default graceful-shutdown duration and request body limit.
 
 **Fields**
 
   - `maximumHandlers` : [Integer](../number.md#make-integer) (optional)
   - `backlog` : [Integer](../number.md#make-integer) (optional)
   - `gracefulShutdown` : [Duration](../units.md#record-duration) (optional)
+  - `maximumBodyBytes` : [Integer](../number.md#make-integer) (optional)
+
+
+
+## record `RequestOptions`
+
+How long one client request may take, and how large an answer it accepts.
+
+A request over a size limit is a `Limit` error, and one over a time limit a `Timeout`.
+
+**Examples**
+
+_A link preview: a short deadline and a small answer_
+
+```kex
+RequestOptions { timeout: Duration.seconds(2), maximumBodyBytes: 262144 }
+```
+
+**Fields**
+
+  - `connectTimeout` : [Duration](../units.md#record-duration) (optional)
+  - `timeout` : [Duration](../units.md#record-duration) (optional)
+  - `maximumBodyBytes` : [Integer](../number.md#make-integer) (optional)
+  - `maximumHeaderBytes` : [Integer](../number.md#make-integer) (optional)
 
 
 
@@ -408,6 +439,7 @@ Options owned by an explicit HTTP client.
 **Fields**
 
   - `pool` : [PoolOptions](#record-net-http-pooloptions) (optional)
+  - `request` : [RequestOptions](#record-net-http-requestoptions) (optional)
 
 
 
@@ -442,7 +474,7 @@ The pooled HTTP client. An opaque handle over the connection pool that owns it; 
 #### `request`
 
 ```kex
-request(method: String, url: String, headers: Headers, body: Binary) -> Result<Response<Binary>, NetError>
+request(method: String, url: String, headers: Headers, body: Binary, options: RequestOptions) -> Result<Response<Binary>, NetError>
 ```
 
 Sends a buffered request. Redirects and generic retries are not implicit.
@@ -831,6 +863,7 @@ Stateless HTTP convenience calls for scripts and occasional requests.
 
 ```kex
 request : String -> String -> Headers -> Binary -> Result<Response<Binary>, NetError>
+request : String -> String -> Headers -> Binary -> RequestOptions -> Result<Response<Binary>, NetError>
 ```
 
 Sends one stateless buffered request with no redirect or hidden retry.

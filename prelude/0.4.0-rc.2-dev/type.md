@@ -6,6 +6,7 @@ title: Type
 entities:
   - { kind: record, name: "Type" }
   - { kind: module, name: "Type" }
+  - { kind: make, name: "Type.Field" }
   - { kind: make, name: "Type" }
 ---
 
@@ -126,6 +127,86 @@ _Listing what a sum type can be_
 IO.printLine("one of: ${Type.of(shape).constructorNames.join(", ")}")
 ```
 
+#### `construct`
+
+```kex
+construct(values: {String: Any}) -> Result<Any, String>
+```
+
+Builds a record of this type from values by field name: the other half of `fields`, for a library mapping data it does not define (database rows, decoded JSON, form fields) onto the caller's records.
+
+A field missing from `values` takes its declared default, or `None` when it is optional. A required field that is missing, a key that names no field, and a value of the wrong type are each an error naming the field. Values are not converted: `"5"` is not an `Integer`, so convert first (`"5".to(Integer)`), using `fields` for the declared types.
+
+**Parameters**
+
+  - `values` — the field values, by field name
+
+**Returns**: the record, or what was wrong
+
+**Examples**
+
+```kex
+Type.named("User").construct({"id": "u1", "email": "ada@example.com"})
+# => Ok(User { id: u1, email: ada@example.com, admin?: false })
+Type.named("User").construct({"id": "u1", "mail": "x"})
+# => Error("Unknown field \"mail\" for User")
+```
+
+#### `variant`
+
+```kex
+variant(name: String, args: [Any]) -> Result<Any, String>
+```
+
+Builds the constructor `name` of this sum type from its arguments: reading `"Direct"` from a database back into `Direct`. The arguments are checked against the constructor's declared types, and their count against its arity.
+
+**Parameters**
+
+  - `name` — the constructor's name, as `constructorNames` lists it
+  - `args` — its arguments; leave them out for a nullary constructor
+
+**Returns**: the value, or what was wrong
+
+**Examples**
+
+```kex
+Type.named("Kind").variant("Direct")         # => Ok(Direct)
+Type.named("Shape").variant("Circle", [2.0]) # => Ok(Circle(2.0))
+Type.named("Kind").variant("Nope")           # => Error("Kind has no constructor Nope")
+```
+
+#### `parse`
+
+```kex
+parse(text: String) -> Result<Any, String>
+```
+
+Parses `text` as a value of this type: what a database cell, a form field or a query parameter holds is text, and `construct` takes typed values.
+
+`String`, `Integer`, `Float`, `Bool` (`"true"` or `"false"`) and `Char` (one character) are read as written. `T?` parses a `T` and wraps it in `Just`. A sum type's nullary constructor is found by its name, exactly or else ignoring case, so `"channel"` is `Channel`. There is no null: text always stands for a value, and a caller with an absent one leaves it out of `construct`'s map.
+
+**Parameters**
+
+  - `text` — the text to read
+
+**Returns**: the value, or why `text` is not one
+
+**Examples**
+
+```kex
+Type.named("Integer").parse("42")    # => Ok(42)
+Type.named("Integer").parse("4x")    # => Error("Expected Integer, got \"4x\"")
+Type.named("Kind").parse("channel")  # => Ok(Channel)
+```
+
+#### `nullaryNamed`
+
+```kex
+nullaryNamed(text: String) -> String?
+```
+
+The nullary constructor `text` names: exactly, or else ignoring case.
+
 #### `record?`
 
 ```kex
@@ -201,6 +282,8 @@ Returns the type of `value`.
 
 The entry point to everything else here. Prefer it over matching on the `Type` record directly.
 
+A record or sum type's own name, passed as a value, stands for that type: `Type.of(User)` is `User`'s type. That is how a library takes a type from its caller, typed as the generic parameter it binds.
+
 **Parameters**
 
   - `value` — the value to inspect
@@ -219,6 +302,16 @@ _Reporting an unexpected value_
 
 ```kex
 IO.printError("expected a list, got ${Type.of(value).to(String)}")
+```
+
+_Taking a type from the caller_
+
+```kex
+let select(as: T) -> Result<[T], String> do
+  let model = Type.of(as)        # the caller's record type
+  ...                            # rows decoded with model.construct
+end
+select(as: User)                 # => Result<[User], String>
 ```
 
 ### `named`
@@ -312,6 +405,14 @@ Named functions only. A lambda or a function VALUE carries no signature at runti
 Type.returnedBy(Date.parse).to(String)   # => "Result<Date, TimeError>"
 ```
 
+### `parsed`
+
+```kex
+parsed : Any? -> Type -> String -> Result<Any, String>
+```
+
+The result of a conversion that answers `None` for text it cannot read.
+
 ## record `Field`
 
 A record field, as `Type.fields` describes it.
@@ -334,5 +435,30 @@ A sum type's constructor, as `Type.constructors` describes it.
   - `name` : [String](string.md#make-string)
   - `arity` : [Integer](number.md#make-integer)
   - `argTypes` : [[Type](#record-type)]
+
+
+
+## type `Type.Field`
+
+### `parse`
+
+```kex
+parse(text: String) -> Result<Any, String>
+```
+
+Parses `text` as a value of this field's declared type: `Type.parse`, with the field named in the error. What a library reads from a database row or a form is text, and `Type.construct` takes typed values, so this is the step between them.
+
+**Parameters**
+
+  - `text` — the text to read
+
+**Returns**: the value, or why `text` is not one
+
+**Examples**
+
+```kex
+Type.named("User").fields.first.map { |field| field.parse("u1") }
+# => Just(Ok("u1"))
+```
 
 

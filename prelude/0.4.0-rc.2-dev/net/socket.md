@@ -198,7 +198,7 @@ Idempotently closes a connected stream.
 closed?(connection: TCPConnection) -> Bool
 ```
 
-**Returns**: whether the listener owner has stopped
+**Returns**: whether the connected stream owner has stopped
 
 ### `localAddress`
 
@@ -663,7 +663,7 @@ Idempotently closes a stream.
 closed?(connection: UnixConnection) -> Bool
 ```
 
-**Returns**: whether the listener owner has stopped
+**Returns**: whether the stream owner has stopped
 
 ## type `UnixConnection`
 

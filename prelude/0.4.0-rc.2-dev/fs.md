@@ -36,7 +36,7 @@ FS.Path        pure path arithmetic, with no filesystem access at all
 
 The first two are capabilities: everything in them touches the real filesystem, so they can only be called from `foul` code, and a test can replace the whole of `FS.File` for a lexical region rather than mutating global state. `FS.Path` is ordinary pure code.
 
-Most read operations answer with an `Optional` and most write operations with a `Bool`, so a missing file or a failed write is an ordinary value you handle rather than an exception you catch.
+Reading and writing a file answer with a `Result`, and most other operations with an `Optional` or a `Bool`, so a missing file or a failed write is an ordinary value you handle rather than an exception you catch.
 
 ### `permissionMode`
 
@@ -119,12 +119,13 @@ Something a file may allow, for `FS.File.changePermission`. Named for the intent
 
 A file operation that failed, carrying the path it failed on.
 
-`OpenFailed` and `ReadFailed` mean the filesystem refused the operation. `InvalidUtf8` means the bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence.
+`OpenFailed`, `ReadFailed` and `WriteFailed` mean the filesystem refused the operation. `InvalidUtf8` means the bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence.
 
 **Variants**
 
   - `OpenFailed(FilePath)`
   - `ReadFailed(FilePath)`
+  - `WriteFailed(FilePath)`
   - `InvalidUtf8(FilePath, Integer)`
 
 
@@ -279,59 +280,59 @@ FS.File.readBytes(path).map { |data| Digest.sha256(data).hex }
 ### `writeBytes`
 
 ```kex
-writeBytes(path: FilePath, content: Binary) -> Bool
+writeBytes(path: FilePath, content: Binary) -> Result<Void, FileError>
 ```
 
 Writes `content` to `path` as raw bytes, replacing whatever was there.
 
-The byte counterpart of `FS.File.write`: the payload lands on disk exactly as given, with no encoding step. Answers `false` when the write fails.
+The byte counterpart of `FS.File.write`: the payload lands on disk exactly as given, with no encoding step. Answers `Error(WriteFailed(path))` when the write fails.
 
 **Parameters**
 
   - `path` — the file to write
   - `content` — the bytes to write
 
-**Returns**: `true` when the write succeeded
+**Returns**: `Ok` when the write succeeded, or the failure
 
 **Examples**
 
 ```kex
-FS.File.writeBytes("out.bin", Binary.fromBytes([0, 255]))   # => true
+FS.File.writeBytes("out.bin", Binary.fromBytes([0, 255])).ok?   # => true
 ```
 
 _Copying a file without decoding it_
 
 ```kex
-FS.File.readBytes(source).map { |data| FS.File.writeBytes(target, data) }
+FS.File.readBytes(source).flatMap { |data| FS.File.writeBytes(target, data) }
 ```
 
 ### `write`
 
 ```kex
-write(path: FilePath, content: String) -> Bool
+write(path: FilePath, content: String) -> Result<Void, FileError>
 ```
 
 Writes `content` to `path`, replacing whatever was there.
 
-Creates the file if it does not exist. The containing directory must already exist: see `FS.Directory.create`. Answers `false` when the write fails.
+Creates the file if it does not exist. The containing directory must already exist: see `FS.Directory.create`. Answers `Error(WriteFailed(path))` when the write fails.
 
 **Parameters**
 
   - `path` — the file to write
   - `content` — the text to write
 
-**Returns**: `true` when the write succeeded
+**Returns**: `Ok` when the write succeeded, or the failure
 
 **Examples**
 
 ```kex
-FS.File.write("out.txt", "hello\n")   # => true
+FS.File.write("out.txt", "hello\n").ok?   # => true
 ```
 
 _Reporting a failed write_
 
 ```kex
-if !FS.File.write(target, rendered)
+if FS.File.write(target, rendered).error?
   IO.printError("could not write ${target}")
 end
 ```

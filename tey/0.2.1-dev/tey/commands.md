@@ -453,7 +453,7 @@ The name is overridable because a directory name is not always the package name 
 
 **Fields**
 
-  - `runStatus` : [Integer](../../../prelude/0.4.0-rc.2-dev/number.md#make-integer) (optional)
-  - `failedMembers` : [[String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)] (optional)
+  - `runStatus` : [Integer](../../../prelude/0.4.0-rc.3-dev/number.md#make-integer) (optional)
+  - `failedMembers` : [[String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)] (optional)
 
 

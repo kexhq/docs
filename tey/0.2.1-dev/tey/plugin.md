@@ -85,8 +85,8 @@ generator(binding: Binding, name: String) -> Result<PluginOperation, String>
 
 **Fields**
 
-  - `approvalKey` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
-  - `scopeName` : [String](../../../prelude/0.4.0-rc.2-dev/string.md#make-string)
+  - `approvalKey` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
+  - `scopeName` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
   - `declaration` : [Plugin](../tey/manifest.md#record-tey-manifest-plugin)
 
 
