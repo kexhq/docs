@@ -6,7 +6,7 @@ path: "/guide/0.4.0-alpha/syntax/"
 draft: false
 template: "page"
 ---
-A one-line block uses braces; a multi-line block uses `do ... end`.
+Alpha: A one-line block uses braces; a multi-line block uses `do ... end`. Exec Beta.
 
 ```kex
 let doubled = xs.map { |x| x * 2 }
