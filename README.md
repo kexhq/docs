@@ -64,7 +64,7 @@ Theme → Site, and the Guide link on the landing page.
 
 ## Verify the guide examples
 
-The current guide is `/guide/0.4.0-beta.4/`. Its executable Kex fences are
+The current guide is `/guide/0.4.0/`. Its executable Kex fences are
 checked directly from Markdown, so the tested code cannot drift from the
 published examples:
 
