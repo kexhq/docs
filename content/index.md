@@ -57,7 +57,7 @@ Check the current instructions for your system at [https://www.kex.run/install/.
 
 New to Kex? Start with the guide. If you already know what you are looking for, jump straight to the reference.
 
-- **[Guide](/guide/0.4.0-beta.4/)**: learn the language step by step, with examples.
+- **[Guide](/guide/0.4.0/)**: learn the language step by step, with examples.
 - **Language reference**: the syntax and semantics of Kex in detail.
 - **[Standard library](/prelude/)**: the modules, types and functions that ship with Kex.
 - **[Tey](/tey/)**: the package manager and build tool, including its commands and options.
