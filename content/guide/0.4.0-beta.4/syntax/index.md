@@ -75,7 +75,7 @@ end
 
 ### Comparisions
 
-`<`, `>`, `==` operators allow comparisions to be made between values. Each of them evaulates to either `true` or `false`. These [booleans](https://en.wikipedia.org/wiki/Boolean_data_type) then could then be used for making decision in control structures.
+`<`, `>`, `==` and such operators allow comparisions to be made between values. Each of them evaulates to either `true` or `false`. These [booleans](https://en.wikipedia.org/wiki/Boolean_data_type) then could then be used for making decision in control structures.
 
 | Spelling | Meaning |
 | --- | --- |
@@ -115,7 +115,7 @@ end
 | > true |
 
 > [!IMPORTANT]
-> **Operators like **`||`** doesn't have to evaluate their operands in every case.**
+> **Operators don't have to evaluate their operands in every case.**
 >
 > If the left side of `||` evaluates to `true`, there is no need to also check its right side, because it only needs either of them to be `true`.
 >
