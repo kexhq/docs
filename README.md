@@ -21,7 +21,7 @@ generated; `gh-pages` is the published site. Nothing on `reference` or
 ```sh
 git clone --recurse-submodules https://github.com/kexhq/docs && cd docs
 git worktree add generated reference   # the reference (the mounts need it)
-marq dev .                             # http://localhost:4173
+marq dev . --port 4625                # http://localhost:4625
 ```
 
 `package.kex` declares the everyday commands, listed by `tey help`: `tey dev`

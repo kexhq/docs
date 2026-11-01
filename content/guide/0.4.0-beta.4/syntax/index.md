@@ -52,9 +52,8 @@ main do
 end
 ```
 
-| Output |
-| --- |
-| > 20 >  > 30 |
+<marqraft-code filename="Output" language="output">20
+30</marqraft-code>
 
 Redeclarations are not  allowed, even via `var`, also bindings must be declared either mutable or immutable, but never both:
 
@@ -90,8 +89,8 @@ Boolean values also come with their own operators:
 
 | Spelling | Meaning |
 | --- | --- |
-| `x && y` | Evaluates to `true` if **both** `x`  and `y` is `true` |
-| `x \|\| y` | Evaluates to `true` if **either**  `x` or `y` is `true` |
+| `x && y` | Evaluates to `true` if **both** `x` **and** `y` is `true` |
+| `x \|\| y` | Evaluates to `true` if **either** `x` **or** `y` is `true` |
 | `!x` | Evaluates to `true` if `x` is `false`, or `false` if `x` is `true`. (Always the **opposite**) |
 
 This operators allows the creation of complex expression, which can be embedded into each other, if needed. `()` are used to define evaluation order.
@@ -110,9 +109,7 @@ main do
 end
 ```
 
-| Output |
-| --- |
-| > true |
+<marqraft-code filename="Output" language="output">true</marqraft-code>
 
 > [!IMPORTANT]
 > **Operators don't have to evaluate their operands in every case.**
@@ -148,9 +145,7 @@ main do
 end
 ```
 
-| Output |
-| --- |
-| > is 5 |
+<marqraft-code filename="Output" language="output">is 5</marqraft-code>
 
 While the optional `else` branch runs if the condition doesn't hold:
 
@@ -166,9 +161,7 @@ main do
 end
 ```
 
-| Output |
-| --- |
-| > non-zero |
+<marqraft-code filename="Output" language="output">non-zero</marqraft-code>
 
 ### Elif
 
@@ -190,9 +183,7 @@ main do
 end
 ```
 
-| Output |
-| --- |
-| > positive |
+<marqraft-code filename="Output" language="output">positive</marqraft-code>
 
 This is possible, because `if` always returns the last expression's value of the successfully evaulated branch, `positive` in the above example.
 
@@ -209,9 +200,7 @@ main do
 end
 ```
 
-| Output |
-| --- |
-| > negative |
+<marqraft-code filename="Output" language="output">negative</marqraft-code>
 
 > [!NOTE]
 > In other languages this is done by the [ternary conditional operator](https://en.wikipedia.org/wiki/Ternary_conditional_operator) `?:`, which is absent in `Kex`. `then`/`else` seemed much more readable, especially when using predicate function, since those end with `?`:
@@ -255,9 +244,7 @@ main do
 end
 ```
 
-| Output |
-| --- |
-| > 120 |
+<marqraft-code language="output" filename="Output">&gt; 120</marqraft-code>
 
 Keyword `break` can be used to escape from the loop:
 
@@ -267,7 +254,7 @@ main do
 
   var i = 1
   while i <= n do
-    break if i.modulo(5( == 0
+    break if i.modulo(5) == 0
 
     i = i + 1
   end
@@ -276,9 +263,12 @@ main do
 end
 ```
 
-| Output |
-| --- |
-| > 5 |
+<marqraft-code filename="Output" language="output">5</marqraft-code>
+
+> [!NOTE]
+> The `modulo` function or the `%` operator returns with the remainder of a division of one number by another. In this case `i.modulo(5) == 0` returns with `true` if `i` is divisible by `5` (the remainder of `i / 5` is `0`).
+>
+> Functions will be discussed in later chapters.
 
 `next` skips the rest of the current iteration:
 
@@ -298,7 +288,7 @@ end
 
 ### Loop without condition
 
-Sometimes, especially when handling events, it makes sense to create loops without conditions. You could either use `while true do ... end` or the much more expressive `loop`, `break` and `next` works exactly the same:
+Sometimes, especially when handling events, it makes sense to create loops without conditions. You could either use `while true do ... end` or the much more expressive `loop`. Keywords `break` and `next` works exactly the same within `loop`s:
 
 ```kex filename="loop_fact.kex"
 main do
