@@ -6,42 +6,15 @@ path: "/guide/0.4.0-beta.4/overview/"
 draft: false
 template: "page"
 ---
-**Kex** is a [functional language](https://en.wikipedia.org/wiki/Functional_programming) with [Ruby](https://en.wikipedia.org/wiki/Ruby_(programming_language))-like syntax and a static type checker. It runs on the [BEAM virtual machine](https://en.wikipedia.org/wiki/BEAM_(Erlang_virtual_machine)) by default and also has a C++-based interpreter.
+**Kex** is a [multi-paradigm programming language](https://simple.wikipedia.org/wiki/Multi-paradigm_programming_language), with a primary [focus on pure functional programming](https://en.wikipedia.org/wiki/Purely_functional_programming), with similar syntax to Ruby, running on, but not limited to [BEAM virtual machine](https://en.wikipedia.org/wiki/BEAM_(Erlang_virtual_machine).
 
-### Philosophy
+### Key philosophy
 
-The core idea behind the language was to make it powerful and immutable, yet highly readable and easy to extend, which makes building highly scalable BEAM software easy.
-
-Not all algorithms are best suited for functional constructs so 
-
-## Transform values
-
-A function usually describes a transformation. A list operation returns a new list; a record method returns a new record. Existing values stay usable.
-
-```kex
-let prices = [10, 20, 30]
-let discounted = prices.map { |price| price - 2 }
-assert(prices == [10, 20, 30])
-assert(discounted == [8, 18, 28])
-```
-
-This lets you follow a value through a sequence of steps without tracking who else might change it. `var` allows a local binding to refer to a new value; it does not make aliases into shared mutable objects.
-
-## Read calls from left to right
-
-Uniform Function Call Syntax, or UFCS, lets a function's first argument appear before a dot. `double(3)` and `3.double` express the same call when they resolve to that function.
-
-```kex
-let double(n: Integer) -> Integer = n * 2
-assert(double(3) == 3.double)
-assert([1, 2, 3].map(~double).filter { |n| n > 2 } == [4, 6])
-```
-
-Methods in `make` blocks add behavior for particular receiver types. The compiler resolves calls using available declarations and types; the dot does not imply a class hierarchy.
+The guiding principle behind the language was to build something powerful, which has the elegant aesthetics of **Ruby**, static type safety of **Haskell** and the scalable runtime of **Erlang**.
 
 ## Keep effects visible
 
-`let` defines pure functions. A function that performs IO or communicates with another process uses `foul`. The `main` entry point is an effectful boundary, so it can call both.
+Kex is built 
 
 ```kex
 let greeting(name: String) -> String = "Hello, ${name}!"
@@ -52,7 +25,27 @@ end
 runOverview1()
 ```
 
+`let` defines pure functions. A function that performs IO or communicates with another process uses `foul`. The `main` entry point is an effectful boundary, so it can call both.
+
 A useful application structure is a pure core that transforms data, surrounded by a small effectful layer that reads inputs and writes results. It is easy to test the core without a filesystem or network.
+
+
+
+
+
+## Read calls from left to right
+
+You might have heard of a similar langauge, called Elixir with similar design goals. The main difference between Kex and Elixir is that Elixir has invented the `|>` pipe operator, which is more similar to a the shell
+
+Uniform Function Call Syntax, or UFCS, lets a function's first argument appear before a dot. `double(3)` and `3.double` express the same call when they resolve to that function.
+
+```kex
+let double(n: Integer) -> Integer = n * 2
+assert(double(3) == 3.double)
+assert([1, 2, 3].map(~double).filter { |n| n > 2 } == [4, 6])
+```
+
+Methods in `make` blocks add behavior for particular receiver types. The compiler resolves calls using available declarations and types; the dot does not imply a class hierarchy.
 
 ## Represent decisions in data
 
