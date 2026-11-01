@@ -90,8 +90,10 @@ Boolean values also come with their own operators:
 | Spelling | Meaning |
 | --- | --- |
 | `x && y` | Evaluates to `true` if **both** `x` **and** `y` is `true` |
-| `x \|\| y` | Evaluates to `true` if **either** `x` **or** `y` is `true` |
+| OR | Evaluates to `true` if **either** `x` **or** `y` is `true` |
 | `!x` | Evaluates to `true` if `x` is `false`, or `false` if `x` is `true`. (Always the **opposite**) |
+
+The OR operator is written `x || y`.
 
 This operators allows the creation of complex expression, which can be embedded into each other, if needed. `()` are used to define evaluation order.
 
