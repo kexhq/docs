@@ -81,6 +81,8 @@ end
 | --- | --- |
 | `x < y` | Evaluates to `true` if `x` is **smaller** than `y` |
 | `x > y` | Evaluates to `true` if `x` is **greater** than `y` |
+| `x <= y` | Evaluates to `true` if `x` is **smaller or equal to **`y` |
+| `x >= y` | Evaluates to `true` if `x` is **greater or equal to** `y` |
 | `x == y` | Evaluates to `true` if `x` is the **same** as `y` |
 | `x != y` | Evaluates to `true` if `x` is **different** to `y` |
 
