@@ -85,6 +85,42 @@ Returns `true` when the integer is not divisible by two. The opposite of `even?`
 4.odd?   # => false
 ```
 
+### `dividesBy?`
+
+```kex
+dividesBy?(n: Integer) -> Bool
+```
+
+Returns `true` when the integer divides evenly by `n`.
+
+Zero is divisible by every non-zero integer, and nothing is divisible by zero — not even zero itself.
+
+**Parameters**
+
+  - `n` — the divisor
+
+**Returns**: `true` when the integer divides evenly by `n`
+
+**Examples**
+
+```kex
+10.dividesBy?(5)   # => true
+10.dividesBy?(3)   # => false
+5.dividesBy?(0)    # => false
+```
+
+_FizzBuzz without spelling out the remainder_
+
+```kex
+if i.dividesBy?(15)
+  IO.printLine("FizzBuzz")
+elif i.dividesBy?(3)
+  IO.printLine("Fizz")
+elif i.dividesBy?(5)
+  IO.printLine("Buzz")
+end
+```
+
 ### `abs`
 
 ```kex
