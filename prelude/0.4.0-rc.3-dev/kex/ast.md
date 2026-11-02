@@ -522,7 +522,7 @@ Expressions retain syntax-level distinctions that matter to tools: a receiver ca
   - `Block([Expression])`
   - `Lambda([LambdaParam], [Expression], TypeRef?, RescueInfo?)`
   - `Let(PatternRef, TypeRef?, Expression)`
-  - `Var(String, TypeRef?, Expression)`
+  - `Var(PatternRef, TypeRef?, Expression)`
   - `Assign(String, Expression)`
   - `Return(Expression)`
   - `Break`
