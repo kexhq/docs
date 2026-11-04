@@ -1105,6 +1105,30 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 </div>
 
 </section>
+<section class="entity" id="trait-closeable">
+<h2><span class="kind kind-trait">trait</span> <code>Closeable</code></h2>
+<p><a class="xref" href="#trait-closeable"><code>Closeable</code></a>: anything that holds a releasable resource.</p>
+<p>File handles, socket connections, listeners, and datagram sockets are all <a class="xref" href="#trait-closeable"><code>Closeable</code></a>. Closing is idempotent everywhere, so a shared cleanup path never has to track who closed what.</p>
+<pre class="code"><code><span class="tok-keyword">foul</span> <span class="tok-fn">shutdown</span><span class="tok-punct">(</span>first<span class="tok-op">:</span> <span class="tok-type">Closeable</span><span class="tok-punct">,</span> second<span class="tok-op">:</span> <span class="tok-type">Closeable</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span> <span class="tok-keyword">do</span>
+  first<span class="tok-op">.</span><span class="tok-method">close</span>
+  second<span class="tok-op">.</span><span class="tok-method">close</span>
+<span class="tok-keyword">end</span>
+
+<span class="tok-fn">shutdown</span><span class="tok-punct">(</span>handle<span class="tok-punct">,</span> listener<span class="tok-punct">)</span></code></pre>
+<p class="implements">Implemented by <a class="xref" href="#make-filehandle"><code>FileHandle&lt;R, W&gt;</code></a>, <a class="xref" href="/prelude/0.4.0-rc.3-dev/net/socket/#make-net-socket-tcp-tcpconnection"><code>Net.Socket.TCP.TCPConnection</code></a>, <a class="xref" href="/prelude/0.4.0-rc.3-dev/net/socket/#make-net-socket-tcp-tcplistener"><code>Net.Socket.TCP.TCPListener</code></a>, <a class="xref" href="/prelude/0.4.0-rc.3-dev/net/socket/#make-net-socket-udp-socket"><code>Net.Socket.UDP.Socket</code></a>, <a class="xref" href="/prelude/0.4.0-rc.3-dev/net/socket/#make-net-socket-unix-unixconnection"><code>Net.Socket.Unix.UnixConnection</code></a>, <a class="xref" href="/prelude/0.4.0-rc.3-dev/net/socket/#make-net-socket-unix-unixlistener"><code>Net.Socket.Unix.UnixListener</code></a>, <a class="xref" href="/prelude/0.4.0-rc.3-dev/net/socket/#make-net-socket-tls-tlsconnection"><code>Net.Socket.TLS.TLSConnection</code></a>.</p>
+<h3>Required functions</h3>
+<p class="group-note">An implementor writes these.</p>
+
+<div class="functions">
+<div class="fn" id="closeable-close">
+<h4><a class="self" href="#closeable-close"><code>close</code></a></h4>
+<pre class="code sig"><code>close <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p>Releases the underlying resource. Idempotent: closing twice is fine.</p>
+
+</div>
+</div>
+
+</section>
 <section class="entity" id="type-filehandle">
 <h2><span class="kind kind-type">type</span> <code>FileHandle&lt;R, W&gt;</code></h2>
 <p>An open file, obtained from <code>FS.File.open</code>.</p>
@@ -1122,26 +1146,11 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <span class="tok-keyword">end</span></code></pre>
 <p>Reach for a handle when you want to walk a large file a line at a time, or make many small writes. When a file fits comfortably in memory, <code>FS.File.read</code> and <code>FS.File.write</code> are shorter and need no closing. To be rid of the closing entirely, pass <code>FS.File.open</code> a block.</p>
 <p>The handle functions are <code>foul</code>: obtaining a handle is not an effect, but reading or writing through one is, so a function that does so is <code>foul</code> no matter where the handle came from. Injection makes a thing substitutable, not pure.</p>
-<p class="implements">Implements <a class="xref" href="#trait-readable"><code>Readable</code></a>, <a class="xref" href="#trait-writable"><code>Writable</code></a>.</p>
+<p class="implements">Implements <a class="xref" href="#trait-readable"><code>Readable</code></a>, <a class="xref" href="#trait-writable"><code>Writable</code></a>, <a class="xref" href="#trait-closeable"><code>Closeable</code></a>.</p>
 <section class="members" id="make-filehandle">
 <h3>Functions</h3>
 
 <div class="functions">
-<div class="fn" id="filehandle-close">
-<h4><a class="self" href="#filehandle-close"><code>close</code></a></h4>
-<pre class="code sig"><code>close <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
-<p>Closes the handle, flushing anything still buffered.</p>
-<p>Close every handle you open. A written file is not guaranteed to be complete on disk until its handle is closed. Passing <code>FS.File.open</code> a block closes the handle for you.</p>
-<h5>Examples</h5>
-<pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">out.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Write</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
-  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>handle<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">do</span>
-    handle<span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-    handle<span class="tok-op">.</span><span class="tok-method">close</span>
-  <span class="tok-keyword">end</span>
-  <span class="tok-bool">Error</span><span class="tok-punct">(</span>_<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cannot open out.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
-<span class="tok-keyword">end</span></code></pre>
-
-</div>
 <div class="fn" id="filehandle-seek">
 <h4><a class="self" href="#filehandle-seek"><code>seek</code></a></h4>
 <pre class="code sig"><code><span class="tok-fn">seek</span><span class="tok-punct">(</span>offset<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="#type-readerror"><span class="tok-type">ReadError</span></a><span class="tok-op">&gt;</span></code></pre>
@@ -1168,6 +1177,21 @@ handle<span class="tok-op">.</span><span class="tok-method">seek</span><span cla
 <pre class="code"><code><span class="tok-keyword">let</span> firstPass <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
 handle<span class="tok-op">.</span><span class="tok-method">reset</span>
 <span class="tok-keyword">let</span> secondPass <span class="tok-op">=</span> handle<span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="filehandle-close">
+<h4><a class="self" href="#filehandle-close"><code>close</code></a> <a class="tag-trait" href="#closeable-close" title="Implements Closeable.close">Closeable</a></h4>
+<pre class="code sig"><code>close <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p>Closes the handle, flushing anything still buffered.</p>
+<p>Close every handle you open. A written file is not guaranteed to be complete on disk until its handle is closed. Passing <code>FS.File.open</code> a block closes the handle for you.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">out.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Write</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>handle<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">do</span>
+    handle<span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+    handle<span class="tok-op">.</span><span class="tok-method">close</span>
+  <span class="tok-keyword">end</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span>_<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cannot open out.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
 
 </div>
 </div>
@@ -1354,7 +1378,7 @@ handle<span class="tok-op">.</span><span class="tok-method">printLine</span><spa
         </article>
       </main>
       <aside class="toc" aria-label="On this page">
-        <nav><p class="toc-heading">On this page</p><ul><li><a href="#type-readerror">ReadError</a></li><li><a href="#trait-readable">Readable</a></li><li><a href="#trait-writable">Writable</a></li><li><a href="#type-filehandle">FileHandle</a></li></ul></nav>
+        <nav><p class="toc-heading">On this page</p><ul><li><a href="#type-readerror">ReadError</a></li><li><a href="#trait-readable">Readable</a></li><li><a href="#trait-writable">Writable</a></li><li><a href="#trait-closeable">Closeable</a></li><li><a href="#type-filehandle">FileHandle</a></li></ul></nav>
       </aside>
     </div>
     <footer class="foot">

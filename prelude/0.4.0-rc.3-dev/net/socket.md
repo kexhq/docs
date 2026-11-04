@@ -48,6 +48,25 @@ let endpoint = TCP.Endpoint.host("127.0.0.1", Port.from(9000).try)
 let connection = TCP.connect(endpoint).try
 ```
 
+### `connectTo`
+
+```kex
+connectTo(address: String) -> Result<TCPConnection, NetError>
+connectTo(address: String, block: (TCPConnection -> A)) -> Result<A, NetError>
+```
+
+Connects to a "host:port" address with the default options.
+
+A separate name (not a `connect` overload) until #619 is fixed: mixing arities and same-arity type overloads breaks call resolution.
+
+**Examples**
+
+_Talking to a local echo server_
+
+```kex
+let connection = TCP.connectTo("127.0.0.1:12321").try
+```
+
 ### `listen`
 
 ```kex
@@ -68,6 +87,23 @@ let listener = TCP.listen(TCP.Endpoint.loopback(Port.from(0).try)).try
 let port = listener.localAddress.try.port
 ```
 
+### `bind`
+
+```kex
+bind(address: String) -> Result<TCPListener, NetError>
+bind(address: String, block: (TCPListener -> A)) -> Result<A, NetError>
+```
+
+Binds and starts listening on a "host:port" address.
+
+**Examples**
+
+_A Rosetta-style echo server socket_
+
+```kex
+let listener = TCP.bind("127.0.0.1:12321").try
+```
+
 ### `sendAll`
 
 ```kex
@@ -84,6 +120,91 @@ _Sending one newline-delimited request_
 
 ```kex
 connection.sendAll("status\n".to(Binary).try).try
+```
+
+### `write`
+
+```kex
+write(connection: TCPConnection, content: Showable) -> Void
+```
+
+Writes `content` with no trailing newline.
+
+**Examples**
+
+_Sending a prompt without a newline_
+
+```kex
+connection.write("name? ")
+```
+
+### `printLine`
+
+```kex
+printLine(connection: TCPConnection, content: Showable) -> Void
+```
+
+Writes `content` followed by a newline.
+
+**Examples**
+
+_Answering a line-oriented client_
+
+```kex
+connection.printLine("hello")
+```
+
+### `writeBytes`
+
+```kex
+writeBytes(connection: TCPConnection, content: Binary) -> Void
+```
+
+Writes raw bytes with no trailing newline and no rendering.
+
+**Examples**
+
+_Echoing a received line verbatim_
+
+```kex
+connection.writeBytes(line)
+```
+
+### `print`
+
+```kex
+print(connection: TCPConnection, content: Showable) -> Void
+```
+
+Writes `content` with no trailing newline. The same as `write`.
+
+### `writeLine`
+
+```kex
+writeLine(connection: TCPConnection, content: Showable) -> Void
+```
+
+Writes `content` followed by a newline. The same as `printLine`.
+
+### `getLine`
+
+```kex
+getLine(connection: TCPConnection) -> Result<String?, NetError>
+```
+
+Reads the next line as text, without its newline.
+
+Answers `Ok(None)` at end of input, like `FileHandle.getLine`. Lines are capped at 64 KiB; a longer line fails with `Limit` instead of growing without bound.
+
+**Examples**
+
+_Echoing one line back to its sender_
+
+```kex
+match connection.getLine.try do
+  Just(line) => connection.printLine(line)
+  None => connection.close
+end
 ```
 
 ### `receiveChunk`
@@ -183,14 +304,6 @@ _Accepting one client in a small test server_
 ```kex
 let client = listener.accept(5.seconds).try
 ```
-
-### `close`
-
-```kex
-close(connection: TCPConnection) -> Void
-```
-
-Idempotently closes a connected stream.
 
 ### `closed?`
 
@@ -349,6 +462,26 @@ _Starting an isolated test listener_
 TCP.Endpoint.loopback(Port.from(0).try)
 ```
 
+### `parse`
+
+```kex
+parse(address: String) -> Result<Endpoint, NetError>
+```
+
+Splits a "host:port" address instead of assembling an endpoint by parts.
+
+Only the port is validated here; the host rides through to the backend, which reports `Resolve` for an unknown name. The host may itself contain colons, so an IPv6 literal needs no brackets.
+
+**Returns**: the endpoint or a `Parse` failure
+
+**Examples**
+
+_Connecting without a Port value in hand_
+
+```kex
+TCP.connect(TCP.Endpoint.parse("127.0.0.1:9000").try).try
+```
+
 ## module `Net.Socket.UDP`
 
 ### `bind`
@@ -367,6 +500,25 @@ _A local UDP echo test_
 ```kex
 let socket = UDP.bind(UDP.Endpoint.loopback(Port.from(0).try)).try
 let endpoint = socket.localAddress.try
+```
+
+### `bindTo`
+
+```kex
+bindTo(address: String) -> Result<Socket, NetError>
+bindTo(address: String, block: (Socket -> A)) -> Result<A, NetError>
+```
+
+Binds a datagram socket on a "host:port" address.
+
+A separate name (not a `bind` overload) until #619 is fixed: mixing arities and same-arity type overloads breaks call resolution.
+
+**Examples**
+
+_Receiving on an ephemeral port_
+
+```kex
+let socket = UDP.bindTo("127.0.0.1:0").try
 ```
 
 ### `sendTo`
@@ -405,14 +557,6 @@ _Receiving and replying to one packet_
 let packet = socket.receiveFrom(4096).try
 socket.sendTo(packet.source, packet.data).try
 ```
-
-### `close`
-
-```kex
-close(socket: Socket) -> Void
-```
-
-Idempotently closes the socket.
 
 ### `closed?`
 
@@ -555,6 +699,26 @@ _Allocating a free UDP port for a test_
 UDP.Endpoint.loopback(Port.from(0).try)
 ```
 
+### `parse`
+
+```kex
+parse(address: String) -> Result<Endpoint, NetError>
+```
+
+Splits a "host:port" address instead of assembling an endpoint by parts.
+
+Only the port is validated here; the host rides through to the backend, which reports `Resolve` for an unknown name. The host may itself contain colons, so an IPv6 literal needs no brackets.
+
+**Returns**: the endpoint or a `Parse` failure
+
+**Examples**
+
+_Binding without a Port value in hand_
+
+```kex
+UDP.bind(UDP.Endpoint.parse("127.0.0.1:9000").try).try
+```
+
 ## module `Net.Socket.Unix`
 
 ### `connect`
@@ -585,6 +749,40 @@ Binds a new path; an existing filesystem entry is never removed implicitly.
 
 This conservative default protects regular files and also avoids taking over a socket that may still belong to a running service.
 
+### `connectTo`
+
+```kex
+connectTo(path: String) -> Result<UnixConnection, NetError>
+connectTo(path: String, block: (UnixConnection -> A)) -> Result<A, NetError>
+```
+
+Connects to the listener at `path` with the default options.
+
+**Examples**
+
+_Talking to a per-user background service_
+
+```kex
+let daemon = Unix.connectTo("/tmp/my-app.sock").try
+```
+
+### `bind`
+
+```kex
+bind(path: String) -> Result<UnixListener, NetError>
+bind(path: String, block: (UnixListener -> A)) -> Result<A, NetError>
+```
+
+Binds and starts listening on the socket at `path`.
+
+**Examples**
+
+_A Rosetta-style IPC listener_
+
+```kex
+let listener = Unix.bind("/tmp/my-app.sock").try
+```
+
 ### `sendAll`
 
 ```kex
@@ -592,6 +790,88 @@ sendAll(connection: UnixConnection, data: Binary) -> Result<Integer, NetError>
 ```
 
 Sends every byte and returns the count.
+
+### `write`
+
+```kex
+write(connection: UnixConnection, content: Showable) -> Void
+```
+
+Writes `content` with no trailing newline.
+
+**Examples**
+
+_Sending a prompt without a newline_
+
+```kex
+connection.write("name? ")
+```
+
+### `printLine`
+
+```kex
+printLine(connection: UnixConnection, content: Showable) -> Void
+```
+
+Writes `content` followed by a newline.
+
+**Examples**
+
+_Answering a line-oriented peer_
+
+```kex
+connection.printLine("hello")
+```
+
+### `writeBytes`
+
+```kex
+writeBytes(connection: UnixConnection, content: Binary) -> Void
+```
+
+Writes raw bytes with no trailing newline and no rendering.
+
+**Examples**
+
+_Echoing a received line verbatim_
+
+```kex
+connection.writeBytes(line)
+```
+
+### `print`
+
+```kex
+print(connection: UnixConnection, content: Showable) -> Void
+```
+
+Writes `content` with no trailing newline. The same as `write`.
+
+### `writeLine`
+
+```kex
+writeLine(connection: UnixConnection, content: Showable) -> Void
+```
+
+Writes `content` followed by a newline. The same as `printLine`.
+
+### `getLine`
+
+```kex
+getLine(connection: UnixConnection) -> Result<String?, NetError>
+```
+
+Reads the next line as text, without its newline.
+
+Answers `Ok(None)` at end of input, like `FileHandle.getLine`. Lines are capped at 64 KiB; a longer line fails with `Limit` instead of growing without bound.
+
+**Examples**
+
+_Printing one received line_
+
+```kex
+IO.printLine(connection.getLine.try.or("(closed)"))
+```
 
 ### `receiveChunk`
 
@@ -648,14 +928,6 @@ accept(listener: UnixListener) -> Result<UnixConnection, NetError>
 ```
 
 Waits for and returns the next stream connection.
-
-### `close`
-
-```kex
-close(connection: UnixConnection) -> Void
-```
-
-Idempotently closes a stream.
 
 ### `closed?`
 
@@ -780,6 +1052,70 @@ sendAll(connection: TLSConnection, data: Binary) -> Result<Integer, NetError>
 
 Sends every plaintext byte through the TLS stream.
 
+### `write`
+
+```kex
+write(connection: TLSConnection, content: Showable) -> Void
+```
+
+Writes `content` with no trailing newline.
+
+**Examples**
+
+_Sending a prompt without a newline_
+
+```kex
+connection.write("name? ")
+```
+
+### `printLine`
+
+```kex
+printLine(connection: TLSConnection, content: Showable) -> Void
+```
+
+Writes `content` followed by a newline.
+
+**Examples**
+
+_Answering a line-oriented peer_
+
+```kex
+connection.printLine("hello")
+```
+
+### `writeBytes`
+
+```kex
+writeBytes(connection: TLSConnection, content: Binary) -> Void
+```
+
+Writes raw bytes with no trailing newline and no rendering.
+
+**Examples**
+
+_Echoing a received line verbatim_
+
+```kex
+connection.writeBytes(line)
+```
+
+### `print`
+
+```kex
+print(connection: TLSConnection, content: Showable) -> Void
+```
+
+Writes `content` with no trailing newline. The same as `write`.
+
+### `writeLine`
+
+```kex
+writeLine(connection: TLSConnection, content: Showable) -> Void
+```
+
+Writes `content` followed by a newline. The same as `printLine`.
+
 ### `receiveChunk`
 
 ```kex
@@ -787,14 +1123,6 @@ receiveChunk(connection: TLSConnection, limit: Integer) -> Result<Binary, NetErr
 ```
 
 Receives one decrypted chunk no larger than `limit`.
-
-### `close`
-
-```kex
-close(connection: TLSConnection) -> Void
-```
-
-Idempotently closes the TLS stream.
 
 ### `closed?`
 
@@ -831,3 +1159,499 @@ Client handshake policy. TLS 1.2/1.3 are enabled; verification defaults on.
   - `alpn` : [[String](../string.md#make-string)] (optional)
 
 
+
+## type `Net.Socket.TCP.TCPConnection`
+
+Implements [`Closeable`](../filehandle.md#trait-closeable).
+
+### `close` (from Closeable)
+
+```kex
+close : Void
+```
+
+Idempotently closes a connected stream.
+
+
+
+## type `Net.Socket.TCP.TCPListener`
+
+Implements [`Closeable`](../filehandle.md#trait-closeable).
+
+### `close` (from Closeable)
+
+```kex
+close : Void
+```
+
+Idempotently closes a listener and releases its port.
+
+
+
+## type `Net.Socket.UDP.Socket`
+
+Implements [`Closeable`](../filehandle.md#trait-closeable).
+
+### `close` (from Closeable)
+
+```kex
+close : Void
+```
+
+Idempotently closes the socket.
+
+
+
+## type `Net.Socket.Unix.UnixConnection`
+
+Implements [`Closeable`](../filehandle.md#trait-closeable).
+
+### `close` (from Closeable)
+
+```kex
+close : Void
+```
+
+Idempotently closes a stream.
+
+
+
+## type `Net.Socket.Unix.UnixListener`
+
+Implements [`Closeable`](../filehandle.md#trait-closeable).
+
+### `close` (from Closeable)
+
+```kex
+close : Void
+```
+
+Closes the listener and unlinks only the path it successfully created.
+
+
+
+## type `Net.Socket.TLS.TLSConnection`
+
+Implements [`Closeable`](../filehandle.md#trait-closeable).
+
+### `close` (from Closeable)
+
+```kex
+close : Void
+```
+
+Idempotently closes the TLS stream.
+
+
+
+## module `Net.Socket.Mock`
+
+Failure-injection stand-ins for the socket capabilities.
+
+Lives here rather than in `Mock` because the prebuilt companions only cover top-level stdlib files: this subdir module compiles per run, so only code compiled alongside it can implement its capabilities.
+
+
+
+## record `TCP`
+
+A stand-in for the `Net.Socket.TCP` capability.
+
+Constructors answer `failure` when set, so a test can force a refused connection or a timeout deterministically; everything else answers a canned `MockEmpty`, because a refused constructor leaves no connection for it to run on. Scripted success needs backend connection devices, which do not exist yet — until then, test success paths against loopback (see `spec/net_socket_text_beam.kex`).
+
+```kex
+with Net.Socket.TCP = Mock.TCP {} do
+  TCP.connectTo("127.0.0.1:9")
+end
+```
+
+**Fields**
+
+  - `failure` : [NetError](../net.md#record-net-neterror)? (optional)
+
+Implements `Net.Socket.TCP`.
+
+### Functions
+
+#### `connect`
+
+```kex
+connect(endpoint, options)
+```
+
+#### `connectTo`
+
+```kex
+connectTo(address, block)
+```
+
+#### `listen`
+
+```kex
+listen(endpoint, options)
+```
+
+#### `bind`
+
+```kex
+bind(address, block)
+```
+
+#### `accept`
+
+```kex
+accept(listener, timeout)
+```
+
+#### `sendAll`
+
+```kex
+sendAll(connection, data)
+```
+
+#### `write`
+
+```kex
+write(connection, content)
+```
+
+#### `printLine`
+
+```kex
+printLine(connection, content)
+```
+
+#### `writeBytes`
+
+```kex
+writeBytes(connection, content)
+```
+
+#### `print`
+
+```kex
+print(connection, content)
+```
+
+#### `writeLine`
+
+```kex
+writeLine(connection, content)
+```
+
+#### `getLine`
+
+```kex
+getLine(connection)
+```
+
+#### `receiveChunk`
+
+```kex
+receiveChunk(connection, limit, timeout)
+```
+
+#### `receiveExactly`
+
+```kex
+receiveExactly(connection, count, timeout)
+```
+
+#### `receiveUntil`
+
+```kex
+receiveUntil(connection, delimiter, limit, timeout)
+```
+
+#### `receiveLine`
+
+```kex
+receiveLine(connection, limit, timeout)
+```
+
+#### `shutdownWrite`
+
+```kex
+shutdownWrite(connection)
+```
+
+#### `closed?`
+
+```kex
+closed?(handle)
+```
+
+#### `localAddress`
+
+```kex
+localAddress(handle)
+```
+
+#### `peerAddress`
+
+```kex
+peerAddress(connection)
+```
+
+## record `UDP`
+
+A stand-in for the `Net.Socket.UDP` capability. Same deal as `Mock.TCP`: constructors answer `failure` when set, everything else answers canned `MockEmpty`.
+
+```kex
+with Net.Socket.UDP = Mock.UDP {} do
+  UDP.bindTo("127.0.0.1:0")
+end
+```
+
+**Fields**
+
+  - `failure` : [NetError](../net.md#record-net-neterror)? (optional)
+
+Implements `Net.Socket.UDP`.
+
+### Functions
+
+#### `bind`
+
+```kex
+bind(endpoint, options)
+```
+
+#### `bindTo`
+
+```kex
+bindTo(address, block)
+```
+
+#### `sendTo`
+
+```kex
+sendTo(socket, endpoint, data)
+```
+
+#### `receiveFrom`
+
+```kex
+receiveFrom(socket, limit)
+```
+
+#### `closed?`
+
+```kex
+closed?(socket)
+```
+
+#### `localAddress`
+
+```kex
+localAddress(socket)
+```
+
+#### `joinMulticast`
+
+```kex
+joinMulticast(socket, group, interface)
+```
+
+#### `leaveMulticast`
+
+```kex
+leaveMulticast(socket, group, interface)
+```
+
+## record `Unix`
+
+A stand-in for the `Net.Socket.Unix` capability. Same deal as `Mock.TCP`: constructors answer `failure` when set, everything else answers canned `MockEmpty`.
+
+```kex
+with Net.Socket.Unix = Mock.Unix {} do
+  Unix.connectTo("/tmp/app.sock")
+end
+```
+
+**Fields**
+
+  - `failure` : [NetError](../net.md#record-net-neterror)? (optional)
+
+Implements `Net.Socket.Unix`.
+
+### Functions
+
+#### `connect`
+
+```kex
+connect(address, options)
+```
+
+#### `listen`
+
+```kex
+listen(address, options)
+```
+
+#### `connectTo`
+
+```kex
+connectTo(path, block)
+```
+
+#### `bind`
+
+```kex
+bind(path, block)
+```
+
+#### `accept`
+
+```kex
+accept(listener)
+```
+
+#### `sendAll`
+
+```kex
+sendAll(connection, data)
+```
+
+#### `write`
+
+```kex
+write(connection, content)
+```
+
+#### `printLine`
+
+```kex
+printLine(connection, content)
+```
+
+#### `writeBytes`
+
+```kex
+writeBytes(connection, content)
+```
+
+#### `print`
+
+```kex
+print(connection, content)
+```
+
+#### `writeLine`
+
+```kex
+writeLine(connection, content)
+```
+
+#### `getLine`
+
+```kex
+getLine(connection)
+```
+
+#### `receiveChunk`
+
+```kex
+receiveChunk(connection, limit)
+```
+
+#### `receiveExactly`
+
+```kex
+receiveExactly(connection, count)
+```
+
+#### `receiveUntil`
+
+```kex
+receiveUntil(connection, delimiter, limit)
+```
+
+#### `receiveLine`
+
+```kex
+receiveLine(connection, limit)
+```
+
+#### `shutdownWrite`
+
+```kex
+shutdownWrite(connection)
+```
+
+#### `closed?`
+
+```kex
+closed?(handle)
+```
+
+## record `TLS`
+
+A stand-in for the `Net.Socket.TLS` capability. Same deal as `Mock.TCP`: constructors answer `failure` when set, everything else answers canned `MockEmpty`.
+
+```kex
+with Net.Socket.TLS = Mock.TLS {} do
+  TLS.connect(endpoint, config)
+end
+```
+
+**Fields**
+
+  - `failure` : [NetError](../net.md#record-net-neterror)? (optional)
+
+Implements `Net.Socket.TLS`.
+
+### Functions
+
+#### `connect`
+
+```kex
+connect(endpoint, config)
+```
+
+#### `sendAll`
+
+```kex
+sendAll(connection, data)
+```
+
+#### `write`
+
+```kex
+write(connection, content)
+```
+
+#### `printLine`
+
+```kex
+printLine(connection, content)
+```
+
+#### `writeBytes`
+
+```kex
+writeBytes(connection, content)
+```
+
+#### `print`
+
+```kex
+print(connection, content)
+```
+
+#### `writeLine`
+
+```kex
+writeLine(connection, content)
+```
+
+#### `receiveChunk`
+
+```kex
+receiveChunk(connection, limit)
+```
+
+#### `closed?`
+
+```kex
+closed?(connection)
+```

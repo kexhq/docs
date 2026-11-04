@@ -7,6 +7,7 @@ entities:
   - { kind: type, name: "ReadError" }
   - { kind: trait, name: "Readable" }
   - { kind: trait, name: "Writable" }
+  - { kind: trait, name: "Closeable" }
   - { kind: type, name: "FileHandle" }
   - { kind: make, name: "FileHandle<CanRead, W>" }
   - { kind: make, name: "FileHandle<R, CanWrite>" }
@@ -211,6 +212,35 @@ The byte counterpart of `write`: the payload goes to the sink exactly as given. 
 
 
 
+## trait `Closeable`
+
+`Closeable`: anything that holds a releasable resource.
+
+File handles, socket connections, listeners, and datagram sockets are all `Closeable`. Closing is idempotent everywhere, so a shared cleanup path never has to track who closed what.
+
+```kex
+foul shutdown(first: Closeable, second: Closeable) -> Void do
+  first.close
+  second.close
+end
+
+shutdown(handle, listener)
+```
+
+Implemented by [`FileHandle<R, W>`](#make-filehandle), [`Net.Socket.TCP.TCPConnection`](net/socket.md#make-net-socket-tcp-tcpconnection), [`Net.Socket.TCP.TCPListener`](net/socket.md#make-net-socket-tcp-tcplistener), [`Net.Socket.UDP.Socket`](net/socket.md#make-net-socket-udp-socket), [`Net.Socket.Unix.UnixConnection`](net/socket.md#make-net-socket-unix-unixconnection), [`Net.Socket.Unix.UnixListener`](net/socket.md#make-net-socket-unix-unixlistener), [`Net.Socket.TLS.TLSConnection`](net/socket.md#make-net-socket-tls-tlsconnection).
+
+### Required functions
+
+#### `close`
+
+```kex
+close : Void
+```
+
+Releases the underlying resource. Idempotent: closing twice is fine.
+
+
+
 ## type `FileHandle<R, W>`
 
 An open file, obtained from `FS.File.open`.
@@ -235,31 +265,9 @@ Reach for a handle when you want to walk a large file a line at a time, or make 
 
 The handle functions are `foul`: obtaining a handle is not an effect, but reading or writing through one is, so a function that does so is `foul` no matter where the handle came from. Injection makes a thing substitutable, not pure.
 
-Implements [`Readable`](#trait-readable), [`Writable`](#trait-writable).
+Implements [`Readable`](#trait-readable), [`Writable`](#trait-writable), [`Closeable`](#trait-closeable).
 
 ### Functions
-
-#### `close`
-
-```kex
-close : Void
-```
-
-Closes the handle, flushing anything still buffered.
-
-Close every handle you open. A written file is not guaranteed to be complete on disk until its handle is closed. Passing `FS.File.open` a block closes the handle for you.
-
-**Examples**
-
-```kex
-match FS.File.open("out.txt", Write) do
-  Ok(handle) => do
-    handle.printLine("hello")
-    handle.close
-  end
-  Error(_) => IO.printError("cannot open out.txt")
-end
-```
 
 #### `seek`
 
@@ -303,6 +311,28 @@ _Reading a file twice_
 let firstPass = handle.read.or("")
 handle.reset
 let secondPass = handle.read.or("")
+```
+
+#### `close` (from Closeable)
+
+```kex
+close : Void
+```
+
+Closes the handle, flushing anything still buffered.
+
+Close every handle you open. A written file is not guaranteed to be complete on disk until its handle is closed. Passing `FS.File.open` a block closes the handle for you.
+
+**Examples**
+
+```kex
+match FS.File.open("out.txt", Write) do
+  Ok(handle) => do
+    handle.printLine("hello")
+    handle.close
+  end
+  Error(_) => IO.printError("cannot open out.txt")
+end
 ```
 
 ### On `FileHandle<CanRead, W>`
