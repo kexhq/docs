@@ -1,0 +1,31 @@
+---
+package: prelude
+version: "0.4.0-beta.4-dev"
+source: prelude.kex
+title: Prelude
+entities:
+
+---
+
+# Prelude
+
+The standard-library surface automatically visible to every Kex source file.
+
+Prelude names require no `using` at the call site. This includes everyday values and operations (`List`, `Map`, `String`, `Math`, `IO`), language-level protocols (`Enumerable`, `Truthyable`, `Errorable`), and core runtime services such as processes and time. For example, `.map`, conditions, and `.try` work without importing the traits that define them.
+
+Being useful is not enough for inclusion. Every prelude name occupies global scope in every program, so a module belongs here only when ordinary Kex code needs it pervasively or the language model depends on it.
+
+Modules stay opt-in when they expose a capability that should be visible in a file's dependencies, or when most programs do not need their vocabulary. Examples include the filesystem (`FS`), regular expressions (`Regex`), JSON, parser combinators (`Parsing`), bit operations (`Bits`), data structures such as `Data.Set`, hashing (`Digest`), command-line parsing (`OptionParser`), and the sandboxed evaluator (`Evaluator`).
+
+```kex
+using FS
+
+main do
+  let config = FS.File.read("config.txt").or("")
+  IO.printLine(config)
+end
+```
+
+Keep this file declarative. Each bare `using` names a sibling stdlib source; the toolchain expands those sources in order when it builds or loads the prelude. Put documentation for an individual type or operation beside its declaration in that source file, not here.
+
+

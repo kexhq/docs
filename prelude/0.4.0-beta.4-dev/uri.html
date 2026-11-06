@@ -1,0 +1,441 @@
+<section class="entity" id="module-uri">
+<h2><span class="kind kind-module">module</span> <code>URI</code></h2>
+<div class="functions">
+<div class="fn" id="function-uri-parse">
+<h3><a class="self" href="#function-uri-parse"><code>parse</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-uri-uri"><span class="tok-type">URI</span></a><span class="tok-punct">,</span> <a class="xref" href="#record-uri-urierror"><span class="tok-type">URIError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Strictly parses an ASCII RFC 3986 URI reference.</p>
+<p>Relative references are valid here. Use <code>URL.parse</code> when the input must be a complete hierarchical URL with a scheme and authority.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code></dt><dd>an absolute URI or relative reference</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the reference or a precise syntax error</p>
+<h5>Examples</h5>
+<p class="caption"><em>Resolving an image link found in a document</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> reference <span class="tok-op">=</span> <span class="tok-type">URI</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">../images/logo.svg</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> absolute <span class="tok-op">=</span> base<span class="tok-op">.</span><span class="tok-method">resolve</span><span class="tok-punct">(</span>reference<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="function-uri-fromiri">
+<h3><a class="self" href="#function-uri-fromiri"><code>fromIRI</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">fromIRI</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-uri-uri"><span class="tok-type">URI</span></a><span class="tok-punct">,</span> <a class="xref" href="#record-uri-urierror"><span class="tok-type">URIError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Converts a Unicode IRI to an ASCII URI using IDNA and UTF-8 percent encoding.</p>
+<p>Use this for human-entered international addresses. <code>parse</code> is intentionally stricter and accepts only an already encoded ASCII URI.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code></dt><dd>a Unicode internationalized resource identifier</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the converted URI or a conversion error</p>
+<h5>Examples</h5>
+<p class="caption"><em>Turning a pasted international address into a request URI</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> target <span class="tok-op">=</span> <span class="tok-type">URI</span><span class="tok-op">.</span><span class="tok-method">fromIRI</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://münich.example/straße</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-type">HTTP</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span>target<span class="tok-op">.</span><span class="tok-method">string</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="record-uri-uri">
+<h2><span class="kind kind-record">record</span> <code>URI</code></h2>
+<p>Strict RFC 3986 URI values, hierarchical URLs, query strings, and HTML form encoding. Parsing preserves caller spelling; normalization is always explicit.</p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">URI</span>
+
+<span class="tok-keyword">let</span> base <span class="tok-op">=</span> <span class="tok-type">URL</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://example.test/a/</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> reference <span class="tok-op">=</span> <span class="tok-type">URI</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">../items?limit=10</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+base<span class="tok-op">.</span><span class="tok-method">resolve</span><span class="tok-punct">(</span>reference<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-op">.</span><span class="tok-method">string</span></code></pre>
+<p>A parsed RFC 3986 URI reference. Construction is strict; use <code>parse</code> rather than building this representation directly. <code>string</code> preserves the spelling supplied by the caller, while <code>normalize</code> is explicit.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>source</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+</dl>
+<p class="implements">Implements <a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#trait-showable"><code>Showable</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#trait-inspectable"><code>Inspectable</code></a>.</p>
+<section class="members" id="make-uri">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="uri-string">
+<h4><a class="self" href="#uri-string"><code>string</code></a></h4>
+<pre class="code sig"><code>string <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the caller-supplied URI spelling unchanged.</p>
+<p class="returns"><strong>Returns</strong> the original URI text</p>
+
+</div>
+<div class="fn" id="uri-normalize">
+<h4><a class="self" href="#uri-normalize"><code>normalize</code></a></h4>
+<pre class="code sig"><code>normalize <span class="tok-op">:</span> <a class="xref" href="#record-uri-uri"><span class="tok-type">URI</span></a></code></pre>
+<p>Returns an explicitly normalized RFC 3986 representation.</p>
+<p>Parsing never normalizes implicitly: signatures, cache keys, and logs may depend on the exact text received. Ask for normalization where semantic comparison is what you mean.</p>
+<p class="returns"><strong>Returns</strong> the normalized URI</p>
+
+</div>
+<div class="fn" id="uri-equivalent?">
+<h4><a class="self" href="#uri-equivalent?"><code>equivalent?</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">equivalent?</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-uri-uri"><span class="tok-type">URI</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Compares normalized representations rather than original spellings.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the URI to compare</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> whether the URIs identify the same normalized reference</p>
+<h5>Examples</h5>
+<p class="caption"><em>Deduplicating differently spelled links</em></p>
+<pre class="code"><code><span class="tok-type">URI</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">HTTP://example.com/%7Eada</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+  <span class="tok-op">.</span><span class="tok-method">equivalent?</span><span class="tok-punct">(</span><span class="tok-type">URI</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">http://example.com/~ada</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="uri-resolve">
+<h4><a class="self" href="#uri-resolve"><code>resolve</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">resolve</span><span class="tok-punct">(</span>reference<span class="tok-op">:</span> <a class="xref" href="#record-uri-uri"><span class="tok-type">URI</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-uri-uri"><span class="tok-type">URI</span></a><span class="tok-punct">,</span> <a class="xref" href="#record-uri-urierror"><span class="tok-type">URIError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Resolves a URI reference against this absolute base.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>reference</code></dt><dd>the relative or absolute reference</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the resolved URI, or <code>NotAbsolute</code> when</p>
+<h5>Examples</h5>
+<p class="caption"><em>Following a relative link</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> base <span class="tok-op">=</span> <span class="tok-type">URI</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://example.com/docs/start</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+base<span class="tok-op">.</span><span class="tok-method">resolve</span><span class="tok-punct">(</span><span class="tok-type">URI</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">../api</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-op">.</span><span class="tok-method">string</span>
+<span class="tok-comment"># =&gt; &quot;https://example.com/api&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="uri-scheme">
+<h4><a class="self" href="#uri-scheme"><code>scheme</code></a></h4>
+<pre class="code sig"><code>scheme <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
+<p>Returns the normalized lowercase scheme, when one is present.</p>
+<p class="returns"><strong>Returns</strong> the scheme, or <code>None</code> for a relative reference</p>
+
+</div>
+<div class="fn" id="uri-host">
+<h4><a class="self" href="#uri-host"><code>host</code></a></h4>
+<pre class="code sig"><code>host <span class="tok-op">:</span> <span class="tok-type">Host?</span></code></pre>
+<p>Returns the parsed authority host, when one is present.</p>
+<p class="returns"><strong>Returns</strong> the host, or <code>None</code> for references without an authority</p>
+
+</div>
+<div class="fn" id="uri-query">
+<h4><a class="self" href="#uri-query"><code>query</code></a></h4>
+<pre class="code sig"><code>query <span class="tok-op">:</span> <span class="tok-type">Query?</span></code></pre>
+<p>Returns the parsed query when the reference contains <code>?</code>.</p>
+<p><code>Just(Query { entries: [] })</code> represents an explicitly empty query; <code>None</code> means no question mark was present at all.</p>
+<p class="returns"><strong>Returns</strong> the query, including an explicitly empty one</p>
+
+</div>
+<div class="fn" id="uri-showvalue">
+<h4><a class="self" href="#uri-showvalue"><code>showValue</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/kex/#showable-showvalue" title="Implements Showable.showValue">Showable</a></h4>
+<pre class="code sig"><code>showValue <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Renders with any authority password replaced by <code>***</code>.</p>
+
+</div>
+<div class="fn" id="uri-inspectvalue">
+<h4><a class="self" href="#uri-inspectvalue"><code>inspectValue</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/kex/#inspectable-inspectvalue" title="Implements Inspectable.inspectValue">Inspectable</a></h4>
+<pre class="code sig"><code><span class="tok-fn">inspectValue</span><span class="tok-punct">(</span>colors<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Structural inspection is also credential-safe.</p>
+
+</div>
+</div>
+</section><h3>From <a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#trait-showable"><code>Showable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#showable-to"><code>to</code></a></dt><dd></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-uri-url">
+<h2><span class="kind kind-record">record</span> <code>URL</code></h2>
+<p>An absolute hierarchical URI with an authority component, such as an HTTP URL. Unlike a general <a class="xref" href="#record-uri-uri"><code>URI</code></a>, a <a class="xref" href="#record-uri-url"><code>URL</code></a> always has a scheme and host, which makes accessors such as <code>scheme</code> and <code>host</code> total.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>source</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+</dl>
+<p class="implements">Implements <a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#trait-showable"><code>Showable</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#trait-inspectable"><code>Inspectable</code></a>.</p>
+<section class="members" id="make-url">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="url-string">
+<h4><a class="self" href="#url-string"><code>string</code></a></h4>
+<pre class="code sig"><code>string <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the caller-supplied URL spelling unchanged.</p>
+<p class="returns"><strong>Returns</strong> the original URL text</p>
+
+</div>
+<div class="fn" id="url-normalize">
+<h4><a class="self" href="#url-normalize"><code>normalize</code></a></h4>
+<pre class="code sig"><code>normalize <span class="tok-op">:</span> <a class="xref" href="#record-uri-url"><span class="tok-type">URL</span></a></code></pre>
+<p>Returns an explicitly normalized URL without changing this value.</p>
+<p class="returns"><strong>Returns</strong> the normalized URL</p>
+
+</div>
+<div class="fn" id="url-equivalent?">
+<h4><a class="self" href="#url-equivalent?"><code>equivalent?</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">equivalent?</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-uri-url"><span class="tok-type">URL</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Compares normalized representations rather than original spellings.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the URL to compare</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> whether the URLs normalize to the same value</p>
+
+</div>
+<div class="fn" id="url-resolve">
+<h4><a class="self" href="#url-resolve"><code>resolve</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">resolve</span><span class="tok-punct">(</span>reference<span class="tok-op">:</span> <a class="xref" href="#record-uri-uri"><span class="tok-type">URI</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-uri-url"><span class="tok-type">URL</span></a><span class="tok-punct">,</span> <a class="xref" href="#record-uri-urierror"><span class="tok-type">URIError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Resolves a URI reference while preserving the URL invariant.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>reference</code></dt><dd>the relative or absolute reference</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the resolved absolute URL</p>
+<h5>Examples</h5>
+<p class="caption"><em>Resolving an API pagination link</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> <span class="tok-keyword">next</span> <span class="tok-op">=</span> <span class="tok-type">URL</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://api.example.com/v1/items</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+  <span class="tok-op">.</span><span class="tok-method">resolve</span><span class="tok-punct">(</span><span class="tok-type">URI</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">?page=2</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="url-scheme">
+<h4><a class="self" href="#url-scheme"><code>scheme</code></a></h4>
+<pre class="code sig"><code>scheme <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the normalized lowercase scheme.</p>
+<p class="returns"><strong>Returns</strong> the scheme</p>
+
+</div>
+<div class="fn" id="url-host">
+<h4><a class="self" href="#url-host"><code>host</code></a></h4>
+<pre class="code sig"><code>host <span class="tok-op">:</span> <a class="xref" href="#record-uri-host"><span class="tok-type">Host</span></a></code></pre>
+<p>Returns the authority host in display and normalized ASCII forms.</p>
+<p class="returns"><strong>Returns</strong> the host</p>
+
+</div>
+<div class="fn" id="url-query">
+<h4><a class="self" href="#url-query"><code>query</code></a></h4>
+<pre class="code sig"><code>query <span class="tok-op">:</span> <span class="tok-type">Query?</span></code></pre>
+<p>Returns the parsed query when the URL contains <code>?</code>.</p>
+<p class="returns"><strong>Returns</strong> the query, or <code>None</code> when absent</p>
+
+</div>
+<div class="fn" id="url-showvalue">
+<h4><a class="self" href="#url-showvalue"><code>showValue</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/kex/#showable-showvalue" title="Implements Showable.showValue">Showable</a></h4>
+<pre class="code sig"><code>showValue <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Renders with any authority password replaced by <code>***</code>.</p>
+
+</div>
+<div class="fn" id="url-inspectvalue">
+<h4><a class="self" href="#url-inspectvalue"><code>inspectValue</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/kex/#inspectable-inspectvalue" title="Implements Inspectable.inspectValue">Inspectable</a></h4>
+<pre class="code sig"><code><span class="tok-fn">inspectValue</span><span class="tok-punct">(</span>colors<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Structural inspection is also credential-safe.</p>
+
+</div>
+</div>
+</section><h3>From <a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#trait-showable"><code>Showable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#showable-to"><code>to</code></a></dt><dd></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-uri-host">
+<h2><span class="kind kind-record">record</span> <code>Host</code></h2>
+<p>A host's display spelling and normalized ASCII/IDNA spelling.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>display</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>ascii</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-uri-query">
+<h2><span class="kind kind-record">record</span> <code>Query</code></h2>
+<p>Ordered URI query entries. <code>None</code> distinguishes a bare key from <code>key=</code>.</p>
+<p>Order and duplicates matter in real APIs: <code>tag=kex&amp;tag=beam</code> must not become a map with one value silently discarded.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>entries</code></dt><dd><code>[(<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>?)]</code></dd></div>
+</dl>
+<section class="members" id="make-query">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="query-encode">
+<h4><a class="self" href="#query-encode"><code>encode</code></a></h4>
+<pre class="code sig"><code>encode <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Encodes according to generic RFC 3986 query rules.</p>
+<p class="returns"><strong>Returns</strong> encoded query text without a leading question mark</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Query</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">q</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a+b</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">encode</span>   <span class="tok-comment"># =&gt; &quot;q=a%2Bb&quot;</span></code></pre>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="record-uri-form">
+<h2><span class="kind kind-record">record</span> <code>Form</code></h2>
+<p>Ordered <code>application/x-www-form-urlencoded</code> entries.</p>
+<p>This is deliberately separate from <a class="xref" href="#record-uri-query"><code>Query</code></a>: HTML forms encode spaces as plus signs, while a generic URI query treats a plus as an ordinary +++.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>entries</code></dt><dd><code>[(<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>?)]</code></dd></div>
+</dl>
+<section class="members" id="make-form">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="form-encode">
+<h4><a class="self" href="#form-encode"><code>encode</code></a></h4>
+<pre class="code sig"><code>encode <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Encodes according to HTML form rules, including space as ++.</p>
+<p class="returns"><strong>Returns</strong> the <code>application/x-www-form-urlencoded</code> body</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Form</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">query</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">hello world</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">encode</span>
+<span class="tok-comment"># =&gt; &quot;query=hello+world&quot;</span></code></pre>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="record-uri-urierror">
+<h2><span class="kind kind-record">record</span> <code>URIError</code></h2>
+<p>A typed URI parsing, conversion, or resolution failure.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>kind</code></dt><dd><code><a class="xref" href="#type-uri-urierrorkind">URIErrorKind</a></code></dd></div>
+<div class="field"><dt><code>message</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>position</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a>?</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="type-uri-urierrorkind">
+<h2><span class="kind kind-type">type</span> <code>URIErrorKind</code></h2>
+<p>Stable URI failure categories.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>InvalidSyntax</code></li>
+<li><code>InvalidEscape</code></li>
+<li><code>InvalidAuthority</code></li>
+<li><code>InvalidPort</code></li>
+<li><code>NonASCII</code></li>
+<li><code>NotAbsolute</code></li>
+<li><code>NotHierarchical</code></li>
+<li><code>MissingAuthority</code></li>
+<li><code>UnsupportedScheme</code></li>
+</ul>
+
+</section>
+<section class="entity" id="module-uri-url">
+<h2><span class="kind kind-module">module</span> <code>URI.URL</code></h2>
+<div class="functions">
+<div class="fn" id="function-uri-url-parse">
+<h3><a class="self" href="#function-uri-url-parse"><code>parse</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-uri-url"><span class="tok-type">URL</span></a><span class="tok-punct">,</span> <a class="xref" href="#record-uri-urierror"><span class="tok-type">URIError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Parses an absolute hierarchical URL with an authority.</p>
+<p>Rejects relative references, opaque URIs, and values without a host, so a caller can use <code>scheme</code> and <code>host</code> without handling absence.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code></dt><dd>the complete URL</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the URL or a precise syntax error</p>
+<h5>Examples</h5>
+<p class="caption"><em>Validating a webhook target at configuration time</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> webhook <span class="tok-op">=</span> <span class="tok-type">URL</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">WEBHOOK_URL</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="function-uri-url-build">
+<h3><a class="self" href="#function-uri-url-build"><code>build</code></a></h3>
+<pre class="code sig"><code>build <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-uri-query"><span class="tok-type">Query</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-uri-url"><span class="tok-type">URL</span></a><span class="tok-punct">,</span> <a class="xref" href="#record-uri-urierror"><span class="tok-type">URIError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Builds and validates a URL from decoded path segments and a query value.</p>
+<p>Pass decoded values, not pre-escaped text. The builder escapes each path segment independently, so a slash inside one value cannot accidentally become another level of the path.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>scheme</code></dt><dd>the URL scheme, such as <code>https</code></dd></div>
+<div class="param"><dt><code>host</code></dt><dd>the Unicode or ASCII hostname</dd></div>
+<div class="param"><dt><code>path</code></dt><dd>decoded path segments</dd></div>
+<div class="param"><dt><code>query</code></dt><dd>ordered decoded query entries</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the encoded, validated URL</p>
+<h5>Examples</h5>
+<p class="caption"><em>Building an API URL from an identifier supplied by a user</em></p>
+<pre class="code"><code><span class="tok-type">URL</span><span class="tok-op">.</span><span class="tok-method">build</span><span class="tok-punct">(</span>
+  <span class="tok-string">&quot;</span><span class="tok-string">https</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span>
+  <span class="tok-string">&quot;</span><span class="tok-string">api.example.com</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span>
+  <span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">users</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> userName<span class="tok-punct">]</span><span class="tok-punct">,</span>
+  <span class="tok-type">Query</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">include</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">profile</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-uri-query">
+<h2><span class="kind kind-module">module</span> <code>URI.Query</code></h2>
+<div class="functions">
+<div class="fn" id="function-uri-query-from">
+<h3><a class="self" href="#function-uri-query-from"><code>from</code></a></h3>
+<pre class="code sig"><code><span class="tok-keyword">from</span><span class="tok-punct">(</span>entries<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <span class="tok-type">String?</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-uri-query"><span class="tok-type">Query</span></a>
+<span class="tok-keyword">from</span><span class="tok-punct">(</span>entries<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/map/#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <span class="tok-type">String?</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-uri-query"><span class="tok-type">Query</span></a></code></pre>
+<p>Builds a query while preserving order, duplicates, and bare keys.</p>
+<p>A <code>None</code> value encodes as a bare key; <code>Just(&quot;&quot;)</code> encodes with an equals sign. This preserves the difference between <code>?debug</code> and <code>?debug=</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>entries</code></dt><dd>decoded key/value pairs</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the ordered query</p>
+<h5>Examples</h5>
+<p class="caption"><em>Adding repeated filters and a bare feature flag</em></p>
+<pre class="code"><code><span class="tok-type">Query</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span>
+  <span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">tag</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">kex</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+  <span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">tag</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">beam</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+  <span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">debug</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-bool">None</span><span class="tok-punct">)</span>
+<span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-uri-query-parse">
+<h3><a class="self" href="#function-uri-query-parse"><code>parse</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-uri-query"><span class="tok-type">Query</span></a><span class="tok-punct">,</span> <a class="xref" href="#record-uri-urierror"><span class="tok-type">URIError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Parses generic URI query encoding; ++ remains a literal plus.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code></dt><dd>encoded query text without the leading question mark</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> decoded entries or an invalid escape</p>
+<h5>Examples</h5>
+<p class="caption"><em>Reading repeated filters without losing their order</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> filters <span class="tok-op">=</span> <span class="tok-type">Query</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">tag=kex&amp;tag=beam&amp;debug</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-op">.</span><span class="tok-method">entries</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-uri-form">
+<h2><span class="kind kind-module">module</span> <code>URI.Form</code></h2>
+<div class="functions">
+<div class="fn" id="function-uri-form-from">
+<h3><a class="self" href="#function-uri-form-from"><code>from</code></a></h3>
+<pre class="code sig"><code><span class="tok-keyword">from</span><span class="tok-punct">(</span>entries<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-uri-form"><span class="tok-type">Form</span></a>
+<span class="tok-keyword">from</span><span class="tok-punct">(</span>entries<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/map/#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-uri-form"><span class="tok-type">Form</span></a></code></pre>
+<p>Builds a form value while preserving order and duplicates.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>entries</code></dt><dd>decoded form fields</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the ordered form</p>
+<h5>Examples</h5>
+<p class="caption"><em>Preparing a login request body</em></p>
+<pre class="code"><code><span class="tok-type">Form</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">email</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> email<span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">password</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> password<span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">encode</span></code></pre>
+
+</div>
+<div class="fn" id="function-uri-form-parse">
+<h3><a class="self" href="#function-uri-form-parse"><code>parse</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-uri-form"><span class="tok-type">Form</span></a><span class="tok-punct">,</span> <a class="xref" href="#record-uri-urierror"><span class="tok-type">URIError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Parses form encoding where ++ represents a space.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code></dt><dd>an <code>application/x-www-form-urlencoded</code> body</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> decoded fields or an invalid escape</p>
+<h5>Examples</h5>
+<p class="caption"><em>Reading a search field submitted by a browser</em></p>
+<pre class="code"><code><span class="tok-type">Form</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">query=hello+world</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span><span class="tok-op">.</span><span class="tok-method">entries</span></code></pre>
+
+</div>
+</div>
+</section>
+

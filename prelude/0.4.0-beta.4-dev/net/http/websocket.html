@@ -1,0 +1,173 @@
+<section class="entity" id="module-net-http-websocket">
+<h2><span class="kind kind-module">module</span> <code>Net.HTTP.WebSocket</code></h2>
+<p>High-level RFC 6455 client messages. The runtime handles fragmentation and ping/pong frames; reconnect and heartbeat policies remain application-owned.</p>
+<p>A <a class="xref" href="#type-net-http-websocket-connection"><code>Connection</code></a> delivers complete messages rather than wire frames. Your code never has to assemble fragments or answer a protocol ping, but it does decide what a dropped connection means: reconnecting may require resubscribing or replaying an application cursor, so the library cannot do that safely for you.</p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Net</span><span class="tok-op">.</span><span class="tok-type">HTTP</span><span class="tok-op">.</span><span class="tok-type">WebSocket</span>
+
+<span class="tok-keyword">let</span> socket <span class="tok-op">=</span> <span class="tok-type">WebSocket</span><span class="tok-op">.</span><span class="tok-method">connect</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">wss://example.test/events</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+socket<span class="tok-op">.</span><span class="tok-method">send</span><span class="tok-punct">(</span><span class="tok-type">Text</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">let</span> message <span class="tok-op">=</span> socket<span class="tok-op">.</span><span class="tok-method">receiveMessage</span><span class="tok-op">.</span><span class="tok-method">try</span>
+socket<span class="tok-op">.</span><span class="tok-method">close</span></code></pre>
+</section>
+<section class="entity" id="type-net-http-websocket-message">
+<h2><span class="kind kind-type">type</span> <code>Message</code></h2>
+<p>A complete high-level WebSocket message. Fragmentation and ping/pong control frames are handled by the connection runtime.</p>
+<p><code>CloseMessage</code> carries the peer's status code and reason. Treat it as the end of the message stream even when the code describes a normal shutdown.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>Text(String)</code></li>
+<li><code>BinaryMessage(Binary)</code></li>
+<li><code>CloseMessage(Integer, String)</code></li>
+</ul>
+
+</section>
+<section class="entity" id="record-net-http-websocket-clientoptions">
+<h2><span class="kind kind-record">record</span> <code>ClientOptions</code></h2>
+<p>Client handshake policy and the maximum reassembled message size.</p>
+<p>Subprotocols are offered in preference order. The byte limit applies after fragments are reassembled, preventing a peer from bypassing the bound with many individually small frames.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>subprotocols</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>]</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>maximumMessageBytes</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-http-websocket-session">
+<h2><span class="kind kind-record">record</span> <code>Session</code></h2>
+<p>Negotiated handshake information. The subprotocol is <code>None</code> when the server selected none.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>subprotocol</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>?</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="type-net-http-websocket-connection">
+<h2><span class="kind kind-type">type</span> <code>Connection</code></h2>
+<p>An opaque RFC 6455 connection, client- or server-side. It does not reconnect automatically.</p>
+<section class="members" id="make-connection">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="connection-send">
+<h4><a class="self" href="#connection-send"><code>send</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">send</span><span class="tok-punct">(</span>message<span class="tok-op">:</span> <a class="xref" href="#type-net-http-websocket-message"><span class="tok-type">Message</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Sends one masked text, binary, or close message.</p>
+<p class="returns"><strong>Returns</strong> success or <code>Protocol</code>/<code>Limit</code>/<code>Closed</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Subscribing after connecting</em></p>
+<pre class="code"><code>connection<span class="tok-op">.</span><span class="tok-method">send</span><span class="tok-punct">(</span><span class="tok-type">Text</span><span class="tok-punct">(</span><span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span><span class="tok-punct">{</span> action<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">subscribe</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> topic<span class="tok-op">:</span> topic <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span></code></pre>
+
+</div>
+<div class="fn" id="connection-receivemessage">
+<h4><a class="self" href="#connection-receivemessage"><code>receiveMessage</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">receiveMessage</span><span class="tok-punct">(</span>timeout<span class="tok-op">:</span> <span class="tok-type">Duration?</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-http-websocket-message"><span class="tok-type">Message</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p><code>receive</code> is a Kex process keyword, so the public method spells out the operation while preserving the plan's high-level message semantics. Reassembles fragments, validates UTF-8, and automatically answers pings.</p>
+<p>A <code>CloseMessage</code> is returned once so the application can inspect the peer's reason. Subsequent reads fail with <code>Closed</code>.</p>
+<p class="returns"><strong>Returns</strong> the next data or close message</p>
+<h5>Examples</h5>
+<p class="caption"><em>Processing messages until the server closes the session</em></p>
+<pre class="code"><code><span class="tok-keyword">loop</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">match</span> connection<span class="tok-op">.</span><span class="tok-method">receiveMessage</span><span class="tok-op">.</span><span class="tok-method">try</span> <span class="tok-keyword">do</span>
+    <span class="tok-type">Text</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span>                  <span class="tok-op">=&gt;</span> <span class="tok-fn">handleEvent</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span>
+    <span class="tok-type">BinaryMessage</span><span class="tok-punct">(</span>data<span class="tok-punct">)</span>         <span class="tok-op">=&gt;</span> <span class="tok-fn">saveSnapshot</span><span class="tok-punct">(</span>data<span class="tok-punct">)</span>
+    <span class="tok-type">CloseMessage</span><span class="tok-punct">(</span>code<span class="tok-punct">,</span> reason<span class="tok-punct">)</span>  <span class="tok-op">=&gt;</span> <span class="tok-keyword">break</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="connection-session">
+<h4><a class="self" href="#connection-session"><code>session</code></a></h4>
+<pre class="code sig"><code>session <span class="tok-op">:</span> <a class="xref" href="#record-net-http-websocket-session"><span class="tok-type">Session</span></a></code></pre>
+<p>Returns handshake details negotiated with the server.</p>
+<p class="returns"><strong>Returns</strong> the selected subprotocol, if any</p>
+<h5>Examples</h5>
+<p class="caption"><em>Verifying which compatible event format was selected</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> protocol <span class="tok-op">=</span> connection<span class="tok-op">.</span><span class="tok-method">session</span><span class="tok-op">.</span><span class="tok-method">subprotocol</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">default</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="connection-close">
+<h4><a class="self" href="#connection-close"><code>close</code></a></h4>
+<pre class="code sig"><code>close <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p>Sends a normal close frame and idempotently releases the transport.</p>
+<p>Use an explicit <code>CloseMessage</code> with <code>send</code> first when the peer needs an application-specific code or reason.</p>
+
+</div>
+<div class="fn" id="connection-closed?">
+<h4><a class="self" href="#connection-closed?"><code>closed?</code></a></h4>
+<pre class="code sig"><code>closed? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p class="returns"><strong>Returns</strong> whether the connection owner has stopped</p>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="record-net-http-websocket-handshake">
+<h2><span class="kind kind-record">record</span> <code>Handshake</code></h2>
+<p>Subprotocols offered by an incoming upgrade request, in the order the peer listed them.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>subprotocols</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a>]</code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="type-net-http-websocket-upgrade">
+<h2><span class="kind kind-type">type</span> <code>Upgrade</code></h2>
+<p>A server's decision after inspecting a <a class="xref" href="#record-net-http-websocket-handshake"><code>Handshake</code></a>.</p>
+<p><code>Accept</code> takes over the connection once the 101 response is sent: <code>handler</code> runs with the negotiated server <a class="xref" href="#type-net-http-websocket-connection"><code>Connection</code></a>, and its return value is discarded. <code>headers</code> are added to the 101 response; a name that manages the handshake itself (<a class="xref" href="#type-net-http-websocket-upgrade"><code>Upgrade</code></a>, <a class="xref" href="#type-net-http-websocket-connection"><code>Connection</code></a>, <code>Sec-WebSocket-Accept</code>, <code>Sec-WebSocket-Protocol</code>) is dropped rather than overridden. <code>subprotocol</code> must be one <code>handshake.subprotocols</code> actually offered, or <code>None</code>.</p>
+<p><code>Reject</code> answers with an ordinary buffered response instead, leaving the connection as plain HTTP — a client requesting an unsupported subprotocol might get <code>Response.text(426, &quot;chat.v2 required&quot;)</code>, for instance.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>Accept((Connection) -&gt; Void, Headers, String?)</code></li>
+<li><code>Reject(Response&lt;Binary&gt;)</code></li>
+</ul>
+
+</section>
+<section class="entity" id="module-net-http-websocket-websocket">
+<h2><span class="kind kind-module">module</span> <code>Net.HTTP.WebSocket.WebSocket</code></h2>
+<p>Constructors for high-level WebSocket connections, client- and server-side.</p>
+<div class="functions">
+<div class="fn" id="function-net-http-websocket-websocket-connect">
+<h3><a class="self" href="#function-net-http-websocket-websocket-connect"><code>connect</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">connect</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> options<span class="tok-op">:</span> <span class="tok-type">ClientOptions</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-http-websocket-connection"><span class="tok-type">Connection</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Opens a <code>ws:</code> or verified <code>wss:</code> connection with default options.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>url</code></dt><dd>an absolute WebSocket URL</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> a connection or typed handshake error</p>
+<h5>Examples</h5>
+<p class="caption"><em>Following a live event feed</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> socket <span class="tok-op">=</span> <span class="tok-type">WebSocket</span><span class="tok-op">.</span><span class="tok-method">connect</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">wss://events.example.com/orders</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">try</span>
+<span class="tok-keyword">match</span> socket<span class="tok-op">.</span><span class="tok-method">receiveMessage</span><span class="tok-op">.</span><span class="tok-method">try</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">Text</span><span class="tok-punct">(</span>json<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>json<span class="tok-punct">)</span>
+  _          <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">warn</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">unexpected non-text event</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="function-net-http-websocket-websocket-upgrade">
+<h3><a class="self" href="#function-net-http-websocket-websocket-upgrade"><code>upgrade</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">upgrade</span><span class="tok-punct">(</span>request<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/http/#record-net-http-request"><span class="tok-type">Request</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> decide<span class="tok-op">:</span> <span class="tok-punct">(</span><a class="xref" href="#record-net-http-websocket-handshake"><span class="tok-type">Handshake</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-net-http-websocket-upgrade"><span class="tok-type">Upgrade</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/http/#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Decides whether to accept an incoming <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/http/#module-net-http-server"><code>Net.HTTP.Server</code></a> upgrade request.</p>
+<p>Call from a route handler and return the result directly — it types as an ordinary <code>Response&lt;Binary&gt;</code>, and <a class="xref" href="/prelude/0.4.0-beta.4-dev/net/http/#module-net-http-server"><code>Net.HTTP.Server</code></a> recognizes what it actually is: a request that isn't a syntactically valid WebSocket handshake at all (wrong method, missing <code>Sec-WebSocket-Key</code>, unsupported <code>Sec-WebSocket-Version</code>) is answered automatically without calling <code>decide</code>; a valid one reaches <code>decide</code> for an application decision.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>request</code></dt><dd>the route handler's own request</dd></div>
+<div class="param"><dt><code>decide</code></dt><dd>the accept/reject decision</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the handler's response — an upgrade in</p>
+<h5>Examples</h5>
+<p class="caption"><em>An authenticated, subprotocol-gated chat route</em></p>
+<pre class="code"><code><span class="tok-keyword">foul</span> <span class="tok-fn">socketRoute</span><span class="tok-punct">(</span>request<span class="tok-op">:</span> <span class="tok-type">Request</span><span class="tok-op">&lt;</span><span class="tok-type">Binary</span><span class="tok-op">&gt;</span><span class="tok-punct">,</span> context<span class="tok-op">:</span> <span class="tok-type">Context</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Response</span><span class="tok-op">&lt;</span><span class="tok-type">Binary</span><span class="tok-op">&gt;</span> <span class="tok-op">=</span> <span class="tok-type">WebSocket</span><span class="tok-op">.</span><span class="tok-method">upgrade</span><span class="tok-punct">(</span>request<span class="tok-punct">)</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>handshake<span class="tok-op">|</span>
+  <span class="tok-keyword">if</span> handshake<span class="tok-op">.</span><span class="tok-method">subprotocols</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">chat.v2</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-keyword">let</span> handler <span class="tok-op">:</span> <span class="tok-type">Connection</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span> <span class="tok-op">=</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>socket<span class="tok-op">|</span> <span class="tok-fn">serveChat</span><span class="tok-punct">(</span>socket<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+    <span class="tok-type">Accept</span><span class="tok-punct">(</span>handler<span class="tok-punct">,</span> <span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-punct">,</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">chat.v2</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">else</span>
+    <span class="tok-type">Reject</span><span class="tok-punct">(</span><span class="tok-type">Response</span><span class="tok-op">.</span><span class="tok-method">text</span><span class="tok-punct">(</span><span class="tok-number">426</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">chat.v2 required</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span>
+<span class="tok-keyword">let</span> router <span class="tok-op">=</span> <span class="tok-type">Router</span><span class="tok-op">.</span><span class="tok-method">build</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/socket</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-op">~</span>socketRoute<span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+
