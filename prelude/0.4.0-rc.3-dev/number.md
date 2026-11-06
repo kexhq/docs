@@ -490,12 +490,13 @@ Use `parse` when a failure needs explaining and `"42".to(Integer)` when it does 
 
 ```kex
 parse(s: String) -> Result<Integer, ParseError>
-parse(s: String, radix: Integer) -> Result<Integer, ParseError>
+parse(s: String, culture: Culture) -> Result<Integer, ParseError>
+parse(s: String, culture: Integer) -> Result<Integer, ParseError>
 ```
 
 Parses the whole string as a base-10 integer.
 
-The string must be entirely consumed: leading or trailing characters make it an `Error`, with a `ParseError` describing where parsing stopped. Use `parsePrefix` when a trailing remainder is expected.
+The string must be entirely consumed: leading or trailing characters make it an `Error`, with a `ParseError` describing where parsing stopped. Use `parsePrefix` when a trailing remainder is expected. For localized text, pass `culture:` explicitly.
 
 **Parameters**
 
@@ -530,6 +531,7 @@ end
 
 ```kex
 parsePrefix(s: String) -> (Integer, String)?
+parsePrefix(s: String, culture: Culture) -> (Integer, String)?
 ```
 
 Parses an integer from the front of the string and returns it together with whatever text was left over.
@@ -569,11 +571,12 @@ Reading floating-point numbers out of text.
 
 ```kex
 parse(s: String) -> Result<Float, ParseError>
+parse(s: String, culture: Culture) -> Result<Float, ParseError>
 ```
 
 Parses the whole string as a float.
 
-The string must be entirely consumed; anything left over makes it an `Error` carrying a `ParseError`.
+The string must be entirely consumed; anything left over makes it an `Error` carrying a `ParseError`. For localized text, pass `culture:` explicitly.
 
 **Parameters**
 
@@ -599,6 +602,7 @@ rows.map { |r| Float.parse(r).or(0.0) }.sum / rows.count.to(Float).or(1.0)
 
 ```kex
 parsePrefix(s: String) -> (Float, String)?
+parsePrefix(s: String, culture: Culture) -> (Float, String)?
 ```
 
 Parses a float from the front of the string and returns it together with the unconsumed remainder. Answers `None` when the string does not begin with a number.
@@ -924,11 +928,12 @@ Reading a number out of text without deciding in advance which half of the numer
 
 ```kex
 parse(s: String) -> Result<Number, ParseError>
+parse(s: String, culture: Culture) -> Result<Number, ParseError>
 ```
 
 Parses the whole string as an `Integer` or a `Float`, whichever the text describes.
 
-Use it when the input's shape is not known ahead of time: a config value, a CSV column that may hold either.
+Use it when the input's shape is not known ahead of time: a config value, a CSV column that may hold either. For localized text, pass `culture:` explicitly.
 
 **Parameters**
 
@@ -1054,7 +1059,7 @@ Implements [`Comparable`](comparable.md#trait-comparable).
 ### `to`
 
 ```kex
-to(String: Type, format: NumberFormat) -> String?
+to(String: Type, format: NumberFormat, culture: Culture) -> String?
 ```
 
 Writes the number by a digit pattern, described at `Number.format`.

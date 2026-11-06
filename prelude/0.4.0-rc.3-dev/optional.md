@@ -617,7 +617,7 @@ Right("ok").either(~toString, ~upperCase)  # => "OK"
 ## function `to`
 
 ```kex
-to(value, t: Type, radix: Integer) -> A?
+to(value, t: Type, format: NumberFormat, culture: Culture) -> A?
 ```
 
 Converts `value` to the type `t`, or `None` if it cannot be represented.
