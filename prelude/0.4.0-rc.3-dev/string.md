@@ -192,6 +192,7 @@ Returns the last character, or `None` when the string is empty.
 ```kex
 get(i: Integer) -> Char?
 get(i: Integer, default: Char) -> Char
+get(i: Range<Integer>) -> String
 ```
 
 Returns the character at index `i`, counting from 0.
@@ -265,6 +266,60 @@ _Removing a known prefix_
 ```kex
 let flag = "--verbose"
 flag.startsWith?("--") then flag.drop(2) else flag   # => "verbose"
+```
+
+### `slice`
+
+```kex
+slice(start: Integer, length: Integer) -> String
+slice(range: Range<Integer>) -> String
+```
+
+Returns the substring of `length` characters starting at index `start`, counting from 0.
+
+Characters, not bytes: the indices count what `count` counts. The window is clamped rather than refused, the way `take` and `drop` already behave: a start past the end answers `""`, a length running past the end stops at the end, a negative start counts as 0, and a negative length answers `""`.
+
+**Parameters**
+
+  - `start` — the 0-based index of the first character
+  - `length` — how many characters to keep
+
+**Returns**: the characters in that window
+
+**Examples**
+
+```kex
+"hello".slice(1, 3)    # => "ell"
+"hello".slice(1, 99)   # => "ello"
+"hello".slice(9, 3)    # => ""
+```
+
+_Reading a fixed-width field_
+
+```kex
+line.slice(0, 10).trim   # the date column of a log line
+```
+
+### `substring`
+
+```kex
+substring(start: Integer, length: Integer) -> String
+substring(range: Range<Integer>) -> String
+```
+
+Returns the substring of `length` characters starting at index `start`. The same as `slice`, under the name familiar from other languages.
+
+**Parameters**
+
+  - `start` — the 0-based index of the first character
+  - `length` — how many characters to keep
+
+**Returns**: the characters in that window
+
+**Examples**
+
+```kex
+"hello".substring(1, 3)   # => "ell"
 ```
 
 ### `reject`
@@ -544,7 +599,7 @@ value.enclose("\"")   # => "\"localhost\""
 at(i: Integer) -> Char?
 ```
 
-Returns the character at index `i`, counting from 0, or `None` when the index is out of range. The same as the one-argument `get`.
+Returns the character at index `i`, counting from 0, or `None` when the index is out of range. The same as the integer one-argument `get` (`get` also accepts a `Range`, which answers a substring instead).
 
 **Parameters**
 

@@ -350,9 +350,10 @@ Returns the element at position `i` (0-based) wrapped in `Just`, or `None` if th
 ```kex
 get(i: Integer) -> X?
 get(i: Integer, default: X) -> X
+get(i: Range<Integer>) -> [X]
 ```
 
-Returns the element at position `i` (0-based), or `None` when the index is out of range. The same as `at`.
+Returns the element at position `i` (0-based), or `None` when the index is out of range. The same as `at` (`get` also accepts a `Range`, which answers a sublist instead).
 
 **Parameters**
 
@@ -508,6 +509,38 @@ Drops the first `n` elements.
 
 ```kex
 [1, 2, 3, 4, 5].drop(2)   # => [3, 4, 5]
+```
+
+#### `slice`
+
+```kex
+slice(start: Integer, length: Integer) -> [X]
+slice(range: Range<Integer>) -> [X]
+```
+
+Returns the sublist of `length` elements starting at index `start`, counting from 0.
+
+The window is clamped rather than refused, the way `take` and `drop` already behave: a start past the end answers `[]`, a length running past the end stops at the end, a negative start counts as 0, and a negative length answers `[]`.
+
+**Parameters**
+
+  - `start` — the 0-based index of the first element
+  - `length` — how many elements to keep
+
+**Returns**: the elements in that window
+
+**Examples**
+
+```kex
+[1, 2, 3, 4].slice(1, 2)    # => [2, 3]
+[1, 2, 3].slice(1, 99)      # => [2, 3]
+[1, 2, 3].slice(9, 2)       # => []
+```
+
+_Taking a page of rows_
+
+```kex
+rows.slice(page * 10, 10)
 ```
 
 #### `push`
