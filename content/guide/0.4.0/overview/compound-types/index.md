@@ -1,11 +1,11 @@
 ---
 id: "c53b0c85f523d0b2ec5cc40562f0f7d9bf65079fa854f2d05b71fc7efad0e69f"
-title: "Compound types"
+title: "Compound values"
 path: "/guide/0.4.0/overview/compound-types/"
-draft: true
+draft: false
 template: "page"
 ---
-Compound types turn primitive values into more practical structures, such as lists, tuples, maps, and sets.
+Compound values turn primitive values into more practical structures, such as lists, tuples, maps, and sets.
 
 ## Lists
 
@@ -58,6 +58,34 @@ let prepended = [1 | original]      # [1, 2, 3]
 let expanded = [0, ...original, 4]  # [0, 1, 2, 3, 4]
 ```
 
+Lists could be decomposed into its elements:
+
+```kex
+main do
+  let list = [10, 20, 30, 40]   # [Integer]
+  let [first | rest]    = list  # first : Integer, rest : [Integer]
+  let [f, s, t | other] = list  # f, s, t : Integer, other : [Integer]
+
+  IO.printLine(first)
+  IO.printLine(rest)
+  IO.printLine(f)
+  IO.printLine(s)
+  IO.printLine(t)
+  IO.printLine(other)
+end
+```
+
+```output filename="OUTPUT"
+10
+[20, 30, 40]
+10
+20
+30
+[40]
+```
+
+Just as `|` can help creating a list via prepending to its beginning, it can also get the first element of the list while pattern matching. The `,`  does by element decomposition.
+
 List can also contain other lists or other compound types:
 
 ```kex
@@ -65,29 +93,119 @@ let original = [2, 3]
 let list = [[1], original, [4, 5]]  # [[1], [2, 3], [3, 5]]
 ```
 
-## Tuples and maps
+## Tuples
 
-While lists only contains elements of the same type, tuples al
-
-```kex
-let location = ("Budapest", 47.5)
-let (city, latitude) = location
-let counts = { "apples": 3, "pears": 2 }
-assert(city == "Budapest")
-assert(latitude == 47.5)
-assert(counts["apples"] == Just(3))
-assert(counts["oranges"] == None)
-```
-
-Map lookup is optional. Decide deliberately whether a missing entry means a default, absence, or an error; `.or(0)` is appropriate for a missing count, but can hide missing configuration.
-
-## Ranges and collection costs
+While lists only contains elements of the same type, tuples can contain multiple types, decomposition works similarly to lists:
 
 ```kex
-assert((1..4).map { |n| n * 2 } == [2, 4, 6, 8])
-assert(["one", "two"].join(", ") == "one, two")
+let location = ("Budapest", 47.5, 19.04)  # (String, Float, Float)
+
+let (city, lat, lon) = location
 ```
 
-Ranges include their endpoints. A range describes iteration compactly, but mapping it produces a collection. Use a [stream](../streams/) for a computed sequence that should stay lazy. A chain of list transformations may allocate intermediate lists; choose clarity first and measure before optimizing.
+If you don't care about a value, just put `_` into those places:
+
+```kex
+let location = ("Budapest", 47.5, 19.04)  # (String, Float, Float)
+
+let (_, lat, lon) = location
+```
+
+## Maps
+
+Maps in a way also collect different typed elements into a single value. However, they associate values, the following example associates a atoms to integers:
+
+```kex
+let scores = {
+  alice: 95,
+  bob: 72,
+  carol: 88
+}
+# scores : {Atom: Integer}
+
+let aliceScore = scores[:alice] # Integer?
+```
+
+The same function demonstrated for lists also work well for maps:
+
+```kex
+main do
+  let scores = {
+    alice: 95,
+    bob: 72,
+    carol: 88
+  }
+  
+  let carolScore = scores[:carol]
+  let evensScores = scores.filter { |n, s| s.even? }
+  let justScores = scores.map { |_, s| s }
+
+  IO.printLine(carolScore)  
+  IO.printLine(evensScores)
+  IO.printLine(justScores)
+  IO.printLine(justScores.sum / justScores.count)
+end
+```
+
+```output filename="OUTPUT"
+88
+{ bob: 72, carol: 88 }
+[95, 72, 88]
+85
+```
+
+> [!NOTE]
+> One of the useful properties of maps is that their lookup is relatively quick. While to find a list's 10th element you have to go through all 10, maps work much faster (O(log n) vs O(n)).
+
+Maps are a natural fit for storing structured data like `JSON`  objects. The module `JSON` and its functions `parse` and `stringify` could be used to convert between `JSON` and `Map` .
+
+## Ranges
+
+Ranges are used to represent a range of primitive values:
+
+```kex
+let first10 = (1..10)
+let alphabet = ('a'..'z')
+```
+
+Ranges are always inclusive, meaning that their start end end are always included. The `items` function can be used to convert a range to list:
+
+```kex
+main do
+  let first10 = (1..10)
+  let alphabet = ('a'..'z')
+
+  IO.printLine(first10.items)
+  IO.printLine(alphabet.items)
+end
+```
+
+```output filename="OUTPUT"
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z]
+```
+
+Another usage of ranges is iteration through a fixed set of values:
+
+```kex
+main do
+  (1..10).map do |i|
+    IO.printLine("${i}. Item")
+  end
+end
+```
+
+```output filename="OUTPUT"
+1. item
+2. item
+3. item
+4. item
+5. item
+6. item
+7. item
+8. item
+9. item
+10. item
+```
 
 See the [standard library](/prelude/) for the full List, Map, Range, Foldable, and Enumerable APIs.
