@@ -225,6 +225,47 @@ let canUpload?(file: WebUpload, user: User) do
 end
 ```
 
+## Matching
+
+`match` is comparable to  `switch`/`case` in other languages. It makes the selection between multiple values easier:
+
+```kex
+main do
+  let n = 1
+
+  let result = match n do
+    -1 => "minus one"
+    0  => "zero"
+    1  => "one"
+    _  => "something else"
+  end
+ IO.printLine(result)
+end
+```
+
+<marqraft-code filename="Output" language="output">one</marqraft-code>
+
+Just like in `if`...`else` the match arms return their values as the result of `match` itself.
+
+`match` arm can contain multiple values, split via `,`:
+
+```kex
+main do
+  let n = -1
+
+  let result = match n do
+    -1, 1 => "±1"
+    0     => "zero"
+    _     => "something else"
+  end
+ IO.printLine(result)
+end
+```
+
+<marqraft-code filename="Output" language="output">±1</marqraft-code>
+
+This keyword plays well with other language features, later chapter will introduce more useful usages, espcially pattern matching.
+
 ## Loops
 
 ### While
