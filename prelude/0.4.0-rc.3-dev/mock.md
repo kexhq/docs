@@ -638,7 +638,7 @@ input(first, second, third, fourth) -> Void
 
 Queues the lines `IO.getLine` will return, in order.
 
-Takes a list, or up to four lines as separate arguments. Once they run out, `IO.getLine` answers `None`: end of input, exactly as a closed stdin would.
+Takes a list, or up to four lines as separate arguments. Once they run out, `IO.readLine` answers `Ok(None)`: end of input, exactly as a closed stdin would.
 
 **Parameters**
 

@@ -961,8 +961,8 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 
 <span class="tok-keyword">main</span> <span class="tok-keyword">do</span>
   <span class="tok-keyword">match</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">config.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
-    <span class="tok-bool">Just</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>text<span class="tok-op">.</span><span class="tok-method">lines</span><span class="tok-op">.</span><span class="tok-method">count</span><span class="tok-punct">)</span>
-    <span class="tok-bool">None</span>       <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">config.txt is missing</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+    <span class="tok-bool">Ok</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>text<span class="tok-op">.</span><span class="tok-method">lines</span><span class="tok-op">.</span><span class="tok-method">count</span><span class="tok-punct">)</span>
+    <span class="tok-bool">Error</span><span class="tok-punct">(</span>_<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">config.txt is missing</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
   <span class="tok-keyword">end</span>
 <span class="tok-keyword">end</span></code></pre>
 <p>It is organised in three parts:</p>
@@ -970,7 +970,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span>   creating<span class="tok-punct">,</span> listing <span class="tok-keyword">and</span> removing directories
 <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span>        pure path arithmetic<span class="tok-punct">,</span> <span class="tok-keyword">with</span> no filesystem access at all</code></pre>
 <p>The first two are capabilities: everything in them touches the real filesystem, so they can only be called from <code>foul</code> code, and a test can replace the whole of <a class="xref" href="#module-fs-file"><code>FS.File</code></a> for a lexical region rather than mutating global state. <a class="xref" href="#module-fs-path"><code>FS.Path</code></a> is ordinary pure code.</p>
-<p>Reading and writing a file answer with a <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><code>Result</code></a>, and most other operations with an <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-optional"><code>Optional</code></a> or a <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><code>Bool</code></a>, so a missing file or a failed write is an ordinary value you handle rather than an exception you catch.</p>
+<p>Anything that can fail answers with a <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><code>Result</code></a> carrying a <a class="xref" href="#type-fs-fileerror"><code>FileError</code></a>, so a missing file or a failed write is an ordinary value you handle rather than an exception you catch. Questions about the filesystem (<code>exists?</code>, <code>file?</code>, <code>directory?</code>) answer a <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><code>Bool</code></a>, and only a value that may simply be absent, such as <code>Directory.home</code>, answers an <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-optional"><code>Optional</code></a>.</p>
 <div class="functions">
 <div class="fn" id="function-fs-permissionmode">
 <h3><a class="self" href="#function-fs-permissionmode"><code>permissionMode</code></a></h3>
@@ -1041,13 +1041,18 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 </section>
 <section class="entity" id="type-fs-fileerror">
 <h2><span class="kind kind-type">type</span> <code>FileError</code></h2>
-<p>A file operation that failed, carrying the path it failed on.</p>
-<p><code>OpenFailed</code>, <code>ReadFailed</code> and <code>WriteFailed</code> mean the filesystem refused the operation. <code>InvalidUtf8</code> means the bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence.</p>
+<p>A file operation that failed, carrying the path (or paths) it failed on.</p>
+<p>Every variant but <code>InvalidUtf8</code> means the filesystem refused the operation its name gives: opening, reading, writing, creating, deleting, copying from the first path to the second, renaming the first to the second, or changing permissions. <code>InvalidUtf8</code> means the bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence.</p>
 <h3>Variants</h3>
 <ul class="variants">
 <li><code>OpenFailed(FilePath)</code></li>
 <li><code>ReadFailed(FilePath)</code></li>
 <li><code>WriteFailed(FilePath)</code></li>
+<li><code>CreateFailed(FilePath)</code></li>
+<li><code>DeleteFailed(FilePath)</code></li>
+<li><code>CopyFailed(FilePath, FilePath)</code></li>
+<li><code>RenameFailed(FilePath, FilePath)</code></li>
+<li><code>ModeFailed(FilePath)</code></li>
 <li><code>InvalidUtf8(FilePath, Integer)</code></li>
 </ul>
 
@@ -1097,7 +1102,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <p class="caption"><em>Reading a file line by line</em></p>
 <pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">log.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">Read</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
   <span class="tok-bool">Ok</span><span class="tok-punct">(</span>handle<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">do</span>
-    <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>handle<span class="tok-op">.</span><span class="tok-method">readLine</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+    <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>handle<span class="tok-op">.</span><span class="tok-method">getLine</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
     handle<span class="tok-op">.</span><span class="tok-method">close</span>
   <span class="tok-keyword">end</span>
   <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cannot open: </span><span class="tok-string">${</span>e<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
@@ -1189,7 +1194,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 </div>
 <div class="fn" id="function-fs-file-append">
 <h3><a class="self" href="#function-fs-file-append"><code>append</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">append</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> content<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<pre class="code sig"><code><span class="tok-fn">append</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> content<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
 <p>Adds <code>content</code> to the end of <code>path</code>, keeping what is already there.</p>
 <p>Creates the file if it does not exist, so it is safe to append to a log that has not been started yet.</p>
 <h5>Parameters</h5>
@@ -1197,9 +1202,9 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <div class="param"><dt><code>path</code></dt><dd>the file to append to</dd></div>
 <div class="param"><dt><code>content</code></dt><dd>the text to add</dd></div>
 </dl>
-<p class="returns"><strong>Returns</strong> <code>true</code> when the write succeeded</p>
+<p class="returns"><strong>Returns</strong> <code>Ok</code> when the write succeeded, or <code>WriteFailed</code></p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">append</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.log</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">started\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">append</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.log</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">started\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(())</span></code></pre>
 <p class="caption"><em>A simple logger</em></p>
 <pre class="code"><code><span class="tok-keyword">foul</span> <span class="tok-fn">log</span><span class="tok-punct">(</span>message<span class="tok-op">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span> <span class="tok-keyword">do</span>
   <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">append</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.log</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">${</span><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">now</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-string">}</span><span class="tok-string"> </span><span class="tok-string">${</span>message<span class="tok-string">}</span><span class="tok-string">\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
@@ -1258,16 +1263,16 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 </div>
 <div class="fn" id="function-fs-file-delete">
 <h3><a class="self" href="#function-fs-file-delete"><code>delete</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">delete</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<pre class="code sig"><code><span class="tok-fn">delete</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
 <p>Deletes the file at <code>path</code>.</p>
-<p>Answers <code>false</code> when the file does not exist or cannot be removed. Use <code>FS.Directory.delete</code> for a directory.</p>
+<p>Answers <code>DeleteFailed</code> when the file does not exist or cannot be removed. Use <code>FS.Directory.delete</code> for a directory.</p>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>path</code></dt><dd>the file to delete</dd></div>
 </dl>
-<p class="returns"><strong>Returns</strong> <code>true</code> when the file was deleted</p>
+<p class="returns"><strong>Returns</strong> <code>Ok</code> when the file was deleted, or <code>DeleteFailed</code></p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">tmp.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">tmp.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(())</span></code></pre>
 <p class="caption"><em>Cleaning up after a temporary file</em></p>
 <pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span>tmp<span class="tok-punct">,</span> data<span class="tok-punct">)</span>
 <span class="tok-fn">process</span><span class="tok-punct">(</span>tmp<span class="tok-punct">)</span>
@@ -1276,16 +1281,16 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 </div>
 <div class="fn" id="function-fs-file-copy">
 <h3><a class="self" href="#function-fs-file-copy"><code>copy</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">copy</span><span class="tok-punct">(</span>src<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> dst<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<pre class="code sig"><code><span class="tok-fn">copy</span><span class="tok-punct">(</span>src<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> dst<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
 <p>Copies the file at <code>src</code> to <code>dst</code>, replacing <code>dst</code> if it exists.</p>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>src</code></dt><dd>the file to copy</dd></div>
 <div class="param"><dt><code>dst</code></dt><dd>where to copy it</dd></div>
 </dl>
-<p class="returns"><strong>Returns</strong> <code>true</code> when the copy succeeded</p>
+<p class="returns"><strong>Returns</strong> <code>Ok</code> when the copy succeeded, or <code>CopyFailed</code></p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">copy</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.conf</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">app.conf.bak</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">copy</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.conf</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">app.conf.bak</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(())</span></code></pre>
 <p class="caption"><em>Backing a file up before rewriting it</em></p>
 <pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">copy</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">${</span>path<span class="tok-string">}</span><span class="tok-string">.bak</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
 <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> updated<span class="tok-punct">)</span></code></pre>
@@ -1293,16 +1298,16 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 </div>
 <div class="fn" id="function-fs-file-rename">
 <h3><a class="self" href="#function-fs-file-rename"><code>rename</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">rename</span><span class="tok-punct">(</span>src<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> dst<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<pre class="code sig"><code><span class="tok-fn">rename</span><span class="tok-punct">(</span>src<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> dst<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
 <p>Renames (or moves) the file at <code>src</code> to <code>dst</code>.</p>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>src</code></dt><dd>the current path</dd></div>
 <div class="param"><dt><code>dst</code></dt><dd>the new path</dd></div>
 </dl>
-<p class="returns"><strong>Returns</strong> <code>true</code> when the rename succeeded</p>
+<p class="returns"><strong>Returns</strong> <code>Ok</code> when the rename succeeded, or <code>RenameFailed</code></p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">rename</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">draft.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">final.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">rename</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">draft.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">final.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(())</span></code></pre>
 <p class="caption"><em>Writing to a temporary file, then swapping it in</em></p>
 <pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>path<span class="tok-string">}</span><span class="tok-string">.tmp</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> content<span class="tok-punct">)</span>
 <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">rename</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>path<span class="tok-string">}</span><span class="tok-string">.tmp</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> path<span class="tok-punct">)</span></code></pre>
@@ -1310,7 +1315,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 </div>
 <div class="fn" id="function-fs-file-changepermission">
 <h3><a class="self" href="#function-fs-file-changepermission"><code>changePermission</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">changePermission</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> permissions<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#type-fs-permission"><span class="tok-type">Permission</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<pre class="code sig"><code><span class="tok-fn">changePermission</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> permissions<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#type-fs-permission"><span class="tok-type">Permission</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
 <p>Sets what may be done with the file at <code>path</code>, portably.</p>
 <p>The file ends up with exactly the listed permissions: anything left out is taken away. The owner gets all of them; everyone else gets the same without <a class="xref" href="/prelude/0.4.0-rc.3-dev/filehandle/#trait-writable"><code>Writable</code></a>. On POSIX that is <code>0o755</code> for all three, <code>0o644</code> for <code>[Readable, Writable]</code> and <code>0o444</code> for <code>[Readable]</code>. On Windows only <a class="xref" href="/prelude/0.4.0-rc.3-dev/filehandle/#trait-writable"><code>Writable</code></a> has an effect, as the read-only attribute: files there are always readable, and whether one runs is decided by its extension.</p>
 <p>Use <code>changeMode</code> when you need exact POSIX bits, such as a file only its owner may read.</p>
@@ -1319,10 +1324,10 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <div class="param"><dt><code>path</code></dt><dd>the file whose permissions to change</dd></div>
 <div class="param"><dt><code>permissions</code></dt><dd>everything the file should allow</dd></div>
 </dl>
-<p class="returns"><strong>Returns</strong> <code>true</code> when the permissions were changed</p>
+<p class="returns"><strong>Returns</strong> <code>Ok</code> when the permissions were changed, or <code>ModeFailed</code></p>
 <h5>Examples</h5>
 <p class="caption"><em>Making a file read-only</em></p>
-<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">changePermission</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">report.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Readable</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">changePermission</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">report.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Readable</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(())</span></code></pre>
 <p class="caption"><em>Writing a script and running it</em></p>
 <pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span>script<span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">#!/bin/sh\necho hello\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
 <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">changePermission</span><span class="tok-punct">(</span>script<span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Readable</span><span class="tok-punct">,</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Writable</span><span class="tok-punct">,</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Executable</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
@@ -1331,7 +1336,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 </div>
 <div class="fn" id="function-fs-file-changemode">
 <h3><a class="self" href="#function-fs-file-changemode"><code>changeMode</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">changeMode</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> mode<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<pre class="code sig"><code><span class="tok-fn">changeMode</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> mode<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
 <p>Sets the POSIX permission bits of the file at <code>path</code> to <code>mode</code>: what <code>chmod</code> does with a numeric mode.</p>
 <p><code>mode</code> is most readably written in octal: <code>0o600</code> is a file only its owner may read and write. The bits are replaced, not added to, and a mode outside <code>0o0000..0o7777</code> is refused. This is the POSIX escape hatch: on Windows only the owner-write bit means anything. Prefer <code>changePermission</code>, which says what you want rather than how POSIX spells it.</p>
 <h5>Parameters</h5>
@@ -1339,25 +1344,25 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <div class="param"><dt><code>path</code></dt><dd>the file whose mode to change</dd></div>
 <div class="param"><dt><code>mode</code></dt><dd>the permission bits, as in <code>chmod</code></dd></div>
 </dl>
-<p class="returns"><strong>Returns</strong> <code>true</code> when the mode was changed</p>
+<p class="returns"><strong>Returns</strong> <code>Ok</code> when the mode was changed, or <code>ModeFailed</code></p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">changeMode</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">secrets.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-number">0</span>o600<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">changeMode</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">secrets.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-number">0</span>o600<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(())</span></code></pre>
 
 </div>
 <div class="fn" id="function-fs-file-readlines">
 <h3><a class="self" href="#function-fs-file-readlines"><code>readLines</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">readLines</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-op">?</span></code></pre>
+<pre class="code sig"><code><span class="tok-fn">readLines</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
 <p>Reads the file and returns its lines, without their newlines.</p>
-<p>Answers <code>None</code> when the file cannot be read. A trailing newline does not produce a final empty line, so the count is the number of lines you would see in an editor.</p>
+<p>Answers why when the file cannot be read, as <code>FS.File.read</code> does. A trailing newline does not produce a final empty line, so the count is the number of lines you would see in an editor.</p>
 <p>NOT <code>lines</code>: FilePath is an alias for String, so a receiver function named <code>lines</code> here is indistinguishable from String's own <code>lines</code> at every call site, and merely saying <code>using FS</code> made <code>text.lines</code> ambiguous. <code>readLines</code> also says what it does: it reads the file.</p>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>path</code></dt><dd>the file to read</dd></div>
 </dl>
-<p class="returns"><strong>Returns</strong> the lines, or <code>None</code></p>
+<p class="returns"><strong>Returns</strong> the lines, or why they could not be read</p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">readLines</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">names.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just([&quot;ada&quot;, &quot;grace&quot;])</span>
-<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">readLines</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">nowhere</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; None</span></code></pre>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">readLines</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">names.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok([&quot;ada&quot;, &quot;grace&quot;])</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">readLines</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">nowhere</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; Error(ReadFailed(&quot;nowhere&quot;))</span></code></pre>
 <p class="caption"><em>Ignoring blank lines and comments</em></p>
 <pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">readLines</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hosts</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
   <span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
@@ -1367,8 +1372,8 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 </div>
 <div class="fn" id="function-fs-file-feed">
 <h3><a class="self" href="#function-fs-file-feed"><code>feed</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">feed</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/feed/#type-feed"><span class="tok-type">Feed</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span><span class="tok-op">?</span></code></pre>
-<p>Returns a lazy <a class="xref" href="/prelude/0.4.0-rc.3-dev/feed/#type-feed"><code>Feed</code></a> of the file's lines, or <code>None</code> when it cannot be read.</p>
+<pre class="code sig"><code><span class="tok-fn">feed</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/feed/#type-feed"><span class="tok-type">Feed</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a lazy <a class="xref" href="/prelude/0.4.0-rc.3-dev/feed/#type-feed"><code>Feed</code></a> of the file's lines, or <code>ReadFailed</code> when the file cannot be opened.</p>
 <p>Unlike <code>readLines</code>, the file is read a line at a time off a handle held open for the feed's lifetime, so this is the way to walk a file too large to hold in memory: nothing but the current line is retained.</p>
 <p>A <a class="xref" href="/prelude/0.4.0-rc.3-dev/feed/#type-feed"><code>Feed</code></a> rather than a <a class="xref" href="/prelude/0.4.0-rc.3-dev/stream/#type-stream"><code>Stream</code></a> because that is what a file honestly is: reading consumes, and there is no rewinding. Taking twice walks forward rather than answering the same lines again. On a file small enough to replay, <code>toStream</code> buys that back.</p>
 <p>The feed ends at the last line, so asking for more lines than the file has answers just the lines there are: unlike <code>Stream.Sequence</code>, which is deliberately infinite.</p>
@@ -1378,12 +1383,12 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <dl class="params">
 <div class="param"><dt><code>path</code></dt><dd>the file to read</dd></div>
 </dl>
-<p class="returns"><strong>Returns</strong> the lines as a feed, or <code>None</code></p>
+<p class="returns"><strong>Returns</strong> the lines as a feed, or <code>ReadFailed</code></p>
 <h5>Examples</h5>
 <p class="caption"><em>Peeking at the head of a large file</em></p>
 <pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">huge.log</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
-  <span class="tok-bool">Just</span><span class="tok-punct">(</span>lines<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> lines<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>line<span class="tok-punct">)</span> <span class="tok-punct">}</span>
-  <span class="tok-bool">None</span>        <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cannot read huge.log</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>lines<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> lines<span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>line<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>line<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span>_<span class="tok-punct">)</span>  <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cannot read huge.log</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
 <span class="tok-keyword">end</span></code></pre>
 <p class="caption"><em>The first ten errors in a long log, in one pass</em></p>
 <pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">feed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.log</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
@@ -1393,33 +1398,33 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 </div>
 <div class="fn" id="function-fs-file-size">
 <h3><a class="self" href="#function-fs-file-size"><code>size</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">size</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer?</span></code></pre>
-<p>Returns the file's size in bytes, or <code>None</code> when it cannot be read.</p>
+<pre class="code sig"><code><span class="tok-fn">size</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Returns the file's size in bytes, or <code>ReadFailed</code> when it cannot be read.</p>
 <p>Bytes, not characters: a file of non-ASCII text has more bytes than it has characters.</p>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>path</code></dt><dd>the file to measure</dd></div>
 </dl>
-<p class="returns"><strong>Returns</strong> the size in bytes, or <code>None</code></p>
+<p class="returns"><strong>Returns</strong> the size in bytes, or <code>ReadFailed</code></p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">size</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(6)</span>
-<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">size</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">nowhere</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; None</span></code></pre>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">size</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(6)</span>
+<span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">size</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">nowhere</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; Error(ReadFailed(&quot;nowhere&quot;))</span></code></pre>
 <p class="caption"><em>Skipping files that are too large</em></p>
 <pre class="code"><code>paths<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">size</span><span class="tok-punct">(</span>p<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-op">&lt;</span> <span class="tok-number">1048576</span> <span class="tok-punct">}</span></code></pre>
 
 </div>
 <div class="fn" id="function-fs-file-absolute">
 <h3><a class="self" href="#function-fs-file-absolute"><code>absolute</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">absolute</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></code></pre>
-<p>Resolves <code>path</code> against the process's current directory and returns the absolute form, or <code>None</code> when it cannot be resolved.</p>
+<pre class="code sig"><code><span class="tok-fn">absolute</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Resolves <code>path</code> against the process's current directory and returns the absolute form, or <code>ReadFailed</code> when it cannot be resolved.</p>
 <p>This is the one path operation that is not in <a class="xref" href="#module-fs-path"><code>FS.Path</code></a>, because it is not lexical: it asks the process where it is.</p>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>path</code></dt><dd>the path to resolve</dd></div>
 </dl>
-<p class="returns"><strong>Returns</strong> the absolute path, or <code>None</code></p>
+<p class="returns"><strong>Returns</strong> the absolute path, or <code>ReadFailed</code></p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">absolute</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(&quot;/home/ada/proj/src/main.kex&quot;)</span></code></pre>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">absolute</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src/main.kex</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(&quot;/home/ada/proj/src/main.kex&quot;)</span></code></pre>
 <p class="caption"><em>Reporting a file unambiguously</em></p>
 <pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">failed: </span><span class="tok-string">${</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">absolute</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
@@ -1595,7 +1600,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <h3><a class="self" href="#function-fs-path-dirname"><code>dirname</code></a></h3>
 <pre class="code sig"><code><span class="tok-fn">dirname</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
 <p>Returns the path's parent directory.</p>
-<p>A child of the root has <code>&quot;/&quot;</code> as its parent; a bare name has <code>&quot;.&quot;</code>, the current directory.</p>
+<p>A child of the root has <code>&quot;/&quot;</code> as its parent; a bare name has <code>&quot;.&quot;</code>, the current directory. The path is read as written, as POSIX <code>dirname</code> reads it: <code>&quot;..&quot;</code> is a name here, not resolved, so <code>dirname(&quot;a/b/..&quot;)</code> is <code>&quot;a/b&quot;</code>. Use <code>normalize</code> first when that is not what you want.</p>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>path</code></dt><dd>the path to take the parent of</dd></div>
@@ -1613,7 +1618,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <h3><a class="self" href="#function-fs-path-basename"><code>basename</code></a></h3>
 <pre class="code sig"><code><span class="tok-fn">basename</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
 <p>Returns the last segment of the path: the file or directory name.</p>
-<p>The root itself answers <code>&quot;/&quot;</code>, and an empty path answers <code>&quot;.&quot;</code>.</p>
+<p>The root itself answers <code>&quot;/&quot;</code>, and an empty path answers <code>&quot;&quot;</code>. Like <code>dirname</code>, it reads the path as written: <code>basename(&quot;a/b/..&quot;)</code> is <code>&quot;..&quot;</code>.</p>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>path</code></dt><dd>the path to take the name of</dd></div>
@@ -1708,7 +1713,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <section class="entity" id="module-fs-directory">
 <h2><span class="kind kind-module">module</span> <code>FS.Directory</code></h2>
 <p>Creating, listing and removing directories.</p>
-<p>Like <a class="xref" href="#module-fs-file"><code>FS.File</code></a>, everything here reaches the real filesystem and so is <code>foul</code>. Listings answer with an <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-optional"><code>Optional</code></a>, so a directory that cannot be read is a value you handle rather than an exception.</p>
+<p>Like <a class="xref" href="#module-fs-file"><code>FS.File</code></a>, everything here reaches the real filesystem and so is <code>foul</code>. Listings answer with a <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><code>Result</code></a>, so a directory that cannot be read is a value you handle rather than an exception.</p>
 <div class="functions">
 <div class="fn" id="function-fs-directory-exists?">
 <h3><a class="self" href="#function-fs-directory-exists?"><code>exists?</code></a></h3>
@@ -1752,45 +1757,45 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 </div>
 <div class="fn" id="function-fs-directory-create">
 <h3><a class="self" href="#function-fs-directory-create"><code>create</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">create</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
-<p>Creates the directory at <code>path</code>.</p>
+<pre class="code sig"><code><span class="tok-fn">create</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Creates the directory at <code>path</code>, and any missing parents along the way, as <code>mkdir -p</code> does. A directory that is already there is <code>Ok</code>.</p>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>path</code></dt><dd>the directory to create</dd></div>
 </dl>
-<p class="returns"><strong>Returns</strong> <code>true</code> when the directory was created</p>
+<p class="returns"><strong>Returns</strong> <code>Ok</code> when the directory is there, or <code>CreateFailed</code></p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">create</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">create</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(())</span></code></pre>
 <p class="caption"><em>Making sure an output directory is there</em></p>
-<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">create</span><span class="tok-punct">(</span>outDir<span class="tok-punct">)</span> <span class="tok-keyword">if</span> <span class="tok-op">!</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">exists?</span><span class="tok-punct">(</span>outDir<span class="tok-punct">)</span></code></pre>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">create</span><span class="tok-punct">(</span>outDir<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre>
 
 </div>
 <div class="fn" id="function-fs-directory-delete">
 <h3><a class="self" href="#function-fs-directory-delete"><code>delete</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">delete</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
-<p>Removes the directory at <code>path</code>, which must be empty.</p>
+<pre class="code sig"><code><span class="tok-fn">delete</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Removes the directory at <code>path</code>, which must be empty. A file or a symlink at <code>path</code> is left alone and answers <code>DeleteFailed</code>.</p>
 <p>Use <code>deleteAll</code> to remove a directory together with its contents.</p>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>path</code></dt><dd>the directory to remove</dd></div>
 </dl>
-<p class="returns"><strong>Returns</strong> <code>true</code> when the directory was removed</p>
+<p class="returns"><strong>Returns</strong> <code>Ok</code> when the directory was removed, or <code>DeleteFailed</code></p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">empty</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">empty</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(())</span></code></pre>
 
 </div>
 <div class="fn" id="function-fs-directory-deleteall">
 <h3><a class="self" href="#function-fs-directory-deleteall"><code>deleteAll</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">deleteAll</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
-<p>Removes the directory at <code>path</code> and everything inside it, recursively.</p>
+<pre class="code sig"><code><span class="tok-fn">deleteAll</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Removes the directory at <code>path</code> and everything inside it, recursively. A path that is not a directory, a file or a symlink included, is left alone and answers <code>DeleteFailed</code>.</p>
 <p>This deletes data and cannot be undone: check the path before calling it, particularly when it was computed or came from user input.</p>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>path</code></dt><dd>the directory tree to remove</dd></div>
 </dl>
-<p class="returns"><strong>Returns</strong> <code>true</code> when the tree was removed</p>
+<p class="returns"><strong>Returns</strong> <code>Ok</code> when the tree was removed, or <code>DeleteFailed</code></p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">deleteAll</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">deleteAll</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(())</span></code></pre>
 <p class="caption"><em>Rebuilding a scratch directory from clean</em></p>
 <pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">deleteAll</span><span class="tok-punct">(</span>tmpDir<span class="tok-punct">)</span>
 <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">create</span><span class="tok-punct">(</span>tmpDir<span class="tok-punct">)</span></code></pre>
@@ -1798,31 +1803,31 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 </div>
 <div class="fn" id="function-fs-directory-list">
 <h3><a class="self" href="#function-fs-directory-list"><code>list</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">list</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-op">?</span></code></pre>
+<pre class="code sig"><code><span class="tok-fn">list</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
 <p>Lists the names in <code>path</code>: both files and directories, one level deep.</p>
-<p>The results are bare names, not paths; join them with <code>path</code> to get something you can open. Answers <code>None</code> when the directory cannot be read.</p>
+<p>The results are bare names, not paths; join them with <code>path</code> to get something you can open. Answers <code>ReadFailed</code> when the directory cannot be read.</p>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>path</code></dt><dd>the directory to list</dd></div>
 </dl>
-<p class="returns"><strong>Returns</strong> the entry names, or <code>None</code></p>
+<p class="returns"><strong>Returns</strong> the entry names, or <code>ReadFailed</code></p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">list</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just([&quot;main.kex&quot;, &quot;lexer&quot;])</span></code></pre>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">list</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok([&quot;main.kex&quot;, &quot;lexer&quot;])</span></code></pre>
 <p class="caption"><em>Turning names into usable paths</em></p>
 <pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">list</span><span class="tok-punct">(</span>dir<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>name<span class="tok-op">|</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span>dir<span class="tok-punct">,</span> name<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
 
 </div>
 <div class="fn" id="function-fs-directory-files">
 <h3><a class="self" href="#function-fs-directory-files"><code>files</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">files</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-op">?</span></code></pre>
+<pre class="code sig"><code><span class="tok-fn">files</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
 <p>Lists only the regular files in <code>path</code>, one level deep.</p>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>path</code></dt><dd>the directory to list</dd></div>
 </dl>
-<p class="returns"><strong>Returns</strong> the file names, or <code>None</code></p>
+<p class="returns"><strong>Returns</strong> the file names, or <code>ReadFailed</code></p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">files</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just([&quot;main.kex&quot;])</span></code></pre>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">files</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok([&quot;main.kex&quot;])</span></code></pre>
 <p class="caption"><em>Every Kex source in a directory</em></p>
 <pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">files</span><span class="tok-punct">(</span>dir<span class="tok-punct">)</span>
   <span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
@@ -1831,15 +1836,15 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 </div>
 <div class="fn" id="function-fs-directory-directories">
 <h3><a class="self" href="#function-fs-directory-directories"><code>directories</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">directories</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-op">?</span></code></pre>
+<pre class="code sig"><code><span class="tok-fn">directories</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
 <p>Lists only the subdirectories of <code>path</code>, one level deep.</p>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>path</code></dt><dd>the directory to list</dd></div>
 </dl>
-<p class="returns"><strong>Returns</strong> the directory names, or <code>None</code></p>
+<p class="returns"><strong>Returns</strong> the directory names, or <code>ReadFailed</code></p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">directories</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just([&quot;lexer&quot;, &quot;parser&quot;])</span></code></pre>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">directories</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok([&quot;lexer&quot;, &quot;parser&quot;])</span></code></pre>
 <p class="caption"><em>Walking one level down</em></p>
 <pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">directories</span><span class="tok-punct">(</span>root<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>name<span class="tok-op">|</span>
   <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span>root<span class="tok-punct">,</span> name<span class="tok-punct">)</span><span class="tok-punct">)</span>
@@ -1885,18 +1890,18 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 </div>
 <div class="fn" id="function-fs-directory-createtemporary">
 <h3><a class="self" href="#function-fs-directory-createtemporary"><code>createTemporary</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">createTemporary</span><span class="tok-punct">(</span>prefix<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">FilePath?</span></code></pre>
+<pre class="code sig"><code><span class="tok-fn">createTemporary</span><span class="tok-punct">(</span>prefix<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-fs-fileerror"><span class="tok-type">FileError</span></a><span class="tok-op">&gt;</span></code></pre>
 <p>Creates a fresh, empty directory under <code>temporary</code> and returns its path.</p>
 <p>The name is <code>prefix</code> followed by a random suffix, so concurrent callers using the same prefix each get their own directory. Nothing removes it for you: <code>deleteAll</code> it when you are done.</p>
 <h5>Parameters</h5>
 <dl class="params">
 <div class="param"><dt><code>prefix</code></dt><dd>the start of the directory name, to say whose it is</dd></div>
 </dl>
-<p class="returns"><strong>Returns</strong> the new directory, or <code>None</code> when it could not be created</p>
+<p class="returns"><strong>Returns</strong> the new directory, or <code>CreateFailed</code></p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">createTemporary</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">report</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(&quot;/tmp/report-9f2c41d07ab35e68&quot;)</span></code></pre>
+<pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">createTemporary</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">report</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(&quot;/tmp/report-9f2c41d07ab35e68&quot;)</span></code></pre>
 <p class="caption"><em>A scratch directory that cleans up after itself</em></p>
-<pre class="code"><code><span class="tok-keyword">let</span> scratch <span class="tok-op">=</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">createTemporary</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-fn">die</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">no temporary directory</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<pre class="code"><code><span class="tok-keyword">let</span> scratch <span class="tok-op">=</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">createTemporary</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
 <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Path</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span>scratch<span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">out.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span> text<span class="tok-punct">)</span>
 <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-op">.</span><span class="tok-method">deleteAll</span><span class="tok-punct">(</span>scratch<span class="tok-punct">)</span></code></pre>
 

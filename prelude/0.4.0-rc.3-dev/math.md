@@ -448,7 +448,7 @@ pow(x: Number, y: Number) -> Float
 
 Returns `x` raised to the power `y`.
 
-The result is always a `Float`, even for whole arguments, so round it when you need an integer back.
+The result is always a `Float`, even for whole arguments. For an exact integer power use `Integer.pow`: `2.pow(100)` keeps every digit, where rounding `Math.pow(2, 100)` cannot.
 
 **Parameters**
 

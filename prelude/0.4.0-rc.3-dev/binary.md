@@ -72,6 +72,22 @@ Number of bytes held.
 "héllo".to(Binary).try.length   # => 6
 ```
 
+#### `count`
+
+```kex
+count : Integer
+```
+
+Number of bytes held. The same as `length`, as on `List` and `String`.
+
+**Returns**: the byte count
+
+**Examples**
+
+```kex
+"héllo".to(Binary).try.count   # => 6
+```
+
 #### `empty?`
 
 ```kex
@@ -96,7 +112,7 @@ at(index: Integer) -> Byte?
 
 The byte at `index`, counting from zero.
 
-Answers `None` for a negative or out-of-range index, so an index you did not check is something you handle rather than something that stops the program.
+A negative index counts back from the end, as on a `List`: `-1` is the last byte. Answers `None` for an index outside the binary, so an index you did not check is something you handle rather than something that stops the program.
 
 **Parameters**
 
@@ -110,7 +126,8 @@ Answers `None` for a negative or out-of-range index, so an index you did not che
 let data = Binary.fromBytes([104, 105])
 data.at(0)    # => Just(104)
 data.at(2)    # => None
-data.at(-1)   # => None
+data.at(-1)   # => Just(105)
+data.at(-3)   # => None
 ```
 
 #### `get`

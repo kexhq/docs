@@ -581,6 +581,8 @@ Set.from([1]).blank?     # => false
   - [`eachIndexed`](../enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
   - [`all?`](../enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`.
   - [`any?`](../enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`.
+  - [`none?`](../enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`one?`](../enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
   - [`find`](../enumerable.md#foldable-find) — Returns the first item satisfying `pred`, or `None` when nothing does.
 
 ### From [`Monoid`](../algebra.md#trait-monoid)
@@ -1034,7 +1036,8 @@ The elements are printed in sorted order where they allow it, so the rendering o
 **Examples**
 
 ```kex
-UnorderedSet.from([2, 1]).showValue   # => "UnorderedSet(1, 2)"
+UnorderedSet.from([2, 1]).showValue    # => "UnorderedSet(1, 2)"
+UnorderedSet.from([10, 2]).showValue   # => "UnorderedSet(2, 10)"
 ```
 
 #### `blank?` (from Blankable)
@@ -1065,6 +1068,8 @@ UnorderedSet.empty.blank?   # => true
   - [`eachIndexed`](../enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
   - [`all?`](../enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`.
   - [`any?`](../enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`.
+  - [`none?`](../enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`one?`](../enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
   - [`find`](../enumerable.md#foldable-find) — Returns the first item satisfying `pred`, or `None` when nothing does.
 
 ### From [`Monoid`](../algebra.md#trait-monoid)

@@ -22,6 +22,37 @@ Float.parse("1,44", culture: hu)   # => Ok(1.44)
 Float.parse("1,44")                 # => Error(...)
 ```
 
+### `ENGLISH_TIME_NAMES` (constant)
+
+```kex
+ENGLISH_TIME_NAMES : TimeNames
+```
+
+The names English writes dates with, and the names used for any culture that carries none of its own.
+
+
+
+### `timeNames`
+
+```kex
+timeNames(culture: Culture) -> TimeNames
+```
+
+The names `culture` writes dates with: its own when it carries them, and English otherwise. Today the presets carry names for English, Hungarian, German, French, Spanish, Italian, Portuguese and Dutch.
+
+**Parameters**
+
+  - `culture` — the culture
+
+**Returns**: the names to write with
+
+**Examples**
+
+```kex
+Culture.timeNames(Culture.of("HU_HU").or(Culture.DEFAULT)).months.first   # => Just("január")
+Culture.timeNames(Culture.DEFAULT).months.first                          # => Just("January")
+```
+
 ### `DEFAULT` (constant)
 
 ```kex
@@ -185,13 +216,29 @@ Number settings: which character marks the decimal point and how digit groups ar
 
 ## record `TimeSettings`
 
-Date and time layout data. Carried by every preset; no behavior reads it yet — culture-aware time parsing and printing is a later slice.
+Date and time layout data: how `to(String, culture:)` on a `Date`, `Time` or `DateTime` lays the value out, and the names a `Date.format` pattern uses.
 
 **Fields**
 
   - `dateOrder` : [[Atom](atom.md#make-atom)]
   - `dateSeparator` : [Char](string.md#make-char)
   - `timeSeparator` : [Char](string.md#make-char)
+  - `twelveHour?` : [Bool](truthyable.md#make-bool) (optional)
+  - `names` : [TimeNames](#record-culture-timenames)? (optional)
+
+
+
+## record `TimeNames`
+
+The words a culture writes dates and times with: what `MMMM`, `MMM`, `EEEE`, `EEE` and `a` in a `Date.format` pattern turn into.
+
+**Fields**
+
+  - `months` : [[String](string.md#make-string)]
+  - `shortMonths` : [[String](string.md#make-string)]
+  - `weekdays` : [[String](string.md#make-string)]
+  - `shortWeekdays` : [[String](string.md#make-string)]
+  - `dayPeriods` : ([String](string.md#make-string), [String](string.md#make-string))
 
 
 

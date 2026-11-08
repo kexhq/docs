@@ -47,6 +47,32 @@ match regex(pattern) do
 end
 ```
 
+### `withOptions`
+
+```kex
+withOptions(source: String, options: {Atom: Bool}) -> Result<Regex, RegexError>
+```
+
+Compiles `source` with matching options, as Ruby's `Regexp.new(source, options)` does: `ignoreCase` (`/i`), `multiline` (`^` and `$` at every line), `dotAll` (`.` matches a newline too) and `extended` (whitespace and `#` comments in the pattern are ignored). An option set to `false` is the same as leaving it out; an unknown one is a `RegexError` at position 0.
+
+The options become an inline `(?imsx)` prefix, so the regex's `source` carries them and prints them. Positions in a compile error still count from the start of `source`.
+
+**Parameters**
+
+  - `source` — the pattern text
+  - `options` — which options to turn on
+
+**Returns**: the regex, or why it did not compile
+
+**Examples**
+
+```kex
+Regex.withOptions("hello", { ignoreCase: true }).map { |re| "HeLLo".matches?(re) }
+# => Ok(true)
+Regex.withOptions("x", { verbose: true })
+# => Error(RegexError { source: "x", position: 0, message: "unknown regex option :verbose" })
+```
+
 ### `validateRegex`
 
 ```kex
@@ -266,6 +292,29 @@ _Redacting numbers in a log line_
 line.replace(re`\d`, "x")
 ```
 
+### `replaceFirst`
+
+```kex
+replaceFirst : String -> Regex -> String | (Match) -> String -> String
+```
+
+Replaces only the first match of `re` in `s`: Ruby's `sub`, where `replace` is its `gsub`. The replacement is a literal string or a function of the `Match`, as for `replace`.
+
+**Parameters**
+
+  - `s` — the text to rewrite
+  - `re` — the pattern to replace
+  - `replacement` — the new text, or how to compute it
+
+**Returns**: the text with its first match replaced, or unchanged
+
+**Examples**
+
+```kex
+"a1b22c".replaceFirst(re`\d+`, "#")   # => "a#b22c"
+"abc".replaceFirst(re`\d`, "#")       # => "abc"
+```
+
 ### `splitLimit`
 
 ```kex
@@ -278,7 +327,7 @@ A positive `limit` caps the field count, leaving the remainder unsplit in the la
 
 Plain `s.split(re)` needs no function here at all: it resolves to `String.split`, which dispatches to this engine when handed a Regex (in both backends), and follows Ruby's semantics: trailing empty fields are dropped, leading ones are kept, and capture groups are interleaved into the result.
 
-Use `Regex.splitWithLimit` to control the number of fields.
+Use `Regex.splitLimit` to control the number of fields.
 
 **Parameters**
 
@@ -350,7 +399,29 @@ let digits = re`[0-9]+`
 
   - `source` : [String](string.md#make-string)
 
+Implements [`Showable`](kex.md#trait-showable).
 
+### Functions
+
+#### `showValue` (from Showable)
+
+```kex
+showValue : String
+```
+
+Renders the regex as the literal that builds it, so interpolating one shows its pattern rather than its record layout.
+
+**Returns**: the pattern as a `re` literal
+
+**Examples**
+
+```kex
+"${re`\d+`}"   # => "re`\d+`"
+```
+
+### From [`Showable`](kex.md#trait-showable)
+
+  - [`to`](kex.md#showable-to) — 
 
 ## record `RegexError`
 
@@ -383,6 +454,7 @@ A group that did not participate is an absent key, so `get` answers `None`. This
 **Fields**
 
   - `captures` : [Map](map.md#type-map)<Any, [String](string.md#make-string)>
+  - `offset` : [Integer](number.md#make-integer)
 
 ### Functions
 

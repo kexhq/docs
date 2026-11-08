@@ -13,7 +13,7 @@ entities:
 
 Cryptographic content digests.
 
-Digests are returned as lowercase hex strings, so a Kex program never has to handle backend-specific binary values: they compare with `==`, print directly, and go into a map key unchanged.
+A digest of a `String` is returned as a lowercase hex string, so a Kex program never has to handle backend-specific binary values: it compares with `==`, prints directly, and goes into a map key unchanged. A digest of a `Binary` is the raw digest bytes, as a `Binary`.
 
 ```kex
 Digest.sha256("hello")
@@ -61,10 +61,10 @@ Digest.sha256(newText) != Digest.sha256(oldText)
 ### `fileSha256`
 
 ```kex
-fileSha256(path: String) -> String?
+fileSha256(path: String) -> Result<String, ReadError>
 ```
 
-Returns the SHA-256 digest of the file at `path`, or `None` when the file cannot be read.
+Returns the SHA-256 digest of the file at `path`, or `ReadFailed` when the file cannot be read.
 
 Reads the file for you, so a large file does not have to be pulled into a `String` first.
 
@@ -72,13 +72,13 @@ Reads the file for you, so a large file does not have to be pulled into a `Strin
 
   - `path` — the file to hash
 
-**Returns**: the hex digest, or `None`
+**Returns**: the hex digest, or `ReadFailed`
 
 **Examples**
 
 ```kex
-Digest.fileSha256("archive.tar.gz")   # => Just("a3f1...")
-Digest.fileSha256("nowhere")          # => None
+Digest.fileSha256("archive.tar.gz")   # => Ok("a3f1...")
+Digest.fileSha256("nowhere")          # => Error(ReadFailed)
 ```
 
 _Verifying a download against a published checksum_

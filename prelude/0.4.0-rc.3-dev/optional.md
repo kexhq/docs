@@ -190,6 +190,21 @@ users.get(id)
   .or("unknown")
 ```
 
+#### `filter`
+
+```kex
+filter : (X -> Bool) -> X?
+```
+
+Keeps the value only when `pred` accepts it.
+
+**Examples**
+
+```kex
+Just(4).filter { |n| n.even? }   # => Just(4)
+Just(3).filter { |n| n.even? }   # => None
+```
+
 ### From [`Showable`](kex.md#trait-showable)
 
   - [`to`](kex.md#showable-to) — 
@@ -376,6 +391,36 @@ _Keeping only the values that parsed_
   .map { |s| Integer.parse(s).optional }
   .filter(~set?)
   .map { |o| o.or(0) }    # => [1, 3]
+```
+
+#### `mapError`
+
+```kex
+mapError : (E -> F) -> Result<X, F>
+```
+
+Applies `f` to the error, leaving a success alone: `map` for the other side.
+
+**Examples**
+
+```kex
+Error(404).mapError { |code| "HTTP ${code}" }   # => Error("HTTP 404")
+Ok(1).mapError { |code| "HTTP ${code}" }        # => Ok(1)
+```
+
+#### `error`
+
+```kex
+error : E?
+```
+
+The error, if this is one: the counterpart of `optional`.
+
+**Examples**
+
+```kex
+Error("bad").error   # => Just("bad")
+Ok(1).error          # => None
 ```
 
 ### From [`Showable`](kex.md#trait-showable)

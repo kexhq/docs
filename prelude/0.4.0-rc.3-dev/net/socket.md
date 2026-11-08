@@ -122,10 +122,26 @@ _Sending one newline-delimited request_
 connection.sendAll("status\n".to(Binary).try).try
 ```
 
+### `put`
+
+```kex
+put(connection: TCPConnection, content: Binary) -> Result<Void, NetError>
+```
+
+Writes `content` verbatim: raw bytes, no rendering, no trailing newline.
+
+**Examples**
+
+_Echoing a received chunk verbatim_
+
+```kex
+connection.put(chunk).try
+```
+
 ### `write`
 
 ```kex
-write(connection: TCPConnection, content: Showable) -> Void
+write(connection: TCPConnection, content: Showable) -> Result<Void, NetError>
 ```
 
 Writes `content` with no trailing newline.
@@ -135,39 +151,23 @@ Writes `content` with no trailing newline.
 _Sending a prompt without a newline_
 
 ```kex
-connection.write("name? ")
+connection.write("name? ").try
 ```
 
-### `printLine`
+### `writeLine`
 
 ```kex
-printLine(connection: TCPConnection, content: Showable) -> Void
+writeLine(connection: TCPConnection, content: Showable) -> Result<Void, NetError>
 ```
 
 Writes `content` followed by a newline.
 
 **Examples**
 
-_Answering a line-oriented client_
+_Answering a line-oriented peer_
 
 ```kex
-connection.printLine("hello")
-```
-
-### `writeBytes`
-
-```kex
-writeBytes(connection: TCPConnection, content: Binary) -> Void
-```
-
-Writes raw bytes with no trailing newline and no rendering.
-
-**Examples**
-
-_Echoing a received line verbatim_
-
-```kex
-connection.writeBytes(line)
+connection.writeLine("hello").try
 ```
 
 ### `print`
@@ -176,35 +176,67 @@ connection.writeBytes(line)
 print(connection: TCPConnection, content: Showable) -> Void
 ```
 
-Writes `content` with no trailing newline. The same as `write`.
+Writes `content` with no trailing newline, ignoring a failure. Use `write` when a failure matters.
 
-### `writeLine`
+**Examples**
+
+_Sending a prompt without a newline_
 
 ```kex
-writeLine(connection: TCPConnection, content: Showable) -> Void
+connection.print("name? ")
 ```
 
-Writes `content` followed by a newline. The same as `printLine`.
-
-### `getLine`
+### `printLine`
 
 ```kex
-getLine(connection: TCPConnection) -> Result<String?, NetError>
+printLine(connection: TCPConnection, content: Showable) -> Void
+```
+
+Writes `content` followed by a newline, ignoring a failure. Use `writeLine` when a failure matters.
+
+**Examples**
+
+_Answering a line-oriented peer_
+
+```kex
+connection.printLine("hello")
+```
+
+### `readLine`
+
+```kex
+readLine(connection: TCPConnection) -> Result<String?, NetError>
 ```
 
 Reads the next line as text, without its newline.
 
-Answers `Ok(None)` at end of input, like `FileHandle.getLine`. Lines are capped at 64 KiB; a longer line fails with `Limit` instead of growing without bound.
+Answers `Ok(None)` at end of input, like `FileHandle.readLine`. Lines are capped at 64 KiB; a longer line fails with `Limit` instead of growing without bound.
 
 **Examples**
 
 _Echoing one line back to its sender_
 
 ```kex
-match connection.getLine.try do
+match connection.readLine.try do
   Just(line) => connection.printLine(line)
   None => connection.close
 end
+```
+
+### `getLine`
+
+```kex
+getLine(connection: TCPConnection) -> String?
+```
+
+Reads the next line as text, without its newline: `readLine` for when the end of input and a failed read mean the same thing.
+
+**Examples**
+
+_Printing one received line_
+
+```kex
+IO.printLine(connection.getLine.or("(closed)"))
 ```
 
 ### `receiveChunk`
@@ -791,10 +823,26 @@ sendAll(connection: UnixConnection, data: Binary) -> Result<Integer, NetError>
 
 Sends every byte and returns the count.
 
+### `put`
+
+```kex
+put(connection: UnixConnection, content: Binary) -> Result<Void, NetError>
+```
+
+Writes `content` verbatim: raw bytes, no rendering, no trailing newline.
+
+**Examples**
+
+_Echoing a received chunk verbatim_
+
+```kex
+connection.put(chunk).try
+```
+
 ### `write`
 
 ```kex
-write(connection: UnixConnection, content: Showable) -> Void
+write(connection: UnixConnection, content: Showable) -> Result<Void, NetError>
 ```
 
 Writes `content` with no trailing newline.
@@ -804,13 +852,13 @@ Writes `content` with no trailing newline.
 _Sending a prompt without a newline_
 
 ```kex
-connection.write("name? ")
+connection.write("name? ").try
 ```
 
-### `printLine`
+### `writeLine`
 
 ```kex
-printLine(connection: UnixConnection, content: Showable) -> Void
+writeLine(connection: UnixConnection, content: Showable) -> Result<Void, NetError>
 ```
 
 Writes `content` followed by a newline.
@@ -820,23 +868,7 @@ Writes `content` followed by a newline.
 _Answering a line-oriented peer_
 
 ```kex
-connection.printLine("hello")
-```
-
-### `writeBytes`
-
-```kex
-writeBytes(connection: UnixConnection, content: Binary) -> Void
-```
-
-Writes raw bytes with no trailing newline and no rendering.
-
-**Examples**
-
-_Echoing a received line verbatim_
-
-```kex
-connection.writeBytes(line)
+connection.writeLine("hello").try
 ```
 
 ### `print`
@@ -845,32 +877,67 @@ connection.writeBytes(line)
 print(connection: UnixConnection, content: Showable) -> Void
 ```
 
-Writes `content` with no trailing newline. The same as `write`.
+Writes `content` with no trailing newline, ignoring a failure. Use `write` when a failure matters.
 
-### `writeLine`
+**Examples**
+
+_Sending a prompt without a newline_
 
 ```kex
-writeLine(connection: UnixConnection, content: Showable) -> Void
+connection.print("name? ")
 ```
 
-Writes `content` followed by a newline. The same as `printLine`.
-
-### `getLine`
+### `printLine`
 
 ```kex
-getLine(connection: UnixConnection) -> Result<String?, NetError>
+printLine(connection: UnixConnection, content: Showable) -> Void
+```
+
+Writes `content` followed by a newline, ignoring a failure. Use `writeLine` when a failure matters.
+
+**Examples**
+
+_Answering a line-oriented peer_
+
+```kex
+connection.printLine("hello")
+```
+
+### `readLine`
+
+```kex
+readLine(connection: UnixConnection) -> Result<String?, NetError>
 ```
 
 Reads the next line as text, without its newline.
 
-Answers `Ok(None)` at end of input, like `FileHandle.getLine`. Lines are capped at 64 KiB; a longer line fails with `Limit` instead of growing without bound.
+Answers `Ok(None)` at end of input, like `FileHandle.readLine`. Lines are capped at 64 KiB; a longer line fails with `Limit` instead of growing without bound.
+
+**Examples**
+
+_Echoing one line back to its sender_
+
+```kex
+match connection.readLine.try do
+  Just(line) => connection.printLine(line)
+  None => connection.close
+end
+```
+
+### `getLine`
+
+```kex
+getLine(connection: UnixConnection) -> String?
+```
+
+Reads the next line as text, without its newline: `readLine` for when the end of input and a failed read mean the same thing.
 
 **Examples**
 
 _Printing one received line_
 
 ```kex
-IO.printLine(connection.getLine.try.or("(closed)"))
+IO.printLine(connection.getLine.or("(closed)"))
 ```
 
 ### `receiveChunk`
@@ -1052,10 +1119,26 @@ sendAll(connection: TLSConnection, data: Binary) -> Result<Integer, NetError>
 
 Sends every plaintext byte through the TLS stream.
 
+### `put`
+
+```kex
+put(connection: TLSConnection, content: Binary) -> Result<Void, NetError>
+```
+
+Writes `content` verbatim: raw bytes, no rendering, no trailing newline.
+
+**Examples**
+
+_Echoing a received chunk verbatim_
+
+```kex
+connection.put(chunk).try
+```
+
 ### `write`
 
 ```kex
-write(connection: TLSConnection, content: Showable) -> Void
+write(connection: TLSConnection, content: Showable) -> Result<Void, NetError>
 ```
 
 Writes `content` with no trailing newline.
@@ -1065,13 +1148,13 @@ Writes `content` with no trailing newline.
 _Sending a prompt without a newline_
 
 ```kex
-connection.write("name? ")
+connection.write("name? ").try
 ```
 
-### `printLine`
+### `writeLine`
 
 ```kex
-printLine(connection: TLSConnection, content: Showable) -> Void
+writeLine(connection: TLSConnection, content: Showable) -> Result<Void, NetError>
 ```
 
 Writes `content` followed by a newline.
@@ -1081,23 +1164,7 @@ Writes `content` followed by a newline.
 _Answering a line-oriented peer_
 
 ```kex
-connection.printLine("hello")
-```
-
-### `writeBytes`
-
-```kex
-writeBytes(connection: TLSConnection, content: Binary) -> Void
-```
-
-Writes raw bytes with no trailing newline and no rendering.
-
-**Examples**
-
-_Echoing a received line verbatim_
-
-```kex
-connection.writeBytes(line)
+connection.writeLine("hello").try
 ```
 
 ### `print`
@@ -1106,15 +1173,31 @@ connection.writeBytes(line)
 print(connection: TLSConnection, content: Showable) -> Void
 ```
 
-Writes `content` with no trailing newline. The same as `write`.
+Writes `content` with no trailing newline, ignoring a failure. Use `write` when a failure matters.
 
-### `writeLine`
+**Examples**
+
+_Sending a prompt without a newline_
 
 ```kex
-writeLine(connection: TLSConnection, content: Showable) -> Void
+connection.print("name? ")
 ```
 
-Writes `content` followed by a newline. The same as `printLine`.
+### `printLine`
+
+```kex
+printLine(connection: TLSConnection, content: Showable) -> Void
+```
+
+Writes `content` followed by a newline, ignoring a failure. Use `writeLine` when a failure matters.
+
+**Examples**
+
+_Answering a line-oriented peer_
+
+```kex
+connection.printLine("hello")
+```
 
 ### `receiveChunk`
 
@@ -1308,22 +1391,22 @@ accept(listener, timeout)
 sendAll(connection, data)
 ```
 
+#### `put`
+
+```kex
+put(connection, content)
+```
+
 #### `write`
 
 ```kex
 write(connection, content)
 ```
 
-#### `printLine`
+#### `writeLine`
 
 ```kex
-printLine(connection, content)
-```
-
-#### `writeBytes`
-
-```kex
-writeBytes(connection, content)
+writeLine(connection, content)
 ```
 
 #### `print`
@@ -1332,10 +1415,16 @@ writeBytes(connection, content)
 print(connection, content)
 ```
 
-#### `writeLine`
+#### `printLine`
 
 ```kex
-writeLine(connection, content)
+printLine(connection, content)
+```
+
+#### `readLine`
+
+```kex
+readLine(connection)
 ```
 
 #### `getLine`
@@ -1512,22 +1601,22 @@ accept(listener)
 sendAll(connection, data)
 ```
 
+#### `put`
+
+```kex
+put(connection, content)
+```
+
 #### `write`
 
 ```kex
 write(connection, content)
 ```
 
-#### `printLine`
+#### `writeLine`
 
 ```kex
-printLine(connection, content)
-```
-
-#### `writeBytes`
-
-```kex
-writeBytes(connection, content)
+writeLine(connection, content)
 ```
 
 #### `print`
@@ -1536,10 +1625,16 @@ writeBytes(connection, content)
 print(connection, content)
 ```
 
-#### `writeLine`
+#### `printLine`
 
 ```kex
-writeLine(connection, content)
+printLine(connection, content)
+```
+
+#### `readLine`
+
+```kex
+readLine(connection)
 ```
 
 #### `getLine`
@@ -1614,22 +1709,22 @@ connect(endpoint, config)
 sendAll(connection, data)
 ```
 
+#### `put`
+
+```kex
+put(connection, content)
+```
+
 #### `write`
 
 ```kex
 write(connection, content)
 ```
 
-#### `printLine`
+#### `writeLine`
 
 ```kex
-printLine(connection, content)
-```
-
-#### `writeBytes`
-
-```kex
-writeBytes(connection, content)
+writeLine(connection, content)
 ```
 
 #### `print`
@@ -1638,10 +1733,10 @@ writeBytes(connection, content)
 print(connection, content)
 ```
 
-#### `writeLine`
+#### `printLine`
 
 ```kex
-writeLine(connection, content)
+printLine(connection, content)
 ```
 
 #### `receiveChunk`

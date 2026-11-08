@@ -1057,7 +1057,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 </section>
 <section class="entity" id="module-control-retry-retry">
 <h2><span class="kind kind-module">module</span> <code>Control.Retry.Retry</code></h2>
-<p><code>run</code> calls the block immediately. <code>Ok</code> stops; <a class="xref" href="/prelude/0.4.0-rc.3-dev/json/#type-json-error"><code>Error</code></a> waits and retries. When the schedule runs out, it returns the last error unchanged. Use <code>again</code> and <code>done</code> when your application needs to choose what to retry.</p>
+<p><code>run</code> calls the block immediately. <code>Ok</code> stops; <code>Error</code> waits and retries. When the schedule runs out, it returns the last error unchanged. Use <code>again</code> and <code>done</code> when your application needs to choose what to retry.</p>
 <p>HTTP 429 and 503 responses are <code>Ok(response)</code>, so retrying those statuses requires an explicit decision. For writes, make sure repeating the request is safe, for example by using an idempotency key. Set request timeouts separately: the schedule limits sleep, not time spent inside the operation.</p>
 <div class="functions">
 <div class="fn" id="function-control-retry-retry-again">
@@ -1087,7 +1087,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <pre class="code sig"><code>run <span class="tok-op">:</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-control-retry-retry-schedule"><span class="tok-type">Schedule</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/units/#record-duration"><span class="tok-type">Duration</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-float"><span class="tok-type">Float</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/units/#record-duration"><span class="tok-type">Duration</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-float"><span class="tok-type">Float</span></a> <span class="tok-op">-&gt;</span> <span class="tok-type">Duration?</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/units/#record-duration"><span class="tok-type">Duration</span></a> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-float"><span class="tok-type">Float</span></a><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="#record-control-retry-retry-info"><span class="tok-type">Info</span></a><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-op">&gt;</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">X</span></code></pre>
 <p>Call the block until it succeeds, returns <code>done</code>, or runs out of attempts or sleep time.</p>
 <p>The first attempt is immediate. Every later attempt follows one sleep. There is no sleep after success or the final error. Named timing options override the corresponding schedule field for this execution only.</p>
-<p>Return a <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><code>Result</code></a> from the block for automatic retries: <code>Ok</code> stops and <a class="xref" href="/prelude/0.4.0-rc.3-dev/json/#type-json-error"><code>Error</code></a> retries. If no more retries are allowed, <code>run</code> returns the last error.</p>
+<p>Return a <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><code>Result</code></a> from the block for automatic retries: <code>Ok</code> stops and <code>Error</code> retries. If no more retries are allowed, <code>run</code> returns the last error.</p>
 <p>Return <code>done(value)</code> or <code>again(value)</code> to make the decision yourself. The final <code>Done</code> means the block chose to stop; <code>Again</code> means it wanted another try but the schedule ran out. Use one return form throughout the block. Runtime faults propagate; they are not retried.</p>
 <p>Out-of-range settings are adjusted: attempts below one become one, negative durations become zero, backoff below one becomes one, jitter and random samples are clamped to 0..1. Non-finite Float settings are unsupported.</p>
 <p><code>Done(Error(...))</code> means the application stopped on a permanent error. <code>Again(Ok(response))</code> means an unacceptable HTTP status persisted until exhaustion. HTTP status classification and Retry-After handling are the application's responsibility; <code>run</code> has no HTTP-specific behavior.</p>
@@ -1136,7 +1136,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 </section>
 <section class="entity" id="type-control-retry-retry-decision">
 <h2><span class="kind kind-type">type</span> <code>Decision&lt;X&gt;</code></h2>
-<p>Whether to retry, together with the last result. <code>Done(value)</code> means the block stopped deliberately. <code>Again(value)</code> returned by <code>run</code> means the schedule was exhausted before completion. The value inside can be any application result, including an <a class="xref" href="/prelude/0.4.0-rc.3-dev/json/#type-json-error"><code>Error</code></a>.</p>
+<p>Whether to retry, together with the last result. <code>Done(value)</code> means the block stopped deliberately. <code>Again(value)</code> returned by <code>run</code> means the schedule was exhausted before completion. The value inside can be any application result, including an <code>Error</code>.</p>
 <h3>Variants</h3>
 <ul class="variants">
 <li><code>Again(X)</code></li>
@@ -1155,7 +1155,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <li><code>remainingAttempts</code>: executions remaining, including the upcoming one.</li>
 <li><code>delay</code>: actual upcoming wait, after jitter and the delay cap.</li>
 <li><code>totalDelay</code>: sleep already performed, excluding the upcoming wait.</li>
-<li><code>result</code>: the last <a class="xref" href="/prelude/0.4.0-rc.3-dev/json/#type-json-error"><code>Error</code></a> or <code>Again</code>, including its application payload.</li>
+<li><code>result</code>: the last <code>Error</code> or <code>Again</code>, including its application payload.</li>
 </ul>
 <h3>Fields</h3>
 <dl class="fields">

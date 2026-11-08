@@ -342,7 +342,8 @@ Returns the element at position `i` (0-based) wrapped in `Just`, or `None` if th
 
 ```kex
 [10, 20, 30].at(1)   # => Just(20)
-[10, 20, 30].at(9)   # => None
+[10, 20, 30].at(9)    # => None
+[10, 20, 30].at(-1)   # => Just(30)
 ```
 
 #### `get`
@@ -365,7 +366,8 @@ Returns the element at position `i` (0-based), or `None` when the index is out o
 
 ```kex
 [10, 20, 30].get(1)   # => Just(20)
-[10, 20, 30].get(9)   # => None
+[10, 20, 30].get(9)    # => None
+[10, 20, 30].get(-1)   # => Just(30)
 ```
 
 #### `contains?`
@@ -520,7 +522,7 @@ slice(range: Range<Integer>) -> [X]
 
 Returns the sublist of `length` elements starting at index `start`, counting from 0.
 
-The window is clamped rather than refused, the way `take` and `drop` already behave: a start past the end answers `[]`, a length running past the end stops at the end, a negative start counts as 0, and a negative length answers `[]`.
+The window is clamped rather than refused, the way `take` and `drop` already behave: a start past the end answers `[]`, a length running past the end stops at the end, and a negative length answers `[]`. A negative start counts back from the end, as in Ruby: `-1` is the last element, and a start still before the beginning answers `[]`.
 
 **Parameters**
 
@@ -535,6 +537,7 @@ The window is clamped rather than refused, the way `take` and `drop` already beh
 [1, 2, 3, 4].slice(1, 2)    # => [2, 3]
 [1, 2, 3].slice(1, 99)      # => [2, 3]
 [1, 2, 3].slice(9, 2)       # => []
+[1, 2, 3, 4].slice(-2, 2)   # => [3, 4]
 ```
 
 _Taking a page of rows_
@@ -614,29 +617,271 @@ Returns the elements sorted using a custom comparator. `comp` should return `tru
 #### `min`
 
 ```kex
-min(f: (X -> Y)) -> X?
+min : X?
 ```
 
-Returns the element with the smallest `f` key wrapped in `Just`, or `None` for an empty list.
+Returns the smallest element wrapped in `Just`, or `None` for an empty list. Elements compare in the same natural order `sort` uses.
+
+**Returns**: the smallest element, or `None`
 
 **Examples**
 
 ```kex
-["hey", "hi"].min { |s| s.count }   # => Just("hi")
+[3, 1, 2].min          # => Just(1)
+["pear", "fig"].min    # => Just("fig")
+[].min                 # => None
 ```
 
 #### `max`
 
 ```kex
-max(f: (X -> Y)) -> X?
+max : X?
 ```
 
-Returns the element with the largest `f` key wrapped in `Just`, or `None` for an empty list.
+Returns the largest element wrapped in `Just`, or `None` for an empty list. Elements compare in the same natural order `sort` uses.
+
+**Returns**: the largest element, or `None`
 
 **Examples**
 
 ```kex
-["hey", "hi"].max { |s| s.count }   # => Just("hey")
+[3, 1, 2].max          # => Just(3)
+["pear", "fig"].max    # => Just("pear")
+```
+
+#### `product`
+
+```kex
+product(f: (X -> Number)) -> Number
+```
+
+Maps each element through `f` and multiplies the results.
+
+**Examples**
+
+```kex
+[[1, 2], [3, 4]].product { |pair| pair.first.or(1) }   # => 3
+```
+
+#### `minBy`
+
+```kex
+minBy(f: (X -> Y)) -> X?
+```
+
+Returns the element with the smallest `f` key wrapped in `Just`, or `None` for an empty list. The first of several tying elements wins.
+
+**Parameters**
+
+  - `f` — the key each element is compared by
+
+**Returns**: the element with the smallest key, or `None`
+
+**Examples**
+
+```kex
+["hey", "hi"].minBy { |s| s.count }   # => Just("hi")
+[].minBy { |s| s.count }              # => None
+```
+
+#### `maxBy`
+
+```kex
+maxBy(f: (X -> Y)) -> X?
+```
+
+Returns the element with the largest `f` key wrapped in `Just`, or `None` for an empty list. The first of several tying elements wins.
+
+**Parameters**
+
+  - `f` — the key each element is compared by
+
+**Returns**: the element with the largest key, or `None`
+
+**Examples**
+
+```kex
+["hey", "hi"].maxBy { |s| s.count }   # => Just("hey")
+```
+
+#### `sortBy`
+
+```kex
+sortBy(f: (X -> Y)) -> [X]
+```
+
+Returns the elements sorted by the key `f` gives each one, smallest key first. The sort is stable: elements with equal keys keep their order.
+
+**Parameters**
+
+  - `f` — the key each element is sorted by
+
+**Returns**: the sorted elements
+
+**Examples**
+
+```kex
+["pear", "fig", "apple"].sortBy { |s| s.count }   # => ["fig", "pear", "apple"]
+```
+
+_Newest first_
+
+```kex
+posts.sortBy { |p| p.published }.reverse
+```
+
+#### `groupBy`
+
+```kex
+groupBy(f: (X -> K)) -> {K: [X]}
+```
+
+Groups the elements by the key `f` gives each one. Each group keeps its elements in their original order.
+
+**Parameters**
+
+  - `f` — the key each element is grouped under
+
+**Returns**: each key with the elements that produced it
+
+**Examples**
+
+```kex
+[1, 2, 3, 4].groupBy { |n| n.even? }   # => { false: [1, 3], true: [2, 4] }
+```
+
+_Words by their first letter_
+
+```kex
+words.groupBy { |w| w.first.or(' ') }
+```
+
+#### `tally`
+
+```kex
+tally : {X: Integer}
+```
+
+Counts how many times each distinct element occurs.
+
+**Returns**: each distinct element with its count
+
+**Examples**
+
+```kex
+["a", "b", "a"].tally   # => { "a": 2, "b": 1 }
+```
+
+#### `slices`
+
+```kex
+slices(n: Integer) -> [[X]]
+```
+
+Splits the list into consecutive pieces of `n` elements; the last piece holds whatever is left over. Ruby calls this `each_slice`.
+
+**Parameters**
+
+  - `n` — the piece size, at least 1
+
+**Returns**: the pieces, in order; `[]` when `n` is less than 1
+
+**Examples**
+
+```kex
+[1, 2, 3, 4, 5].slices(2)   # => [[1, 2], [3, 4], [5]]
+```
+
+_Rows of a table, three cells each_
+
+```kex
+cells.slices(3).map { |row| row.join(" | ") }
+```
+
+#### `windows`
+
+```kex
+windows(n: Integer) -> [[X]]
+```
+
+Every run of `n` consecutive elements, each overlapping the next by all but one element. Ruby calls this `each_cons`.
+
+**Parameters**
+
+  - `n` — the window size, at least 1
+
+**Returns**: the windows, in order; `[]` when the list is shorter than `n` or `n` is less than 1
+
+**Examples**
+
+```kex
+[1, 2, 3, 4].windows(2)   # => [[1, 2], [2, 3], [3, 4]]
+```
+
+_Differences between neighbours_
+
+```kex
+readings.windows(2).map { |w| w.get(1, 0) - w.get(0, 0) }
+```
+
+#### `difference`
+
+```kex
+difference(other: [X]) -> [X]
+```
+
+The elements of this list that are not in `other`, in this list's order. Duplicates in this list are kept unless `other` removes them.
+
+**Parameters**
+
+  - `other` — the elements to leave out
+
+**Returns**: what remains
+
+**Examples**
+
+```kex
+[1, 2, 2, 3].difference([2])   # => [1, 3]
+```
+
+#### `intersect`
+
+```kex
+intersect(other: [X]) -> [X]
+```
+
+The distinct elements present in both lists, in this list's order.
+
+**Parameters**
+
+  - `other` — the list to intersect with
+
+**Returns**: the shared elements, each once
+
+**Examples**
+
+```kex
+[1, 2, 2, 3].intersect([3, 2, 5])   # => [2, 3]
+```
+
+#### `union`
+
+```kex
+union(other: [X]) -> [X]
+```
+
+The distinct elements of both lists: this list's first, then the new ones from `other`.
+
+**Parameters**
+
+  - `other` — the list to add
+
+**Returns**: every distinct element, each once
+
+**Examples**
+
+```kex
+[1, 2, 2].union([2, 3])   # => [1, 2, 3]
 ```
 
 #### `sum`
@@ -710,48 +955,6 @@ Multiplies all elements. Returns `1` for an empty list.
 [].product          # => 1
 ```
 
-```kex
-product(f: (X -> Number)) -> Number
-```
-
-Maps each element through `f` and multiplies the results.
-
-**Examples**
-
-```kex
-[[1,2],[3,4]].product { |pair| pair.first.or(1) }   # => 3
-```
-
-#### `min`
-
-```kex
-min : X?
-```
-
-Returns the smallest element wrapped in `Just`, or `None` for an empty list.
-
-**Examples**
-
-```kex
-[3, 1, 2].min   # => Just(1)
-[].min          # => None
-```
-
-#### `max`
-
-```kex
-max : X?
-```
-
-Returns the largest element wrapped in `Just`, or `None` for an empty list.
-
-**Examples**
-
-```kex
-[3, 1, 2].max   # => Just(3)
-[].max          # => None
-```
-
 ### On `[[Y]]`
 
 #### `flatten`
@@ -779,6 +982,8 @@ Flattens exactly one level of nesting.
 ### From [`Foldable`](enumerable.md#trait-foldable)
 
   - [`eachIndexed`](enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
+  - [`none?`](enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`one?`](enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
 
 ### Defined in other modules
 

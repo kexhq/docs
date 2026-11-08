@@ -970,7 +970,7 @@ _Building a lint message from a parsed annotation_
 
 ```kex
 let written = reference.to(String).or("unknown")
-IO.warn("avoid the broad ${written} annotation")
+IO.printError("avoid the broad ${written} annotation")
 ```
 
 ### `to`

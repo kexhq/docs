@@ -6,6 +6,7 @@ title: Map
 entities:
   - { kind: type, name: "Map" }
   - { kind: make, name: "Map<K, V>" }
+  - { kind: module, name: "Map" }
 ---
 
 # Map
@@ -23,11 +24,13 @@ config.get(:user).or("anonymous")   # => "anonymous"
 config.put(:port, 9090)             # => { :host: "localhost", :port: 9090 }
 ```
 
-A map is `Enumerable` and `Foldable`, and the traversal blocks take the key and value as two parameters:
+A map is `Enumerable` and `Foldable`, and every traversal block takes the key and value as two parameters: `each`, `map`, `filter`, `reject`, `find`, `any?`, `all?`, `none?`, `one?`, `count`, `collect` and `flatMap`, with `mapIndexed` adding the index as a third. Only `reduce`, the primitive, hands over the pair as one value.
 
 ```kex
 config.each { |k, v| IO.printLine("${k} = ${v}") }
 config.filter { |k, v| k != :port }   # => { :host: "localhost" }
+config.collect { |k, v| k == :port then Just(v) else None }   # => [8080]
+config.mapIndexed { |k, v, i| "${i}. ${k}" }   # => ["0. host", "1. port"]
 ```
 
 ## type `Map<K, V>`
@@ -538,6 +541,29 @@ _Layering user settings over defaults_
 defaults.merge(userConfig)
 ```
 
+#### `update`
+
+```kex
+update(key: K, f: (V -> V)) -> Map<K, V>
+update(key: K, f: V) -> (V -> V) -> Map<K, V>
+```
+
+Replaces the value under `key` with `f` of it. A missing key is left missing: use the three-argument form to supply a starting value.
+
+**Parameters**
+
+  - `key` — the key to update
+  - `f` — computes the new value from the old
+
+**Returns**: the map with that one value replaced
+
+**Examples**
+
+```kex
+{ "a": 1 }.update("a") { |n| n + 1 }   # => { "a": 2 }
+{ "a": 1 }.update("b") { |n| n + 1 }   # => { "a": 1 }
+```
+
 #### `any?` (from Foldable)
 
 ```kex
@@ -641,6 +667,8 @@ Returns `true` when the map has no entries. The `Blankable` view of `empty?`, so
 ### From [`Foldable`](enumerable.md#trait-foldable)
 
   - [`eachIndexed`](enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
+  - [`none?`](enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`one?`](enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
 
 ### From [`Monoid`](algebra.md#trait-monoid)
 
@@ -649,3 +677,26 @@ Returns `true` when the map has no entries. The `Blankable` view of `empty?`, so
 ### Defined in other modules
 
   - [Truthyable](truthyable.md#make-map): [`truthy?`](truthyable.md#map-truthy?)
+
+## module `Map`
+
+### `from`
+
+```kex
+from(entries: [(K, V)]) -> Map<K, V>
+```
+
+Builds a map from `(key, value)` pairs. A key that appears more than once keeps its last value, as `put` would. Ruby spells this `to_h`.
+
+**Parameters**
+
+  - `entries` — the pairs
+
+**Returns**: the map
+
+**Examples**
+
+```kex
+Map.from([("a", 1), ("b", 2)])   # => { "a": 1, "b": 2 }
+Map.from(m.entries) == m         # => true
+```

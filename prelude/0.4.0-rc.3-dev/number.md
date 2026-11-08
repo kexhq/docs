@@ -304,6 +304,173 @@ Returns the integer unchanged. The `Integer` counterpart of `Float.round`.
 7.round   # => 7
 ```
 
+### `pow`
+
+```kex
+pow(exponent: Integer) -> Integer
+```
+
+Raises the integer to a non-negative integer power, exactly: integers have no size limit, so `2.pow(100)` is the whole 31-digit number, where `Math.pow` answers a `Float`.
+
+A negative exponent gives the reciprocal truncated toward zero, the way `/` divides integers: `0` for any base but `1` and `-1`.
+
+**Parameters**
+
+  - `exponent` — the power to raise to
+
+**Returns**: `this` multiplied by itself `exponent` times
+
+**Examples**
+
+```kex
+2.pow(10)    # => 1024
+2.pow(100)   # => 1267650600228229401496703205376
+(-3).pow(3)  # => -27
+```
+
+### `div`
+
+```kex
+div(n: Integer) -> Integer
+```
+
+Divides and rounds toward negative infinity: the quotient that goes with `modulo`. Plain `/` truncates toward zero instead, so the two differ only when the signs do. Ruby's `/` on integers is this one.
+
+**Parameters**
+
+  - `n` — the divisor, non-zero
+
+**Returns**: the floored quotient
+
+**Examples**
+
+```kex
+7.div(2)      # => 3
+(-7).div(2)   # => -4   (-7 / 2 is -3)
+```
+
+### `divmod`
+
+```kex
+divmod(n: Integer) -> (Integer, Integer)
+```
+
+The floored quotient and the `modulo` remainder together, so that +q * n + r == this+ always holds.
+
+**Parameters**
+
+  - `n` — the divisor, non-zero
+
+**Returns**: `(this.div(n), this.modulo(n))`
+
+**Examples**
+
+```kex
+7.divmod(2)      # => (3, 1)
+(-7).divmod(2)   # => (-4, 1)
+```
+
+### `gcd`
+
+```kex
+gcd(n: Integer) -> Integer
+```
+
+The greatest common divisor, always non-negative. `0.gcd(0)` is `0`.
+
+**Parameters**
+
+  - `n` — the other integer
+
+**Returns**: the largest integer dividing both
+
+**Examples**
+
+```kex
+12.gcd(18)    # => 6
+(-4).gcd(6)   # => 2
+```
+
+### `lcm`
+
+```kex
+lcm(n: Integer) -> Integer
+```
+
+The least common multiple, always non-negative. Zero with anything is `0`.
+
+**Parameters**
+
+  - `n` — the other integer
+
+**Returns**: the smallest positive integer both divide
+
+**Examples**
+
+```kex
+4.lcm(6)   # => 12
+```
+
+### `digits`
+
+```kex
+digits : [Integer]
+```
+
+The decimal digits of the integer's magnitude, least significant first, as Ruby's `digits` answers them. `.reverse` gives reading order.
+
+**Returns**: the digits, ones place first
+
+**Examples**
+
+```kex
+1234.digits           # => [4, 3, 2, 1]
+0.digits              # => [0]
+1234.digits.reverse   # => [1, 2, 3, 4]
+```
+
+### `zero?`
+
+```kex
+zero? : Bool
+```
+
+Returns `true` for zero.
+
+**Examples**
+
+```kex
+0.zero?   # => true
+```
+
+### `positive?`
+
+```kex
+positive? : Bool
+```
+
+Returns `true` when the number is greater than zero.
+
+**Examples**
+
+```kex
+0.positive?   # => false
+```
+
+### `negative?`
+
+```kex
+negative? : Bool
+```
+
+Returns `true` when the number is less than zero.
+
+**Examples**
+
+```kex
+0.negative?   # => false
+```
+
 ### From [`Monoid`](algebra.md#trait-monoid)
 
   - [`repeat`](algebra.md#monoid-repeat) — Combines this value with itself `n` times.
@@ -389,11 +556,9 @@ Returns `true` when the float falls inside `range`, endpoints included.
 
 **Examples**
 
-_Comparing directly is usually clearer for floats_
-
 ```kex
-let ratio = 0.75
-ratio >= 0.0 && ratio <= 1.0   # => true
+0.75.in?(0.0..1.0)   # => true
+1.5.in?(0.0..1.0)    # => false
 ```
 
 ### `floor`
@@ -471,6 +636,48 @@ Truncates toward zero and returns the result as an `Integer`: it drops the fract
 ```kex
 3.7.toInteger      # => 3
 (-3.7).toInteger   # => -3   (floor would give -4)
+```
+
+### `zero?`
+
+```kex
+zero? : Bool
+```
+
+Returns `true` for zero.
+
+**Examples**
+
+```kex
+2.5.zero?   # => false
+```
+
+### `positive?`
+
+```kex
+positive? : Bool
+```
+
+Returns `true` when the number is greater than zero.
+
+**Examples**
+
+```kex
+2.5.positive?   # => true
+```
+
+### `negative?`
+
+```kex
+negative? : Bool
+```
+
+Returns `true` when the number is less than zero.
+
+**Examples**
+
+```kex
+2.5.negative?   # => false
 ```
 
 ### Defined in other modules

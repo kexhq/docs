@@ -20,8 +20,8 @@ using FS
 
 main do
   match FS.File.read("config.txt") do
-    Just(text) => IO.printLine(text.lines.count)
-    None       => IO.printError("config.txt is missing")
+    Ok(text) => IO.printLine(text.lines.count)
+    Error(_) => IO.printError("config.txt is missing")
   end
 end
 ```
@@ -36,7 +36,7 @@ FS.Path        pure path arithmetic, with no filesystem access at all
 
 The first two are capabilities: everything in them touches the real filesystem, so they can only be called from `foul` code, and a test can replace the whole of `FS.File` for a lexical region rather than mutating global state. `FS.Path` is ordinary pure code.
 
-Reading and writing a file answer with a `Result`, and most other operations with an `Optional` or a `Bool`, so a missing file or a failed write is an ordinary value you handle rather than an exception you catch.
+Anything that can fail answers with a `Result` carrying a `FileError`, so a missing file or a failed write is an ordinary value you handle rather than an exception you catch. Questions about the filesystem (`exists?`, `file?`, `directory?`) answer a `Bool`, and only a value that may simply be absent, such as `Directory.home`, answers an `Optional`.
 
 ### `permissionMode`
 
@@ -117,15 +117,20 @@ Something a file may allow, for `FS.File.changePermission`. Named for the intent
 
 ## type `FileError`
 
-A file operation that failed, carrying the path it failed on.
+A file operation that failed, carrying the path (or paths) it failed on.
 
-`OpenFailed`, `ReadFailed` and `WriteFailed` mean the filesystem refused the operation. `InvalidUtf8` means the bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence.
+Every variant but `InvalidUtf8` means the filesystem refused the operation its name gives: opening, reading, writing, creating, deleting, copying from the first path to the second, renaming the first to the second, or changing permissions. `InvalidUtf8` means the bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence.
 
 **Variants**
 
   - `OpenFailed(FilePath)`
   - `ReadFailed(FilePath)`
   - `WriteFailed(FilePath)`
+  - `CreateFailed(FilePath)`
+  - `DeleteFailed(FilePath)`
+  - `CopyFailed(FilePath, FilePath)`
+  - `RenameFailed(FilePath, FilePath)`
+  - `ModeFailed(FilePath)`
   - `InvalidUtf8(FilePath, Integer)`
 
 
@@ -189,7 +194,7 @@ _Reading a file line by line_
 ```kex
 match FS.File.open("log.txt", Read) do
   Ok(handle) => do
-    IO.printLine(handle.readLine.or(""))
+    IO.printLine(handle.getLine.or(""))
     handle.close
   end
   Error(e) => IO.printError("cannot open: ${e}")
@@ -346,7 +351,7 @@ FS.File.write("names.txt", names.join("\n") + "\n")
 ### `append`
 
 ```kex
-append(path: FilePath, content: String) -> Bool
+append(path: FilePath, content: String) -> Result<Void, FileError>
 ```
 
 Adds `content` to the end of `path`, keeping what is already there.
@@ -358,12 +363,12 @@ Creates the file if it does not exist, so it is safe to append to a log that has
   - `path` — the file to append to
   - `content` — the text to add
 
-**Returns**: `true` when the write succeeded
+**Returns**: `Ok` when the write succeeded, or `WriteFailed`
 
 **Examples**
 
 ```kex
-FS.File.append("app.log", "started\n")   # => true
+FS.File.append("app.log", "started\n")   # => Ok(())
 ```
 
 _A simple logger_
@@ -456,23 +461,23 @@ entries.partition { |e| FS.File.directory?(e) }
 ### `delete`
 
 ```kex
-delete(path: FilePath) -> Bool
+delete(path: FilePath) -> Result<Void, FileError>
 ```
 
 Deletes the file at `path`.
 
-Answers `false` when the file does not exist or cannot be removed. Use `FS.Directory.delete` for a directory.
+Answers `DeleteFailed` when the file does not exist or cannot be removed. Use `FS.Directory.delete` for a directory.
 
 **Parameters**
 
   - `path` — the file to delete
 
-**Returns**: `true` when the file was deleted
+**Returns**: `Ok` when the file was deleted, or `DeleteFailed`
 
 **Examples**
 
 ```kex
-FS.File.delete("tmp.txt")   # => true
+FS.File.delete("tmp.txt")   # => Ok(())
 ```
 
 _Cleaning up after a temporary file_
@@ -486,7 +491,7 @@ FS.File.delete(tmp)
 ### `copy`
 
 ```kex
-copy(src: FilePath, dst: FilePath) -> Bool
+copy(src: FilePath, dst: FilePath) -> Result<Void, FileError>
 ```
 
 Copies the file at `src` to `dst`, replacing `dst` if it exists.
@@ -496,12 +501,12 @@ Copies the file at `src` to `dst`, replacing `dst` if it exists.
   - `src` — the file to copy
   - `dst` — where to copy it
 
-**Returns**: `true` when the copy succeeded
+**Returns**: `Ok` when the copy succeeded, or `CopyFailed`
 
 **Examples**
 
 ```kex
-FS.File.copy("app.conf", "app.conf.bak")   # => true
+FS.File.copy("app.conf", "app.conf.bak")   # => Ok(())
 ```
 
 _Backing a file up before rewriting it_
@@ -514,7 +519,7 @@ FS.File.write(path, updated)
 ### `rename`
 
 ```kex
-rename(src: FilePath, dst: FilePath) -> Bool
+rename(src: FilePath, dst: FilePath) -> Result<Void, FileError>
 ```
 
 Renames (or moves) the file at `src` to `dst`.
@@ -524,12 +529,12 @@ Renames (or moves) the file at `src` to `dst`.
   - `src` — the current path
   - `dst` — the new path
 
-**Returns**: `true` when the rename succeeded
+**Returns**: `Ok` when the rename succeeded, or `RenameFailed`
 
 **Examples**
 
 ```kex
-FS.File.rename("draft.txt", "final.txt")   # => true
+FS.File.rename("draft.txt", "final.txt")   # => Ok(())
 ```
 
 _Writing to a temporary file, then swapping it in_
@@ -542,7 +547,7 @@ FS.File.rename("${path}.tmp", path)
 ### `changePermission`
 
 ```kex
-changePermission(path: FilePath, permissions: [Permission]) -> Bool
+changePermission(path: FilePath, permissions: [Permission]) -> Result<Void, FileError>
 ```
 
 Sets what may be done with the file at `path`, portably.
@@ -556,14 +561,14 @@ Use `changeMode` when you need exact POSIX bits, such as a file only its owner m
   - `path` — the file whose permissions to change
   - `permissions` — everything the file should allow
 
-**Returns**: `true` when the permissions were changed
+**Returns**: `Ok` when the permissions were changed, or `ModeFailed`
 
 **Examples**
 
 _Making a file read-only_
 
 ```kex
-FS.File.changePermission("report.txt", [FS.Readable])   # => true
+FS.File.changePermission("report.txt", [FS.Readable])   # => Ok(())
 ```
 
 _Writing a script and running it_
@@ -577,7 +582,7 @@ Process.run(script, [])
 ### `changeMode`
 
 ```kex
-changeMode(path: FilePath, mode: Integer) -> Bool
+changeMode(path: FilePath, mode: Integer) -> Result<Void, FileError>
 ```
 
 Sets the POSIX permission bits of the file at `path` to `mode`: what `chmod` does with a numeric mode.
@@ -589,23 +594,23 @@ Sets the POSIX permission bits of the file at `path` to `mode`: what `chmod` doe
   - `path` — the file whose mode to change
   - `mode` — the permission bits, as in `chmod`
 
-**Returns**: `true` when the mode was changed
+**Returns**: `Ok` when the mode was changed, or `ModeFailed`
 
 **Examples**
 
 ```kex
-FS.File.changeMode("secrets.txt", 0o600)   # => true
+FS.File.changeMode("secrets.txt", 0o600)   # => Ok(())
 ```
 
 ### `readLines`
 
 ```kex
-readLines(path: FilePath) -> [String]?
+readLines(path: FilePath) -> Result<[String], FileError>
 ```
 
 Reads the file and returns its lines, without their newlines.
 
-Answers `None` when the file cannot be read. A trailing newline does not produce a final empty line, so the count is the number of lines you would see in an editor.
+Answers why when the file cannot be read, as `FS.File.read` does. A trailing newline does not produce a final empty line, so the count is the number of lines you would see in an editor.
 
 NOT `lines`: FilePath is an alias for String, so a receiver function named `lines` here is indistinguishable from String's own `lines` at every call site, and merely saying `using FS` made `text.lines` ambiguous. `readLines` also says what it does: it reads the file.
 
@@ -613,13 +618,13 @@ NOT `lines`: FilePath is an alias for String, so a receiver function named `line
 
   - `path` — the file to read
 
-**Returns**: the lines, or `None`
+**Returns**: the lines, or why they could not be read
 
 **Examples**
 
 ```kex
-FS.File.readLines("names.txt")   # => Just(["ada", "grace"])
-FS.File.readLines("nowhere")     # => None
+FS.File.readLines("names.txt")   # => Ok(["ada", "grace"])
+FS.File.readLines("nowhere")     # => Error(ReadFailed("nowhere"))
 ```
 
 _Ignoring blank lines and comments_
@@ -634,10 +639,10 @@ FS.File.readLines("hosts")
 ### `feed`
 
 ```kex
-feed(path: FilePath) -> Feed<String>?
+feed(path: FilePath) -> Result<Feed<String>, FileError>
 ```
 
-Returns a lazy `Feed` of the file's lines, or `None` when it cannot be read.
+Returns a lazy `Feed` of the file's lines, or `ReadFailed` when the file cannot be opened.
 
 Unlike `readLines`, the file is read a line at a time off a handle held open for the feed's lifetime, so this is the way to walk a file too large to hold in memory: nothing but the current line is retained.
 
@@ -654,7 +659,7 @@ FS.File.feed("two-lines.txt").map { |lines| lines.take(5) }.or([])
 
   - `path` — the file to read
 
-**Returns**: the lines as a feed, or `None`
+**Returns**: the lines as a feed, or `ReadFailed`
 
 **Examples**
 
@@ -662,8 +667,8 @@ _Peeking at the head of a large file_
 
 ```kex
 match FS.File.feed("huge.log") do
-  Just(lines) => lines.take(10).each { |line| IO.printLine(line) }
-  None        => IO.printError("cannot read huge.log")
+  Ok(lines) => lines.take(10).each { |line| IO.printLine(line) }
+  Error(_)  => IO.printError("cannot read huge.log")
 end
 ```
 
@@ -678,10 +683,10 @@ FS.File.feed("app.log")
 ### `size`
 
 ```kex
-size(path: FilePath) -> Integer?
+size(path: FilePath) -> Result<Integer, FileError>
 ```
 
-Returns the file's size in bytes, or `None` when it cannot be read.
+Returns the file's size in bytes, or `ReadFailed` when it cannot be read.
 
 Bytes, not characters: a file of non-ASCII text has more bytes than it has characters.
 
@@ -689,13 +694,13 @@ Bytes, not characters: a file of non-ASCII text has more bytes than it has chara
 
   - `path` — the file to measure
 
-**Returns**: the size in bytes, or `None`
+**Returns**: the size in bytes, or `ReadFailed`
 
 **Examples**
 
 ```kex
-FS.File.size("hello.txt")   # => Just(6)
-FS.File.size("nowhere")     # => None
+FS.File.size("hello.txt")   # => Ok(6)
+FS.File.size("nowhere")     # => Error(ReadFailed("nowhere"))
 ```
 
 _Skipping files that are too large_
@@ -707,10 +712,10 @@ paths.filter { |p| FS.File.size(p).or(0) < 1048576 }
 ### `absolute`
 
 ```kex
-absolute(path: FilePath) -> String?
+absolute(path: FilePath) -> Result<String, FileError>
 ```
 
-Resolves `path` against the process's current directory and returns the absolute form, or `None` when it cannot be resolved.
+Resolves `path` against the process's current directory and returns the absolute form, or `ReadFailed` when it cannot be resolved.
 
 This is the one path operation that is not in `FS.Path`, because it is not lexical: it asks the process where it is.
 
@@ -718,12 +723,12 @@ This is the one path operation that is not in `FS.Path`, because it is not lexic
 
   - `path` — the path to resolve
 
-**Returns**: the absolute path, or `None`
+**Returns**: the absolute path, or `ReadFailed`
 
 **Examples**
 
 ```kex
-FS.File.absolute("src/main.kex")   # => Just("/home/ada/proj/src/main.kex")
+FS.File.absolute("src/main.kex")   # => Ok("/home/ada/proj/src/main.kex")
 ```
 
 _Reporting a file unambiguously_
@@ -1004,7 +1009,7 @@ dirname(path: FilePath) -> String
 
 Returns the path's parent directory.
 
-A child of the root has `"/"` as its parent; a bare name has `"."`, the current directory.
+A child of the root has `"/"` as its parent; a bare name has `"."`, the current directory. The path is read as written, as POSIX `dirname` reads it: `".."` is a name here, not resolved, so `dirname("a/b/..")` is `"a/b"`. Use `normalize` first when that is not what you want.
 
 **Parameters**
 
@@ -1034,7 +1039,7 @@ basename(path: FilePath) -> String
 
 Returns the last segment of the path: the file or directory name.
 
-The root itself answers `"/"`, and an empty path answers `"."`.
+The root itself answers `"/"`, and an empty path answers `""`. Like `dirname`, it reads the path as written: `basename("a/b/..")` is `".."`.
 
 **Parameters**
 
@@ -1183,7 +1188,7 @@ matches.each { |p| IO.printLine(FS.Path.relativeTo(p, projectRoot)) }
 
 Creating, listing and removing directories.
 
-Like `FS.File`, everything here reaches the real filesystem and so is `foul`. Listings answer with an `Optional`, so a directory that cannot be read is a value you handle rather than an exception.
+Like `FS.File`, everything here reaches the real filesystem and so is `foul`. Listings answer with a `Result`, so a directory that cannot be read is a value you handle rather than an exception.
 
 ### `exists?`
 
@@ -1249,36 +1254,36 @@ FS.Directory.file?("README.md")   # => true
 ### `create`
 
 ```kex
-create(path: FilePath) -> Bool
+create(path: FilePath) -> Result<Void, FileError>
 ```
 
-Creates the directory at `path`.
+Creates the directory at `path`, and any missing parents along the way, as `mkdir -p` does. A directory that is already there is `Ok`.
 
 **Parameters**
 
   - `path` — the directory to create
 
-**Returns**: `true` when the directory was created
+**Returns**: `Ok` when the directory is there, or `CreateFailed`
 
 **Examples**
 
 ```kex
-FS.Directory.create("build")   # => true
+FS.Directory.create("build")   # => Ok(())
 ```
 
 _Making sure an output directory is there_
 
 ```kex
-FS.Directory.create(outDir) if !FS.Directory.exists?(outDir)
+FS.Directory.create(outDir).try
 ```
 
 ### `delete`
 
 ```kex
-delete(path: FilePath) -> Bool
+delete(path: FilePath) -> Result<Void, FileError>
 ```
 
-Removes the directory at `path`, which must be empty.
+Removes the directory at `path`, which must be empty. A file or a symlink at `path` is left alone and answers `DeleteFailed`.
 
 Use `deleteAll` to remove a directory together with its contents.
 
@@ -1286,21 +1291,21 @@ Use `deleteAll` to remove a directory together with its contents.
 
   - `path` — the directory to remove
 
-**Returns**: `true` when the directory was removed
+**Returns**: `Ok` when the directory was removed, or `DeleteFailed`
 
 **Examples**
 
 ```kex
-FS.Directory.delete("empty")   # => true
+FS.Directory.delete("empty")   # => Ok(())
 ```
 
 ### `deleteAll`
 
 ```kex
-deleteAll(path: FilePath) -> Bool
+deleteAll(path: FilePath) -> Result<Void, FileError>
 ```
 
-Removes the directory at `path` and everything inside it, recursively.
+Removes the directory at `path` and everything inside it, recursively. A path that is not a directory, a file or a symlink included, is left alone and answers `DeleteFailed`.
 
 This deletes data and cannot be undone: check the path before calling it, particularly when it was computed or came from user input.
 
@@ -1308,12 +1313,12 @@ This deletes data and cannot be undone: check the path before calling it, partic
 
   - `path` — the directory tree to remove
 
-**Returns**: `true` when the tree was removed
+**Returns**: `Ok` when the tree was removed, or `DeleteFailed`
 
 **Examples**
 
 ```kex
-FS.Directory.deleteAll("build")   # => true
+FS.Directory.deleteAll("build")   # => Ok(())
 ```
 
 _Rebuilding a scratch directory from clean_
@@ -1326,23 +1331,23 @@ FS.Directory.create(tmpDir)
 ### `list`
 
 ```kex
-list(path: FilePath) -> [String]?
+list(path: FilePath) -> Result<[String], FileError>
 ```
 
 Lists the names in `path`: both files and directories, one level deep.
 
-The results are bare names, not paths; join them with `path` to get something you can open. Answers `None` when the directory cannot be read.
+The results are bare names, not paths; join them with `path` to get something you can open. Answers `ReadFailed` when the directory cannot be read.
 
 **Parameters**
 
   - `path` — the directory to list
 
-**Returns**: the entry names, or `None`
+**Returns**: the entry names, or `ReadFailed`
 
 **Examples**
 
 ```kex
-FS.Directory.list("src")   # => Just(["main.kex", "lexer"])
+FS.Directory.list("src")   # => Ok(["main.kex", "lexer"])
 ```
 
 _Turning names into usable paths_
@@ -1354,7 +1359,7 @@ FS.Directory.list(dir).or([]).map { |name| FS.Path.join(dir, name) }
 ### `files`
 
 ```kex
-files(path: FilePath) -> [String]?
+files(path: FilePath) -> Result<[String], FileError>
 ```
 
 Lists only the regular files in `path`, one level deep.
@@ -1363,12 +1368,12 @@ Lists only the regular files in `path`, one level deep.
 
   - `path` — the directory to list
 
-**Returns**: the file names, or `None`
+**Returns**: the file names, or `ReadFailed`
 
 **Examples**
 
 ```kex
-FS.Directory.files("src")   # => Just(["main.kex"])
+FS.Directory.files("src")   # => Ok(["main.kex"])
 ```
 
 _Every Kex source in a directory_
@@ -1382,7 +1387,7 @@ FS.Directory.files(dir)
 ### `directories`
 
 ```kex
-directories(path: FilePath) -> [String]?
+directories(path: FilePath) -> Result<[String], FileError>
 ```
 
 Lists only the subdirectories of `path`, one level deep.
@@ -1391,12 +1396,12 @@ Lists only the subdirectories of `path`, one level deep.
 
   - `path` — the directory to list
 
-**Returns**: the directory names, or `None`
+**Returns**: the directory names, or `ReadFailed`
 
 **Examples**
 
 ```kex
-FS.Directory.directories("src")   # => Just(["lexer", "parser"])
+FS.Directory.directories("src")   # => Ok(["lexer", "parser"])
 ```
 
 _Walking one level down_
@@ -1482,7 +1487,7 @@ FS.File.delete(scratch)
 ### `createTemporary`
 
 ```kex
-createTemporary(prefix: String) -> FilePath?
+createTemporary(prefix: String) -> Result<FilePath, FileError>
 ```
 
 Creates a fresh, empty directory under `temporary` and returns its path.
@@ -1493,18 +1498,18 @@ The name is `prefix` followed by a random suffix, so concurrent callers using th
 
   - `prefix` — the start of the directory name, to say whose it is
 
-**Returns**: the new directory, or `None` when it could not be created
+**Returns**: the new directory, or `CreateFailed`
 
 **Examples**
 
 ```kex
-FS.Directory.createTemporary("report")   # => Just("/tmp/report-9f2c41d07ab35e68")
+FS.Directory.createTemporary("report")   # => Ok("/tmp/report-9f2c41d07ab35e68")
 ```
 
 _A scratch directory that cleans up after itself_
 
 ```kex
-let scratch = FS.Directory.createTemporary("build").or(die("no temporary directory"))
+let scratch = FS.Directory.createTemporary("build").try
 FS.File.write(FS.Path.join(scratch, "out.txt"), text)
 FS.Directory.deleteAll(scratch)
 ```

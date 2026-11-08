@@ -162,6 +162,48 @@ _Detecting a flag among arguments_
 args.any? { |a| a == "--verbose" }
 ```
 
+#### `none?`
+
+```kex
+none?(pred: (T -> Bool)) -> Bool
+```
+
+Returns `true` when no item satisfies `pred`: the opposite of `any?`. An empty collection answers `true`.
+
+**Parameters**
+
+  - `pred` — the test applied to each item
+
+**Returns**: `true` when nothing matches
+
+**Examples**
+
+```kex
+[1, 2, 3].none? { |n| n > 9 }   # => true
+[1, 2, 3].none? { |n| n > 2 }   # => false
+```
+
+#### `one?`
+
+```kex
+one?(pred: (T -> Bool)) -> Bool
+```
+
+Returns `true` when exactly one item satisfies `pred`.
+
+**Parameters**
+
+  - `pred` — the test applied to each item
+
+**Returns**: `true` for exactly one match
+
+**Examples**
+
+```kex
+[1, 2, 3].one? { |n| n > 2 }   # => true
+[1, 2, 3].one? { |n| n > 1 }   # => false
+```
+
 #### `find`
 
 ```kex

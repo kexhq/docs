@@ -961,9 +961,11 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 config<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-op">:</span>host<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">0.0.0.0</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; &quot;localhost&quot;</span>
 config<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-op">:</span>user<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">anonymous</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;anonymous&quot;</span>
 config<span class="tok-op">.</span><span class="tok-method">put</span><span class="tok-punct">(</span><span class="tok-op">:</span>port<span class="tok-punct">,</span> <span class="tok-number">9090</span><span class="tok-punct">)</span>             <span class="tok-comment"># =&gt; { :host: &quot;localhost&quot;, :port: 9090 }</span></code></pre>
-<p>A map is <a class="xref" href="/prelude/0.4.0-rc.3-dev/enumerable/#trait-enumerable"><code>Enumerable</code></a> and <a class="xref" href="/prelude/0.4.0-rc.3-dev/enumerable/#trait-foldable"><code>Foldable</code></a>, and the traversal blocks take the key and value as two parameters:</p>
+<p>A map is <a class="xref" href="/prelude/0.4.0-rc.3-dev/enumerable/#trait-enumerable"><code>Enumerable</code></a> and <a class="xref" href="/prelude/0.4.0-rc.3-dev/enumerable/#trait-foldable"><code>Foldable</code></a>, and every traversal block takes the key and value as two parameters: <code>each</code>, <code>map</code>, <code>filter</code>, <code>reject</code>, <code>find</code>, <code>any?</code>, <code>all?</code>, <code>none?</code>, <code>one?</code>, <code>count</code>, <code>collect</code> and <code>flatMap</code>, with <code>mapIndexed</code> adding the index as a third. Only <code>reduce</code>, the primitive, hands over the pair as one value.</p>
 <pre class="code"><code>config<span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>k<span class="tok-string">}</span><span class="tok-string"> = </span><span class="tok-string">${</span>v<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
-config<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> k <span class="tok-op">!=</span> <span class="tok-op">:</span>port <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; { :host: &quot;localhost&quot; }</span></code></pre>
+config<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> k <span class="tok-op">!=</span> <span class="tok-op">:</span>port <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; { :host: &quot;localhost&quot; }</span>
+config<span class="tok-op">.</span><span class="tok-method">collect</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> k <span class="tok-op">==</span> <span class="tok-op">:</span>port <span class="tok-keyword">then</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span>v<span class="tok-punct">)</span> <span class="tok-keyword">else</span> <span class="tok-bool">None</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; [8080]</span>
+config<span class="tok-op">.</span><span class="tok-method">mapIndexed</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-punct">,</span> i<span class="tok-op">|</span> <span class="tok-string">&quot;</span><span class="tok-string">${</span>i<span class="tok-string">}</span><span class="tok-string">. </span><span class="tok-string">${</span>k<span class="tok-string">}</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; [&quot;0. host&quot;, &quot;1. port&quot;]</span></code></pre>
 </div>
 <section class="entity" id="type-map">
 <h2><span class="kind kind-type">type</span> <code>Map&lt;K, V&gt;</code></h2>
@@ -1265,6 +1267,22 @@ totals                     <span class="tok-comment"># =&gt; { :visits: 1 }</spa
 <pre class="code"><code>defaults<span class="tok-op">.</span><span class="tok-method">merge</span><span class="tok-punct">(</span>userConfig<span class="tok-punct">)</span></code></pre>
 
 </div>
+<div class="fn" id="map-update">
+<h4><a class="self" href="#map-update"><code>update</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">update</span><span class="tok-punct">(</span>key<span class="tok-op">:</span> <span class="tok-type">K</span><span class="tok-punct">,</span> f<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">V</span> <span class="tok-op">-&gt;</span> <span class="tok-type">V</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><span class="tok-type">K</span><span class="tok-punct">,</span> <span class="tok-type">V</span><span class="tok-op">&gt;</span>
+<span class="tok-fn">update</span><span class="tok-punct">(</span>key<span class="tok-op">:</span> <span class="tok-type">K</span><span class="tok-punct">,</span> f<span class="tok-op">:</span> <span class="tok-type">V</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-type">V</span> <span class="tok-op">-&gt;</span> <span class="tok-type">V</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><span class="tok-type">K</span><span class="tok-punct">,</span> <span class="tok-type">V</span><span class="tok-op">&gt;</span></code></pre>
+<p>Replaces the value under <code>key</code> with <code>f</code> of it. A missing key is left missing: use the three-argument form to supply a starting value.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>key</code></dt><dd>the key to update</dd></div>
+<div class="param"><dt><code>f</code></dt><dd>computes the new value from the old</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the map with that one value replaced</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">update</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n <span class="tok-op">+</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; { &quot;a&quot;: 2 }</span>
+<span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">update</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n <span class="tok-op">+</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; { &quot;a&quot;: 1 }</span></code></pre>
+
+</div>
 <div class="fn" id="map-any?">
 <h4><a class="self" href="#map-any?"><code>any?</code></a> <a class="tag-trait" href="/prelude/0.4.0-rc.3-dev/enumerable/#foldable-any?" title="Implements Foldable.any?">Foldable</a></h4>
 <pre class="code sig"><code><span class="tok-fn">any?</span><span class="tok-punct">(</span>pred<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">K</span> <span class="tok-op">-&gt;</span> <span class="tok-type">V</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
@@ -1332,6 +1350,8 @@ totals                     <span class="tok-comment"># =&gt; { :visits: 1 }</spa
 <h3>From <a class="xref" href="/prelude/0.4.0-rc.3-dev/enumerable/#trait-foldable"><code>Foldable</code></a></h3>
 <dl class="params inherited">
 <div class="param"><dt><a class="xref" href="/prelude/0.4.0-rc.3-dev/enumerable/#foldable-eachindexed"><code>eachIndexed</code></a></dt><dd>Calls <code>f</code> with each item and its 0-based position, for its side effects.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-rc.3-dev/enumerable/#foldable-none?"><code>none?</code></a></dt><dd>Returns <code>true</code> when no item satisfies <code>pred</code>: the opposite of <code>any?</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-rc.3-dev/enumerable/#foldable-one?"><code>one?</code></a></dt><dd>Returns <code>true</code> when exactly one item satisfies <code>pred</code>.</dd></div>
 </dl>
 <h3>From <a class="xref" href="/prelude/0.4.0-rc.3-dev/algebra/#trait-monoid"><code>Monoid</code></a></h3>
 <dl class="params inherited">
@@ -1343,11 +1363,31 @@ totals                     <span class="tok-comment"># =&gt; { :visits: 1 }</spa
 </dl>
 
 </section>
+<section class="entity" id="module-map">
+<h2><span class="kind kind-module">module</span> <code>Map</code></h2>
+<div class="functions">
+<div class="fn" id="function-map-from">
+<h3><a class="self" href="#function-map-from"><code>from</code></a></h3>
+<pre class="code sig"><code><span class="tok-keyword">from</span><span class="tok-punct">(</span>entries<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-type">K</span><span class="tok-punct">,</span> <span class="tok-type">V</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><span class="tok-type">K</span><span class="tok-punct">,</span> <span class="tok-type">V</span><span class="tok-op">&gt;</span></code></pre>
+<p>Builds a map from <code>(key, value)</code> pairs. A key that appears more than once keeps its last value, as <code>put</code> would. Ruby spells this <code>to_h</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>entries</code></dt><dd>the pairs</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the map</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Map</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; { &quot;a&quot;: 1, &quot;b&quot;: 2 }</span>
+<span class="tok-type">Map</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span>m<span class="tok-op">.</span><span class="tok-method">entries</span><span class="tok-punct">)</span> <span class="tok-op">==</span> m         <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+</div>
+</section>
+
 
         </article>
       </main>
       <aside class="toc" aria-label="On this page">
-        
+        <nav><p class="toc-heading">On this page</p><ul><li><a href="#type-map">Map</a></li><li><a href="#module-map">Map</a></li></ul></nav>
       </aside>
     </div>
     <footer class="foot">

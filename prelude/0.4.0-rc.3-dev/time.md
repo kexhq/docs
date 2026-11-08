@@ -22,6 +22,9 @@ entities:
   - { kind: make, name: "Date" }
   - { kind: make, name: "Time" }
   - { kind: make, name: "DateTime" }
+  - { kind: record, name: "DateFormat" }
+  - { kind: module, name: "DateFormat" }
+  - { kind: make, name: "TimeError" }
 ---
 
 # Time
@@ -89,7 +92,29 @@ A field out of range, or text that is not a date/time.
   - `InvalidTime(Integer, Integer, Integer)`
   - `InvalidFormat(String)`
 
+Implements [`Showable`](kex.md#trait-showable).
 
+### Functions
+
+#### `showValue` (from Showable)
+
+```kex
+showValue : String
+```
+
+Shows the failure as the sentence `Time.errorMessage` writes, so `"${e}"` explains itself rather than printing the constructor.
+
+**Returns**: the message
+
+**Examples**
+
+```kex
+"${InvalidDate(2026, 13, 1)}"   # => "not a calendar date: 2026-13-1"
+```
+
+### From [`Showable`](kex.md#trait-showable)
+
+  - [`to`](kex.md#showable-to) — 
 
 ## record `Date`
 
@@ -659,9 +684,28 @@ Date.of(2026, 7, 30).try.at(Time.of(9, 0, 0).try, Duration.zero()).iso
 # => "2026-07-30T09:00:00Z"
 ```
 
-### From [`Showable`](kex.md#trait-showable)
+#### `to`
 
-  - [`to`](kex.md#showable-to) — 
+```kex
+to(String: Type, format: DateFormat, culture: Culture) -> String?
+```
+
+Writes the date by a CLDR pattern, with English month and weekday names. Patterns are described at `Date.format`.
+
+**Parameters**
+
+  - `String` — the target type
+  - `format` — the pattern
+
+**Returns**: the text, or `None` when the pattern asks for a time field, which a date does not have
+
+**Examples**
+
+```kex
+Date.of(2026, 11, 7).try.to(String, Date.format`yyyy-MM-dd`)   # => Just("2026-11-07")
+Date.of(2026, 11, 7).try.to(String, Date.format`EEEE, d MMMM yyyy`)
+# => Just("Saturday, 7 November 2026")
+```
 
 ## record `Time`
 
@@ -782,7 +826,7 @@ Advances the time of day by a span, wrapping within the day.
 
 A Time has no date to carry into, so 23:00 + 2.hours is 01:00. Reach for `DateTime` when the day rolling over is something you need to see.
 
-The nanosecond field rides along untouched: `wholeSeconds` truncates the span, so a sub-second Duration shifts nothing.
+Sub-second spans count: the nanoseconds carry into the seconds.
 
 **Parameters**
 
@@ -793,8 +837,9 @@ The nanosecond field rides along untouched: `wholeSeconds` truncates the span, s
 **Examples**
 
 ```kex
-(Time.of(14, 3, 0).try + 2.hours).iso    # => "16:03:00"
-(Time.of(23, 0, 0).try + 2.hours).iso    # => "01:00:00"
+(Time.of(14, 3, 0).try + 2.hours).iso            # => "16:03:00"
+(Time.of(23, 0, 0).try + 2.hours).iso            # => "01:00:00"
+(Time.of(14, 3, 0).try + 500.milliseconds).iso   # => "14:03:00.500"
 ```
 
 #### `-`
@@ -936,9 +981,27 @@ Orders this time of day against another, nanoseconds included.
 Time.of(14, 3, 0).try.compareTo(Time.of(15, 0, 0).try)   # => Less
 ```
 
-### From [`Showable`](kex.md#trait-showable)
+#### `to`
 
-  - [`to`](kex.md#showable-to) — 
+```kex
+to(String: Type, format: DateFormat, culture: Culture) -> String?
+```
+
+Writes the time of day by a CLDR pattern. Patterns are described at `Date.format`.
+
+**Parameters**
+
+  - `String` — the target type
+  - `format` — the pattern
+
+**Returns**: the text, or `None` when the pattern asks for a date or an offset field, which a time of day does not have
+
+**Examples**
+
+```kex
+Time.of(14, 3, 0).try.to(String, Date.format`HH:mm`)     # => Just("14:03")
+Time.of(14, 3, 0).try.to(String, Date.format`h:mm a`)    # => Just("2:03 PM")
+```
 
 ## record `DateTime`
 
@@ -950,7 +1013,7 @@ m.iso        # => "2026-07-30T14:03:00+02:00"
 m.utc.iso    # => "2026-07-30T12:03:00Z"
 ```
 
-Two `DateTime` values that name the same instant compare equal whatever offsets they are written at: comparison goes through `epochSeconds`.
+Two `DateTime` values that name the same instant order `Equal` under `compareTo` whatever offsets they are written at: ordering goes through `epochSeconds`. `==` is structural, so the same instant written at two offsets is not `==`; compare `epochSeconds` (or `utc`) for that.
 
 **Fields**
 
@@ -1319,9 +1382,27 @@ _Sorting events by when they happened_
 events.sort { |a, b| a.at.compareTo(b.at) == Less }
 ```
 
-### From [`Showable`](kex.md#trait-showable)
+#### `to`
 
-  - [`to`](kex.md#showable-to) — 
+```kex
+to(String: Type, format: DateFormat, culture: Culture) -> String?
+```
+
+Writes the instant by a CLDR pattern, as read at its own offset. Patterns are described at `Date.format`.
+
+**Parameters**
+
+  - `String` — the target type
+  - `format` — the pattern
+
+**Returns**: the text, or `None` for a pattern that is not valid
+
+**Examples**
+
+```kex
+DateTime.parse("2026-07-30T14:03:00+02:00").try.to(String, Date.format`yyyy-MM-dd HH:mm XXX`)
+# => Just("2026-07-30 14:03 +02:00")
+```
 
 ## record `Period`
 
@@ -1982,6 +2063,8 @@ Kex's `/` truncates toward zero; instants before the epoch need the floor.
 truncatedBy(seconds: Float, unit: Float) -> Integer
 ```
 
+A Duration holds Float seconds, so it is rounded to the nanosecond, the finest unit it names, before truncating: 7.nanoseconds is 7e-9 seconds, and dividing that by 1e-9 directly gives 6.999... and so 6.
+
 ### `pad2`
 
 ```kex
@@ -2012,11 +2095,21 @@ digitsIn(fragment: String, whole: String) -> Result<Integer, TimeError>
 
 Digits, with the failure reported against the WHOLE input rather than the fragment that failed: `Time.parse("2:03 pm")` should complain about "2:03 pm", not about "03 pm".
 
+### `fixedDigitsIn`
+
+```kex
+fixedDigitsIn(fragment: String, width: Integer, whole: String) -> Result<Integer, TimeError>
+```
+
+The same, for a field ISO 8601 writes at a fixed width: "14", never "2".
+
 ### `digitsToInteger`
 
 ```kex
 digitsToInteger(text: String) -> Result<Integer, TimeError>
 ```
+
+ASCII digits only: Integer.parse would also take a sign or surrounding space, and none of those belongs inside an ISO 8601 field.
 
 ### `parseFraction`
 
@@ -2024,7 +2117,7 @@ digitsToInteger(text: String) -> Result<Integer, TimeError>
 parseFraction(text: String, whole: String) -> Result<Integer, TimeError>
 ```
 
-".5" is 500000000ns: the digits are padded out to nanosecond scale.
+".5" is 500000000ns: the digits are padded out to nanosecond scale. The caller has seen the ".", so an empty fraction is malformed, not zero.
 
 ### `splitOffset`
 
@@ -2122,6 +2215,59 @@ days.count { |d| !d.weekday.weekend? }
 
 Building calendar dates, and asking what today is.
 
+### `format`
+
+```kex
+format(parts: [String], values: [Any]) -> DateFormat
+```
+
+Builds a `DateFormat` from a CLDR pattern, for `to(String, format)` on a `Date`, a `Time` or a `DateTime`.
+
+A pattern that does not fit makes `to(String, format)` answer `None`; `DateFormat.parse` says where it goes wrong, and `validateFormat` is the companion check for the tagged literal. Letters are fields, repeated for width; quote literal letters, as in `'at'`, and write `''` for a quote itself. Anything else is written as it stands.
+
+- `yyyy` the year, `yy` its last two digits
+- `M` / `MM` the month number, `MMM` / `MMMM` its short / full name
+- `d` / `dd` the day of the month
+- `EEE` / `EEEE` the short / full weekday name
+- `H` / `HH` the hour 0-23, `h` / `hh` the hour 1-12, `a` AM or PM
+- `m` / `mm` minutes, `s` / `ss` seconds, `S` up to `SSSSSSSSS` the
+  fraction of a second
+- `XXX` the offset as `-05:00`, or `Z` for UTC; `xxx` the same without `Z`
+  (`XX` / `xx` write `-0500`, and one letter writes `-05`)
+
+Names come from the culture passed to `to(String, format, culture:)`, English without one.
+
+**Parameters**
+
+  - `parts` — the literal pieces of the tagged literal
+  - `values` — the interpolated values
+
+**Returns**: the format
+
+**Examples**
+
+```kex
+let d = Date.of(2026, 11, 7).try
+d.to(String, Date.format`yyyy-MM-dd`)        # => Just("2026-11-07")
+d.to(String, Date.format`EEE, d MMM yyyy`)   # => Just("Sat, 7 Nov 2026")
+d.to(String, Date.format`d MMMM yyyy`, culture: Culture.of("HU_HU").or(Culture.DEFAULT))
+# => Just("7 november 2026")
+```
+
+### `validateFormat`
+
+```kex
+validateFormat(source: String) -> [TaggedValidation.Issue]
+```
+
+Checks a `Date.format` pattern during compilation, pointing at the first character that does not fit.
+
+**Parameters**
+
+  - `source` — the pattern
+
+**Returns**: the problem found, if any
+
 ### `of`
 
 ```kex
@@ -2205,9 +2351,9 @@ Date.parse("2026-02-30")                     # => Error(InvalidDate(2026, 2, 30)
 now : Date
 ```
 
-Today's date, in this machine's zone.
+Today's date, in this machine's zone. The same as `Date.today()`.
 
-`Date.today()` reads better in most code; `now` exists so every type in this file answers the same question the same way.
+`Date.today()` reads better in most code; `now` exists so every type in this file answers the same question the same way: `Date.now()`, `Time.now()` and `DateTime.now()`.
 
 **Returns**: today's date
 
@@ -2281,7 +2427,7 @@ Date.yesterday().iso   # => "2026-07-29"
 utcNow : Date
 ```
 
-Today's date in UTC, whatever this machine's zone is.
+Today's date in UTC, whatever this machine's zone is. The same as `Date.utcToday()`, under the name every type in this file shares.
 
 **Returns**: today's UTC date
 
@@ -2297,7 +2443,7 @@ Date.utcNow().iso   # => "2026-07-30"
 utcToday : Date
 ```
 
-Today's date in UTC. The same as `Date.utcNow()`, under the name that reads better.
+Today's date in UTC, whatever this machine's zone is.
 
 **Returns**: today's UTC date
 
@@ -2712,6 +2858,8 @@ This many weeks, as a `Duration`: a fixed 604800 seconds each.
 
 More functions for [`Duration`](units.md#record-duration), added by this module.
 
+Implements [`Showable`](kex.md#trait-showable).
+
 ### `wholeNanoseconds`
 
 ```kex
@@ -3066,6 +3214,41 @@ _Sorting by length_
 spans.sort { |a, b| a.compareTo(b) == Less }
 ```
 
+### `iso`
+
+```kex
+iso : String
+```
+
+The span in ISO 8601 form: hours, minutes and seconds, with the fraction of a second written as `iso` on a `Time` writes it. A zero span is `PT0S`, and a negative one carries a leading `-`.
+
+**Returns**: the ISO 8601 duration
+
+**Examples**
+
+```kex
+90.minutes.iso          # => "PT1H30M"
+500.milliseconds.iso    # => "PT0.500S"
+(-2).seconds.iso        # => "-PT2S"
+Duration.zero().iso     # => "PT0S"
+```
+
+### `showValue` (from Showable)
+
+```kex
+showValue : String
+```
+
+Shows the span as its ISO 8601 form, as `iso` writes it, so interpolating a `Duration` reads as a span rather than as its record.
+
+**Returns**: the ISO 8601 duration
+
+**Examples**
+
+```kex
+"${90.seconds}"   # => "PT1M30S"
+```
+
 ## module `Duration`
 
 Building elapsed spans, and UTC offsets.
@@ -3371,3 +3554,127 @@ A span of `count` weeks, recorded as that many times seven days.
 ```kex
 Period.weeks(2).iso   # => "P14D"
 ```
+
+## record `DateFormat`
+
+How `to(String, format)` writes a date, a time of day or an instant: a CLDR pattern such as `"yyyy-MM-dd HH:mm"`, described at `Date.format`. Build one with the `Date.format` tagged literal, or with `DateFormat.parse`, which says where a pattern known only at run time goes wrong.
+
+**Fields**
+
+  - `pattern` : [String](string.md#make-string)
+
+
+
+## module `DateFormat`
+
+### `parse`
+
+```kex
+parse(pattern: String) -> Result<DateFormat, ParseError>
+```
+
+Checks a pattern known only at run time. `Date.format` describes the patterns.
+
+**Parameters**
+
+  - `pattern` — the pattern
+
+**Returns**: the format, or where the pattern goes wrong
+
+**Examples**
+
+```kex
+DateFormat.parse("yyyy-MM-dd")   # => Ok(DateFormat { pattern: "yyyy-MM-dd" })
+DateFormat.parse("yyyy-QQ")      # => Error(ParseError { position: 5, ... })
+```
+
+### `pieces`
+
+```kex
+pieces(pattern: String) -> Result<[Piece], (Integer, String)>
+```
+
+Splits a pattern into its fields and its literal text. Otherwise the index of its first problem, and what that problem is.
+
+**Parameters**
+
+  - `pattern` — the pattern
+
+**Returns**: the pieces, or the problem
+
+**Examples**
+
+```kex
+DateFormat.pieces("d MMM")   # => Ok([PatternField('d', 1), PatternText(" "), PatternField('M', 3)])
+```
+
+### `renderParts`
+
+```kex
+renderParts : DateFormat -> Date? -> Time? -> Duration? -> Culture -> String?
+```
+
+Writes `date`, `time` and `offset` (whichever the value has) by the pieces of a pattern, with `culture`'s names. `None` when the pattern asks for a field the value does not have, such as an hour of a `Date`.
+
+The `to(String, format)` functions on `Date`, `Time` and `DateTime` are the way to reach this.
+
+**Parameters**
+
+  - `format` — the pattern
+  - `date` — the calendar date, when the value has one
+  - `time` — the time of day, when the value has one
+  - `offset` — the offset from UTC, when the value has one
+  - `culture` — where month, weekday and day-period names come from
+
+**Returns**: the text, or `None`
+
+### `dateLayout`
+
+```kex
+dateLayout(culture: Culture) -> String
+```
+
+The pattern a culture writes its dates in: year, month and day in its order, joined by its date separator. ISO order without a time section.
+
+**Parameters**
+
+  - `culture` — the culture
+
+**Returns**: the pattern, such as `"dd.MM.yyyy"`
+
+**Examples**
+
+```kex
+DateFormat.dateLayout(Culture.of("DE_DE").or(Culture.DEFAULT))   # => "dd.MM.yyyy"
+```
+
+### `timeLayout`
+
+```kex
+timeLayout(culture: Culture) -> String
+```
+
+The pattern a culture writes a time of day in: hours, minutes and seconds joined by its time separator, on a 12-hour clock with a day period where the culture reads time that way.
+
+**Parameters**
+
+  - `culture` — the culture
+
+**Returns**: the pattern, such as `"HH:mm:ss"` or `"h:mm:ss a"`
+
+**Examples**
+
+```kex
+DateFormat.timeLayout(Culture.of("EN_US").or(Culture.DEFAULT))   # => "h:mm:ss a"
+```
+
+## type `Piece`
+
+One piece of a pattern: a field letter written `width` times, or text written as it stands.
+
+**Variants**
+
+  - `PatternField(Char, Integer)`
+  - `PatternText(String)`
+
+

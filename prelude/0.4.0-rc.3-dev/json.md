@@ -14,13 +14,13 @@ entities:
 ### `parse`
 
 ```kex
-parse(text: String) -> Result<Any, Error>
-parse(text: String, options: {Atom: Bool}) -> Result<Any, Error>
+parse(text: String) -> Result<Any, JSONError>
+parse(text: String, options: {Atom: Bool}) -> Result<Any, JSONError>
 ```
 
 Parses a JSON document, strictly.
 
-The whole text must be one JSON value with nothing after it: trailing input is `TrailingInput`, not a silently ignored tail. Objects come back as maps with atom keys, arrays as lists, `null` as `None`.
+The whole text must be one JSON value with nothing after it: trailing input is `TrailingInput`, not a silently ignored tail. Objects come back as maps with string keys, arrays as lists, `null` as `None`.
 
 **Parameters**
 
@@ -32,7 +32,7 @@ The whole text must be one JSON value with nothing after it: trailing input is `
 
 ```kex
 JSON.parse("{\"a\": 1, \"b\": [true, null, 2.5]}")
-# => Ok({ a: 1, b: [true, None, 2.5] })
+# => Ok({ "a": 1, "b": [true, None, 2.5] })
 JSON.parse("[1, 2")   # => Error(UnexpectedEnd(5))
 ```
 
@@ -55,7 +55,7 @@ Renders a Kex value as strict JSON text.
 
 Maps become objects, lists become arrays, `None` becomes `null`, and strings are escaped. A map written with atom keys (the usual Kex spelling) renders with those names as strings, so `{ name: "Ada" }` becomes `{"name":"Ada"}`. Object keys come out in canonical key order.
 
-Anything the encoder does not recognise renders as `null` rather than failing, so this never raises.
+Records become objects of their fields, in declaration order; tuples become arrays; atoms, characters and constructors without a payload (`Monday`) become strings. A constructor that carries a payload, such as `Ok(1)`, has no JSON shape of its own and renders as `null` (`Just(x)` is the exception: it is `x`), as does anything else the encoder does not recognise, so this never raises.
 
 **Parameters**
 
@@ -69,7 +69,7 @@ Anything the encoder does not recognise renders as `null` rather than failing, s
 JSON.stringify({ name: "Ada", n: 1, ok: true })
 # => '{"n":1,"name":"Ada","ok":true}'
 JSON.stringify([1, 2, 3])
-# => '[1,2,3]'
+# => "[1,2,3]"
 ```
 
 _Writing a JSON file_
@@ -81,10 +81,10 @@ FS.File.write("out.json", JSON.stringify(report))
 _A round trip_
 
 ```kex
-JSON.parse(JSON.stringify({ a: 1 }))   # => Ok({ a: 1 })
+JSON.parse(JSON.stringify({ "a": 1 }))   # => Ok({ "a": 1 })
 ```
 
-## type `Error`
+## type `JSONError`
 
 Why a document could not be parsed. Every variant carries the position in the input where the parser stopped, so a caller can point at the problem.
 

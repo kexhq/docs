@@ -454,9 +454,15 @@ Duration is an elapsed span used by Time, Date, and DateTime. A time Measure is 
 
   - `seconds` : [Float](number.md#make-float)
 
+Implements [`Showable`](kex.md#trait-showable).
+
+### From [`Showable`](kex.md#trait-showable)
+
+  - [`to`](kex.md#showable-to) — 
+
 ### Defined in other modules
 
-  - [Time](time.md#make-duration): [`wholeNanoseconds`](time.md#duration-wholenanoseconds), [`wholeMicroseconds`](time.md#duration-wholemicroseconds), [`+`](time.md#duration-op-plus), [`-`](time.md#duration-op-minus), [`negated`](time.md#duration-negated), [`*`](time.md#duration-op-times), [`/`](time.md#duration-op-div), [`abs`](time.md#duration-abs), [`zero?`](time.md#duration-zero?), [`negative?`](time.md#duration-negative?), [`positive?`](time.md#duration-positive?), [`shorterThan?`](time.md#duration-shorterthan?), [`longerThan?`](time.md#duration-longerthan?), [`wholeMilliseconds`](time.md#duration-wholemilliseconds), [`wholeSeconds`](time.md#duration-wholeseconds), [`wholeMinutes`](time.md#duration-wholeminutes), [`wholeHours`](time.md#duration-wholehours), [`wholeDays`](time.md#duration-wholedays), [`wholeWeeks`](time.md#duration-wholeweeks), [`compareTo`](time.md#duration-compareto)
+  - [Time](time.md#make-duration): [`wholeNanoseconds`](time.md#duration-wholenanoseconds), [`wholeMicroseconds`](time.md#duration-wholemicroseconds), [`+`](time.md#duration-op-plus), [`-`](time.md#duration-op-minus), [`negated`](time.md#duration-negated), [`*`](time.md#duration-op-times), [`/`](time.md#duration-op-div), [`abs`](time.md#duration-abs), [`zero?`](time.md#duration-zero?), [`negative?`](time.md#duration-negative?), [`positive?`](time.md#duration-positive?), [`shorterThan?`](time.md#duration-shorterthan?), [`longerThan?`](time.md#duration-longerthan?), [`wholeMilliseconds`](time.md#duration-wholemilliseconds), [`wholeSeconds`](time.md#duration-wholeseconds), [`wholeMinutes`](time.md#duration-wholeminutes), [`wholeHours`](time.md#duration-wholehours), [`wholeDays`](time.md#duration-wholedays), [`wholeWeeks`](time.md#duration-wholeweeks), [`compareTo`](time.md#duration-compareto), [`iso`](time.md#duration-iso), [`showValue`](time.md#duration-showvalue)
 
 ## type `TimeUnit`
 

@@ -1027,32 +1027,42 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <div class="fn" id="function-io-getline">
 <h3><a class="self" href="#function-io-getline"><code>getLine</code></a></h3>
 <pre class="code sig"><code>getLine <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
-<p>Reads one line from stdin, without the trailing newline.</p>
-<p>Returns <code>None</code> at end of input, which is what makes it usable as a loop condition: the <code>None</code> is the end of the stream, not an error.</p>
-<p class="returns"><strong>Returns</strong> the line, or <code>None</code> at end of input</p>
+<p>Reads one line from stdin, without its line ending.</p>
+<p>The same read as <code>IO.in.getLine</code>: <code>None</code> both at the end of the input and on a failed read, which is what interactive code wants. Use <code>IO.readLine</code> when the two need telling apart.</p>
+<p class="returns"><strong>Returns</strong> the line, or <code>None</code> at end of input or on failure</p>
 <h5>Examples</h5>
 <p class="caption"><em>Reading an answer with a default</em></p>
 <pre class="code"><code><span class="tok-keyword">let</span> answer <span class="tok-op">=</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">getLine</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-io-readline">
+<h3><a class="self" href="#function-io-readline"><code>readLine</code></a></h3>
+<pre class="code sig"><code>readLine <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">String?</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/filehandle/#type-readerror"><span class="tok-type">ReadError</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Reads one line from stdin, without its line ending, reporting a failure.</p>
+<p>The same read as <code>IO.in.readLine</code>: <code>Ok(None)</code> at end of input, which is what makes it usable as a loop condition, and an <code>Error</code> only when the input cannot be read as text.</p>
+<p class="returns"><strong>Returns</strong> the line, <code>Ok(None)</code> at end of input, or why it could not be read</p>
+<h5>Examples</h5>
 <p class="caption"><em>Draining stdin line by line</em></p>
 <pre class="code"><code><span class="tok-keyword">foul</span> echoAll <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span> <span class="tok-keyword">do</span>
-  <span class="tok-keyword">match</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">getLine</span> <span class="tok-keyword">do</span>
-    <span class="tok-bool">Just</span><span class="tok-punct">(</span>line<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">match</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">readLine</span> <span class="tok-keyword">do</span>
+    <span class="tok-bool">Ok</span><span class="tok-punct">(</span><span class="tok-bool">Just</span><span class="tok-punct">(</span>line<span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-keyword">do</span>
       <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>line<span class="tok-punct">)</span>
       echoAll
     <span class="tok-keyword">end</span>
-    <span class="tok-bool">None</span> <span class="tok-op">=&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-bool">Ok</span><span class="tok-punct">(</span><span class="tok-bool">None</span><span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">)</span>
+    <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cannot read stdin: </span><span class="tok-string">${</span>e<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
   <span class="tok-keyword">end</span>
 <span class="tok-keyword">end</span></code></pre>
 
 </div>
-<div class="fn" id="function-io-get">
-<h3><a class="self" href="#function-io-get"><code>get</code></a></h3>
-<pre class="code sig"><code>get <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
-<p>Reads a single character from stdin.</p>
-<p>Returns <code>None</code> at end of input. Note that the result is a one-character <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><code>String</code></a>, not a <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-char"><code>Char</code></a>.</p>
-<p class="returns"><strong>Returns</strong> the character, or <code>None</code> at end of input</p>
+<div class="fn" id="function-io-getchar">
+<h3><a class="self" href="#function-io-getchar"><code>getChar</code></a></h3>
+<pre class="code sig"><code>getChar <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
+<p>Reads a single character from stdin, as <code>IO.in.getChar</code> does.</p>
+<p>Note that the character is a one-character <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><code>String</code></a>, not a <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-char"><code>Char</code></a>.</p>
+<p class="returns"><strong>Returns</strong> the character, or <code>None</code> at end of input or on failure</p>
 <h5>Examples</h5>
-<pre class="code"><code><span class="tok-keyword">let</span> key <span class="tok-op">=</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<pre class="code"><code><span class="tok-keyword">let</span> key <span class="tok-op">=</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">getChar</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
 <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">you pressed </span><span class="tok-string">${</span>key<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </div>
@@ -1071,30 +1081,6 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <p class="caption"><em>Keeping stdout clean for the real result</em></p>
 <pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">scanning </span><span class="tok-string">${</span>dir<span class="tok-string">}</span><span class="tok-string">...</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># progress, on stderr</span>
 <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>results<span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>      <span class="tok-comment"># the output, on stdout</span></code></pre>
-
-</div>
-<div class="fn" id="function-io-warn">
-<h3><a class="self" href="#function-io-warn"><code>warn</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">warn</span><span class="tok-punct">(</span>msg<span class="tok-op">:</span> <span class="tok-type">Showable</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
-<p>Writes <code>msg</code> to stderr. Identical to <code>printError</code>, named for the case where the message is a warning rather than a failure.</p>
-<h5>Parameters</h5>
-<dl class="params">
-<div class="param"><dt><code>msg</code></dt><dd>the warning to write</dd></div>
-</dl>
-<h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">warn</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">ignoring unknown key </span><span class="tok-string">${</span>key<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
-
-</div>
-<div class="fn" id="function-io-warning">
-<h3><a class="self" href="#function-io-warning"><code>warning</code></a></h3>
-<pre class="code sig"><code><span class="tok-fn">warning</span><span class="tok-punct">(</span>msg<span class="tok-op">:</span> <span class="tok-type">Showable</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
-<p>Writes <code>msg</code> to stderr. The long spelling of <code>warn</code>.</p>
-<h5>Parameters</h5>
-<dl class="params">
-<div class="param"><dt><code>msg</code></dt><dd>the warning to write</dd></div>
-</dl>
-<h5>Examples</h5>
-<pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">warning</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">this option is deprecated</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
 </div>
 <div class="fn" id="constant-io-out">
@@ -1118,7 +1104,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <div class="fn" id="constant-io-error">
 <h3><a class="self" href="#constant-io-error"><code>error</code></a> <span class="tag-kind">constant</span></h3>
 <pre class="code sig"><code>error <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/filehandle/#type-filehandle"><span class="tok-type">FileHandle</span></a><span class="tok-op">&lt;</span><span class="tok-type">CannotRead</span><span class="tok-punct">,</span> <span class="tok-type">CanWrite</span><span class="tok-op">&gt;</span></code></pre>
-<p>Standard error, as a handle. The sink <code>IO.printError</code> and <code>IO.warn</code> write to, reachable as a value.</p>
+<p>Standard error, as a handle. The sink <code>IO.printError</code> writes to, reachable as a value.</p>
 <h5>Examples</h5>
 <pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">error</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">config file not found</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
 
@@ -1126,7 +1112,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <div class="fn" id="constant-io-in">
 <h3><a class="self" href="#constant-io-in"><code>in</code></a> <span class="tag-kind">constant</span></h3>
 <pre class="code sig"><code><span class="tok-keyword">in</span> <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/filehandle/#type-filehandle"><span class="tok-type">FileHandle</span></a><span class="tok-op">&lt;</span><span class="tok-type">CanRead</span><span class="tok-punct">,</span> <span class="tok-type">CannotWrite</span><span class="tok-op">&gt;</span></code></pre>
-<p>Standard input, as a handle. The source <code>IO.getLine</code> and <code>IO.get</code> read from, reachable as a value.</p>
+<p>Standard input, as a handle. The source <code>IO.getLine</code>, <code>IO.readLine</code> and <code>IO.getChar</code> read from, reachable as a value.</p>
 <h5>Examples</h5>
 <p class="caption"><em>Reading from a file or from a pipe, with one function</em></p>
 <pre class="code"><code><span class="tok-keyword">foul</span> <span class="tok-fn">firstLine</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <span class="tok-type">Readable</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-keyword">do</span>

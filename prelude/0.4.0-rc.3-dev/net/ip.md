@@ -128,7 +128,7 @@ On a listening endpoint this usually means "all local interfaces". It is not a u
 _Warning before binding a service on every interface_
 
 ```kex
-IO.warn("service will be publicly reachable") if bind.unspecified?
+IO.printError("service will be publicly reachable") if bind.unspecified?
 ```
 
 #### `multicast?`

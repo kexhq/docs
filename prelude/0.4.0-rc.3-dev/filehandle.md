@@ -5,6 +5,7 @@ source: filehandle.kex
 title: FileHandle
 entities:
   - { kind: type, name: "ReadError" }
+  - { kind: type, name: "WriteError" }
   - { kind: trait, name: "Readable" }
   - { kind: trait, name: "Writable" }
   - { kind: trait, name: "Closeable" }
@@ -29,15 +30,27 @@ Why a read failed.
 
 
 
+## type `WriteError`
+
+Why a write failed: the sink refused it. A closed handle, a full device, or standard input all answer `WriteFailed`.
+
+**Variants**
+
+  - `WriteFailed`
+
+
+
 ## trait `Readable`
 
-`Readable`: a source that yields text.
+`Readable`: a source of bytes and text.
 
 `IO.in` and file handles opened for reading are `Readable`. Accept this trait when your function should work with either source.
 
+Two families read text. The `read` family (`readLine`, `read`, `readBytes`) answers a `Result`, so a failed read can be told apart from the end of the input. The `get` family is the short form: `getLine` answers an `Optional`, `None` both at the end and on a failed read, which is what most interactive code wants. `get` itself is the primitive the rest stand on: the next chunk of raw bytes.
+
 ```kex
 foul firstLine(source: Readable) -> String do
-  source.getLine.try.or("(empty)")
+  source.getLine.or("(empty)")
 end
 
 firstLine(IO.in)
@@ -48,27 +61,15 @@ Implemented by [`FileHandle<CanRead, W>`](#make-filehandle-canread).
 
 ### Required functions
 
-#### `getLine`
-
-```kex
-getLine : Result<String?, ReadError>
-```
-
-Reads the next line, without its newline.
-
-**Returns**: the next line, `Ok(None)` at end of input, or the failure
-
 #### `get`
 
 ```kex
-get : Result<String?, ReadError>
+get : Result<Binary?, ReadError>
 ```
 
-Reads a single character, as a one-character `String`.
+Reads the next chunk of bytes: whatever the source has ready, up to its buffer size. Standard input answers one line at a time, newline included.
 
-Reads one complete Unicode scalar, not one byte.
-
-**Returns**: the next character, `Ok(None)` at end of input, or the failure
+**Returns**: the next chunk, `Ok(None)` at end of input, or the failure
 
 #### `readLine`
 
@@ -76,9 +77,19 @@ Reads one complete Unicode scalar, not one byte.
 readLine : Result<String?, ReadError>
 ```
 
-Reads the next line, without its newline. The same as `getLine`.
+Reads the next line, without its newline.
 
 **Returns**: the next line, `Ok(None)` at end of input, or the failure
+
+#### `getLine`
+
+```kex
+getLine : String?
+```
+
+Reads the next line, without its newline: `readLine` for when the end of the input and a failed read mean the same thing.
+
+**Returns**: the next line, or `None` at end of input or on failure
 
 #### `read`
 
@@ -114,23 +125,15 @@ Returns `true` when the source has reached its end.
 
 **Returns**: `true` at end of input
 
-#### `atEnd?`
-
-```kex
-atEnd? : Bool
-```
-
-Returns `true` when the source has reached its end. The same as `eof?`.
-
-**Returns**: `true` at end of input
-
 
 
 ## trait `Writable`
 
-`Writable`: a sink that accepts text.
+`Writable`: a sink for bytes and text.
 
 Accept a `Writable` parameter to let callers choose standard output, standard error, or a file as the destination.
+
+Two families write text. The `write` family (`put`, `write`, `writeLine`) answers a `Result`, for when a failed write matters. The `print` family (`print`, `printLine`) answers `Void`, for output where there is nothing useful to do about a failure. `put` is the primitive the rest stand on: raw bytes, verbatim.
 
 ```kex
 foul report(out: Writable, lines: [String]) -> Void do
@@ -142,28 +145,30 @@ report(IO.error, warnings)
 report(FS.File.open("report.txt", Write).try, results)
 ```
 
-Write functions accept any `Showable` value and return `Void`.
-
 Implemented by [`FileHandle<R, CanWrite>`](#make-filehandle-canwrite).
 
 ### Required functions
 
-#### `printLine`
+#### `put`
 
 ```kex
-printLine(content: Showable) -> Void
+put(content: Binary) -> Result<Void, WriteError>
 ```
 
-Writes `content` followed by a newline.
+Writes `content` verbatim, with no trailing newline.
+
+It never renders the value, so a `Binary` reaches the sink as its bytes rather than as the `#Binary<N bytes>` that `Showable` would print.
 
 **Parameters**
 
-  - `content` — the value to write
+  - `content` — the bytes to write
 
-#### `print`
+**Returns**: `Ok`, or why the write failed
+
+#### `write`
 
 ```kex
-print(content: Showable) -> Void
+write(content: Showable) -> Result<Void, WriteError>
 ```
 
 Writes `content` with no trailing newline.
@@ -172,43 +177,45 @@ Writes `content` with no trailing newline.
 
   - `content` — the value to write
 
+**Returns**: `Ok`, or why the write failed
+
 #### `writeLine`
 
 ```kex
-writeLine(content: Showable) -> Void
+writeLine(content: Showable) -> Result<Void, WriteError>
 ```
 
-Writes `content` followed by a newline. The same as `printLine`.
+Writes `content` followed by a newline.
 
 **Parameters**
 
   - `content` — the value to write
 
-#### `write`
+**Returns**: `Ok`, or why the write failed
+
+#### `print`
 
 ```kex
-write(content: Showable) -> Void
+print(content: Showable) -> Void
 ```
 
-Writes `content` with no trailing newline. The same as `print`.
+Writes `content` with no trailing newline, ignoring a failure. Use `write` when a failure matters.
 
 **Parameters**
 
   - `content` — the value to write
 
-#### `writeBytes`
+#### `printLine`
 
 ```kex
-writeBytes(content: Binary) -> Void
+printLine(content: Showable) -> Void
 ```
 
-Writes `content` as raw bytes, with no trailing newline.
-
-The byte counterpart of `write`: the payload goes to the sink exactly as given. It never renders the value, so a `Binary` reaches the sink as its bytes rather than as the `#Binary<N bytes>` that `Showable` would print.
+Writes `content` followed by a newline, ignoring a failure. Use `writeLine` when a failure matters.
 
 **Parameters**
 
-  - `content` — the bytes to write
+  - `content` — the value to write
 
 
 
@@ -245,7 +252,7 @@ Releases the underlying resource. Idempotent: closing twice is fine.
 
 An open file, obtained from `FS.File.open`.
 
-The two type parameters record what the handle is allowed to do: `R` is `CanRead` or `CannotRead`, `W` is `CanWrite` or `CannotWrite`. `FS.File.open` picks them from the mode you pass, so calling `write` on a handle opened `Read` is a compile error rather than a run-time failure.
+The two type parameters record what the handle is allowed to do: `R` is `CanRead` or `CannotRead`, `W` is `CanWrite` or `CannotWrite`. `FS.File.open` picks them from the mode you pass, so calling `printLine` on a handle opened `Read` is a compile error rather than a run-time failure.
 
 ```kex
 using FS
@@ -275,7 +282,7 @@ Implements [`Readable`](#trait-readable), [`Writable`](#trait-writable), [`Close
 seek(offset: Integer) -> Result<Void, ReadError>
 ```
 
-Moves the handle's cursor to an absolute byte offset from the start of the file. Read and write share one cursor, so this repositions both — a `readLine` right after `seek(0)` starts over from the top, and a `write` right after does too, overwriting from that point.
+Moves the handle's cursor to an absolute byte offset from the start of the file. Read and write share one cursor, so this repositions both — a `getLine` right after `seek(0)` starts over from the top, and a `print` right after does too, overwriting from that point.
 
 **Parameters**
 
@@ -288,7 +295,7 @@ Moves the handle's cursor to an absolute byte offset from the start of the file.
 _Reading a length-prefixed record, then rewinding past it_
 
 ```kex
-let length = handle.readLine.or("0").to(Integer).or(0)
+let length = handle.getLine.or("0").to(Integer).or(0)
 let record = handle.readBytes.try
 handle.seek(0)
 ```
@@ -337,50 +344,30 @@ end
 
 ### On `FileHandle<CanRead, W>`
 
-#### `getLine` (from Readable)
-
-```kex
-getLine : Result<String?, ReadError>
-```
-
-Reads the next line from the handle, without its newline.
-
-Answers `None` at end of file, which is what makes it usable as a loop condition. The same operation as `readLine`, under the name `IO.getLine` uses.
-
-**Returns**: the next line, or `None` at end of file
-
-**Examples**
-
-_Walking a file line by line_
-
-```kex
-foul echo(handle: FileHandle<CanRead, W>) -> Void do
-  match handle.getLine do
-    Just(line) => do
-      IO.printLine(line)
-      echo(handle)
-    end
-    None => ()
-  end
-end
-```
-
 #### `get` (from Readable)
 
 ```kex
-get : Result<String?, ReadError>
+get : Result<Binary?, ReadError>
 ```
 
-Reads a single character from the handle, as a one-character `String`.
+Reads the next chunk of bytes from the handle, up to 64 KiB.
 
-Answers `None` at end of file.
-
-**Returns**: the next character, or `None` at end of file
+**Returns**: the next chunk, or `None` at end of file
 
 **Examples**
 
+_Copying a file a chunk at a time_
+
 ```kex
-let firstChar = handle.get.or("")
+foul copy(source: FileHandle<CanRead, W>, target: FileHandle<R, CanWrite>) -> Void do
+  match source.get do
+    Ok(Just(chunk)) => do
+      target.put(chunk)
+      copy(source, target)
+    end
+    _ => ()
+  end
+end
 ```
 
 #### `readLine` (from Readable)
@@ -389,20 +376,57 @@ let firstChar = handle.get.or("")
 readLine : Result<String?, ReadError>
 ```
 
-Reads the next line from the handle, without its newline. The same as `getLine`, named for reading from a file rather than from a console.
+Reads the next line from the handle, without its newline.
 
-**Returns**: the next line, or `None` at end of file
+**Returns**: the next line, `Ok(None)` at end of file, or the failure
+
+**Examples**
+
+_Walking a file line by line_
+
+```kex
+foul echo(handle: FileHandle<CanRead, W>) -> Void do
+  match handle.readLine do
+    Ok(Just(line)) => do
+      IO.printLine(line)
+      echo(handle)
+    end
+    Ok(None) => ()
+    Error(e) => IO.printError("read failed: ${e}")
+  end
+end
+```
+
+#### `getLine` (from Readable)
+
+```kex
+getLine : String?
+```
+
+Reads the next line from the handle, without its newline.
+
+**Returns**: the next line, or `None` at end of file or on failure
 
 **Examples**
 
 ```kex
-let header = handle.readLine.or("")
+let header = handle.getLine.or("")
 ```
 
-_Reading the first three lines_
+#### `getChar`
 
 ```kex
-let head = (1..3).items.map { |_| handle.readLine.or("") }
+getChar : String?
+```
+
+Reads a single character from the handle, as a one-character `String`: one complete Unicode scalar, not one byte.
+
+**Returns**: the next character, or `None` at end of file or on failure
+
+**Examples**
+
+```kex
+let firstChar = handle.getChar.or("")
 ```
 
 #### `read` (from Readable)
@@ -426,7 +450,7 @@ let body = handle.read.or("")
 _Skipping a header line, then taking the rest_
 
 ```kex
-handle.readLine
+handle.getLine
 let body = handle.read.or("")
 ```
 
@@ -466,28 +490,10 @@ Returns `true` when the handle has reached the end of the file.
 handle.eof?   # => false, before anything has been read
 ```
 
-#### `atEnd?` (from Readable)
-
-```kex
-atEnd? : Bool
-```
-
-Returns `true` when the handle has reached the end of the file. The same as `eof?`, spelled out.
-
-**Returns**: `true` at end of file
-
-**Examples**
-
-```kex
-if !handle.atEnd?
-  IO.printLine(handle.readLine.or(""))
-end
-```
-
 #### `feed`
 
 ```kex
-feed : Feed<String>?
+feed : Result<Feed<String>, ReadError>
 ```
 
 Returns the handle's remaining lines as a lazy `Feed`.
@@ -498,7 +504,7 @@ The feed ends at the last line, so taking more lines than the file has answers j
 
 NOT part of `Readable`: a feed is neither pure nor reusable, so requiring it of every `Readable` would put a foul, one-shot operation on types that have no such cursor to offer. It stays a FileHandle function.
 
-**Returns**: the lines as a feed, or `None`
+**Returns**: the lines as a feed, or `ReadFailed` for a handle that cannot be read line by line
 
 **Examples**
 
@@ -512,10 +518,10 @@ handle.feed
 
 ### On `FileHandle<R, CanWrite>`
 
-#### `writeBytes` (from Writable)
+#### `put` (from Writable)
 
 ```kex
-writeBytes(content: Binary) -> Void
+put(content: Binary) -> Result<Void, WriteError>
 ```
 
 Writes `content` verbatim, without text encoding or a trailing newline.
@@ -524,12 +530,56 @@ Writes `content` verbatim, without text encoding or a trailing newline.
 
   - `content` — the bytes to write
 
+**Returns**: `Ok`, or why the write failed
+
 **Examples**
 
 _Copying an opaque payload_
 
 ```kex
-destination.writeBytes(source.readBytes.try)
+destination.put(source.readBytes.try)
+```
+
+#### `write` (from Writable)
+
+```kex
+write(content: Showable) -> Result<Void, WriteError>
+```
+
+Writes `content` with no trailing newline.
+
+**Parameters**
+
+  - `content` — the value to write
+
+**Returns**: `Ok`, or why the write failed
+
+**Examples**
+
+```kex
+handle.write("total: ${total}").try
+```
+
+#### `writeLine` (from Writable)
+
+```kex
+writeLine(content: Showable) -> Result<Void, WriteError>
+```
+
+Writes `content` followed by a newline.
+
+**Parameters**
+
+  - `content` — the value to write
+
+**Returns**: `Ok`, or why the write failed
+
+**Examples**
+
+_Stopping at the first failed write_
+
+```kex
+rows.each { |row| handle.writeLine(row).try }
 ```
 
 #### `printLine` (from Writable)
@@ -538,7 +588,7 @@ destination.writeBytes(source.readBytes.try)
 printLine(content: Showable) -> Void
 ```
 
-Writes `content` followed by a newline.
+Writes `content` followed by a newline, ignoring a failure.
 
 **Parameters**
 
@@ -558,7 +608,7 @@ rows.each { |row| handle.printLine(row) }
 print(content: Showable) -> Void
 ```
 
-Writes `content` with no trailing newline.
+Writes `content` with no trailing newline, ignoring a failure.
 
 **Parameters**
 
@@ -572,42 +622,4 @@ _Building a line from pieces_
 handle.print("name,")
 handle.print("age")
 handle.printLine("")
-```
-
-#### `writeLine` (from Writable)
-
-```kex
-writeLine(content: Showable) -> Void
-```
-
-Writes `content` followed by a newline. The same as `printLine`, named for writing to a file rather than to a console.
-
-**Parameters**
-
-  - `content` — the value to write
-
-**Examples**
-
-```kex
-handle.writeLine("done")
-```
-
-#### `write` (from Writable)
-
-```kex
-write(content: Showable) -> Void
-```
-
-Writes `content` with no trailing newline. The same as `print`.
-
-**Parameters**
-
-  - `content` — the value to write
-
-**Examples**
-
-_Writing a whole document in one call_
-
-```kex
-handle.write(rendered)
 ```

@@ -200,7 +200,7 @@ _Following a live event feed_
 let socket = WebSocket.connect("wss://events.example.com/orders").try
 match socket.receiveMessage.try do
   Text(json) => IO.printLine(json)
-  _          => IO.warn("unexpected non-text event")
+  _          => IO.printError("unexpected non-text event")
 end
 ```
 

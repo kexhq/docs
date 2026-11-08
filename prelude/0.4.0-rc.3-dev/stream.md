@@ -64,7 +64,7 @@ _Generating retry delays without building an unbounded list_
 
 ```kex
 let delays = Stream.Sequence(from: 1.seconds) { |d| d * 2 }
-delays.take(4)   # => [1 second, 2 seconds, 4 seconds, 8 seconds]
+delays.take(4)   # => four Durations: 1, 2, 4 and 8 seconds
 ```
 
 #### `drop`
@@ -249,28 +249,6 @@ _A geometric decay_
 ```kex
 Stream.Sequence(from: 1.0) { |x| x / 2.0 }.take(4)
 # => [1.0, 0.5, 0.25, 0.125]
-```
-
-### `Iterate`
-
-```kex
-Iterate(seed: A, step: (A -> A)) -> Stream<A>
-```
-
-Builds an infinite stream from a seed and a step function. The same thing as `Sequence`: use whichever reads better where you are.
-
-**Parameters**
-
-  - `seed` — the first element
-  - `step` — produces the next element from the current one
-
-**Returns**: the generated stream
-
-**Examples**
-
-```kex
-let odds = Stream.Iterate(1) { |n| n + 2 }
-odds.take(5)   # => [1, 3, 5, 7, 9]
 ```
 
 ### `empty` (constant)

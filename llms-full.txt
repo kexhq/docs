@@ -557,6 +557,22 @@ Number of bytes held.
 "héllo".to(Binary).try.length   # => 6
 ```
 
+#### `count`
+
+```kex
+count : Integer
+```
+
+Number of bytes held. The same as `length`, as on `List` and `String`.
+
+**Returns**: the byte count
+
+**Examples**
+
+```kex
+"héllo".to(Binary).try.count   # => 6
+```
+
 #### `empty?`
 
 ```kex
@@ -581,7 +597,7 @@ at(index: Integer) -> Byte?
 
 The byte at `index`, counting from zero.
 
-Answers `None` for a negative or out-of-range index, so an index you did not check is something you handle rather than something that stops the program.
+A negative index counts back from the end, as on a `List`: `-1` is the last byte. Answers `None` for an index outside the binary, so an index you did not check is something you handle rather than something that stops the program.
 
 **Parameters**
 
@@ -595,7 +611,8 @@ Answers `None` for a negative or out-of-range index, so an index you did not che
 let data = Binary.fromBytes([104, 105])
 data.at(0)    # => Just(104)
 data.at(2)    # => None
-data.at(-1)   # => None
+data.at(-1)   # => Just(105)
+data.at(-3)   # => None
 ```
 
 #### `get`
@@ -1819,54 +1836,65 @@ entities:
 
 ## module `Complex`
 
-Complex numbers with real and imaginary components, plus polar conversion.
-
-Components accept `Number` values. Trigonometric angles are in radians.
-
-```kex
-using Complex
-let z = Rectangular { re: 3, im: 4 }
-z.abs   # => 5.0
-```
-
 ### `ZERO` (constant)
 
-The additive identity, +0 + 0i+.
+The additive identity, +0+0i+.
 
 
 
 ### `ONE` (constant)
 
-The multiplicative identity, +1 + 0i+.
+The multiplicative identity, +1+0i+.
 
 
 
 ### `I` (constant)
 
-The imaginary unit, +0 + 1i+.
+The imaginary unit, +0+1i+.
 
 
 
 ### `NEG_I` (constant)
 
-The negative imaginary unit, `0 - 1i`.
+The negative imaginary unit, `0-1i`.
 
 
+
+### `from`
+
+```kex
+from(re: Number, im: Number) -> Complex
+```
+
+Builds a complex number from its rectangular parts.
+
+**Parameters**
+
+  - `re` — the real part
+  - `im` — the imaginary part
+
+**Returns**: +re + im·i+
+
+**Examples**
+
+```kex
+Complex.from(3, 4).showValue   # => "3+4i"
+```
 
 ### `fromPolar`
 
 ```kex
-fromPolar(radius: Number, theta: Number) -> Rectangular
+fromPolar(radius: Number, theta: Number) -> Complex
 ```
 
-Constructs a complex number from a radius and an angle in radians.
+Builds a complex number from its polar parts: a distance from the origin and an angle in radians.
 
 **Parameters**
 
   - `radius` — distance from the origin
   - `theta` — angle in radians
 
-**Returns**: the rectangular representation
+**Returns**: the same number, held by its rectangular parts
 
 **Examples**
 
@@ -1876,49 +1904,24 @@ _A quarter turn_
 Complex.fromPolar(2, Math.PI / 2).im   # approximately 2.0
 ```
 
-### `fromPolarCoordinates`
+## record `Complex`
+
+Complex numbers: one value, readable in rectangular or polar terms.
+
+A `Complex` is a point in the plane. Its rectangular view is the real and imaginary parts, `re` and `im`; its polar view is the distance from the origin and the angle, `abs` and `arg`. They are two ways of reading the same number, not two kinds of number, so either view is available on every value and either can build one. Components accept `Number` values; angles are in radians.
 
 ```kex
-fromPolarCoordinates(polar: Polar) -> Rectangular
+using Complex
+
+let z = Complex.from(3, 4)
+z.abs            # => 5.0
+z.polar          # => (5.0, 0.9272952180016122)
+Complex.fromPolar(2, Math.PI / 2).im   # approximately 2.0
 ```
 
-Constructs a complex number from a `Polar` value.
+A complex number, stored by its real part `re` and imaginary part `im`.
 
-**Parameters**
-
-  - `polar` — radius and angle in radians
-
-**Returns**: the rectangular representation
-
-**Examples**
-
-```kex
-Complex.fromPolarCoordinates(Polar { radius: 3, theta: 0 }).re # => 3.0
-```
-
-### `conjugateOf`
-
-```kex
-conjugateOf(value: Rectangular) -> Rectangular
-```
-
-Returns the conjugate of a complex number.
-
-**Parameters**
-
-  - `value` — the number to conjugate
-
-**Returns**: the number with its imaginary sign reversed
-
-**Examples**
-
-```kex
-Complex.conjugateOf(Complex.I).im # => -1
-```
-
-## record `Rectangular`
-
-A complex number in rectangular form: `re` is the real part and `im` is the imaginary part.
+Write one literally as `Complex { re: 3, im: 4 }`, or with `Complex.from` and `Complex.fromPolar`.
 
 **Fields**
 
@@ -1942,192 +1945,39 @@ Renders the number in rectangular form, such as +3+4i+.
 **Examples**
 
 ```kex
-(Rectangular { re: 3, im: -4 }).showValue # => "3-4i"
+Complex.from(3, -4).showValue   # => "3-4i"
 ```
 
-#### `+`
+#### `rectangular`
 
 ```kex
-+(other: Rectangular) -> Rectangular
+rectangular : (Number, Number)
 ```
 
-Adds two complex numbers component by component.
+The rectangular view: the real and imaginary parts.
+
+**Returns**: `(re, im)`
 
 **Examples**
 
 ```kex
-(Rectangular { re: 1, im: 2 } + Complex.I).im # => 3
+Complex.from(3, 4).rectangular   # => (3, 4)
 ```
 
-#### `-`
+#### `polar`
 
 ```kex
--(other: Rectangular) -> Rectangular
+polar : (Float, Float)
 ```
 
-Subtracts `other` from this complex number.
+The polar view: the distance from the origin and the angle in radians.
+
+**Returns**: `(abs, arg)`
 
 **Examples**
 
 ```kex
-(Rectangular { re: 1, im: 2 } - Complex.I).im # => 1
-```
-
-#### `*`
-
-```kex
-*(other: Rectangular) -> Rectangular
-```
-
-Multiplies two complex numbers.
-
-**Examples**
-
-```kex
-(Complex.I * Complex.I).re # => -1
-```
-
-#### `/`
-
-```kex
-/(other: Rectangular) -> Rectangular
-```
-
-Divides by `other` using the complex conjugate formula. The divisor must be non-zero.
-
-**Examples**
-
-```kex
-(Complex.I / Complex.I).re # => 1.0
-```
-
-#### `conjugate`
-
-```kex
-conjugate : Rectangular
-```
-
-Returns the complex conjugate, negating the imaginary part.
-
-**Examples**
-
-```kex
-let conjugated: Rectangular = Complex.conjugateOf(Complex.I)
-conjugated.im # => -1
-```
-
-#### `sqrt`
-
-```kex
-sqrt : Rectangular
-```
-
-Returns the principal square root. The result's argument lies in the right half-plane.
-
-**Examples**
-
-```kex
-(Rectangular { re: -1, im: 0 }).sqrt.im # approximately 1.0
-```
-
-#### `exp`
-
-```kex
-exp : Rectangular
-```
-
-Returns e raised to this complex number.
-
-**Examples**
-
-```kex
-Complex.ZERO.exp.re # => 1.0
-```
-
-#### `log`
-
-```kex
-log : Rectangular
-```
-
-Returns the principal natural logarithm. Zero has no logarithm.
-
-**Examples**
-
-```kex
-Complex.ONE.log.re # => 0.0
-```
-
-#### `sin`
-
-```kex
-sin : Rectangular
-```
-
-Returns the complex sine.
-
-**Examples**
-
-```kex
-Complex.ZERO.sin.re # => 0.0
-```
-
-#### `cos`
-
-```kex
-cos : Rectangular
-```
-
-Returns the complex cosine.
-
-**Examples**
-
-```kex
-Complex.ZERO.cos.re # => 1.0
-```
-
-#### `tan`
-
-```kex
-tan : Rectangular
-```
-
-Returns the complex tangent.
-
-**Examples**
-
-```kex
-Complex.ZERO.tan.re # => 0.0
-```
-
-#### `^`
-
-```kex
-^(exponent: Number) -> Rectangular
-```
-
-Raises this number to a real power using the principal argument.
-
-**Examples**
-
-```kex
-(Complex.I ^ 2).re # approximately -1.0
-```
-
-#### `absSquared`
-
-```kex
-absSquared : Number
-```
-
-Returns the square of the magnitude.
-
-**Returns**: real² + imaginary²
-
-**Examples**
-
-```kex
-(Rectangular { re: 3, im: 4 }).absSquared # => 25
+Complex.from(3, 4).polar   # => (5.0, 0.9272952180016122)
 ```
 
 #### `abs`
@@ -2136,14 +1986,30 @@ Returns the square of the magnitude.
 abs : Float
 ```
 
-Returns the magnitude of this complex number.
+The magnitude: the distance from the origin, the polar radius.
 
-**Returns**: distance from the origin
+**Returns**: the distance from the origin
 
 **Examples**
 
 ```kex
-(Rectangular { re: 3, im: 4 }).abs # => 5.0
+Complex.from(3, 4).abs   # => 5.0
+```
+
+#### `absSquared`
+
+```kex
+absSquared : Number
+```
+
+The square of the magnitude, which needs no square root and so stays an `Integer` for integer parts.
+
+**Returns**: +re² + im²+
+
+**Examples**
+
+```kex
+Complex.from(3, 4).absSquared   # => 25
 ```
 
 #### `arg`
@@ -2152,90 +2018,187 @@ Returns the magnitude of this complex number.
 arg : Float
 ```
 
-Returns the argument in radians, in the range chosen by `Math.atan2`.
+The argument: the angle from the positive real axis, the polar angle, in the range `Math.atan2` answers.
 
-**Returns**: angle in radians
-
-**Examples**
-
-```kex
-Complex.I.arg # => Math.PI / 2.0
-```
-
-#### `polar`
-
-```kex
-polar : Polar
-```
-
-Converts this number to polar coordinates.
-
-**Returns**: magnitude and argument in radians
+**Returns**: the angle in radians
 
 **Examples**
 
 ```kex
-(Rectangular { re: 3, im: 4 }).polar.radius # => 5.0
+Complex.I.arg   # => 1.5707963267948966
+```
+
+#### `+`
+
+```kex
++(other: Complex) -> Complex
+```
+
+Adds two complex numbers component by component.
+
+**Examples**
+
+```kex
+(Complex.from(1, 2) + Complex.I).im   # => 3
+```
+
+#### `-`
+
+```kex
+-(other: Complex) -> Complex
+```
+
+Subtracts `other` from this complex number.
+
+**Examples**
+
+```kex
+(Complex.from(1, 2) - Complex.I).im   # => 1
+```
+
+#### `*`
+
+```kex
+*(other: Complex) -> Complex
+```
+
+Multiplies two complex numbers.
+
+**Examples**
+
+```kex
+(Complex.I * Complex.I).re   # => -1
+```
+
+#### `/`
+
+```kex
+/(other: Complex) -> Complex
+```
+
+Divides by `other` using the complex conjugate formula. The divisor must be non-zero.
+
+**Examples**
+
+```kex
+(Complex.I / Complex.I).re   # => 1.0
+```
+
+#### `conjugate`
+
+```kex
+conjugate : Complex
+```
+
+Returns the complex conjugate, negating the imaginary part.
+
+**Examples**
+
+```kex
+Complex.I.conjugate.im   # => -1
+```
+
+#### `sqrt`
+
+```kex
+sqrt : Complex
+```
+
+Returns the principal square root. The result's argument lies in the right half-plane.
+
+**Examples**
+
+```kex
+Complex.from(-1, 0).sqrt.im   # approximately 1.0
+```
+
+#### `exp`
+
+```kex
+exp : Complex
+```
+
+Returns e raised to this complex number.
+
+**Examples**
+
+```kex
+Complex.ZERO.exp.re   # => 1.0
+```
+
+#### `log`
+
+```kex
+log : Complex
+```
+
+Returns the principal natural logarithm. Zero has no logarithm.
+
+**Examples**
+
+```kex
+Complex.ONE.log.re   # => 0.0
+```
+
+#### `sin`
+
+```kex
+sin : Complex
+```
+
+Returns the complex sine.
+
+**Examples**
+
+```kex
+Complex.ZERO.sin.re   # => 0.0
+```
+
+#### `cos`
+
+```kex
+cos : Complex
+```
+
+Returns the complex cosine.
+
+**Examples**
+
+```kex
+Complex.ZERO.cos.re   # => 1.0
+```
+
+#### `tan`
+
+```kex
+tan : Complex
+```
+
+Returns the complex tangent.
+
+**Examples**
+
+```kex
+Complex.ZERO.tan.re   # => 0.0
+```
+
+#### `^`
+
+```kex
+^(exponent: Number) -> Complex
+```
+
+Raises this number to a real power using the principal argument.
+
+**Examples**
+
+```kex
+(Complex.I ^ 2).re   # approximately -1.0
 ```
 
 ### From [`Showable`](kex.md#trait-showable)
 
   - [`to`](kex.md#showable-to) — 
-
-## record `Polar`
-
-A complex number in polar form, with a non-negative radius and angle in radians.
-
-**Fields**
-
-  - `radius` : [Number](number.md#make-number)
-  - `theta` : [Number](number.md#make-number)
-
-Implements [`Showable`](kex.md#trait-showable).
-
-### Functions
-
-#### `showValue` (from Showable)
-
-```kex
-showValue : String
-```
-
-Renders the radius and angle in radians.
-
-**Returns**: the polar coordinates
-
-**Examples**
-
-```kex
-(Polar { radius: 2, theta: 0 }).showValue # => "(2, 0)"
-```
-
-#### `rectangular`
-
-```kex
-rectangular : Rectangular
-```
-
-Converts these polar coordinates to a complex number.
-
-**Returns**: the rectangular representation
-
-**Examples**
-
-```kex
-(Polar { radius: 2, theta: 0 }).rectangular.re # => 2.0
-```
-
-### From [`Showable`](kex.md#trait-showable)
-
-  - [`to`](kex.md#showable-to) — 
-
-## module `Complex.Polar`
-
-### `ZERO` (constant)
-
-
 
 
 ---
@@ -2415,7 +2378,7 @@ Yellow. Conventionally: warnings.
 **Examples**
 
 ```kex
-IO.warn(Console.colorize("deprecated option", Console.YELLOW))
+IO.printError(Console.colorize("deprecated option", Console.YELLOW))
 ```
 
 
@@ -2621,6 +2584,37 @@ Float.parse("1,44", culture: hu)   # => Ok(1.44)
 Float.parse("1,44")                 # => Error(...)
 ```
 
+### `ENGLISH_TIME_NAMES` (constant)
+
+```kex
+ENGLISH_TIME_NAMES : TimeNames
+```
+
+The names English writes dates with, and the names used for any culture that carries none of its own.
+
+
+
+### `timeNames`
+
+```kex
+timeNames(culture: Culture) -> TimeNames
+```
+
+The names `culture` writes dates with: its own when it carries them, and English otherwise. Today the presets carry names for English, Hungarian, German, French, Spanish, Italian, Portuguese and Dutch.
+
+**Parameters**
+
+  - `culture` — the culture
+
+**Returns**: the names to write with
+
+**Examples**
+
+```kex
+Culture.timeNames(Culture.of("HU_HU").or(Culture.DEFAULT)).months.first   # => Just("január")
+Culture.timeNames(Culture.DEFAULT).months.first                          # => Just("January")
+```
+
 ### `DEFAULT` (constant)
 
 ```kex
@@ -2784,13 +2778,29 @@ Number settings: which character marks the decimal point and how digit groups ar
 
 ## record `TimeSettings`
 
-Date and time layout data. Carried by every preset; no behavior reads it yet — culture-aware time parsing and printing is a later slice.
+Date and time layout data: how `to(String, culture:)` on a `Date`, `Time` or `DateTime` lays the value out, and the names a `Date.format` pattern uses.
 
 **Fields**
 
   - `dateOrder` : [[Atom](atom.md#make-atom)]
   - `dateSeparator` : [Char](string.md#make-char)
   - `timeSeparator` : [Char](string.md#make-char)
+  - `twelveHour?` : [Bool](truthyable.md#make-bool) (optional)
+  - `names` : [TimeNames](#record-culture-timenames)? (optional)
+
+
+
+## record `TimeNames`
+
+The words a culture writes dates and times with: what `MMMM`, `MMM`, `EEEE`, `EEE` and `a` in a `Date.format` pattern turn into.
+
+**Fields**
+
+  - `months` : [[String](string.md#make-string)]
+  - `shortMonths` : [[String](string.md#make-string)]
+  - `weekdays` : [[String](string.md#make-string)]
+  - `shortWeekdays` : [[String](string.md#make-string)]
+  - `dayPeriods` : ([String](string.md#make-string), [String](string.md#make-string))
 
 
 
@@ -2826,7 +2836,7 @@ entities:
 
 Cryptographic content digests.
 
-Digests are returned as lowercase hex strings, so a Kex program never has to handle backend-specific binary values: they compare with `==`, print directly, and go into a map key unchanged.
+A digest of a `String` is returned as a lowercase hex string, so a Kex program never has to handle backend-specific binary values: it compares with `==`, prints directly, and goes into a map key unchanged. A digest of a `Binary` is the raw digest bytes, as a `Binary`.
 
 ```kex
 Digest.sha256("hello")
@@ -2874,10 +2884,10 @@ Digest.sha256(newText) != Digest.sha256(oldText)
 ### `fileSha256`
 
 ```kex
-fileSha256(path: String) -> String?
+fileSha256(path: String) -> Result<String, ReadError>
 ```
 
-Returns the SHA-256 digest of the file at `path`, or `None` when the file cannot be read.
+Returns the SHA-256 digest of the file at `path`, or `ReadFailed` when the file cannot be read.
 
 Reads the file for you, so a large file does not have to be pulled into a `String` first.
 
@@ -2885,13 +2895,13 @@ Reads the file for you, so a large file does not have to be pulled into a `Strin
 
   - `path` — the file to hash
 
-**Returns**: the hex digest, or `None`
+**Returns**: the hex digest, or `ReadFailed`
 
 **Examples**
 
 ```kex
-Digest.fileSha256("archive.tar.gz")   # => Just("a3f1...")
-Digest.fileSha256("nowhere")          # => None
+Digest.fileSha256("archive.tar.gz")   # => Ok("a3f1...")
+Digest.fileSha256("nowhere")          # => Error(ReadFailed)
 ```
 
 _Verifying a download against a published checksum_
@@ -3203,6 +3213,48 @@ _Detecting a flag among arguments_
 
 ```kex
 args.any? { |a| a == "--verbose" }
+```
+
+#### `none?`
+
+```kex
+none?(pred: (T -> Bool)) -> Bool
+```
+
+Returns `true` when no item satisfies `pred`: the opposite of `any?`. An empty collection answers `true`.
+
+**Parameters**
+
+  - `pred` — the test applied to each item
+
+**Returns**: `true` when nothing matches
+
+**Examples**
+
+```kex
+[1, 2, 3].none? { |n| n > 9 }   # => true
+[1, 2, 3].none? { |n| n > 2 }   # => false
+```
+
+#### `one?`
+
+```kex
+one?(pred: (T -> Bool)) -> Bool
+```
+
+Returns `true` when exactly one item satisfies `pred`.
+
+**Parameters**
+
+  - `pred` — the test applied to each item
+
+**Returns**: `true` for exactly one match
+
+**Examples**
+
+```kex
+[1, 2, 3].one? { |n| n > 2 }   # => true
+[1, 2, 3].one? { |n| n > 1 }   # => false
 ```
 
 #### `find`
@@ -3643,10 +3695,6 @@ Sets an environment variable for this process and every child it starts.
 
 This is how a program decides what a child sees. `Kex.AST`, for instance, shells out to the compiler named by `$KEX`, so a tool that knows which compiler it means says so here rather than hoping `PATH` agrees.
 
-Sets a variable for THIS process and every child it starts. `ENV` is a snapshot, so it is rebuilt by the write: a later `ENV.get` answers what was set, not what the process started with.
-
-This is how a program decides what a child sees: `Kex.AST` shells out to the compiler named by `$KEX`, so a tool that knows which compiler it means says so here rather than hoping PATH agrees.
-
 **Parameters**
 
   - `name` — the variable to set
@@ -3953,7 +4001,9 @@ _Draining a feed a piece at a time_
 ```kex
 let jobs = Feed.Elements(["resize", "index"])
 jobs.spent?   # => false
-jobs.take(2)
+jobs.take(2)  # => ["resize", "index"]
+jobs.spent?   # => false: nothing has read past the end yet
+jobs.pull     # => None
 jobs.spent?   # => true
 ```
 
@@ -4129,7 +4179,7 @@ Constructors for `Feed`.
 empty : Feed<A>
 ```
 
-A feed with nothing in it, already spent.
+A feed with nothing in it: its first read answers `None`.
 
 Mostly the `or` half of a failed open: `FS.File.feed(path).or(Feed.empty)` reads nothing rather than stopping the program.
 
@@ -4175,6 +4225,7 @@ source: filehandle.kex
 title: FileHandle
 entities:
   - { kind: type, name: "ReadError" }
+  - { kind: type, name: "WriteError" }
   - { kind: trait, name: "Readable" }
   - { kind: trait, name: "Writable" }
   - { kind: trait, name: "Closeable" }
@@ -4199,15 +4250,27 @@ Why a read failed.
 
 
 
+## type `WriteError`
+
+Why a write failed: the sink refused it. A closed handle, a full device, or standard input all answer `WriteFailed`.
+
+**Variants**
+
+  - `WriteFailed`
+
+
+
 ## trait `Readable`
 
-`Readable`: a source that yields text.
+`Readable`: a source of bytes and text.
 
 `IO.in` and file handles opened for reading are `Readable`. Accept this trait when your function should work with either source.
 
+Two families read text. The `read` family (`readLine`, `read`, `readBytes`) answers a `Result`, so a failed read can be told apart from the end of the input. The `get` family is the short form: `getLine` answers an `Optional`, `None` both at the end and on a failed read, which is what most interactive code wants. `get` itself is the primitive the rest stand on: the next chunk of raw bytes.
+
 ```kex
 foul firstLine(source: Readable) -> String do
-  source.getLine.try.or("(empty)")
+  source.getLine.or("(empty)")
 end
 
 firstLine(IO.in)
@@ -4218,27 +4281,15 @@ Implemented by [`FileHandle<CanRead, W>`](#make-filehandle-canread).
 
 ### Required functions
 
-#### `getLine`
-
-```kex
-getLine : Result<String?, ReadError>
-```
-
-Reads the next line, without its newline.
-
-**Returns**: the next line, `Ok(None)` at end of input, or the failure
-
 #### `get`
 
 ```kex
-get : Result<String?, ReadError>
+get : Result<Binary?, ReadError>
 ```
 
-Reads a single character, as a one-character `String`.
+Reads the next chunk of bytes: whatever the source has ready, up to its buffer size. Standard input answers one line at a time, newline included.
 
-Reads one complete Unicode scalar, not one byte.
-
-**Returns**: the next character, `Ok(None)` at end of input, or the failure
+**Returns**: the next chunk, `Ok(None)` at end of input, or the failure
 
 #### `readLine`
 
@@ -4246,9 +4297,19 @@ Reads one complete Unicode scalar, not one byte.
 readLine : Result<String?, ReadError>
 ```
 
-Reads the next line, without its newline. The same as `getLine`.
+Reads the next line, without its newline.
 
 **Returns**: the next line, `Ok(None)` at end of input, or the failure
+
+#### `getLine`
+
+```kex
+getLine : String?
+```
+
+Reads the next line, without its newline: `readLine` for when the end of the input and a failed read mean the same thing.
+
+**Returns**: the next line, or `None` at end of input or on failure
 
 #### `read`
 
@@ -4284,23 +4345,15 @@ Returns `true` when the source has reached its end.
 
 **Returns**: `true` at end of input
 
-#### `atEnd?`
-
-```kex
-atEnd? : Bool
-```
-
-Returns `true` when the source has reached its end. The same as `eof?`.
-
-**Returns**: `true` at end of input
-
 
 
 ## trait `Writable`
 
-`Writable`: a sink that accepts text.
+`Writable`: a sink for bytes and text.
 
 Accept a `Writable` parameter to let callers choose standard output, standard error, or a file as the destination.
+
+Two families write text. The `write` family (`put`, `write`, `writeLine`) answers a `Result`, for when a failed write matters. The `print` family (`print`, `printLine`) answers `Void`, for output where there is nothing useful to do about a failure. `put` is the primitive the rest stand on: raw bytes, verbatim.
 
 ```kex
 foul report(out: Writable, lines: [String]) -> Void do
@@ -4312,28 +4365,30 @@ report(IO.error, warnings)
 report(FS.File.open("report.txt", Write).try, results)
 ```
 
-Write functions accept any `Showable` value and return `Void`.
-
 Implemented by [`FileHandle<R, CanWrite>`](#make-filehandle-canwrite).
 
 ### Required functions
 
-#### `printLine`
+#### `put`
 
 ```kex
-printLine(content: Showable) -> Void
+put(content: Binary) -> Result<Void, WriteError>
 ```
 
-Writes `content` followed by a newline.
+Writes `content` verbatim, with no trailing newline.
+
+It never renders the value, so a `Binary` reaches the sink as its bytes rather than as the `#Binary<N bytes>` that `Showable` would print.
 
 **Parameters**
 
-  - `content` — the value to write
+  - `content` — the bytes to write
 
-#### `print`
+**Returns**: `Ok`, or why the write failed
+
+#### `write`
 
 ```kex
-print(content: Showable) -> Void
+write(content: Showable) -> Result<Void, WriteError>
 ```
 
 Writes `content` with no trailing newline.
@@ -4342,43 +4397,45 @@ Writes `content` with no trailing newline.
 
   - `content` — the value to write
 
+**Returns**: `Ok`, or why the write failed
+
 #### `writeLine`
 
 ```kex
-writeLine(content: Showable) -> Void
+writeLine(content: Showable) -> Result<Void, WriteError>
 ```
 
-Writes `content` followed by a newline. The same as `printLine`.
+Writes `content` followed by a newline.
 
 **Parameters**
 
   - `content` — the value to write
 
-#### `write`
+**Returns**: `Ok`, or why the write failed
+
+#### `print`
 
 ```kex
-write(content: Showable) -> Void
+print(content: Showable) -> Void
 ```
 
-Writes `content` with no trailing newline. The same as `print`.
+Writes `content` with no trailing newline, ignoring a failure. Use `write` when a failure matters.
 
 **Parameters**
 
   - `content` — the value to write
 
-#### `writeBytes`
+#### `printLine`
 
 ```kex
-writeBytes(content: Binary) -> Void
+printLine(content: Showable) -> Void
 ```
 
-Writes `content` as raw bytes, with no trailing newline.
-
-The byte counterpart of `write`: the payload goes to the sink exactly as given. It never renders the value, so a `Binary` reaches the sink as its bytes rather than as the `#Binary<N bytes>` that `Showable` would print.
+Writes `content` followed by a newline, ignoring a failure. Use `writeLine` when a failure matters.
 
 **Parameters**
 
-  - `content` — the bytes to write
+  - `content` — the value to write
 
 
 
@@ -4415,7 +4472,7 @@ Releases the underlying resource. Idempotent: closing twice is fine.
 
 An open file, obtained from `FS.File.open`.
 
-The two type parameters record what the handle is allowed to do: `R` is `CanRead` or `CannotRead`, `W` is `CanWrite` or `CannotWrite`. `FS.File.open` picks them from the mode you pass, so calling `write` on a handle opened `Read` is a compile error rather than a run-time failure.
+The two type parameters record what the handle is allowed to do: `R` is `CanRead` or `CannotRead`, `W` is `CanWrite` or `CannotWrite`. `FS.File.open` picks them from the mode you pass, so calling `printLine` on a handle opened `Read` is a compile error rather than a run-time failure.
 
 ```kex
 using FS
@@ -4445,7 +4502,7 @@ Implements [`Readable`](#trait-readable), [`Writable`](#trait-writable), [`Close
 seek(offset: Integer) -> Result<Void, ReadError>
 ```
 
-Moves the handle's cursor to an absolute byte offset from the start of the file. Read and write share one cursor, so this repositions both — a `readLine` right after `seek(0)` starts over from the top, and a `write` right after does too, overwriting from that point.
+Moves the handle's cursor to an absolute byte offset from the start of the file. Read and write share one cursor, so this repositions both — a `getLine` right after `seek(0)` starts over from the top, and a `print` right after does too, overwriting from that point.
 
 **Parameters**
 
@@ -4458,7 +4515,7 @@ Moves the handle's cursor to an absolute byte offset from the start of the file.
 _Reading a length-prefixed record, then rewinding past it_
 
 ```kex
-let length = handle.readLine.or("0").to(Integer).or(0)
+let length = handle.getLine.or("0").to(Integer).or(0)
 let record = handle.readBytes.try
 handle.seek(0)
 ```
@@ -4507,50 +4564,30 @@ end
 
 ### On `FileHandle<CanRead, W>`
 
-#### `getLine` (from Readable)
-
-```kex
-getLine : Result<String?, ReadError>
-```
-
-Reads the next line from the handle, without its newline.
-
-Answers `None` at end of file, which is what makes it usable as a loop condition. The same operation as `readLine`, under the name `IO.getLine` uses.
-
-**Returns**: the next line, or `None` at end of file
-
-**Examples**
-
-_Walking a file line by line_
-
-```kex
-foul echo(handle: FileHandle<CanRead, W>) -> Void do
-  match handle.getLine do
-    Just(line) => do
-      IO.printLine(line)
-      echo(handle)
-    end
-    None => ()
-  end
-end
-```
-
 #### `get` (from Readable)
 
 ```kex
-get : Result<String?, ReadError>
+get : Result<Binary?, ReadError>
 ```
 
-Reads a single character from the handle, as a one-character `String`.
+Reads the next chunk of bytes from the handle, up to 64 KiB.
 
-Answers `None` at end of file.
-
-**Returns**: the next character, or `None` at end of file
+**Returns**: the next chunk, or `None` at end of file
 
 **Examples**
 
+_Copying a file a chunk at a time_
+
 ```kex
-let firstChar = handle.get.or("")
+foul copy(source: FileHandle<CanRead, W>, target: FileHandle<R, CanWrite>) -> Void do
+  match source.get do
+    Ok(Just(chunk)) => do
+      target.put(chunk)
+      copy(source, target)
+    end
+    _ => ()
+  end
+end
 ```
 
 #### `readLine` (from Readable)
@@ -4559,20 +4596,57 @@ let firstChar = handle.get.or("")
 readLine : Result<String?, ReadError>
 ```
 
-Reads the next line from the handle, without its newline. The same as `getLine`, named for reading from a file rather than from a console.
+Reads the next line from the handle, without its newline.
 
-**Returns**: the next line, or `None` at end of file
+**Returns**: the next line, `Ok(None)` at end of file, or the failure
+
+**Examples**
+
+_Walking a file line by line_
+
+```kex
+foul echo(handle: FileHandle<CanRead, W>) -> Void do
+  match handle.readLine do
+    Ok(Just(line)) => do
+      IO.printLine(line)
+      echo(handle)
+    end
+    Ok(None) => ()
+    Error(e) => IO.printError("read failed: ${e}")
+  end
+end
+```
+
+#### `getLine` (from Readable)
+
+```kex
+getLine : String?
+```
+
+Reads the next line from the handle, without its newline.
+
+**Returns**: the next line, or `None` at end of file or on failure
 
 **Examples**
 
 ```kex
-let header = handle.readLine.or("")
+let header = handle.getLine.or("")
 ```
 
-_Reading the first three lines_
+#### `getChar`
 
 ```kex
-let head = (1..3).items.map { |_| handle.readLine.or("") }
+getChar : String?
+```
+
+Reads a single character from the handle, as a one-character `String`: one complete Unicode scalar, not one byte.
+
+**Returns**: the next character, or `None` at end of file or on failure
+
+**Examples**
+
+```kex
+let firstChar = handle.getChar.or("")
 ```
 
 #### `read` (from Readable)
@@ -4596,7 +4670,7 @@ let body = handle.read.or("")
 _Skipping a header line, then taking the rest_
 
 ```kex
-handle.readLine
+handle.getLine
 let body = handle.read.or("")
 ```
 
@@ -4636,28 +4710,10 @@ Returns `true` when the handle has reached the end of the file.
 handle.eof?   # => false, before anything has been read
 ```
 
-#### `atEnd?` (from Readable)
-
-```kex
-atEnd? : Bool
-```
-
-Returns `true` when the handle has reached the end of the file. The same as `eof?`, spelled out.
-
-**Returns**: `true` at end of file
-
-**Examples**
-
-```kex
-if !handle.atEnd?
-  IO.printLine(handle.readLine.or(""))
-end
-```
-
 #### `feed`
 
 ```kex
-feed : Feed<String>?
+feed : Result<Feed<String>, ReadError>
 ```
 
 Returns the handle's remaining lines as a lazy `Feed`.
@@ -4668,7 +4724,7 @@ The feed ends at the last line, so taking more lines than the file has answers j
 
 NOT part of `Readable`: a feed is neither pure nor reusable, so requiring it of every `Readable` would put a foul, one-shot operation on types that have no such cursor to offer. It stays a FileHandle function.
 
-**Returns**: the lines as a feed, or `None`
+**Returns**: the lines as a feed, or `ReadFailed` for a handle that cannot be read line by line
 
 **Examples**
 
@@ -4682,10 +4738,10 @@ handle.feed
 
 ### On `FileHandle<R, CanWrite>`
 
-#### `writeBytes` (from Writable)
+#### `put` (from Writable)
 
 ```kex
-writeBytes(content: Binary) -> Void
+put(content: Binary) -> Result<Void, WriteError>
 ```
 
 Writes `content` verbatim, without text encoding or a trailing newline.
@@ -4694,12 +4750,56 @@ Writes `content` verbatim, without text encoding or a trailing newline.
 
   - `content` — the bytes to write
 
+**Returns**: `Ok`, or why the write failed
+
 **Examples**
 
 _Copying an opaque payload_
 
 ```kex
-destination.writeBytes(source.readBytes.try)
+destination.put(source.readBytes.try)
+```
+
+#### `write` (from Writable)
+
+```kex
+write(content: Showable) -> Result<Void, WriteError>
+```
+
+Writes `content` with no trailing newline.
+
+**Parameters**
+
+  - `content` — the value to write
+
+**Returns**: `Ok`, or why the write failed
+
+**Examples**
+
+```kex
+handle.write("total: ${total}").try
+```
+
+#### `writeLine` (from Writable)
+
+```kex
+writeLine(content: Showable) -> Result<Void, WriteError>
+```
+
+Writes `content` followed by a newline.
+
+**Parameters**
+
+  - `content` — the value to write
+
+**Returns**: `Ok`, or why the write failed
+
+**Examples**
+
+_Stopping at the first failed write_
+
+```kex
+rows.each { |row| handle.writeLine(row).try }
 ```
 
 #### `printLine` (from Writable)
@@ -4708,7 +4808,7 @@ destination.writeBytes(source.readBytes.try)
 printLine(content: Showable) -> Void
 ```
 
-Writes `content` followed by a newline.
+Writes `content` followed by a newline, ignoring a failure.
 
 **Parameters**
 
@@ -4728,7 +4828,7 @@ rows.each { |row| handle.printLine(row) }
 print(content: Showable) -> Void
 ```
 
-Writes `content` with no trailing newline.
+Writes `content` with no trailing newline, ignoring a failure.
 
 **Parameters**
 
@@ -4742,44 +4842,6 @@ _Building a line from pieces_
 handle.print("name,")
 handle.print("age")
 handle.printLine("")
-```
-
-#### `writeLine` (from Writable)
-
-```kex
-writeLine(content: Showable) -> Void
-```
-
-Writes `content` followed by a newline. The same as `printLine`, named for writing to a file rather than to a console.
-
-**Parameters**
-
-  - `content` — the value to write
-
-**Examples**
-
-```kex
-handle.writeLine("done")
-```
-
-#### `write` (from Writable)
-
-```kex
-write(content: Showable) -> Void
-```
-
-Writes `content` with no trailing newline. The same as `print`.
-
-**Parameters**
-
-  - `content` — the value to write
-
-**Examples**
-
-_Writing a whole document in one call_
-
-```kex
-handle.write(rendered)
 ```
 
 
@@ -4807,8 +4869,8 @@ using FS
 
 main do
   match FS.File.read("config.txt") do
-    Just(text) => IO.printLine(text.lines.count)
-    None       => IO.printError("config.txt is missing")
+    Ok(text) => IO.printLine(text.lines.count)
+    Error(_) => IO.printError("config.txt is missing")
   end
 end
 ```
@@ -4823,7 +4885,7 @@ FS.Path        pure path arithmetic, with no filesystem access at all
 
 The first two are capabilities: everything in them touches the real filesystem, so they can only be called from `foul` code, and a test can replace the whole of `FS.File` for a lexical region rather than mutating global state. `FS.Path` is ordinary pure code.
 
-Reading and writing a file answer with a `Result`, and most other operations with an `Optional` or a `Bool`, so a missing file or a failed write is an ordinary value you handle rather than an exception you catch.
+Anything that can fail answers with a `Result` carrying a `FileError`, so a missing file or a failed write is an ordinary value you handle rather than an exception you catch. Questions about the filesystem (`exists?`, `file?`, `directory?`) answer a `Bool`, and only a value that may simply be absent, such as `Directory.home`, answers an `Optional`.
 
 ### `permissionMode`
 
@@ -4904,15 +4966,20 @@ Something a file may allow, for `FS.File.changePermission`. Named for the intent
 
 ## type `FileError`
 
-A file operation that failed, carrying the path it failed on.
+A file operation that failed, carrying the path (or paths) it failed on.
 
-`OpenFailed`, `ReadFailed` and `WriteFailed` mean the filesystem refused the operation. `InvalidUtf8` means the bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence.
+Every variant but `InvalidUtf8` means the filesystem refused the operation its name gives: opening, reading, writing, creating, deleting, copying from the first path to the second, renaming the first to the second, or changing permissions. `InvalidUtf8` means the bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence.
 
 **Variants**
 
   - `OpenFailed(FilePath)`
   - `ReadFailed(FilePath)`
   - `WriteFailed(FilePath)`
+  - `CreateFailed(FilePath)`
+  - `DeleteFailed(FilePath)`
+  - `CopyFailed(FilePath, FilePath)`
+  - `RenameFailed(FilePath, FilePath)`
+  - `ModeFailed(FilePath)`
   - `InvalidUtf8(FilePath, Integer)`
 
 
@@ -4976,7 +5043,7 @@ _Reading a file line by line_
 ```kex
 match FS.File.open("log.txt", Read) do
   Ok(handle) => do
-    IO.printLine(handle.readLine.or(""))
+    IO.printLine(handle.getLine.or(""))
     handle.close
   end
   Error(e) => IO.printError("cannot open: ${e}")
@@ -5133,7 +5200,7 @@ FS.File.write("names.txt", names.join("\n") + "\n")
 ### `append`
 
 ```kex
-append(path: FilePath, content: String) -> Bool
+append(path: FilePath, content: String) -> Result<Void, FileError>
 ```
 
 Adds `content` to the end of `path`, keeping what is already there.
@@ -5145,12 +5212,12 @@ Creates the file if it does not exist, so it is safe to append to a log that has
   - `path` — the file to append to
   - `content` — the text to add
 
-**Returns**: `true` when the write succeeded
+**Returns**: `Ok` when the write succeeded, or `WriteFailed`
 
 **Examples**
 
 ```kex
-FS.File.append("app.log", "started\n")   # => true
+FS.File.append("app.log", "started\n")   # => Ok(())
 ```
 
 _A simple logger_
@@ -5243,23 +5310,23 @@ entries.partition { |e| FS.File.directory?(e) }
 ### `delete`
 
 ```kex
-delete(path: FilePath) -> Bool
+delete(path: FilePath) -> Result<Void, FileError>
 ```
 
 Deletes the file at `path`.
 
-Answers `false` when the file does not exist or cannot be removed. Use `FS.Directory.delete` for a directory.
+Answers `DeleteFailed` when the file does not exist or cannot be removed. Use `FS.Directory.delete` for a directory.
 
 **Parameters**
 
   - `path` — the file to delete
 
-**Returns**: `true` when the file was deleted
+**Returns**: `Ok` when the file was deleted, or `DeleteFailed`
 
 **Examples**
 
 ```kex
-FS.File.delete("tmp.txt")   # => true
+FS.File.delete("tmp.txt")   # => Ok(())
 ```
 
 _Cleaning up after a temporary file_
@@ -5273,7 +5340,7 @@ FS.File.delete(tmp)
 ### `copy`
 
 ```kex
-copy(src: FilePath, dst: FilePath) -> Bool
+copy(src: FilePath, dst: FilePath) -> Result<Void, FileError>
 ```
 
 Copies the file at `src` to `dst`, replacing `dst` if it exists.
@@ -5283,12 +5350,12 @@ Copies the file at `src` to `dst`, replacing `dst` if it exists.
   - `src` — the file to copy
   - `dst` — where to copy it
 
-**Returns**: `true` when the copy succeeded
+**Returns**: `Ok` when the copy succeeded, or `CopyFailed`
 
 **Examples**
 
 ```kex
-FS.File.copy("app.conf", "app.conf.bak")   # => true
+FS.File.copy("app.conf", "app.conf.bak")   # => Ok(())
 ```
 
 _Backing a file up before rewriting it_
@@ -5301,7 +5368,7 @@ FS.File.write(path, updated)
 ### `rename`
 
 ```kex
-rename(src: FilePath, dst: FilePath) -> Bool
+rename(src: FilePath, dst: FilePath) -> Result<Void, FileError>
 ```
 
 Renames (or moves) the file at `src` to `dst`.
@@ -5311,12 +5378,12 @@ Renames (or moves) the file at `src` to `dst`.
   - `src` — the current path
   - `dst` — the new path
 
-**Returns**: `true` when the rename succeeded
+**Returns**: `Ok` when the rename succeeded, or `RenameFailed`
 
 **Examples**
 
 ```kex
-FS.File.rename("draft.txt", "final.txt")   # => true
+FS.File.rename("draft.txt", "final.txt")   # => Ok(())
 ```
 
 _Writing to a temporary file, then swapping it in_
@@ -5329,7 +5396,7 @@ FS.File.rename("${path}.tmp", path)
 ### `changePermission`
 
 ```kex
-changePermission(path: FilePath, permissions: [Permission]) -> Bool
+changePermission(path: FilePath, permissions: [Permission]) -> Result<Void, FileError>
 ```
 
 Sets what may be done with the file at `path`, portably.
@@ -5343,14 +5410,14 @@ Use `changeMode` when you need exact POSIX bits, such as a file only its owner m
   - `path` — the file whose permissions to change
   - `permissions` — everything the file should allow
 
-**Returns**: `true` when the permissions were changed
+**Returns**: `Ok` when the permissions were changed, or `ModeFailed`
 
 **Examples**
 
 _Making a file read-only_
 
 ```kex
-FS.File.changePermission("report.txt", [FS.Readable])   # => true
+FS.File.changePermission("report.txt", [FS.Readable])   # => Ok(())
 ```
 
 _Writing a script and running it_
@@ -5364,7 +5431,7 @@ Process.run(script, [])
 ### `changeMode`
 
 ```kex
-changeMode(path: FilePath, mode: Integer) -> Bool
+changeMode(path: FilePath, mode: Integer) -> Result<Void, FileError>
 ```
 
 Sets the POSIX permission bits of the file at `path` to `mode`: what `chmod` does with a numeric mode.
@@ -5376,23 +5443,23 @@ Sets the POSIX permission bits of the file at `path` to `mode`: what `chmod` doe
   - `path` — the file whose mode to change
   - `mode` — the permission bits, as in `chmod`
 
-**Returns**: `true` when the mode was changed
+**Returns**: `Ok` when the mode was changed, or `ModeFailed`
 
 **Examples**
 
 ```kex
-FS.File.changeMode("secrets.txt", 0o600)   # => true
+FS.File.changeMode("secrets.txt", 0o600)   # => Ok(())
 ```
 
 ### `readLines`
 
 ```kex
-readLines(path: FilePath) -> [String]?
+readLines(path: FilePath) -> Result<[String], FileError>
 ```
 
 Reads the file and returns its lines, without their newlines.
 
-Answers `None` when the file cannot be read. A trailing newline does not produce a final empty line, so the count is the number of lines you would see in an editor.
+Answers why when the file cannot be read, as `FS.File.read` does. A trailing newline does not produce a final empty line, so the count is the number of lines you would see in an editor.
 
 NOT `lines`: FilePath is an alias for String, so a receiver function named `lines` here is indistinguishable from String's own `lines` at every call site, and merely saying `using FS` made `text.lines` ambiguous. `readLines` also says what it does: it reads the file.
 
@@ -5400,13 +5467,13 @@ NOT `lines`: FilePath is an alias for String, so a receiver function named `line
 
   - `path` — the file to read
 
-**Returns**: the lines, or `None`
+**Returns**: the lines, or why they could not be read
 
 **Examples**
 
 ```kex
-FS.File.readLines("names.txt")   # => Just(["ada", "grace"])
-FS.File.readLines("nowhere")     # => None
+FS.File.readLines("names.txt")   # => Ok(["ada", "grace"])
+FS.File.readLines("nowhere")     # => Error(ReadFailed("nowhere"))
 ```
 
 _Ignoring blank lines and comments_
@@ -5421,10 +5488,10 @@ FS.File.readLines("hosts")
 ### `feed`
 
 ```kex
-feed(path: FilePath) -> Feed<String>?
+feed(path: FilePath) -> Result<Feed<String>, FileError>
 ```
 
-Returns a lazy `Feed` of the file's lines, or `None` when it cannot be read.
+Returns a lazy `Feed` of the file's lines, or `ReadFailed` when the file cannot be opened.
 
 Unlike `readLines`, the file is read a line at a time off a handle held open for the feed's lifetime, so this is the way to walk a file too large to hold in memory: nothing but the current line is retained.
 
@@ -5441,7 +5508,7 @@ FS.File.feed("two-lines.txt").map { |lines| lines.take(5) }.or([])
 
   - `path` — the file to read
 
-**Returns**: the lines as a feed, or `None`
+**Returns**: the lines as a feed, or `ReadFailed`
 
 **Examples**
 
@@ -5449,8 +5516,8 @@ _Peeking at the head of a large file_
 
 ```kex
 match FS.File.feed("huge.log") do
-  Just(lines) => lines.take(10).each { |line| IO.printLine(line) }
-  None        => IO.printError("cannot read huge.log")
+  Ok(lines) => lines.take(10).each { |line| IO.printLine(line) }
+  Error(_)  => IO.printError("cannot read huge.log")
 end
 ```
 
@@ -5465,10 +5532,10 @@ FS.File.feed("app.log")
 ### `size`
 
 ```kex
-size(path: FilePath) -> Integer?
+size(path: FilePath) -> Result<Integer, FileError>
 ```
 
-Returns the file's size in bytes, or `None` when it cannot be read.
+Returns the file's size in bytes, or `ReadFailed` when it cannot be read.
 
 Bytes, not characters: a file of non-ASCII text has more bytes than it has characters.
 
@@ -5476,13 +5543,13 @@ Bytes, not characters: a file of non-ASCII text has more bytes than it has chara
 
   - `path` — the file to measure
 
-**Returns**: the size in bytes, or `None`
+**Returns**: the size in bytes, or `ReadFailed`
 
 **Examples**
 
 ```kex
-FS.File.size("hello.txt")   # => Just(6)
-FS.File.size("nowhere")     # => None
+FS.File.size("hello.txt")   # => Ok(6)
+FS.File.size("nowhere")     # => Error(ReadFailed("nowhere"))
 ```
 
 _Skipping files that are too large_
@@ -5494,10 +5561,10 @@ paths.filter { |p| FS.File.size(p).or(0) < 1048576 }
 ### `absolute`
 
 ```kex
-absolute(path: FilePath) -> String?
+absolute(path: FilePath) -> Result<String, FileError>
 ```
 
-Resolves `path` against the process's current directory and returns the absolute form, or `None` when it cannot be resolved.
+Resolves `path` against the process's current directory and returns the absolute form, or `ReadFailed` when it cannot be resolved.
 
 This is the one path operation that is not in `FS.Path`, because it is not lexical: it asks the process where it is.
 
@@ -5505,12 +5572,12 @@ This is the one path operation that is not in `FS.Path`, because it is not lexic
 
   - `path` — the path to resolve
 
-**Returns**: the absolute path, or `None`
+**Returns**: the absolute path, or `ReadFailed`
 
 **Examples**
 
 ```kex
-FS.File.absolute("src/main.kex")   # => Just("/home/ada/proj/src/main.kex")
+FS.File.absolute("src/main.kex")   # => Ok("/home/ada/proj/src/main.kex")
 ```
 
 _Reporting a file unambiguously_
@@ -5791,7 +5858,7 @@ dirname(path: FilePath) -> String
 
 Returns the path's parent directory.
 
-A child of the root has `"/"` as its parent; a bare name has `"."`, the current directory.
+A child of the root has `"/"` as its parent; a bare name has `"."`, the current directory. The path is read as written, as POSIX `dirname` reads it: `".."` is a name here, not resolved, so `dirname("a/b/..")` is `"a/b"`. Use `normalize` first when that is not what you want.
 
 **Parameters**
 
@@ -5821,7 +5888,7 @@ basename(path: FilePath) -> String
 
 Returns the last segment of the path: the file or directory name.
 
-The root itself answers `"/"`, and an empty path answers `"."`.
+The root itself answers `"/"`, and an empty path answers `""`. Like `dirname`, it reads the path as written: `basename("a/b/..")` is `".."`.
 
 **Parameters**
 
@@ -5970,7 +6037,7 @@ matches.each { |p| IO.printLine(FS.Path.relativeTo(p, projectRoot)) }
 
 Creating, listing and removing directories.
 
-Like `FS.File`, everything here reaches the real filesystem and so is `foul`. Listings answer with an `Optional`, so a directory that cannot be read is a value you handle rather than an exception.
+Like `FS.File`, everything here reaches the real filesystem and so is `foul`. Listings answer with a `Result`, so a directory that cannot be read is a value you handle rather than an exception.
 
 ### `exists?`
 
@@ -6036,36 +6103,36 @@ FS.Directory.file?("README.md")   # => true
 ### `create`
 
 ```kex
-create(path: FilePath) -> Bool
+create(path: FilePath) -> Result<Void, FileError>
 ```
 
-Creates the directory at `path`.
+Creates the directory at `path`, and any missing parents along the way, as `mkdir -p` does. A directory that is already there is `Ok`.
 
 **Parameters**
 
   - `path` — the directory to create
 
-**Returns**: `true` when the directory was created
+**Returns**: `Ok` when the directory is there, or `CreateFailed`
 
 **Examples**
 
 ```kex
-FS.Directory.create("build")   # => true
+FS.Directory.create("build")   # => Ok(())
 ```
 
 _Making sure an output directory is there_
 
 ```kex
-FS.Directory.create(outDir) if !FS.Directory.exists?(outDir)
+FS.Directory.create(outDir).try
 ```
 
 ### `delete`
 
 ```kex
-delete(path: FilePath) -> Bool
+delete(path: FilePath) -> Result<Void, FileError>
 ```
 
-Removes the directory at `path`, which must be empty.
+Removes the directory at `path`, which must be empty. A file or a symlink at `path` is left alone and answers `DeleteFailed`.
 
 Use `deleteAll` to remove a directory together with its contents.
 
@@ -6073,21 +6140,21 @@ Use `deleteAll` to remove a directory together with its contents.
 
   - `path` — the directory to remove
 
-**Returns**: `true` when the directory was removed
+**Returns**: `Ok` when the directory was removed, or `DeleteFailed`
 
 **Examples**
 
 ```kex
-FS.Directory.delete("empty")   # => true
+FS.Directory.delete("empty")   # => Ok(())
 ```
 
 ### `deleteAll`
 
 ```kex
-deleteAll(path: FilePath) -> Bool
+deleteAll(path: FilePath) -> Result<Void, FileError>
 ```
 
-Removes the directory at `path` and everything inside it, recursively.
+Removes the directory at `path` and everything inside it, recursively. A path that is not a directory, a file or a symlink included, is left alone and answers `DeleteFailed`.
 
 This deletes data and cannot be undone: check the path before calling it, particularly when it was computed or came from user input.
 
@@ -6095,12 +6162,12 @@ This deletes data and cannot be undone: check the path before calling it, partic
 
   - `path` — the directory tree to remove
 
-**Returns**: `true` when the tree was removed
+**Returns**: `Ok` when the tree was removed, or `DeleteFailed`
 
 **Examples**
 
 ```kex
-FS.Directory.deleteAll("build")   # => true
+FS.Directory.deleteAll("build")   # => Ok(())
 ```
 
 _Rebuilding a scratch directory from clean_
@@ -6113,23 +6180,23 @@ FS.Directory.create(tmpDir)
 ### `list`
 
 ```kex
-list(path: FilePath) -> [String]?
+list(path: FilePath) -> Result<[String], FileError>
 ```
 
 Lists the names in `path`: both files and directories, one level deep.
 
-The results are bare names, not paths; join them with `path` to get something you can open. Answers `None` when the directory cannot be read.
+The results are bare names, not paths; join them with `path` to get something you can open. Answers `ReadFailed` when the directory cannot be read.
 
 **Parameters**
 
   - `path` — the directory to list
 
-**Returns**: the entry names, or `None`
+**Returns**: the entry names, or `ReadFailed`
 
 **Examples**
 
 ```kex
-FS.Directory.list("src")   # => Just(["main.kex", "lexer"])
+FS.Directory.list("src")   # => Ok(["main.kex", "lexer"])
 ```
 
 _Turning names into usable paths_
@@ -6141,7 +6208,7 @@ FS.Directory.list(dir).or([]).map { |name| FS.Path.join(dir, name) }
 ### `files`
 
 ```kex
-files(path: FilePath) -> [String]?
+files(path: FilePath) -> Result<[String], FileError>
 ```
 
 Lists only the regular files in `path`, one level deep.
@@ -6150,12 +6217,12 @@ Lists only the regular files in `path`, one level deep.
 
   - `path` — the directory to list
 
-**Returns**: the file names, or `None`
+**Returns**: the file names, or `ReadFailed`
 
 **Examples**
 
 ```kex
-FS.Directory.files("src")   # => Just(["main.kex"])
+FS.Directory.files("src")   # => Ok(["main.kex"])
 ```
 
 _Every Kex source in a directory_
@@ -6169,7 +6236,7 @@ FS.Directory.files(dir)
 ### `directories`
 
 ```kex
-directories(path: FilePath) -> [String]?
+directories(path: FilePath) -> Result<[String], FileError>
 ```
 
 Lists only the subdirectories of `path`, one level deep.
@@ -6178,12 +6245,12 @@ Lists only the subdirectories of `path`, one level deep.
 
   - `path` — the directory to list
 
-**Returns**: the directory names, or `None`
+**Returns**: the directory names, or `ReadFailed`
 
 **Examples**
 
 ```kex
-FS.Directory.directories("src")   # => Just(["lexer", "parser"])
+FS.Directory.directories("src")   # => Ok(["lexer", "parser"])
 ```
 
 _Walking one level down_
@@ -6269,7 +6336,7 @@ FS.File.delete(scratch)
 ### `createTemporary`
 
 ```kex
-createTemporary(prefix: String) -> FilePath?
+createTemporary(prefix: String) -> Result<FilePath, FileError>
 ```
 
 Creates a fresh, empty directory under `temporary` and returns its path.
@@ -6280,18 +6347,18 @@ The name is `prefix` followed by a random suffix, so concurrent callers using th
 
   - `prefix` — the start of the directory name, to say whose it is
 
-**Returns**: the new directory, or `None` when it could not be created
+**Returns**: the new directory, or `CreateFailed`
 
 **Examples**
 
 ```kex
-FS.Directory.createTemporary("report")   # => Just("/tmp/report-9f2c41d07ab35e68")
+FS.Directory.createTemporary("report")   # => Ok("/tmp/report-9f2c41d07ab35e68")
 ```
 
 _A scratch directory that cleans up after itself_
 
 ```kex
-let scratch = FS.Directory.createTemporary("build").or(die("no temporary directory"))
+let scratch = FS.Directory.createTemporary("build").try
 FS.File.write(FS.Path.join(scratch, "out.txt"), text)
 FS.Directory.deleteAll(scratch)
 ```
@@ -6429,11 +6496,11 @@ IO.inspect((1..4))   # stderr: 1..4 : Range
 getLine : String?
 ```
 
-Reads one line from stdin, without the trailing newline.
+Reads one line from stdin, without its line ending.
 
-Returns `None` at end of input, which is what makes it usable as a loop condition: the `None` is the end of the stream, not an error.
+The same read as `IO.in.getLine`: `None` both at the end of the input and on a failed read, which is what interactive code wants. Use `IO.readLine` when the two need telling apart.
 
-**Returns**: the line, or `None` at end of input
+**Returns**: the line, or `None` at end of input or on failure
 
 **Examples**
 
@@ -6443,36 +6510,51 @@ _Reading an answer with a default_
 let answer = IO.getLine.or("")
 ```
 
+### `readLine`
+
+```kex
+readLine : Result<String?, ReadError>
+```
+
+Reads one line from stdin, without its line ending, reporting a failure.
+
+The same read as `IO.in.readLine`: `Ok(None)` at end of input, which is what makes it usable as a loop condition, and an `Error` only when the input cannot be read as text.
+
+**Returns**: the line, `Ok(None)` at end of input, or why it could not be read
+
+**Examples**
+
 _Draining stdin line by line_
 
 ```kex
 foul echoAll -> Void do
-  match IO.getLine do
-    Just(line) => do
+  match IO.readLine do
+    Ok(Just(line)) => do
       IO.printLine(line)
       echoAll
     end
-    None => ()
+    Ok(None) => ()
+    Error(e) => IO.printError("cannot read stdin: ${e}")
   end
 end
 ```
 
-### `get`
+### `getChar`
 
 ```kex
-get : String?
+getChar : String?
 ```
 
-Reads a single character from stdin.
+Reads a single character from stdin, as `IO.in.getChar` does.
 
-Returns `None` at end of input. Note that the result is a one-character `String`, not a `Char`.
+Note that the character is a one-character `String`, not a `Char`.
 
-**Returns**: the character, or `None` at end of input
+**Returns**: the character, or `None` at end of input or on failure
 
 **Examples**
 
 ```kex
-let key = IO.get.or("")
+let key = IO.getChar.or("")
 IO.printLine("you pressed ${key}")
 ```
 
@@ -6503,42 +6585,6 @@ _Keeping stdout clean for the real result_
 ```kex
 IO.printError("scanning ${dir}...")   # progress, on stderr
 IO.printLine(results.join("\n"))      # the output, on stdout
-```
-
-### `warn`
-
-```kex
-warn(msg: Showable) -> Void
-```
-
-Writes `msg` to stderr. Identical to `printError`, named for the case where the message is a warning rather than a failure.
-
-**Parameters**
-
-  - `msg` — the warning to write
-
-**Examples**
-
-```kex
-IO.warn("ignoring unknown key ${key}")
-```
-
-### `warning`
-
-```kex
-warning(msg: Showable) -> Void
-```
-
-Writes `msg` to stderr. The long spelling of `warn`.
-
-**Parameters**
-
-  - `msg` — the warning to write
-
-**Examples**
-
-```kex
-IO.warning("this option is deprecated")
 ```
 
 ### `out` (constant)
@@ -6577,7 +6623,7 @@ report(FS.File.open("report.txt", Write).try, results)
 error : FileHandle<CannotRead, CanWrite>
 ```
 
-Standard error, as a handle. The sink `IO.printError` and `IO.warn` write to, reachable as a value.
+Standard error, as a handle. The sink `IO.printError` writes to, reachable as a value.
 
 **Examples**
 
@@ -6593,7 +6639,7 @@ IO.error.printLine("config file not found")
 in : FileHandle<CanRead, CannotWrite>
 ```
 
-Standard input, as a handle. The source `IO.getLine` and `IO.get` read from, reachable as a value.
+Standard input, as a handle. The source `IO.getLine`, `IO.readLine` and `IO.getChar` read from, reachable as a value.
 
 **Examples**
 
@@ -6628,13 +6674,13 @@ entities:
 ### `parse`
 
 ```kex
-parse(text: String) -> Result<Any, Error>
-parse(text: String, options: {Atom: Bool}) -> Result<Any, Error>
+parse(text: String) -> Result<Any, JSONError>
+parse(text: String, options: {Atom: Bool}) -> Result<Any, JSONError>
 ```
 
 Parses a JSON document, strictly.
 
-The whole text must be one JSON value with nothing after it: trailing input is `TrailingInput`, not a silently ignored tail. Objects come back as maps with atom keys, arrays as lists, `null` as `None`.
+The whole text must be one JSON value with nothing after it: trailing input is `TrailingInput`, not a silently ignored tail. Objects come back as maps with string keys, arrays as lists, `null` as `None`.
 
 **Parameters**
 
@@ -6646,7 +6692,7 @@ The whole text must be one JSON value with nothing after it: trailing input is `
 
 ```kex
 JSON.parse("{\"a\": 1, \"b\": [true, null, 2.5]}")
-# => Ok({ a: 1, b: [true, None, 2.5] })
+# => Ok({ "a": 1, "b": [true, None, 2.5] })
 JSON.parse("[1, 2")   # => Error(UnexpectedEnd(5))
 ```
 
@@ -6669,7 +6715,7 @@ Renders a Kex value as strict JSON text.
 
 Maps become objects, lists become arrays, `None` becomes `null`, and strings are escaped. A map written with atom keys (the usual Kex spelling) renders with those names as strings, so `{ name: "Ada" }` becomes `{"name":"Ada"}`. Object keys come out in canonical key order.
 
-Anything the encoder does not recognise renders as `null` rather than failing, so this never raises.
+Records become objects of their fields, in declaration order; tuples become arrays; atoms, characters and constructors without a payload (`Monday`) become strings. A constructor that carries a payload, such as `Ok(1)`, has no JSON shape of its own and renders as `null` (`Just(x)` is the exception: it is `x`), as does anything else the encoder does not recognise, so this never raises.
 
 **Parameters**
 
@@ -6683,7 +6729,7 @@ Anything the encoder does not recognise renders as `null` rather than failing, s
 JSON.stringify({ name: "Ada", n: 1, ok: true })
 # => '{"n":1,"name":"Ada","ok":true}'
 JSON.stringify([1, 2, 3])
-# => '[1,2,3]'
+# => "[1,2,3]"
 ```
 
 _Writing a JSON file_
@@ -6695,10 +6741,10 @@ FS.File.write("out.json", JSON.stringify(report))
 _A round trip_
 
 ```kex
-JSON.parse(JSON.stringify({ a: 1 }))   # => Ok({ a: 1 })
+JSON.parse(JSON.stringify({ "a": 1 }))   # => Ok({ "a": 1 })
 ```
 
-## type `Error`
+## type `JSONError`
 
 Why a document could not be parsed. Every variant carries the position in the input where the parser stopped, so a caller can point at the problem.
 
@@ -6797,7 +6843,7 @@ Just("hello").showValue    # => "hello"
 None.showValue             # => ""
 ```
 
-Implemented by [`Binary`](binary.md#make-binary), [`Rectangular`](complex.md#make-rectangular), [`Polar`](complex.md#make-polar), [`Optional<Showable>`](#make-optional-showable), [`Result<X, E>`](#make-result), [`Period`](time.md#make-period), [`Date`](time.md#make-date), [`Time`](time.md#make-time), [`DateTime`](time.md#make-datetime), [`Measure`](units.md#make-measure), [`URI`](uri.md#make-uri), [`URL`](uri.md#make-url), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack), [`Headers`](net/http.md#make-headers).
+Implemented by [`Binary`](binary.md#make-binary), [`Complex`](complex.md#make-complex), [`Optional<Showable>`](#make-optional-showable), [`Result<X, E>`](#make-result), [`Regex`](regex.md#make-regex), [`Duration`](time.md#make-duration), [`Period`](time.md#make-period), [`Date`](time.md#make-date), [`Time`](time.md#make-time), [`DateTime`](time.md#make-datetime), [`TimeError`](time.md#make-timeerror), [`Measure`](units.md#make-measure), [`URI`](uri.md#make-uri), [`URL`](uri.md#make-url), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack), [`Headers`](net/http.md#make-headers).
 
 ### Provided functions
 
@@ -7642,7 +7688,8 @@ Returns the element at position `i` (0-based) wrapped in `Just`, or `None` if th
 
 ```kex
 [10, 20, 30].at(1)   # => Just(20)
-[10, 20, 30].at(9)   # => None
+[10, 20, 30].at(9)    # => None
+[10, 20, 30].at(-1)   # => Just(30)
 ```
 
 #### `get`
@@ -7665,7 +7712,8 @@ Returns the element at position `i` (0-based), or `None` when the index is out o
 
 ```kex
 [10, 20, 30].get(1)   # => Just(20)
-[10, 20, 30].get(9)   # => None
+[10, 20, 30].get(9)    # => None
+[10, 20, 30].get(-1)   # => Just(30)
 ```
 
 #### `contains?`
@@ -7820,7 +7868,7 @@ slice(range: Range<Integer>) -> [X]
 
 Returns the sublist of `length` elements starting at index `start`, counting from 0.
 
-The window is clamped rather than refused, the way `take` and `drop` already behave: a start past the end answers `[]`, a length running past the end stops at the end, a negative start counts as 0, and a negative length answers `[]`.
+The window is clamped rather than refused, the way `take` and `drop` already behave: a start past the end answers `[]`, a length running past the end stops at the end, and a negative length answers `[]`. A negative start counts back from the end, as in Ruby: `-1` is the last element, and a start still before the beginning answers `[]`.
 
 **Parameters**
 
@@ -7835,6 +7883,7 @@ The window is clamped rather than refused, the way `take` and `drop` already beh
 [1, 2, 3, 4].slice(1, 2)    # => [2, 3]
 [1, 2, 3].slice(1, 99)      # => [2, 3]
 [1, 2, 3].slice(9, 2)       # => []
+[1, 2, 3, 4].slice(-2, 2)   # => [3, 4]
 ```
 
 _Taking a page of rows_
@@ -7914,29 +7963,271 @@ Returns the elements sorted using a custom comparator. `comp` should return `tru
 #### `min`
 
 ```kex
-min(f: (X -> Y)) -> X?
+min : X?
 ```
 
-Returns the element with the smallest `f` key wrapped in `Just`, or `None` for an empty list.
+Returns the smallest element wrapped in `Just`, or `None` for an empty list. Elements compare in the same natural order `sort` uses.
+
+**Returns**: the smallest element, or `None`
 
 **Examples**
 
 ```kex
-["hey", "hi"].min { |s| s.count }   # => Just("hi")
+[3, 1, 2].min          # => Just(1)
+["pear", "fig"].min    # => Just("fig")
+[].min                 # => None
 ```
 
 #### `max`
 
 ```kex
-max(f: (X -> Y)) -> X?
+max : X?
 ```
 
-Returns the element with the largest `f` key wrapped in `Just`, or `None` for an empty list.
+Returns the largest element wrapped in `Just`, or `None` for an empty list. Elements compare in the same natural order `sort` uses.
+
+**Returns**: the largest element, or `None`
 
 **Examples**
 
 ```kex
-["hey", "hi"].max { |s| s.count }   # => Just("hey")
+[3, 1, 2].max          # => Just(3)
+["pear", "fig"].max    # => Just("pear")
+```
+
+#### `product`
+
+```kex
+product(f: (X -> Number)) -> Number
+```
+
+Maps each element through `f` and multiplies the results.
+
+**Examples**
+
+```kex
+[[1, 2], [3, 4]].product { |pair| pair.first.or(1) }   # => 3
+```
+
+#### `minBy`
+
+```kex
+minBy(f: (X -> Y)) -> X?
+```
+
+Returns the element with the smallest `f` key wrapped in `Just`, or `None` for an empty list. The first of several tying elements wins.
+
+**Parameters**
+
+  - `f` — the key each element is compared by
+
+**Returns**: the element with the smallest key, or `None`
+
+**Examples**
+
+```kex
+["hey", "hi"].minBy { |s| s.count }   # => Just("hi")
+[].minBy { |s| s.count }              # => None
+```
+
+#### `maxBy`
+
+```kex
+maxBy(f: (X -> Y)) -> X?
+```
+
+Returns the element with the largest `f` key wrapped in `Just`, or `None` for an empty list. The first of several tying elements wins.
+
+**Parameters**
+
+  - `f` — the key each element is compared by
+
+**Returns**: the element with the largest key, or `None`
+
+**Examples**
+
+```kex
+["hey", "hi"].maxBy { |s| s.count }   # => Just("hey")
+```
+
+#### `sortBy`
+
+```kex
+sortBy(f: (X -> Y)) -> [X]
+```
+
+Returns the elements sorted by the key `f` gives each one, smallest key first. The sort is stable: elements with equal keys keep their order.
+
+**Parameters**
+
+  - `f` — the key each element is sorted by
+
+**Returns**: the sorted elements
+
+**Examples**
+
+```kex
+["pear", "fig", "apple"].sortBy { |s| s.count }   # => ["fig", "pear", "apple"]
+```
+
+_Newest first_
+
+```kex
+posts.sortBy { |p| p.published }.reverse
+```
+
+#### `groupBy`
+
+```kex
+groupBy(f: (X -> K)) -> {K: [X]}
+```
+
+Groups the elements by the key `f` gives each one. Each group keeps its elements in their original order.
+
+**Parameters**
+
+  - `f` — the key each element is grouped under
+
+**Returns**: each key with the elements that produced it
+
+**Examples**
+
+```kex
+[1, 2, 3, 4].groupBy { |n| n.even? }   # => { false: [1, 3], true: [2, 4] }
+```
+
+_Words by their first letter_
+
+```kex
+words.groupBy { |w| w.first.or(' ') }
+```
+
+#### `tally`
+
+```kex
+tally : {X: Integer}
+```
+
+Counts how many times each distinct element occurs.
+
+**Returns**: each distinct element with its count
+
+**Examples**
+
+```kex
+["a", "b", "a"].tally   # => { "a": 2, "b": 1 }
+```
+
+#### `slices`
+
+```kex
+slices(n: Integer) -> [[X]]
+```
+
+Splits the list into consecutive pieces of `n` elements; the last piece holds whatever is left over. Ruby calls this `each_slice`.
+
+**Parameters**
+
+  - `n` — the piece size, at least 1
+
+**Returns**: the pieces, in order; `[]` when `n` is less than 1
+
+**Examples**
+
+```kex
+[1, 2, 3, 4, 5].slices(2)   # => [[1, 2], [3, 4], [5]]
+```
+
+_Rows of a table, three cells each_
+
+```kex
+cells.slices(3).map { |row| row.join(" | ") }
+```
+
+#### `windows`
+
+```kex
+windows(n: Integer) -> [[X]]
+```
+
+Every run of `n` consecutive elements, each overlapping the next by all but one element. Ruby calls this `each_cons`.
+
+**Parameters**
+
+  - `n` — the window size, at least 1
+
+**Returns**: the windows, in order; `[]` when the list is shorter than `n` or `n` is less than 1
+
+**Examples**
+
+```kex
+[1, 2, 3, 4].windows(2)   # => [[1, 2], [2, 3], [3, 4]]
+```
+
+_Differences between neighbours_
+
+```kex
+readings.windows(2).map { |w| w.get(1, 0) - w.get(0, 0) }
+```
+
+#### `difference`
+
+```kex
+difference(other: [X]) -> [X]
+```
+
+The elements of this list that are not in `other`, in this list's order. Duplicates in this list are kept unless `other` removes them.
+
+**Parameters**
+
+  - `other` — the elements to leave out
+
+**Returns**: what remains
+
+**Examples**
+
+```kex
+[1, 2, 2, 3].difference([2])   # => [1, 3]
+```
+
+#### `intersect`
+
+```kex
+intersect(other: [X]) -> [X]
+```
+
+The distinct elements present in both lists, in this list's order.
+
+**Parameters**
+
+  - `other` — the list to intersect with
+
+**Returns**: the shared elements, each once
+
+**Examples**
+
+```kex
+[1, 2, 2, 3].intersect([3, 2, 5])   # => [2, 3]
+```
+
+#### `union`
+
+```kex
+union(other: [X]) -> [X]
+```
+
+The distinct elements of both lists: this list's first, then the new ones from `other`.
+
+**Parameters**
+
+  - `other` — the list to add
+
+**Returns**: every distinct element, each once
+
+**Examples**
+
+```kex
+[1, 2, 2].union([2, 3])   # => [1, 2, 3]
 ```
 
 #### `sum`
@@ -8010,48 +8301,6 @@ Multiplies all elements. Returns `1` for an empty list.
 [].product          # => 1
 ```
 
-```kex
-product(f: (X -> Number)) -> Number
-```
-
-Maps each element through `f` and multiplies the results.
-
-**Examples**
-
-```kex
-[[1,2],[3,4]].product { |pair| pair.first.or(1) }   # => 3
-```
-
-#### `min`
-
-```kex
-min : X?
-```
-
-Returns the smallest element wrapped in `Just`, or `None` for an empty list.
-
-**Examples**
-
-```kex
-[3, 1, 2].min   # => Just(1)
-[].min          # => None
-```
-
-#### `max`
-
-```kex
-max : X?
-```
-
-Returns the largest element wrapped in `Just`, or `None` for an empty list.
-
-**Examples**
-
-```kex
-[3, 1, 2].max   # => Just(3)
-[].max          # => None
-```
-
 ### On `[[Y]]`
 
 #### `flatten`
@@ -8079,6 +8328,8 @@ Flattens exactly one level of nesting.
 ### From [`Foldable`](enumerable.md#trait-foldable)
 
   - [`eachIndexed`](enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
+  - [`none?`](enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`one?`](enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
 
 ### Defined in other modules
 
@@ -8097,6 +8348,7 @@ title: Map
 entities:
   - { kind: type, name: "Map" }
   - { kind: make, name: "Map<K, V>" }
+  - { kind: module, name: "Map" }
 ---
 
 # Map
@@ -8114,11 +8366,13 @@ config.get(:user).or("anonymous")   # => "anonymous"
 config.put(:port, 9090)             # => { :host: "localhost", :port: 9090 }
 ```
 
-A map is `Enumerable` and `Foldable`, and the traversal blocks take the key and value as two parameters:
+A map is `Enumerable` and `Foldable`, and every traversal block takes the key and value as two parameters: `each`, `map`, `filter`, `reject`, `find`, `any?`, `all?`, `none?`, `one?`, `count`, `collect` and `flatMap`, with `mapIndexed` adding the index as a third. Only `reduce`, the primitive, hands over the pair as one value.
 
 ```kex
 config.each { |k, v| IO.printLine("${k} = ${v}") }
 config.filter { |k, v| k != :port }   # => { :host: "localhost" }
+config.collect { |k, v| k == :port then Just(v) else None }   # => [8080]
+config.mapIndexed { |k, v, i| "${i}. ${k}" }   # => ["0. host", "1. port"]
 ```
 
 ## type `Map<K, V>`
@@ -8629,6 +8883,29 @@ _Layering user settings over defaults_
 defaults.merge(userConfig)
 ```
 
+#### `update`
+
+```kex
+update(key: K, f: (V -> V)) -> Map<K, V>
+update(key: K, f: V) -> (V -> V) -> Map<K, V>
+```
+
+Replaces the value under `key` with `f` of it. A missing key is left missing: use the three-argument form to supply a starting value.
+
+**Parameters**
+
+  - `key` — the key to update
+  - `f` — computes the new value from the old
+
+**Returns**: the map with that one value replaced
+
+**Examples**
+
+```kex
+{ "a": 1 }.update("a") { |n| n + 1 }   # => { "a": 2 }
+{ "a": 1 }.update("b") { |n| n + 1 }   # => { "a": 1 }
+```
+
 #### `any?` (from Foldable)
 
 ```kex
@@ -8732,6 +9009,8 @@ Returns `true` when the map has no entries. The `Blankable` view of `empty?`, so
 ### From [`Foldable`](enumerable.md#trait-foldable)
 
   - [`eachIndexed`](enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
+  - [`none?`](enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`one?`](enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
 
 ### From [`Monoid`](algebra.md#trait-monoid)
 
@@ -8740,6 +9019,29 @@ Returns `true` when the map has no entries. The `Blankable` view of `empty?`, so
 ### Defined in other modules
 
   - [Truthyable](truthyable.md#make-map): [`truthy?`](truthyable.md#map-truthy?)
+
+## module `Map`
+
+### `from`
+
+```kex
+from(entries: [(K, V)]) -> Map<K, V>
+```
+
+Builds a map from `(key, value)` pairs. A key that appears more than once keeps its last value, as `put` would. Ruby spells this `to_h`.
+
+**Parameters**
+
+  - `entries` — the pairs
+
+**Returns**: the map
+
+**Examples**
+
+```kex
+Map.from([("a", 1), ("b", 2)])   # => { "a": 1, "b": 2 }
+Map.from(m.entries) == m         # => true
+```
 
 
 ---
@@ -9194,7 +9496,7 @@ pow(x: Number, y: Number) -> Float
 
 Returns `x` raised to the power `y`.
 
-The result is always a `Float`, even for whole arguments, so round it when you need an integer back.
+The result is always a `Float`, even for whole arguments. For an exact integer power use `Integer.pow`: `2.pow(100)` keeps every digit, where rounding `Math.pow(2, 100)` cannot.
 
 **Parameters**
 
@@ -9953,7 +10255,7 @@ input(first, second, third, fourth) -> Void
 
 Queues the lines `IO.getLine` will return, in order.
 
-Takes a list, or up to four lines as separate arguments. Once they run out, `IO.getLine` answers `None`: end of input, exactly as a closed stdin would.
+Takes a list, or up to four lines as separate arguments. Once they run out, `IO.readLine` answers `Ok(None)`: end of input, exactly as a closed stdin would.
 
 **Parameters**
 
@@ -10777,6 +11079,173 @@ Returns the integer unchanged. The `Integer` counterpart of `Float.round`.
 7.round   # => 7
 ```
 
+### `pow`
+
+```kex
+pow(exponent: Integer) -> Integer
+```
+
+Raises the integer to a non-negative integer power, exactly: integers have no size limit, so `2.pow(100)` is the whole 31-digit number, where `Math.pow` answers a `Float`.
+
+A negative exponent gives the reciprocal truncated toward zero, the way `/` divides integers: `0` for any base but `1` and `-1`.
+
+**Parameters**
+
+  - `exponent` — the power to raise to
+
+**Returns**: `this` multiplied by itself `exponent` times
+
+**Examples**
+
+```kex
+2.pow(10)    # => 1024
+2.pow(100)   # => 1267650600228229401496703205376
+(-3).pow(3)  # => -27
+```
+
+### `div`
+
+```kex
+div(n: Integer) -> Integer
+```
+
+Divides and rounds toward negative infinity: the quotient that goes with `modulo`. Plain `/` truncates toward zero instead, so the two differ only when the signs do. Ruby's `/` on integers is this one.
+
+**Parameters**
+
+  - `n` — the divisor, non-zero
+
+**Returns**: the floored quotient
+
+**Examples**
+
+```kex
+7.div(2)      # => 3
+(-7).div(2)   # => -4   (-7 / 2 is -3)
+```
+
+### `divmod`
+
+```kex
+divmod(n: Integer) -> (Integer, Integer)
+```
+
+The floored quotient and the `modulo` remainder together, so that +q * n + r == this+ always holds.
+
+**Parameters**
+
+  - `n` — the divisor, non-zero
+
+**Returns**: `(this.div(n), this.modulo(n))`
+
+**Examples**
+
+```kex
+7.divmod(2)      # => (3, 1)
+(-7).divmod(2)   # => (-4, 1)
+```
+
+### `gcd`
+
+```kex
+gcd(n: Integer) -> Integer
+```
+
+The greatest common divisor, always non-negative. `0.gcd(0)` is `0`.
+
+**Parameters**
+
+  - `n` — the other integer
+
+**Returns**: the largest integer dividing both
+
+**Examples**
+
+```kex
+12.gcd(18)    # => 6
+(-4).gcd(6)   # => 2
+```
+
+### `lcm`
+
+```kex
+lcm(n: Integer) -> Integer
+```
+
+The least common multiple, always non-negative. Zero with anything is `0`.
+
+**Parameters**
+
+  - `n` — the other integer
+
+**Returns**: the smallest positive integer both divide
+
+**Examples**
+
+```kex
+4.lcm(6)   # => 12
+```
+
+### `digits`
+
+```kex
+digits : [Integer]
+```
+
+The decimal digits of the integer's magnitude, least significant first, as Ruby's `digits` answers them. `.reverse` gives reading order.
+
+**Returns**: the digits, ones place first
+
+**Examples**
+
+```kex
+1234.digits           # => [4, 3, 2, 1]
+0.digits              # => [0]
+1234.digits.reverse   # => [1, 2, 3, 4]
+```
+
+### `zero?`
+
+```kex
+zero? : Bool
+```
+
+Returns `true` for zero.
+
+**Examples**
+
+```kex
+0.zero?   # => true
+```
+
+### `positive?`
+
+```kex
+positive? : Bool
+```
+
+Returns `true` when the number is greater than zero.
+
+**Examples**
+
+```kex
+0.positive?   # => false
+```
+
+### `negative?`
+
+```kex
+negative? : Bool
+```
+
+Returns `true` when the number is less than zero.
+
+**Examples**
+
+```kex
+0.negative?   # => false
+```
+
 ### From [`Monoid`](algebra.md#trait-monoid)
 
   - [`repeat`](algebra.md#monoid-repeat) — Combines this value with itself `n` times.
@@ -10862,11 +11331,9 @@ Returns `true` when the float falls inside `range`, endpoints included.
 
 **Examples**
 
-_Comparing directly is usually clearer for floats_
-
 ```kex
-let ratio = 0.75
-ratio >= 0.0 && ratio <= 1.0   # => true
+0.75.in?(0.0..1.0)   # => true
+1.5.in?(0.0..1.0)    # => false
 ```
 
 ### `floor`
@@ -10944,6 +11411,48 @@ Truncates toward zero and returns the result as an `Integer`: it drops the fract
 ```kex
 3.7.toInteger      # => 3
 (-3.7).toInteger   # => -3   (floor would give -4)
+```
+
+### `zero?`
+
+```kex
+zero? : Bool
+```
+
+Returns `true` for zero.
+
+**Examples**
+
+```kex
+2.5.zero?   # => false
+```
+
+### `positive?`
+
+```kex
+positive? : Bool
+```
+
+Returns `true` when the number is greater than zero.
+
+**Examples**
+
+```kex
+2.5.positive?   # => true
+```
+
+### `negative?`
+
+```kex
+negative? : Bool
+```
+
+Returns `true` when the number is less than zero.
+
+**Examples**
+
+```kex
+2.5.negative?   # => false
 ```
 
 ### Defined in other modules
@@ -11777,6 +12286,21 @@ users.get(id)
   .or("unknown")
 ```
 
+#### `filter`
+
+```kex
+filter : (X -> Bool) -> X?
+```
+
+Keeps the value only when `pred` accepts it.
+
+**Examples**
+
+```kex
+Just(4).filter { |n| n.even? }   # => Just(4)
+Just(3).filter { |n| n.even? }   # => None
+```
+
 ### From [`Showable`](kex.md#trait-showable)
 
   - [`to`](kex.md#showable-to) — 
@@ -11963,6 +12487,36 @@ _Keeping only the values that parsed_
   .map { |s| Integer.parse(s).optional }
   .filter(~set?)
   .map { |o| o.or(0) }    # => [1, 3]
+```
+
+#### `mapError`
+
+```kex
+mapError : (E -> F) -> Result<X, F>
+```
+
+Applies `f` to the error, leaving a success alone: `map` for the other side.
+
+**Examples**
+
+```kex
+Error(404).mapError { |code| "HTTP ${code}" }   # => Error("HTTP 404")
+Ok(1).mapError { |code| "HTTP ${code}" }        # => Ok(1)
+```
+
+#### `error`
+
+```kex
+error : E?
+```
+
+The error, if this is one: the counterpart of `optional`.
+
+**Examples**
+
+```kex
+Error("bad").error   # => Just("bad")
+Ok(1).error          # => None
 ```
 
 ### From [`Showable`](kex.md#trait-showable)
@@ -14663,9 +15217,9 @@ Returns the product of the range's elements.
 contains?(value: A) -> Bool
 ```
 
-Returns `true` when `value` is one of the enumerated elements.
+Returns `true` when `value` lies between the endpoints, both included.
 
-This function materializes the range and supports integer and character ranges only. For continuous bounds, compare the value with each endpoint: `value >= lower && value <= upper`.
+Only the endpoints are compared: nothing is enumerated, so this is cheap for a range of any size and works for a continuous `Float` range too. A range whose lower endpoint exceeds its upper endpoint contains nothing.
 
 **Parameters**
 
@@ -14676,8 +15230,10 @@ This function materializes the range and supports integer and character ranges o
 **Examples**
 
 ```kex
-(1..10).contains?(5)    # => true
-(1..10).contains?(11)   # => false
+(1..10).contains?(5)          # => true
+(1..10).contains?(11)         # => false
+(0.0..1.0).contains?(0.25)    # => true
+('a'..'f').contains?('c')     # => true
 ```
 
 #### `items`
@@ -14703,23 +15259,6 @@ _Building a lookup table_
 
 ```kex
 (1..12).items.map { |m| (m, monthName(m)) }
-```
-
-#### `list`
-
-```kex
-list : [A]
-```
-
-Returns the range's elements as a list. The same as `items`, under the name that reads as a conversion — and unlike `to(List)` it answers the list directly rather than wrapped in an `Optional`.
-
-**Returns**: the elements, in ascending order
-
-**Examples**
-
-```kex
-(1..3).list      # => [1, 2, 3]
-('a'..'c').list  # => ['a', 'b', 'c']
 ```
 
 #### `first`
@@ -15189,6 +15728,8 @@ Returns the elements that do NOT satisfy `pred`, as a list.
   - [`eachIndexed`](enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
   - [`all?`](enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`.
   - [`any?`](enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`.
+  - [`none?`](enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`one?`](enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
   - [`find`](enumerable.md#foldable-find) — Returns the first item satisfying `pred`, or `None` when nothing does.
 
 
@@ -15241,6 +15782,32 @@ match regex(pattern) do
     []
   end
 end
+```
+
+### `withOptions`
+
+```kex
+withOptions(source: String, options: {Atom: Bool}) -> Result<Regex, RegexError>
+```
+
+Compiles `source` with matching options, as Ruby's `Regexp.new(source, options)` does: `ignoreCase` (`/i`), `multiline` (`^` and `$` at every line), `dotAll` (`.` matches a newline too) and `extended` (whitespace and `#` comments in the pattern are ignored). An option set to `false` is the same as leaving it out; an unknown one is a `RegexError` at position 0.
+
+The options become an inline `(?imsx)` prefix, so the regex's `source` carries them and prints them. Positions in a compile error still count from the start of `source`.
+
+**Parameters**
+
+  - `source` — the pattern text
+  - `options` — which options to turn on
+
+**Returns**: the regex, or why it did not compile
+
+**Examples**
+
+```kex
+Regex.withOptions("hello", { ignoreCase: true }).map { |re| "HeLLo".matches?(re) }
+# => Ok(true)
+Regex.withOptions("x", { verbose: true })
+# => Error(RegexError { source: "x", position: 0, message: "unknown regex option :verbose" })
 ```
 
 ### `validateRegex`
@@ -15462,6 +16029,29 @@ _Redacting numbers in a log line_
 line.replace(re`\d`, "x")
 ```
 
+### `replaceFirst`
+
+```kex
+replaceFirst : String -> Regex -> String | (Match) -> String -> String
+```
+
+Replaces only the first match of `re` in `s`: Ruby's `sub`, where `replace` is its `gsub`. The replacement is a literal string or a function of the `Match`, as for `replace`.
+
+**Parameters**
+
+  - `s` — the text to rewrite
+  - `re` — the pattern to replace
+  - `replacement` — the new text, or how to compute it
+
+**Returns**: the text with its first match replaced, or unchanged
+
+**Examples**
+
+```kex
+"a1b22c".replaceFirst(re`\d+`, "#")   # => "a#b22c"
+"abc".replaceFirst(re`\d`, "#")       # => "abc"
+```
+
 ### `splitLimit`
 
 ```kex
@@ -15474,7 +16064,7 @@ A positive `limit` caps the field count, leaving the remainder unsplit in the la
 
 Plain `s.split(re)` needs no function here at all: it resolves to `String.split`, which dispatches to this engine when handed a Regex (in both backends), and follows Ruby's semantics: trailing empty fields are dropped, leading ones are kept, and capture groups are interleaved into the result.
 
-Use `Regex.splitWithLimit` to control the number of fields.
+Use `Regex.splitLimit` to control the number of fields.
 
 **Parameters**
 
@@ -15546,7 +16136,29 @@ let digits = re`[0-9]+`
 
   - `source` : [String](string.md#make-string)
 
+Implements [`Showable`](kex.md#trait-showable).
 
+### Functions
+
+#### `showValue` (from Showable)
+
+```kex
+showValue : String
+```
+
+Renders the regex as the literal that builds it, so interpolating one shows its pattern rather than its record layout.
+
+**Returns**: the pattern as a `re` literal
+
+**Examples**
+
+```kex
+"${re`\d+`}"   # => "re`\d+`"
+```
+
+### From [`Showable`](kex.md#trait-showable)
+
+  - [`to`](kex.md#showable-to) — 
 
 ## record `RegexError`
 
@@ -15579,6 +16191,7 @@ A group that did not participate is an absent key, so `get` answers `None`. This
 **Fields**
 
   - `captures` : [Map](map.md#type-map)<Any, [String](string.md#make-string)>
+  - `offset` : [Integer](number.md#make-integer)
 
 ### Functions
 
@@ -15684,7 +16297,7 @@ _Generating retry delays without building an unbounded list_
 
 ```kex
 let delays = Stream.Sequence(from: 1.seconds) { |d| d * 2 }
-delays.take(4)   # => [1 second, 2 seconds, 4 seconds, 8 seconds]
+delays.take(4)   # => four Durations: 1, 2, 4 and 8 seconds
 ```
 
 #### `drop`
@@ -15869,28 +16482,6 @@ _A geometric decay_
 ```kex
 Stream.Sequence(from: 1.0) { |x| x / 2.0 }.take(4)
 # => [1.0, 0.5, 0.25, 0.125]
-```
-
-### `Iterate`
-
-```kex
-Iterate(seed: A, step: (A -> A)) -> Stream<A>
-```
-
-Builds an infinite stream from a seed and a step function. The same thing as `Sequence`: use whichever reads better where you are.
-
-**Parameters**
-
-  - `seed` — the first element
-  - `step` — produces the next element from the current one
-
-**Returns**: the generated stream
-
-**Examples**
-
-```kex
-let odds = Stream.Iterate(1) { |n| n + 2 }
-odds.take(5)   # => [1, 3, 5, 7, 9]
 ```
 
 ### `empty` (constant)
@@ -16120,6 +16711,7 @@ Answers `None` for an index past either end rather than failing, so it is safe t
 ```kex
 "hi".get(1)    # => Just('i')
 "hi".get(9)    # => None
+"hi".get(-1)   # => Just('i')
 ```
 
 ### `take`
@@ -16187,7 +16779,7 @@ slice(range: Range<Integer>) -> String
 
 Returns the substring of `length` characters starting at index `start`, counting from 0.
 
-Characters, not bytes: the indices count what `count` counts. The window is clamped rather than refused, the way `take` and `drop` already behave: a start past the end answers `""`, a length running past the end stops at the end, a negative start counts as 0, and a negative length answers `""`.
+Characters, not bytes: the indices count what `count` counts. The window is clamped rather than refused, the way `take` and `drop` already behave: a start past the end answers `""`, a length running past the end stops at the end, and a negative length answers `""`. A negative start counts back from the end, as in Ruby: `-1` is the last character, and a start still before the beginning answers `""`.
 
 **Parameters**
 
@@ -16208,28 +16800,6 @@ _Reading a fixed-width field_
 
 ```kex
 line.slice(0, 10).trim   # the date column of a log line
-```
-
-### `substring`
-
-```kex
-substring(start: Integer, length: Integer) -> String
-substring(range: Range<Integer>) -> String
-```
-
-Returns the substring of `length` characters starting at index `start`. The same as `slice`, under the name familiar from other languages.
-
-**Parameters**
-
-  - `start` — the 0-based index of the first character
-  - `length` — how many characters to keep
-
-**Returns**: the characters in that window
-
-**Examples**
-
-```kex
-"hello".substring(1, 3)   # => "ell"
 ```
 
 ### `reject`
@@ -16283,7 +16853,8 @@ _An anagram check_
 ### `indexOf`
 
 ```kex
-indexOf(c: Char) -> Integer?
+indexOf(x: Char) -> Integer?
+indexOf(x: String) -> Integer?
 ```
 
 Returns the index of the first occurrence of `c`, or `None` when the character does not appear.
@@ -16336,6 +16907,46 @@ _Finding where the leading indentation ends_
 
 ```kex
 "    text".findIndex { |c| !c.space? }   # => Just(4)
+```
+
+### `takeWhile`
+
+```kex
+takeWhile(pred: (Char -> Bool)) -> String
+```
+
+Returns the leading characters that satisfy `pred`, stopping at the first that does not.
+
+**Parameters**
+
+  - `pred` — the test applied to each character
+
+**Returns**: the longest matching prefix
+
+**Examples**
+
+```kex
+"123abc".takeWhile(~digit?)   # => "123"
+```
+
+### `dropWhile`
+
+```kex
+dropWhile(pred: (Char -> Bool)) -> String
+```
+
+Drops the leading characters that satisfy `pred` and returns the rest.
+
+**Parameters**
+
+  - `pred` — the test applied to each character
+
+**Returns**: the string from the first character that fails `pred`
+
+**Examples**
+
+```kex
+"123abc".dropWhile(~digit?)   # => "abc"
 ```
 
 ### `zip`
@@ -16409,6 +17020,28 @@ Returns the number of characters: characters, not bytes. See `bytes` for the sto
 "hello".count   # => 5
 "".count        # => 0
 "é".count       # => 1   (but "é".bytes.count is 2)
+```
+
+### `occurrences`
+
+```kex
+occurrences(sub: String) -> Integer
+```
+
+Returns how many times `sub` occurs, counting non-overlapping matches from the left. An empty `sub` occurs 0 times. (Ruby spells this `scan(sub).size`; `count` here counts characters by a predicate.)
+
+**Parameters**
+
+  - `sub` — the text to look for
+
+**Returns**: the number of occurrences
+
+**Examples**
+
+```kex
+"hello".occurrences("l")     # => 2
+"aaaa".occurrences("aa")     # => 2
+"hello".occurrences("xyz")   # => 0
 ```
 
 ### `length`
@@ -16720,7 +17353,6 @@ Use `chars` instead when you want `Char` values rather than strings.
 
 ```kex
 split(sep: String | Regex) -> [String]
-split : [String]
 ```
 
 Splits the string on every occurrence of `sep`, which may be a literal string or a `Regex`.
@@ -16762,16 +17394,17 @@ lines : [String]
 
 Splits the string into lines on `\n`.
 
-A single trailing newline is dropped, so a file that ends in one does not produce a final empty line. Windows line endings are not stripped: split on `\r\n` explicitly, or `trim` each line, when that matters.
+A single trailing newline is dropped, so a file that ends in one does not produce a final empty line. A Windows `\r\n` ending is one line ending, as Ruby's `chomp` reads it, so no line keeps a stray `\r`. Every line-reading function (`FS.File.readLines`, `FileHandle.getLine`, a file `Feed`) reads line endings the same way.
 
 **Returns**: the lines, without their newlines
 
 **Examples**
 
 ```kex
-"a\nb".lines      # => ["a", "b"]
-"a\nb\n".lines    # => ["a", "b"]
-"".lines          # => []
+"a\nb".lines       # => ["a", "b"]
+"a\nb\n".lines     # => ["a", "b"]
+"a\r\nb".lines     # => ["a", "b"]
+"".lines           # => []
 ```
 
 _Numbering the lines of a file_
@@ -16844,19 +17477,41 @@ _Normalising a path separator_
 "a\\b\\c".replace("\\", "/")   # => "a/b/c"
 ```
 
+### `replaceFirst`
+
+```kex
+replaceFirst(pattern: String, replacement: String) -> String
+```
+
+Replaces only the first literal occurrence of `pattern`. Ruby calls this `sub`, and `replace` is its `gsub`.
+
+**Parameters**
+
+  - `pattern` — the text to look for
+  - `replacement` — what to put in its place
+
+**Returns**: the string with its first match replaced, or unchanged when there is none
+
+**Examples**
+
+```kex
+"a-b-c".replaceFirst("-", "+")   # => "a+b-c"
+"abc".replaceFirst("x", "y")     # => "abc"
+```
+
 ### `substitute`
 
 ```kex
 substitute(replacements: {String: String}) -> String
 ```
 
-Replaces every key of `replacements` with its value, in one pass over the map.
+Replaces every occurrence of each key of `replacements` with its value.
 
 The keys are the placeholders exactly as written: no syntax is imposed and nothing is reserved, so `$NAME$`, `__NAME__`, `{{name}}` and `%name%` are all equally valid, and a template needs no escaping to be a template. `$NAME$` is the convention to reach for when there is no reason to prefer another.
 
 Note that a placeholder is NOT `${name}`: that is interpolation, which the compiler resolves before this ever sees the string.
 
-This is what a template wants instead of a chain of `replace` calls: the chain reads as a pipeline when it is really a substitution table, and it quietly depends on its own order, since an earlier replacement's OUTPUT is still visible to every later one.
+This is what a template wants instead of a chain of `replace` calls: the chain reads as a pipeline when it is really a substitution table.
 
 Substitutions are applied in the map's canonical key order and each is applied to the result of the last, so a value that itself contains a key can still be rewritten by a later one. Keep values placeholder-free when that matters.
 
@@ -16903,6 +17558,170 @@ _Cleaning up user input_
 
 ```kex
 let name = IO.getLine.or("").trim
+```
+
+### `trimStart`
+
+```kex
+trimStart : String
+```
+
+Removes leading whitespace only. Ruby calls this `lstrip`.
+
+**Returns**: the string without its leading whitespace
+
+**Examples**
+
+```kex
+"  hi  ".trimStart   # => "hi  "
+```
+
+### `trimEnd`
+
+```kex
+trimEnd : String
+```
+
+Removes trailing whitespace only. Ruby calls this `rstrip`.
+
+**Returns**: the string without its trailing whitespace
+
+**Examples**
+
+```kex
+"  hi  ".trimEnd   # => "  hi"
+```
+
+_Dropping a line ending, CRLF included_
+
+```kex
+line.trimEnd
+```
+
+### `removePrefix`
+
+```kex
+removePrefix(prefix: String) -> String
+```
+
+Removes `prefix` from the start of the string when it is there, and otherwise returns the string unchanged. Ruby calls this `delete_prefix`.
+
+**Parameters**
+
+  - `prefix` — the text to remove
+
+**Returns**: the string without the prefix
+
+**Examples**
+
+```kex
+"v1.2.0".removePrefix("v")   # => "1.2.0"
+"1.2.0".removePrefix("v")    # => "1.2.0"
+```
+
+### `removeSuffix`
+
+```kex
+removeSuffix(suffix: String) -> String
+```
+
+Removes `suffix` from the end of the string when it is there, and otherwise returns the string unchanged. Ruby calls this `delete_suffix`.
+
+**Parameters**
+
+  - `suffix` — the text to remove
+
+**Returns**: the string without the suffix
+
+**Examples**
+
+```kex
+"notes.txt".removeSuffix(".txt")   # => "notes"
+```
+
+### `repeat`
+
+```kex
+repeat(n: Integer) -> String
+```
+
+Returns the string repeated `n` times; `""` when `n` is 0 or less. Ruby spells this `*`.
+
+**Parameters**
+
+  - `n` — how many copies
+
+**Returns**: the copies, joined
+
+**Examples**
+
+```kex
+"ab".repeat(3)    # => "ababab"
+"-".repeat(10)    # => "----------"
+```
+
+### `padLeft`
+
+```kex
+padLeft(width: Integer) -> String
+padLeft(width: Integer, pad: String) -> String
+```
+
+Pads the string on the left with spaces until it is `width` characters long. A string already that long is returned unchanged. Ruby calls this `rjust`.
+
+**Parameters**
+
+  - `width` — the length to reach
+
+**Returns**: the padded string
+
+**Examples**
+
+```kex
+"7".padLeft(3)   # => "  7"
+```
+
+### `padRight`
+
+```kex
+padRight(width: Integer) -> String
+padRight(width: Integer, pad: String) -> String
+```
+
+Pads the string on the right with spaces until it is `width` characters long. Ruby calls this `ljust`.
+
+**Parameters**
+
+  - `width` — the length to reach
+
+**Returns**: the padded string
+
+**Examples**
+
+```kex
+"ab".padRight(4) + "|"   # => "ab  |"
+```
+
+### `center`
+
+```kex
+center(width: Integer) -> String
+center(width: Integer, pad: String) -> String
+```
+
+Centers the string in a field of `width` characters, padding both sides with spaces. When the padding cannot split evenly, the extra character goes on the right, as Ruby's `center` does.
+
+**Parameters**
+
+  - `width` — the length to reach
+
+**Returns**: the centered string
+
+**Examples**
+
+```kex
+"ab".center(6)   # => "  ab  "
+"ab".center(5)   # => " ab  "
 ```
 
 ### `upperCase`
@@ -17051,6 +17870,14 @@ Returns the identifier in `PascalCase`: every word capitalized, with nothing bet
 "user-id".pascalCase         # => "UserId"
 ```
 
+### `filler`
+
+```kex
+filler(pad: String, width: Integer) -> String
+```
+
+`pad` repeated and cut to exactly `width` characters: the filler the padding functions put beside the string. Nothing for a width of 0 or less, or for an empty `pad`.
+
 ### `identifierWords`
 
 ```kex
@@ -17166,10 +17993,6 @@ _Selecting files by extension_
 paths.filter { |p| p.endsWith?(".kex") }
 ```
 
-### From [`Monoid`](algebra.md#trait-monoid)
-
-  - [`repeat`](algebra.md#monoid-repeat) — Combines this value with itself `n` times.
-
 ### From [`Comparable`](comparable.md#trait-comparable)
 
   - [`max`](comparable.md#comparable-max) — What every ordered type gets from `compare` alone.
@@ -17193,6 +18016,8 @@ paths.filter { |p| p.endsWith?(".kex") }
   - [`eachIndexed`](enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
   - [`all?`](enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`.
   - [`any?`](enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`.
+  - [`none?`](enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`one?`](enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
   - [`find`](enumerable.md#foldable-find) — Returns the first item satisfying `pred`, or `None` when nothing does.
 
 ### Defined in other modules
@@ -18723,6 +19548,9 @@ entities:
   - { kind: make, name: "Date" }
   - { kind: make, name: "Time" }
   - { kind: make, name: "DateTime" }
+  - { kind: record, name: "DateFormat" }
+  - { kind: module, name: "DateFormat" }
+  - { kind: make, name: "TimeError" }
 ---
 
 # Time
@@ -18790,7 +19618,29 @@ A field out of range, or text that is not a date/time.
   - `InvalidTime(Integer, Integer, Integer)`
   - `InvalidFormat(String)`
 
+Implements [`Showable`](kex.md#trait-showable).
 
+### Functions
+
+#### `showValue` (from Showable)
+
+```kex
+showValue : String
+```
+
+Shows the failure as the sentence `Time.errorMessage` writes, so `"${e}"` explains itself rather than printing the constructor.
+
+**Returns**: the message
+
+**Examples**
+
+```kex
+"${InvalidDate(2026, 13, 1)}"   # => "not a calendar date: 2026-13-1"
+```
+
+### From [`Showable`](kex.md#trait-showable)
+
+  - [`to`](kex.md#showable-to) — 
 
 ## record `Date`
 
@@ -19360,9 +20210,28 @@ Date.of(2026, 7, 30).try.at(Time.of(9, 0, 0).try, Duration.zero()).iso
 # => "2026-07-30T09:00:00Z"
 ```
 
-### From [`Showable`](kex.md#trait-showable)
+#### `to`
 
-  - [`to`](kex.md#showable-to) — 
+```kex
+to(String: Type, format: DateFormat, culture: Culture) -> String?
+```
+
+Writes the date by a CLDR pattern, with English month and weekday names. Patterns are described at `Date.format`.
+
+**Parameters**
+
+  - `String` — the target type
+  - `format` — the pattern
+
+**Returns**: the text, or `None` when the pattern asks for a time field, which a date does not have
+
+**Examples**
+
+```kex
+Date.of(2026, 11, 7).try.to(String, Date.format`yyyy-MM-dd`)   # => Just("2026-11-07")
+Date.of(2026, 11, 7).try.to(String, Date.format`EEEE, d MMMM yyyy`)
+# => Just("Saturday, 7 November 2026")
+```
 
 ## record `Time`
 
@@ -19483,7 +20352,7 @@ Advances the time of day by a span, wrapping within the day.
 
 A Time has no date to carry into, so 23:00 + 2.hours is 01:00. Reach for `DateTime` when the day rolling over is something you need to see.
 
-The nanosecond field rides along untouched: `wholeSeconds` truncates the span, so a sub-second Duration shifts nothing.
+Sub-second spans count: the nanoseconds carry into the seconds.
 
 **Parameters**
 
@@ -19494,8 +20363,9 @@ The nanosecond field rides along untouched: `wholeSeconds` truncates the span, s
 **Examples**
 
 ```kex
-(Time.of(14, 3, 0).try + 2.hours).iso    # => "16:03:00"
-(Time.of(23, 0, 0).try + 2.hours).iso    # => "01:00:00"
+(Time.of(14, 3, 0).try + 2.hours).iso            # => "16:03:00"
+(Time.of(23, 0, 0).try + 2.hours).iso            # => "01:00:00"
+(Time.of(14, 3, 0).try + 500.milliseconds).iso   # => "14:03:00.500"
 ```
 
 #### `-`
@@ -19637,9 +20507,27 @@ Orders this time of day against another, nanoseconds included.
 Time.of(14, 3, 0).try.compareTo(Time.of(15, 0, 0).try)   # => Less
 ```
 
-### From [`Showable`](kex.md#trait-showable)
+#### `to`
 
-  - [`to`](kex.md#showable-to) — 
+```kex
+to(String: Type, format: DateFormat, culture: Culture) -> String?
+```
+
+Writes the time of day by a CLDR pattern. Patterns are described at `Date.format`.
+
+**Parameters**
+
+  - `String` — the target type
+  - `format` — the pattern
+
+**Returns**: the text, or `None` when the pattern asks for a date or an offset field, which a time of day does not have
+
+**Examples**
+
+```kex
+Time.of(14, 3, 0).try.to(String, Date.format`HH:mm`)     # => Just("14:03")
+Time.of(14, 3, 0).try.to(String, Date.format`h:mm a`)    # => Just("2:03 PM")
+```
 
 ## record `DateTime`
 
@@ -19651,7 +20539,7 @@ m.iso        # => "2026-07-30T14:03:00+02:00"
 m.utc.iso    # => "2026-07-30T12:03:00Z"
 ```
 
-Two `DateTime` values that name the same instant compare equal whatever offsets they are written at: comparison goes through `epochSeconds`.
+Two `DateTime` values that name the same instant order `Equal` under `compareTo` whatever offsets they are written at: ordering goes through `epochSeconds`. `==` is structural, so the same instant written at two offsets is not `==`; compare `epochSeconds` (or `utc`) for that.
 
 **Fields**
 
@@ -20020,9 +20908,27 @@ _Sorting events by when they happened_
 events.sort { |a, b| a.at.compareTo(b.at) == Less }
 ```
 
-### From [`Showable`](kex.md#trait-showable)
+#### `to`
 
-  - [`to`](kex.md#showable-to) — 
+```kex
+to(String: Type, format: DateFormat, culture: Culture) -> String?
+```
+
+Writes the instant by a CLDR pattern, as read at its own offset. Patterns are described at `Date.format`.
+
+**Parameters**
+
+  - `String` — the target type
+  - `format` — the pattern
+
+**Returns**: the text, or `None` for a pattern that is not valid
+
+**Examples**
+
+```kex
+DateTime.parse("2026-07-30T14:03:00+02:00").try.to(String, Date.format`yyyy-MM-dd HH:mm XXX`)
+# => Just("2026-07-30 14:03 +02:00")
+```
 
 ## record `Period`
 
@@ -20683,6 +21589,8 @@ Kex's `/` truncates toward zero; instants before the epoch need the floor.
 truncatedBy(seconds: Float, unit: Float) -> Integer
 ```
 
+A Duration holds Float seconds, so it is rounded to the nanosecond, the finest unit it names, before truncating: 7.nanoseconds is 7e-9 seconds, and dividing that by 1e-9 directly gives 6.999... and so 6.
+
 ### `pad2`
 
 ```kex
@@ -20713,11 +21621,21 @@ digitsIn(fragment: String, whole: String) -> Result<Integer, TimeError>
 
 Digits, with the failure reported against the WHOLE input rather than the fragment that failed: `Time.parse("2:03 pm")` should complain about "2:03 pm", not about "03 pm".
 
+### `fixedDigitsIn`
+
+```kex
+fixedDigitsIn(fragment: String, width: Integer, whole: String) -> Result<Integer, TimeError>
+```
+
+The same, for a field ISO 8601 writes at a fixed width: "14", never "2".
+
 ### `digitsToInteger`
 
 ```kex
 digitsToInteger(text: String) -> Result<Integer, TimeError>
 ```
+
+ASCII digits only: Integer.parse would also take a sign or surrounding space, and none of those belongs inside an ISO 8601 field.
 
 ### `parseFraction`
 
@@ -20725,7 +21643,7 @@ digitsToInteger(text: String) -> Result<Integer, TimeError>
 parseFraction(text: String, whole: String) -> Result<Integer, TimeError>
 ```
 
-".5" is 500000000ns: the digits are padded out to nanosecond scale.
+".5" is 500000000ns: the digits are padded out to nanosecond scale. The caller has seen the ".", so an empty fraction is malformed, not zero.
 
 ### `splitOffset`
 
@@ -20823,6 +21741,59 @@ days.count { |d| !d.weekday.weekend? }
 
 Building calendar dates, and asking what today is.
 
+### `format`
+
+```kex
+format(parts: [String], values: [Any]) -> DateFormat
+```
+
+Builds a `DateFormat` from a CLDR pattern, for `to(String, format)` on a `Date`, a `Time` or a `DateTime`.
+
+A pattern that does not fit makes `to(String, format)` answer `None`; `DateFormat.parse` says where it goes wrong, and `validateFormat` is the companion check for the tagged literal. Letters are fields, repeated for width; quote literal letters, as in `'at'`, and write `''` for a quote itself. Anything else is written as it stands.
+
+- `yyyy` the year, `yy` its last two digits
+- `M` / `MM` the month number, `MMM` / `MMMM` its short / full name
+- `d` / `dd` the day of the month
+- `EEE` / `EEEE` the short / full weekday name
+- `H` / `HH` the hour 0-23, `h` / `hh` the hour 1-12, `a` AM or PM
+- `m` / `mm` minutes, `s` / `ss` seconds, `S` up to `SSSSSSSSS` the
+  fraction of a second
+- `XXX` the offset as `-05:00`, or `Z` for UTC; `xxx` the same without `Z`
+  (`XX` / `xx` write `-0500`, and one letter writes `-05`)
+
+Names come from the culture passed to `to(String, format, culture:)`, English without one.
+
+**Parameters**
+
+  - `parts` — the literal pieces of the tagged literal
+  - `values` — the interpolated values
+
+**Returns**: the format
+
+**Examples**
+
+```kex
+let d = Date.of(2026, 11, 7).try
+d.to(String, Date.format`yyyy-MM-dd`)        # => Just("2026-11-07")
+d.to(String, Date.format`EEE, d MMM yyyy`)   # => Just("Sat, 7 Nov 2026")
+d.to(String, Date.format`d MMMM yyyy`, culture: Culture.of("HU_HU").or(Culture.DEFAULT))
+# => Just("7 november 2026")
+```
+
+### `validateFormat`
+
+```kex
+validateFormat(source: String) -> [TaggedValidation.Issue]
+```
+
+Checks a `Date.format` pattern during compilation, pointing at the first character that does not fit.
+
+**Parameters**
+
+  - `source` — the pattern
+
+**Returns**: the problem found, if any
+
 ### `of`
 
 ```kex
@@ -20906,9 +21877,9 @@ Date.parse("2026-02-30")                     # => Error(InvalidDate(2026, 2, 30)
 now : Date
 ```
 
-Today's date, in this machine's zone.
+Today's date, in this machine's zone. The same as `Date.today()`.
 
-`Date.today()` reads better in most code; `now` exists so every type in this file answers the same question the same way.
+`Date.today()` reads better in most code; `now` exists so every type in this file answers the same question the same way: `Date.now()`, `Time.now()` and `DateTime.now()`.
 
 **Returns**: today's date
 
@@ -20982,7 +21953,7 @@ Date.yesterday().iso   # => "2026-07-29"
 utcNow : Date
 ```
 
-Today's date in UTC, whatever this machine's zone is.
+Today's date in UTC, whatever this machine's zone is. The same as `Date.utcToday()`, under the name every type in this file shares.
 
 **Returns**: today's UTC date
 
@@ -20998,7 +21969,7 @@ Date.utcNow().iso   # => "2026-07-30"
 utcToday : Date
 ```
 
-Today's date in UTC. The same as `Date.utcNow()`, under the name that reads better.
+Today's date in UTC, whatever this machine's zone is.
 
 **Returns**: today's UTC date
 
@@ -21413,6 +22384,8 @@ This many weeks, as a `Duration`: a fixed 604800 seconds each.
 
 More functions for [`Duration`](units.md#record-duration), added by this module.
 
+Implements [`Showable`](kex.md#trait-showable).
+
 ### `wholeNanoseconds`
 
 ```kex
@@ -21767,6 +22740,41 @@ _Sorting by length_
 spans.sort { |a, b| a.compareTo(b) == Less }
 ```
 
+### `iso`
+
+```kex
+iso : String
+```
+
+The span in ISO 8601 form: hours, minutes and seconds, with the fraction of a second written as `iso` on a `Time` writes it. A zero span is `PT0S`, and a negative one carries a leading `-`.
+
+**Returns**: the ISO 8601 duration
+
+**Examples**
+
+```kex
+90.minutes.iso          # => "PT1H30M"
+500.milliseconds.iso    # => "PT0.500S"
+(-2).seconds.iso        # => "-PT2S"
+Duration.zero().iso     # => "PT0S"
+```
+
+### `showValue` (from Showable)
+
+```kex
+showValue : String
+```
+
+Shows the span as its ISO 8601 form, as `iso` writes it, so interpolating a `Duration` reads as a span rather than as its record.
+
+**Returns**: the ISO 8601 duration
+
+**Examples**
+
+```kex
+"${90.seconds}"   # => "PT1M30S"
+```
+
 ## module `Duration`
 
 Building elapsed spans, and UTC offsets.
@@ -22072,6 +23080,130 @@ A span of `count` weeks, recorded as that many times seven days.
 ```kex
 Period.weeks(2).iso   # => "P14D"
 ```
+
+## record `DateFormat`
+
+How `to(String, format)` writes a date, a time of day or an instant: a CLDR pattern such as `"yyyy-MM-dd HH:mm"`, described at `Date.format`. Build one with the `Date.format` tagged literal, or with `DateFormat.parse`, which says where a pattern known only at run time goes wrong.
+
+**Fields**
+
+  - `pattern` : [String](string.md#make-string)
+
+
+
+## module `DateFormat`
+
+### `parse`
+
+```kex
+parse(pattern: String) -> Result<DateFormat, ParseError>
+```
+
+Checks a pattern known only at run time. `Date.format` describes the patterns.
+
+**Parameters**
+
+  - `pattern` — the pattern
+
+**Returns**: the format, or where the pattern goes wrong
+
+**Examples**
+
+```kex
+DateFormat.parse("yyyy-MM-dd")   # => Ok(DateFormat { pattern: "yyyy-MM-dd" })
+DateFormat.parse("yyyy-QQ")      # => Error(ParseError { position: 5, ... })
+```
+
+### `pieces`
+
+```kex
+pieces(pattern: String) -> Result<[Piece], (Integer, String)>
+```
+
+Splits a pattern into its fields and its literal text. Otherwise the index of its first problem, and what that problem is.
+
+**Parameters**
+
+  - `pattern` — the pattern
+
+**Returns**: the pieces, or the problem
+
+**Examples**
+
+```kex
+DateFormat.pieces("d MMM")   # => Ok([PatternField('d', 1), PatternText(" "), PatternField('M', 3)])
+```
+
+### `renderParts`
+
+```kex
+renderParts : DateFormat -> Date? -> Time? -> Duration? -> Culture -> String?
+```
+
+Writes `date`, `time` and `offset` (whichever the value has) by the pieces of a pattern, with `culture`'s names. `None` when the pattern asks for a field the value does not have, such as an hour of a `Date`.
+
+The `to(String, format)` functions on `Date`, `Time` and `DateTime` are the way to reach this.
+
+**Parameters**
+
+  - `format` — the pattern
+  - `date` — the calendar date, when the value has one
+  - `time` — the time of day, when the value has one
+  - `offset` — the offset from UTC, when the value has one
+  - `culture` — where month, weekday and day-period names come from
+
+**Returns**: the text, or `None`
+
+### `dateLayout`
+
+```kex
+dateLayout(culture: Culture) -> String
+```
+
+The pattern a culture writes its dates in: year, month and day in its order, joined by its date separator. ISO order without a time section.
+
+**Parameters**
+
+  - `culture` — the culture
+
+**Returns**: the pattern, such as `"dd.MM.yyyy"`
+
+**Examples**
+
+```kex
+DateFormat.dateLayout(Culture.of("DE_DE").or(Culture.DEFAULT))   # => "dd.MM.yyyy"
+```
+
+### `timeLayout`
+
+```kex
+timeLayout(culture: Culture) -> String
+```
+
+The pattern a culture writes a time of day in: hours, minutes and seconds joined by its time separator, on a 12-hour clock with a day period where the culture reads time that way.
+
+**Parameters**
+
+  - `culture` — the culture
+
+**Returns**: the pattern, such as `"HH:mm:ss"` or `"h:mm:ss a"`
+
+**Examples**
+
+```kex
+DateFormat.timeLayout(Culture.of("EN_US").or(Culture.DEFAULT))   # => "h:mm:ss a"
+```
+
+## type `Piece`
+
+One piece of a pattern: a field letter written `width` times, or text written as it stands.
+
+**Variants**
+
+  - `PatternField(Char, Integer)`
+  - `PatternText(String)`
+
+
 
 
 ---
@@ -23318,9 +24450,15 @@ Duration is an elapsed span used by Time, Date, and DateTime. A time Measure is 
 
   - `seconds` : [Float](number.md#make-float)
 
+Implements [`Showable`](kex.md#trait-showable).
+
+### From [`Showable`](kex.md#trait-showable)
+
+  - [`to`](kex.md#showable-to) — 
+
 ### Defined in other modules
 
-  - [Time](time.md#make-duration): [`wholeNanoseconds`](time.md#duration-wholenanoseconds), [`wholeMicroseconds`](time.md#duration-wholemicroseconds), [`+`](time.md#duration-op-plus), [`-`](time.md#duration-op-minus), [`negated`](time.md#duration-negated), [`*`](time.md#duration-op-times), [`/`](time.md#duration-op-div), [`abs`](time.md#duration-abs), [`zero?`](time.md#duration-zero?), [`negative?`](time.md#duration-negative?), [`positive?`](time.md#duration-positive?), [`shorterThan?`](time.md#duration-shorterthan?), [`longerThan?`](time.md#duration-longerthan?), [`wholeMilliseconds`](time.md#duration-wholemilliseconds), [`wholeSeconds`](time.md#duration-wholeseconds), [`wholeMinutes`](time.md#duration-wholeminutes), [`wholeHours`](time.md#duration-wholehours), [`wholeDays`](time.md#duration-wholedays), [`wholeWeeks`](time.md#duration-wholeweeks), [`compareTo`](time.md#duration-compareto)
+  - [Time](time.md#make-duration): [`wholeNanoseconds`](time.md#duration-wholenanoseconds), [`wholeMicroseconds`](time.md#duration-wholemicroseconds), [`+`](time.md#duration-op-plus), [`-`](time.md#duration-op-minus), [`negated`](time.md#duration-negated), [`*`](time.md#duration-op-times), [`/`](time.md#duration-op-div), [`abs`](time.md#duration-abs), [`zero?`](time.md#duration-zero?), [`negative?`](time.md#duration-negative?), [`positive?`](time.md#duration-positive?), [`shorterThan?`](time.md#duration-shorterthan?), [`longerThan?`](time.md#duration-longerthan?), [`wholeMilliseconds`](time.md#duration-wholemilliseconds), [`wholeSeconds`](time.md#duration-wholeseconds), [`wholeMinutes`](time.md#duration-wholeminutes), [`wholeHours`](time.md#duration-wholehours), [`wholeDays`](time.md#duration-wholedays), [`wholeWeeks`](time.md#duration-wholeweeks), [`compareTo`](time.md#duration-compareto), [`iso`](time.md#duration-iso), [`showValue`](time.md#duration-showvalue)
 
 ## type `TimeUnit`
 
@@ -24835,6 +25973,8 @@ Queue.from([1]).blank?     # => false
   - [`eachIndexed`](../enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
   - [`all?`](../enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`.
   - [`any?`](../enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`.
+  - [`none?`](../enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`one?`](../enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
   - [`find`](../enumerable.md#foldable-find) — Returns the first item satisfying `pred`, or `None` when nothing does.
 
 ### From [`Monoid`](../algebra.md#trait-monoid)
@@ -25471,6 +26611,8 @@ Set.from([1]).blank?     # => false
   - [`eachIndexed`](../enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
   - [`all?`](../enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`.
   - [`any?`](../enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`.
+  - [`none?`](../enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`one?`](../enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
   - [`find`](../enumerable.md#foldable-find) — Returns the first item satisfying `pred`, or `None` when nothing does.
 
 ### From [`Monoid`](../algebra.md#trait-monoid)
@@ -25924,7 +27066,8 @@ The elements are printed in sorted order where they allow it, so the rendering o
 **Examples**
 
 ```kex
-UnorderedSet.from([2, 1]).showValue   # => "UnorderedSet(1, 2)"
+UnorderedSet.from([2, 1]).showValue    # => "UnorderedSet(1, 2)"
+UnorderedSet.from([10, 2]).showValue   # => "UnorderedSet(2, 10)"
 ```
 
 #### `blank?` (from Blankable)
@@ -25955,6 +27098,8 @@ UnorderedSet.empty.blank?   # => true
   - [`eachIndexed`](../enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
   - [`all?`](../enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`.
   - [`any?`](../enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`.
+  - [`none?`](../enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`one?`](../enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
   - [`find`](../enumerable.md#foldable-find) — Returns the first item satisfying `pred`, or `None` when nothing does.
 
 ### From [`Monoid`](../algebra.md#trait-monoid)
@@ -26126,7 +27271,7 @@ Implements [`Enumerable`](../enumerable.md#trait-enumerable), [`Foldable`](../en
 reduce(acc: B, f: (B -> A -> B)) -> B
 ```
 
-Folds from the top down to the bottom.
+Folds from the bottom up to the top: the order `items` lists them in, so `map`, `each` and `items` all agree.
 
 This is `Stack`'s `Enumerable`/`Foldable` primitive.
 
@@ -26351,6 +27496,8 @@ Stack.from([1]).blank?     # => false
   - [`eachIndexed`](../enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
   - [`all?`](../enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`.
   - [`any?`](../enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`.
+  - [`none?`](../enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`one?`](../enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
   - [`find`](../enumerable.md#foldable-find) — Returns the first item satisfying `pred`, or `None` when nothing does.
 
 ### From [`Monoid`](../algebra.md#trait-monoid)
@@ -27376,7 +28523,7 @@ _Building a lint message from a parsed annotation_
 
 ```kex
 let written = reference.to(String).or("unknown")
-IO.warn("avoid the broad ${written} annotation")
+IO.printError("avoid the broad ${written} annotation")
 ```
 
 ### `to`
@@ -28835,7 +29982,7 @@ On a listening endpoint this usually means "all local interfaces". It is not a u
 _Warning before binding a service on every interface_
 
 ```kex
-IO.warn("service will be publicly reachable") if bind.unspecified?
+IO.printError("service will be publicly reachable") if bind.unspecified?
 ```
 
 #### `multicast?`
@@ -29138,10 +30285,26 @@ _Sending one newline-delimited request_
 connection.sendAll("status\n".to(Binary).try).try
 ```
 
+### `put`
+
+```kex
+put(connection: TCPConnection, content: Binary) -> Result<Void, NetError>
+```
+
+Writes `content` verbatim: raw bytes, no rendering, no trailing newline.
+
+**Examples**
+
+_Echoing a received chunk verbatim_
+
+```kex
+connection.put(chunk).try
+```
+
 ### `write`
 
 ```kex
-write(connection: TCPConnection, content: Showable) -> Void
+write(connection: TCPConnection, content: Showable) -> Result<Void, NetError>
 ```
 
 Writes `content` with no trailing newline.
@@ -29151,39 +30314,23 @@ Writes `content` with no trailing newline.
 _Sending a prompt without a newline_
 
 ```kex
-connection.write("name? ")
+connection.write("name? ").try
 ```
 
-### `printLine`
+### `writeLine`
 
 ```kex
-printLine(connection: TCPConnection, content: Showable) -> Void
+writeLine(connection: TCPConnection, content: Showable) -> Result<Void, NetError>
 ```
 
 Writes `content` followed by a newline.
 
 **Examples**
 
-_Answering a line-oriented client_
+_Answering a line-oriented peer_
 
 ```kex
-connection.printLine("hello")
-```
-
-### `writeBytes`
-
-```kex
-writeBytes(connection: TCPConnection, content: Binary) -> Void
-```
-
-Writes raw bytes with no trailing newline and no rendering.
-
-**Examples**
-
-_Echoing a received line verbatim_
-
-```kex
-connection.writeBytes(line)
+connection.writeLine("hello").try
 ```
 
 ### `print`
@@ -29192,35 +30339,67 @@ connection.writeBytes(line)
 print(connection: TCPConnection, content: Showable) -> Void
 ```
 
-Writes `content` with no trailing newline. The same as `write`.
+Writes `content` with no trailing newline, ignoring a failure. Use `write` when a failure matters.
 
-### `writeLine`
+**Examples**
+
+_Sending a prompt without a newline_
 
 ```kex
-writeLine(connection: TCPConnection, content: Showable) -> Void
+connection.print("name? ")
 ```
 
-Writes `content` followed by a newline. The same as `printLine`.
-
-### `getLine`
+### `printLine`
 
 ```kex
-getLine(connection: TCPConnection) -> Result<String?, NetError>
+printLine(connection: TCPConnection, content: Showable) -> Void
+```
+
+Writes `content` followed by a newline, ignoring a failure. Use `writeLine` when a failure matters.
+
+**Examples**
+
+_Answering a line-oriented peer_
+
+```kex
+connection.printLine("hello")
+```
+
+### `readLine`
+
+```kex
+readLine(connection: TCPConnection) -> Result<String?, NetError>
 ```
 
 Reads the next line as text, without its newline.
 
-Answers `Ok(None)` at end of input, like `FileHandle.getLine`. Lines are capped at 64 KiB; a longer line fails with `Limit` instead of growing without bound.
+Answers `Ok(None)` at end of input, like `FileHandle.readLine`. Lines are capped at 64 KiB; a longer line fails with `Limit` instead of growing without bound.
 
 **Examples**
 
 _Echoing one line back to its sender_
 
 ```kex
-match connection.getLine.try do
+match connection.readLine.try do
   Just(line) => connection.printLine(line)
   None => connection.close
 end
+```
+
+### `getLine`
+
+```kex
+getLine(connection: TCPConnection) -> String?
+```
+
+Reads the next line as text, without its newline: `readLine` for when the end of input and a failed read mean the same thing.
+
+**Examples**
+
+_Printing one received line_
+
+```kex
+IO.printLine(connection.getLine.or("(closed)"))
 ```
 
 ### `receiveChunk`
@@ -29807,10 +30986,26 @@ sendAll(connection: UnixConnection, data: Binary) -> Result<Integer, NetError>
 
 Sends every byte and returns the count.
 
+### `put`
+
+```kex
+put(connection: UnixConnection, content: Binary) -> Result<Void, NetError>
+```
+
+Writes `content` verbatim: raw bytes, no rendering, no trailing newline.
+
+**Examples**
+
+_Echoing a received chunk verbatim_
+
+```kex
+connection.put(chunk).try
+```
+
 ### `write`
 
 ```kex
-write(connection: UnixConnection, content: Showable) -> Void
+write(connection: UnixConnection, content: Showable) -> Result<Void, NetError>
 ```
 
 Writes `content` with no trailing newline.
@@ -29820,13 +31015,13 @@ Writes `content` with no trailing newline.
 _Sending a prompt without a newline_
 
 ```kex
-connection.write("name? ")
+connection.write("name? ").try
 ```
 
-### `printLine`
+### `writeLine`
 
 ```kex
-printLine(connection: UnixConnection, content: Showable) -> Void
+writeLine(connection: UnixConnection, content: Showable) -> Result<Void, NetError>
 ```
 
 Writes `content` followed by a newline.
@@ -29836,23 +31031,7 @@ Writes `content` followed by a newline.
 _Answering a line-oriented peer_
 
 ```kex
-connection.printLine("hello")
-```
-
-### `writeBytes`
-
-```kex
-writeBytes(connection: UnixConnection, content: Binary) -> Void
-```
-
-Writes raw bytes with no trailing newline and no rendering.
-
-**Examples**
-
-_Echoing a received line verbatim_
-
-```kex
-connection.writeBytes(line)
+connection.writeLine("hello").try
 ```
 
 ### `print`
@@ -29861,32 +31040,67 @@ connection.writeBytes(line)
 print(connection: UnixConnection, content: Showable) -> Void
 ```
 
-Writes `content` with no trailing newline. The same as `write`.
+Writes `content` with no trailing newline, ignoring a failure. Use `write` when a failure matters.
 
-### `writeLine`
+**Examples**
+
+_Sending a prompt without a newline_
 
 ```kex
-writeLine(connection: UnixConnection, content: Showable) -> Void
+connection.print("name? ")
 ```
 
-Writes `content` followed by a newline. The same as `printLine`.
-
-### `getLine`
+### `printLine`
 
 ```kex
-getLine(connection: UnixConnection) -> Result<String?, NetError>
+printLine(connection: UnixConnection, content: Showable) -> Void
+```
+
+Writes `content` followed by a newline, ignoring a failure. Use `writeLine` when a failure matters.
+
+**Examples**
+
+_Answering a line-oriented peer_
+
+```kex
+connection.printLine("hello")
+```
+
+### `readLine`
+
+```kex
+readLine(connection: UnixConnection) -> Result<String?, NetError>
 ```
 
 Reads the next line as text, without its newline.
 
-Answers `Ok(None)` at end of input, like `FileHandle.getLine`. Lines are capped at 64 KiB; a longer line fails with `Limit` instead of growing without bound.
+Answers `Ok(None)` at end of input, like `FileHandle.readLine`. Lines are capped at 64 KiB; a longer line fails with `Limit` instead of growing without bound.
+
+**Examples**
+
+_Echoing one line back to its sender_
+
+```kex
+match connection.readLine.try do
+  Just(line) => connection.printLine(line)
+  None => connection.close
+end
+```
+
+### `getLine`
+
+```kex
+getLine(connection: UnixConnection) -> String?
+```
+
+Reads the next line as text, without its newline: `readLine` for when the end of input and a failed read mean the same thing.
 
 **Examples**
 
 _Printing one received line_
 
 ```kex
-IO.printLine(connection.getLine.try.or("(closed)"))
+IO.printLine(connection.getLine.or("(closed)"))
 ```
 
 ### `receiveChunk`
@@ -30068,10 +31282,26 @@ sendAll(connection: TLSConnection, data: Binary) -> Result<Integer, NetError>
 
 Sends every plaintext byte through the TLS stream.
 
+### `put`
+
+```kex
+put(connection: TLSConnection, content: Binary) -> Result<Void, NetError>
+```
+
+Writes `content` verbatim: raw bytes, no rendering, no trailing newline.
+
+**Examples**
+
+_Echoing a received chunk verbatim_
+
+```kex
+connection.put(chunk).try
+```
+
 ### `write`
 
 ```kex
-write(connection: TLSConnection, content: Showable) -> Void
+write(connection: TLSConnection, content: Showable) -> Result<Void, NetError>
 ```
 
 Writes `content` with no trailing newline.
@@ -30081,13 +31311,13 @@ Writes `content` with no trailing newline.
 _Sending a prompt without a newline_
 
 ```kex
-connection.write("name? ")
+connection.write("name? ").try
 ```
 
-### `printLine`
+### `writeLine`
 
 ```kex
-printLine(connection: TLSConnection, content: Showable) -> Void
+writeLine(connection: TLSConnection, content: Showable) -> Result<Void, NetError>
 ```
 
 Writes `content` followed by a newline.
@@ -30097,23 +31327,7 @@ Writes `content` followed by a newline.
 _Answering a line-oriented peer_
 
 ```kex
-connection.printLine("hello")
-```
-
-### `writeBytes`
-
-```kex
-writeBytes(connection: TLSConnection, content: Binary) -> Void
-```
-
-Writes raw bytes with no trailing newline and no rendering.
-
-**Examples**
-
-_Echoing a received line verbatim_
-
-```kex
-connection.writeBytes(line)
+connection.writeLine("hello").try
 ```
 
 ### `print`
@@ -30122,15 +31336,31 @@ connection.writeBytes(line)
 print(connection: TLSConnection, content: Showable) -> Void
 ```
 
-Writes `content` with no trailing newline. The same as `write`.
+Writes `content` with no trailing newline, ignoring a failure. Use `write` when a failure matters.
 
-### `writeLine`
+**Examples**
+
+_Sending a prompt without a newline_
 
 ```kex
-writeLine(connection: TLSConnection, content: Showable) -> Void
+connection.print("name? ")
 ```
 
-Writes `content` followed by a newline. The same as `printLine`.
+### `printLine`
+
+```kex
+printLine(connection: TLSConnection, content: Showable) -> Void
+```
+
+Writes `content` followed by a newline, ignoring a failure. Use `writeLine` when a failure matters.
+
+**Examples**
+
+_Answering a line-oriented peer_
+
+```kex
+connection.printLine("hello")
+```
 
 ### `receiveChunk`
 
@@ -30324,22 +31554,22 @@ accept(listener, timeout)
 sendAll(connection, data)
 ```
 
+#### `put`
+
+```kex
+put(connection, content)
+```
+
 #### `write`
 
 ```kex
 write(connection, content)
 ```
 
-#### `printLine`
+#### `writeLine`
 
 ```kex
-printLine(connection, content)
-```
-
-#### `writeBytes`
-
-```kex
-writeBytes(connection, content)
+writeLine(connection, content)
 ```
 
 #### `print`
@@ -30348,10 +31578,16 @@ writeBytes(connection, content)
 print(connection, content)
 ```
 
-#### `writeLine`
+#### `printLine`
 
 ```kex
-writeLine(connection, content)
+printLine(connection, content)
+```
+
+#### `readLine`
+
+```kex
+readLine(connection)
 ```
 
 #### `getLine`
@@ -30528,22 +31764,22 @@ accept(listener)
 sendAll(connection, data)
 ```
 
+#### `put`
+
+```kex
+put(connection, content)
+```
+
 #### `write`
 
 ```kex
 write(connection, content)
 ```
 
-#### `printLine`
+#### `writeLine`
 
 ```kex
-printLine(connection, content)
-```
-
-#### `writeBytes`
-
-```kex
-writeBytes(connection, content)
+writeLine(connection, content)
 ```
 
 #### `print`
@@ -30552,10 +31788,16 @@ writeBytes(connection, content)
 print(connection, content)
 ```
 
-#### `writeLine`
+#### `printLine`
 
 ```kex
-writeLine(connection, content)
+printLine(connection, content)
+```
+
+#### `readLine`
+
+```kex
+readLine(connection)
 ```
 
 #### `getLine`
@@ -30630,22 +31872,22 @@ connect(endpoint, config)
 sendAll(connection, data)
 ```
 
+#### `put`
+
+```kex
+put(connection, content)
+```
+
 #### `write`
 
 ```kex
 write(connection, content)
 ```
 
-#### `printLine`
+#### `writeLine`
 
 ```kex
-printLine(connection, content)
-```
-
-#### `writeBytes`
-
-```kex
-writeBytes(connection, content)
+writeLine(connection, content)
 ```
 
 #### `print`
@@ -30654,10 +31896,10 @@ writeBytes(connection, content)
 print(connection, content)
 ```
 
-#### `writeLine`
+#### `printLine`
 
 ```kex
-writeLine(connection, content)
+printLine(connection, content)
 ```
 
 #### `receiveChunk`
@@ -30877,7 +32119,7 @@ _Following a live event feed_
 let socket = WebSocket.connect("wss://events.example.com/orders").try
 match socket.receiveMessage.try do
   Text(json) => IO.printLine(json)
-  _          => IO.warn("unexpected non-text event")
+  _          => IO.printError("unexpected non-text event")
 end
 ```
 

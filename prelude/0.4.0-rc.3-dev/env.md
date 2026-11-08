@@ -197,10 +197,6 @@ Sets an environment variable for this process and every child it starts.
 
 This is how a program decides what a child sees. `Kex.AST`, for instance, shells out to the compiler named by `$KEX`, so a tool that knows which compiler it means says so here rather than hoping `PATH` agrees.
 
-Sets a variable for THIS process and every child it starts. `ENV` is a snapshot, so it is rebuilt by the write: a later `ENV.get` answers what was set, not what the process started with.
-
-This is how a program decides what a child sees: `Kex.AST` shells out to the compiler named by `$KEX`, so a tool that knows which compiler it means says so here rather than hoping PATH agrees.
-
 **Parameters**
 
   - `name` — the variable to set

@@ -128,11 +128,11 @@ IO.inspect((1..4))   # stderr: 1..4 : Range
 getLine : String?
 ```
 
-Reads one line from stdin, without the trailing newline.
+Reads one line from stdin, without its line ending.
 
-Returns `None` at end of input, which is what makes it usable as a loop condition: the `None` is the end of the stream, not an error.
+The same read as `IO.in.getLine`: `None` both at the end of the input and on a failed read, which is what interactive code wants. Use `IO.readLine` when the two need telling apart.
 
-**Returns**: the line, or `None` at end of input
+**Returns**: the line, or `None` at end of input or on failure
 
 **Examples**
 
@@ -142,36 +142,51 @@ _Reading an answer with a default_
 let answer = IO.getLine.or("")
 ```
 
+### `readLine`
+
+```kex
+readLine : Result<String?, ReadError>
+```
+
+Reads one line from stdin, without its line ending, reporting a failure.
+
+The same read as `IO.in.readLine`: `Ok(None)` at end of input, which is what makes it usable as a loop condition, and an `Error` only when the input cannot be read as text.
+
+**Returns**: the line, `Ok(None)` at end of input, or why it could not be read
+
+**Examples**
+
 _Draining stdin line by line_
 
 ```kex
 foul echoAll -> Void do
-  match IO.getLine do
-    Just(line) => do
+  match IO.readLine do
+    Ok(Just(line)) => do
       IO.printLine(line)
       echoAll
     end
-    None => ()
+    Ok(None) => ()
+    Error(e) => IO.printError("cannot read stdin: ${e}")
   end
 end
 ```
 
-### `get`
+### `getChar`
 
 ```kex
-get : String?
+getChar : String?
 ```
 
-Reads a single character from stdin.
+Reads a single character from stdin, as `IO.in.getChar` does.
 
-Returns `None` at end of input. Note that the result is a one-character `String`, not a `Char`.
+Note that the character is a one-character `String`, not a `Char`.
 
-**Returns**: the character, or `None` at end of input
+**Returns**: the character, or `None` at end of input or on failure
 
 **Examples**
 
 ```kex
-let key = IO.get.or("")
+let key = IO.getChar.or("")
 IO.printLine("you pressed ${key}")
 ```
 
@@ -202,42 +217,6 @@ _Keeping stdout clean for the real result_
 ```kex
 IO.printError("scanning ${dir}...")   # progress, on stderr
 IO.printLine(results.join("\n"))      # the output, on stdout
-```
-
-### `warn`
-
-```kex
-warn(msg: Showable) -> Void
-```
-
-Writes `msg` to stderr. Identical to `printError`, named for the case where the message is a warning rather than a failure.
-
-**Parameters**
-
-  - `msg` — the warning to write
-
-**Examples**
-
-```kex
-IO.warn("ignoring unknown key ${key}")
-```
-
-### `warning`
-
-```kex
-warning(msg: Showable) -> Void
-```
-
-Writes `msg` to stderr. The long spelling of `warn`.
-
-**Parameters**
-
-  - `msg` — the warning to write
-
-**Examples**
-
-```kex
-IO.warning("this option is deprecated")
 ```
 
 ### `out` (constant)
@@ -276,7 +255,7 @@ report(FS.File.open("report.txt", Write).try, results)
 error : FileHandle<CannotRead, CanWrite>
 ```
 
-Standard error, as a handle. The sink `IO.printError` and `IO.warn` write to, reachable as a value.
+Standard error, as a handle. The sink `IO.printError` writes to, reachable as a value.
 
 **Examples**
 
@@ -292,7 +271,7 @@ IO.error.printLine("config file not found")
 in : FileHandle<CanRead, CannotWrite>
 ```
 
-Standard input, as a handle. The source `IO.getLine` and `IO.get` read from, reachable as a value.
+Standard input, as a handle. The source `IO.getLine`, `IO.readLine` and `IO.getChar` read from, reachable as a value.
 
 **Examples**
 

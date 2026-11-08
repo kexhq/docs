@@ -88,9 +88,9 @@ Returns the product of the range's elements.
 contains?(value: A) -> Bool
 ```
 
-Returns `true` when `value` is one of the enumerated elements.
+Returns `true` when `value` lies between the endpoints, both included.
 
-This function materializes the range and supports integer and character ranges only. For continuous bounds, compare the value with each endpoint: `value >= lower && value <= upper`.
+Only the endpoints are compared: nothing is enumerated, so this is cheap for a range of any size and works for a continuous `Float` range too. A range whose lower endpoint exceeds its upper endpoint contains nothing.
 
 **Parameters**
 
@@ -101,8 +101,10 @@ This function materializes the range and supports integer and character ranges o
 **Examples**
 
 ```kex
-(1..10).contains?(5)    # => true
-(1..10).contains?(11)   # => false
+(1..10).contains?(5)          # => true
+(1..10).contains?(11)         # => false
+(0.0..1.0).contains?(0.25)    # => true
+('a'..'f').contains?('c')     # => true
 ```
 
 #### `items`
@@ -128,23 +130,6 @@ _Building a lookup table_
 
 ```kex
 (1..12).items.map { |m| (m, monthName(m)) }
-```
-
-#### `list`
-
-```kex
-list : [A]
-```
-
-Returns the range's elements as a list. The same as `items`, under the name that reads as a conversion — and unlike `to(List)` it answers the list directly rather than wrapped in an `Optional`.
-
-**Returns**: the elements, in ascending order
-
-**Examples**
-
-```kex
-(1..3).list      # => [1, 2, 3]
-('a'..'c').list  # => ['a', 'b', 'c']
 ```
 
 #### `first`
@@ -614,4 +599,6 @@ Returns the elements that do NOT satisfy `pred`, as a list.
   - [`eachIndexed`](enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
   - [`all?`](enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`.
   - [`any?`](enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`.
+  - [`none?`](enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`one?`](enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
   - [`find`](enumerable.md#foldable-find) — Returns the first item satisfying `pred`, or `None` when nothing does.

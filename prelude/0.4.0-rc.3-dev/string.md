@@ -210,6 +210,7 @@ Answers `None` for an index past either end rather than failing, so it is safe t
 ```kex
 "hi".get(1)    # => Just('i')
 "hi".get(9)    # => None
+"hi".get(-1)   # => Just('i')
 ```
 
 ### `take`
@@ -277,7 +278,7 @@ slice(range: Range<Integer>) -> String
 
 Returns the substring of `length` characters starting at index `start`, counting from 0.
 
-Characters, not bytes: the indices count what `count` counts. The window is clamped rather than refused, the way `take` and `drop` already behave: a start past the end answers `""`, a length running past the end stops at the end, a negative start counts as 0, and a negative length answers `""`.
+Characters, not bytes: the indices count what `count` counts. The window is clamped rather than refused, the way `take` and `drop` already behave: a start past the end answers `""`, a length running past the end stops at the end, and a negative length answers `""`. A negative start counts back from the end, as in Ruby: `-1` is the last character, and a start still before the beginning answers `""`.
 
 **Parameters**
 
@@ -298,28 +299,6 @@ _Reading a fixed-width field_
 
 ```kex
 line.slice(0, 10).trim   # the date column of a log line
-```
-
-### `substring`
-
-```kex
-substring(start: Integer, length: Integer) -> String
-substring(range: Range<Integer>) -> String
-```
-
-Returns the substring of `length` characters starting at index `start`. The same as `slice`, under the name familiar from other languages.
-
-**Parameters**
-
-  - `start` — the 0-based index of the first character
-  - `length` — how many characters to keep
-
-**Returns**: the characters in that window
-
-**Examples**
-
-```kex
-"hello".substring(1, 3)   # => "ell"
 ```
 
 ### `reject`
@@ -373,7 +352,8 @@ _An anagram check_
 ### `indexOf`
 
 ```kex
-indexOf(c: Char) -> Integer?
+indexOf(x: Char) -> Integer?
+indexOf(x: String) -> Integer?
 ```
 
 Returns the index of the first occurrence of `c`, or `None` when the character does not appear.
@@ -426,6 +406,46 @@ _Finding where the leading indentation ends_
 
 ```kex
 "    text".findIndex { |c| !c.space? }   # => Just(4)
+```
+
+### `takeWhile`
+
+```kex
+takeWhile(pred: (Char -> Bool)) -> String
+```
+
+Returns the leading characters that satisfy `pred`, stopping at the first that does not.
+
+**Parameters**
+
+  - `pred` — the test applied to each character
+
+**Returns**: the longest matching prefix
+
+**Examples**
+
+```kex
+"123abc".takeWhile(~digit?)   # => "123"
+```
+
+### `dropWhile`
+
+```kex
+dropWhile(pred: (Char -> Bool)) -> String
+```
+
+Drops the leading characters that satisfy `pred` and returns the rest.
+
+**Parameters**
+
+  - `pred` — the test applied to each character
+
+**Returns**: the string from the first character that fails `pred`
+
+**Examples**
+
+```kex
+"123abc".dropWhile(~digit?)   # => "abc"
 ```
 
 ### `zip`
@@ -499,6 +519,28 @@ Returns the number of characters: characters, not bytes. See `bytes` for the sto
 "hello".count   # => 5
 "".count        # => 0
 "é".count       # => 1   (but "é".bytes.count is 2)
+```
+
+### `occurrences`
+
+```kex
+occurrences(sub: String) -> Integer
+```
+
+Returns how many times `sub` occurs, counting non-overlapping matches from the left. An empty `sub` occurs 0 times. (Ruby spells this `scan(sub).size`; `count` here counts characters by a predicate.)
+
+**Parameters**
+
+  - `sub` — the text to look for
+
+**Returns**: the number of occurrences
+
+**Examples**
+
+```kex
+"hello".occurrences("l")     # => 2
+"aaaa".occurrences("aa")     # => 2
+"hello".occurrences("xyz")   # => 0
 ```
 
 ### `length`
@@ -810,7 +852,6 @@ Use `chars` instead when you want `Char` values rather than strings.
 
 ```kex
 split(sep: String | Regex) -> [String]
-split : [String]
 ```
 
 Splits the string on every occurrence of `sep`, which may be a literal string or a `Regex`.
@@ -852,16 +893,17 @@ lines : [String]
 
 Splits the string into lines on `\n`.
 
-A single trailing newline is dropped, so a file that ends in one does not produce a final empty line. Windows line endings are not stripped: split on `\r\n` explicitly, or `trim` each line, when that matters.
+A single trailing newline is dropped, so a file that ends in one does not produce a final empty line. A Windows `\r\n` ending is one line ending, as Ruby's `chomp` reads it, so no line keeps a stray `\r`. Every line-reading function (`FS.File.readLines`, `FileHandle.getLine`, a file `Feed`) reads line endings the same way.
 
 **Returns**: the lines, without their newlines
 
 **Examples**
 
 ```kex
-"a\nb".lines      # => ["a", "b"]
-"a\nb\n".lines    # => ["a", "b"]
-"".lines          # => []
+"a\nb".lines       # => ["a", "b"]
+"a\nb\n".lines     # => ["a", "b"]
+"a\r\nb".lines     # => ["a", "b"]
+"".lines           # => []
 ```
 
 _Numbering the lines of a file_
@@ -934,19 +976,41 @@ _Normalising a path separator_
 "a\\b\\c".replace("\\", "/")   # => "a/b/c"
 ```
 
+### `replaceFirst`
+
+```kex
+replaceFirst(pattern: String, replacement: String) -> String
+```
+
+Replaces only the first literal occurrence of `pattern`. Ruby calls this `sub`, and `replace` is its `gsub`.
+
+**Parameters**
+
+  - `pattern` — the text to look for
+  - `replacement` — what to put in its place
+
+**Returns**: the string with its first match replaced, or unchanged when there is none
+
+**Examples**
+
+```kex
+"a-b-c".replaceFirst("-", "+")   # => "a+b-c"
+"abc".replaceFirst("x", "y")     # => "abc"
+```
+
 ### `substitute`
 
 ```kex
 substitute(replacements: {String: String}) -> String
 ```
 
-Replaces every key of `replacements` with its value, in one pass over the map.
+Replaces every occurrence of each key of `replacements` with its value.
 
 The keys are the placeholders exactly as written: no syntax is imposed and nothing is reserved, so `$NAME$`, `__NAME__`, `{{name}}` and `%name%` are all equally valid, and a template needs no escaping to be a template. `$NAME$` is the convention to reach for when there is no reason to prefer another.
 
 Note that a placeholder is NOT `${name}`: that is interpolation, which the compiler resolves before this ever sees the string.
 
-This is what a template wants instead of a chain of `replace` calls: the chain reads as a pipeline when it is really a substitution table, and it quietly depends on its own order, since an earlier replacement's OUTPUT is still visible to every later one.
+This is what a template wants instead of a chain of `replace` calls: the chain reads as a pipeline when it is really a substitution table.
 
 Substitutions are applied in the map's canonical key order and each is applied to the result of the last, so a value that itself contains a key can still be rewritten by a later one. Keep values placeholder-free when that matters.
 
@@ -993,6 +1057,170 @@ _Cleaning up user input_
 
 ```kex
 let name = IO.getLine.or("").trim
+```
+
+### `trimStart`
+
+```kex
+trimStart : String
+```
+
+Removes leading whitespace only. Ruby calls this `lstrip`.
+
+**Returns**: the string without its leading whitespace
+
+**Examples**
+
+```kex
+"  hi  ".trimStart   # => "hi  "
+```
+
+### `trimEnd`
+
+```kex
+trimEnd : String
+```
+
+Removes trailing whitespace only. Ruby calls this `rstrip`.
+
+**Returns**: the string without its trailing whitespace
+
+**Examples**
+
+```kex
+"  hi  ".trimEnd   # => "  hi"
+```
+
+_Dropping a line ending, CRLF included_
+
+```kex
+line.trimEnd
+```
+
+### `removePrefix`
+
+```kex
+removePrefix(prefix: String) -> String
+```
+
+Removes `prefix` from the start of the string when it is there, and otherwise returns the string unchanged. Ruby calls this `delete_prefix`.
+
+**Parameters**
+
+  - `prefix` — the text to remove
+
+**Returns**: the string without the prefix
+
+**Examples**
+
+```kex
+"v1.2.0".removePrefix("v")   # => "1.2.0"
+"1.2.0".removePrefix("v")    # => "1.2.0"
+```
+
+### `removeSuffix`
+
+```kex
+removeSuffix(suffix: String) -> String
+```
+
+Removes `suffix` from the end of the string when it is there, and otherwise returns the string unchanged. Ruby calls this `delete_suffix`.
+
+**Parameters**
+
+  - `suffix` — the text to remove
+
+**Returns**: the string without the suffix
+
+**Examples**
+
+```kex
+"notes.txt".removeSuffix(".txt")   # => "notes"
+```
+
+### `repeat`
+
+```kex
+repeat(n: Integer) -> String
+```
+
+Returns the string repeated `n` times; `""` when `n` is 0 or less. Ruby spells this `*`.
+
+**Parameters**
+
+  - `n` — how many copies
+
+**Returns**: the copies, joined
+
+**Examples**
+
+```kex
+"ab".repeat(3)    # => "ababab"
+"-".repeat(10)    # => "----------"
+```
+
+### `padLeft`
+
+```kex
+padLeft(width: Integer) -> String
+padLeft(width: Integer, pad: String) -> String
+```
+
+Pads the string on the left with spaces until it is `width` characters long. A string already that long is returned unchanged. Ruby calls this `rjust`.
+
+**Parameters**
+
+  - `width` — the length to reach
+
+**Returns**: the padded string
+
+**Examples**
+
+```kex
+"7".padLeft(3)   # => "  7"
+```
+
+### `padRight`
+
+```kex
+padRight(width: Integer) -> String
+padRight(width: Integer, pad: String) -> String
+```
+
+Pads the string on the right with spaces until it is `width` characters long. Ruby calls this `ljust`.
+
+**Parameters**
+
+  - `width` — the length to reach
+
+**Returns**: the padded string
+
+**Examples**
+
+```kex
+"ab".padRight(4) + "|"   # => "ab  |"
+```
+
+### `center`
+
+```kex
+center(width: Integer) -> String
+center(width: Integer, pad: String) -> String
+```
+
+Centers the string in a field of `width` characters, padding both sides with spaces. When the padding cannot split evenly, the extra character goes on the right, as Ruby's `center` does.
+
+**Parameters**
+
+  - `width` — the length to reach
+
+**Returns**: the centered string
+
+**Examples**
+
+```kex
+"ab".center(6)   # => "  ab  "
+"ab".center(5)   # => " ab  "
 ```
 
 ### `upperCase`
@@ -1141,6 +1369,14 @@ Returns the identifier in `PascalCase`: every word capitalized, with nothing bet
 "user-id".pascalCase         # => "UserId"
 ```
 
+### `filler`
+
+```kex
+filler(pad: String, width: Integer) -> String
+```
+
+`pad` repeated and cut to exactly `width` characters: the filler the padding functions put beside the string. Nothing for a width of 0 or less, or for an empty `pad`.
+
 ### `identifierWords`
 
 ```kex
@@ -1256,10 +1492,6 @@ _Selecting files by extension_
 paths.filter { |p| p.endsWith?(".kex") }
 ```
 
-### From [`Monoid`](algebra.md#trait-monoid)
-
-  - [`repeat`](algebra.md#monoid-repeat) — Combines this value with itself `n` times.
-
 ### From [`Comparable`](comparable.md#trait-comparable)
 
   - [`max`](comparable.md#comparable-max) — What every ordered type gets from `compare` alone.
@@ -1283,6 +1515,8 @@ paths.filter { |p| p.endsWith?(".kex") }
   - [`eachIndexed`](enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
   - [`all?`](enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`.
   - [`any?`](enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`.
+  - [`none?`](enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`one?`](enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
   - [`find`](enumerable.md#foldable-find) — Returns the first item satisfying `pred`, or `None` when nothing does.
 
 ### Defined in other modules

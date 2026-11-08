@@ -11,54 +11,65 @@ entities:
 
 ## module `Complex`
 
-Complex numbers with real and imaginary components, plus polar conversion.
-
-Components accept `Number` values. Trigonometric angles are in radians.
-
-```kex
-using Complex
-let z = Rectangular { re: 3, im: 4 }
-z.abs   # => 5.0
-```
-
 ### `ZERO` (constant)
 
-The additive identity, +0 + 0i+.
+The additive identity, +0+0i+.
 
 
 
 ### `ONE` (constant)
 
-The multiplicative identity, +1 + 0i+.
+The multiplicative identity, +1+0i+.
 
 
 
 ### `I` (constant)
 
-The imaginary unit, +0 + 1i+.
+The imaginary unit, +0+1i+.
 
 
 
 ### `NEG_I` (constant)
 
-The negative imaginary unit, `0 - 1i`.
+The negative imaginary unit, `0-1i`.
 
 
+
+### `from`
+
+```kex
+from(re: Number, im: Number) -> Complex
+```
+
+Builds a complex number from its rectangular parts.
+
+**Parameters**
+
+  - `re` — the real part
+  - `im` — the imaginary part
+
+**Returns**: +re + im·i+
+
+**Examples**
+
+```kex
+Complex.from(3, 4).showValue   # => "3+4i"
+```
 
 ### `fromPolar`
 
 ```kex
-fromPolar(radius: Number, theta: Number) -> Rectangular
+fromPolar(radius: Number, theta: Number) -> Complex
 ```
 
-Constructs a complex number from a radius and an angle in radians.
+Builds a complex number from its polar parts: a distance from the origin and an angle in radians.
 
 **Parameters**
 
   - `radius` — distance from the origin
   - `theta` — angle in radians
 
-**Returns**: the rectangular representation
+**Returns**: the same number, held by its rectangular parts
 
 **Examples**
 
@@ -68,49 +79,24 @@ _A quarter turn_
 Complex.fromPolar(2, Math.PI / 2).im   # approximately 2.0
 ```
 
-### `fromPolarCoordinates`
+## record `Complex`
+
+Complex numbers: one value, readable in rectangular or polar terms.
+
+A `Complex` is a point in the plane. Its rectangular view is the real and imaginary parts, `re` and `im`; its polar view is the distance from the origin and the angle, `abs` and `arg`. They are two ways of reading the same number, not two kinds of number, so either view is available on every value and either can build one. Components accept `Number` values; angles are in radians.
 
 ```kex
-fromPolarCoordinates(polar: Polar) -> Rectangular
+using Complex
+
+let z = Complex.from(3, 4)
+z.abs            # => 5.0
+z.polar          # => (5.0, 0.9272952180016122)
+Complex.fromPolar(2, Math.PI / 2).im   # approximately 2.0
 ```
 
-Constructs a complex number from a `Polar` value.
+A complex number, stored by its real part `re` and imaginary part `im`.
 
-**Parameters**
-
-  - `polar` — radius and angle in radians
-
-**Returns**: the rectangular representation
-
-**Examples**
-
-```kex
-Complex.fromPolarCoordinates(Polar { radius: 3, theta: 0 }).re # => 3.0
-```
-
-### `conjugateOf`
-
-```kex
-conjugateOf(value: Rectangular) -> Rectangular
-```
-
-Returns the conjugate of a complex number.
-
-**Parameters**
-
-  - `value` — the number to conjugate
-
-**Returns**: the number with its imaginary sign reversed
-
-**Examples**
-
-```kex
-Complex.conjugateOf(Complex.I).im # => -1
-```
-
-## record `Rectangular`
-
-A complex number in rectangular form: `re` is the real part and `im` is the imaginary part.
+Write one literally as `Complex { re: 3, im: 4 }`, or with `Complex.from` and `Complex.fromPolar`.
 
 **Fields**
 
@@ -134,192 +120,39 @@ Renders the number in rectangular form, such as +3+4i+.
 **Examples**
 
 ```kex
-(Rectangular { re: 3, im: -4 }).showValue # => "3-4i"
+Complex.from(3, -4).showValue   # => "3-4i"
 ```
 
-#### `+`
+#### `rectangular`
 
 ```kex
-+(other: Rectangular) -> Rectangular
+rectangular : (Number, Number)
 ```
 
-Adds two complex numbers component by component.
+The rectangular view: the real and imaginary parts.
+
+**Returns**: `(re, im)`
 
 **Examples**
 
 ```kex
-(Rectangular { re: 1, im: 2 } + Complex.I).im # => 3
+Complex.from(3, 4).rectangular   # => (3, 4)
 ```
 
-#### `-`
+#### `polar`
 
 ```kex
--(other: Rectangular) -> Rectangular
+polar : (Float, Float)
 ```
 
-Subtracts `other` from this complex number.
+The polar view: the distance from the origin and the angle in radians.
+
+**Returns**: `(abs, arg)`
 
 **Examples**
 
 ```kex
-(Rectangular { re: 1, im: 2 } - Complex.I).im # => 1
-```
-
-#### `*`
-
-```kex
-*(other: Rectangular) -> Rectangular
-```
-
-Multiplies two complex numbers.
-
-**Examples**
-
-```kex
-(Complex.I * Complex.I).re # => -1
-```
-
-#### `/`
-
-```kex
-/(other: Rectangular) -> Rectangular
-```
-
-Divides by `other` using the complex conjugate formula. The divisor must be non-zero.
-
-**Examples**
-
-```kex
-(Complex.I / Complex.I).re # => 1.0
-```
-
-#### `conjugate`
-
-```kex
-conjugate : Rectangular
-```
-
-Returns the complex conjugate, negating the imaginary part.
-
-**Examples**
-
-```kex
-let conjugated: Rectangular = Complex.conjugateOf(Complex.I)
-conjugated.im # => -1
-```
-
-#### `sqrt`
-
-```kex
-sqrt : Rectangular
-```
-
-Returns the principal square root. The result's argument lies in the right half-plane.
-
-**Examples**
-
-```kex
-(Rectangular { re: -1, im: 0 }).sqrt.im # approximately 1.0
-```
-
-#### `exp`
-
-```kex
-exp : Rectangular
-```
-
-Returns e raised to this complex number.
-
-**Examples**
-
-```kex
-Complex.ZERO.exp.re # => 1.0
-```
-
-#### `log`
-
-```kex
-log : Rectangular
-```
-
-Returns the principal natural logarithm. Zero has no logarithm.
-
-**Examples**
-
-```kex
-Complex.ONE.log.re # => 0.0
-```
-
-#### `sin`
-
-```kex
-sin : Rectangular
-```
-
-Returns the complex sine.
-
-**Examples**
-
-```kex
-Complex.ZERO.sin.re # => 0.0
-```
-
-#### `cos`
-
-```kex
-cos : Rectangular
-```
-
-Returns the complex cosine.
-
-**Examples**
-
-```kex
-Complex.ZERO.cos.re # => 1.0
-```
-
-#### `tan`
-
-```kex
-tan : Rectangular
-```
-
-Returns the complex tangent.
-
-**Examples**
-
-```kex
-Complex.ZERO.tan.re # => 0.0
-```
-
-#### `^`
-
-```kex
-^(exponent: Number) -> Rectangular
-```
-
-Raises this number to a real power using the principal argument.
-
-**Examples**
-
-```kex
-(Complex.I ^ 2).re # approximately -1.0
-```
-
-#### `absSquared`
-
-```kex
-absSquared : Number
-```
-
-Returns the square of the magnitude.
-
-**Returns**: real² + imaginary²
-
-**Examples**
-
-```kex
-(Rectangular { re: 3, im: 4 }).absSquared # => 25
+Complex.from(3, 4).polar   # => (5.0, 0.9272952180016122)
 ```
 
 #### `abs`
@@ -328,14 +161,30 @@ Returns the square of the magnitude.
 abs : Float
 ```
 
-Returns the magnitude of this complex number.
+The magnitude: the distance from the origin, the polar radius.
 
-**Returns**: distance from the origin
+**Returns**: the distance from the origin
 
 **Examples**
 
 ```kex
-(Rectangular { re: 3, im: 4 }).abs # => 5.0
+Complex.from(3, 4).abs   # => 5.0
+```
+
+#### `absSquared`
+
+```kex
+absSquared : Number
+```
+
+The square of the magnitude, which needs no square root and so stays an `Integer` for integer parts.
+
+**Returns**: +re² + im²+
+
+**Examples**
+
+```kex
+Complex.from(3, 4).absSquared   # => 25
 ```
 
 #### `arg`
@@ -344,87 +193,184 @@ Returns the magnitude of this complex number.
 arg : Float
 ```
 
-Returns the argument in radians, in the range chosen by `Math.atan2`.
+The argument: the angle from the positive real axis, the polar angle, in the range `Math.atan2` answers.
 
-**Returns**: angle in radians
-
-**Examples**
-
-```kex
-Complex.I.arg # => Math.PI / 2.0
-```
-
-#### `polar`
-
-```kex
-polar : Polar
-```
-
-Converts this number to polar coordinates.
-
-**Returns**: magnitude and argument in radians
+**Returns**: the angle in radians
 
 **Examples**
 
 ```kex
-(Rectangular { re: 3, im: 4 }).polar.radius # => 5.0
+Complex.I.arg   # => 1.5707963267948966
+```
+
+#### `+`
+
+```kex
++(other: Complex) -> Complex
+```
+
+Adds two complex numbers component by component.
+
+**Examples**
+
+```kex
+(Complex.from(1, 2) + Complex.I).im   # => 3
+```
+
+#### `-`
+
+```kex
+-(other: Complex) -> Complex
+```
+
+Subtracts `other` from this complex number.
+
+**Examples**
+
+```kex
+(Complex.from(1, 2) - Complex.I).im   # => 1
+```
+
+#### `*`
+
+```kex
+*(other: Complex) -> Complex
+```
+
+Multiplies two complex numbers.
+
+**Examples**
+
+```kex
+(Complex.I * Complex.I).re   # => -1
+```
+
+#### `/`
+
+```kex
+/(other: Complex) -> Complex
+```
+
+Divides by `other` using the complex conjugate formula. The divisor must be non-zero.
+
+**Examples**
+
+```kex
+(Complex.I / Complex.I).re   # => 1.0
+```
+
+#### `conjugate`
+
+```kex
+conjugate : Complex
+```
+
+Returns the complex conjugate, negating the imaginary part.
+
+**Examples**
+
+```kex
+Complex.I.conjugate.im   # => -1
+```
+
+#### `sqrt`
+
+```kex
+sqrt : Complex
+```
+
+Returns the principal square root. The result's argument lies in the right half-plane.
+
+**Examples**
+
+```kex
+Complex.from(-1, 0).sqrt.im   # approximately 1.0
+```
+
+#### `exp`
+
+```kex
+exp : Complex
+```
+
+Returns e raised to this complex number.
+
+**Examples**
+
+```kex
+Complex.ZERO.exp.re   # => 1.0
+```
+
+#### `log`
+
+```kex
+log : Complex
+```
+
+Returns the principal natural logarithm. Zero has no logarithm.
+
+**Examples**
+
+```kex
+Complex.ONE.log.re   # => 0.0
+```
+
+#### `sin`
+
+```kex
+sin : Complex
+```
+
+Returns the complex sine.
+
+**Examples**
+
+```kex
+Complex.ZERO.sin.re   # => 0.0
+```
+
+#### `cos`
+
+```kex
+cos : Complex
+```
+
+Returns the complex cosine.
+
+**Examples**
+
+```kex
+Complex.ZERO.cos.re   # => 1.0
+```
+
+#### `tan`
+
+```kex
+tan : Complex
+```
+
+Returns the complex tangent.
+
+**Examples**
+
+```kex
+Complex.ZERO.tan.re   # => 0.0
+```
+
+#### `^`
+
+```kex
+^(exponent: Number) -> Complex
+```
+
+Raises this number to a real power using the principal argument.
+
+**Examples**
+
+```kex
+(Complex.I ^ 2).re   # approximately -1.0
 ```
 
 ### From [`Showable`](kex.md#trait-showable)
 
   - [`to`](kex.md#showable-to) — 
-
-## record `Polar`
-
-A complex number in polar form, with a non-negative radius and angle in radians.
-
-**Fields**
-
-  - `radius` : [Number](number.md#make-number)
-  - `theta` : [Number](number.md#make-number)
-
-Implements [`Showable`](kex.md#trait-showable).
-
-### Functions
-
-#### `showValue` (from Showable)
-
-```kex
-showValue : String
-```
-
-Renders the radius and angle in radians.
-
-**Returns**: the polar coordinates
-
-**Examples**
-
-```kex
-(Polar { radius: 2, theta: 0 }).showValue # => "(2, 0)"
-```
-
-#### `rectangular`
-
-```kex
-rectangular : Rectangular
-```
-
-Converts these polar coordinates to a complex number.
-
-**Returns**: the rectangular representation
-
-**Examples**
-
-```kex
-(Polar { radius: 2, theta: 0 }).rectangular.re # => 2.0
-```
-
-### From [`Showable`](kex.md#trait-showable)
-
-  - [`to`](kex.md#showable-to) — 
-
-## module `Complex.Polar`
-
-### `ZERO` (constant)
-
-

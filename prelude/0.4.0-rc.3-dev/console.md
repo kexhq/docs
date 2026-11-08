@@ -173,7 +173,7 @@ Yellow. Conventionally: warnings.
 **Examples**
 
 ```kex
-IO.warn(Console.colorize("deprecated option", Console.YELLOW))
+IO.printError(Console.colorize("deprecated option", Console.YELLOW))
 ```
 
 

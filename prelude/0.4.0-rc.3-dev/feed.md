@@ -76,7 +76,9 @@ _Draining a feed a piece at a time_
 ```kex
 let jobs = Feed.Elements(["resize", "index"])
 jobs.spent?   # => false
-jobs.take(2)
+jobs.take(2)  # => ["resize", "index"]
+jobs.spent?   # => false: nothing has read past the end yet
+jobs.pull     # => None
 jobs.spent?   # => true
 ```
 
@@ -252,7 +254,7 @@ Constructors for `Feed`.
 empty : Feed<A>
 ```
 
-A feed with nothing in it, already spent.
+A feed with nothing in it: its first read answers `None`.
 
 Mostly the `or` half of a failed open: `FS.File.feed(path).or(Feed.empty)` reads nothing rather than stopping the program.
 
