@@ -11,19 +11,19 @@ entities:
 
 ## module `Tey.Resolver`
 
-### `fingerprint`
+### `fingerprint` (foul)
 
 ```kex
 fingerprint(context: Context) -> String
 ```
 
-### `resolveWorkspace`
+### `resolveWorkspace` (foul)
 
 ```kex
 resolveWorkspace(context: Context) -> Result<LockState, String>
 ```
 
-### `resolveWorkspaceWithInfo`
+### `resolveWorkspaceWithInfo` (foul)
 
 ```kex
 resolveWorkspaceWithInfo(context: Context, toolchain: Tey.Toolchain.ToolchainInfo) -> Result<LockState, String>
@@ -31,7 +31,7 @@ resolveWorkspaceWithInfo(context: Context, toolchain: Tey.Toolchain.ToolchainInf
 
 The caller may already have inspected the selected compiler while deciding whether an existing lock is reusable. Passing that result through keeps the `--info` contract to one invocation per install/resolve decision.
 
-### `resolvePackage`
+### `resolvePackage` (foul)
 
 ```kex
 resolvePackage(manifest: ManifestPackage) -> Result<LockState, String>

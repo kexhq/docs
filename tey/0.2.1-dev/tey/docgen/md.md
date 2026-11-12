@@ -19,7 +19,7 @@ Nothing here knows about guides, books, or the kexhq site.
 
 ## module `Tey.Docgen.Md`
 
-### `parseDocument`
+### `parseDocument` (foul)
 
 ```kex
 parseDocument(text: String) -> Document
@@ -27,7 +27,7 @@ parseDocument(text: String) -> Document
 
 The whole job: text in, document out.
 
-### `toHtml`
+### `toHtml` (foul)
 
 ```kex
 toHtml(text: String) -> String
@@ -35,7 +35,7 @@ toHtml(text: String) -> String
 
 Text in, HTML out — `parse` then `render`, which is all a caller wanting a page body needs.
 
-### `splitFrontmatter`
+### `splitFrontmatter` (foul)
 
 ```kex
 splitFrontmatter(lines: [String]) -> (Frontmatter, [String])
@@ -45,31 +45,31 @@ splitFrontmatter(lines: [String]) -> (Frontmatter, [String])
 
 A leading `---` fence delimits frontmatter. Without one the document is all body, and every field takes its default.
 
-### `closingFence`
+### `closingFence` (foul)
 
 ```kex
 closingFence(lines: [String], index: Integer) -> Integer?
 ```
 
-### `frontmatterOf`
+### `frontmatterOf` (foul)
 
 ```kex
 frontmatterOf(lines: [String], accum: Frontmatter) -> Frontmatter
 ```
 
-### `assign`
+### `assign` (foul)
 
 ```kex
 assign(front: Frontmatter, key: String, value: String) -> Frontmatter
 ```
 
-### `unquote`
+### `unquote` (foul)
 
 ```kex
 unquote(value: String) -> String
 ```
 
-### `trimEnds`
+### `trimEnds` (foul)
 
 ```kex
 trimEnds(value: String) -> String
@@ -77,13 +77,13 @@ trimEnds(value: String) -> String
 
 Drops the first and last character — the quotes `quoted?` just matched.
 
-### `quoted?`
+### `quoted?` (foul)
 
 ```kex
 quoted?(value: String, mark: String) -> Bool
 ```
 
-### `parseBlocks`
+### `parseBlocks` (foul)
 
 ```kex
 parseBlocks(lines: [String]) -> [MdBlock]
@@ -91,7 +91,7 @@ parseBlocks(lines: [String]) -> [MdBlock]
 
 --- block structure ---------------------------------------------------
 
-### `blockLoop`
+### `blockLoop` (foul)
 
 ```kex
 blockLoop(lines: [String], accum: [MdBlock]) -> [MdBlock]
@@ -99,13 +99,13 @@ blockLoop(lines: [String], accum: [MdBlock]) -> [MdBlock]
 
 One pass over the lines, each branch consuming the whole construct it recognises and returning the lines it did not take.
 
-### `fence?`
+### `fence?` (foul)
 
 ```kex
 fence?(line: String) -> Bool
 ```
 
-### `rule?`
+### `rule?` (foul)
 
 ```kex
 rule?(line: String) -> Bool
@@ -113,13 +113,13 @@ rule?(line: String) -> Bool
 
 `---`, `***` or `___`, three or more, nothing else on the line. Checked after frontmatter is gone, so a stray `---` here really is a break.
 
-### `ruleOf?`
+### `ruleOf?` (foul)
 
 ```kex
 ruleOf?(text: String, mark: String) -> Bool
 ```
 
-### `headingLevel`
+### `headingLevel` (foul)
 
 ```kex
 headingLevel(line: String) -> Integer
@@ -127,13 +127,13 @@ headingLevel(line: String) -> Integer
 
 `##` → 2. Zero when the line is not a heading; `#hashtag` is not one.
 
-### `countHashes`
+### `countHashes` (foul)
 
 ```kex
 countHashes(text: String, seen: Integer) -> Integer
 ```
 
-### `takeCode`
+### `takeCode` (foul)
 
 ```kex
 takeCode(lines: [String]) -> (MdBlock, [String])
@@ -143,13 +143,13 @@ takeCode(lines: [String]) -> (MdBlock, [String])
 
 The info string is the language. An unterminated fence runs to the end of the document rather than failing — a truncated page still renders.
 
-### `closingCodeFence`
+### `closingCodeFence` (foul)
 
 ```kex
 closingCodeFence(lines: [String], index: Integer) -> Integer
 ```
 
-### `takeQuote`
+### `takeQuote` (foul)
 
 ```kex
 takeQuote(lines: [String]) -> (MdBlock, [String])
@@ -159,19 +159,19 @@ takeQuote(lines: [String]) -> (MdBlock, [String])
 
 `>` is stripped from each line and what remains is parsed as blocks, so a quote can hold anything a document can, nesting included.
 
-### `quoteLine?`
+### `quoteLine?` (foul)
 
 ```kex
 quoteLine?(line: String) -> Bool
 ```
 
-### `stripQuote`
+### `stripQuote` (foul)
 
 ```kex
 stripQuote(line: String) -> String
 ```
 
-### `takeList`
+### `takeList` (foul)
 
 ```kex
 takeList(lines: [String]) -> (MdBlock, [String])
@@ -181,7 +181,7 @@ takeList(lines: [String]) -> (MdBlock, [String])
 
 Nesting is by indentation: a line indented past the first item's marker belongs to that item and is parsed as blocks in its own right, so a list can hold paragraphs, code and deeper lists.
 
-### `listLine?`
+### `listLine?` (foul)
 
 ```kex
 listLine?(line: String) -> Bool
@@ -189,13 +189,13 @@ listLine?(line: String) -> Bool
 
 A list continues through its own items, indented continuation lines, and blank lines — but a blank line followed by unindented text ends it, which is why the run is cut at the first line that is neither.
 
-### `listItems`
+### `listItems` (foul)
 
 ```kex
 listItems(lines: [String], indent: Integer, current: [String], accum: [ListItem]) -> [ListItem]
 ```
 
-### `flushItem`
+### `flushItem` (foul)
 
 ```kex
 flushItem(current: [String], accum: [ListItem]) -> [ListItem]
@@ -203,13 +203,13 @@ flushItem(current: [String], accum: [ListItem]) -> [ListItem]
 
 The first line is the item's own text; anything below it is nested content, dedented so it parses as a document of its own.
 
-### `dropTrailingBlanks`
+### `dropTrailingBlanks` (foul)
 
 ```kex
 dropTrailingBlanks(lines: [String]) -> [String]
 ```
 
-### `dedent`
+### `dedent` (foul)
 
 ```kex
 dedent(lines: [String]) -> [String]
@@ -217,25 +217,25 @@ dedent(lines: [String]) -> [String]
 
 Removes the common indent, so nested content is parsed at column zero.
 
-### `indentOf`
+### `indentOf` (foul)
 
 ```kex
 indentOf(line: String) -> Integer
 ```
 
-### `itemMarker`
+### `itemMarker` (foul)
 
 ```kex
 itemMarker(line: String) -> String
 ```
 
-### `bulletMarker`
+### `bulletMarker` (foul)
 
 ```kex
 bulletMarker(line: String) -> String
 ```
 
-### `numberMarker`
+### `numberMarker` (foul)
 
 ```kex
 numberMarker(line: String) -> String
@@ -243,7 +243,7 @@ numberMarker(line: String) -> String
 
 "12. " → "12." ; anything else → "".
 
-### `tableStart?`
+### `tableStart?` (foul)
 
 ```kex
 tableStart?(lines: [String]) -> Bool
@@ -253,25 +253,25 @@ tableStart?(lines: [String]) -> Bool
 
 A GFM table is a header row and a delimiter row of dashes; without the delimiter the lines are ordinary paragraphs.
 
-### `delimiterRow?`
+### `delimiterRow?` (foul)
 
 ```kex
 delimiterRow?(line: String) -> Bool
 ```
 
-### `delimiterChar?`
+### `delimiterChar?` (foul)
 
 ```kex
 delimiterChar?(c: String) -> Bool
 ```
 
-### `takeTable`
+### `takeTable` (foul)
 
 ```kex
 takeTable(lines: [String]) -> (MdBlock, [String])
 ```
 
-### `cellsOf`
+### `cellsOf` (foul)
 
 ```kex
 cellsOf(line: String) -> [String]
@@ -279,7 +279,7 @@ cellsOf(line: String) -> [String]
 
 Leading and trailing pipes are optional, so the split is trimmed of the empty cells they produce.
 
-### `takeParagraph`
+### `takeParagraph` (foul)
 
 ```kex
 takeParagraph(lines: [String]) -> (MdBlock, [String])
@@ -289,13 +289,13 @@ takeParagraph(lines: [String]) -> (MdBlock, [String])
 
 Runs to a blank line or to the start of any other construct, so a list or fence directly under prose is not swallowed into it.
 
-### `paragraphLine?`
+### `paragraphLine?` (foul)
 
 ```kex
 paragraphLine?(line: String) -> Bool
 ```
 
-### `render`
+### `render` (foul)
 
 ```kex
 render(items: [MdBlock]) -> String
@@ -303,13 +303,13 @@ render(items: [MdBlock]) -> String
 
 --- rendering ---------------------------------------------------------
 
-### `renderBlock`
+### `renderBlock` (foul)
 
 ```kex
 renderBlock(block: MdBlock) -> String
 ```
 
-### `renderCode`
+### `renderCode` (foul)
 
 ```kex
 renderCode(language: String, body: String) -> String
@@ -317,31 +317,31 @@ renderCode(language: String, body: String) -> String
 
 Kex code goes through the same highlighter the reference pages use, so a snippet in the guide looks like a signature in the reference. Everything else is escaped and left plain.
 
-### `renderItems`
+### `renderItems` (foul)
 
 ```kex
 renderItems(items: [ListItem]) -> String
 ```
 
-### `renderItem`
+### `renderItem` (foul)
 
 ```kex
 renderItem(item: ListItem) -> String
 ```
 
-### `renderTable`
+### `renderTable` (foul)
 
 ```kex
 renderTable(header: [String], rows: [[String]]) -> String
 ```
 
-### `renderRow`
+### `renderRow` (foul)
 
 ```kex
 renderRow(row: [String]) -> String
 ```
 
-### `anchor`
+### `anchor` (foul)
 
 ```kex
 anchor(text: String) -> String
@@ -349,7 +349,7 @@ anchor(text: String) -> String
 
 A heading's id: lowercase, non-alphanumerics folded to single dashes.
 
-### `trimDashes`
+### `trimDashes` (foul)
 
 ```kex
 trimDashes(text: String) -> String
@@ -357,19 +357,19 @@ trimDashes(text: String) -> String
 
 `String.trim` takes no argument, and the folding above can leave a dash at either end (`## \`try\`` → `-try-`).
 
-### `anchorChar`
+### `anchorChar` (foul)
 
 ```kex
 anchorChar(c: Char) -> String
 ```
 
-### `squeezeDashes`
+### `squeezeDashes` (foul)
 
 ```kex
 squeezeDashes(text: String, accum: String) -> String
 ```
 
-### `stripInline`
+### `stripInline` (foul)
 
 ```kex
 stripInline(text: String) -> String
@@ -377,7 +377,7 @@ stripInline(text: String) -> String
 
 Inline markers removed, for anchors and any other plain-text use.
 
-### `inline`
+### `inline` (foul)
 
 ```kex
 inline(text: String) -> String
@@ -387,13 +387,13 @@ inline(text: String) -> String
 
 Code spans first and separately: their content is escaped but never scanned for emphasis, so `a*b*c` inside backticks stays literal.
 
-### `inlineLoop`
+### `inlineLoop` (foul)
 
 ```kex
 inlineLoop(text: String, accum: String) -> String
 ```
 
-### `emphasis`
+### `emphasis` (foul)
 
 ```kex
 emphasis(text: String) -> String
@@ -401,13 +401,13 @@ emphasis(text: String) -> String
 
 Links before emphasis, so a `*` inside a URL is not read as a marker.
 
-### `links`
+### `links` (foul)
 
 ```kex
 links(text: String, accum: String) -> String
 ```
 
-### `linkParts`
+### `linkParts` (foul)
 
 ```kex
 linkParts(rest: String) -> (String, String, String)?
@@ -415,7 +415,7 @@ linkParts(rest: String) -> (String, String, String)?
 
 `label](href)` → (label, href, what follows). None when the shape is not a link after all, in which case the `[` is literal text.
 
-### `marks`
+### `marks` (foul)
 
 ```kex
 marks(text: String) -> String
@@ -423,13 +423,13 @@ marks(text: String) -> String
 
 `**bold**` before `*italic*`, or the opening `**` would parse as an empty emphasis. Escaping happens here, on the text that is left.
 
-### `wrap`
+### `wrap` (foul)
 
 ```kex
 wrap(text: String, strongMark: String, strongTag: String, emMark: String, emTag: String) -> String
 ```
 
-### `pairs`
+### `pairs` (foul)
 
 ```kex
 pairs(text: String, mark: String, tag: String, accum: String) -> String
@@ -437,7 +437,7 @@ pairs(text: String, mark: String, tag: String, accum: String) -> String
 
 Replaces each surviving pair of markers with a tag. An unpaired marker is left as written rather than swallowing the rest of the line.
 
-### `indexOfText`
+### `indexOfText` (foul)
 
 ```kex
 indexOfText(haystack: String, needle: String, at: Integer) -> Integer?
@@ -445,7 +445,7 @@ indexOfText(haystack: String, needle: String, at: Integer) -> Integer?
 
 Where `needle` first occurs in `haystack`, or None. String.indexOf takes a Char, and the markers here are two characters wide ("**"), so the search is spelled out.
 
-### `esc`
+### `esc` (foul)
 
 ```kex
 esc(s: String) -> String

@@ -52,7 +52,7 @@ Implements [`Monoid`](algebra.md#trait-monoid), [`Blankable`](blankable.md#trait
 #### `first`
 
 ```kex
-first : X?
+first -> X?
 ```
 
 Returns the first element wrapped in `Just`, or `None` if the list is empty.
@@ -67,7 +67,7 @@ Returns the first element wrapped in `Just`, or `None` if the list is empty.
 #### `second`
 
 ```kex
-second : X?
+second -> X?
 ```
 
 Returns the second element wrapped in `Just`, or `None` if the list has fewer than two elements.
@@ -82,7 +82,7 @@ Returns the second element wrapped in `Just`, or `None` if the list has fewer th
 #### `third`
 
 ```kex
-third : X?
+third -> X?
 ```
 
 Returns the third element wrapped in `Just`, or `None` if the list has fewer than three elements.
@@ -97,7 +97,7 @@ Returns the third element wrapped in `Just`, or `None` if the list has fewer tha
 #### `rest`
 
 ```kex
-rest : [X]
+rest -> [X]
 ```
 
 Returns all elements after the first. Returns `[]` for an empty or single-element list.
@@ -113,7 +113,7 @@ Returns all elements after the first. Returns `[]` for an empty or single-elemen
 #### `last`
 
 ```kex
-last : X?
+last -> X?
 ```
 
 Returns the last element wrapped in `Just`, or `None` if the list is empty.
@@ -128,7 +128,7 @@ Returns the last element wrapped in `Just`, or `None` if the list is empty.
 #### `count` (from Foldable)
 
 ```kex
-count : Integer
+count -> Integer
 ```
 
 Returns the number of elements. When given a predicate, returns the count of elements for which it holds.
@@ -164,7 +164,7 @@ count(pred) is provided by the Enumerable trait.
 #### `length`
 
 ```kex
-length : Integer
+length -> Integer
 ```
 
 Returns the number of elements. The same as `count`, under the name `String` uses.
@@ -180,7 +180,7 @@ Returns the number of elements. The same as `count`, under the name `String` use
 #### `empty?`
 
 ```kex
-empty? : Bool
+empty? -> Bool
 ```
 
 Returns `true` if the list contains no elements.
@@ -446,7 +446,7 @@ Returns what is left after `takeWhile`: everything from the first element that d
 #### `uniq`
 
 ```kex
-uniq : [X]
+uniq -> [X]
 ```
 
 Returns a new list with duplicate elements removed, preserving the first occurrence of each element.
@@ -563,7 +563,7 @@ Returns a new list with `x` appended at the end.
 #### `reverse`
 
 ```kex
-reverse : [X]
+reverse -> [X]
 ```
 
 Returns the elements in reverse order.
@@ -591,7 +591,7 @@ Pairs each element of this list with the corresponding element of `other`. Stops
 #### `sort`
 
 ```kex
-sort : [X]
+sort -> [X]
 ```
 
 Returns the elements sorted in ascending natural order.
@@ -617,7 +617,7 @@ Returns the elements sorted using a custom comparator. `comp` should return `tru
 #### `min`
 
 ```kex
-min : X?
+min -> X?
 ```
 
 Returns the smallest element wrapped in `Just`, or `None` for an empty list. Elements compare in the same natural order `sort` uses.
@@ -635,7 +635,7 @@ Returns the smallest element wrapped in `Just`, or `None` for an empty list. Ele
 #### `max`
 
 ```kex
-max : X?
+max -> X?
 ```
 
 Returns the largest element wrapped in `Just`, or `None` for an empty list. Elements compare in the same natural order `sort` uses.
@@ -759,7 +759,7 @@ words.groupBy { |w| w.first.or(' ') }
 #### `tally`
 
 ```kex
-tally : {X: Integer}
+tally -> {X: Integer}
 ```
 
 Counts how many times each distinct element occurs.
@@ -902,7 +902,7 @@ Maps each element through `f` and sums the results.
 
 ```kex
 join(sep: String) -> String
-join : String
+join -> String
 ```
 
 Renders and concatenates the elements, placing `sep` between adjacent values. With no separator, the rendered values are joined directly.
@@ -928,7 +928,7 @@ Elements do not have to be strings: each is rendered using the same user-facing 
 #### `sum`
 
 ```kex
-sum : Number
+sum -> Number
 ```
 
 Sums all elements. Returns `0` for an empty list.
@@ -943,7 +943,7 @@ Sums all elements. Returns `0` for an empty list.
 #### `product`
 
 ```kex
-product : Number
+product -> Number
 ```
 
 Multiplies all elements. Returns `1` for an empty list.
@@ -960,7 +960,7 @@ Multiplies all elements. Returns `1` for an empty list.
 #### `flatten`
 
 ```kex
-flatten : [Y]
+flatten -> [Y]
 ```
 
 Flattens exactly one level of nesting.

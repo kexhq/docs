@@ -11,13 +11,13 @@ entities:
 
 ## module `Tey.Cache`
 
-### `root`
+### `root` (foul)
 
 ```kex
-root : String
+root -> String
 ```
 
-### `packagePath`
+### `packagePath` (foul)
 
 ```kex
 packagePath(dep: Tey.Lockfile.Dependency) -> String
@@ -25,19 +25,19 @@ packagePath(dep: Tey.Lockfile.Dependency) -> String
 
 Include the source URL in the cache identity: two packages with the same display name must never share a checkout.
 
-### `repositoryPath`
+### `repositoryPath` (foul)
 
 ```kex
 repositoryPath(dep: Tey.Lockfile.Dependency) -> String
 ```
 
-### `fetch`
+### `fetch` (foul)
 
 ```kex
 fetch(dep: Tey.Lockfile.Dependency) -> Result<String, String>
 ```
 
-### `verify`
+### `verify` (foul)
 
 ```kex
 verify(dep: Tey.Lockfile.Dependency) -> Result<String, String>

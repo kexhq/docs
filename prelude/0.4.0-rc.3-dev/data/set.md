@@ -88,7 +88,7 @@ Set.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
 #### `identity` (from Monoid)
 
 ```kex
-identity : Set<A>
+identity -> Set<A>
 ```
 
 The empty set: the `Monoid` identity, since union with nothing changes nothing.
@@ -150,7 +150,7 @@ methods.filter { |m| allowed.contains?(m.lowerCase) }
 #### `count` (from Foldable)
 
 ```kex
-count : Integer
+count -> Integer
 ```
 
 Returns the number of distinct elements. Duplicates in the source list were already discarded, so this is the size of the set, not of what it was built from.
@@ -172,7 +172,7 @@ Set.from(text.split(" ")).count
 #### `empty?`
 
 ```kex
-empty? : Bool
+empty? -> Bool
 ```
 
 Returns `true` when the set has no elements.
@@ -539,7 +539,7 @@ Set.from([1, 2, 3]).reject { |x| x > 1 }   # => Set(1)
 #### `showValue` (from Showable)
 
 ```kex
-showValue : String
+showValue -> String
 ```
 
 Renders the set as `Set(...)` in element order, rather than exposing the record layout behind it.
@@ -555,7 +555,7 @@ Set.from([2, 1]).showValue   # => "Set(1, 2)"
 #### `blank?` (from Blankable)
 
 ```kex
-blank? : Bool
+blank? -> Bool
 ```
 
 Returns `true` when the set has no elements. The `Blankable` view of `empty?`, so generic code can test a set the same way it tests a string.
@@ -637,7 +637,7 @@ UnorderedSet.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
 #### `identity` (from Monoid)
 
 ```kex
-identity : UnorderedSet<A>
+identity -> UnorderedSet<A>
 ```
 
 The empty unordered set: the `Monoid` identity.
@@ -684,7 +684,7 @@ UnorderedSet.from([1, 2, 3]).contains?(9)   # => false
 #### `count` (from Foldable)
 
 ```kex
-count : Integer
+count -> Integer
 ```
 
 Returns the number of distinct elements.
@@ -700,7 +700,7 @@ UnorderedSet.from([1, 1, 2]).count   # => 2
 #### `empty?`
 
 ```kex
-empty? : Bool
+empty? -> Bool
 ```
 
 Returns `true` when the set has no elements.
@@ -716,7 +716,7 @@ UnorderedSet.empty.empty?   # => true
 #### `items`
 
 ```kex
-items : [A]
+items -> [A]
 ```
 
 Returns the elements as a list, in unspecified order.
@@ -1024,7 +1024,7 @@ UnorderedSet.from([1, 2, 3]).reject { |x| x > 1 }.items   # => [1]
 #### `showValue` (from Showable)
 
 ```kex
-showValue : String
+showValue -> String
 ```
 
 Renders the set as `UnorderedSet(...)`.
@@ -1043,7 +1043,7 @@ UnorderedSet.from([10, 2]).showValue   # => "UnorderedSet(2, 10)"
 #### `blank?` (from Blankable)
 
 ```kex
-blank? : Bool
+blank? -> Bool
 ```
 
 Returns `true` when the set has no elements. The `Blankable` view of `empty?`.

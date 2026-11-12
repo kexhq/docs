@@ -23,7 +23,7 @@ main do
 end
 ```
 
-### `printLine`
+### `printLine` (foul)
 
 ```kex
 printLine(msg: Showable) -> Void
@@ -55,7 +55,7 @@ let user = "ada"
 IO.printLine("logged in as ${user}")   # prints: logged in as ada
 ```
 
-### `print`
+### `print` (foul)
 
 ```kex
 print(msg: Showable) -> Void
@@ -122,10 +122,10 @@ IO.inspect("hi")     # stderr: "hi" : String
 IO.inspect((1..4))   # stderr: 1..4 : Range
 ```
 
-### `getLine`
+### `getLine` (foul)
 
 ```kex
-getLine : String?
+getLine -> String?
 ```
 
 Reads one line from stdin, without its line ending.
@@ -142,10 +142,10 @@ _Reading an answer with a default_
 let answer = IO.getLine.or("")
 ```
 
-### `readLine`
+### `readLine` (foul)
 
 ```kex
-readLine : Result<String?, ReadError>
+readLine -> Result<String?, ReadError>
 ```
 
 Reads one line from stdin, without its line ending, reporting a failure.
@@ -171,10 +171,10 @@ foul echoAll -> Void do
 end
 ```
 
-### `getChar`
+### `getChar` (foul)
 
 ```kex
-getChar : String?
+getChar -> String?
 ```
 
 Reads a single character from stdin, as `IO.in.getChar` does.
@@ -190,7 +190,7 @@ let key = IO.getChar.or("")
 IO.printLine("you pressed ${key}")
 ```
 
-### `printError`
+### `printError` (foul)
 
 ```kex
 printError(msg: Showable) -> Void

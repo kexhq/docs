@@ -19,13 +19,13 @@ decode(text: String) -> Result<[Operation], String>
 
 Decodes the child-to-host half of the separately versioned protocol. Plugin stdout is data, never Kex source evaluated in Tey's process.
 
-### `apply`
+### `apply` (foul)
 
 ```kex
 apply(operations: [Operation], workspaceRoot: String, force?: Bool) -> Result<Void, String>
 ```
 
-### `safePath`
+### `safePath` (foul)
 
 ```kex
 safePath(workspaceRoot: String, path: String) -> Result<String, String>

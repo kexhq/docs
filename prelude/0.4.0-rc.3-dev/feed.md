@@ -36,10 +36,10 @@ Taking twice answers two different windows: the first ten, then the ten after th
 
 Reading a feed consumes its cursor. Obtain a new feed when you need to traverse the same data again. Opening a file-backed feed is `foul`; consuming an existing feed does not require another capability.
 
-#### `pull`
+#### `pull` (foul)
 
 ```kex
-pull : A?
+pull -> A?
 ```
 
 Answers the next element and consumes it, or `None` once the source is spent.
@@ -57,10 +57,10 @@ feed.pull   # => Just(2)
 feed.pull   # => None
 ```
 
-#### `spent?`
+#### `spent?` (foul)
 
 ```kex
-spent? : Bool
+spent? -> Bool
 ```
 
 Whether the source has run out.
@@ -199,7 +199,7 @@ FS.File.feed("log.txt").or(Feed.empty).each { |line| IO.printLine(line) }
 #### `collect`
 
 ```kex
-collect : [A]
+collect -> [A]
 ```
 
 Drains the feed into a list.
@@ -227,7 +227,7 @@ let rules = FS.File.feed("rules.txt")
 #### `toStream`
 
 ```kex
-toStream : Stream<A>
+toStream -> Stream<A>
 ```
 
 Returns a `Stream` drawn from the feed.

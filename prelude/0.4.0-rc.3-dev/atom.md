@@ -66,7 +66,7 @@ Atom.from("app@${host}")              # => :"app@myhost"
 ### `string`
 
 ```kex
-string : String
+string -> String
 ```
 
 Returns the atom's name as a string, without the leading colon.
@@ -83,7 +83,7 @@ Returns the atom's name as a string, without the leading colon.
 ### `to`
 
 ```kex
-to(_) -> String?
+to(String) -> String?
 ```
 
 Returns the atom's name as text, like `string`, through the universal conversion. The name, not the displayed form: `:ok` converts to `"ok"`, not `":ok"`, so `text.to(Atom)` and this are inverses.

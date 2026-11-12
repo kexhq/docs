@@ -17,7 +17,7 @@ entities:
 grants(plugin: Plugin, workspaceRoot: String) -> Grants
 ```
 
-### `answered`
+### `answered` (foul)
 
 ```kex
 answered(grants: Grants, line: String) -> String

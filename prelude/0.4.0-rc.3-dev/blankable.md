@@ -42,7 +42,7 @@ Implemented by [`Bool`](#make-bool), [`Integer`](#make-integer), [`Float`](#make
 #### `blank?`
 
 ```kex
-blank? : Bool
+blank? -> Bool
 ```
 
 Returns `true` when the value holds nothing meaningful.
@@ -70,7 +70,7 @@ Implements [`Blankable`](#trait-blankable).
 ### `blank?` (from Blankable)
 
 ```kex
-blank? : Bool
+blank? -> Bool
 ```
 
 Returns `true` for `false`: the only blank boolean.
@@ -93,7 +93,7 @@ Implements [`Blankable`](#trait-blankable).
 ### `blank?` (from Blankable)
 
 ```kex
-blank? : Bool
+blank? -> Bool
 ```
 
 Always `false`: every integer is a value, including zero.
@@ -116,7 +116,7 @@ Implements [`Blankable`](#trait-blankable).
 ### `blank?` (from Blankable)
 
 ```kex
-blank? : Bool
+blank? -> Bool
 ```
 
 Always `false`: every float is a value, including zero.
@@ -138,7 +138,7 @@ Implements [`Blankable`](#trait-blankable).
 ### `blank?` (from Blankable)
 
 ```kex
-blank? : Bool
+blank? -> Bool
 ```
 
 Returns `true` when the string is empty or contains only whitespace.
@@ -174,7 +174,7 @@ Implements [`Blankable`](#trait-blankable).
 ### `blank?` (from Blankable)
 
 ```kex
-blank? : Bool
+blank? -> Bool
 ```
 
 Returns `true` for `None` and `false` for a `Just`: whatever it wraps.
@@ -200,7 +200,7 @@ Implements [`Blankable`](#trait-blankable).
 ### `blank?` (from Blankable)
 
 ```kex
-blank? : Bool
+blank? -> Bool
 ```
 
 Returns `true` when the list has no elements.

@@ -99,7 +99,7 @@ Implements [`Showable`](kex.md#trait-showable).
 #### `showValue` (from Showable)
 
 ```kex
-showValue : String
+showValue -> String
 ```
 
 Shows the failure as the sentence `Time.errorMessage` writes, so `"${e}"` explains itself rather than printing the constructor.
@@ -156,7 +156,7 @@ Renders the date structurally, for debugging output.
 #### `showValue` (from Showable)
 
 ```kex
-showValue : String
+showValue -> String
 ```
 
 Renders the date in ISO form, so interpolation and `IO.printLine` show `2026-07-30`.
@@ -172,7 +172,7 @@ Renders the date in ISO form, so interpolation and `IO.printLine` show `2026-07-
 #### `epochDay`
 
 ```kex
-epochDay : Integer
+epochDay -> Integer
 ```
 
 Days since 1970-01-01, negative before it.
@@ -191,7 +191,7 @@ Date.of(2026, 7, 30).try.epochDay   # => 20664
 #### `weekday`
 
 ```kex
-weekday : Weekday
+weekday -> Weekday
 ```
 
 The day of the week this date falls on.
@@ -208,7 +208,7 @@ Date.of(2026, 7, 30).try.weekday.name   # => "Thursday"
 #### `dayOfYear`
 
 ```kex
-dayOfYear : Integer
+dayOfYear -> Integer
 ```
 
 The day's position in its year, counting from 1 on January 1st.
@@ -225,7 +225,7 @@ Date.of(2026, 7, 30).try.dayOfYear   # => 211
 #### `leapYear?`
 
 ```kex
-leapYear? : Bool
+leapYear? -> Bool
 ```
 
 Returns `true` when this date falls in a leap year.
@@ -242,7 +242,7 @@ Date.of(2026, 1, 1).try.leapYear?   # => false
 #### `daysInMonth`
 
 ```kex
-daysInMonth : Integer
+daysInMonth -> Integer
 ```
 
 The number of days in THIS date's month.
@@ -390,7 +390,7 @@ Date.of(2024, 2, 29).try.addYears(1).iso   # => "2025-02-28"
 #### `startOfMonth`
 
 ```kex
-startOfMonth : Date
+startOfMonth -> Date
 ```
 
 The first day of this date's month.
@@ -406,7 +406,7 @@ Date.of(2026, 7, 30).try.startOfMonth.iso   # => "2026-07-01"
 #### `endOfMonth`
 
 ```kex
-endOfMonth : Date
+endOfMonth -> Date
 ```
 
 The last day of this date's month, whatever its length.
@@ -423,7 +423,7 @@ Date.of(2024, 2, 1).try.endOfMonth.iso    # => "2024-02-29"
 #### `startOfYear`
 
 ```kex
-startOfYear : Date
+startOfYear -> Date
 ```
 
 January 1st of this date's year.
@@ -439,7 +439,7 @@ Date.of(2026, 7, 30).try.startOfYear.iso   # => "2026-01-01"
 #### `endOfYear`
 
 ```kex
-endOfYear : Date
+endOfYear -> Date
 ```
 
 December 31st of this date's year.
@@ -455,7 +455,7 @@ Date.of(2026, 7, 30).try.endOfYear.iso   # => "2026-12-31"
 #### `startOfWeek`
 
 ```kex
-startOfWeek : Date
+startOfWeek -> Date
 ```
 
 The Monday of this date's week.
@@ -473,7 +473,7 @@ Date.of(2026, 7, 30).try.startOfWeek.iso   # => "2026-07-27"
 #### `endOfWeek`
 
 ```kex
-endOfWeek : Date
+endOfWeek -> Date
 ```
 
 The Sunday of this date's week.
@@ -649,7 +649,7 @@ dates.sort { |a, b| a.compareTo(b) == Less }
 #### `iso`
 
 ```kex
-iso : String
+iso -> String
 ```
 
 The date as ISO 8601 text, `2026-07-30`.
@@ -747,7 +747,7 @@ Renders the time structurally, for debugging output.
 #### `showValue` (from Showable)
 
 ```kex
-showValue : String
+showValue -> String
 ```
 
 Renders the time in ISO form, so interpolation and `IO.printLine` show `14:03:00`.
@@ -763,7 +763,7 @@ Renders the time in ISO form, so interpolation and `IO.printLine` show `14:03:00
 #### `secondsSinceMidnight`
 
 ```kex
-secondsSinceMidnight : Integer
+secondsSinceMidnight -> Integer
 ```
 
 Seconds from midnight to this time of day, ignoring the nanosecond field.
@@ -947,7 +947,7 @@ Time.of(14, 3, 0).try.until(Time.of(15, 3, 0).try).wholeMinutes   # => 60
 #### `iso`
 
 ```kex
-iso : String
+iso -> String
 ```
 
 The time of day as ISO 8601 text, with fractional seconds only when they are non-zero.
@@ -1042,7 +1042,7 @@ Renders the instant structurally, for debugging output.
 #### `showValue` (from Showable)
 
 ```kex
-showValue : String
+showValue -> String
 ```
 
 Renders the instant in ISO form, so interpolation and `IO.printLine` show +2026-07-30T14:03:00+02:00+.
@@ -1058,7 +1058,7 @@ Renders the instant in ISO form, so interpolation and `IO.printLine` show +2026-
 #### `epochSeconds`
 
 ```kex
-epochSeconds : Integer
+epochSeconds -> Integer
 ```
 
 Seconds since the Unix epoch.
@@ -1082,7 +1082,7 @@ FS.File.write("stamp", "${DateTime.utcNow().epochSeconds}")
 #### `weekday`
 
 ```kex
-weekday : Weekday
+weekday -> Weekday
 ```
 
 The day of the week this instant falls on, at its own offset.
@@ -1124,7 +1124,7 @@ DateTime.parse("2026-07-30T14:03:00+02:00").try
 #### `utc`
 
 ```kex
-utc : DateTime
+utc -> DateTime
 ```
 
 The same instant, rendered at UTC.
@@ -1338,7 +1338,7 @@ DateTime.utcNow().after?(started)   # => true
 #### `iso`
 
 ```kex
-iso : String
+iso -> String
 ```
 
 The instant as ISO 8601 text, +2026-07-30T14:03:00+02:00+.
@@ -1442,7 +1442,7 @@ Renders the period structurally, for debugging output.
 #### `showValue` (from Showable)
 
 ```kex
-showValue : String
+showValue -> String
 ```
 
 Renders the period as its ISO 8601 form, so interpolation and `IO.printLine` show `P1Y2M3D`.
@@ -1498,7 +1498,7 @@ Subtracts a calendar span, field by field. Fields may go negative.
 #### `negated`
 
 ```kex
-negated : Period
+negated -> Period
 ```
 
 The same span with every field's sign flipped: a step backwards.
@@ -1534,7 +1534,7 @@ Multiplies every field by `factor`.
 #### `zero?`
 
 ```kex
-zero? : Bool
+zero? -> Bool
 ```
 
 Returns `true` when every field is zero.
@@ -1551,7 +1551,7 @@ Period.of(0, 1, 0).zero?     # => false
 #### `totalMonths`
 
 ```kex
-totalMonths : Integer
+totalMonths -> Integer
 ```
 
 The years and months of the span, as one count of months.
@@ -1569,7 +1569,7 @@ Period.of(1, 2, 3).totalMonths   # => 14
 #### `normalized`
 
 ```kex
-normalized : Period
+normalized -> Period
 ```
 
 The same span with excess months carried into years.
@@ -1587,7 +1587,7 @@ The same span with excess months carried into years.
 #### `iso`
 
 ```kex
-iso : String
+iso -> String
 ```
 
 The span as an ISO 8601 duration, `P1Y2M3D`.
@@ -1648,7 +1648,7 @@ Time.of(14, 3, 0, 123456789).map { |t| t.iso }
 ### `midnight`
 
 ```kex
-midnight : Time
+midnight -> Time
 ```
 
 Midnight, 00:00:00. The start of a day.
@@ -1712,10 +1712,10 @@ Time.parse("14:03").map { |t| t.iso }   # => Ok("14:03:00")
 Time.parse("xx")                        # => Error(InvalidFormat("xx"))
 ```
 
-### `now`
+### `now` (foul)
 
 ```kex
-now : Time
+now -> Time
 ```
 
 The current time of day, in this machine's zone.
@@ -1730,10 +1730,10 @@ Reads `Time.Clock` like everything else here does, so it is pinned by replacing 
 Time.now().iso   # => "14:03:00"
 ```
 
-### `utcNow`
+### `utcNow` (foul)
 
 ```kex
-utcNow : Time
+utcNow -> Time
 ```
 
 The current time of day in UTC, whatever this machine's zone is.
@@ -1769,7 +1769,7 @@ Time.parseOffset("+02:00").map { |d| d.wholeSeconds }   # => Ok(7200)
 Time.parseOffset("Z").map { |d| d.wholeSeconds }        # => Ok(0)
 ```
 
-### `momentAt`
+### `momentAt` (foul)
 
 ```kex
 momentAt(nanos: Integer) -> DateTime
@@ -1934,7 +1934,7 @@ Time.weekdayFromEpochDay(0)   # => Thursday   (1970-01-01 was a Thursday)
 ### `weekdayNumber`
 
 ```kex
-weekdayNumber(weekday: Weekday) -> Integer
+weekdayNumber -> Integer
 ```
 
 The ISO number of a weekday: Monday is 1, Sunday is 7.
@@ -1956,7 +1956,7 @@ Time.weekdayNumber(Monday)   # => 1
 ### `weekdayName`
 
 ```kex
-weekdayName(weekday: Weekday) -> String
+weekdayName -> String
 ```
 
 The English name of a weekday.
@@ -1978,7 +1978,7 @@ Time.weekdayName(Sunday)   # => "Sunday"
 ### `errorMessage`
 
 ```kex
-errorMessage(error: TimeError) -> String
+errorMessage -> String
 ```
 
 Renders a `TimeError` as a sentence for the user.
@@ -2141,10 +2141,10 @@ end
 
 `now` is the whole interface. Its answer carries the zone as its offset, so one member covers both ambient inputs: what time it is, and where. `Mock.Clock` is the ready-made stand-in; any record that implements `now` is one too.
 
-### `now`
+### `now` (foul)
 
 ```kex
-now : DateTime
+now -> DateTime
 ```
 
 The current instant, in this machine's zone as it stands right now.
@@ -2156,7 +2156,7 @@ The current instant, in this machine's zone as it stands right now.
 ### `number`
 
 ```kex
-number : Integer
+number -> Integer
 ```
 
 This weekday's ISO number: Monday is 1, Sunday is 7.
@@ -2173,7 +2173,7 @@ Sunday.number   # => 7
 ### `name`
 
 ```kex
-name : String
+name -> String
 ```
 
 This weekday's English name.
@@ -2189,7 +2189,7 @@ Date.of(2026, 7, 30).try.weekday.name   # => "Thursday"
 ### `weekend?`
 
 ```kex
-weekend? : Bool
+weekend? -> Bool
 ```
 
 Returns `true` for Saturday and Sunday.
@@ -2345,10 +2345,10 @@ Date.parse("nope")                           # => Error(InvalidFormat("nope"))
 Date.parse("2026-02-30")                     # => Error(InvalidDate(2026, 2, 30))
 ```
 
-### `now`
+### `now` (foul)
 
 ```kex
-now : Date
+now -> Date
 ```
 
 Today's date, in this machine's zone. The same as `Date.today()`.
@@ -2363,10 +2363,10 @@ Today's date, in this machine's zone. The same as `Date.today()`.
 Date.now().iso   # => "2026-07-30"
 ```
 
-### `today`
+### `today` (foul)
 
 ```kex
-today : Date
+today -> Date
 ```
 
 Today's date, in this machine's zone.
@@ -2389,10 +2389,10 @@ with Time.Clock = Mock.Clock { at: DateTime.parse("2026-07-30T00:00:00Z").try } 
 end
 ```
 
-### `tomorrow`
+### `tomorrow` (foul)
 
 ```kex
-tomorrow : Date
+tomorrow -> Date
 ```
 
 The day after today, in this machine's zone.
@@ -2405,10 +2405,10 @@ The day after today, in this machine's zone.
 Date.tomorrow().iso   # => "2026-07-31"
 ```
 
-### `yesterday`
+### `yesterday` (foul)
 
 ```kex
-yesterday : Date
+yesterday -> Date
 ```
 
 The day before today, in this machine's zone.
@@ -2421,10 +2421,10 @@ The day before today, in this machine's zone.
 Date.yesterday().iso   # => "2026-07-29"
 ```
 
-### `utcNow`
+### `utcNow` (foul)
 
 ```kex
-utcNow : Date
+utcNow -> Date
 ```
 
 Today's date in UTC, whatever this machine's zone is. The same as `Date.utcToday()`, under the name every type in this file shares.
@@ -2437,10 +2437,10 @@ Today's date in UTC, whatever this machine's zone is. The same as `Date.utcToday
 Date.utcNow().iso   # => "2026-07-30"
 ```
 
-### `utcToday`
+### `utcToday` (foul)
 
 ```kex
-utcToday : Date
+utcToday -> Date
 ```
 
 Today's date in UTC, whatever this machine's zone is.
@@ -2548,10 +2548,10 @@ _Reading a timestamp out of a log line_
 DateTime.parse(line.take(20)).map { |m| m.epochSeconds }
 ```
 
-### `now`
+### `now` (foul)
 
 ```kex
-now : DateTime
+now -> DateTime
 ```
 
 The current instant, in this machine's zone as it stands right now.
@@ -2566,10 +2566,10 @@ The offset is the one in effect at this instant, so it is right today. Named IAN
 DateTime.now().iso   # => "2026-07-30T14:03:00+02:00"
 ```
 
-### `utcNow`
+### `utcNow` (foul)
 
 ```kex
-utcNow : DateTime
+utcNow -> DateTime
 ```
 
 The current instant, at UTC.
@@ -2584,10 +2584,10 @@ The form to prefer when the value is stored, compared or transmitted: there is n
 DateTime.utcNow().iso   # => "2026-07-30T12:03:00Z"
 ```
 
-### `epochNanos`
+### `epochNanos` (foul)
 
 ```kex
-epochNanos : Integer
+epochNanos -> Integer
 ```
 
 Nanoseconds since the Unix epoch, straight from the clock.
@@ -2615,19 +2615,19 @@ The plural spellings build a Duration; the singular ones from units.kex build a 
 ### `nanoseconds`
 
 ```kex
-nanoseconds : Duration
+nanoseconds -> Duration
 ```
 
 ### `microseconds`
 
 ```kex
-microseconds : Duration
+microseconds -> Duration
 ```
 
 ### `milliseconds`
 
 ```kex
-milliseconds : Duration
+milliseconds -> Duration
 ```
 
 This many milliseconds, as a `Duration`.
@@ -2643,7 +2643,7 @@ This many milliseconds, as a `Duration`.
 ### `seconds`
 
 ```kex
-seconds : Duration
+seconds -> Duration
 ```
 
 This many seconds, as a `Duration`.
@@ -2661,7 +2661,7 @@ Note the plural: `5.seconds` is an elapsed span, while `5.second` from `units.ke
 ### `minutes`
 
 ```kex
-minutes : Duration
+minutes -> Duration
 ```
 
 This many minutes, as a `Duration`.
@@ -2677,7 +2677,7 @@ This many minutes, as a `Duration`.
 ### `hours`
 
 ```kex
-hours : Duration
+hours -> Duration
 ```
 
 This many hours, as a `Duration`.
@@ -2693,7 +2693,7 @@ This many hours, as a `Duration`.
 ### `days`
 
 ```kex
-days : Duration
+days -> Duration
 ```
 
 This many days, as a `Duration`: a fixed 86400 seconds each.
@@ -2711,7 +2711,7 @@ Use `Period.days` when the calendar should get a say.
 ### `weeks`
 
 ```kex
-weeks : Duration
+weeks -> Duration
 ```
 
 This many weeks, as a `Duration`: a fixed 604800 seconds each.
@@ -2727,7 +2727,7 @@ This many weeks, as a `Duration`: a fixed 604800 seconds each.
 ### `months`
 
 ```kex
-months : Period
+months -> Period
 ```
 
 This many calendar months, as a `Period`.
@@ -2751,7 +2751,7 @@ _The calendar clamps a day that does not exist_
 ### `years`
 
 ```kex
-years : Period
+years -> Period
 ```
 
 This many calendar years, as a `Period`.
@@ -2773,19 +2773,19 @@ The same `Duration` constructors on `Float`, for fractional spans: `1.5.hours`, 
 ### `nanoseconds`
 
 ```kex
-nanoseconds : Duration
+nanoseconds -> Duration
 ```
 
 ### `microseconds`
 
 ```kex
-microseconds : Duration
+microseconds -> Duration
 ```
 
 ### `milliseconds`
 
 ```kex
-milliseconds : Duration
+milliseconds -> Duration
 ```
 
 This many milliseconds, as a `Duration`.
@@ -2795,7 +2795,7 @@ This many milliseconds, as a `Duration`.
 ### `seconds`
 
 ```kex
-seconds : Duration
+seconds -> Duration
 ```
 
 This many seconds, as a `Duration`.
@@ -2811,7 +2811,7 @@ This many seconds, as a `Duration`.
 ### `minutes`
 
 ```kex
-minutes : Duration
+minutes -> Duration
 ```
 
 This many minutes, as a `Duration`.
@@ -2821,7 +2821,7 @@ This many minutes, as a `Duration`.
 ### `hours`
 
 ```kex
-hours : Duration
+hours -> Duration
 ```
 
 This many hours, as a `Duration`.
@@ -2837,7 +2837,7 @@ This many hours, as a `Duration`.
 ### `days`
 
 ```kex
-days : Duration
+days -> Duration
 ```
 
 This many days, as a `Duration`: a fixed 86400 seconds each.
@@ -2847,7 +2847,7 @@ This many days, as a `Duration`: a fixed 86400 seconds each.
 ### `weeks`
 
 ```kex
-weeks : Duration
+weeks -> Duration
 ```
 
 This many weeks, as a `Duration`: a fixed 604800 seconds each.
@@ -2863,13 +2863,13 @@ Implements [`Showable`](kex.md#trait-showable).
 ### `wholeNanoseconds`
 
 ```kex
-wholeNanoseconds : Integer
+wholeNanoseconds -> Integer
 ```
 
 ### `wholeMicroseconds`
 
 ```kex
-wholeMicroseconds : Integer
+wholeMicroseconds -> Integer
 ```
 
 ### `+`
@@ -2915,7 +2915,7 @@ Subtracts a span. The result may be negative.
 ### `negated`
 
 ```kex
-negated : Duration
+negated -> Duration
 ```
 
 The same span with its sign flipped.
@@ -2973,7 +2973,7 @@ Divides the span by a plain number.
 ### `abs`
 
 ```kex
-abs : Duration
+abs -> Duration
 ```
 
 The span's magnitude, discarding its direction.
@@ -2989,7 +2989,7 @@ The span's magnitude, discarding its direction.
 ### `zero?`
 
 ```kex
-zero? : Bool
+zero? -> Bool
 ```
 
 Returns `true` when the span is exactly zero.
@@ -3005,7 +3005,7 @@ Duration.zero().zero?   # => true
 ### `negative?`
 
 ```kex
-negative? : Bool
+negative? -> Bool
 ```
 
 Returns `true` when the span points backwards.
@@ -3023,7 +3023,7 @@ date.until(other).negative?   # => true when `other` is earlier
 ### `positive?`
 
 ```kex
-positive? : Bool
+positive? -> Bool
 ```
 
 Returns `true` when the span points forwards.
@@ -3089,7 +3089,7 @@ Returns `true` when this span is longer than `other`.
 ### `wholeMilliseconds`
 
 ```kex
-wholeMilliseconds : Integer
+wholeMilliseconds -> Integer
 ```
 
 The whole milliseconds in the span, truncated toward zero.
@@ -3105,7 +3105,7 @@ The whole milliseconds in the span, truncated toward zero.
 ### `wholeSeconds`
 
 ```kex
-wholeSeconds : Integer
+wholeSeconds -> Integer
 ```
 
 The whole seconds in the span, truncated toward zero.
@@ -3121,7 +3121,7 @@ Duration.hours(2).wholeSeconds   # => 7200
 ### `wholeMinutes`
 
 ```kex
-wholeMinutes : Integer
+wholeMinutes -> Integer
 ```
 
 The whole minutes in the span, truncated toward zero.
@@ -3138,7 +3138,7 @@ The whole minutes in the span, truncated toward zero.
 ### `wholeHours`
 
 ```kex
-wholeHours : Integer
+wholeHours -> Integer
 ```
 
 The whole hours in the span, truncated toward zero. A partial hour does not count.
@@ -3154,7 +3154,7 @@ The whole hours in the span, truncated toward zero. A partial hour does not coun
 ### `wholeDays`
 
 ```kex
-wholeDays : Integer
+wholeDays -> Integer
 ```
 
 The whole days in the span, truncated toward zero.
@@ -3173,7 +3173,7 @@ This is what +date + span+ uses, which is why +date + 36.hours+ advances exactly
 ### `wholeWeeks`
 
 ```kex
-wholeWeeks : Integer
+wholeWeeks -> Integer
 ```
 
 The whole weeks in the span, truncated toward zero.
@@ -3217,7 +3217,7 @@ spans.sort { |a, b| a.compareTo(b) == Less }
 ### `iso`
 
 ```kex
-iso : String
+iso -> String
 ```
 
 The span in ISO 8601 form: hours, minutes and seconds, with the fraction of a second written as `iso` on a `Time` writes it. A zero span is `PT0S`, and a negative one carries a leading `-`.
@@ -3236,7 +3236,7 @@ Duration.zero().iso     # => "PT0S"
 ### `showValue` (from Showable)
 
 ```kex
-showValue : String
+showValue -> String
 ```
 
 Shows the span as its ISO 8601 form, as `iso` writes it, so interpolating a `Duration` reads as a span rather than as its record.
@@ -3256,7 +3256,7 @@ Building elapsed spans, and UTC offsets.
 ### `zero`
 
 ```kex
-zero : Duration
+zero -> Duration
 ```
 
 A span of no time at all. Also the UTC offset.
@@ -3439,7 +3439,7 @@ Building calendar spans.
 ### `zero`
 
 ```kex
-zero : Period
+zero -> Period
 ```
 
 A span of nothing.
@@ -3611,7 +3611,7 @@ DateFormat.pieces("d MMM")   # => Ok([PatternField('d', 1), PatternText(" "), Pa
 ### `renderParts`
 
 ```kex
-renderParts : DateFormat -> Date? -> Time? -> Duration? -> Culture -> String?
+renderParts(format: DateFormat, date: Date?, time: Time?, offset: Duration?, culture: Culture) -> String?
 ```
 
 Writes `date`, `time` and `offset` (whichever the value has) by the pieces of a pattern, with `culture`'s names. `None` when the pattern asks for a field the value does not have, such as an hour of a `Date`.

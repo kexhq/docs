@@ -28,7 +28,7 @@ listener.close
 
 ## module `Net.Socket.TCP`
 
-### `connect`
+### `connect` (foul)
 
 ```kex
 connect(endpoint: Endpoint) -> Result<TCPConnection, NetError>
@@ -48,7 +48,7 @@ let endpoint = TCP.Endpoint.host("127.0.0.1", Port.from(9000).try)
 let connection = TCP.connect(endpoint).try
 ```
 
-### `connectTo`
+### `connectTo` (foul)
 
 ```kex
 connectTo(address: String) -> Result<TCPConnection, NetError>
@@ -67,7 +67,7 @@ _Talking to a local echo server_
 let connection = TCP.connectTo("127.0.0.1:12321").try
 ```
 
-### `listen`
+### `listen` (foul)
 
 ```kex
 listen(endpoint: Endpoint) -> Result<TCPListener, NetError>
@@ -87,7 +87,7 @@ let listener = TCP.listen(TCP.Endpoint.loopback(Port.from(0).try)).try
 let port = listener.localAddress.try.port
 ```
 
-### `bind`
+### `bind` (foul)
 
 ```kex
 bind(address: String) -> Result<TCPListener, NetError>
@@ -104,7 +104,7 @@ _A Rosetta-style echo server socket_
 let listener = TCP.bind("127.0.0.1:12321").try
 ```
 
-### `sendAll`
+### `sendAll` (foul)
 
 ```kex
 sendAll(connection: TCPConnection, data: Binary) -> Result<Integer, NetError>
@@ -122,7 +122,7 @@ _Sending one newline-delimited request_
 connection.sendAll("status\n".to(Binary).try).try
 ```
 
-### `put`
+### `put` (foul)
 
 ```kex
 put(connection: TCPConnection, content: Binary) -> Result<Void, NetError>
@@ -138,7 +138,7 @@ _Echoing a received chunk verbatim_
 connection.put(chunk).try
 ```
 
-### `write`
+### `write` (foul)
 
 ```kex
 write(connection: TCPConnection, content: Showable) -> Result<Void, NetError>
@@ -154,7 +154,7 @@ _Sending a prompt without a newline_
 connection.write("name? ").try
 ```
 
-### `writeLine`
+### `writeLine` (foul)
 
 ```kex
 writeLine(connection: TCPConnection, content: Showable) -> Result<Void, NetError>
@@ -170,7 +170,7 @@ _Answering a line-oriented peer_
 connection.writeLine("hello").try
 ```
 
-### `print`
+### `print` (foul)
 
 ```kex
 print(connection: TCPConnection, content: Showable) -> Void
@@ -186,7 +186,7 @@ _Sending a prompt without a newline_
 connection.print("name? ")
 ```
 
-### `printLine`
+### `printLine` (foul)
 
 ```kex
 printLine(connection: TCPConnection, content: Showable) -> Void
@@ -202,7 +202,7 @@ _Answering a line-oriented peer_
 connection.printLine("hello")
 ```
 
-### `readLine`
+### `readLine` (foul)
 
 ```kex
 readLine(connection: TCPConnection) -> Result<String?, NetError>
@@ -223,7 +223,7 @@ match connection.readLine.try do
 end
 ```
 
-### `getLine`
+### `getLine` (foul)
 
 ```kex
 getLine(connection: TCPConnection) -> String?
@@ -239,7 +239,7 @@ _Printing one received line_
 IO.printLine(connection.getLine.or("(closed)"))
 ```
 
-### `receiveChunk`
+### `receiveChunk` (foul)
 
 ```kex
 receiveChunk(connection: TCPConnection, limit: Integer, timeout: Duration) -> Result<Binary, NetError>
@@ -257,7 +257,7 @@ _Reading up to 16 KiB from a streaming response_
 let chunk = connection.receiveChunk(16 * 1024).try
 ```
 
-### `receiveExactly`
+### `receiveExactly` (foul)
 
 ```kex
 receiveExactly(connection: TCPConnection, count: Integer, timeout: Duration) -> Result<Binary, NetError>
@@ -275,7 +275,7 @@ _Reading a four-byte frame header_
 let header = connection.receiveExactly(4).try
 ```
 
-### `receiveUntil`
+### `receiveUntil` (foul)
 
 ```kex
 receiveUntil(connection: TCPConnection, delimiter: Binary, limit: Integer, timeout: Duration) -> Result<Binary, NetError>
@@ -293,7 +293,7 @@ _Read through the end of an HTTP header section_
 connection.receiveUntil("\r\n\r\n".to(Binary).try, 65536).try
 ```
 
-### `receiveLine`
+### `receiveLine` (foul)
 
 ```kex
 receiveLine(connection: TCPConnection, limit: Integer, timeout: Duration) -> Result<Binary, NetError>
@@ -311,7 +311,7 @@ _Reading a response line with a defensive 8 KiB limit_
 let line = connection.receiveLine(8192).try.to(String).try.trim
 ```
 
-### `shutdownWrite`
+### `shutdownWrite` (foul)
 
 ```kex
 shutdownWrite(connection: TCPConnection) -> Result<Void, NetError>
@@ -319,7 +319,7 @@ shutdownWrite(connection: TCPConnection) -> Result<Void, NetError>
 
 Half-closes the write side while leaving reads available.
 
-### `accept`
+### `accept` (foul)
 
 ```kex
 accept(listener: TCPListener, timeout: Duration) -> Result<TCPConnection, NetError>
@@ -337,7 +337,7 @@ _Accepting one client in a small test server_
 let client = listener.accept(5.seconds).try
 ```
 
-### `closed?`
+### `closed?` (foul)
 
 ```kex
 closed?(connection: TCPConnection) -> Bool
@@ -345,7 +345,7 @@ closed?(connection: TCPConnection) -> Bool
 
 **Returns**: whether the connected stream owner has stopped
 
-### `localAddress`
+### `localAddress` (foul)
 
 ```kex
 localAddress(connection: TCPConnection) -> Result<Endpoint, NetError>
@@ -353,7 +353,7 @@ localAddress(connection: TCPConnection) -> Result<Endpoint, NetError>
 
 Returns the bound local endpoint, including an ephemeral assigned port.
 
-### `peerAddress`
+### `peerAddress` (foul)
 
 ```kex
 peerAddress(connection: TCPConnection) -> Result<Endpoint, NetError>
@@ -494,7 +494,7 @@ _Starting an isolated test listener_
 TCP.Endpoint.loopback(Port.from(0).try)
 ```
 
-### `parse`
+### `parse` (foul)
 
 ```kex
 parse(address: String) -> Result<Endpoint, NetError>
@@ -516,7 +516,7 @@ TCP.connect(TCP.Endpoint.parse("127.0.0.1:9000").try).try
 
 ## module `Net.Socket.UDP`
 
-### `bind`
+### `bind` (foul)
 
 ```kex
 bind(endpoint: Endpoint) -> Result<Socket, NetError>
@@ -534,7 +534,7 @@ let socket = UDP.bind(UDP.Endpoint.loopback(Port.from(0).try)).try
 let endpoint = socket.localAddress.try
 ```
 
-### `bindTo`
+### `bindTo` (foul)
 
 ```kex
 bindTo(address: String) -> Result<Socket, NetError>
@@ -553,7 +553,7 @@ _Receiving on an ephemeral port_
 let socket = UDP.bindTo("127.0.0.1:0").try
 ```
 
-### `sendTo`
+### `sendTo` (foul)
 
 ```kex
 sendTo(socket: Socket, endpoint: Endpoint, data: Binary) -> Result<Integer, NetError>
@@ -571,7 +571,7 @@ _Sending a StatsD-style counter_
 socket.sendTo(collector, "orders:1|c".to(Binary).try).try
 ```
 
-### `receiveFrom`
+### `receiveFrom` (foul)
 
 ```kex
 receiveFrom(socket: Socket, limit: Integer) -> Result<Datagram, NetError>
@@ -590,7 +590,7 @@ let packet = socket.receiveFrom(4096).try
 socket.sendTo(packet.source, packet.data).try
 ```
 
-### `closed?`
+### `closed?` (foul)
 
 ```kex
 closed?(socket: Socket) -> Bool
@@ -598,7 +598,7 @@ closed?(socket: Socket) -> Bool
 
 **Returns**: whether the socket owner has stopped
 
-### `localAddress`
+### `localAddress` (foul)
 
 ```kex
 localAddress(socket: Socket) -> Result<Endpoint, NetError>
@@ -606,7 +606,7 @@ localAddress(socket: Socket) -> Result<Endpoint, NetError>
 
 Returns the bound endpoint, including an ephemeral assigned port.
 
-### `joinMulticast`
+### `joinMulticast` (foul)
 
 ```kex
 joinMulticast(socket: Socket, group: Net.IP.Address, interface: Net.IP.Address) -> Result<Void, NetError>
@@ -614,7 +614,7 @@ joinMulticast(socket: Socket, group: Net.IP.Address, interface: Net.IP.Address) 
 
 Joins an IPv4 multicast group on the selected local interface. The group must be multicast and the interface must be an IPv4 address.
 
-### `leaveMulticast`
+### `leaveMulticast` (foul)
 
 ```kex
 leaveMulticast(socket: Socket, group: Net.IP.Address, interface: Net.IP.Address) -> Result<Void, NetError>
@@ -731,7 +731,7 @@ _Allocating a free UDP port for a test_
 UDP.Endpoint.loopback(Port.from(0).try)
 ```
 
-### `parse`
+### `parse` (foul)
 
 ```kex
 parse(address: String) -> Result<Endpoint, NetError>
@@ -753,7 +753,7 @@ UDP.bind(UDP.Endpoint.parse("127.0.0.1:9000").try).try
 
 ## module `Net.Socket.Unix`
 
-### `connect`
+### `connect` (foul)
 
 ```kex
 connect(address: Address) -> Result<UnixConnection, NetError>
@@ -770,7 +770,7 @@ Unix sockets avoid opening a network port and are a good fit for two processes o
 let daemon = Unix.connect(Unix.Address.path("/tmp/my-app.sock").try).try
 ```
 
-### `listen`
+### `listen` (foul)
 
 ```kex
 listen(address: Address) -> Result<UnixListener, NetError>
@@ -781,7 +781,7 @@ Binds a new path; an existing filesystem entry is never removed implicitly.
 
 This conservative default protects regular files and also avoids taking over a socket that may still belong to a running service.
 
-### `connectTo`
+### `connectTo` (foul)
 
 ```kex
 connectTo(path: String) -> Result<UnixConnection, NetError>
@@ -798,7 +798,7 @@ _Talking to a per-user background service_
 let daemon = Unix.connectTo("/tmp/my-app.sock").try
 ```
 
-### `bind`
+### `bind` (foul)
 
 ```kex
 bind(path: String) -> Result<UnixListener, NetError>
@@ -815,7 +815,7 @@ _A Rosetta-style IPC listener_
 let listener = Unix.bind("/tmp/my-app.sock").try
 ```
 
-### `sendAll`
+### `sendAll` (foul)
 
 ```kex
 sendAll(connection: UnixConnection, data: Binary) -> Result<Integer, NetError>
@@ -823,7 +823,7 @@ sendAll(connection: UnixConnection, data: Binary) -> Result<Integer, NetError>
 
 Sends every byte and returns the count.
 
-### `put`
+### `put` (foul)
 
 ```kex
 put(connection: UnixConnection, content: Binary) -> Result<Void, NetError>
@@ -839,7 +839,7 @@ _Echoing a received chunk verbatim_
 connection.put(chunk).try
 ```
 
-### `write`
+### `write` (foul)
 
 ```kex
 write(connection: UnixConnection, content: Showable) -> Result<Void, NetError>
@@ -855,7 +855,7 @@ _Sending a prompt without a newline_
 connection.write("name? ").try
 ```
 
-### `writeLine`
+### `writeLine` (foul)
 
 ```kex
 writeLine(connection: UnixConnection, content: Showable) -> Result<Void, NetError>
@@ -871,7 +871,7 @@ _Answering a line-oriented peer_
 connection.writeLine("hello").try
 ```
 
-### `print`
+### `print` (foul)
 
 ```kex
 print(connection: UnixConnection, content: Showable) -> Void
@@ -887,7 +887,7 @@ _Sending a prompt without a newline_
 connection.print("name? ")
 ```
 
-### `printLine`
+### `printLine` (foul)
 
 ```kex
 printLine(connection: UnixConnection, content: Showable) -> Void
@@ -903,7 +903,7 @@ _Answering a line-oriented peer_
 connection.printLine("hello")
 ```
 
-### `readLine`
+### `readLine` (foul)
 
 ```kex
 readLine(connection: UnixConnection) -> Result<String?, NetError>
@@ -924,7 +924,7 @@ match connection.readLine.try do
 end
 ```
 
-### `getLine`
+### `getLine` (foul)
 
 ```kex
 getLine(connection: UnixConnection) -> String?
@@ -940,7 +940,7 @@ _Printing one received line_
 IO.printLine(connection.getLine.or("(closed)"))
 ```
 
-### `receiveChunk`
+### `receiveChunk` (foul)
 
 ```kex
 receiveChunk(connection: UnixConnection, limit: Integer) -> Result<Binary, NetError>
@@ -948,7 +948,7 @@ receiveChunk(connection: UnixConnection, limit: Integer) -> Result<Binary, NetEr
 
 Receives one bounded chunk; EOF is `Closed`.
 
-### `receiveExactly`
+### `receiveExactly` (foul)
 
 ```kex
 receiveExactly(connection: UnixConnection, count: Integer) -> Result<Binary, NetError>
@@ -956,7 +956,7 @@ receiveExactly(connection: UnixConnection, count: Integer) -> Result<Binary, Net
 
 Receives exactly `count` bytes or returns a typed EOF/timeout failure.
 
-### `receiveUntil`
+### `receiveUntil` (foul)
 
 ```kex
 receiveUntil(connection: UnixConnection, delimiter: Binary, limit: Integer) -> Result<Binary, NetError>
@@ -972,7 +972,7 @@ _Read through the next newline_
 connection.receiveUntil("\n".to(Binary).try, 4096).try
 ```
 
-### `receiveLine`
+### `receiveLine` (foul)
 
 ```kex
 receiveLine(connection: UnixConnection, limit: Integer) -> Result<Binary, NetError>
@@ -980,7 +980,7 @@ receiveLine(connection: UnixConnection, limit: Integer) -> Result<Binary, NetErr
 
 Receives through a newline without exceeding `limit` bytes.
 
-### `shutdownWrite`
+### `shutdownWrite` (foul)
 
 ```kex
 shutdownWrite(connection: UnixConnection) -> Result<Void, NetError>
@@ -988,7 +988,7 @@ shutdownWrite(connection: UnixConnection) -> Result<Void, NetError>
 
 Half-closes the write side while leaving reads available.
 
-### `accept`
+### `accept` (foul)
 
 ```kex
 accept(listener: UnixListener) -> Result<UnixConnection, NetError>
@@ -996,7 +996,7 @@ accept(listener: UnixListener) -> Result<UnixConnection, NetError>
 
 Waits for and returns the next stream connection.
 
-### `closed?`
+### `closed?` (foul)
 
 ```kex
 closed?(connection: UnixConnection) -> Bool
@@ -1087,7 +1087,7 @@ Unix.Address.path("/tmp/my-app.sock").try
 
 ## module `Net.Socket.TLS`
 
-### `connect`
+### `connect` (foul)
 
 ```kex
 connect(endpoint: Net.Socket.TCP.Endpoint, config: ClientConfig) -> Result<TLSConnection, NetError>
@@ -1111,7 +1111,7 @@ let connection = TLS.connect(endpoint, TLS.ClientConfig {
 }).try
 ```
 
-### `sendAll`
+### `sendAll` (foul)
 
 ```kex
 sendAll(connection: TLSConnection, data: Binary) -> Result<Integer, NetError>
@@ -1119,7 +1119,7 @@ sendAll(connection: TLSConnection, data: Binary) -> Result<Integer, NetError>
 
 Sends every plaintext byte through the TLS stream.
 
-### `put`
+### `put` (foul)
 
 ```kex
 put(connection: TLSConnection, content: Binary) -> Result<Void, NetError>
@@ -1135,7 +1135,7 @@ _Echoing a received chunk verbatim_
 connection.put(chunk).try
 ```
 
-### `write`
+### `write` (foul)
 
 ```kex
 write(connection: TLSConnection, content: Showable) -> Result<Void, NetError>
@@ -1151,7 +1151,7 @@ _Sending a prompt without a newline_
 connection.write("name? ").try
 ```
 
-### `writeLine`
+### `writeLine` (foul)
 
 ```kex
 writeLine(connection: TLSConnection, content: Showable) -> Result<Void, NetError>
@@ -1167,7 +1167,7 @@ _Answering a line-oriented peer_
 connection.writeLine("hello").try
 ```
 
-### `print`
+### `print` (foul)
 
 ```kex
 print(connection: TLSConnection, content: Showable) -> Void
@@ -1183,7 +1183,7 @@ _Sending a prompt without a newline_
 connection.print("name? ")
 ```
 
-### `printLine`
+### `printLine` (foul)
 
 ```kex
 printLine(connection: TLSConnection, content: Showable) -> Void
@@ -1199,7 +1199,7 @@ _Answering a line-oriented peer_
 connection.printLine("hello")
 ```
 
-### `receiveChunk`
+### `receiveChunk` (foul)
 
 ```kex
 receiveChunk(connection: TLSConnection, limit: Integer) -> Result<Binary, NetError>
@@ -1207,7 +1207,7 @@ receiveChunk(connection: TLSConnection, limit: Integer) -> Result<Binary, NetErr
 
 Receives one decrypted chunk no larger than `limit`.
 
-### `closed?`
+### `closed?` (foul)
 
 ```kex
 closed?(connection: TLSConnection) -> Bool
@@ -1247,10 +1247,10 @@ Client handshake policy. TLS 1.2/1.3 are enabled; verification defaults on.
 
 Implements [`Closeable`](../filehandle.md#trait-closeable).
 
-### `close` (from Closeable)
+### `close` (foul) (from Closeable)
 
 ```kex
-close : Void
+close -> Void
 ```
 
 Idempotently closes a connected stream.
@@ -1261,10 +1261,10 @@ Idempotently closes a connected stream.
 
 Implements [`Closeable`](../filehandle.md#trait-closeable).
 
-### `close` (from Closeable)
+### `close` (foul) (from Closeable)
 
 ```kex
-close : Void
+close -> Void
 ```
 
 Idempotently closes a listener and releases its port.
@@ -1275,10 +1275,10 @@ Idempotently closes a listener and releases its port.
 
 Implements [`Closeable`](../filehandle.md#trait-closeable).
 
-### `close` (from Closeable)
+### `close` (foul) (from Closeable)
 
 ```kex
-close : Void
+close -> Void
 ```
 
 Idempotently closes the socket.
@@ -1289,10 +1289,10 @@ Idempotently closes the socket.
 
 Implements [`Closeable`](../filehandle.md#trait-closeable).
 
-### `close` (from Closeable)
+### `close` (foul) (from Closeable)
 
 ```kex
-close : Void
+close -> Void
 ```
 
 Idempotently closes a stream.
@@ -1303,10 +1303,10 @@ Idempotently closes a stream.
 
 Implements [`Closeable`](../filehandle.md#trait-closeable).
 
-### `close` (from Closeable)
+### `close` (foul) (from Closeable)
 
 ```kex
-close : Void
+close -> Void
 ```
 
 Closes the listener and unlinks only the path it successfully created.
@@ -1317,10 +1317,10 @@ Closes the listener and unlinks only the path it successfully created.
 
 Implements [`Closeable`](../filehandle.md#trait-closeable).
 
-### `close` (from Closeable)
+### `close` (foul) (from Closeable)
 
 ```kex
-close : Void
+close -> Void
 ```
 
 Idempotently closes the TLS stream.
@@ -1355,127 +1355,127 @@ Implements `Net.Socket.TCP`.
 
 ### Functions
 
-#### `connect`
+#### `connect` (foul)
 
 ```kex
 connect(endpoint, options)
 ```
 
-#### `connectTo`
+#### `connectTo` (foul)
 
 ```kex
 connectTo(address, block)
 ```
 
-#### `listen`
+#### `listen` (foul)
 
 ```kex
 listen(endpoint, options)
 ```
 
-#### `bind`
+#### `bind` (foul)
 
 ```kex
 bind(address, block)
 ```
 
-#### `accept`
+#### `accept` (foul)
 
 ```kex
 accept(listener, timeout)
 ```
 
-#### `sendAll`
+#### `sendAll` (foul)
 
 ```kex
 sendAll(connection, data)
 ```
 
-#### `put`
+#### `put` (foul)
 
 ```kex
 put(connection, content)
 ```
 
-#### `write`
+#### `write` (foul)
 
 ```kex
 write(connection, content)
 ```
 
-#### `writeLine`
+#### `writeLine` (foul)
 
 ```kex
 writeLine(connection, content)
 ```
 
-#### `print`
+#### `print` (foul)
 
 ```kex
 print(connection, content)
 ```
 
-#### `printLine`
+#### `printLine` (foul)
 
 ```kex
 printLine(connection, content)
 ```
 
-#### `readLine`
+#### `readLine` (foul)
 
 ```kex
 readLine(connection)
 ```
 
-#### `getLine`
+#### `getLine` (foul)
 
 ```kex
 getLine(connection)
 ```
 
-#### `receiveChunk`
+#### `receiveChunk` (foul)
 
 ```kex
 receiveChunk(connection, limit, timeout)
 ```
 
-#### `receiveExactly`
+#### `receiveExactly` (foul)
 
 ```kex
 receiveExactly(connection, count, timeout)
 ```
 
-#### `receiveUntil`
+#### `receiveUntil` (foul)
 
 ```kex
 receiveUntil(connection, delimiter, limit, timeout)
 ```
 
-#### `receiveLine`
+#### `receiveLine` (foul)
 
 ```kex
 receiveLine(connection, limit, timeout)
 ```
 
-#### `shutdownWrite`
+#### `shutdownWrite` (foul)
 
 ```kex
 shutdownWrite(connection)
 ```
 
-#### `closed?`
+#### `closed?` (foul)
 
 ```kex
 closed?(handle)
 ```
 
-#### `localAddress`
+#### `localAddress` (foul)
 
 ```kex
 localAddress(handle)
 ```
 
-#### `peerAddress`
+#### `peerAddress` (foul)
 
 ```kex
 peerAddress(connection)
@@ -1499,49 +1499,49 @@ Implements `Net.Socket.UDP`.
 
 ### Functions
 
-#### `bind`
+#### `bind` (foul)
 
 ```kex
 bind(endpoint, options)
 ```
 
-#### `bindTo`
+#### `bindTo` (foul)
 
 ```kex
 bindTo(address, block)
 ```
 
-#### `sendTo`
+#### `sendTo` (foul)
 
 ```kex
 sendTo(socket, endpoint, data)
 ```
 
-#### `receiveFrom`
+#### `receiveFrom` (foul)
 
 ```kex
 receiveFrom(socket, limit)
 ```
 
-#### `closed?`
+#### `closed?` (foul)
 
 ```kex
 closed?(socket)
 ```
 
-#### `localAddress`
+#### `localAddress` (foul)
 
 ```kex
 localAddress(socket)
 ```
 
-#### `joinMulticast`
+#### `joinMulticast` (foul)
 
 ```kex
 joinMulticast(socket, group, interface)
 ```
 
-#### `leaveMulticast`
+#### `leaveMulticast` (foul)
 
 ```kex
 leaveMulticast(socket, group, interface)
@@ -1565,115 +1565,115 @@ Implements `Net.Socket.Unix`.
 
 ### Functions
 
-#### `connect`
+#### `connect` (foul)
 
 ```kex
 connect(address, options)
 ```
 
-#### `listen`
+#### `listen` (foul)
 
 ```kex
 listen(address, options)
 ```
 
-#### `connectTo`
+#### `connectTo` (foul)
 
 ```kex
 connectTo(path, block)
 ```
 
-#### `bind`
+#### `bind` (foul)
 
 ```kex
 bind(path, block)
 ```
 
-#### `accept`
+#### `accept` (foul)
 
 ```kex
 accept(listener)
 ```
 
-#### `sendAll`
+#### `sendAll` (foul)
 
 ```kex
 sendAll(connection, data)
 ```
 
-#### `put`
+#### `put` (foul)
 
 ```kex
 put(connection, content)
 ```
 
-#### `write`
+#### `write` (foul)
 
 ```kex
 write(connection, content)
 ```
 
-#### `writeLine`
+#### `writeLine` (foul)
 
 ```kex
 writeLine(connection, content)
 ```
 
-#### `print`
+#### `print` (foul)
 
 ```kex
 print(connection, content)
 ```
 
-#### `printLine`
+#### `printLine` (foul)
 
 ```kex
 printLine(connection, content)
 ```
 
-#### `readLine`
+#### `readLine` (foul)
 
 ```kex
 readLine(connection)
 ```
 
-#### `getLine`
+#### `getLine` (foul)
 
 ```kex
 getLine(connection)
 ```
 
-#### `receiveChunk`
+#### `receiveChunk` (foul)
 
 ```kex
 receiveChunk(connection, limit)
 ```
 
-#### `receiveExactly`
+#### `receiveExactly` (foul)
 
 ```kex
 receiveExactly(connection, count)
 ```
 
-#### `receiveUntil`
+#### `receiveUntil` (foul)
 
 ```kex
 receiveUntil(connection, delimiter, limit)
 ```
 
-#### `receiveLine`
+#### `receiveLine` (foul)
 
 ```kex
 receiveLine(connection, limit)
 ```
 
-#### `shutdownWrite`
+#### `shutdownWrite` (foul)
 
 ```kex
 shutdownWrite(connection)
 ```
 
-#### `closed?`
+#### `closed?` (foul)
 
 ```kex
 closed?(handle)
@@ -1697,55 +1697,55 @@ Implements `Net.Socket.TLS`.
 
 ### Functions
 
-#### `connect`
+#### `connect` (foul)
 
 ```kex
 connect(endpoint, config)
 ```
 
-#### `sendAll`
+#### `sendAll` (foul)
 
 ```kex
 sendAll(connection, data)
 ```
 
-#### `put`
+#### `put` (foul)
 
 ```kex
 put(connection, content)
 ```
 
-#### `write`
+#### `write` (foul)
 
 ```kex
 write(connection, content)
 ```
 
-#### `writeLine`
+#### `writeLine` (foul)
 
 ```kex
 writeLine(connection, content)
 ```
 
-#### `print`
+#### `print` (foul)
 
 ```kex
 print(connection, content)
 ```
 
-#### `printLine`
+#### `printLine` (foul)
 
 ```kex
 printLine(connection, content)
 ```
 
-#### `receiveChunk`
+#### `receiveChunk` (foul)
 
 ```kex
 receiveChunk(connection, limit)
 ```
 
-#### `closed?`
+#### `closed?` (foul)
 
 ```kex
 closed?(connection)

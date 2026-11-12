@@ -54,7 +54,7 @@ Implements [`Blankable`](blankable.md#trait-blankable), [`Showable`](kex.md#trai
 #### `set?` (from Optionable)
 
 ```kex
-set? : Bool
+set? -> Bool
 ```
 
 Returns `true` when a value is present.
@@ -78,7 +78,7 @@ end
 #### `none?`
 
 ```kex
-none? : Bool
+none? -> Bool
 ```
 
 Returns `true` when there is no value. The opposite of `set?`.
@@ -193,7 +193,7 @@ users.get(id)
 #### `filter`
 
 ```kex
-filter : (X -> Bool) -> X?
+filter(pred: (X -> Bool)) -> X?
 ```
 
 Keeps the value only when `pred` accepts it.
@@ -245,7 +245,7 @@ Implements [`Showable`](kex.md#trait-showable), [`Resultable`](#trait-resultable
 #### `ok?` (from Resultable)
 
 ```kex
-ok? : Bool
+ok? -> Bool
 ```
 
 Returns `true` when the result is `Ok`.
@@ -266,7 +266,7 @@ inputs.map(~Integer.parse).count(~ok?)
 #### `error?`
 
 ```kex
-error? : Bool
+error? -> Bool
 ```
 
 Returns `true` when the result is `Error`. The opposite of `ok?`.
@@ -368,7 +368,7 @@ Integer.parse(raw)
 #### `optional`
 
 ```kex
-optional : X?
+optional -> X?
 ```
 
 Converts the result to an `Optional`, dropping the error payload.
@@ -396,7 +396,7 @@ _Keeping only the values that parsed_
 #### `mapError`
 
 ```kex
-mapError : (E -> F) -> Result<X, F>
+mapError(f: (E -> F)) -> Result<X, F>
 ```
 
 Applies `f` to the error, leaving a success alone: `map` for the other side.
@@ -411,7 +411,7 @@ Ok(1).mapError { |code| "HTTP ${code}" }        # => Ok(1)
 #### `error`
 
 ```kex
-error : E?
+error -> E?
 ```
 
 The error, if this is one: the counterpart of `optional`.
@@ -494,7 +494,7 @@ end
 #### `left?`
 
 ```kex
-left? : Bool
+left? -> Bool
 ```
 
 Returns `true` for a `Left`.
@@ -509,7 +509,7 @@ Right(1).left?   # => false
 #### `right?`
 
 ```kex
-right? : Bool
+right? -> Bool
 ```
 
 Returns `true` for a `Right`. The opposite of `left?`.
@@ -534,7 +534,7 @@ Implemented by [`Optional<X>`](#make-optional).
 #### `set?`
 
 ```kex
-set? : Bool
+set? -> Bool
 ```
 
 Answers `true` when a value is present.
@@ -586,7 +586,7 @@ Implemented by [`Result<X, E>`](#make-result).
 #### `ok?`
 
 ```kex
-ok? : Bool
+ok? -> Bool
 ```
 
 Answers `true` for a success.

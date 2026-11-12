@@ -51,14 +51,18 @@ a.name.compare(b.name).combine(a.age.compare(b.age))
 
 #### `identity` (from Monoid)
 
+```kex
+identity -> Ordering
+```
+
 `Equal` is the neutral element, since an undecided comparison lets the next one decide.
 
-**Returns**: `Ordering` — `Equal`
+**Returns**: `Equal`
 
 #### `combine` (from Monoid)
 
 ```kex
-combine(other: Ordering, other: Ordering) -> Ordering
+combine(other: Ordering) -> Ordering
 ```
 
 Returns the first decisive ordering: this one if it is not `Equal`, otherwise `other`.
@@ -87,7 +91,7 @@ a.last.compare(b.last).combine(a.first.compare(b.first))
 #### `reverse`
 
 ```kex
-reverse : Ordering
+reverse -> Ordering
 ```
 
 Returns the opposite ordering: `Less` becomes `Greater`, `Greater` becomes `Less`, and `Equal` stays `Equal`.

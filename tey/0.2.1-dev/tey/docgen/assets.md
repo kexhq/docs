@@ -15,8 +15,8 @@ The script itself is assets/site.js, embedded at compile time.
 
 ## module `Tey.Docgen.Assets`
 
-### `siteJs`
+### `siteJs` (foul)
 
 ```kex
-siteJs : String
+siteJs -> String
 ```

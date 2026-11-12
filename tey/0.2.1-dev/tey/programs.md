@@ -35,10 +35,10 @@ Names that are Tey's own and never a package's to take: the `kex` shim lives in 
 
 
 
-### `directory`
+### `directory` (foul)
 
 ```kex
-directory : String
+directory -> String
 ```
 
 ### `classify`
@@ -49,7 +49,7 @@ classify(argument: String) -> ProgramSource
 
 A path when it starts like one (`.`, `/`, `~`), a Git URL when it has a scheme or is scp-like (`git@host:owner/repo`), and otherwise the name of an installed program.
 
-### `buildDirectory`
+### `buildDirectory` (foul)
 
 ```kex
 buildDirectory(name: String) -> String
@@ -57,15 +57,15 @@ buildDirectory(name: String) -> String
 
 Where a program's staged build tree ends up once it is installed.
 
-### `stagingDirectory`
+### `stagingDirectory` (foul)
 
 ```kex
-stagingDirectory : Result<String, String>
+stagingDirectory -> Result<String, String>
 ```
 
 A fresh directory to build a program in before it is installed. Beside `programs/` rather than in it, so a half-built tree is never listed as a program, and on the same filesystem, so publishing it is a rename.
 
-### `stage`
+### `stage` (foul)
 
 ```kex
 stage(root: String, destination: String) -> Result<Void, String>
@@ -73,13 +73,13 @@ stage(root: String, destination: String) -> Result<Void, String>
 
 Copies the tree at `root` into `destination`: what a snapshot would hold, plus a committed `tey.lock` — the dependency versions the program's author tested, which a snapshot leaves out.
 
-### `copyInto`
+### `copyInto` (foul)
 
 ```kex
 copyInto(root: String, relative: String, destination: String) -> Bool
 ```
 
-### `publishBuild`
+### `publishBuild` (foul)
 
 ```kex
 publishBuild(name: String, staged: String) -> Result<Void, String>
@@ -87,7 +87,7 @@ publishBuild(name: String, staged: String) -> Result<Void, String>
 
 Replaces a program's build tree with the one it was just installed from. The old tree is moved aside first and removed last, so a failure part way leaves one of the two in place.
 
-### `receiptPath`
+### `receiptPath` (foul)
 
 ```kex
 receiptPath(name: String) -> String
@@ -123,21 +123,21 @@ refusal(target: String, claim: Claim, path: String, force?: Bool) -> String?
 
 Why a claim stops the install, or None when it may go ahead. `--force` takes a name over from another package or from an unowned file, but never from Tey itself.
 
-### `load`
+### `load` (foul)
 
 ```kex
 load(name: String) -> Receipt?
 ```
 
-### `all`
+### `all` (foul)
 
 ```kex
-all : [Receipt]
+all -> [Receipt]
 ```
 
 Every receipt, by package name. An unreadable one is reported rather than skipped silently: skipping it would make the files it owns look unowned.
 
-### `save`
+### `save` (foul)
 
 ```kex
 save(receipt: Receipt) -> Result<Void, String>
@@ -145,13 +145,13 @@ save(receipt: Receipt) -> Result<Void, String>
 
 Written beside the final file and renamed into place, so a reader never sees half a receipt and a failed write leaves the previous one intact.
 
-### `remove`
+### `remove` (foul)
 
 ```kex
 remove(name: String) -> Bool
 ```
 
-### `teyBuilt?`
+### `teyBuilt?` (foul)
 
 ```kex
 teyBuilt?(path: String) -> Bool

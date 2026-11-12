@@ -15,13 +15,13 @@ Source discovery: walk a tree and collect the files a build reads.
 
 ## module `Tey.Docgen.Scan`
 
-### `sourceFiles`
+### `sourceFiles` (foul)
 
 ```kex
 sourceFiles(sourceDir: String) -> [String]
 ```
 
-### `proseFiles`
+### `proseFiles` (foul)
 
 ```kex
 proseFiles(sourceDir: String) -> [String]
@@ -29,19 +29,19 @@ proseFiles(sourceDir: String) -> [String]
 
 The prose half of the same walk: `tey docs prose` reads .md rather than .kex, and wants the same recursion, the same sorting and the same skip.
 
-### `filesWithSuffix`
+### `filesWithSuffix` (foul)
 
 ```kex
 filesWithSuffix(sourceDir: String, suffix: String) -> [String]
 ```
 
-### `subdirectories`
+### `subdirectories` (foul)
 
 ```kex
 subdirectories(sourceDir: String) -> [String]
 ```
 
-### `nested`
+### `nested` (foul)
 
 ```kex
 nested(dirs: [String], sourceDir: String, suffix: String) -> [String]

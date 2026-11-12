@@ -127,7 +127,7 @@ let cookies = response.headers.getAll("Set-Cookie")
 #### `showValue` (from Showable)
 
 ```kex
-showValue : String
+showValue -> String
 ```
 
 Renders fields while replacing authorization and cookie values with `***`.
@@ -157,7 +157,7 @@ A validated HTTP status code in `100..599`.
 #### `informational?`
 
 ```kex
-informational? : Bool
+informational? -> Bool
 ```
 
 **Returns**: whether the status is in `100..199`
@@ -165,7 +165,7 @@ informational? : Bool
 #### `success?`
 
 ```kex
-success? : Bool
+success? -> Bool
 ```
 
 **Returns**: whether the status is in `200..299`
@@ -173,7 +173,7 @@ success? : Bool
 #### `redirect?`
 
 ```kex
-redirect? : Bool
+redirect? -> Bool
 ```
 
 **Returns**: whether the status is in `300..399`
@@ -181,7 +181,7 @@ redirect? : Bool
 #### `clientError?`
 
 ```kex
-clientError? : Bool
+clientError? -> Bool
 ```
 
 **Returns**: whether the status is in `400..499`
@@ -189,7 +189,7 @@ clientError? : Bool
 #### `serverError?`
 
 ```kex
-serverError? : Bool
+serverError? -> Bool
 ```
 
 **Returns**: whether the status is in `500..599`
@@ -471,7 +471,7 @@ The pooled HTTP client. An opaque handle over the connection pool that owns it; 
 
 ### Functions
 
-#### `request`
+#### `request` (foul)
 
 ```kex
 request(method: String, url: String, headers: Headers, body: Binary, options: RequestOptions) -> Result<Response<Binary>, NetError>
@@ -492,7 +492,7 @@ let headers = Headers.empty
 client.request("POST", url, headers, JSON.stringify(order).to(Binary).try)
 ```
 
-#### `get`
+#### `get` (foul)
 
 ```kex
 get(url: String) -> Result<Response<Binary>, NetError>
@@ -500,7 +500,7 @@ get(url: String) -> Result<Response<Binary>, NetError>
 
 Sends a buffered GET request.
 
-#### `post`
+#### `post` (foul)
 
 ```kex
 post(url: String, body: Binary) -> Result<Response<Binary>, NetError>
@@ -508,7 +508,7 @@ post(url: String, body: Binary) -> Result<Response<Binary>, NetError>
 
 Sends a buffered binary POST request.
 
-#### `put`
+#### `put` (foul)
 
 ```kex
 put(url: String, body: Binary) -> Result<Response<Binary>, NetError>
@@ -516,7 +516,7 @@ put(url: String, body: Binary) -> Result<Response<Binary>, NetError>
 
 Sends a buffered binary PUT request.
 
-#### `patch`
+#### `patch` (foul)
 
 ```kex
 patch(url: String, body: Binary) -> Result<Response<Binary>, NetError>
@@ -524,7 +524,7 @@ patch(url: String, body: Binary) -> Result<Response<Binary>, NetError>
 
 Sends a buffered binary PATCH request.
 
-#### `delete`
+#### `delete` (foul)
 
 ```kex
 delete(url: String) -> Result<Response<Binary>, NetError>
@@ -532,7 +532,7 @@ delete(url: String) -> Result<Response<Binary>, NetError>
 
 Sends a DELETE request with an empty body.
 
-#### `head`
+#### `head` (foul)
 
 ```kex
 head(url: String) -> Result<Response<Binary>, NetError>
@@ -540,7 +540,7 @@ head(url: String) -> Result<Response<Binary>, NetError>
 
 Sends a HEAD request; the returned body is empty.
 
-#### `options`
+#### `options` (foul)
 
 ```kex
 options(url: String) -> Result<Response<Binary>, NetError>
@@ -548,10 +548,10 @@ options(url: String) -> Result<Response<Binary>, NetError>
 
 Sends an OPTIONS request.
 
-#### `statistics`
+#### `statistics` (foul)
 
 ```kex
-statistics : ClientStatistics
+statistics -> ClientStatistics
 ```
 
 Reports current pool occupancy and lifetime request counters.
@@ -567,10 +567,10 @@ let stats = client.statistics
 IO.printLine("HTTP reuse: ${stats.reusedConnections}/${stats.requests}")
 ```
 
-#### `close`
+#### `close` (foul)
 
 ```kex
-close : Result<ClientCloseReport, NetError>
+close -> Result<ClientCloseReport, NetError>
 ```
 
 Idempotently closes the client and every idle pooled connection.
@@ -676,7 +676,7 @@ let expected = Status.from(code).try
 
 Buffered response constructors for route handlers.
 
-### `binary`
+### `binary` (foul)
 
 ```kex
 binary(status: Integer, body: Binary, headers: Headers) -> Response<Binary>
@@ -692,7 +692,7 @@ _Returning a downloaded file without decoding it as text_
 Response.binary(200, archive, Headers.empty.add("Content-Type", "application/zip").try)
 ```
 
-### `text`
+### `text` (foul)
 
 ```kex
 text(status: Integer, body: String) -> Response<Binary>
@@ -708,7 +708,7 @@ _A small health endpoint_
 Response.text(200, "ok")
 ```
 
-### `empty`
+### `empty` (foul)
 
 ```kex
 empty(status: Integer) -> Response<Binary>
@@ -740,7 +740,7 @@ build : Router
 
 Starting, observing, and gracefully stopping HTTP servers.
 
-### `start`
+### `start` (foul)
 
 ```kex
 start(endpoint: Net.Socket.TCP.Endpoint, router: Router, options: ServerOptions) -> Result<Running, NetError>
@@ -761,7 +761,7 @@ let server = Server.start(endpoint, router).try
 Server.stop(server).try
 ```
 
-### `serve`
+### `serve` (foul)
 
 ```kex
 serve(endpoint: Net.Socket.TCP.Endpoint, router: Router, options: ServerOptions) -> Result<Void, NetError>
@@ -769,7 +769,7 @@ serve(endpoint: Net.Socket.TCP.Endpoint, router: Router, options: ServerOptions)
 
 Starts with defaults and blocks until the server stops.
 
-### `stop`
+### `stop` (foul)
 
 ```kex
 stop(server: Running, grace: Duration) -> Result<ShutdownReport, NetError>
@@ -788,7 +788,7 @@ let report = Server.stop(server).try
 IO.printLine("closed after ${report.completed} requests")
 ```
 
-### `join`
+### `join` (foul)
 
 ```kex
 join(server: Running) -> Result<Void, NetError>
@@ -796,7 +796,7 @@ join(server: Running) -> Result<Void, NetError>
 
 Waits until the server owner exits.
 
-### `running?`
+### `running?` (foul)
 
 ```kex
 running?(server: Running) -> Bool
@@ -804,7 +804,7 @@ running?(server: Running) -> Bool
 
 **Returns**: whether the server owner is alive
 
-### `localAddress`
+### `localAddress` (foul)
 
 ```kex
 localAddress(server: Running) -> Net.Socket.TCP.Endpoint
@@ -833,10 +833,10 @@ An opaque asynchronous HTTP server handle.
 
 Constructors for explicitly owned, connection-pooling HTTP clients.
 
-### `open`
+### `open` (foul)
 
 ```kex
-open : Result<Client, NetError>
+open -> Result<Client, NetError>
 open(options: ClientOptions) -> Result<Client, NetError>
 ```
 
@@ -862,8 +862,8 @@ Stateless HTTP convenience calls for scripts and occasional requests.
 ### `request`
 
 ```kex
-request : String -> String -> Headers -> Binary -> Result<Response<Binary>, NetError>
-request : String -> String -> Headers -> Binary -> RequestOptions -> Result<Response<Binary>, NetError>
+request(method: String, url: String, headers: Headers = …, body: Binary = …) -> Result<Response<Binary>, NetError>
+request(method: String, url: String, headers: Headers, body: Binary, options: RequestOptions) -> Result<Response<Binary>, NetError>
 ```
 
 Sends one stateless buffered request with no redirect or hidden retry.

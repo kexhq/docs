@@ -48,7 +48,7 @@ Implemented by [`UnitDefinition`](#make-unitdefinition), [`TimeUnit`](#make-time
 #### `factor`
 
 ```kex
-factor : Float
+factor -> Float
 ```
 
 How many base units one of this unit is: `60.0` for a minute, whose base unit is the second.
@@ -64,7 +64,7 @@ Minute.factor   # => 60.0
 #### `kind`
 
 ```kex
-kind : Atom
+kind -> Atom
 ```
 
 Which dimension this unit measures, as an atom. Only measures of the same kind can be added or converted between.
@@ -80,7 +80,7 @@ Second.kind   # => :time
 #### `symbol`
 
 ```kex
-symbol : String
+symbol -> String
 ```
 
 How this unit is written when a measure is displayed.
@@ -173,21 +173,33 @@ Implements [`Unit`](#trait-unit).
 
 #### `factor` (from Unit)
 
+```kex
+factor -> Float
+```
+
 How many base units one of this unit is.
 
-**Returns**: `Float` — the conversion factor
+**Returns**: the conversion factor
 
 #### `kind` (from Unit)
 
+```kex
+kind -> Atom
+```
+
 Which dimension this unit measures.
 
-**Returns**: `Atom` — the dimension tag
+**Returns**: the dimension tag
 
 #### `symbol` (from Unit)
 
+```kex
+symbol -> String
+```
+
 How the unit is written.
 
-**Returns**: `String` — the unit's symbol
+**Returns**: the unit's symbol
 
 ### Defined in other modules
 
@@ -213,19 +225,19 @@ Implements [`Showable`](kex.md#trait-showable).
 #### `factor`
 
 ```kex
-factor : Float
+factor -> Float
 ```
 
 #### `kind`
 
 ```kex
-kind : Atom
+kind -> Atom
 ```
 
 #### `symbol`
 
 ```kex
-symbol : String
+symbol -> String
 ```
 
 #### `to`
@@ -251,7 +263,7 @@ Renders the measure in its own unit.
 #### `scaled`
 
 ```kex
-scaled : Measure
+scaled -> Measure
 ```
 
 Chooses the largest unit whose absolute value is at least one. Time uses nanoseconds through weeks; data uses bytes through terabytes (`binary: true` selects KiB through TiB). SI dimensions use decimal prefixes. Zero uses the family's base unit; smaller values use its smallest unit. Other dimensions keep their current unit.
@@ -271,7 +283,7 @@ As `scaled`, using binary scales for data when `binary` is true.
 #### `showValue` (from Showable)
 
 ```kex
-showValue : String
+showValue -> String
 ```
 
 Renders the measure as its value and unit, so `IO.printLine` and interpolation show `5.0 W` rather than the record's fields. Inspecting it (the REPL's echo, `inspected`) still shows the record itself.
@@ -486,17 +498,19 @@ Implements [`Unit`](#trait-unit).
 #### `factor` (from Unit)
 
 ```kex
-factor(_)
+factor -> Float
 ```
 
 #### `kind` (from Unit)
 
-
+```kex
+kind -> Atom
+```
 
 #### `symbol` (from Unit)
 
 ```kex
-symbol(_)
+symbol -> String
 ```
 
 ## extends `Integer`
@@ -510,7 +524,7 @@ Each answers a `Measure` whose display unit is the one you named, so `90.minute`
 ### `nanosecond`
 
 ```kex
-nanosecond : Measure
+nanosecond -> Measure
 ```
 
 This many nanoseconds, as a `Measure`.
@@ -526,7 +540,7 @@ This many nanoseconds, as a `Measure`.
 ### `microsecond`
 
 ```kex
-microsecond : Measure
+microsecond -> Measure
 ```
 
 This many microseconds, as a `Measure`.
@@ -542,7 +556,7 @@ This many microseconds, as a `Measure`.
 ### `millisecond`
 
 ```kex
-millisecond : Measure
+millisecond -> Measure
 ```
 
 This many milliseconds, as a `Measure`.
@@ -558,7 +572,7 @@ This many milliseconds, as a `Measure`.
 ### `second`
 
 ```kex
-second : Measure
+second -> Measure
 ```
 
 This many seconds, as a `Measure`. Seconds are the base unit of time, so this is the one everything else converts through.
@@ -574,7 +588,7 @@ This many seconds, as a `Measure`. Seconds are the base unit of time, so this is
 ### `minute`
 
 ```kex
-minute : Measure
+minute -> Measure
 ```
 
 This many minutes, as a `Measure`.
@@ -590,7 +604,7 @@ This many minutes, as a `Measure`.
 ### `hour`
 
 ```kex
-hour : Measure
+hour -> Measure
 ```
 
 This many hours, as a `Measure`.
@@ -606,7 +620,7 @@ This many hours, as a `Measure`.
 ### `day`
 
 ```kex
-day : Measure
+day -> Measure
 ```
 
 This many days, as a `Measure`.
@@ -622,7 +636,7 @@ This many days, as a `Measure`.
 ### `week`
 
 ```kex
-week : Measure
+week -> Measure
 ```
 
 This many weeks, as a `Measure`.
@@ -650,7 +664,7 @@ The same time-unit constructors on `Float`, for fractional quantities: `1.5.hour
 ### `nanosecond`
 
 ```kex
-nanosecond : Measure
+nanosecond -> Measure
 ```
 
 This many nanoseconds, as a `Measure`.
@@ -660,7 +674,7 @@ This many nanoseconds, as a `Measure`.
 ### `microsecond`
 
 ```kex
-microsecond : Measure
+microsecond -> Measure
 ```
 
 This many microseconds, as a `Measure`.
@@ -670,7 +684,7 @@ This many microseconds, as a `Measure`.
 ### `millisecond`
 
 ```kex
-millisecond : Measure
+millisecond -> Measure
 ```
 
 This many milliseconds, as a `Measure`.
@@ -686,7 +700,7 @@ This many milliseconds, as a `Measure`.
 ### `second`
 
 ```kex
-second : Measure
+second -> Measure
 ```
 
 This many seconds, as a `Measure`.
@@ -702,7 +716,7 @@ This many seconds, as a `Measure`.
 ### `minute`
 
 ```kex
-minute : Measure
+minute -> Measure
 ```
 
 This many minutes, as a `Measure`.
@@ -712,7 +726,7 @@ This many minutes, as a `Measure`.
 ### `hour`
 
 ```kex
-hour : Measure
+hour -> Measure
 ```
 
 This many hours, as a `Measure`.
@@ -728,7 +742,7 @@ This many hours, as a `Measure`.
 ### `day`
 
 ```kex
-day : Measure
+day -> Measure
 ```
 
 This many days, as a `Measure`.
@@ -738,7 +752,7 @@ This many days, as a `Measure`.
 ### `week`
 
 ```kex
-week : Measure
+week -> Measure
 ```
 
 This many weeks, as a `Measure`.

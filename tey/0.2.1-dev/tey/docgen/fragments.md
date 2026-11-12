@@ -27,19 +27,19 @@ Pages are addressed the way a static host with pretty URLs serves them: `list` i
 
 ## module `Tey.Docgen.Fragments`
 
-### `write`
+### `write` (foul)
 
 ```kex
 write(pages: [SourcePage], versionDir: String, model: PackageModel) -> Integer
 ```
 
-### `writePage`
+### `writePage` (foul)
 
 ```kex
 writePage(page: SourcePage, versionDir: String, model: PackageModel) -> ()
 ```
 
-### `unitData`
+### `unitData` (foul)
 
 ```kex
 unitData(model: PackageModel, source: String, toc: [TocEntry]) -> Any
@@ -47,13 +47,13 @@ unitData(model: PackageModel, source: String, toc: [TocEntry]) -> Any
 
 Everything a theme might show beside the body: which unit and version this is (the header badge), where the source lives, and the page's sections for an "On this page" list.
 
-### `tocValue`
+### `tocValue` (foul)
 
 ```kex
 tocValue(t: TocEntry) -> Any
 ```
 
-### `tocHtml`
+### `tocHtml` (foul)
 
 ```kex
 tocHtml(toc: [TocEntry]) -> String
@@ -61,7 +61,13 @@ tocHtml(toc: [TocEntry]) -> String
 
 The rail as markup too, so a theme template can place it without walking JSON: a template language that sees the data as `Any` cannot iterate it. A page with a single section has nothing to navigate.
 
-### `unitRoot`
+### `tocClass` (foul)
+
+```kex
+tocClass(t: TocEntry) -> String
+```
+
+### `unitRoot` (foul)
 
 ```kex
 unitRoot(model: PackageModel) -> String
@@ -69,13 +75,13 @@ unitRoot(model: PackageModel) -> String
 
 "/prelude/0.4.0/": where the unit is mounted.
 
-### `pageUrl`
+### `pageUrl` (foul)
 
 ```kex
 pageUrl(model: PackageModel, urlPath: String) -> String
 ```
 
-### `navTree`
+### `navTree` (foul)
 
 ```kex
 navTree(pages: [SourcePage], model: PackageModel) -> Any
@@ -83,33 +89,61 @@ navTree(pages: [SourcePage], model: PackageModel) -> Any
 
 The page tree, nested the way the standalone sidebar nests it: a module family (Net, Net.DNS, Net.HTTP) is one branch.
 
-### `navNode`
+### `navNode` (foul)
 
 ```kex
 navNode(page: SourcePage, pages: [SourcePage], model: PackageModel) -> Any
 ```
 
-### `tocOf`
+### `tocOf` (foul)
 
 ```kex
-tocOf(entities: [Entity]) -> [TocEntry]
+tocOf(page: SourcePage, model: PackageModel) -> [TocEntry]
 ```
 
-The sections a reader can jump to, in page order: each declaration with a section of its own, and those a module declares.
+The sections a reader can jump to, in page order: each declaration with a section of its own, the functions and constants listed under it, and the declarations a module holds. The members are what make the rail worth having on the page of one long type: `List` is a single section fifty functions deep.
 
-### `tocAt`
+### `tocAt` (foul)
 
 ```kex
-tocAt(entities: [Entity], nested: Bool) -> [TocEntry]
+tocAt(entities: [Entity], nested: Bool, page: SourcePage, model: PackageModel) -> [TocEntry]
 ```
 
-### `tocTitle`
+A module that is only the file's namespace has no section, so what it declares stands at the top level of the rail.
+
+### `MemberKind` (constant)
+
+The `kind` of a rail entry that is a member rather than a declaration.
+
+
+
+### `memberToc` (foul)
+
+```kex
+memberToc(e: Entity, entities: [Entity], model: PackageModel) -> [TocEntry]
+```
+
+What the section of `e` lists, under the anchors the renderer gives them: a type's functions come from the make blocks folded into it.
+
+### `functionToc` (foul)
+
+```kex
+functionToc(functions: [FunctionEntry], owner: String) -> [TocEntry]
+```
+
+### `memberEntry` (foul)
+
+```kex
+memberEntry(name: String, anchor: String) -> TocEntry
+```
+
+### `tocTitle` (foul)
 
 ```kex
 tocTitle(e: Entity) -> String
 ```
 
-### `descriptionOf`
+### `descriptionOf` (foul)
 
 ```kex
 descriptionOf(page: SourcePage) -> String
@@ -117,13 +151,7 @@ descriptionOf(page: SourcePage) -> String
 
 One sentence for the page's <meta name="description">: the file's intro, else what its first declaration says, else its title.
 
-### `summaryOf`
-
-```kex
-summaryOf(e: Entity) -> String
-```
-
-### `absolutize`
+### `absolutize` (foul)
 
 ```kex
 absolutize(html: String, model: PackageModel, urlPath: String) -> String
@@ -131,13 +159,13 @@ absolutize(html: String, model: PackageModel, urlPath: String) -> String
 
 Every relative href in a fragment, rewritten to a site path: from the page at `urlPath`, "../net.html#module-net" is "/prelude/0.4.0/net/#module-net" and "index.html" is "/prelude/0.4.0/". A fragment-only href ("#x"), an absolute one and an external URL stay as they are.
 
-### `sitePath`
+### `sitePath` (foul)
 
 ```kex
 sitePath(href: String, base: [String]) -> String
 ```
 
-### `normalize`
+### `normalize` (foul)
 
 ```kex
 normalize(base: [String], rel: [String]) -> [String]

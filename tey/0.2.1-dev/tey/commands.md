@@ -11,31 +11,31 @@ entities:
 
 ## module `Tey.Commands`
 
-### `manifest`
+### `manifest` (foul)
 
 ```kex
-manifest : Result<ManifestPackage, String>
+manifest -> Result<ManifestPackage, String>
 ```
 
-### `lock`
+### `lock` (foul)
 
 ```kex
-lock : Integer
+lock -> Integer
 ```
 
-### `add`
+### `add` (foul)
 
 ```kex
 add(name: String, options: ParsedOptions) -> Integer
 ```
 
-### `localOverride`
+### `localOverride` (foul)
 
 ```kex
 localOverride(name: String, path: String, remove?: Bool, list?: Bool) -> Integer
 ```
 
-### `install`
+### `install` (foul)
 
 ```kex
 install(without: String, packageName: String = …) -> Integer
@@ -43,7 +43,7 @@ install(without: String, packageName: String = …) -> Integer
 
 `--without dev` leaves a group's dependencies out of this install. The LOCKFILE still lists them — what is omitted is the fetching, so switching the flag off later needs no re-resolve.
 
-### `installWorkspace`
+### `installWorkspace` (foul)
 
 ```kex
 installWorkspace(without: String, packageName: String, force?: Bool, approveAll?: Bool) -> Integer
@@ -51,7 +51,7 @@ installWorkspace(without: String, packageName: String, force?: Bool, approveAll?
 
 `install`, where `force?` lets targets replace programs Tey does not own (see Tey.Programs.refusal).
 
-### `installDependencies`
+### `installDependencies` (foul)
 
 ```kex
 installDependencies(context: Context, without: String, approveAll?: Bool) -> Result<Void, String>
@@ -59,13 +59,13 @@ installDependencies(context: Context, without: String, approveAll?: Bool) -> Res
 
 Resolves (or reuses) the workspace's lock, fetches and verifies what it names, approves plugins, and writes the lock back — everything `tey install` does before building.
 
-### `fetchAll`
+### `fetchAll` (foul)
 
 ```kex
 fetchAll(dependencies: [Tey.Lockfile.Dependency]) -> Result<Void, String>
 ```
 
-### `installPrograms`
+### `installPrograms` (foul)
 
 ```kex
 installPrograms(arguments: [String], options: InstallOptions) -> Integer
@@ -73,13 +73,13 @@ installPrograms(arguments: [String], options: InstallOptions) -> Integer
 
 `tey install <argument>...`: a program from a path or a Git URL, or installed programs updated by name. Several arguments must all be names — a source is one program, with its own options.
 
-### `installProgram`
+### `installProgram` (foul)
 
 ```kex
 installProgram(argument: String, options: InstallOptions) -> Integer
 ```
 
-### `reinstallProgram`
+### `reinstallProgram` (foul)
 
 ```kex
 reinstallProgram(name: String, options: InstallOptions) -> Integer
@@ -87,7 +87,7 @@ reinstallProgram(name: String, options: InstallOptions) -> Integer
 
 `tey install <name>`: installs an installed program again from where its receipt says it came from — which is what updating it means. A tag or an exact commit stays pinned unless a new `--tag`/`--branch`/`--ref` is given; a branch (or HEAD) and a path are rebuilt only when their commit or content moved, unless `--rebuild` says to anyway (a new Erlang, a compiler fix).
 
-### `uninstallPrograms`
+### `uninstallPrograms` (foul)
 
 ```kex
 uninstallPrograms(names: [String]) -> Integer
@@ -95,13 +95,13 @@ uninstallPrograms(names: [String]) -> Integer
 
 `tey uninstall <name>...`: removes the programs each receipt owns, then the receipt and the build tree it came from. A program that has since been replaced by a file Tey did not write is left where it is, and said so.
 
-### `uninstallProgram`
+### `uninstallProgram` (foul)
 
 ```kex
 uninstallProgram(name: String) -> Integer
 ```
 
-### `installFromPath`
+### `installFromPath` (foul)
 
 ```kex
 installFromPath(path: String, options: InstallOptions) -> Integer
@@ -109,7 +109,7 @@ installFromPath(path: String, options: InstallOptions) -> Integer
 
 Installs the program at `path` without touching it: the workspace around it is copied into a staging directory, which gets its own lock, dependencies and build, and only replaces the program's previous build tree once its programs are in place. The user's checkout gains no `ebin/`, no `tey.lock`, nothing.
 
-### `installFromGit`
+### `installFromGit` (foul)
 
 ```kex
 installFromGit(url: String, options: InstallOptions) -> Integer
@@ -117,7 +117,7 @@ installFromGit(url: String, options: InstallOptions) -> Integer
 
 Installs a program from a Git repository at the commit `--tag`, `--branch` or `--ref` names (the default branch's HEAD otherwise). The commit is fetched into the cache the way a dependency is, and installed from there as a path is — the cache checkout itself is never built in.
 
-### `previousApprovals`
+### `previousApprovals` (foul)
 
 ```kex
 previousApprovals(name: String) -> {String: String}
@@ -125,7 +125,7 @@ previousApprovals(name: String) -> {String: String}
 
 The plugin approvals the previous install of program `name` was built with: its build tree's lock. None for a first install.
 
-### `programMember`
+### `programMember` (foul)
 
 ```kex
 programMember(context: Context, packageName: String) -> Result<Member, String>
@@ -133,7 +133,7 @@ programMember(context: Context, packageName: String) -> Result<Member, String>
 
 The member of `context` a program install means: the one `--package` names, else the one the path is inside of.
 
-### `installProgramMember`
+### `installProgramMember` (foul)
 
 ```kex
 installProgramMember(context: Context, member: Member, options: InstallOptions, origin: Receipt) -> Integer
@@ -141,13 +141,13 @@ installProgramMember(context: Context, member: Member, options: InstallOptions, 
 
 The shared half of a path and a Git install, once the member is known: refuse a library, check `--target`, stage, build, publish.
 
-### `installStaged`
+### `installStaged` (foul)
 
 ```kex
 installStaged(context: Context, member: Member, staging: String, options: InstallOptions, origin: Receipt) -> Integer
 ```
 
-### `updateDependencies`
+### `updateDependencies` (foul)
 
 ```kex
 updateDependencies(name: String = …) -> Integer
@@ -187,13 +187,13 @@ validateUpdateName(members: [Member], name: String) -> Result<Void, String>
 updateScopeMembers(context: Context) -> [Member]
 ```
 
-### `installTargetsSelected`
+### `installTargetsSelected` (foul)
 
 ```kex
 installTargetsSelected(context: Context, packageName: String, force?: Bool = …) -> Integer
 ```
 
-### `installMemberTargets`
+### `installMemberTargets` (foul)
 
 ```kex
 installMemberTargets(member: Member, force?: Bool = …) -> Integer
@@ -207,7 +207,7 @@ Only packages that DECLARE a target are affected. A library has none, so `tey in
 
 Every name is checked before anything is built, so a refused install costs nothing and changes nothing.
 
-### `installMemberTargetsFrom`
+### `installMemberTargetsFrom` (foul)
 
 ```kex
 installMemberTargetsFrom(member: Member, force?: Bool, origin: Receipt, selected: [String]) -> Integer
@@ -217,7 +217,7 @@ installMemberTargetsFrom(member: Member, force?: Bool, origin: Receipt, selected
 
 `selected` limits the targets installed (`--target`); empty means all.
 
-### `releaseTarget`
+### `releaseTarget` (foul)
 
 ```kex
 releaseTarget(owner: String, name: String) -> Result<Void, String>
@@ -225,7 +225,7 @@ releaseTarget(owner: String, name: String) -> Result<Void, String>
 
 Drops `name` from `owner`'s receipt after another package took it over with `--force`; a receipt left owning nothing is removed.
 
-### `recordInstall`
+### `recordInstall` (foul)
 
 ```kex
 recordInstall(package: ManifestPackage, origin: Receipt, installed: [String], receipts: [Receipt], claims: [(String, Claim)]) -> Result<Void, String>
@@ -233,15 +233,15 @@ recordInstall(package: ManifestPackage, origin: Receipt, installed: [String], re
 
 Writes the package's receipt and settles ownership around it: names taken over with `--force` leave the other package's receipt, and targets the previous receipt owned that this install no longer declares are removed from the bin directory rather than left behind unowned.
 
-### `dependencyRoots`
+### `dependencyRoots` (foul)
 
 ```kex
-dependencyRoots : [String]
+dependencyRoots -> [String]
 ```
 
 `--source-root` for every fetched dependency. Without these a dependency is just bytes in the cache: `using Greet` cannot find it, and the package that declared it does not compile. A dependency the lockfile names but the cache does not have is reported rather than quietly dropped — the answer is `tey install`, and silence would look like a broken `using`.
 
-### `dependencyRootsAt`
+### `dependencyRootsAt` (foul)
 
 ```kex
 dependencyRootsAt(start: String) -> [String]
@@ -249,7 +249,7 @@ dependencyRootsAt(start: String) -> [String]
 
 `dependencyRoots` for the workspace around `start` rather than around the working directory. A program being installed from a path is built in a staged copy while the user stands somewhere else entirely — possibly in another project, whose lockfile would otherwise supply the dependencies.
 
-### `sourceDirectoryAt`
+### `sourceDirectoryAt` (foul)
 
 ```kex
 sourceDirectoryAt(packageRoot: String) -> String
@@ -273,29 +273,29 @@ sourceUnit?(path: String) -> Bool
 
 Whether a file directly under the source directory is a module to compile. With the package itself as the root, its manifests sit there too, and are not modules.
 
-### `sourceRoots`
+### `sourceRoots` (foul)
 
 ```kex
-sourceRoots : [String]
+sourceRoots -> [String]
 ```
 
 Every `--source-root` a compile of THIS package needs: its own source directory first (`src/`, or the package itself when it declares `sources`), then each dependency's. Own-first is deliberate — a package that shadows a dependency's module name means its own, the same way `--source-root` order already decides that for dependencies among themselves.
 
-### `sourceRootsAt`
+### `sourceRootsAt` (foul)
 
 ```kex
 sourceRootsAt(packageRoot: String) -> [String]
 ```
 
-### `librarySources`
+### `librarySources` (foul)
 
 ```kex
-librarySources : [String]
+librarySources -> [String]
 ```
 
 A library's compilable units: every `.kex` directly under its source directory (`src/`, or the package's top when it declares `sources`). Not a recursive walk — a nested module is reached by the file that declares it, and compiling it twice by name is how you get a duplicate-module error out of a perfectly good package.
 
-### `librarySourcesAt`
+### `librarySourcesAt` (foul)
 
 ```kex
 librarySourcesAt(packageRoot: String) -> [String]
@@ -313,13 +313,13 @@ What `tey build` produces is what ships, so what `tey run` and `tey test` exerci
 
 `--interpret` is the way back, for a backend gap or a debugging session.
 
-### `runPackage`
+### `runPackage` (foul)
 
 ```kex
 runPackage(extra: [String], interpret?: Bool, packageName: String = …) -> Integer
 ```
 
-### `runCommand`
+### `runCommand` (foul)
 
 ```kex
 runCommand(command: Command, extra: [String], interpret?: Bool) -> Integer
@@ -331,7 +331,7 @@ A `.kex` script is run through the SELECTED toolchain with this package's source
 
 The `--` before the arguments plays the same role as in runPackage.
 
-### `generate`
+### `generate` (foul)
 
 ```kex
 generate(arguments: [String]) -> Integer
@@ -341,7 +341,7 @@ The locked dependencies, then the programs Tey has installed. Outside a project 
 
 Runs a generator a direct dependency declares in its `plugin` block. The plugin is a child process: it is handed the invocation as one line of JSON on stdin and answers with the files it wants written, which Tey — not the plugin — then writes, inside the workspace and asking before it replaces anything (`--force` answers yes). The child itself runs in the operating system's sandbox: it cannot write outside scratch space or use the network (`--unconfined` lifts that, with a warning).
 
-### `pluginCommand`
+### `pluginCommand` (foul)
 
 ```kex
 pluginCommand(arguments: [String]) -> Integer
@@ -351,31 +351,31 @@ pluginCommand(arguments: [String]) -> Integer
 
 Runs a command a direct dependency declares in its `plugin` block, confined to what the plugin declared and the user approved.
 
-### `list`
+### `list` (foul)
 
 ```kex
-list : Integer
+list -> Integer
 ```
 
-### `listPrograms`
+### `listPrograms` (foul)
 
 ```kex
 listPrograms(programs: [Receipt]) -> Void
 ```
 
-### `build`
+### `build` (foul)
 
 ```kex
-build : Integer
+build -> Integer
 ```
 
-### `buildSelected`
+### `buildSelected` (foul)
 
 ```kex
 buildSelected(packageName: String, workspace?: Bool, requestedJobs: String = …) -> Integer
 ```
 
-### `buildMember`
+### `buildMember` (foul)
 
 ```kex
 buildMember(member: Member) -> Integer
@@ -393,7 +393,7 @@ How `tey test` should REPORT, as compiler flags (kexhq/kex#199).
 
 Tey does not interpret any of it: the flags are the compiler's, the records are the compiler's, and this is the mapping from what a person typed to what the compiler is asked. Which is the point — an editor drives `tey test` because Tey knows the package's source roots, not because it wants Tey to reformat the answer (docs/testing.md).
 
-### `testSpecs`
+### `testSpecs` (foul)
 
 ```kex
 testSpecs(requested: [String]) -> [String]
@@ -401,37 +401,37 @@ testSpecs(requested: [String]) -> [String]
 
 The spec files to run: the ones named on the line, or every `spec/*.spec.kex` when none were. Naming one is what an editor's per-file ▶ needs — and what anyone debugging a single suite in a package with thirty of them wants.
 
-### `test`
+### `test` (foul)
 
 ```kex
 test(requested: [String], interpret?: Bool, json?: Bool, list?: Bool, only: String) -> Integer
 ```
 
-### `testSelected`
+### `testSelected` (foul)
 
 ```kex
 testSelected(requested: [String], packageName: String, workspace?: Bool, interpret?: Bool, json?: Bool, list?: Bool, only: String, requestedJobs: String = …) -> Integer
 ```
 
-### `testAt`
+### `testAt` (foul)
 
 ```kex
 testAt(packageRoot: String, requested: [String], interpret?: Bool, json?: Bool, list?: Bool, only: String) -> Integer
 ```
 
-### `clean`
+### `clean` (foul)
 
 ```kex
 clean(all?: Bool) -> Integer
 ```
 
-### `setupMergeDriver`
+### `setupMergeDriver` (foul)
 
 ```kex
 setupMergeDriver(remove?: Bool) -> Integer
 ```
 
-### `new`
+### `new` (foul)
 
 ```kex
 new(directory: String, library: Bool) -> Integer
@@ -439,7 +439,7 @@ new(directory: String, library: Bool) -> Integer
 
 `tey new <name>` — a package in a directory of its own, which the command creates. The pair with `init` below follows what `git init` and `cargo new` already taught everyone: `new` makes the directory, `init` adopts the one you are standing in.
 
-### `init`
+### `init` (foul)
 
 ```kex
 init(name: String, library: Bool) -> Integer

@@ -344,17 +344,19 @@ Implements [`Unit`](../units.md#trait-unit).
 #### `factor` (from Unit)
 
 ```kex
-factor(_)
+factor -> Float
 ```
 
 #### `kind` (from Unit)
 
-
+```kex
+kind -> Atom
+```
 
 #### `symbol` (from Unit)
 
 ```kex
-symbol(_)
+symbol -> String
 ```
 
 ## extends `UnitDefinition`
@@ -365,15 +367,21 @@ Implements [`Unit`](../units.md#trait-unit).
 
 ### `factor` (from Unit)
 
-
+```kex
+factor -> Float
+```
 
 ### `kind` (from Unit)
 
-
+```kex
+kind -> Atom
+```
 
 ### `symbol` (from Unit)
 
-
+```kex
+symbol -> String
+```
 
 ## extends `Measure`
 
@@ -384,19 +392,19 @@ Displaying a size in another data unit: the prelude's `to(String, in:)`, for thi
 ### `factor`
 
 ```kex
-factor : Float
+factor -> Float
 ```
 
 ### `kind`
 
 ```kex
-kind : Atom
+kind -> Atom
 ```
 
 ### `symbol`
 
 ```kex
-symbol : String
+symbol -> String
 ```
 
 ### `to`

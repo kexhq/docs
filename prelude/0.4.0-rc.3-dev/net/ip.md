@@ -38,7 +38,7 @@ The stored spelling is normalized, so addresses that arrived in different forms 
 #### `string`
 
 ```kex
-string : String
+string -> String
 ```
 
 Returns the canonical text form of the address.
@@ -56,7 +56,7 @@ Address.parse("2001:0db8:0:0::42").try.string   # => "2001:db8::42"
 #### `version`
 
 ```kex
-version : Integer
+version -> Integer
 ```
 
 Returns the address family as `4` or `6`.
@@ -74,7 +74,7 @@ let family = address.version == 6 then :ipv6 else :ipv4
 #### `loopback?`
 
 ```kex
-loopback? : Bool
+loopback? -> Bool
 ```
 
 Returns `true` for an address that routes back to this host.
@@ -94,7 +94,7 @@ die("development server must use loopback") if !address.loopback?
 #### `private?`
 
 ```kex
-private? : Bool
+private? -> Bool
 ```
 
 Returns `true` for an address reserved for private networks.
@@ -114,7 +114,7 @@ Error("target must be private") if !target.private?
 #### `unspecified?`
 
 ```kex
-unspecified? : Bool
+unspecified? -> Bool
 ```
 
 Returns `true` for the all-zero address: `0.0.0.0` or `::`.
@@ -134,7 +134,7 @@ IO.printError("service will be publicly reachable") if bind.unspecified?
 #### `multicast?`
 
 ```kex
-multicast? : Bool
+multicast? -> Bool
 ```
 
 Returns `true` when the address names a multicast group.
@@ -164,7 +164,7 @@ Parsing `192.0.2.9/24` therefore produces `192.0.2.0/24`. This makes a `Network`
 #### `string`
 
 ```kex
-string : String
+string -> String
 ```
 
 Returns canonical CIDR text, including the prefix length.
@@ -205,7 +205,7 @@ let allowed? = office.contains(requestAddress)
 #### `prefix`
 
 ```kex
-prefix : Integer
+prefix -> Integer
 ```
 
 Returns the number of fixed leading address bits.
@@ -221,7 +221,7 @@ Network.parse("10.0.0.0/8").try.prefix   # => 8
 #### `first`
 
 ```kex
-first : Address
+first -> Address
 ```
 
 Returns the first address in the range: the address with all host bits cleared.
@@ -237,7 +237,7 @@ Network.parse("192.0.2.9/24").try.first.string   # => "192.0.2.0"
 #### `last`
 
 ```kex
-last : Address
+last -> Address
 ```
 
 Returns the last address in the range: the address with all host bits set.

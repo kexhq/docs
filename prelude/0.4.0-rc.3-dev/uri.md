@@ -86,7 +86,7 @@ Implements [`Showable`](kex.md#trait-showable), [`Inspectable`](kex.md#trait-ins
 #### `string`
 
 ```kex
-string : String
+string -> String
 ```
 
 Returns the caller-supplied URI spelling unchanged.
@@ -96,7 +96,7 @@ Returns the caller-supplied URI spelling unchanged.
 #### `normalize`
 
 ```kex
-normalize : URI
+normalize -> URI
 ```
 
 Returns an explicitly normalized RFC 3986 representation.
@@ -155,7 +155,7 @@ base.resolve(URI.parse("../api").try).try.string
 #### `scheme`
 
 ```kex
-scheme : String?
+scheme -> String?
 ```
 
 Returns the normalized lowercase scheme, when one is present.
@@ -165,7 +165,7 @@ Returns the normalized lowercase scheme, when one is present.
 #### `host`
 
 ```kex
-host : Host?
+host -> Host?
 ```
 
 Returns the parsed authority host, when one is present.
@@ -175,7 +175,7 @@ Returns the parsed authority host, when one is present.
 #### `query`
 
 ```kex
-query : Query?
+query -> Query?
 ```
 
 Returns the parsed query when the reference contains `?`.
@@ -187,7 +187,7 @@ Returns the parsed query when the reference contains `?`.
 #### `showValue` (from Showable)
 
 ```kex
-showValue : String
+showValue -> String
 ```
 
 Renders with any authority password replaced by `***`.
@@ -219,7 +219,7 @@ Implements [`Showable`](kex.md#trait-showable), [`Inspectable`](kex.md#trait-ins
 #### `string`
 
 ```kex
-string : String
+string -> String
 ```
 
 Returns the caller-supplied URL spelling unchanged.
@@ -229,7 +229,7 @@ Returns the caller-supplied URL spelling unchanged.
 #### `normalize`
 
 ```kex
-normalize : URL
+normalize -> URL
 ```
 
 Returns an explicitly normalized URL without changing this value.
@@ -277,7 +277,7 @@ let next = URL.parse("https://api.example.com/v1/items").try
 #### `scheme`
 
 ```kex
-scheme : String
+scheme -> String
 ```
 
 Returns the normalized lowercase scheme.
@@ -287,7 +287,7 @@ Returns the normalized lowercase scheme.
 #### `host`
 
 ```kex
-host : Host
+host -> Host
 ```
 
 Returns the authority host in display and normalized ASCII forms.
@@ -297,7 +297,7 @@ Returns the authority host in display and normalized ASCII forms.
 #### `query`
 
 ```kex
-query : Query?
+query -> Query?
 ```
 
 Returns the parsed query when the URL contains `?`.
@@ -307,7 +307,7 @@ Returns the parsed query when the URL contains `?`.
 #### `showValue` (from Showable)
 
 ```kex
-showValue : String
+showValue -> String
 ```
 
 Renders with any authority password replaced by `***`.
@@ -350,7 +350,7 @@ Order and duplicates matter in real APIs: `tag=kex&tag=beam` must not become a m
 #### `encode`
 
 ```kex
-encode : String
+encode -> String
 ```
 
 Encodes according to generic RFC 3986 query rules.
@@ -378,7 +378,7 @@ This is deliberately separate from `Query`: HTML forms encode spaces as plus sig
 #### `encode`
 
 ```kex
-encode : String
+encode -> String
 ```
 
 Encodes according to HTML form rules, including space as ++.
@@ -451,7 +451,7 @@ let webhook = URL.parse(ENV.get("WEBHOOK_URL").or("")).try
 ### `build`
 
 ```kex
-build : String -> String -> [String] -> Query -> Result<URL, URIError>
+build(scheme: String, host: String, path: [String], query: Query) -> Result<URL, URIError>
 ```
 
 Builds and validates a URL from decoded path segments and a query value.

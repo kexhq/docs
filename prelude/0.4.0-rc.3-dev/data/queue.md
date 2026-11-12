@@ -77,7 +77,7 @@ Queue.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
 #### `identity` (from Monoid)
 
 ```kex
-identity : Queue<A>
+identity -> Queue<A>
 ```
 
 The empty queue: the `Monoid` identity.
@@ -107,7 +107,7 @@ Queue.from([1, 2]).combine(Queue.from([3, 4])).items   # => [1, 2, 3, 4]
 #### `items`
 
 ```kex
-items : [A]
+items -> [A]
 ```
 
 Returns the elements front to back. Never opaque: this is a real list.
@@ -145,7 +145,7 @@ Queue.from([1, 2]).enqueue(3).items   # => [1, 2, 3]
 #### `dequeue`
 
 ```kex
-dequeue : (A, Queue<A>)?
+dequeue -> (A, Queue<A>)?
 ```
 
 Returns the front element and the queue without it, wrapped in `Just`, or `None` for an empty queue.
@@ -166,7 +166,7 @@ Queue.empty.dequeue             # => None
 #### `peek`
 
 ```kex
-peek : A?
+peek -> A?
 ```
 
 Returns the front element wrapped in `Just`, or `None` for an empty queue.
@@ -183,7 +183,7 @@ Queue.empty.peek          # => None
 #### `count` (from Foldable)
 
 ```kex
-count : Integer
+count -> Integer
 ```
 
 Returns the number of elements.
@@ -199,7 +199,7 @@ Queue.from([1, 2, 3]).count   # => 3
 #### `empty?`
 
 ```kex
-empty? : Bool
+empty? -> Bool
 ```
 
 Returns `true` when the queue has no elements.
@@ -258,7 +258,7 @@ Queue.from([1, 2]) + Queue.from([3])   # => Queue(1, 2, 3)
 #### `showValue` (from Showable)
 
 ```kex
-showValue : String
+showValue -> String
 ```
 
 Renders the queue as `Queue(...)`, front to back.
@@ -274,7 +274,7 @@ Queue.from([1, 2, 3]).showValue   # => "Queue(1, 2, 3)"
 #### `blank?` (from Blankable)
 
 ```kex
-blank? : Bool
+blank? -> Bool
 ```
 
 Returns `true` when the queue has no elements. The `Blankable` view of `empty?`.

@@ -78,9 +78,13 @@ _Rendering the map as a query string_
 
 #### `identity` (from Monoid)
 
+```kex
+identity -> Map<K, V>
+```
+
 The empty map: the identity element of the `Monoid` instance, so `m.combine({})` is `m`.
 
-**Returns**: `Map<K, V>` — the empty map
+**Returns**: the empty map
 
 **Examples**
 
@@ -241,7 +245,7 @@ end
 #### `empty?`
 
 ```kex
-empty? : Bool
+empty? -> Bool
 ```
 
 Returns `true` when the map has no entries.
@@ -258,7 +262,7 @@ Returns `true` when the map has no entries.
 #### `count` (from Foldable)
 
 ```kex
-count : Integer
+count -> Integer
 ```
 
 Returns the number of entries.
@@ -299,7 +303,7 @@ config.count { |k, v| v == defaults.get(k, v) }
 #### `keys`
 
 ```kex
-keys : [K]
+keys -> [K]
 ```
 
 Returns the map's keys as a list, in canonical key order.
@@ -321,7 +325,7 @@ params.keys.reject { |k| known.contains?(k) }
 #### `values`
 
 ```kex
-values : [V]
+values -> [V]
 ```
 
 Returns the map's values as a list, ordered by their keys.
@@ -338,7 +342,7 @@ Returns the map's values as a list, ordered by their keys.
 #### `entries`
 
 ```kex
-entries : [(K, V)]
+entries -> [(K, V)]
 ```
 
 Returns the map's entries as a list of `(key, value)` tuples, in canonical key order.
@@ -545,7 +549,7 @@ defaults.merge(userConfig)
 
 ```kex
 update(key: K, f: (V -> V)) -> Map<K, V>
-update(key: K, f: V) -> (V -> V) -> Map<K, V>
+update(key: K, default: V, f: (V -> V)) -> Map<K, V>
 ```
 
 Replaces the value under `key` with `f` of it. A missing key is left missing: use the three-argument form to supply a starting value.
@@ -644,7 +648,7 @@ users.find { |id, user| user.email == target }
 #### `blank?` (from Blankable)
 
 ```kex
-blank? : Bool
+blank? -> Bool
 ```
 
 Returns `true` when the map has no entries. The `Blankable` view of `empty?`, so a map can be tested by the same generic code that tests strings and lists.

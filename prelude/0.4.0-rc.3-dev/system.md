@@ -20,7 +20,7 @@ System.posix?      # => true
 System.exit(1)     # ends the program with status 1
 ```
 
-### `exit`
+### `exit` (foul)
 
 ```kex
 exit(code: Integer) -> Void
@@ -197,7 +197,7 @@ end
 ## function `die`
 
 ```kex
-die : Never
+die -> Never
 die(message: String) -> Never
 ```
 

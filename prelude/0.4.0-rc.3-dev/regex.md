@@ -254,7 +254,7 @@ Kex.Intrinsic.Map.fromEntries(
 ### `replace`
 
 ```kex
-replace : String -> Regex -> String | (Match) -> String -> String
+replace(s: String, re: Regex, replacement: (String | (Match) -> String)) -> String
 ```
 
 Replaces EVERY match of `re` in `s`: this is `gsub`, not `sub`.
@@ -295,7 +295,7 @@ line.replace(re`\d`, "x")
 ### `replaceFirst`
 
 ```kex
-replaceFirst : String -> Regex -> String | (Match) -> String -> String
+replaceFirst(s: String, re: Regex, replacement: (String | (Match) -> String)) -> String
 ```
 
 Replaces only the first match of `re` in `s`: Ruby's `sub`, where `replace` is its `gsub`. The replacement is a literal string or a function of the `Match`, as for `replace`.
@@ -318,7 +318,7 @@ Replaces only the first match of `re` in `s`: Ruby's `sub`, where `replace` is i
 ### `splitLimit`
 
 ```kex
-splitLimit : String -> Regex -> Integer -> [String]
+splitLimit(s: String, re: Regex, limit: Integer) -> [String]
 ```
 
 Splits `s` on `re`, capping the number of fields.
@@ -406,7 +406,7 @@ Implements [`Showable`](kex.md#trait-showable).
 #### `showValue` (from Showable)
 
 ```kex
-showValue : String
+showValue -> String
 ```
 
 Renders the regex as the literal that builds it, so interpolating one shows its pattern rather than its record layout.

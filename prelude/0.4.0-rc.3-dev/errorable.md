@@ -27,7 +27,7 @@ end
 #### `message`
 
 ```kex
-message : String
+message -> String
 ```
 
 A human-readable description of what went wrong.

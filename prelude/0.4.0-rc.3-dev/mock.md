@@ -74,7 +74,7 @@ Implements `FS.File`.
 
 ### Functions
 
-#### `cannedRead`
+#### `cannedRead` (foul)
 
 ```kex
 cannedRead(path)
@@ -82,79 +82,79 @@ cannedRead(path)
 
 Named apart from `read`: `this.read(path)` would bind to the capability's own `read : FilePath -> String?`, not to this function.
 
-#### `read`
+#### `read` (foul)
 
 ```kex
 read(path)
 ```
 
-#### `readBytes`
+#### `readBytes` (foul)
 
 ```kex
 readBytes(path)
 ```
 
-#### `readLines`
+#### `readLines` (foul)
 
 ```kex
 readLines(path)
 ```
 
-#### `feed`
+#### `feed` (foul)
 
 ```kex
 feed(path)
 ```
 
-#### `size`
+#### `size` (foul)
 
 ```kex
 size(path)
 ```
 
-#### `exists?`
+#### `exists?` (foul)
 
 ```kex
 exists?(path)
 ```
 
-#### `file?`
+#### `file?` (foul)
 
 ```kex
 file?(path)
 ```
 
-#### `directory?`
+#### `directory?` (foul)
 
 ```kex
 directory?(path)
 ```
 
-#### `absolute`
+#### `absolute` (foul)
 
 ```kex
 absolute(path)
 ```
 
-#### `canonical`
+#### `canonical` (foul)
 
 ```kex
 canonical(path)
 ```
 
-#### `symlink?`
+#### `symlink?` (foul)
 
 ```kex
 symlink?(path)
 ```
 
-#### `info`
+#### `info` (foul)
 
 ```kex
 info(path)
 ```
 
-#### `open`
+#### `open` (foul)
 
 ```kex
 open(path, mode)
@@ -162,49 +162,49 @@ open(path, mode)
 
 A fake is a value, so there is nowhere for a write to go. Refusing is the honest answer and the useful one: a test that did not expect a write sees it fail rather than silently succeed.
 
-#### `write`
+#### `write` (foul)
 
 ```kex
 write(path, content)
 ```
 
-#### `writeBytes`
+#### `writeBytes` (foul)
 
 ```kex
 writeBytes(path, content)
 ```
 
-#### `append`
+#### `append` (foul)
 
 ```kex
 append(path, content)
 ```
 
-#### `delete`
+#### `delete` (foul)
 
 ```kex
 delete(path)
 ```
 
-#### `copy`
+#### `copy` (foul)
 
 ```kex
 copy(src, dst)
 ```
 
-#### `rename`
+#### `rename` (foul)
 
 ```kex
 rename(src, dst)
 ```
 
-#### `changePermission`
+#### `changePermission` (foul)
 
 ```kex
 changePermission(path, permissions)
 ```
 
-#### `changeMode`
+#### `changeMode` (foul)
 
 ```kex
 changeMode(path, mode)
@@ -230,7 +230,7 @@ Implements `ENV`.
 
 ### Functions
 
-#### `lookup`
+#### `lookup` (foul)
 
 ```kex
 lookup(key)
@@ -238,49 +238,49 @@ lookup(key)
 
 Named apart from `get`: `this.get(key)` would bind to the capability's own `get`, not to this function.
 
-#### `get`
+#### `get` (foul)
 
 ```kex
 get(key, default)
 ```
 
-#### `has?`
+#### `has?` (foul)
 
 ```kex
 has?(key)
 ```
 
-#### `keys`
+#### `keys` (foul)
 
 ```kex
 keys
 ```
 
-#### `values`
+#### `values` (foul)
 
 ```kex
 values
 ```
 
-#### `count`
+#### `count` (foul)
 
 ```kex
 count
 ```
 
-#### `each`
+#### `each` (foul)
 
 ```kex
 each(f)
 ```
 
-#### `entries`
+#### `entries` (foul)
 
 ```kex
 entries
 ```
 
-#### `set`
+#### `set` (foul)
 
 ```kex
 set(name, value)
@@ -288,7 +288,7 @@ set(name, value)
 
 A write goes to `onSet` or nowhere. It must NOT reach the real environment: a substituted ENV is the whole point of the mock, and a test that set a variable would otherwise leak it into the next one and into every process the suite starts. `vars` cannot take it either: a record is immutable, so a test that cares about writes supplies the hook, and one that does not gets a write that goes quietly nowhere.
 
-#### `unset`
+#### `unset` (foul)
 
 ```kex
 unset(name)
@@ -325,7 +325,7 @@ Implements `Time.Clock`.
 
 ### Functions
 
-#### `now`
+#### `now` (foul)
 
 ```kex
 now
@@ -353,7 +353,7 @@ describe "the config loader" do
 end
 ```
 
-### `File`
+### `File` (foul)
 
 ```kex
 File(path: FS.FilePath, content: String) -> Void
@@ -372,7 +372,7 @@ Declares one file and its content.
 Mock.FS.File("app.conf", "port = 8080\n")
 ```
 
-### `Directory`
+### `Directory` (foul)
 
 ```kex
 Directory(path: FS.FilePath) -> Void
@@ -390,10 +390,10 @@ Declares a directory at `path`.
 Mock.FS.Directory("src")
 ```
 
-### `clear`
+### `clear` (foul)
 
 ```kex
-clear : Void
+clear -> Void
 ```
 
 Empties the store, so nothing declared so far is visible any more.
@@ -408,7 +408,7 @@ after do
 end
 ```
 
-### `files`
+### `files` (foul)
 
 ```kex
 files(entries: Map<FS.FilePath, String>) -> Void
@@ -431,7 +431,7 @@ Mock.FS.files({
 })
 ```
 
-### `onRead`
+### `onRead` (foul)
 
 ```kex
 onRead(reader: Reader) -> Void
@@ -467,7 +467,7 @@ assert(configPath() == "/fake/.config")
 Mock.ENV.clear()
 ```
 
-### `set`
+### `set` (foul)
 
 ```kex
 set(name: String, value: String) -> Void
@@ -486,7 +486,7 @@ Sets one variable in the overlay.
 Mock.ENV.set("LOG_LEVEL", "debug")
 ```
 
-### `unset`
+### `unset` (foul)
 
 ```kex
 unset(name: String) -> Void
@@ -509,10 +509,10 @@ Mock.ENV.unset("HOME")
 Assert.equal(configPath(), ".")
 ```
 
-### `clear`
+### `clear` (foul)
 
 ```kex
-clear : Void
+clear -> Void
 ```
 
 Removes the whole overlay, restoring the real environment.
@@ -525,7 +525,7 @@ after do
 end
 ```
 
-### `vars`
+### `vars` (foul)
 
 ```kex
 vars(entries: Map<String, String>) -> Void
@@ -559,10 +559,10 @@ Assert.equal(Mock.IO.output(), "hello, Ada\n")
 Mock.IO.stop()
 ```
 
-### `start`
+### `start` (foul)
 
 ```kex
-start : Void
+start -> Void
 ```
 
 Starts capturing output and serving queued input.
@@ -575,10 +575,10 @@ before do
 end
 ```
 
-### `stop`
+### `stop` (foul)
 
 ```kex
-stop : Void
+stop -> Void
 ```
 
 Stops capturing, and restores the real console.
@@ -591,10 +591,10 @@ after do
 end
 ```
 
-### `output`
+### `output` (foul)
 
 ```kex
-output : String
+output -> String
 ```
 
 Everything the program has printed since capturing started.
@@ -611,10 +611,10 @@ IO.printLine("hello")
 Assert.equal(Mock.IO.output(), "hello\n")
 ```
 
-### `clear`
+### `clear` (foul)
 
 ```kex
-clear : Void
+clear -> Void
 ```
 
 Discards the captured output, while continuing to capture.
@@ -630,7 +630,7 @@ theThingUnderTest()
 Assert.equal(Mock.IO.output(), "done\n")
 ```
 
-### `input`
+### `input` (foul)
 
 ```kex
 input(first, second, third, fourth) -> Void

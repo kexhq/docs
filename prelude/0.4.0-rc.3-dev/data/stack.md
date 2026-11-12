@@ -77,7 +77,7 @@ Stack.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
 #### `identity` (from Monoid)
 
 ```kex
-identity : Stack<A>
+identity -> Stack<A>
 ```
 
 The empty stack: the `Monoid` identity.
@@ -107,7 +107,7 @@ Stack.from([1, 2]).combine(Stack.from([3, 4])).items   # => [1, 2, 3, 4]
 #### `items`
 
 ```kex
-items : [A]
+items -> [A]
 ```
 
 Returns the elements bottom-to-top: the order you would have pushed them in.
@@ -145,7 +145,7 @@ Stack.from([1, 2]).push(3).items   # => [1, 2, 3]
 #### `pop`
 
 ```kex
-pop : (A, Stack<A>)?
+pop -> (A, Stack<A>)?
 ```
 
 Returns the top element and the stack without it, wrapped in `Just`, or `None` for an empty stack.
@@ -164,7 +164,7 @@ Stack.empty.pop             # => None
 #### `peek`
 
 ```kex
-peek : A?
+peek -> A?
 ```
 
 Returns the top element wrapped in `Just`, or `None` for an empty stack.
@@ -181,7 +181,7 @@ Stack.empty.peek             # => None
 #### `count` (from Foldable)
 
 ```kex
-count : Integer
+count -> Integer
 ```
 
 Returns the number of elements.
@@ -197,7 +197,7 @@ Stack.from([1, 2, 3]).count   # => 3
 #### `empty?`
 
 ```kex
-empty? : Bool
+empty? -> Bool
 ```
 
 Returns `true` when the stack has no elements.
@@ -238,7 +238,7 @@ Stack.from([1, 2]) + Stack.from([3])    # => Stack(1, 2, 3)
 #### `showValue` (from Showable)
 
 ```kex
-showValue : String
+showValue -> String
 ```
 
 Renders the stack as `Stack(...)`, bottom-to-top.
@@ -254,7 +254,7 @@ Stack.from([1, 2, 3]).showValue   # => "Stack(1, 2, 3)"
 #### `blank?` (from Blankable)
 
 ```kex
-blank? : Bool
+blank? -> Bool
 ```
 
 Returns `true` when the stack has no elements. The `Blankable` view of `empty?`.

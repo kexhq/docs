@@ -11,19 +11,19 @@ entities:
 
 ## module `Tey.Git`
 
-### `execute`
+### `execute` (foul)
 
 ```kex
 execute(args: [String]) -> Result<ProcessResult, String>
 ```
 
-### `pinRef`
+### `pinRef` (foul)
 
 ```kex
 pinRef(url: String, selector: String, requested: String) -> Result<(String, String), String>
 ```
 
-### `tags`
+### `tags` (foul)
 
 ```kex
 tags(url: String) -> Result<[String], String>

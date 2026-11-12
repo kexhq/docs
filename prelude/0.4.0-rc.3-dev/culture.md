@@ -186,10 +186,10 @@ let hu = Culture.of("HU_HU").or(Culture.DEFAULT)
 Culture.renderNumber("1500.5", hu)              # => Just("1\u{A0}500,5")
 ```
 
-### `local`
+### `local` (foul)
 
 ```kex
-local : Culture
+local -> Culture
 ```
 
 Answers the machine's culture as an ordinary value: numbers follow the `LC_ALL`, `LC_NUMERIC` or `LANG` environment variable, falling back to `DEFAULT` when none names a known culture.

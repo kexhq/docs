@@ -15,8 +15,8 @@ The stylesheet itself is assets/style.css, embedded at compile time so the build
 
 ## module `Tey.Docgen.Css`
 
-### `siteCss`
+### `siteCss` (foul)
 
 ```kex
-siteCss : String
+siteCss -> String
 ```

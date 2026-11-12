@@ -131,7 +131,7 @@ _Stripping punctuation before comparing_
 ### `uniq`
 
 ```kex
-uniq : String
+uniq -> String
 ```
 
 Returns the string with repeated characters removed, keeping the first occurrence of each.
@@ -148,7 +148,7 @@ Returns the string with repeated characters removed, keeping the first occurrenc
 ### `first`
 
 ```kex
-first : Char?
+first -> Char?
 ```
 
 A String is its OWN type, not a [Char]: `chars` converts between them. So the sequence operations below are declared here rather than inherited from List, and they answer in String's terms: `take`/`drop`/`sort` hand back a String, while `first`/`last` hand back a Char. The List intrinsics they delegate to already understand the String representation, so there is one implementation for both backends.
@@ -173,7 +173,7 @@ _Testing an initial without risking an empty string_
 ### `last`
 
 ```kex
-last : Char?
+last -> Char?
 ```
 
 Returns the last character, or `None` when the string is empty.
@@ -330,7 +330,7 @@ _Removing whitespace_
 ### `sort`
 
 ```kex
-sort : String
+sort -> String
 ```
 
 Returns the characters in ascending codepoint order.
@@ -506,7 +506,7 @@ other    # => "ab"
 ### `count` (from Foldable)
 
 ```kex
-count : Integer
+count -> Integer
 ```
 
 Returns the number of characters: characters, not bytes. See `bytes` for the storage-level length.
@@ -546,7 +546,7 @@ Returns how many times `sub` occurs, counting non-overlapping matches from the l
 ### `length`
 
 ```kex
-length : Integer
+length -> Integer
 ```
 
 Returns the number of characters. The same as `count`, under the name familiar from other languages.
@@ -562,7 +562,7 @@ Returns the number of characters. The same as `count`, under the name familiar f
 ### `graphemeCount`
 
 ```kex
-graphemeCount : Integer
+graphemeCount -> Integer
 ```
 
 Returns the number of user-perceived characters: extended grapheme clusters (Unicode UAX #29), which is not always `count`.
@@ -590,7 +590,7 @@ e.graphemeCount   # => 1 (one character on screen)
 ### `empty?`
 
 ```kex
-empty? : Bool
+empty? -> Bool
 ```
 
 Returns `true` when the string has no characters.
@@ -659,7 +659,7 @@ Returns the character at index `i`, counting from 0, or `None` when the index is
 ### `second`
 
 ```kex
-second : Char?
+second -> Char?
 ```
 
 Returns the second character, or `None` when the string is shorter than two characters.
@@ -676,7 +676,7 @@ Returns the second character, or `None` when the string is shorter than two char
 ### `third`
 
 ```kex
-third : Char?
+third -> Char?
 ```
 
 Returns the third character, or `None` when the string is shorter than three characters.
@@ -693,7 +693,7 @@ Returns the third character, or `None` when the string is shorter than three cha
 ### `rest`
 
 ```kex
-rest : String
+rest -> String
 ```
 
 Returns everything after the first character. The empty string has no rest, and answers with itself.
@@ -710,7 +710,7 @@ Returns everything after the first character. The empty string has no rest, and 
 ### `chars`
 
 ```kex
-chars : [Char]
+chars -> [Char]
 ```
 
 Returns the string's characters as a list.
@@ -734,7 +734,7 @@ _Going out to List and back_
 ### `bytes`
 
 ```kex
-bytes : [Byte]
+bytes -> [Byte]
 ```
 
 Returns the string's UTF-8 encoding, one `Byte` per byte.
@@ -763,7 +763,7 @@ _Measuring the encoded size_
 ### `byteSize`
 
 ```kex
-byteSize : Integer
+byteSize -> Integer
 ```
 
 The storage size in bytes, without building the byte list.
@@ -835,7 +835,7 @@ payload.bytePart(4, payload.byteSize - 4)
 ### `split`
 
 ```kex
-split : [String]
+split -> [String]
 ```
 
 Splits the string into its individual characters, as one-character strings.
@@ -888,7 +888,7 @@ _Empty parts at the edges are kept_
 ### `lines`
 
 ```kex
-lines : [String]
+lines -> [String]
 ```
 
 Splits the string into lines on `\n`.
@@ -1038,7 +1038,7 @@ greeting.substitute({"$NAME$": "Ada", "$ID$": "A-1701"})
 ### `trim`
 
 ```kex
-trim : String
+trim -> String
 ```
 
 Removes leading and trailing whitespace. Whitespace inside the string is left alone.
@@ -1062,7 +1062,7 @@ let name = IO.getLine.or("").trim
 ### `trimStart`
 
 ```kex
-trimStart : String
+trimStart -> String
 ```
 
 Removes leading whitespace only. Ruby calls this `lstrip`.
@@ -1078,7 +1078,7 @@ Removes leading whitespace only. Ruby calls this `lstrip`.
 ### `trimEnd`
 
 ```kex
-trimEnd : String
+trimEnd -> String
 ```
 
 Removes trailing whitespace only. Ruby calls this `rstrip`.
@@ -1226,7 +1226,7 @@ Centers the string in a field of `width` characters, padding both sides with spa
 ### `upperCase`
 
 ```kex
-upperCase : String
+upperCase -> String
 ```
 
 Returns the string with every character converted to upper case.
@@ -1249,7 +1249,7 @@ input.lowerCase == "yes"
 ### `lowerCase`
 
 ```kex
-lowerCase : String
+lowerCase -> String
 ```
 
 Returns the string with every character converted to lower case.
@@ -1271,7 +1271,7 @@ settings.get(key.trim.lowerCase)
 ### `capitalize`
 
 ```kex
-capitalize : String
+capitalize -> String
 ```
 
 Returns the string with its first character upper-cased and the rest LOWER-cased.
@@ -1301,7 +1301,7 @@ _Title-casing a sentence_
 ### `snakeCase`
 
 ```kex
-snakeCase : String
+snakeCase -> String
 ```
 
 Returns the identifier in `snake_case`: its words lower-cased and joined with underscores.
@@ -1321,7 +1321,7 @@ Words are separated by `_`, `-` and spaces, and by case: a capital after a lower
 ### `kebabCase`
 
 ```kex
-kebabCase : String
+kebabCase -> String
 ```
 
 Returns the identifier in `kebab-case`: its words lower-cased and joined with hyphens. Words are found as `snakeCase` finds them.
@@ -1338,7 +1338,7 @@ Returns the identifier in `kebab-case`: its words lower-cased and joined with hy
 ### `camelCase`
 
 ```kex
-camelCase : String
+camelCase -> String
 ```
 
 Returns the identifier in `camelCase`: its first word lower-cased and the rest capitalized, with nothing between them. Words are found as `snakeCase` finds them.
@@ -1355,7 +1355,7 @@ Returns the identifier in `camelCase`: its first word lower-cased and the rest c
 ### `pascalCase`
 
 ```kex
-pascalCase : String
+pascalCase -> String
 ```
 
 Returns the identifier in `PascalCase`: every word capitalized, with nothing between them. Words are found as `snakeCase` finds them.
@@ -1380,7 +1380,7 @@ filler(pad: String, width: Integer) -> String
 ### `identifierWords`
 
 ```kex
-identifierWords : [Char] -> Char? -> String -> [String] -> [String]
+identifierWords(chars: [Char], previous: Char?, current: String, words: [String]) -> [String]
 ```
 
 The words of an identifier, read one character at a time: `previous` is the character before `chars`, `current` the word being read.
@@ -1388,7 +1388,7 @@ The words of an identifier, read one character at a time: `previous` is the char
 ### `reverse`
 
 ```kex
-reverse : String
+reverse -> String
 ```
 
 Returns the string with its characters in reverse order.
@@ -1541,7 +1541,7 @@ Character literals are written with single quotes (`'a'`) and are a different ty
 ### `string`
 
 ```kex
-string : String
+string -> String
 ```
 
 Returns this character as a one-character `String`.
@@ -1561,7 +1561,7 @@ A `Char` and a `String` are distinct types, so converting between them is explic
 ### `upperCase`
 
 ```kex
-upperCase : Char
+upperCase -> Char
 ```
 
 Returns the upper-case form of this character, still as a `Char`.
@@ -1580,7 +1580,7 @@ Characters with no upper-case form (digits, punctuation) are returned unchanged.
 ### `lowerCase`
 
 ```kex
-lowerCase : Char
+lowerCase -> Char
 ```
 
 Returns the lower-case form of this character, still as a `Char`.
@@ -1599,7 +1599,7 @@ Characters with no lower-case form are returned unchanged.
 ### `digit?`
 
 ```kex
-digit? : Bool
+digit? -> Bool
 ```
 
 Returns `true` when the character is a decimal digit, `'0'` through `'9'`.
@@ -1622,7 +1622,7 @@ _Validating that a field is all digits_
 ### `alpha?`
 
 ```kex
-alpha? : Bool
+alpha? -> Bool
 ```
 
 Returns `true` when the character is alphabetic.
@@ -1646,7 +1646,7 @@ _Keeping only letters_
 ### `letter?`
 
 ```kex
-letter? : Bool
+letter? -> Bool
 ```
 
 Returns `true` when the character is a letter. The Unicode-letter spelling of `alpha?`.
@@ -1663,7 +1663,7 @@ Returns `true` when the character is a letter. The Unicode-letter spelling of `a
 ### `upper?`
 
 ```kex
-upper? : Bool
+upper? -> Bool
 ```
 
 Returns `true` when the character is upper case.
@@ -1689,7 +1689,7 @@ _Splitting a camelCase name_
 ### `lower?`
 
 ```kex
-lower? : Bool
+lower? -> Bool
 ```
 
 Returns `true` when the character is lower case.
@@ -1706,7 +1706,7 @@ Returns `true` when the character is lower case.
 ### `space?`
 
 ```kex
-space? : Bool
+space? -> Bool
 ```
 
 Returns `true` when the character is whitespace: a space, tab, newline or carriage return.
@@ -1730,7 +1730,7 @@ _Counting the words on a line_
 ### `codepoint`
 
 ```kex
-codepoint : Integer
+codepoint -> Integer
 ```
 
 Returns the character's Unicode codepoint.
@@ -1858,7 +1858,7 @@ let (name, age) = ("Ada", 36)
 ### `items`
 
 ```kex
-items : [Any]
+items -> [Any]
 ```
 
 Returns the tuple's elements as a list.

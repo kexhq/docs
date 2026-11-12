@@ -13,31 +13,31 @@ Model records → Markdown pages (LLM-friendly: stable headings, fenced kex sign
 
 ## module `Tey.Docgen.Markdown`
 
-### `pageMarkdown`
+### `pageMarkdown` (foul)
 
 ```kex
 pageMarkdown(page: SourcePage, model: PackageModel) -> String
 ```
 
-### `pageFrontmatter`
+### `pageFrontmatter` (foul)
 
 ```kex
 pageFrontmatter(page: SourcePage, model: PackageModel) -> String
 ```
 
-### `entityFrontmatterLine`
+### `entityFrontmatterLine` (foul)
 
 ```kex
 entityFrontmatterLine(e: Entity) -> String
 ```
 
-### `pageBody`
+### `pageBody` (foul)
 
 ```kex
 pageBody(page: SourcePage, model: PackageModel) -> String
 ```
 
-### `entitiesMd`
+### `entitiesMd` (foul)
 
 ```kex
 entitiesMd(entities: [Entity], page: SourcePage, model: PackageModel) -> String
@@ -45,13 +45,13 @@ entitiesMd(entities: [Entity], page: SourcePage, model: PackageModel) -> String
 
 The same layout as the HTML: a type's make blocks on its own page are folded into the type's section.
 
-### `entitySection`
+### `entitySection` (foul)
 
 ```kex
 entitySection(e: Entity, page: SourcePage, model: PackageModel) -> String
 ```
 
-### `linkMd`
+### `linkMd` (foul)
 
 ```kex
 linkMd(model: PackageModel, fromPath: String, name: String) -> String
@@ -59,97 +59,97 @@ linkMd(model: PackageModel, fromPath: String, name: String) -> String
 
 Cross-links in Markdown resolve against the same package index the HTML renderer uses — one resolution rule, two renderings. Targets are the .md siblings of this page.
 
-### `hrefMd`
+### `hrefMd` (foul)
 
 ```kex
 hrefMd(fromPath: String, toPath: String, anchor: String) -> String
 ```
 
-### `linkTypeMd`
+### `linkTypeMd` (foul)
 
 ```kex
 linkTypeMd(model: PackageModel, fromPath: String, text: String) -> String
 ```
 
-### `typeSection`
+### `typeSection` (foul)
 
 ```kex
 typeSection(e: TypeEntry, makes: [MakeEntry], page: SourcePage, model: PackageModel) -> String
 ```
 
-### `variantBullet`
+### `variantBullet` (foul)
 
 ```kex
 variantBullet(name: String, fields: [String]) -> String
 ```
 
-### `recordSection`
+### `recordSection` (foul)
 
 ```kex
 recordSection(e: RecordEntry, makes: [MakeEntry], page: SourcePage, model: PackageModel) -> String
 ```
 
-### `typeBodyMd`
+### `typeBodyMd` (foul)
 
 ```kex
 typeBodyMd(name: String, makes: [MakeEntry], page: SourcePage, model: PackageModel) -> String
 ```
 
-### `implementsMd`
+### `implementsMd` (foul)
 
 ```kex
 implementsMd(name: String, page: SourcePage, model: PackageModel) -> String
 ```
 
-### `traitLinksMd`
+### `traitLinksMd` (foul)
 
 ```kex
 traitLinksMd(traits: [String], page: SourcePage, model: PackageModel) -> String
 ```
 
-### `providedMd`
+### `providedMd` (foul)
 
 ```kex
 providedMd(name: String, page: SourcePage, model: PackageModel) -> String
 ```
 
-### `providedFromMd`
+### `providedFromMd` (foul)
 
 ```kex
 providedFromMd(written: String, own: [String], page: SourcePage, model: PackageModel) -> String
 ```
 
-### `elsewhereMd`
+### `elsewhereMd` (foul)
 
 ```kex
 elsewhereMd(name: String, page: SourcePage, model: PackageModel) -> String
 ```
 
-### `traitSection`
+### `traitSection` (foul)
 
 ```kex
 traitSection(e: TraitEntry, page: SourcePage, model: PackageModel) -> String
 ```
 
-### `makeSection`
+### `makeSection` (foul)
 
 ```kex
 makeSection(e: MakeEntry, page: SourcePage, model: PackageModel) -> String
 ```
 
-### `moduleSection`
+### `moduleSection` (foul)
 
 ```kex
 moduleSection(e: ModuleEntry, page: SourcePage, model: PackageModel) -> String
 ```
 
-### `constantSection`
+### `constantSection` (foul)
 
 ```kex
 constantSection(e: ConstantEntry) -> String
 ```
 
-### `functionsMd`
+### `functionsMd` (foul)
 
 ```kex
 functionsMd(functions: [FunctionEntry], owner: String, level: Integer, implements: [String], page: SourcePage, model: PackageModel) -> String
@@ -157,73 +157,81 @@ functionsMd(functions: [FunctionEntry], owner: String, level: Integer, implement
 
 One heading per name; overloads listed under it.
 
-### `traitTagsMd`
+### `foulMd` (foul)
+
+```kex
+foulMd(isFoul: Bool) -> String
+```
+
+Beside the name, as the HTML chip is: purity is part of what a caller has to know before calling.
+
+### `traitTagsMd` (foul)
 
 ```kex
 traitTagsMd(name: String, implements: [String], page: SourcePage, model: PackageModel) -> String
 ```
 
-### `overloadMd`
+### `overloadMd` (foul)
 
 ```kex
 overloadMd(f: FunctionEntry, page: SourcePage, model: PackageModel) -> String
 ```
 
-### `signatureParts`
+### `signatureParts` (foul)
 
 ```kex
 signatureParts(parts: [String], f: FunctionEntry) -> [String]
 ```
 
-### `paramParts`
+### `paramParts` (foul)
 
 ```kex
 paramParts(parts: [String], f: FunctionEntry) -> [String]
 ```
 
-### `returnParts`
+### `returnParts` (foul)
 
 ```kex
 returnParts(parts: [String], f: FunctionEntry) -> [String]
 ```
 
-### `returnLine`
+### `returnLine` (foul)
 
 ```kex
 returnLine(r: Return) -> String
 ```
 
-### `exampleParts`
+### `exampleParts` (foul)
 
 ```kex
 exampleParts(parts: [String], doc: Doc) -> [String]
 ```
 
-### `exampleBlocks`
+### `exampleBlocks` (foul)
 
 ```kex
 exampleBlocks(examples: [Example]) -> [String]
 ```
 
-### `exampleBlock`
+### `exampleBlock` (foul)
 
 ```kex
 exampleBlock(ex: Example) -> [String]
 ```
 
-### `entityDocMd`
+### `entityDocMd` (foul)
 
 ```kex
 entityDocMd(doc: Doc) -> String
 ```
 
-### `docBlock`
+### `docBlock` (foul)
 
 ```kex
 docBlock(doc: Doc) -> String
 ```
 
-### `typeParamSuffix`
+### `typeParamSuffix` (foul)
 
 ```kex
 typeParamSuffix(typeParams: [String]) -> String

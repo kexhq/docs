@@ -41,7 +41,7 @@ Implements [`Showable`](kex.md#trait-showable), [`Inspectable`](kex.md#trait-ins
 #### `bytes`
 
 ```kex
-bytes : [Byte]
+bytes -> [Byte]
 ```
 
 The bytes, as a list.
@@ -59,7 +59,7 @@ Binary.fromHex("0068").try.bytes   # => [0, 104]
 #### `length`
 
 ```kex
-length : Integer
+length -> Integer
 ```
 
 Number of bytes held.
@@ -75,7 +75,7 @@ Number of bytes held.
 #### `count`
 
 ```kex
-count : Integer
+count -> Integer
 ```
 
 Number of bytes held. The same as `length`, as on `List` and `String`.
@@ -91,7 +91,7 @@ Number of bytes held. The same as `length`, as on `List` and `String`.
 #### `empty?`
 
 ```kex
-empty? : Bool
+empty? -> Bool
 ```
 
 Whether it holds no bytes at all.
@@ -224,7 +224,7 @@ Binary.fromBytes([104]) + Binary.fromBytes([105])   # => #Binary<2 bytes>
 #### `hex`
 
 ```kex
-hex : String
+hex -> String
 ```
 
 The bytes as lowercase hexadecimal text, two digits per byte.
@@ -240,7 +240,7 @@ Binary.fromBytes([0, 104, 255]).hex   # => "0068ff"
 #### `base64`
 
 ```kex
-base64 : String
+base64 -> String
 ```
 
 The bytes as standard base64 text (RFC 4648), with canonical padding.
@@ -256,7 +256,7 @@ Binary.fromBytes([0, 104, 105, 255]).base64   # => "AGhp/w=="
 #### `showValue` (from Showable)
 
 ```kex
-showValue : String
+showValue -> String
 ```
 
 The length-only rendering: never the payload.
@@ -282,7 +282,7 @@ The length-only rendering: never the payload. The same as `showValue`.
 #### `to`
 
 ```kex
-to(_) -> String?
+to(String) -> String?
 ```
 
 Decodes the payload as UTF-8, or answers `None` when the bytes are not valid text.

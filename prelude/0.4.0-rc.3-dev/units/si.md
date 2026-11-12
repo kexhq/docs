@@ -333,25 +333,25 @@ Implements [`Unit`](../units.md#trait-unit).
 #### `factor` (from Unit)
 
 ```kex
-factor(_)
+factor -> Float
 ```
 
 #### `kind` (from Unit)
 
 ```kex
-kind(_)
+kind -> Atom
 ```
 
 #### `symbol` (from Unit)
 
 ```kex
-symbol(_)
+symbol -> String
 ```
 
 #### `*`
 
 ```kex
-*(_, _) -> UnitDefinition
+* -> UnitDefinition
 ```
 
 ## type `SIPrefix`
@@ -381,19 +381,19 @@ Implements [`Unit`](../units.md#trait-unit).
 #### `factor` (from Unit)
 
 ```kex
-factor(_)
+factor -> Float
 ```
 
 #### `kind` (from Unit)
 
 ```kex
-kind(_)
+kind -> Atom
 ```
 
 #### `symbol` (from Unit)
 
 ```kex
-symbol(_)
+symbol -> String
 ```
 
 ## extends `UnitDefinition`
@@ -404,15 +404,21 @@ Implements [`Unit`](../units.md#trait-unit).
 
 ### `factor` (from Unit)
 
-
+```kex
+factor -> Float
+```
 
 ### `kind` (from Unit)
 
-
+```kex
+kind -> Atom
+```
 
 ### `symbol` (from Unit)
 
-
+```kex
+symbol -> String
+```
 
 ## extends `Measure`
 
@@ -423,19 +429,19 @@ Displaying a measure in a prefixed unit: the prelude's `to(String, in:)`, for th
 ### `factor`
 
 ```kex
-factor : Float
+factor -> Float
 ```
 
 ### `kind`
 
 ```kex
-kind : Atom
+kind -> Atom
 ```
 
 ### `symbol`
 
 ```kex
-symbol : String
+symbol -> String
 ```
 
 ### `to`

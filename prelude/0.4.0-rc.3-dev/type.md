@@ -40,7 +40,7 @@ Reflection functions on runtime type values.
 #### `fields`
 
 ```kex
-fields : [Type.Field]
+fields -> [Type.Field]
 ```
 
 Returns a record type's fields, in declaration order: each one's name, declared type, and whether a value may leave it out. Anything that is not a record answers with an empty list.
@@ -67,7 +67,7 @@ Type.of(user).fields.filter { |f| f.optional? || f.default? }.map(&.name)
 #### `fieldNames`
 
 ```kex
-fieldNames : [String]
+fieldNames -> [String]
 ```
 
 Returns a record type's field names, in declaration order: `fields` when only the names matter. Anything that is not a record answers with an empty list.
@@ -90,7 +90,7 @@ Type.of(value).fieldNames.map { |name| "${name}: ..." }.join(", ")
 #### `constructors`
 
 ```kex
-constructors : [Type.Constructor]
+constructors -> [Type.Constructor]
 ```
 
 Returns a sum type's constructors, in declaration order: each one's name and the declared types of its arguments. Anything that is not a sum type answers with an empty list.
@@ -108,7 +108,7 @@ Type.of(42).constructors                         # => []
 #### `constructorNames`
 
 ```kex
-constructorNames : [String]
+constructorNames -> [String]
 ```
 
 Returns a sum type's constructor names, in declaration order: `constructors` when only the names matter. Anything that is not a sum type answers with an empty list.
@@ -130,7 +130,7 @@ IO.printLine("one of: ${Type.of(shape).constructorNames.join(", ")}")
 #### `constructorValues`
 
 ```kex
-constructorValues : [String]
+constructorValues -> [String]
 ```
 
 The text of each nullary constructor in a database cell or form value, in declaration order. `ReadOnly` is `read_only`.
@@ -226,7 +226,7 @@ The nullary constructor `text` names, including its snake-case value. Exact cons
 #### `record?`
 
 ```kex
-record? : Bool
+record? -> Bool
 ```
 
 Returns `true` when the type is a record: that is, when it has fields.
@@ -243,7 +243,7 @@ Type.of(42).record?                     # => false
 #### `adt?`
 
 ```kex
-adt? : Bool
+adt? -> Bool
 ```
 
 Returns `true` when the type is a sum type: that is, when it has constructors.
@@ -260,7 +260,7 @@ Type.of(42).adt?          # => false
 #### `to`
 
 ```kex
-to(_) -> String?
+to(String) -> String?
 ```
 
 Renders the type the way it is written in SOURCE, not the way it is stored.
@@ -287,7 +287,7 @@ die("cannot serialise a ${Type.of(value)}")
 #### `showValue`
 
 ```kex
-showValue : String
+showValue -> String
 ```
 
 The type as source, as `to(String)` gives it; also what interpolation shows.
@@ -469,7 +469,7 @@ Type.of(user).fields.map(&.name).zip(Type.fieldValues(user).or([]))
 ### `parsed`
 
 ```kex
-parsed : Any? -> Type -> String -> Result<Any, String>
+parsed(_: Any?, _expected: Type, _text: String) -> Result<Any, String>
 ```
 
 The result of a conversion that answers `None` for text it cannot read.

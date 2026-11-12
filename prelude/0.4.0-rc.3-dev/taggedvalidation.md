@@ -83,7 +83,7 @@ end
 ### `fatalBetween`
 
 ```kex
-fatalBetween : Integer -> Integer -> String -> Issue
+fatalBetween(start: Integer, finish: Integer, message: String) -> Issue
 ```
 
 A fatal issue spanning a range of the literal.
@@ -146,7 +146,7 @@ TaggedValidation.warnAt(7, "redundant escape")
 ### `warnBetween`
 
 ```kex
-warnBetween : Integer -> Integer -> String -> Issue
+warnBetween(start: Integer, finish: Integer, message: String) -> Issue
 ```
 
 A warning spanning a range of the literal.

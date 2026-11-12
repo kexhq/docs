@@ -70,7 +70,7 @@ Construct dimensions with `Dimensions.base` and compose them with arithmetic. If
 #### `dimensionless?`
 
 ```kex
-dimensionless? : Bool
+dimensionless? -> Bool
 ```
 
 Whether every base factor has cancelled.

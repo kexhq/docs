@@ -188,10 +188,10 @@ Stop now. The supplied value may be a success or a permanent failure.
 
 **Returns**: `Done(value)`
 
-### `run`
+### `run` (foul)
 
 ```kex
-run : Block<X> -> Schedule -> Integer -> Duration -> Float -> Duration -> Float -> Duration? -> (Duration -> Void) -> Block<Float> -> (Info<X> -> Void) -> X
+run(operation: Block<X>, schedule: Schedule = …, attempts: Integer = …, delay: Duration = …, backoff: Float = …, maximumDelay: Duration = …, jitter: Float = …, maximumTotalDelay: Duration? = …, sleeper: (Duration -> Void) = …, random: Block<Float> = …, onRetry: (Info<X> -> Void) = …) -> X
 ```
 
 Call the block until it succeeds, returns `done`, or runs out of attempts or sleep time.

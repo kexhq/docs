@@ -15,31 +15,57 @@ Extraction documents one file at a time, but a reader thinks in types. The metho
 
 ## module `Tey.Docgen.Relations`
 
-### `build`
+### `build` (foul)
 
 ```kex
 build(pages: [SourcePage]) -> ([TypeFacts], [TraitFacts])
 ```
 
-### `pageExtensions`
+### `withTraitSignatures` (foul)
+
+```kex
+withTraitSignatures(pages: [SourcePage]) -> [SourcePage]
+```
+
+A member that fulfils a trait function and declares no type of its own (`let identity = 0` under `make Integer, implement: Monoid`) is typed by the trait: the signature the trait declares, with `This` read as the implementing type. Done on the pages, before anything renders them, so every output states the same signature.
+
+### `typedByTraits` (foul)
+
+```kex
+typedByTraits(e: Entity, traits: [TraitEntry]) -> Entity
+```
+
+### `typedByTrait` (foul)
+
+```kex
+typedByTrait(f: FunctionEntry, m: MakeEntry, traits: [TraitEntry]) -> FunctionEntry
+```
+
+### `asImplementor` (foul)
+
+```kex
+asImplementor(signature: String, target: String) -> String
+```
+
+### `pageExtensions` (foul)
 
 ```kex
 pageExtensions(page: SourcePage, entities: [Entity]) -> [Extension]
 ```
 
-### `extensionOf`
+### `extensionOf` (foul)
 
 ```kex
 extensionOf(page: SourcePage, entity: Entity, entry: MakeEntry) -> Extension
 ```
 
-### `typeFacts`
+### `typeFacts` (foul)
 
 ```kex
 typeFacts(base: String, extensions: [Extension], pages: [SourcePage]) -> TypeFacts
 ```
 
-### `homePathOf`
+### `homePathOf` (foul)
 
 ```kex
 homePathOf(base: String, mine: [Extension], pages: [SourcePage]) -> String
@@ -47,37 +73,37 @@ homePathOf(base: String, mine: [Extension], pages: [SourcePage]) -> String
 
 Where a reader should land for a type: the page declaring it; else the page titled after it (string.kex for the builtin String); else the page whose make block adds the most methods — number.kex for Integer, not algebra.kex, which only makes it a Monoid.
 
-### `homeAnchorOf`
+### `homeAnchorOf` (foul)
 
 ```kex
 homeAnchorOf(base: String, home: String, mine: [Extension], pages: [SourcePage]) -> String
 ```
 
-### `declarationAnchors`
+### `declarationAnchors` (foul)
 
 ```kex
 declarationAnchors(entities: [Entity], base: String) -> [String]
 ```
 
-### `companionModule?`
+### `companionModule?` (foul)
 
 ```kex
 companionModule?(entities: [Entity], base: String) -> Bool
 ```
 
-### `declares?`
+### `declares?` (foul)
 
 ```kex
 declares?(entities: [Entity], base: String) -> Bool
 ```
 
-### `pageTraits`
+### `pageTraits` (foul)
 
 ```kex
 pageTraits(page: SourcePage, entities: [Entity], extensions: [Extension]) -> [TraitFacts]
 ```
 
-### `namesTrait?`
+### `namesTrait?` (foul)
 
 ```kex
 namesTrait?(written: String, name: String, qualifiedName: String) -> Bool
@@ -85,7 +111,7 @@ namesTrait?(written: String, name: String, qualifiedName: String) -> Bool
 
 `implement: Enumerable` and `implement: Kex.Enumerable` both name the trait declared as `Enumerable` inside `module Kex`.
 
-### `typeFactsFor`
+### `typeFactsFor` (foul)
 
 ```kex
 typeFactsFor(model: PackageModel, base: String) -> TypeFacts?
@@ -93,13 +119,13 @@ typeFactsFor(model: PackageModel, base: String) -> TypeFacts?
 
 The facts for the type a make target extends, if any make extends it.
 
-### `traitFactsFor`
+### `traitFactsFor` (foul)
 
 ```kex
 traitFactsFor(model: PackageModel, written: String) -> TraitFacts?
 ```
 
-### `traitEntryFor`
+### `traitEntryFor` (foul)
 
 ```kex
 traitEntryFor(model: PackageModel, facts: TraitFacts) -> TraitEntry?
@@ -107,13 +133,13 @@ traitEntryFor(model: PackageModel, facts: TraitFacts) -> TraitEntry?
 
 The declaration of a trait, for its method list.
 
-### `traitEntries`
+### `traitEntries` (foul)
 
 ```kex
 traitEntries(entities: [Entity]) -> [TraitEntry]
 ```
 
-### `traitMethods`
+### `traitMethods` (foul)
 
 ```kex
 traitMethods(model: PackageModel, entry: TraitEntry) -> ([FunctionEntry], [FunctionEntry])
@@ -121,13 +147,13 @@ traitMethods(model: PackageModel, entry: TraitEntry) -> ([FunctionEntry], [Funct
 
 A trait's methods as an implementor sees them. Required: declared with no body and given no default anywhere. Provided: a body in the trait, or a default from a `make <Trait>` block in any file — plus methods such a block adds that the trait never declared.
 
-### `traitDefaults`
+### `traitDefaults` (foul)
 
 ```kex
 traitDefaults(entities: [Entity], entry: TraitEntry) -> [FunctionEntry]
 ```
 
-### `traitTarget?`
+### `traitTarget?` (foul)
 
 ```kex
 traitTarget?(model: PackageModel, target: String) -> Bool
@@ -135,7 +161,7 @@ traitTarget?(model: PackageModel, target: String) -> Bool
 
 Whether a make target names a trait of this package.
 
-### `allFunctions`
+### `allFunctions` (foul)
 
 ```kex
 allFunctions(entities: [Entity]) -> [FunctionEntry]
@@ -143,7 +169,7 @@ allFunctions(entities: [Entity]) -> [FunctionEntry]
 
 Every function documented anywhere in these entities: top-level and module functions, trait methods, make members.
 
-### `required?`
+### `required?` (foul)
 
 ```kex
 required?(f: FunctionEntry) -> Bool

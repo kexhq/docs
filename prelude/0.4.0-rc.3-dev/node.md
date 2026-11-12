@@ -32,10 +32,10 @@ Both nodes need the same compiled code for anything that carries a function, lik
 
 Backed by Kex.Intrinsic.Node on the BEAM. The tree-walk interpreter is always a single, unnamed node.
 
-### `self`
+### `self` (foul)
 
 ```kex
-self : Atom
+self -> Atom
 ```
 
 This node's name, or `:nonode@nohost` when it is not distributed.
@@ -48,10 +48,10 @@ This node's name, or `:nonode@nohost` when it is not distributed.
 Node.self   # => :a@myhost
 ```
 
-### `alive?`
+### `alive?` (foul)
 
 ```kex
-alive? : Bool
+alive? -> Bool
 ```
 
 Whether this node is distributed — started with a name, so other nodes can connect to it.
@@ -64,10 +64,10 @@ Whether this node is distributed — started with a name, so other nodes can con
 Node.alive?   # => false, unless started with --sname or Node.start
 ```
 
-### `list`
+### `list` (foul)
 
 ```kex
-list : [Atom]
+list -> [Atom]
 ```
 
 The nodes this one is currently connected to, not including itself.
@@ -80,7 +80,7 @@ The nodes this one is currently connected to, not including itself.
 Node.list   # => [:b@myhost]
 ```
 
-### `start`
+### `start` (foul)
 
 ```kex
 start(name: Atom) -> Result<Atom, String>
@@ -100,17 +100,17 @@ Makes this node distributed under `name`, as `--sname`/`--name` would at startup
 Node.start(:app)   # => Ok(:app@myhost)
 ```
 
-### `stop`
+### `stop` (foul)
 
 ```kex
-stop : Bool
+stop -> Bool
 ```
 
 Stops distribution: the node drops its name and every connection.
 
 **Returns**: whether it was distributed and has now stopped
 
-### `connect`
+### `connect` (foul)
 
 ```kex
 connect(node: Atom) -> Bool
@@ -130,7 +130,7 @@ Connects to the node named `node`. Both nodes must share a cookie.
 Node.connect(:b@myhost)   # => true
 ```
 
-### `disconnect`
+### `disconnect` (foul)
 
 ```kex
 disconnect(node: Atom) -> Bool
@@ -144,7 +144,7 @@ Drops the connection to `node`.
 
 **Returns**: whether a connection was dropped
 
-### `setCookie`
+### `setCookie` (foul)
 
 ```kex
 setCookie(cookie: String) -> Void
@@ -156,10 +156,10 @@ Sets the cookie this node presents when connecting. Nodes connect only when thei
 
   - `cookie` — the shared secret
 
-### `send`
+### `send` (foul)
 
 ```kex
-send : Atom -> Atom -> X -> Void
+send(node: Atom, name: Atom, message: X) -> Void
 ```
 
 Sends `message` to the process registered as `name` on `node`, unchanged. Like `Pid.send`, it never blocks and never fails.
@@ -176,7 +176,7 @@ Sends `message` to the process registered as `name` on `node`, unchanged. Like `
 Node.send(:b@myhost, :logger, (:info, "started"))
 ```
 
-### `whereIs`
+### `whereIs` (foul)
 
 ```kex
 whereIs(node: Atom, name: Atom) -> Pid?
@@ -197,7 +197,7 @@ The `Pid` registered as `name` on `node`, or `None`.
 Node.whereIs(:b@myhost, :logger).map { |pid| pid.send(:flush) }
 ```
 
-### `spawn`
+### `spawn` (foul)
 
 ```kex
 spawn(node: Atom, block: Block<X>) -> Pid

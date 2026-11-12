@@ -17,31 +17,31 @@ Nothing here knows what the prose IS. A guide, a book, a package's own handbook 
 
 ## module `Tey.Docgen.Prose`
 
-### `proseCommand`
+### `proseCommand` (foul)
 
 ```kex
 proseCommand(parsed: OptionParser.ParsedOptions) -> Integer
 ```
 
-### `readPages`
+### `readPages` (foul)
 
 ```kex
 readPages(files: [String], source: String, accum: [ProsePage]) -> [ProsePage]
 ```
 
-### `pageOf`
+### `pageOf` (foul)
 
 ```kex
 pageOf(fileName: String, text: String) -> ProsePage
 ```
 
-### `stripSuffix`
+### `stripSuffix` (foul)
 
 ```kex
 stripSuffix(name: String, suffix: String) -> String
 ```
 
-### `writeProse`
+### `writeProse` (foul)
 
 ```kex
 writeProse(pages: [ProsePage], versionDir: String, out: String, model: PackageModel) -> ()
@@ -49,13 +49,13 @@ writeProse(pages: [ProsePage], versionDir: String, out: String, model: PackageMo
 
 Both renderings, from the same parsed page: HTML for readers, Markdown for crawlers, LLMs, and the "Markdown" link every page carries — the same `.md`-next-to-`.html` pairing reference builds write.
 
-### `writeProseLoop`
+### `writeProseLoop` (foul)
 
 ```kex
 writeProseLoop(pages: [ProsePage], index: Integer, versionDir: String, model: PackageModel) -> ()
 ```
 
-### `proseIndexHtml`
+### `proseIndexHtml` (foul)
 
 ```kex
 proseIndexHtml(pages: [ProsePage], model: PackageModel) -> String
@@ -63,13 +63,13 @@ proseIndexHtml(pages: [ProsePage], model: PackageModel) -> String
 
 The book's own spine: chapters in author order with their descriptions, not the module grid reference builds get. Deliberately separate from `versionIndexHtml` — `tey docs build` keeps documenting any package, and nothing about a book leaks into it.
 
-### `chapterItem`
+### `chapterItem` (foul)
 
 ```kex
 chapterItem(prose: ProsePage) -> String
 ```
 
-### `prevNextHtml`
+### `prevNextHtml` (foul)
 
 ```kex
 prevNextHtml(pages: [ProsePage], index: Integer) -> String
@@ -77,19 +77,19 @@ prevNextHtml(pages: [ProsePage], index: Integer) -> String
 
 Chapter footer: the siblings around this one, so the book reads forward as well as sideways. First and last chapters link one way only.
 
-### `prevLink`
+### `prevLink` (foul)
 
 ```kex
 prevLink(pages: [ProsePage], index: Integer, up: String) -> String
 ```
 
-### `nextLink`
+### `nextLink` (foul)
 
 ```kex
 nextLink(pages: [ProsePage], index: Integer, up: String) -> String
 ```
 
-### `chapterNav`
+### `chapterNav` (foul)
 
 ```kex
 chapterNav(prev: String, nextHtml: String) -> String

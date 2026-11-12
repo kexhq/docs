@@ -17,16 +17,16 @@ macOS's `sandbox-exec`. The only mechanism supported so far; on any other system
 
 
 
-### `available?`
+### `available?` (foul)
 
 ```kex
-available? : Bool
+available? -> Bool
 ```
 
-### `scratch`
+### `scratch` (foul)
 
 ```kex
-scratch : [String]
+scratch -> [String]
 ```
 
 The directories a Kex child always needs to write to: where the compiler puts its scratch files and its run cache.
@@ -39,7 +39,7 @@ profile(limits: Limits, home: String) -> String
 
 The sandbox profile for `limits`. Later rules win, so: allow by default, deny the dangerous classes, then allow back the exceptions.
 
-### `prefix`
+### `prefix` (foul)
 
 ```kex
 prefix(limits: Limits) -> Result<([String], String), String>

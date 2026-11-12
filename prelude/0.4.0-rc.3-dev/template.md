@@ -327,7 +327,7 @@ A scanned template: its frontmatter tags, and its body as a node list.
 #### `parameters`
 
 ```kex
-parameters : [TemplateParam]
+parameters -> [TemplateParam]
 ```
 
 The template's declared parameters, out of a `params: [...]` frontmatter key: `[]` when the template declares none, or when `params` holds a bare scalar rather than a list.

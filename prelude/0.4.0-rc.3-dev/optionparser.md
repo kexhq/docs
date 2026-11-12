@@ -274,7 +274,7 @@ match config.parse(args) do
 end
 ```
 
-#### `run`
+#### `run` (foul)
 
 ```kex
 run(args: [String]) -> Integer
@@ -303,10 +303,10 @@ main(args) do
 end
 ```
 
-#### `printHelp`
+#### `printHelp` (foul)
 
 ```kex
-printHelp : Integer
+printHelp -> Integer
 ```
 
 Prints the help text and returns 0, the exit code for a successful run.
@@ -326,7 +326,7 @@ args.empty? then cli.printHelp else cli.run(args)
 #### `help`
 
 ```kex
-help : String
+help -> String
 ```
 
 Returns the tool's help text: its name and description, its options, and its commands grouped by section.

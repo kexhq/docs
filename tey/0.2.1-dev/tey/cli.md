@@ -11,27 +11,27 @@ entities:
 
 ## module `Tey.Cli`
 
-### `parser`
+### `parser` (foul)
 
 ```kex
-parser : OptionConfig
+parser -> OptionConfig
 ```
 
 Options AND commands in one declaration: OptionParser matches the command words, strips them, and hands the handler what is left. Tey keeps no dispatcher of its own, so the help text and what actually runs cannot drift apart — they are read off the same list.
 
 `foul` because the handlers do things.
 
-### `cli`
+### `cli` (foul)
 
 ```kex
-cli : OptionConfig
+cli -> OptionConfig
 ```
 
 The parser Tey actually runs: the declared commands, plus one for every `command(...)` this package's manifest declares. Registering them here rather than in a fallback is what gets them into `tey help`, into the unknown-command message, and into argument stripping, for free.
 
 A package command can never shadow a built-in: the manifest reader refuses those names outright (Tey.Manifest.reservedCommands). They are listed under their own help heading regardless — "unknown command" should send a reader to package.kex or to Tey, and the two lists are written by different people.
 
-### `dispatch`
+### `dispatch` (foul)
 
 ```kex
 dispatch(args: [String]) -> Integer
@@ -63,24 +63,24 @@ withoutColorFlags(args: [String]) -> [String]
 
 The line without the color flags, which are answered before parsing — by setting NO_COLOR, the one switch `Console`, every child `kex`, and this parser's own error text all read. Taking them out here rather than leaving them to the parser is what makes the flag work wherever it is written: `tey docs` is a passthrough command whose own parser has never heard of it.
 
-### `dispatchArguments`
+### `dispatchArguments` (foul)
 
 ```kex
 dispatchArguments(args: [String]) -> Integer
 ```
 
-### `relayColors`
+### `relayColors` (foul)
 
 ```kex
-relayColors : Void
+relayColors -> Void
 ```
 
 `kex` colors only a terminal. Every `kex` Tey starts — `tey test`, `tey run`, a package command — now writes to Tey's own stdout (`Process.stream` hands its child the descriptors), so it sees the terminal Tey sees and colors by itself; until it did, it wrote through a pipe and had to be told. Telling it still agrees with what it sees. NO_COLOR, when set, is left to win in every child; `Kex.AST` passes `--no-colors`, which outranks this, so nothing Tey parses back picks up escape codes.
 
-### `announceToolchain`
+### `announceToolchain` (foul)
 
 ```kex
-announceToolchain : Void
+announceToolchain -> Void
 ```
 
 Tells the rest of the process which compiler Tey selected.

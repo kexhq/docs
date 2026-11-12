@@ -110,7 +110,7 @@ Implements [`Showable`](kex.md#trait-showable).
 #### `showValue` (from Showable)
 
 ```kex
-showValue : String
+showValue -> String
 ```
 
 Renders the number in rectangular form, such as +3+4i+.
@@ -126,7 +126,7 @@ Complex.from(3, -4).showValue   # => "3-4i"
 #### `rectangular`
 
 ```kex
-rectangular : (Number, Number)
+rectangular -> (Number, Number)
 ```
 
 The rectangular view: the real and imaginary parts.
@@ -142,7 +142,7 @@ Complex.from(3, 4).rectangular   # => (3, 4)
 #### `polar`
 
 ```kex
-polar : (Float, Float)
+polar -> (Float, Float)
 ```
 
 The polar view: the distance from the origin and the angle in radians.
@@ -158,7 +158,7 @@ Complex.from(3, 4).polar   # => (5.0, 0.9272952180016122)
 #### `abs`
 
 ```kex
-abs : Float
+abs -> Float
 ```
 
 The magnitude: the distance from the origin, the polar radius.
@@ -174,7 +174,7 @@ Complex.from(3, 4).abs   # => 5.0
 #### `absSquared`
 
 ```kex
-absSquared : Number
+absSquared -> Number
 ```
 
 The square of the magnitude, which needs no square root and so stays an `Integer` for integer parts.
@@ -190,7 +190,7 @@ Complex.from(3, 4).absSquared   # => 25
 #### `arg`
 
 ```kex
-arg : Float
+arg -> Float
 ```
 
 The argument: the angle from the positive real axis, the polar angle, in the range `Math.atan2` answers.
@@ -262,7 +262,7 @@ Divides by `other` using the complex conjugate formula. The divisor must be non-
 #### `conjugate`
 
 ```kex
-conjugate : Complex
+conjugate -> Complex
 ```
 
 Returns the complex conjugate, negating the imaginary part.
@@ -276,7 +276,7 @@ Complex.I.conjugate.im   # => -1
 #### `sqrt`
 
 ```kex
-sqrt : Complex
+sqrt -> Complex
 ```
 
 Returns the principal square root. The result's argument lies in the right half-plane.
@@ -290,7 +290,7 @@ Complex.from(-1, 0).sqrt.im   # approximately 1.0
 #### `exp`
 
 ```kex
-exp : Complex
+exp -> Complex
 ```
 
 Returns e raised to this complex number.
@@ -304,7 +304,7 @@ Complex.ZERO.exp.re   # => 1.0
 #### `log`
 
 ```kex
-log : Complex
+log -> Complex
 ```
 
 Returns the principal natural logarithm. Zero has no logarithm.
@@ -318,7 +318,7 @@ Complex.ONE.log.re   # => 0.0
 #### `sin`
 
 ```kex
-sin : Complex
+sin -> Complex
 ```
 
 Returns the complex sine.
@@ -332,7 +332,7 @@ Complex.ZERO.sin.re   # => 0.0
 #### `cos`
 
 ```kex
-cos : Complex
+cos -> Complex
 ```
 
 Returns the complex cosine.
@@ -346,7 +346,7 @@ Complex.ZERO.cos.re   # => 1.0
 #### `tan`
 
 ```kex
-tan : Complex
+tan -> Complex
 ```
 
 Returns the complex tangent.

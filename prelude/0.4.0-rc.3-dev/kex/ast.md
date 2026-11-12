@@ -976,7 +976,7 @@ IO.printError("avoid the broad ${written} annotation")
 ### `to`
 
 ```kex
-to(_) -> String?
+to(String) -> String?
 ```
 
 

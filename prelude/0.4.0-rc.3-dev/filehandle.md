@@ -64,7 +64,7 @@ Implemented by [`FileHandle<CanRead, W>`](#make-filehandle-canread).
 #### `get`
 
 ```kex
-get : Result<Binary?, ReadError>
+get -> Result<Binary?, ReadError>
 ```
 
 Reads the next chunk of bytes: whatever the source has ready, up to its buffer size. Standard input answers one line at a time, newline included.
@@ -74,7 +74,7 @@ Reads the next chunk of bytes: whatever the source has ready, up to its buffer s
 #### `readLine`
 
 ```kex
-readLine : Result<String?, ReadError>
+readLine -> Result<String?, ReadError>
 ```
 
 Reads the next line, without its newline.
@@ -84,7 +84,7 @@ Reads the next line, without its newline.
 #### `getLine`
 
 ```kex
-getLine : String?
+getLine -> String?
 ```
 
 Reads the next line, without its newline: `readLine` for when the end of the input and a failed read mean the same thing.
@@ -94,7 +94,7 @@ Reads the next line, without its newline: `readLine` for when the end of the inp
 #### `read`
 
 ```kex
-read : Result<String, ReadError>
+read -> Result<String, ReadError>
 ```
 
 Reads everything remaining, as one `String`.
@@ -106,7 +106,7 @@ Draining an exhausted source answers `Ok("")`.
 #### `readBytes`
 
 ```kex
-readBytes : Result<Binary, ReadError>
+readBytes -> Result<Binary, ReadError>
 ```
 
 Reads everything remaining as raw bytes, without decoding it as text.
@@ -118,7 +118,7 @@ The byte counterpart of `read`: it returns the remaining bytes without validatin
 #### `eof?`
 
 ```kex
-eof? : Bool
+eof? -> Bool
 ```
 
 Returns `true` when the source has reached its end.
@@ -241,7 +241,7 @@ Implemented by [`FileHandle<R, W>`](#make-filehandle), [`Net.Socket.TCP.TCPConne
 #### `close`
 
 ```kex
-close : Void
+close -> Void
 ```
 
 Releases the underlying resource. Idempotent: closing twice is fine.
@@ -276,7 +276,7 @@ Implements [`Readable`](#trait-readable), [`Writable`](#trait-writable), [`Close
 
 ### Functions
 
-#### `seek`
+#### `seek` (foul)
 
 ```kex
 seek(offset: Integer) -> Result<Void, ReadError>
@@ -300,10 +300,10 @@ let record = handle.readBytes.try
 handle.seek(0)
 ```
 
-#### `reset`
+#### `reset` (foul)
 
 ```kex
-reset : Result<Void, ReadError>
+reset -> Result<Void, ReadError>
 ```
 
 Moves the handle's cursor back to the start of the file — the same as `seek(0)`, for the common case of re-reading a handle from the top.
@@ -320,10 +320,10 @@ handle.reset
 let secondPass = handle.read.or("")
 ```
 
-#### `close` (from Closeable)
+#### `close` (foul) (from Closeable)
 
 ```kex
-close : Void
+close -> Void
 ```
 
 Closes the handle, flushing anything still buffered.
@@ -344,10 +344,10 @@ end
 
 ### On `FileHandle<CanRead, W>`
 
-#### `get` (from Readable)
+#### `get` (foul) (from Readable)
 
 ```kex
-get : Result<Binary?, ReadError>
+get -> Result<Binary?, ReadError>
 ```
 
 Reads the next chunk of bytes from the handle, up to 64 KiB.
@@ -370,10 +370,10 @@ foul copy(source: FileHandle<CanRead, W>, target: FileHandle<R, CanWrite>) -> Vo
 end
 ```
 
-#### `readLine` (from Readable)
+#### `readLine` (foul) (from Readable)
 
 ```kex
-readLine : Result<String?, ReadError>
+readLine -> Result<String?, ReadError>
 ```
 
 Reads the next line from the handle, without its newline.
@@ -397,10 +397,10 @@ foul echo(handle: FileHandle<CanRead, W>) -> Void do
 end
 ```
 
-#### `getLine` (from Readable)
+#### `getLine` (foul) (from Readable)
 
 ```kex
-getLine : String?
+getLine -> String?
 ```
 
 Reads the next line from the handle, without its newline.
@@ -413,10 +413,10 @@ Reads the next line from the handle, without its newline.
 let header = handle.getLine.or("")
 ```
 
-#### `getChar`
+#### `getChar` (foul)
 
 ```kex
-getChar : String?
+getChar -> String?
 ```
 
 Reads a single character from the handle, as a one-character `String`: one complete Unicode scalar, not one byte.
@@ -429,10 +429,10 @@ Reads a single character from the handle, as a one-character `String`: one compl
 let firstChar = handle.getChar.or("")
 ```
 
-#### `read` (from Readable)
+#### `read` (foul) (from Readable)
 
 ```kex
-read : Result<String, ReadError>
+read -> Result<String, ReadError>
 ```
 
 Reads everything remaining in the file and returns it as one `String`.
@@ -454,10 +454,10 @@ handle.getLine
 let body = handle.read.or("")
 ```
 
-#### `readBytes` (from Readable)
+#### `readBytes` (foul) (from Readable)
 
 ```kex
-readBytes : Result<Binary, ReadError>
+readBytes -> Result<Binary, ReadError>
 ```
 
 Reads all remaining bytes from the handle without decoding them.
@@ -474,10 +474,10 @@ _Reading a file with an unknown encoding_
 let payload = handle.readBytes.try
 ```
 
-#### `eof?` (from Readable)
+#### `eof?` (foul) (from Readable)
 
 ```kex
-eof? : Bool
+eof? -> Bool
 ```
 
 Returns `true` when the handle has reached the end of the file.
@@ -490,10 +490,10 @@ Returns `true` when the handle has reached the end of the file.
 handle.eof?   # => false, before anything has been read
 ```
 
-#### `feed`
+#### `feed` (foul)
 
 ```kex
-feed : Result<Feed<String>, ReadError>
+feed -> Result<Feed<String>, ReadError>
 ```
 
 Returns the handle's remaining lines as a lazy `Feed`.
@@ -518,7 +518,7 @@ handle.feed
 
 ### On `FileHandle<R, CanWrite>`
 
-#### `put` (from Writable)
+#### `put` (foul) (from Writable)
 
 ```kex
 put(content: Binary) -> Result<Void, WriteError>
@@ -540,7 +540,7 @@ _Copying an opaque payload_
 destination.put(source.readBytes.try)
 ```
 
-#### `write` (from Writable)
+#### `write` (foul) (from Writable)
 
 ```kex
 write(content: Showable) -> Result<Void, WriteError>
@@ -560,7 +560,7 @@ Writes `content` with no trailing newline.
 handle.write("total: ${total}").try
 ```
 
-#### `writeLine` (from Writable)
+#### `writeLine` (foul) (from Writable)
 
 ```kex
 writeLine(content: Showable) -> Result<Void, WriteError>
@@ -582,7 +582,7 @@ _Stopping at the first failed write_
 rows.each { |row| handle.writeLine(row).try }
 ```
 
-#### `printLine` (from Writable)
+#### `printLine` (foul) (from Writable)
 
 ```kex
 printLine(content: Showable) -> Void
@@ -602,7 +602,7 @@ _Writing a report line by line_
 rows.each { |row| handle.printLine(row) }
 ```
 
-#### `print` (from Writable)
+#### `print` (foul) (from Writable)
 
 ```kex
 print(content: Showable) -> Void

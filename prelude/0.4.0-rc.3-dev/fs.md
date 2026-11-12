@@ -159,17 +159,17 @@ Reading and writing files.
 
 A capability: every member reaches the real filesystem, so a test can replace the whole thing for a lexical region with `with FS.File = ...` to test file operations without touching the filesystem. `FS.Path` operations only manipulate path strings.
 
-### `open`
+### `open` (foul)
 
 ```kex
 open(path: FilePath, mode: Read) -> Result<FileHandle<CanRead, CannotWrite>, FileError>
 open(path: FilePath, mode: Write) -> Result<FileHandle<CannotRead, CanWrite>, FileError>
 open(path: FilePath, mode: Append) -> Result<FileHandle<CannotRead, CanWrite>, FileError>
 open(path: FilePath, mode: ReadWrite) -> Result<FileHandle<CanRead, CanWrite>, FileError>
-open(path: FilePath, mode: Read) -> (FileHandle<CanRead, CannotWrite> -> A) -> Result<A, FileError>
-open(path: FilePath, mode: Write) -> (FileHandle<CannotRead, CanWrite> -> A) -> Result<A, FileError>
-open(path: FilePath, mode: Append) -> (FileHandle<CannotRead, CanWrite> -> A) -> Result<A, FileError>
-open(path: FilePath, mode: ReadWrite) -> (FileHandle<CanRead, CanWrite> -> A) -> Result<A, FileError>
+open(path: FilePath, mode: Read, block: (FileHandle<CanRead, CannotWrite> -> A)) -> Result<A, FileError>
+open(path: FilePath, mode: Write, block: (FileHandle<CannotRead, CanWrite> -> A)) -> Result<A, FileError>
+open(path: FilePath, mode: Append, block: (FileHandle<CannotRead, CanWrite> -> A)) -> Result<A, FileError>
+open(path: FilePath, mode: ReadWrite, block: (FileHandle<CanRead, CanWrite> -> A)) -> Result<A, FileError>
 ```
 
 Opens `path` and returns a `FileHandle` for it.
@@ -219,7 +219,7 @@ _A failure names the path_
 FS.File.open("missing/x.txt", Read)   # => Error(OpenFailed("missing/x.txt"))
 ```
 
-### `read`
+### `read` (foul)
 
 ```kex
 read(path: FilePath) -> Result<String, FileError>
@@ -254,7 +254,7 @@ _Counting words in a file_
 FS.File.read("essay.txt").or("").split(" ").reject(~empty?).count
 ```
 
-### `readBytes`
+### `readBytes` (foul)
 
 ```kex
 readBytes(path: FilePath) -> Result<Binary, FileError>
@@ -282,7 +282,7 @@ _Hashing a file_
 FS.File.readBytes(path).map { |data| Digest.sha256(data).hex }
 ```
 
-### `writeBytes`
+### `writeBytes` (foul)
 
 ```kex
 writeBytes(path: FilePath, content: Binary) -> Result<Void, FileError>
@@ -311,7 +311,7 @@ _Copying a file without decoding it_
 FS.File.readBytes(source).flatMap { |data| FS.File.writeBytes(target, data) }
 ```
 
-### `write`
+### `write` (foul)
 
 ```kex
 write(path: FilePath, content: String) -> Result<Void, FileError>
@@ -348,7 +348,7 @@ _Writing a list of lines_
 FS.File.write("names.txt", names.join("\n") + "\n")
 ```
 
-### `append`
+### `append` (foul)
 
 ```kex
 append(path: FilePath, content: String) -> Result<Void, FileError>
@@ -379,7 +379,7 @@ foul log(message: String) -> Void do
 end
 ```
 
-### `exists?`
+### `exists?` (foul)
 
 ```kex
 exists?(path: FilePath) -> Bool
@@ -410,7 +410,7 @@ else
 end
 ```
 
-### `file?`
+### `file?` (foul)
 
 ```kex
 file?(path: FilePath) -> Bool
@@ -431,7 +431,7 @@ FS.File.file?("README.md")   # => true
 FS.File.file?("src")         # => false
 ```
 
-### `directory?`
+### `directory?` (foul)
 
 ```kex
 directory?(path: FilePath) -> Bool
@@ -458,7 +458,7 @@ _Separating files from directories in a listing_
 entries.partition { |e| FS.File.directory?(e) }
 ```
 
-### `delete`
+### `delete` (foul)
 
 ```kex
 delete(path: FilePath) -> Result<Void, FileError>
@@ -488,7 +488,7 @@ process(tmp)
 FS.File.delete(tmp)
 ```
 
-### `copy`
+### `copy` (foul)
 
 ```kex
 copy(src: FilePath, dst: FilePath) -> Result<Void, FileError>
@@ -516,7 +516,7 @@ FS.File.copy(path, "${path}.bak")
 FS.File.write(path, updated)
 ```
 
-### `rename`
+### `rename` (foul)
 
 ```kex
 rename(src: FilePath, dst: FilePath) -> Result<Void, FileError>
@@ -544,7 +544,7 @@ FS.File.write("${path}.tmp", content)
 FS.File.rename("${path}.tmp", path)
 ```
 
-### `changePermission`
+### `changePermission` (foul)
 
 ```kex
 changePermission(path: FilePath, permissions: [Permission]) -> Result<Void, FileError>
@@ -579,7 +579,7 @@ FS.File.changePermission(script, [FS.Readable, FS.Writable, FS.Executable])
 Process.run(script, [])
 ```
 
-### `changeMode`
+### `changeMode` (foul)
 
 ```kex
 changeMode(path: FilePath, mode: Integer) -> Result<Void, FileError>
@@ -602,7 +602,7 @@ Sets the POSIX permission bits of the file at `path` to `mode`: what `chmod` doe
 FS.File.changeMode("secrets.txt", 0o600)   # => Ok(())
 ```
 
-### `readLines`
+### `readLines` (foul)
 
 ```kex
 readLines(path: FilePath) -> Result<[String], FileError>
@@ -636,7 +636,7 @@ FS.File.readLines("hosts")
   .reject { |line| line.empty? || line.startsWith?("#") }
 ```
 
-### `feed`
+### `feed` (foul)
 
 ```kex
 feed(path: FilePath) -> Result<Feed<String>, FileError>
@@ -680,7 +680,7 @@ FS.File.feed("app.log")
   .or([])
 ```
 
-### `size`
+### `size` (foul)
 
 ```kex
 size(path: FilePath) -> Result<Integer, FileError>
@@ -709,7 +709,7 @@ _Skipping files that are too large_
 paths.filter { |p| FS.File.size(p).or(0) < 1048576 }
 ```
 
-### `absolute`
+### `absolute` (foul)
 
 ```kex
 absolute(path: FilePath) -> Result<String, FileError>
@@ -737,7 +737,7 @@ _Reporting a file unambiguously_
 IO.printError("failed: ${FS.File.absolute(path).or(path)}")
 ```
 
-### `canonical`
+### `canonical` (foul)
 
 ```kex
 canonical(path: FilePath) -> Result<String, FileError>
@@ -759,7 +759,7 @@ Unlike `absolute` this reads the filesystem, so a path that does not exist (or a
 FS.File.canonical("/tmp/../etc")   # => Ok("/private/etc") on macOS
 ```
 
-### `symlink?`
+### `symlink?` (foul)
 
 ```kex
 symlink?(path: FilePath) -> Bool
@@ -779,7 +779,7 @@ Whether `path` is itself a symlink, without following it. A dangling link is sti
 FS.File.symlink?("current")   # => true
 ```
 
-### `info`
+### `info` (foul)
 
 ```kex
 info(path: FilePath) -> Result<FileInfo, FileError>
@@ -843,7 +843,7 @@ FS.Path.separator   # => "/"
 
 ```kex
 join(a: FilePath, b: FilePath) -> String
-join(a: FilePath, b: FilePath) -> FilePath -> String
+join(a: FilePath, b: FilePath, c: FilePath) -> String
 ```
 
 Joins two path parts with a single separator and normalises the result.
@@ -1190,7 +1190,7 @@ Creating, listing and removing directories.
 
 Like `FS.File`, everything here reaches the real filesystem and so is `foul`. Listings answer with a `Result`, so a directory that cannot be read is a value you handle rather than an exception.
 
-### `exists?`
+### `exists?` (foul)
 
 ```kex
 exists?(path: FilePath) -> Bool
@@ -1210,7 +1210,7 @@ Returns `true` when something exists at `path`.
 FS.Directory.exists?("src")   # => true
 ```
 
-### `directory?`
+### `directory?` (foul)
 
 ```kex
 directory?(path: FilePath) -> Bool
@@ -1231,7 +1231,7 @@ FS.Directory.directory?("src")        # => true
 FS.Directory.directory?("README.md")  # => false
 ```
 
-### `file?`
+### `file?` (foul)
 
 ```kex
 file?(path: FilePath) -> Bool
@@ -1251,7 +1251,7 @@ Returns `true` when `path` exists and is a regular file.
 FS.Directory.file?("README.md")   # => true
 ```
 
-### `create`
+### `create` (foul)
 
 ```kex
 create(path: FilePath) -> Result<Void, FileError>
@@ -1277,7 +1277,7 @@ _Making sure an output directory is there_
 FS.Directory.create(outDir).try
 ```
 
-### `delete`
+### `delete` (foul)
 
 ```kex
 delete(path: FilePath) -> Result<Void, FileError>
@@ -1299,7 +1299,7 @@ Use `deleteAll` to remove a directory together with its contents.
 FS.Directory.delete("empty")   # => Ok(())
 ```
 
-### `deleteAll`
+### `deleteAll` (foul)
 
 ```kex
 deleteAll(path: FilePath) -> Result<Void, FileError>
@@ -1328,7 +1328,7 @@ FS.Directory.deleteAll(tmpDir)
 FS.Directory.create(tmpDir)
 ```
 
-### `list`
+### `list` (foul)
 
 ```kex
 list(path: FilePath) -> Result<[String], FileError>
@@ -1356,7 +1356,7 @@ _Turning names into usable paths_
 FS.Directory.list(dir).or([]).map { |name| FS.Path.join(dir, name) }
 ```
 
-### `files`
+### `files` (foul)
 
 ```kex
 files(path: FilePath) -> Result<[String], FileError>
@@ -1384,7 +1384,7 @@ FS.Directory.files(dir)
   .filter { |f| FS.Path.extension(f) == ".kex" }
 ```
 
-### `directories`
+### `directories` (foul)
 
 ```kex
 directories(path: FilePath) -> Result<[String], FileError>
@@ -1412,10 +1412,10 @@ FS.Directory.directories(root).or([]).each do |name|
 end
 ```
 
-### `current`
+### `current` (foul)
 
 ```kex
-current : String
+current -> String
 ```
 
 Returns the process's current working directory, as an absolute path.
@@ -1434,10 +1434,10 @@ _Resolving a relative path by hand_
 FS.Path.join(FS.Directory.current, "build")
 ```
 
-### `home`
+### `home` (foul)
 
 ```kex
-home : String?
+home -> String?
 ```
 
 Returns the current user's home directory, or `None` when it cannot be determined.
@@ -1456,10 +1456,10 @@ _A per-user config path_
 FS.Path.join(FS.Directory.home.or("."), ".apprc")
 ```
 
-### `temporary`
+### `temporary` (foul)
 
 ```kex
-temporary : String
+temporary -> String
 ```
 
 Returns the directory this system puts temporary files in.
@@ -1484,7 +1484,7 @@ FS.File.writeBytes(scratch, payload)
 FS.File.delete(scratch)
 ```
 
-### `createTemporary`
+### `createTemporary` (foul)
 
 ```kex
 createTemporary(prefix: String) -> Result<FilePath, FileError>

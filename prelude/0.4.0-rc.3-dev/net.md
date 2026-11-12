@@ -37,7 +37,7 @@ Use `Port.from` at input boundaries. Port zero requests an ephemeral port where 
 #### `string`
 
 ```kex
-string : String
+string -> String
 ```
 
 Renders the decimal port without a host or scheme.

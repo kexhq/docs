@@ -41,7 +41,7 @@ Implemented by [`Bool`](#make-bool), [`Integer`](#make-integer), [`Float`](#make
 #### `truthy?`
 
 ```kex
-truthy? : Bool
+truthy? -> Bool
 ```
 
 Returns `true` when the value counts as true in a condition.
@@ -64,7 +64,7 @@ Implements [`Blankable`](blankable.md#trait-blankable), [`Truthyable`](#trait-tr
 ### `truthy?` (from Truthyable)
 
 ```kex
-truthy? : Bool
+truthy? -> Bool
 ```
 
 Returns the boolean itself.
@@ -81,7 +81,7 @@ false.truthy?   # => false
 ### `not`
 
 ```kex
-not : Bool
+not -> Bool
 ```
 
 Returns the negation of this boolean.
@@ -116,7 +116,7 @@ Implements [`Truthyable`](#trait-truthyable).
 ### `truthy?` (from Truthyable)
 
 ```kex
-truthy? : Bool
+truthy? -> Bool
 ```
 
 Always `true`, including for zero.
@@ -141,7 +141,7 @@ Implements [`Truthyable`](#trait-truthyable).
 ### `truthy?` (from Truthyable)
 
 ```kex
-truthy? : Bool
+truthy? -> Bool
 ```
 
 Always `true`, including for zero.
@@ -163,7 +163,7 @@ Implements [`Truthyable`](#trait-truthyable).
 ### `truthy?` (from Truthyable)
 
 ```kex
-truthy? : Bool
+truthy? -> Bool
 ```
 
 Always `true`, including for the empty string.
@@ -188,7 +188,7 @@ Implements [`Truthyable`](#trait-truthyable).
 ### `truthy?` (from Truthyable)
 
 ```kex
-truthy? : Bool
+truthy? -> Bool
 ```
 
 Returns `true` for a `Just` and `false` for `None`.
@@ -213,7 +213,7 @@ Implements [`Truthyable`](#trait-truthyable).
 ### `truthy?` (from Truthyable)
 
 ```kex
-truthy? : Bool
+truthy? -> Bool
 ```
 
 Always `true`, including for the empty list.
@@ -238,7 +238,7 @@ Implements [`Truthyable`](#trait-truthyable).
 ### `truthy?` (from Truthyable)
 
 ```kex
-truthy? : Bool
+truthy? -> Bool
 ```
 
 Always `true`, including for the empty map.

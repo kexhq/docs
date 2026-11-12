@@ -116,7 +116,7 @@ server.sendFrom(:status)   # the server receives (senderPid, :status)
 #### `link`
 
 ```kex
-link : Void
+link -> Void
 ```
 
 Links the calling process to this one, so that either one exiting abnormally takes the other down.
@@ -132,7 +132,7 @@ worker.link
 #### `unlink`
 
 ```kex
-unlink : Void
+unlink -> Void
 ```
 
 Removes the link between the calling process and this one.
@@ -146,7 +146,7 @@ worker.unlink
 #### `monitor`
 
 ```kex
-monitor : Reference
+monitor -> Reference
 ```
 
 Starts monitoring this process, and returns the reference that identifies the monitor.
@@ -165,7 +165,7 @@ ref.demonitor
 #### `alive?`
 
 ```kex
-alive? : Bool
+alive? -> Bool
 ```
 
 Returns `true` when the process is still running.
@@ -191,7 +191,7 @@ Created by `Task.start`.
 #### `await`
 
 ```kex
-await : Result<X, Any>
+await -> Result<X, Any>
 ```
 
 Waits for the task's result, for as long as it takes.
@@ -234,7 +234,7 @@ A monitor reference, returned by `monitor` and passed back to `demonitor`.
 #### `demonitor`
 
 ```kex
-demonitor : Void
+demonitor -> Void
 ```
 
 Stops the monitor this reference identifies.
@@ -281,7 +281,7 @@ Sends the sender-bearing pair `{Process.self, msg}`, with the message type check
 #### `link`
 
 ```kex
-link : Void
+link -> Void
 ```
 
 Links the calling process to this one. See `Pid.link`.
@@ -289,7 +289,7 @@ Links the calling process to this one. See `Pid.link`.
 #### `unlink`
 
 ```kex
-unlink : Void
+unlink -> Void
 ```
 
 Removes the link between the calling process and this one.
@@ -297,7 +297,7 @@ Removes the link between the calling process and this one.
 #### `monitor`
 
 ```kex
-monitor : Reference
+monitor -> Reference
 ```
 
 Starts monitoring this process. See `Pid.monitor`.
@@ -307,7 +307,7 @@ Starts monitoring this process. See `Pid.monitor`.
 #### `alive?`
 
 ```kex
-alive? : Bool
+alive? -> Bool
 ```
 
 Returns `true` when the process is still running.
@@ -354,7 +354,7 @@ The identity of a pending caller, for a slot that answers later rather than imme
 
 ### Functions
 
-#### `reply`
+#### `reply` (foul)
 
 ```kex
 reply(value: X) -> Void
@@ -381,7 +381,7 @@ end
 #### `pid`
 
 ```kex
-pid : Pid
+pid -> Pid
 ```
 
 Returns the waiting caller's `Pid`.
@@ -440,7 +440,7 @@ api.within(30000).rebuildIndex()
 #### `link`
 
 ```kex
-link : Void
+link -> Void
 ```
 
 Links the calling process to the server. See `Pid.link`.
@@ -454,7 +454,7 @@ api.link
 #### `unlink`
 
 ```kex
-unlink : Void
+unlink -> Void
 ```
 
 Removes the link between the calling process and the server.
@@ -462,7 +462,7 @@ Removes the link between the calling process and the server.
 #### `monitor`
 
 ```kex
-monitor : Reference
+monitor -> Reference
 ```
 
 Starts monitoring the server. See `Pid.monitor`.
@@ -472,7 +472,7 @@ Starts monitoring the server. See `Pid.monitor`.
 #### `alive?`
 
 ```kex
-alive? : Bool
+alive? -> Bool
 ```
 
 Returns `true` when the server is still running.
@@ -489,7 +489,7 @@ api.alive?   # => true
 
 Spawning servers, running external commands, and the ambient process operations.
 
-### `spawn`
+### `spawn` (foul)
 
 ```kex
 spawn(state: X) -> Server<X>
@@ -515,11 +515,11 @@ api.allowed?()   # => Ok(false)
 api.stop()
 ```
 
-### `run`
+### `run` (foul)
 
 ```kex
 run(command: String, args: [String]) -> Result<ProcessResult, String>
-run(command: String, args: [String]) -> Integer -> Result<ProcessResult, String>
+run(command: String, args: [String], timeoutMs: Integer) -> Result<ProcessResult, String>
 ```
 
 Runs an executable with an argument vector and captures its output.
@@ -564,7 +564,7 @@ Process.run("git", ["rev-parse", "HEAD"])
   .or("unknown")
 ```
 
-### `stream`
+### `stream` (foul)
 
 ```kex
 stream(command: String, args: [String]) -> Result<Integer, String>
@@ -595,7 +595,7 @@ match Process.stream("make", ["-j8"]) do
 end
 ```
 
-### `exec`
+### `exec` (foul)
 
 ```kex
 exec(command: String, args: [String]) -> Integer
@@ -626,10 +626,10 @@ _Testing for a tool's presence_
 let haveGit = Process.exec("git", ["--version"]) == 0
 ```
 
-### `self`
+### `self` (foul)
 
 ```kex
-self : Pid
+self -> Pid
 ```
 
 Returns the calling process's own `Pid`.
@@ -644,7 +644,7 @@ _Telling another process where to answer_
 worker.send((Process.self, :ping))
 ```
 
-### `exit`
+### `exit` (foul)
 
 ```kex
 exit(pid: Pid, reason: X) -> Void
@@ -665,7 +665,7 @@ Sends an exit signal carrying `reason` to `pid`.
 Process.exit(worker, :shutdown)
 ```
 
-### `register`
+### `register` (foul)
 
 ```kex
 register(pid: Pid, name: Atom) -> Void
@@ -685,7 +685,7 @@ Registers `pid` under the atom `name`, so it can be found by name rather than by
 Process.register(Process.self, :main)
 ```
 
-### `whereIs`
+### `whereIs` (foul)
 
 ```kex
 whereIs(name: Atom) -> Pid?
@@ -735,7 +735,7 @@ let current = site.get.or(emptySite)
 
 ### Functions
 
-#### `put`
+#### `put` (foul)
 
 ```kex
 put(value: X) -> Void
@@ -749,10 +749,10 @@ Expensive: see `Process.Shared`.
 
   - `value` — the value to store
 
-#### `get`
+#### `get` (foul)
 
 ```kex
-get : X?
+get -> X?
 ```
 
 The stored value, or `None` when nothing has been stored yet.
@@ -761,10 +761,10 @@ Cheap, whatever the value's size.
 
 **Returns**: the stored value
 
-#### `delete`
+#### `delete` (foul)
 
 ```kex
-delete : Bool
+delete -> Bool
 ```
 
 Empties the slot.
@@ -805,7 +805,7 @@ Returned inside `Ok` by `Process.run`, whatever the exit status.
 
 Running work in another process and collecting the answer.
 
-### `sleep`
+### `sleep` (foul)
 
 ```kex
 sleep(duration: Duration) -> Void
@@ -813,7 +813,7 @@ sleep(duration: Duration) -> Void
 
 Suspends for an elapsed duration. Negative durations are treated as zero.
 
-### `start`
+### `start` (foul)
 
 ```kex
 start(f: Block<X>) -> Task<X>
@@ -844,7 +844,7 @@ let b = Task.start do slowThing("b") end
 (a.await, b.await)
 ```
 
-### `awaitAll`
+### `awaitAll` (foul)
 
 ```kex
 awaitAll(tasks: [Task<X>]) -> [Result<X, Any>]
@@ -877,7 +877,7 @@ let results = Task.awaitAll(paths.map { |p| Task.start do process(p) end })
 
 Supervision trees: processes that restart the processes under them when they crash.
 
-### `start`
+### `start` (foul)
 
 ```kex
 start(restart: Atom, children: Block<[(Atom, Block<Pid>)]>) -> Result<Pid, Any>

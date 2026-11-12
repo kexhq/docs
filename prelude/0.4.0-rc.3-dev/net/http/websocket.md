@@ -69,7 +69,7 @@ An opaque RFC 6455 connection, client- or server-side. It does not reconnect aut
 
 ### Functions
 
-#### `send`
+#### `send` (foul)
 
 ```kex
 send(message: Message) -> Result<Void, NetError>
@@ -87,7 +87,7 @@ _Subscribing after connecting_
 connection.send(Text(JSON.stringify({ action: "subscribe", topic: topic }))).try
 ```
 
-#### `receiveMessage`
+#### `receiveMessage` (foul)
 
 ```kex
 receiveMessage(timeout: Duration?) -> Result<Message, NetError>
@@ -113,10 +113,10 @@ loop do
 end
 ```
 
-#### `session`
+#### `session` (foul)
 
 ```kex
-session : Session
+session -> Session
 ```
 
 Returns handshake details negotiated with the server.
@@ -131,20 +131,20 @@ _Verifying which compatible event format was selected_
 let protocol = connection.session.subprotocol.or("default")
 ```
 
-#### `close`
+#### `close` (foul)
 
 ```kex
-close : Void
+close -> Void
 ```
 
 Sends a normal close frame and idempotently releases the transport.
 
 Use an explicit `CloseMessage` with `send` first when the peer needs an application-specific code or reason.
 
-#### `closed?`
+#### `closed?` (foul)
 
 ```kex
-closed? : Bool
+closed? -> Bool
 ```
 
 **Returns**: whether the connection owner has stopped
@@ -178,7 +178,7 @@ A server's decision after inspecting a `Handshake`.
 
 Constructors for high-level WebSocket connections, client- and server-side.
 
-### `connect`
+### `connect` (foul)
 
 ```kex
 connect(url: String, options: ClientOptions) -> Result<Connection, NetError>
@@ -204,7 +204,7 @@ match socket.receiveMessage.try do
 end
 ```
 
-### `upgrade`
+### `upgrade` (foul)
 
 ```kex
 upgrade(request: Request<Binary>, decide: (Handshake -> Upgrade)) -> Response<Binary>

@@ -223,7 +223,7 @@ let (_, afterComma) = cursor.char(',').try
 #### `whiteSpaces`
 
 ```kex
-whiteSpaces : Input
+whiteSpaces -> Input
 ```
 
 A cursor advanced past any run of whitespace.

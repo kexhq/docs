@@ -11,18 +11,18 @@ entities:
 
 ## module `Tey.SelfUpdate`
 
-### `currentPrefix`
+### `currentPrefix` (foul)
 
 ```kex
-currentPrefix : String?
+currentPrefix -> String?
 ```
 
 Where this Tey is installed, or None when it cannot be told — outside an installed launcher (a source checkout, `erl` by hand) there is nothing safe to overwrite. `tey/bin/tey` exports TEY_EBIN before invoking the BEAM, so a released install always knows.
 
-### `installEbin`
+### `installEbin` (foul)
 
 ```kex
-installEbin : String?
+installEbin -> String?
 ```
 
 The launcher's own runtime directory. TEY_EBIN can instead name the Tey paired with the selected Kex (see `installPaired`), which is not an install to upgrade — TEY_INSTALL_EBIN always names the launcher's.
@@ -83,7 +83,7 @@ The oldest Tey with an `upgrade` command. Pinning an older one would strand the 
 
 
 
-### `installedVersion`
+### `installedVersion` (foul)
 
 ```kex
 installedVersion(prefix: String) -> String
@@ -91,7 +91,7 @@ installedVersion(prefix: String) -> String
 
 The version of the Tey installed at `prefix`, which is not always the one running: with a Kex selected whose own Tey is unpacked beside it (see `installPaired`), the launcher runs that one instead. Comparing the running version against a release then answers "already the newest" while the install itself stays old. The installed launcher is asked directly, pointed at its own runtime; if that cannot be read, the running version is the answer — the behaviour before, and never a reason to downgrade.
 
-### `upgradeLatest`
+### `upgradeLatest` (foul)
 
 ```kex
 upgradeLatest(includePre: Bool) -> Result<UpgradeOutcome, String>
@@ -99,7 +99,7 @@ upgradeLatest(includePre: Bool) -> Result<UpgradeOutcome, String>
 
 `tey upgrade` — the newest released Tey: the one the newest Kex release's manifest declares. Stable Kex releases unless `includePre` (`--pre`), which is how a pre-release Tey is reached without knowing its number.
 
-### `upgradePinned`
+### `upgradePinned` (foul)
 
 ```kex
 upgradePinned(version: String) -> Result<UpgradeOutcome, String>
@@ -107,7 +107,7 @@ upgradePinned(version: String) -> Result<UpgradeOutcome, String>
 
 `tey upgrade <version>` — exactly that Tey, from the newest release (stable first, then pre-releases) whose manifest declares it. An older version is allowed: pinning is explicit, and it is the way back from a bad release.
 
-### `installPaired`
+### `installPaired` (foul)
 
 ```kex
 installPaired(kexVersion: String) -> Result<String?, String>

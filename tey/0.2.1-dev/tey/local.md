@@ -11,19 +11,19 @@ entities:
 
 ## module `Tey.Local`
 
-### `load`
+### `load` (foul)
 
 ```kex
 load(context: Context) -> Result<[Override], String>
 ```
 
-### `set`
+### `set` (foul)
 
 ```kex
 set(context: Context, name: String, path: String) -> Result<String, String>
 ```
 
-### `remove`
+### `remove` (foul)
 
 ```kex
 remove(context: Context, name: String) -> Result<String, String>

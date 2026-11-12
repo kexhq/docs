@@ -40,7 +40,7 @@ Implemented by [`Integer`](#make-integer), [`String`](#make-string), [`[A]`](#ma
 #### `identity`
 
 ```kex
-identity : This
+identity -> This
 ```
 
 The neutral element: combining it with any value gives that value back.
@@ -134,7 +134,7 @@ Implemented by [`Integer`](#make-integer).
 #### `identity`
 
 ```kex
-identity : This
+identity -> This
 ```
 
 The neutral element.
@@ -144,7 +144,7 @@ The neutral element.
 #### `combine`
 
 ```kex
-combine : This -> This
+combine(This) -> This
 ```
 
 Combines this value with `other`.
@@ -154,7 +154,7 @@ Combines this value with `other`.
 #### `inverse`
 
 ```kex
-inverse : This
+inverse -> This
 ```
 
 The value that combines with this one to give the identity.
@@ -180,9 +180,13 @@ Implements `Monoid`, `Group` over `Integer` for addition.
 
 ### `identity` (from Monoid, Group)
 
+```kex
+identity -> Integer
+```
+
 `0`: the neutral element for addition.
 
-**Returns**: `Integer` — zero
+**Returns**: zero
 
 **Examples**
 
@@ -213,7 +217,7 @@ Adds `other` to this integer. Addition is the monoid operation for `Integer`.
 ### `inverse` (from Group)
 
 ```kex
-inverse : This
+inverse -> This
 ```
 
 The additive inverse: this integer negated.
@@ -237,9 +241,13 @@ Implements `Monoid` over `String` for concatenation.
 
 ### `identity` (from Monoid)
 
+```kex
+identity -> String
+```
+
 `""`: the neutral element for concatenation.
 
-**Returns**: `String` — the empty string
+**Returns**: the empty string
 
 **Examples**
 
@@ -277,9 +285,13 @@ Implements `Monoid` over `List<A>` for concatenation.
 
 ### `identity` (from Monoid)
 
+```kex
+identity -> [A]
+```
+
 `[]`: the neutral element for concatenation.
 
-**Returns**: `[A]` — the empty list
+**Returns**: the empty list
 
 **Examples**
 

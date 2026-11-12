@@ -13,13 +13,13 @@ Serves a generated output directory over HTTP. Tey runs on the BEAM, so Net.HTTP
 
 ## module `Tey.Docgen.Serve`
 
-### `serveCommand`
+### `serveCommand` (foul)
 
 ```kex
 serveCommand(parsed: OptionParser.ParsedOptions) -> Integer
 ```
 
-### `routesFor`
+### `routesFor` (foul)
 
 ```kex
 routesFor(prefix: String, name: String) -> [String]
@@ -27,13 +27,13 @@ routesFor(prefix: String, name: String) -> [String]
 
 The URL paths a browser would type for this file: an index.html is reached by its directory ("/", "/prelude/0.4.0-alpha/") as much as by its name, and the router matches exactly — so it answers the bare, the slash-terminated, and the named spelling. Every other file answers its own path only.
 
-### `collectServeFiles`
+### `collectServeFiles` (foul)
 
 ```kex
 collectServeFiles(dir: String, prefix: String) -> [ServedFile]
 ```
 
-### `serveFile`
+### `serveFile` (foul)
 
 ```kex
 serveFile(filePath: String, _request: Request<Binary>, _context: Context) -> Response<Binary>
@@ -41,7 +41,7 @@ serveFile(filePath: String, _request: Request<Binary>, _context: Context) -> Res
 
 A route handler once `filePath` is applied: `~serveFile(path)`. Reads the file as bytes, not text: the site ships images and fonts beside its HTML, and decoding those as UTF-8 would turn them into a 404.
 
-### `contentTypeFor`
+### `contentTypeFor` (foul)
 
 ```kex
 contentTypeFor(path: String) -> String

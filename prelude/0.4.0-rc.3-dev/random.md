@@ -49,17 +49,17 @@ Starts a deterministic sequence. Any Integer seed is reduced modulo 2^64.
 
 **Returns**: initial state; no draw has been consumed
 
-### `fresh`
+### `fresh` (foul)
 
 ```kex
-fresh : Generator
+fresh -> Generator
 ```
 
 Starts a generator using fresh host entropy.
 
 **Returns**: initial state for a sequence that varies between runs
 
-### `integer`
+### `integer` (foul)
 
 ```kex
 integer(range: Range<Integer>) -> Integer
@@ -73,7 +73,7 @@ Draws an integer from an inclusive range using fresh entropy.
 
 **Returns**: drawn value
 
-### `float`
+### `float` (foul)
 
 ```kex
 float(range: Range<Float> = …) -> Float
@@ -87,17 +87,17 @@ Draws a float; defaults to [0.0, 1.0). The upper bound is excluded.
 
 **Returns**: drawn value
 
-### `boolean`
+### `boolean` (foul)
 
 ```kex
-boolean : Bool
+boolean -> Bool
 ```
 
 Draws a fair coin flip using fresh entropy.
 
 **Returns**: true or false with equal probability
 
-### `chance?`
+### `chance?` (foul)
 
 ```kex
 chance?(probability: Float) -> Bool
@@ -111,7 +111,7 @@ Returns true with the supplied probability using fresh entropy.
 
 **Returns**: sampled outcome
 
-### `choice`
+### `choice` (foul)
 
 ```kex
 choice(items: [X]) -> X?
@@ -125,7 +125,7 @@ Chooses a position uniformly, returning None for an empty input.
 
 **Returns**: chosen value, if any
 
-### `sample`
+### `sample` (foul)
 
 ```kex
 sample(items: [X], count: Integer) -> [X]
@@ -140,7 +140,7 @@ Samples positions without replacement; duplicate values remain possible.
 
 **Returns**: values selected in random order
 
-### `shuffle`
+### `shuffle` (foul)
 
 ```kex
 shuffle(items: [X]) -> [X]
@@ -154,7 +154,7 @@ Returns a random permutation using fresh entropy.
 
 **Returns**: shuffled copy
 
-### `secureBytes`
+### `secureBytes` (foul)
 
 ```kex
 secureBytes(count: Integer) -> Binary
@@ -178,7 +178,7 @@ _A 256-bit key_
 let key = Random.secureBytes(32)
 ```
 
-### `token`
+### `token` (foul)
 
 ```kex
 token(bytes: Integer = …) -> String
@@ -265,7 +265,7 @@ let (weight, advanced) = Random.seeded(42).float(-1.0..1.0)
 ### `boolean`
 
 ```kex
-boolean : (Bool, Generator)
+boolean -> (Bool, Generator)
 ```
 
 Draws a fair Boolean and returns the advanced generator.

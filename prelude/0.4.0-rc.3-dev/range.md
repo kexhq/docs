@@ -110,7 +110,7 @@ Only the endpoints are compared: nothing is enumerated, so this is cheap for a r
 #### `items`
 
 ```kex
-items : [A]
+items -> [A]
 ```
 
 Returns the range's elements as a list.
@@ -135,7 +135,7 @@ _Building a lookup table_
 #### `first`
 
 ```kex
-first : A?
+first -> A?
 ```
 
 Returns the first element, or `None` for an empty range.
@@ -153,7 +153,7 @@ The list operations, over the materialized items. A range is an ordered collecti
 #### `second`
 
 ```kex
-second : A?
+second -> A?
 ```
 
 Returns the second element, or `None` when the range is shorter than two.
@@ -169,7 +169,7 @@ Returns the second element, or `None` when the range is shorter than two.
 #### `third`
 
 ```kex
-third : A?
+third -> A?
 ```
 
 Returns the third element, or `None` when the range is shorter than three.
@@ -185,7 +185,7 @@ Returns the third element, or `None` when the range is shorter than three.
 #### `last`
 
 ```kex
-last : A?
+last -> A?
 ```
 
 Returns the last element, or `None` for an empty range.
@@ -201,7 +201,7 @@ Returns the last element, or `None` for an empty range.
 #### `rest`
 
 ```kex
-rest : [A]
+rest -> [A]
 ```
 
 Returns every element after the first, as a list.
@@ -217,7 +217,7 @@ Returns every element after the first, as a list.
 #### `length`
 
 ```kex
-length : Integer
+length -> Integer
 ```
 
 Returns how many elements the range has.
@@ -234,7 +234,7 @@ Returns how many elements the range has.
 #### `count` (from Foldable)
 
 ```kex
-count : Integer
+count -> Integer
 ```
 
 Returns how many elements the range has. The same as `length`.
@@ -250,7 +250,7 @@ Returns how many elements the range has. The same as `length`.
 #### `empty?`
 
 ```kex
-empty? : Bool
+empty? -> Bool
 ```
 
 Returns `true` when the range has no elements.
@@ -266,7 +266,7 @@ Returns `true` when the range has no elements.
 #### `max`
 
 ```kex
-max : A?
+max -> A?
 ```
 
 Returns the largest element, or `None` for an empty range.
@@ -282,7 +282,7 @@ Returns the largest element, or `None` for an empty range.
 #### `min`
 
 ```kex
-min : A?
+min -> A?
 ```
 
 Returns the smallest element, or `None` for an empty range.
@@ -298,7 +298,7 @@ Returns the smallest element, or `None` for an empty range.
 #### `reverse`
 
 ```kex
-reverse : [A]
+reverse -> [A]
 ```
 
 Returns the elements as a list, in descending order.
@@ -320,7 +320,7 @@ _Counting down_
 #### `sort`
 
 ```kex
-sort : [A]
+sort -> [A]
 ```
 
 Returns the elements as a sorted list. A range is already ascending, so this is the identity: it exists so that generic code can call it.
@@ -354,7 +354,7 @@ Returns the elements as a list, ordered by `comparator`.
 #### `uniq`
 
 ```kex
-uniq : [A]
+uniq -> [A]
 ```
 
 Returns the elements as a list with duplicates removed. A range has none, so this is the identity: it exists so that generic code can call it.

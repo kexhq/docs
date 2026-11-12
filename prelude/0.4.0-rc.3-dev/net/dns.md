@@ -155,7 +155,7 @@ An opaque, process-safe resolver that owns its cache.
 
 ### Functions
 
-#### `addresses`
+#### `addresses` (foul)
 
 ```kex
 addresses(name: Name) -> Result<[Net.IP.Address], NetError>
@@ -180,7 +180,7 @@ let host = Name.parse("api.example.com").try
 let addresses = resolver.addresses(host).try
 ```
 
-#### `lookup`
+#### `lookup` (foul)
 
 ```kex
 lookup(kind: RecordType, name: Name) -> Result<LookupResponse, NetError>
@@ -204,10 +204,10 @@ let response = resolver.lookup(MX, Name.parse("example.com").try).try
 response.records.each { |record| IO.inspect(record) }
 ```
 
-#### `clear`
+#### `clear` (foul)
 
 ```kex
-clear : Void
+clear -> Void
 ```
 
 Empties cached entries without resetting lifetime counters.
@@ -222,10 +222,10 @@ _Refreshing service discovery after configuration changes_
 resolver.clear
 ```
 
-#### `statistics`
+#### `statistics` (foul)
 
 ```kex
-statistics : CacheStatistics
+statistics -> CacheStatistics
 ```
 
 Reports current occupancy and lifetime cache counters.
@@ -241,10 +241,10 @@ let stats = resolver.statistics
 IO.printLine("DNS cache: ${stats.hits} hits, ${stats.misses} misses")
 ```
 
-#### `close`
+#### `close` (foul)
 
 ```kex
-close : Void
+close -> Void
 ```
 
 Idempotently closes the resolver.
@@ -283,7 +283,7 @@ resolver.addresses(name).try
 
 Constructors for long-lived, cache-owning resolvers.
 
-### `system`
+### `system` (foul)
 
 ```kex
 system(cache: CacheOptions) -> Result<Resolver, NetError>
@@ -305,7 +305,7 @@ let upstream = resolver.addresses(Name.parse("api.example.com").try).try
 resolver.close
 ```
 
-### `custom`
+### `custom` (foul)
 
 ```kex
 custom(options: ResolverOptions) -> Result<Resolver, NetError>
@@ -340,7 +340,7 @@ Resolver.custom(ResolverOptions {
 
 Convenience lookup operations for callers that do not need resolver ownership or cache reuse.
 
-### `addresses`
+### `addresses` (foul)
 
 ```kex
 addresses(name: Name) -> Result<[Net.IP.Address], NetError>

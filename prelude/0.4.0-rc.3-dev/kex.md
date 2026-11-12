@@ -78,7 +78,7 @@ Implemented by [`Binary`](binary.md#make-binary), [`Complex`](complex.md#make-co
 #### `showValue`
 
 ```kex
-showValue : String
+showValue -> String
 ```
 
 Returns the value's user-facing text representation.
@@ -90,7 +90,7 @@ Implement this for domain types whose useful presentation differs from their str
 #### `to`
 
 ```kex
-to(_)
+to(String)
 ```
 
 
@@ -104,7 +104,7 @@ Implements [`Showable`](#trait-showable).
 ### `showValue` (from Showable)
 
 ```kex
-showValue(_)
+showValue -> String
 ```
 
 ## extends `Result<X, E>`
@@ -122,7 +122,7 @@ What functions RETURN is unchanged: `Integer.parse` still answers with a Result,
 ### `showValue` (from Showable)
 
 ```kex
-showValue(_)
+showValue -> String
 ```
 
 ## module `Kex`
@@ -177,7 +177,7 @@ IO.printLine("built with Kex ${Kex.VERSION.number}")
 
 
 
-### `load`
+### `load` (foul)
 
 ```kex
 load(path: String) -> Result<LoadedModule, String>
@@ -197,7 +197,7 @@ Loads the compiled module at `path`, replacing an older version of it that is al
 let theme = Kex.load("build/kex_theme.beam").try
 ```
 
-### `loaded`
+### `loaded` (foul)
 
 ```kex
 loaded(name: Atom) -> LoadedModule?
@@ -257,7 +257,7 @@ Which backend is executing the program: the tree-walking `Interpreter`, or the `
 #### `interpreted?`
 
 ```kex
-interpreted? : Bool
+interpreted? -> Bool
 ```
 
 Whether this is the tree-walking interpreter.
@@ -273,7 +273,7 @@ Kex.BACKEND.interpreted?   # => true under `kex -R file.kex`
 #### `compiled?`
 
 ```kex
-compiled? : Bool
+compiled? -> Bool
 ```
 
 Whether this backend runs compiled code: today, the BEAM.
@@ -289,7 +289,7 @@ Kex.BACKEND.compiled?   # => true under `kex file.kex`
 #### `beam?`
 
 ```kex
-beam? : Bool
+beam? -> Bool
 ```
 
 Whether this is the BEAM virtual machine. Processes, the web server and clustering need it.
@@ -346,7 +346,7 @@ Kex.VERSION.to(String)   # => "0.3.0 (a1b2c3d)"
 #### `tuple`
 
 ```kex
-tuple : (Integer, Integer, Integer, String?)
+tuple -> (Integer, Integer, Integer, String?)
 ```
 
 The version's four values as a tuple, for destructuring.
@@ -365,7 +365,7 @@ major   # => 0
 #### `release`
 
 ```kex
-release : String
+release -> String
 ```
 
 The three numbers, plus the pre-release channel when there is one.
@@ -383,7 +383,7 @@ Kex.VERSION.release   # => "0.4.0-alpha.2"
 #### `number`
 
 ```kex
-number : String
+number -> String
 ```
 
 The release string with the build revision after it, when there is one.
@@ -425,7 +425,7 @@ let html = theme.call(:render, [context]).try
 
 ### Functions
 
-#### `call`
+#### `call` (foul)
 
 ```kex
 call(function: Atom, arguments: [Any]) -> Result<Any, String>

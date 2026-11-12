@@ -11,7 +11,7 @@ entities:
 
 ## module `Tey.Workspace`
 
-### `discover`
+### `discover` (foul)
 
 ```kex
 discover(start: String) -> Result<Context, String>

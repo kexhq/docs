@@ -83,7 +83,7 @@ scaled(factor: Float, notation: String) -> Result<DynamicUnit, UnitError>
 #### `value`
 
 ```kex
-value : Float
+value -> Float
 ```
 
 Display magnitude is derived, never a second independently stored value.
@@ -141,7 +141,7 @@ Ordering ignores display preferences but requires compatible dimensions.
 #### `scalar`
 
 ```kex
-scalar : Result<Float, UnitError>
+scalar -> Result<Float, UnitError>
 ```
 
 ## type `UnitError`

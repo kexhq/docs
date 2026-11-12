@@ -187,7 +187,7 @@ Stream.Sequence(from: 1) { |n| n + 1 }
 #### `toFeed`
 
 ```kex
-toFeed : Feed<A>
+toFeed -> Feed<A>
 ```
 
 Returns a `Feed` that walks this stream once.

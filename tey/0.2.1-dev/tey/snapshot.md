@@ -11,7 +11,7 @@ entities:
 
 ## module `Tey.Snapshot`
 
-### `create`
+### `create` (foul)
 
 ```kex
 create(name: String, declaredPath: String, declaringRoot: String) -> Result<Tey.Lockfile.Dependency, String>
@@ -19,19 +19,19 @@ create(name: String, declaredPath: String, declaringRoot: String) -> Result<Tey.
 
 Turns a path dependency into an immutable, content-addressed cache entry. The declared path remains in the lockfile for explanation; builds use the snapshot identified by `sha256`, never the live directory.
 
-### `cachedPath`
+### `cachedPath` (foul)
 
 ```kex
 cachedPath(dependency: Tey.Lockfile.Dependency) -> String
 ```
 
-### `verify`
+### `verify` (foul)
 
 ```kex
 verify(dependency: Tey.Lockfile.Dependency) -> Result<String, String>
 ```
 
-### `sourceFiles`
+### `sourceFiles` (foul)
 
 ```kex
 sourceFiles(root: String) -> [String]
@@ -39,7 +39,7 @@ sourceFiles(root: String) -> [String]
 
 The files a snapshot of `root` holds, relative to it: everything but VCS metadata, build output and `.teyignore` matches.
 
-### `contentDigest`
+### `contentDigest` (foul)
 
 ```kex
 contentDigest(root: String) -> Result<String, String>

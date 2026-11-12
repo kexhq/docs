@@ -32,7 +32,7 @@ main(args, env) do
 end
 ```
 
-### `get`
+### `get` (foul)
 
 ```kex
 get(key: String, default) -> String?
@@ -62,7 +62,7 @@ match ENV.get("HOME") do
 end
 ```
 
-### `has?`
+### `has?` (foul)
 
 ```kex
 has?(key: String) -> Bool
@@ -91,10 +91,10 @@ _Turning a flag on by its presence alone_
 let debug = ENV.has?("DEBUG")
 ```
 
-### `keys`
+### `keys` (foul)
 
 ```kex
-keys : [String]
+keys -> [String]
 ```
 
 Returns every variable name in the environment.
@@ -113,10 +113,10 @@ _Every variable belonging to one tool_
 ENV.keys.filter { |name| name.startsWith?("KEX_") }
 ```
 
-### `values`
+### `values` (foul)
 
 ```kex
-values : [String]
+values -> [String]
 ```
 
 Returns every variable value in the environment.
@@ -129,10 +129,10 @@ Returns every variable value in the environment.
 ENV.values.count   # => 47
 ```
 
-### `count`
+### `count` (foul)
 
 ```kex
-count : Integer
+count -> Integer
 ```
 
 Returns how many variables the environment has.
@@ -145,7 +145,7 @@ Returns how many variables the environment has.
 IO.printLine("environment has ${ENV.count} variables")
 ```
 
-### `each`
+### `each` (foul)
 
 ```kex
 each(f: (String -> String -> Void)) -> Void
@@ -165,10 +165,10 @@ _Dumping the environment_
 ENV.each { |name, value| IO.printLine("${name}=${value}") }
 ```
 
-### `entries`
+### `entries` (foul)
 
 ```kex
-entries : [(String, String)]
+entries -> [(String, String)]
 ```
 
 Returns the environment as a list of `(name, value)` pairs.
@@ -185,7 +185,7 @@ _Printing the environment in name order_
 ENV.entries.each { |name, value| IO.printLine("${name}=${value}") }
 ```
 
-### `set`
+### `set` (foul)
 
 ```kex
 set(name: String, value: String) -> Void
@@ -215,7 +215,7 @@ _Making a child process quiet_
 ENV.set("NO_COLOR", "1")
 ```
 
-### `unset`
+### `unset` (foul)
 
 ```kex
 unset(name: String) -> Void

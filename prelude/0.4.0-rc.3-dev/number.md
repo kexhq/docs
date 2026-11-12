@@ -47,7 +47,7 @@ Whole numbers, of arbitrary size.
 ### `even?`
 
 ```kex
-even? : Bool
+even? -> Bool
 ```
 
 Returns `true` when the integer is divisible by two. Zero is even, and negative numbers follow the same rule.
@@ -71,7 +71,7 @@ _Splitting a list into evens and odds_
 ### `odd?`
 
 ```kex
-odd? : Bool
+odd? -> Bool
 ```
 
 Returns `true` when the integer is not divisible by two. The opposite of `even?`.
@@ -124,7 +124,7 @@ end
 ### `abs`
 
 ```kex
-abs : Integer
+abs -> Integer
 ```
 
 Returns the magnitude of the integer, discarding its sign.
@@ -147,7 +147,7 @@ _Distance between two positions_
 ### `sqrt`
 
 ```kex
-sqrt : Float
+sqrt -> Float
 ```
 
 Returns the square root as a `Float`.
@@ -259,7 +259,7 @@ end
 ### `floor`
 
 ```kex
-floor : Integer
+floor -> Integer
 ```
 
 Returns the integer unchanged. Present so that code written against `Number` works whichever half of the tower it is handed.
@@ -275,7 +275,7 @@ Returns the integer unchanged. Present so that code written against `Number` wor
 ### `ceil`
 
 ```kex
-ceil : Integer
+ceil -> Integer
 ```
 
 Returns the integer unchanged. The `Integer` counterpart of `Float.ceil`.
@@ -291,7 +291,7 @@ Returns the integer unchanged. The `Integer` counterpart of `Float.ceil`.
 ### `round`
 
 ```kex
-round : Integer
+round -> Integer
 ```
 
 Returns the integer unchanged. The `Integer` counterpart of `Float.round`.
@@ -414,7 +414,7 @@ The least common multiple, always non-negative. Zero with anything is `0`.
 ### `digits`
 
 ```kex
-digits : [Integer]
+digits -> [Integer]
 ```
 
 The decimal digits of the integer's magnitude, least significant first, as Ruby's `digits` answers them. `.reverse` gives reading order.
@@ -432,7 +432,7 @@ The decimal digits of the integer's magnitude, least significant first, as Ruby'
 ### `zero?`
 
 ```kex
-zero? : Bool
+zero? -> Bool
 ```
 
 Returns `true` for zero.
@@ -446,7 +446,7 @@ Returns `true` for zero.
 ### `positive?`
 
 ```kex
-positive? : Bool
+positive? -> Bool
 ```
 
 Returns `true` when the number is greater than zero.
@@ -460,7 +460,7 @@ Returns `true` when the number is greater than zero.
 ### `negative?`
 
 ```kex
-negative? : Bool
+negative? -> Bool
 ```
 
 Returns `true` when the number is less than zero.
@@ -503,7 +503,7 @@ A Kex `Float` is always finite. An operation that would produce `NaN` or `Infini
 ### `abs`
 
 ```kex
-abs : Float
+abs -> Float
 ```
 
 Returns the magnitude of the float, discarding its sign.
@@ -526,7 +526,7 @@ _An approximate-equality test_
 ### `sqrt`
 
 ```kex
-sqrt : Float
+sqrt -> Float
 ```
 
 Returns the square root. Raises for a negative receiver, which has no real root.
@@ -564,7 +564,7 @@ Returns `true` when the float falls inside `range`, endpoints included.
 ### `floor`
 
 ```kex
-floor : Integer
+floor -> Integer
 ```
 
 Returns the largest integer that is not greater than the float: it always rounds toward negative infinity, which is what separates it from `toInteger` for negative values.
@@ -582,7 +582,7 @@ Returns the largest integer that is not greater than the float: it always rounds
 ### `ceil`
 
 ```kex
-ceil : Integer
+ceil -> Integer
 ```
 
 Returns the smallest integer that is not less than the float: it always rounds toward positive infinity.
@@ -606,7 +606,7 @@ _How many pages of a fixed size a list needs_
 ### `round`
 
 ```kex
-round : Integer
+round -> Integer
 ```
 
 Returns the nearest integer, with halves rounding away from zero.
@@ -624,7 +624,7 @@ Returns the nearest integer, with halves rounding away from zero.
 ### `toInteger`
 
 ```kex
-toInteger : Integer
+toInteger -> Integer
 ```
 
 Truncates toward zero and returns the result as an `Integer`: it drops the fractional part rather than rounding, so it differs from both `floor` and `round` for negative values.
@@ -641,7 +641,7 @@ Truncates toward zero and returns the result as an `Integer`: it drops the fract
 ### `zero?`
 
 ```kex
-zero? : Bool
+zero? -> Bool
 ```
 
 Returns `true` for zero.
@@ -655,7 +655,7 @@ Returns `true` for zero.
 ### `positive?`
 
 ```kex
-positive? : Bool
+positive? -> Bool
 ```
 
 Returns `true` when the number is greater than zero.
@@ -669,7 +669,7 @@ Returns `true` when the number is greater than zero.
 ### `negative?`
 
 ```kex
-negative? : Bool
+negative? -> Bool
 ```
 
 Returns `true` when the number is less than zero.
