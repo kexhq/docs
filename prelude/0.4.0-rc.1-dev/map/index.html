@@ -577,24 +577,203 @@ pre.code a.xref { color: inherit; border-bottom: 1px dotted color-mix(in oklab, 
 }
 
 /* Which trait a member fulfils: a small link chip beside its name. */
-.tag-trait, .tag-kind {
+.tag-trait, .tag-kind, .tag-foul {
   margin-left: 0.5rem;
-  padding: 0.05rem 0.45rem;
+  padding: 0.2rem 0.6rem;
   border: 1px solid #efcfe0;
   border-radius: 999px;
   background: #f9ecf3;
   color: #c2498a;
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 500;
+  line-height: 1.2;
   text-decoration: none;
   vertical-align: middle;
+  white-space: nowrap;
 }
 .tag-kind { border-color: #e6d2b4; background: #f6ecdd; color: #9a5a13; }
+/* Foul: may touch the outside world. The one chip that is a warning. */
+.tag-foul { border-color: #efcdc3; background: #fbece7; color: #b4432b; font-weight: 600; }
+.index .tag-foul { font-size: 11px; padding: 0.1rem 0.45rem; }
 .tag-trait:hover { border-color: #c2498a; }
 
 /* Methods a type gets from a trait without writing them. */
 .inherited dt, .elsewhere dt { min-width: 9rem; }
+
+/* ── Reference: finding a member ────────────────────────────────────── */
+
+/* What a declaration offers, ahead of the full entries: one line per
+   member, so a long type is read as a list before it is read as a page. */
+.summary { margin: 1.4rem 0 2.4rem; }
+.summary > h3 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  margin: 1.5rem 0 0.3rem;
+}
+.summary > h3:first-child { margin-top: 0; }
+.summary > h3 a, .summary > h3 a.xref { color: inherit; text-decoration: none; border-bottom: 0; }
+.summary > h3 code:not(pre code) { font-size: 1em; letter-spacing: 0; text-transform: none; }
+.summary .params { margin-bottom: 0; }
+.summary .param { padding: 0.28rem 0; }
+.summary dd { font-size: 0.9rem; }
+/* One name column for the whole list, as wide as its longest name and
+   its chip, so every summary starts on the same edge. */
+.summary .params { display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 1.2rem; }
+.summary .param { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; }
+
+/* A member's entry is a card headed by its signature: a band across the
+   top, flush with the card's edges, rather than a box inside a box. The
+   band is light, so the dark surface is left to the examples and the two
+   are told apart at a glance. What the signature does not say shares the
+   band with it, at the right: whether the member is foul, the traits it
+   fulfils, its permalink. */
+.fn {
+  --fn-band: #faf7e4;
+  overflow: hidden;
+  padding: 0.95rem 1.2rem 1rem;
+  border-radius: 12px;
+}
+.fn:has(> .fn-head) { padding-top: 0; }
+.fn-head, .fn > pre.code.sig {
+  margin: 0 -1.2rem 0.95rem;
+  padding: 0.75rem 1.2rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--fn-band);
+}
+.fn-head { display: flex; align-items: flex-start; gap: 0.9rem; }
+.fn pre.code.sig {
+  border: 0;
+  border-radius: 0;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+/* A signature keeps its line: one longer than its room scrolls there,
+   beside the chips, never under them. */
+.sig-line { display: block; }
+.fn-head > pre.code.sig { flex: 1; min-width: 0; margin: 0; padding: 0; background: none; }
+/* A further overload: its own band, part-way down the card. */
+.fn > pre.code.sig { margin-top: 1.2rem; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+/* The token colours are made for the dark code surface. On the band every
+   token starts from the band's own ink, and only what helps read a
+   signature is picked out: the name, the types, the default values. */
+.fn pre.code.sig span { color: inherit; }
+.fn pre.code.sig .tok-fn { color: var(--ink); font-weight: 700; }
+.fn pre.code.sig .tok-type { color: var(--accent-strong); }
+.fn pre.code.sig .tok-op, .fn pre.code.sig .tok-punct { color: var(--faint); }
+.fn pre.code.sig :is(.tok-string, .tok-number, .tok-bool, .tok-atom) { color: var(--accent); }
+.fn pre.code.sig a.xref { border-bottom-color: color-mix(in oklab, var(--accent) 45%, transparent); }
+
+/* The heading beside a signature repeats its name, so only its chips show. */
+.fn-head > :is(h3, h4) {
+  order: 2;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  line-height: 1;
+}
+.fn-head > :is(h3, h4) a.self { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.fn :is(h3, h4) :is(.tag-trait, .tag-kind, .tag-foul) { margin-left: 0; }
+.fn > :is(h3, h4) a.self + :is(.tag-trait, .tag-kind, .tag-foul, .permalink) { margin-left: 0.5rem; }
+.fn h5 { margin: 0.9rem 0 0.35rem; }
+
+/* Parameters as two aligned columns, and what comes back labelled the
+   same way: inside a card the rules between rows are one frame too many. */
+.fn .params { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.35rem 1rem; margin-bottom: 0.9rem; }
+.fn .param { display: contents; }
+.fn .returns { color: var(--muted); font-size: 0.95rem; }
+.fn .returns strong {
+  margin-right: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+
+/* A block of example code, and the control that copies it: in the block's
+   corner, waiting for the pointer like a card's permalink. */
+.code-block { position: relative; margin: 0 0 1.1rem; }
+.code-block > pre.code { margin: 0; }
+.fn .code-block:last-child { margin-bottom: 0; }
+.copy-code {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  height: 1.6rem;
+  padding: 0 0.55rem;
+  border: 1px solid var(--code-border);
+  border-radius: 6px;
+  background: var(--code-bg-soft);
+  box-shadow: 0 0 0 0.35rem var(--code-bg);
+  color: #c9bfa9;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, opacity 0.15s;
+}
+.copy-code:hover { color: #fff; border-color: #e6a960; }
+.copy-code.copied { color: #8fd3a8; border-color: #3d6b4c; }
+@media (hover: hover) {
+  .copy-code { opacity: 0; }
+  .code-block:hover .copy-code, .copy-code:focus-visible, .copy-code.copied { opacity: 1; }
+}
+
+/* The address of a declaration or member: a link to its own anchor that
+   the page script also copies to the clipboard. */
+.prose a.permalink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  vertical-align: middle;
+  transition: color 0.15s, border-color 0.15s, opacity 0.15s;
+}
+.prose a.permalink:hover { color: var(--accent-strong); border-color: var(--accent); }
+.prose a.permalink.copied { color: #2f855a; border-color: #c6e6d4; background: #e8f4ec; }
+.entity > h2 a.permalink { margin-left: 0.4rem; }
+/* With a pointer, a permalink waits for it: beside a declaration's heading,
+   and in the corner of a member's card, where it takes no room from the
+   signature until the card is under the pointer. Without one it is always
+   there, in the row. */
+@media (hover: hover) {
+  .entity > h2 a.permalink { opacity: 0; }
+  .entity > h2:hover a.permalink, .entity > h2 a.permalink:focus-visible, .entity > h2 a.permalink.copied { opacity: 1; }
+  .fn { position: relative; }
+  .fn-head a.permalink {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.9rem;
+    opacity: 0;
+    background: var(--bg);
+    box-shadow: 0 0 0 0.4rem var(--fn-band);
+  }
+  .fn:hover .fn-head a.permalink, .fn-head a.permalink:focus-visible, .fn-head a.permalink.copied { opacity: 1; }
+  /* The chips step aside for it rather than sit under it. */
+  .fn-head :is(.tag-trait, .tag-kind, .tag-foul) { transition: transform 0.15s; }
+  .fn:hover .fn-head :is(.tag-trait, .tag-kind, .tag-foul) { transform: translateX(-2.1rem); }
+}
 
 .prose ul { margin: 0 0 1.1rem; padding-left: 1.3rem; }
 .prose li { margin: 0.25rem 0; }
@@ -859,11 +1038,65 @@ h1 .tag-prelude { font-size: 11px; vertical-align: 0.45em; }
 }
 
 /* Blocks. */
+/* A Code block is a window, as on kex.run: a bar with three dots, the
+   filename (or the language) and a Copy button, over the code, with an
+   optional caption under the window. */
 .marq-code { margin: 0 0 1.1rem; }
-.marq-code figcaption { font-family: var(--font-mono); font-size: 12px; color: var(--faint); margin-bottom: 0.35rem; }
-.marq-code figcaption:empty, .marq-code small:empty { display: none; }
-.marq-code pre { margin-bottom: 0.35rem; }
-.marq-code small { display: block; font-size: 12.5px; color: var(--muted); }
+.marq-code > .marq-code-bar + pre.code,
+.marq-code > .marq-code-bar + pre { margin: 0; border-top: 0; border-radius: 0 0 10px 10px; }
+.marq-code-bar {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.5rem 0.9rem;
+  background: var(--code-bg-soft);
+  border: 1px solid var(--code-border); border-bottom-color: color-mix(in srgb, var(--code-border) 70%, transparent);
+  border-radius: 10px 10px 0 0;
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.4;
+}
+.marq-code-dots { display: flex; gap: 6px; flex-shrink: 0; }
+.marq-code-dots i { width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; }
+.marq-code-dots i:nth-child(2) { background: #febc2e; }
+.marq-code-dots i:nth-child(3) { background: #28c840; }
+.marq-code-file { color: #b8ab8e; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.marq-code-language { color: #7d7159; text-transform: lowercase; }
+.marq-code-copy {
+  margin-left: auto; padding: 0.15rem 0.5rem; border: 0; border-radius: 6px;
+  background: transparent; color: #94876a; font: inherit; font-size: 11px; cursor: pointer;
+}
+.marq-code-copy:hover { background: rgba(255, 255, 255, 0.06); color: #e9e0cf; }
+/* Output uses the supported literal code block with its own plain transcript style. */
+.marq-code[data-language="output"] {
+  border-left: 3px solid var(--accent);
+  border-radius: 0;
+  background: var(--code-bg);
+}
+.marq-code[data-language="output"] .marq-code-bar {
+  padding: 0.65rem 1rem 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.marq-code[data-language="output"] .marq-code-dots,
+.marq-code[data-language="output"] .marq-code-copy,
+.marq-code[data-language="output"] .marq-code-language,
+.marq-code[data-language="output"] figcaption { display: none; }
+.marq-code[data-language="output"] .marq-code-file {
+  color: #b8ab8e;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  overflow: visible;
+  text-overflow: clip;
+  text-transform: uppercase;
+}
+.marq-code[data-language="output"] pre.code,
+.marq-code[data-language="output"] > .marq-code-bar + pre.code {
+  margin: 0;
+  padding: 0.45rem 1rem 0.85rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.marq-code figcaption { margin-top: 0.45rem; font-size: 12.5px; color: var(--muted); text-align: center; }
 .marq-tabs { border: 1px solid var(--line); border-radius: 10px; padding: 0.4rem 1.1rem; margin: 0 0 1.1rem; background: rgba(255, 255, 255, 0.35); }
 .marq-area + .marq-area { border-top: 1px solid var(--line); }
 .marq-area h3 { margin: 0.8rem 0 0.4rem; font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--faint); }
@@ -922,13 +1155,18 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 .toc ul { list-style: none; margin: 0; padding: 0; max-height: calc(100vh - 8rem); overflow-y: auto; }
 .toc li a { display: block; padding: 0.2rem 0.5rem; border-left: 2px solid var(--line); color: var(--muted); }
 .toc li a:hover { color: var(--ink); border-left-color: var(--accent); }
+/* Where the reader is. */
+.toc li a.current { color: var(--ink); border-left-color: var(--accent); background: var(--bg-subtle); font-weight: 600; }
 .toc li.toc-nested a { padding-left: 1.1rem; }
+/* Members, under the declaration they belong to. */
+.toc li.toc-member a { padding: 0.1rem 0.5rem 0.1rem 1.1rem; font-family: var(--font-mono); font-size: 11.5px; }
 .reference .content { max-width: none; }
 @media (max-width: 1280px) { .layout.has-toc { grid-template-columns: 15rem minmax(0, 1fr); } .toc { display: none; } }
 @media (max-width: 1024px) { .layout.has-toc { grid-template-columns: 1fr; } }
 
 :root{--marq-accent:#8a4f0a;--marq-contentWidth:48rem;}</style>
     <script src="/_theme/search.js" defer></script>
+    <script src="/_theme/reference.js" defer></script>
   </head>
   <body class="reference">
     <header class="top">
@@ -945,7 +1183,6 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
     <div class="wrap layout has-toc">
       <aside class="side">
         <nav aria-label="Standard Library">
-          <p class="side-heading"><a href="/prelude/">Standard Library</a></p>
           <div class="side-tree"><ul><li><a href="/prelude/0.4.0-rc.1-dev/">Standard Library</a><ul><li><a href="/prelude/0.4.0-rc.1-dev/algebra/">Algebra</a></li><li><a href="/prelude/0.4.0-rc.1-dev/test/">Assert</a></li><li><a href="/prelude/0.4.0-rc.1-dev/atom/">Atom</a></li><li><a href="/prelude/0.4.0-rc.1-dev/binary/">Binary</a></li><li><a href="/prelude/0.4.0-rc.1-dev/bits/">Bits</a></li><li><a href="/prelude/0.4.0-rc.1-dev/blankable/">Blankable</a></li><li><a href="/prelude/0.4.0-rc.1-dev/comparable/">Comparable</a></li><li><a href="/prelude/0.4.0-rc.1-dev/console/">Console</a></li><li><a href="/prelude/0.4.0-rc.1-dev/control/retry/">Control.Retry</a></li><li><a href="/prelude/0.4.0-rc.1-dev/data/queue/">Data.Queue</a></li><li><a href="/prelude/0.4.0-rc.1-dev/data/set/">Data.Set</a></li><li><a href="/prelude/0.4.0-rc.1-dev/data/stack/">Data.Stack</a></li><li><a href="/prelude/0.4.0-rc.1-dev/digest/">Digest</a></li><li><a href="/prelude/0.4.0-rc.1-dev/dimensions/">Dimensions</a></li><li><a href="/prelude/0.4.0-rc.1-dev/enumerable/">Enumerable</a></li><li><a href="/prelude/0.4.0-rc.1-dev/env/">ENV</a></li><li><a href="/prelude/0.4.0-rc.1-dev/errorable/">Errorable</a></li><li><a href="/prelude/0.4.0-rc.1-dev/evaluator/">Evaluator</a></li><li><a href="/prelude/0.4.0-rc.1-dev/feed/">Feed</a></li><li><a href="/prelude/0.4.0-rc.1-dev/filehandle/">FileHandle</a></li><li><a href="/prelude/0.4.0-rc.1-dev/fs/">FS</a></li><li><a href="/prelude/0.4.0-rc.1-dev/io/">IO</a></li><li><a href="/prelude/0.4.0-rc.1-dev/json/">JSON</a></li><li><a href="/prelude/0.4.0-rc.1-dev/kex/">Kex</a><ul><li><a href="/prelude/0.4.0-rc.1-dev/kex/ast/">Kex.AST</a></li></ul></li><li><a href="/prelude/0.4.0-rc.1-dev/list/">List</a></li><li><a href="/prelude/0.4.0-rc.1-dev/map/" aria-current="page">Map</a></li><li><a href="/prelude/0.4.0-rc.1-dev/math/">Math</a></li><li><a href="/prelude/0.4.0-rc.1-dev/mock/">Mock</a></li><li><a href="/prelude/0.4.0-rc.1-dev/net/">Net</a><ul><li><a href="/prelude/0.4.0-rc.1-dev/net/dns/">Net.DNS</a></li><li><a href="/prelude/0.4.0-rc.1-dev/net/http/">Net.HTTP</a><ul><li><a href="/prelude/0.4.0-rc.1-dev/net/http/websocket/">Net.HTTP.WebSocket</a></li></ul></li><li><a href="/prelude/0.4.0-rc.1-dev/net/ip/">Net.IP</a></li><li><a href="/prelude/0.4.0-rc.1-dev/net/socket/">Net.Socket</a></li></ul></li><li><a href="/prelude/0.4.0-rc.1-dev/node/">Node</a></li><li><a href="/prelude/0.4.0-rc.1-dev/number/">Number</a></li><li><a href="/prelude/0.4.0-rc.1-dev/optional/">Optional</a></li><li><a href="/prelude/0.4.0-rc.1-dev/optionparser/">OptionParser</a></li><li><a href="/prelude/0.4.0-rc.1-dev/parsing/">Parsing</a></li><li><a href="/prelude/0.4.0-rc.1-dev/prelude/">Prelude</a></li><li><a href="/prelude/0.4.0-rc.1-dev/process/">Process</a></li><li><a href="/prelude/0.4.0-rc.1-dev/random/">Random</a></li><li><a href="/prelude/0.4.0-rc.1-dev/range/">Range</a></li><li><a href="/prelude/0.4.0-rc.1-dev/regex/">Regex</a></li><li><a href="/prelude/0.4.0-rc.1-dev/stream/">Stream</a></li><li><a href="/prelude/0.4.0-rc.1-dev/string/">String</a></li><li><a href="/prelude/0.4.0-rc.1-dev/system/">System</a></li><li><a href="/prelude/0.4.0-rc.1-dev/taggedvalidation/">TaggedValidation</a></li><li><a href="/prelude/0.4.0-rc.1-dev/template/">Template</a></li><li><a href="/prelude/0.4.0-rc.1-dev/time/">Time</a></li><li><a href="/prelude/0.4.0-rc.1-dev/truthyable/">Truthyable</a></li><li><a href="/prelude/0.4.0-rc.1-dev/type/">Type</a></li><li><a href="/prelude/0.4.0-rc.1-dev/units/">Units</a><ul><li><a href="/prelude/0.4.0-rc.1-dev/units/data/">Units.Data</a></li><li><a href="/prelude/0.4.0-rc.1-dev/units/dynamic/">Units.Dynamic</a></li><li><a href="/prelude/0.4.0-rc.1-dev/units/si/">Units.SI</a></li></ul></li><li><a href="/prelude/0.4.0-rc.1-dev/uri/">URI</a></li></ul></li></ul></div>
         </nav>
       </aside>
