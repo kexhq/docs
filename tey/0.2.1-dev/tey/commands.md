@@ -434,7 +434,7 @@ setupMergeDriver(remove?: Bool) -> Integer
 ### `new` (foul)
 
 ```kex
-new(directory: String, library: Bool) -> Integer
+new(directory: String, library: Bool, agentFiles: Bool) -> Integer
 ```
 
 `tey new <name>` — a package in a directory of its own, which the command creates. The pair with `init` below follows what `git init` and `cargo new` already taught everyone: `new` makes the directory, `init` adopts the one you are standing in.
@@ -442,7 +442,7 @@ new(directory: String, library: Bool) -> Integer
 ### `init` (foul)
 
 ```kex
-init(name: String, library: Bool) -> Integer
+init(name: String, library: Bool, agentFiles: Bool) -> Integer
 ```
 
 `tey init` — a package in the CURRENT directory, named after it. This is the half that was missing: a repository someone had already made and cloned had no way to become a package except `tey new` in a temp directory and moving the files over by hand.

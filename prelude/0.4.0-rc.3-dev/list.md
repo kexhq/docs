@@ -391,7 +391,7 @@ Returns `true` if `elem` is present in the list.
 indexOf(elem: X) -> Integer?
 ```
 
-Returns `true` if the first index at which `elem` appears, wrapped in `Just`, or `None` if the element is not present.
+Returns the first index at which `elem` appears, wrapped in `Just`, or `None` if the element is not present.
 
 **Examples**
 

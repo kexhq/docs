@@ -32,10 +32,10 @@ There are two flavours, differing only in how they store their elements:
 
 ```kex
 Set           sorted, so iteration is in ascending element order and the
-              elements must be Orderable.
+              elements must be +Comparable+.
 UnorderedSet  hash-backed, so membership does not pay for ordering and
-              the elements need only be comparable. Iteration order is
-              unspecified: never write a test against it.
+              the elements need only support equality. Iteration order
+              is unspecified: never write a test against it.
 ```
 
 Reach for `Set` when you will read the elements back out, and for `UnorderedSet` when the set exists to answer `contains?` quickly.
@@ -1142,7 +1142,7 @@ from(items: [A]) -> UnorderedSet<A>
 
 Builds an unordered set from a list, discarding duplicates.
 
-Nothing is sorted, so unlike `Set.from` this does not require the elements to be `Orderable`.
+Nothing is sorted, so unlike `Set.from` this does not require the elements to be `Comparable`.
 
 **Parameters**
 
