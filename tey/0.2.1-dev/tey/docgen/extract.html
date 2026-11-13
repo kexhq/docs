@@ -1,0 +1,686 @@
+<div class="intro">
+<p>Kex.AST nodes → the typed entity model (Tey.Docgen.Model).</p>
+<p>Declaration bodies interleave TypeAnnotations (<code>name : type</code>) with FunctionDefs (<code>let name(args) ...</code>); overloads repeat both. Functions are collected per name as PendingFunction records (annotations + parameter lists kept apart), then finalised once the body is fully walked, because pairing an annotation's curried type with a clause's parameter names needs both sides.</p>
+</div>
+<section class="entity" id="module-tey-docgen-extract">
+<h2><span class="kind kind-module">module</span> <code>Tey.Docgen.Extract</code> <a class="permalink" href="#module-tey-docgen-extract" title="Copy link" aria-label="Copy link">#</a></h2>
+<section class="summary">
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-fileentities"><code>fileEntities</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-pagefor"><code>pageFor</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd><code>header</code> is the file's opening comment when a blank line separates it from what follows (Index.fileHeader).</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-detachheader"><code>detachHeader</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>The items with the header removed from the first documented one.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-withoutheader"><code>withoutHeader</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-docof"><code>docOf</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-withdoc"><code>withDoc</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-pagetitle"><code>pageTitle</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>A page's title is the declaration it is really about — &quot;OptionParser&quot;, not the file name's &quot;Optionparser&quot;, and &quot;FileHandle&quot;, not &quot;Filehandle&quot;.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-basespelling"><code>baseSpelling</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>&quot;FileHandle&lt;CanRead, W&gt;&quot; -&gt; &quot;FileHandle&quot;, &quot;FS.Path&quot; -&gt; &quot;Path&quot;: what the file could plausibly be named after.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-moduletitle"><code>moduleTitle</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>The title of a file with one top-level module.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-lastsegmentmatches?"><code>lastSegmentMatches?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-nestedmodulenamed"><code>nestedModuleNamed</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-filestem"><code>fileStem</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>&quot;kex/ast&quot; -&gt; &quot;ast&quot;.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-entitiesin"><code>entitiesIn</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-bodyentities"><code>bodyEntities</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-finalize"><code>finalize</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-mergemakes"><code>mergeMakes</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Two <code>make Queue&lt;A&gt;</code> blocks in one file (one for the collection traits, one for Blankable) are one set of methods to a reader: the later block folds into the first, traits and members appended.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-samemaketarget?"><code>sameMakeTarget?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-absorbmake"><code>absorbMake</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-finalizeone"><code>finalizeOne</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-typeentity"><code>typeEntity</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-variantentry"><code>variantEntry</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>A named helper (rather than an inline lambda) so the element type of <code>v.fields</code> comes from VariantInfo, not from VariantEntry's [String].</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-recordentity"><code>recordEntity</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-traitentity"><code>traitEntity</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-makeentity"><code>makeEntity</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-moduleentity"><code>moduleEntity</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-constantentity"><code>constantEntity</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-functionentries"><code>functionEntries</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-noteannotation"><code>noteAnnotation</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-addannotation"><code>addAnnotation</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-notefunction"><code>noteFunction</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-isconstantbinding"><code>isConstantBinding</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>A binding with no parameter list is a constant — unless it is <code>foul</code>, in which case it is a zero-argument FUNCTION that Kex auto-calls.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-noteconstant"><code>noteConstant</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-constantfrompending"><code>constantFromPending</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>The annotation arrived first and created a PendingFunction; the binding now replaces it with the constant entry, keeping name/doc/line.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-returntypetext"><code>returnTypeText</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-addclause"><code>addClause</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-findpending"><code>findPending</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-indexedfind"><code>indexedFind</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-finalizefunction"><code>finalizeFunction</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-declaredreturn"><code>declaredReturn</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>The one return type the source commits to: the annotation's result, or the inline <code>-&gt; T</code> of an unannotated clause.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-finalresult"><code>finalResult</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>What a curried type finally answers: <code>A -&gt; (A -&gt; T -&gt; A) -&gt; A</code> is A.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-docreturntype"><code>docReturnType</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-functiontypes"><code>functionTypes</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>The type names a function is about — every parameter type plus the result type of each annotation, deduplicated.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-annotationtypes"><code>annotationTypes</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-signaturetexts"><code>signatureTexts</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>A signature names every parameter WITH its type and ends in the result: <code>and(a: Integer, b: Integer) -&gt; Integer</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-plainsignature"><code>plainSignature</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>A signature built from the clause alone: inline types first, the doc tags as the fallback, bare names when neither says.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-rendersignature"><code>renderSignature</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-docnamedsignature"><code>docNamedSignature</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>An annotation with no clause to take names from: the @param tags name the parameters when there are exactly as many as the type has.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-annotationsigil"><code>annotationSigil</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>A type that cannot be paired with a clause is shown as the source wrote it, sigil included: <code>:&gt;</code> is what says the receiver is implied, and a plain <code>:</code> in its place would describe a function that takes no receiver.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-unnamedsignature"><code>unnamedSignature</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>A function with nothing to name its parameters by still reads as a function: <code>combine(This) -&gt; This</code>, and with none to take, <code>lines -&gt; [String]</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-paramtext"><code>paramText</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-parenthesized"><code>parenthesized</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>A function type inside a parameter list reads as the parameter's type only in parentheses: <code>f: (T -&gt; Void)</code>, not <code>f: T -&gt; Void</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-displayname"><code>displayName</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>A pattern parameter (<code>repeat(0)</code>) shows the name its @param tag gives that position, or <code>_</code> — never the literal, which reads as an argument.</dd></div>
+<div class="param"><dt><a class="xref" href="#constant-tey-docgen-extract-conversionname"><code>ConversionName</code></a></dt><dd>The conversion protocol: <code>value.to(String)</code> names the type to convert to.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-typeargument?"><code>typeArgument?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-docparamtype"><code>docParamType</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-bestparams"><code>bestParams</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Of several clauses' parameter lists, the one that names the most parameters — <code>repeat(n: Integer)</code> over <code>repeat(0)</code> — merged with the types the other clauses of the same arity declare.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-namedcount"><code>namedCount</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-withpeertype"><code>withPeerType</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-signaturetypetext"><code>signatureTypeText</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Source-style type text: function arrows chain to the right without the redundant parentheses typeRefText adds, and a function-typed parameter is parenthesized so <code>(X -&gt; Y) -&gt; Z</code> stays distinct from <code>X -&gt; Y -&gt; Z</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-signatureparamtext"><code>signatureParamText</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-annotationref"><code>annotationRef</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-matchingparamlist"><code>matchingParamList</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-matchingparamlists"><code>matchingParamLists</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-paramsmatch"><code>paramsMatch</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-flattentoarity"><code>flattenToArity</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Absorbs curried layers until the type takes <code>arity</code> arguments: <code>FilePath -&gt; Read -&gt; Mode -&gt; R</code> with arity 3 becomes <code>(FilePath, Read, Mode) -&gt; R</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-clauseparams"><code>clauseParams</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd><code>type</code> is a keyword after <code>.</code>, so typed-record access goes through pattern matching instead.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-receiverpattern?"><code>receiverPattern?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-paramsig"><code>paramSig</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-paramname"><code>paramName</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-annotationtypeof"><code>annotationTypeOf</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-fieldtypename"><code>fieldTypeName</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-typetext"><code>typeText</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-typetextopt"><code>typeTextOpt</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-qualify"><code>qualify</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Modules may be written fully qualified (<code>module FS.File do</code> inside <code>module FS do</code>), so a dotted name already carries its prefix — never prepend twice.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-stripext"><code>stripExt</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-extract-titlecase"><code>titleCase</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+</dl>
+</section>
+<div class="functions">
+<div class="fn" id="function-tey-docgen-extract-fileentities">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-fileentities"><code>fileEntities</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-fileentities" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">fileEntities</span><span class="tok-punct">(</span>items<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-type">Node</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-pagefor">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-pagefor"><code>pageFor</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-pagefor" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">pageFor</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> items<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-type">Node</span><span class="tok-punct">]</span><span class="tok-punct">,</span> header<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a></span></code></pre>
+</div>
+<p><code>header</code> is the file's opening comment when a blank line separates it from what follows (Index.fileHeader). The AST reader attaches every comment above a declaration to it, blank lines and all, so the first declaration's doc arrives with the file's introduction glued on top — algebra.kex's &quot;Algebraic structures: ...&quot; read as the summary of <a class="xref" href="/prelude/0.4.0-rc.3-dev/algebra/#trait-monoid"><code>Monoid</code></a>. The header is cut off that doc here and kept as the page's own intro.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-detachheader">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-detachheader"><code>detachHeader</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-detachheader" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">detachHeader</span><span class="tok-punct">(</span>items<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-type">Node</span><span class="tok-punct">]</span><span class="tok-punct">,</span> header<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-type">Node</span><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>The items with the header removed from the first documented one.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-withoutheader">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-withoutheader"><code>withoutHeader</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-withoutheader" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">withoutHeader</span><span class="tok-punct">(</span>item<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-type">Node</span><span class="tok-punct">,</span> header<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-type">Node</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-docof">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-docof"><code>docOf</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-docof" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">docOf</span><span class="tok-punct">(</span>item<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-type">Node</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-withdoc">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-withdoc"><code>withDoc</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-withdoc" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">withDoc</span><span class="tok-punct">(</span>item<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-type">Node</span><span class="tok-punct">,</span> doc<span class="tok-op">:</span> <span class="tok-type">String?</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-type">Node</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-pagetitle">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-pagetitle"><code>pageTitle</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-pagetitle" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">pageTitle</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> entities<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>A page's title is the declaration it is really about — &quot;OptionParser&quot;, not the file name's &quot;Optionparser&quot;, and &quot;FileHandle&quot;, not &quot;Filehandle&quot;. Preference order: a single top-level module, then a single top-level type/record/trait, then the file name title-cased.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-basespelling">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-basespelling"><code>baseSpelling</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-basespelling" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">baseSpelling</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>&quot;FileHandle&lt;CanRead, W&gt;&quot; -&gt; &quot;FileHandle&quot;, &quot;FS.Path&quot; -&gt; &quot;Path&quot;: what the file could plausibly be named after.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-moduletitle">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-moduletitle"><code>moduleTitle</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-moduletitle" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">moduleTitle</span><span class="tok-punct">(</span>entry<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-moduleentry"><span class="tok-type">ModuleEntry</span></a><span class="tok-punct">,</span> stem<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>The title of a file with one top-level module. The file's stem has a say when the module is shared across several files: data/queue.kex declares <code>module Data</code> around <code>module Queue</code>, and so do set.kex and stack.kex — without the stem, every one of those pages is titled &quot;Data&quot; and the sidebar shows indistinguishable entries. A module whose last segment matches the stem is the page (&quot;dns.kex&quot; -&gt; Net.DNS); else a nested module matching it is (&quot;queue.kex&quot; -&gt; Data.Queue); else the top module stands (&quot;mock.kex&quot; -&gt; Mock, a file about the family).</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-lastsegmentmatches?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-lastsegmentmatches?"><code>lastSegmentMatches?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-lastsegmentmatches?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">lastSegmentMatches?</span><span class="tok-punct">(</span>qualifiedName<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> stem<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-nestedmodulenamed">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-nestedmodulenamed"><code>nestedModuleNamed</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-nestedmodulenamed" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">nestedModuleNamed</span><span class="tok-punct">(</span>children<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> stem<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-filestem">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-filestem"><code>fileStem</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-filestem" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">fileStem</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>&quot;kex/ast&quot; -&gt; &quot;ast&quot;.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-entitiesin">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-entitiesin"><code>entitiesIn</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-entitiesin" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">entitiesIn</span><span class="tok-punct">(</span>body<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-type">Node</span><span class="tok-punct">]</span><span class="tok-punct">,</span> prefix<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-bodyentities">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-bodyentities"><code>bodyEntities</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-bodyentities" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">bodyEntities</span><span class="tok-punct">(</span>body<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-type">Node</span><span class="tok-punct">]</span><span class="tok-punct">,</span> prefix<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> accum<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#type-tey-docgen-extract-pending"><span class="tok-type">Pending</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="#type-tey-docgen-extract-pending"><span class="tok-type">Pending</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-finalize">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-finalize"><code>finalize</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-finalize" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">finalize</span><span class="tok-punct">(</span>accum<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#type-tey-docgen-extract-pending"><span class="tok-type">Pending</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-mergemakes">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-mergemakes"><code>mergeMakes</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-mergemakes" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">mergeMakes</span><span class="tok-punct">(</span>entities<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Two <code>make Queue&lt;A&gt;</code> blocks in one file (one for the collection traits, one for Blankable) are one set of methods to a reader: the later block folds into the first, traits and members appended.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-samemaketarget?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-samemaketarget?"><code>sameMakeTarget?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-samemaketarget?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">sameMakeTarget?</span><span class="tok-punct">(</span>e<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">,</span> target<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-absorbmake">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-absorbmake"><code>absorbMake</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-absorbmake" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">absorbMake</span><span class="tok-punct">(</span>e<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">,</span> later<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-makeentry"><span class="tok-type">MakeEntry</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-finalizeone">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-finalizeone"><code>finalizeOne</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-finalizeone" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">finalizeOne</span><span class="tok-punct">(</span>p<span class="tok-op">:</span> <a class="xref" href="#type-tey-docgen-extract-pending"><span class="tok-type">Pending</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-typeentity">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-typeentity"><code>typeEntity</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-typeentity" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">typeEntity</span><span class="tok-punct">(</span>info<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-typeinfo"><span class="tok-type">TypeInfo</span></a><span class="tok-punct">,</span> prefix<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-variantentry">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-variantentry"><code>variantEntry</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-variantentry" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">variantEntry</span><span class="tok-punct">(</span>v<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-variantinfo"><span class="tok-type">VariantInfo</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-variantentry"><span class="tok-type">VariantEntry</span></a></span></code></pre>
+</div>
+<p>A named helper (rather than an inline lambda) so the element type of <code>v.fields</code> comes from VariantInfo, not from VariantEntry's [String].</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-recordentity">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-recordentity"><code>recordEntity</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-recordentity" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">recordEntity</span><span class="tok-punct">(</span>info<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-recordinfo"><span class="tok-type">RecordInfo</span></a><span class="tok-punct">,</span> prefix<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-traitentity">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-traitentity"><code>traitEntity</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-traitentity" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">traitEntity</span><span class="tok-punct">(</span>info<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-traitinfo"><span class="tok-type">TraitInfo</span></a><span class="tok-punct">,</span> prefix<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-makeentity">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-makeentity"><code>makeEntity</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-makeentity" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">makeEntity</span><span class="tok-punct">(</span>info<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-makeinfo"><span class="tok-type">MakeInfo</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-moduleentity">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-moduleentity"><code>moduleEntity</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-moduleentity" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">moduleEntity</span><span class="tok-punct">(</span>info<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-moduleinfo"><span class="tok-type">ModuleInfo</span></a><span class="tok-punct">,</span> prefix<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-constantentity">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-constantentity"><code>constantEntity</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-constantentity" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">constantEntity</span><span class="tok-punct">(</span>info<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-constantinfo"><span class="tok-type">ConstantInfo</span></a><span class="tok-punct">,</span> prefix<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-functionentries">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-functionentries"><code>functionEntries</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-functionentries" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">functionEntries</span><span class="tok-punct">(</span>body<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-type">Node</span><span class="tok-punct">]</span><span class="tok-punct">,</span> prefix<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> receiverMethods<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-functionentry"><span class="tok-type">FunctionEntry</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-noteannotation">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-noteannotation"><code>noteAnnotation</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-noteannotation" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">noteAnnotation</span><span class="tok-punct">(</span>accum<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#type-tey-docgen-extract-pending"><span class="tok-type">Pending</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> info<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-annotationinfo"><span class="tok-type">AnnotationInfo</span></a><span class="tok-punct">,</span> prefix<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="#type-tey-docgen-extract-pending"><span class="tok-type">Pending</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-addannotation">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-addannotation"><code>addAnnotation</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-addannotation" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">addAnnotation</span><span class="tok-punct">(</span>p<span class="tok-op">:</span> <a class="xref" href="#type-tey-docgen-extract-pending"><span class="tok-type">Pending</span></a><span class="tok-punct">,</span> info<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-annotationinfo"><span class="tok-type">AnnotationInfo</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-tey-docgen-extract-pending"><span class="tok-type">Pending</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-notefunction">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-notefunction"><code>noteFunction</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-notefunction" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">noteFunction</span><span class="tok-punct">(</span>accum<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#type-tey-docgen-extract-pending"><span class="tok-type">Pending</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> info<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-functioninfo"><span class="tok-type">FunctionInfo</span></a><span class="tok-punct">,</span> prefix<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="#type-tey-docgen-extract-pending"><span class="tok-type">Pending</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-isconstantbinding">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-isconstantbinding"><code>isConstantBinding</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-isconstantbinding" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">isConstantBinding</span><span class="tok-punct">(</span>info<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-functioninfo"><span class="tok-type">FunctionInfo</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>A binding with no parameter list is a constant — unless it is <code>foul</code>, in which case it is a zero-argument FUNCTION that Kex auto-calls. <a class="xref" href="/prelude/0.4.0-rc.3-dev/io/#constant-io-out"><code>IO.out</code></a> is a handle that is always the same one; <code>IO.getLine</code> reads a new line every time it is named, and calling that a constant is a lie about both what it does and when it happens.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-noteconstant">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-noteconstant"><code>noteConstant</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-noteconstant" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">noteConstant</span><span class="tok-punct">(</span>accum<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#type-tey-docgen-extract-pending"><span class="tok-type">Pending</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> info<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-functioninfo"><span class="tok-type">FunctionInfo</span></a><span class="tok-punct">,</span> prefix<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="#type-tey-docgen-extract-pending"><span class="tok-type">Pending</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-constantfrompending">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-constantfrompending"><code>constantFromPending</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-constantfrompending" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">constantFromPending</span><span class="tok-punct">(</span>p<span class="tok-op">:</span> <a class="xref" href="#type-tey-docgen-extract-pending"><span class="tok-type">Pending</span></a><span class="tok-punct">,</span> info<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-functioninfo"><span class="tok-type">FunctionInfo</span></a><span class="tok-punct">,</span> prefix<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-tey-docgen-extract-pending"><span class="tok-type">Pending</span></a></span></code></pre>
+</div>
+<p>The annotation arrived first and created a PendingFunction; the binding now replaces it with the constant entry, keeping name/doc/line.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-returntypetext">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-returntypetext"><code>returnTypeText</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-returntypetext" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">returnTypeText</span><span class="tok-punct">(</span>info<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-functioninfo"><span class="tok-type">FunctionInfo</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-addclause">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-addclause"><code>addClause</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-addclause" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">addClause</span><span class="tok-punct">(</span>p<span class="tok-op">:</span> <a class="xref" href="#type-tey-docgen-extract-pending"><span class="tok-type">Pending</span></a><span class="tok-punct">,</span> info<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-functioninfo"><span class="tok-type">FunctionInfo</span></a><span class="tok-punct">,</span> lists<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-extract-paramsig"><span class="tok-type">ParamSig</span></a><span class="tok-punct">]</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-tey-docgen-extract-pending"><span class="tok-type">Pending</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-findpending">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-findpending"><code>findPending</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-findpending" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">findPending</span><span class="tok-punct">(</span>accum<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#type-tey-docgen-extract-pending"><span class="tok-type">Pending</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer?</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-indexedfind">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-indexedfind"><code>indexedFind</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-indexedfind" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">indexedFind</span><span class="tok-punct">(</span>accum<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#type-tey-docgen-extract-pending"><span class="tok-type">Pending</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> index<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer?</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-finalizefunction">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-finalizefunction"><code>finalizeFunction</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-finalizefunction" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">finalizeFunction</span><span class="tok-punct">(</span><span class="tok-keyword">fn</span><span class="tok-op">:</span> <a class="xref" href="#record-tey-docgen-extract-pendingfunction"><span class="tok-type">PendingFunction</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-functionentry"><span class="tok-type">FunctionEntry</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-declaredreturn">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-declaredreturn"><code>declaredReturn</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-declaredreturn" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">declaredReturn</span><span class="tok-punct">(</span><span class="tok-keyword">fn</span><span class="tok-op">:</span> <a class="xref" href="#record-tey-docgen-extract-pendingfunction"><span class="tok-type">PendingFunction</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>The one return type the source commits to: the annotation's result, or the inline <code>-&gt; T</code> of an unannotated clause. What the @return tag says is checked against this (Index.reportDocDrift), never shown instead of it.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-finalresult">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-finalresult"><code>finalResult</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-finalresult" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">finalResult</span><span class="tok-punct">(</span>ref<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#type-kex-ast-typeref"><span class="tok-type">TypeRef</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#type-kex-ast-typeref"><span class="tok-type">TypeRef</span></a></span></code></pre>
+</div>
+<p>What a curried type finally answers: <code>A -&gt; (A -&gt; T -&gt; A) -&gt; A</code> is A.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-docreturntype">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-docreturntype"><code>docReturnType</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-docreturntype" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">docReturnType</span><span class="tok-punct">(</span>doc<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-doc"><span class="tok-type">Doc</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-functiontypes">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-functiontypes"><code>functionTypes</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-functiontypes" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">functionTypes</span><span class="tok-punct">(</span><span class="tok-keyword">fn</span><span class="tok-op">:</span> <a class="xref" href="#record-tey-docgen-extract-pendingfunction"><span class="tok-type">PendingFunction</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>The type names a function is about — every parameter type plus the result type of each annotation, deduplicated. This is what lets search answer &quot;what touches Integer&quot; rather than just &quot;what is called Integer&quot;.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-annotationtypes">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-annotationtypes"><code>annotationTypes</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-annotationtypes" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">annotationTypes</span><span class="tok-punct">(</span>info<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-annotationinfo"><span class="tok-type">AnnotationInfo</span></a><span class="tok-punct">,</span> paramLists<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-extract-paramsig"><span class="tok-type">ParamSig</span></a><span class="tok-punct">]</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-signaturetexts">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-signaturetexts"><code>signatureTexts</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-signaturetexts" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">signatureTexts</span><span class="tok-punct">(</span><span class="tok-keyword">fn</span><span class="tok-op">:</span> <a class="xref" href="#record-tey-docgen-extract-pendingfunction"><span class="tok-type">PendingFunction</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>A signature names every parameter WITH its type and ends in the result: <code>and(a: Integer, b: Integer) -&gt; Integer</code>. The names come from a clause, the types from the annotation (flattened to the clause's arity), from the clause's own inline annotations, or — for a method nobody annotated — from its @param/@return tags. A zero-parameter function is still a function, written the way its definition is (<code>let sum -&gt; Number</code>): <code>sum -&gt; Number</code>. The <code>name : Type</code> form is left to constants. A method with no clause at all (a trait's required method) has only its type, and borrows parameter names from its @param tags when they line up.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-plainsignature">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-plainsignature"><code>plainSignature</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-plainsignature" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">plainSignature</span><span class="tok-punct">(</span><span class="tok-keyword">fn</span><span class="tok-op">:</span> <a class="xref" href="#record-tey-docgen-extract-pendingfunction"><span class="tok-type">PendingFunction</span></a><span class="tok-punct">,</span> params<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-extract-paramsig"><span class="tok-type">ParamSig</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>A signature built from the clause alone: inline types first, the doc tags as the fallback, bare names when neither says.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-rendersignature">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-rendersignature"><code>renderSignature</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-rendersignature" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">renderSignature</span><span class="tok-punct">(</span>info<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-annotationinfo"><span class="tok-type">AnnotationInfo</span></a><span class="tok-punct">,</span> <span class="tok-keyword">fn</span><span class="tok-op">:</span> <a class="xref" href="#record-tey-docgen-extract-pendingfunction"><span class="tok-type">PendingFunction</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-docnamedsignature">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-docnamedsignature"><code>docNamedSignature</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-docnamedsignature" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">docNamedSignature</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> ref<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#type-kex-ast-typeref"><span class="tok-type">TypeRef</span></a><span class="tok-punct">,</span> doc<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-doc"><span class="tok-type">Doc</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>An annotation with no clause to take names from: the @param tags name the parameters when there are exactly as many as the type has.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-annotationsigil">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-annotationsigil"><code>annotationSigil</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-annotationsigil" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">annotationSigil</span><span class="tok-punct">(</span>info<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-annotationinfo"><span class="tok-type">AnnotationInfo</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>A type that cannot be paired with a clause is shown as the source wrote it, sigil included: <code>:&gt;</code> is what says the receiver is implied, and a plain <code>:</code> in its place would describe a function that takes no receiver.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-unnamedsignature">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-unnamedsignature"><code>unnamedSignature</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-unnamedsignature" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">unnamedSignature</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> ref<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#type-kex-ast-typeref"><span class="tok-type">TypeRef</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>A function with nothing to name its parameters by still reads as a function: <code>combine(This) -&gt; This</code>, and with none to take, <code>lines -&gt; [String]</code>.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-paramtext">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-paramtext"><code>paramText</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-paramtext" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">paramText</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> typeName<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> hasDefault<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-parenthesized">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-parenthesized"><code>parenthesized</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-parenthesized" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parenthesized</span><span class="tok-punct">(</span>typeName<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>A function type inside a parameter list reads as the parameter's type only in parentheses: <code>f: (T -&gt; Void)</code>, not <code>f: T -&gt; Void</code>.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-displayname">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-displayname"><code>displayName</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-displayname" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">displayName</span><span class="tok-punct">(</span>p<span class="tok-op">:</span> <a class="xref" href="#record-tey-docgen-extract-paramsig"><span class="tok-type">ParamSig</span></a><span class="tok-punct">,</span> index<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <span class="tok-keyword">fn</span><span class="tok-op">:</span> <a class="xref" href="#record-tey-docgen-extract-pendingfunction"><span class="tok-type">PendingFunction</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>A pattern parameter (<code>repeat(0)</code>) shows the name its @param tag gives that position, or <code>_</code> — never the literal, which reads as an argument.</p>
+
+</div>
+<div class="fn" id="constant-tey-docgen-extract-conversionname">
+<div class="fn-head">
+<h3><a class="self" href="#constant-tey-docgen-extract-conversionname"><code>ConversionName</code></a> <span class="tag-kind">constant</span> <a class="permalink" href="#constant-tey-docgen-extract-conversionname" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">ConversionName</span></span></code></pre>
+</div>
+<p>The conversion protocol: <code>value.to(String)</code> names the type to convert to. That argument is the type itself, so the pattern in the clause is what a caller writes and is shown as written. Anywhere else a capitalised pattern is a constructor being matched (<code>None</code>), not something to pass.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-typeargument?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-typeargument?"><code>typeArgument?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-typeargument?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">typeArgument?</span><span class="tok-punct">(</span>pattern<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-docparamtype">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-docparamtype"><code>docParamType</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-docparamtype" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">docParamType</span><span class="tok-punct">(</span>doc<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-doc"><span class="tok-type">Doc</span></a><span class="tok-punct">,</span> name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-bestparams">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-bestparams"><code>bestParams</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-bestparams" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">bestParams</span><span class="tok-punct">(</span>lists<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-extract-paramsig"><span class="tok-type">ParamSig</span></a><span class="tok-punct">]</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-extract-paramsig"><span class="tok-type">ParamSig</span></a><span class="tok-punct">]</span><span class="tok-op">?</span></span></code></pre>
+</div>
+<p>Of several clauses' parameter lists, the one that names the most parameters — <code>repeat(n: Integer)</code> over <code>repeat(0)</code> — merged with the types the other clauses of the same arity declare.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-namedcount">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-namedcount"><code>namedCount</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-namedcount" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">namedCount</span><span class="tok-punct">(</span>list<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-extract-paramsig"><span class="tok-type">ParamSig</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-withpeertype">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-withpeertype"><code>withPeerType</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-withpeertype" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">withPeerType</span><span class="tok-punct">(</span>p<span class="tok-op">:</span> <a class="xref" href="#record-tey-docgen-extract-paramsig"><span class="tok-type">ParamSig</span></a><span class="tok-punct">,</span> index<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> peers<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-extract-paramsig"><span class="tok-type">ParamSig</span></a><span class="tok-punct">]</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-tey-docgen-extract-paramsig"><span class="tok-type">ParamSig</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-signaturetypetext">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-signaturetypetext"><code>signatureTypeText</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-signaturetypetext" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">signatureTypeText</span><span class="tok-punct">(</span>ref<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#type-kex-ast-typeref"><span class="tok-type">TypeRef</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Source-style type text: function arrows chain to the right without the redundant parentheses typeRefText adds, and a function-typed parameter is parenthesized so <code>(X -&gt; Y) -&gt; Z</code> stays distinct from <code>X -&gt; Y -&gt; Z</code>.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-signatureparamtext">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-signatureparamtext"><code>signatureParamText</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-signatureparamtext" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">signatureParamText</span><span class="tok-punct">(</span>p<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#type-kex-ast-typeref"><span class="tok-type">TypeRef</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-annotationref">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-annotationref"><code>annotationRef</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-annotationref" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">annotationRef</span><span class="tok-punct">(</span>info<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-annotationinfo"><span class="tok-type">AnnotationInfo</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#type-kex-ast-typeref"><span class="tok-type">TypeRef</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-matchingparamlist">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-matchingparamlist"><code>matchingParamList</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-matchingparamlist" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">matchingParamList</span><span class="tok-punct">(</span>ref<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#type-kex-ast-typeref"><span class="tok-type">TypeRef</span></a><span class="tok-punct">,</span> paramLists<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-extract-paramsig"><span class="tok-type">ParamSig</span></a><span class="tok-punct">]</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-extract-paramsig"><span class="tok-type">ParamSig</span></a><span class="tok-punct">]</span><span class="tok-op">?</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-matchingparamlists">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-matchingparamlists"><code>matchingParamLists</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-matchingparamlists" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">matchingParamLists</span><span class="tok-punct">(</span>ref<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#type-kex-ast-typeref"><span class="tok-type">TypeRef</span></a><span class="tok-punct">,</span> paramLists<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-extract-paramsig"><span class="tok-type">ParamSig</span></a><span class="tok-punct">]</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-extract-paramsig"><span class="tok-type">ParamSig</span></a><span class="tok-punct">]</span><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-paramsmatch">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-paramsmatch"><code>paramsMatch</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-paramsmatch" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">paramsMatch</span><span class="tok-punct">(</span>ref<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#type-kex-ast-typeref"><span class="tok-type">TypeRef</span></a><span class="tok-punct">,</span> names<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-extract-paramsig"><span class="tok-type">ParamSig</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-flattentoarity">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-flattentoarity"><code>flattenToArity</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-flattentoarity" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">flattenToArity</span><span class="tok-punct">(</span>ref<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#type-kex-ast-typeref"><span class="tok-type">TypeRef</span></a><span class="tok-punct">,</span> arity<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#type-kex-ast-typeref"><span class="tok-type">TypeRef</span></a></span></code></pre>
+</div>
+<p>Absorbs curried layers until the type takes <code>arity</code> arguments: <code>FilePath -&gt; Read -&gt; Mode -&gt; R</code> with arity 3 becomes <code>(FilePath, Read, Mode) -&gt; R</code>. A type that runs out of layers first, or whose next layer would overshoot, is left where it stands.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-clauseparams">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-clauseparams"><code>clauseParams</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-clauseparams" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">clauseParams</span><span class="tok-punct">(</span>clause<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-clauseinfo"><span class="tok-type">ClauseInfo</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-extract-paramsig"><span class="tok-type">ParamSig</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p><code>type</code> is a keyword after <code>.</code>, so typed-record access goes through pattern matching instead.</p>
+<p><code>let factor(@Nanosecond) = ...</code> matches on the receiver: the pattern picks the clause and is not something a caller passes.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-receiverpattern?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-receiverpattern?"><code>receiverPattern?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-receiverpattern?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">receiverPattern?</span><span class="tok-punct">(</span>p<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-paraminfo"><span class="tok-type">ParamInfo</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-paramsig">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-paramsig"><code>paramSig</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-paramsig" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">paramSig</span><span class="tok-punct">(</span>p<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-paraminfo"><span class="tok-type">ParamInfo</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-tey-docgen-extract-paramsig"><span class="tok-type">ParamSig</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-paramname">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-paramname"><code>paramName</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-paramname" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">paramName</span><span class="tok-punct">(</span>p<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-paraminfo"><span class="tok-type">ParamInfo</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-annotationtypeof">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-annotationtypeof"><code>annotationTypeOf</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-annotationtypeof" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">annotationTypeOf</span><span class="tok-punct">(</span>info<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-constantinfo"><span class="tok-type">ConstantInfo</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-fieldtypename">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-fieldtypename"><code>fieldTypeName</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-fieldtypename" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">fieldTypeName</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-fieldinfo"><span class="tok-type">FieldInfo</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-typetext">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-typetext"><code>typeText</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-typetext" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">typeText</span><span class="tok-punct">(</span>ref<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#type-kex-ast-typeref"><span class="tok-type">TypeRef</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-typetextopt">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-typetextopt"><code>typeTextOpt</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-typetextopt" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">typeTextOpt</span><span class="tok-punct">(</span>ref<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#module-kex"><span class="tok-type">Kex</span></a><span class="tok-op">.</span><span class="tok-type">AST</span><span class="tok-op">.</span><span class="tok-type">TypeRef?</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-qualify">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-qualify"><code>qualify</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-qualify" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">qualify</span><span class="tok-punct">(</span>prefix<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Modules may be written fully qualified (<code>module FS.File do</code> inside <code>module FS do</code>), so a dotted name already carries its prefix — never prepend twice. A short name gets the parent's prefix as usual.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-stripext">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-stripext"><code>stripExt</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-stripext" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">stripExt</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-extract-titlecase">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-extract-titlecase"><code>titleCase</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-extract-titlecase" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">titleCase</span><span class="tok-punct">(</span>s<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+</div>
+</section>
+<section class="entity" id="type-tey-docgen-extract-pending">
+<h2><span class="kind kind-type">type</span> <code>Pending</code> <a class="permalink" href="#type-tey-docgen-extract-pending" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Accumulator entries: finished entities or functions still collecting.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>Done(Entity)</code></li>
+<li><code>PendingFn(PendingFunction)</code></li>
+</ul>
+
+</section>
+<section class="entity" id="record-tey-docgen-extract-pendingfunction">
+<h2><span class="kind kind-record">record</span> <code>PendingFunction</code> <a class="permalink" href="#record-tey-docgen-extract-pendingfunction" title="Copy link" aria-label="Copy link">#</a></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>qualifiedName</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>annotations</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/ast/#record-kex-ast-annotationinfo">Kex.AST.AnnotationInfo</a>]</code></dd></div>
+<div class="field"><dt><code>paramLists</code></dt><dd><code>[[<a class="xref" href="#record-tey-docgen-extract-paramsig">ParamSig</a>]]</code></dd></div>
+<div class="field"><dt><code>clauseCount</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>doc</code></dt><dd><code><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-doc">Doc</a></code></dd></div>
+<div class="field"><dt><code>line</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>returnType</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>isFoul</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool">Bool</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-tey-docgen-extract-paramsig">
+<h2><span class="kind kind-record">record</span> <code>ParamSig</code> <a class="permalink" href="#record-tey-docgen-extract-paramsig" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>One parameter as a clause declares it. <code>named</code> is false for a pattern parameter (<code>let repeat(0) = ...</code>), whose spelling is a value, not a name a signature should show.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>typeName</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>named</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool">Bool</a></code></dd></div>
+<div class="field"><dt><code>hasDefault</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool">Bool</a></code></dd></div>
+</dl>
+
+</section>

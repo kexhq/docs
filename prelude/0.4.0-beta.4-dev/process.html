@@ -1,0 +1,622 @@
+<div class="intro">
+<p>Processes, tasks and external commands.</p>
+<p>Kex's concurrency is the BEAM's: lightweight processes that share nothing and communicate by message. There are three things here, and they answer different questions.</p>
+<p><a class="xref" href="#type-task"><code>Task</code></a> runs one piece of work somewhere else and gives you the answer back:</p>
+<pre class="code"><code><span class="tok-keyword">let</span> a <span class="tok-op">=</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-fn">expensiveThing</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span> <span class="tok-keyword">end</span>
+<span class="tok-keyword">let</span> b <span class="tok-op">=</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-fn">expensiveThing</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span> <span class="tok-keyword">end</span>
+a<span class="tok-op">.</span><span class="tok-method">await</span> <span class="tok-op">+</span> b<span class="tok-op">.</span><span class="tok-method">await</span></code></pre>
+<p><code>serving</code> plus <code>Process.spawn</code> gives a piece of state its own process, with typed calls into it:</p>
+<pre class="code"><code><span class="tok-keyword">record</span> <span class="tok-type">RateLimiter</span> <span class="tok-keyword">do</span>
+  remaining <span class="tok-op">:</span> <span class="tok-type">Integer</span>
+<span class="tok-keyword">end</span>
+
+serving <span class="tok-type">RateLimiter</span> <span class="tok-keyword">do</span>
+  slot allowed? <span class="tok-op">-&gt;</span> <span class="tok-type">Reply</span><span class="tok-op">&lt;</span><span class="tok-type">Bool</span><span class="tok-op">&gt;</span> <span class="tok-keyword">do</span>
+    <span class="tok-keyword">let</span> allowed <span class="tok-op">=</span> <span class="tok-op">@</span><span class="tok-field">remaining</span> <span class="tok-op">&gt;</span> <span class="tok-number">0</span>
+    new<span class="tok-op">.</span><span class="tok-method">remaining</span> <span class="tok-op">=</span> allowed <span class="tok-keyword">then</span> <span class="tok-op">@</span><span class="tok-field">remaining</span> <span class="tok-op">-</span> <span class="tok-number">1</span> <span class="tok-keyword">else</span> <span class="tok-op">@</span><span class="tok-field">remaining</span>
+    <span class="tok-keyword">return</span> <span class="tok-punct">{</span> new<span class="tok-punct">,</span> reply<span class="tok-op">:</span> allowed <span class="tok-punct">}</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span>
+
+<span class="tok-keyword">let</span> api <span class="tok-op">=</span> <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-keyword">spawn</span><span class="tok-punct">(</span><span class="tok-type">RateLimiter</span> <span class="tok-punct">{</span> remaining<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+api<span class="tok-op">.</span><span class="tok-method">allowed?</span><span class="tok-punct">(</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(true)</span></code></pre>
+<p><code>Process.run</code> and <code>Process.stream</code> run an external program.</p>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">git</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">rev-parse</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">HEAD</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre>
+<p>Backed by Kex.Intrinsic.Process and the BEAM runtime.</p>
+</div>
+<section class="entity" id="type-pid">
+<h2><span class="kind kind-type">type</span> <code>Pid</code></h2>
+<p>An opaque BEAM process identifier.</p>
+<p>Obtained from <code>Process.self</code> or <code>Process.whereIs</code>. Send it messages, link to it, monitor it, or ask whether it is still alive.</p>
+<section class="members" id="make-pid">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="pid-send">
+<h4><a class="self" href="#pid-send"><code>send</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">send</span><span class="tok-punct">(</span>msg<span class="tok-op">:</span> <span class="tok-type">X</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Sends <code>msg</code> to the process, unchanged, as a raw BEAM term.</p>
+<p>Sending never blocks and never fails, even when the process is gone: that is the BEAM's model, not an oversight. Monitor the process when delivery matters.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>msg</code></dt><dd>the message to send</dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code>worker<span class="tok-op">.</span><span class="tok-method">send</span><span class="tok-punct">(</span><span class="tok-op">:</span>stop<span class="tok-punct">)</span>
+worker<span class="tok-op">.</span><span class="tok-method">send</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">job</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-number">42</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="pid-sendfrom">
+<h4><a class="self" href="#pid-sendfrom"><code>sendFrom</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">sendFrom</span><span class="tok-punct">(</span>msg<span class="tok-op">:</span> <span class="tok-type">X</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Sends the conventional Erlang sender-bearing pair <code>{Process.self, msg}</code>, so the receiver knows where to answer.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>msg</code></dt><dd>the message to send</dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code>server<span class="tok-op">.</span><span class="tok-method">sendFrom</span><span class="tok-punct">(</span><span class="tok-op">:</span>status<span class="tok-punct">)</span>   <span class="tok-comment"># the server receives (senderPid, :status)</span></code></pre>
+
+</div>
+<div class="fn" id="pid-link">
+<h4><a class="self" href="#pid-link"><code>link</code></a></h4>
+<pre class="code sig"><code>link <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p>Links the calling process to this one, so that either one exiting abnormally takes the other down.</p>
+<p>Linking is bidirectional and is how a group of processes is made to fail together. Use <code>monitor</code> when you want to be told about a death without sharing it.</p>
+<h5>Examples</h5>
+<pre class="code"><code>worker<span class="tok-op">.</span><span class="tok-method">link</span></code></pre>
+
+</div>
+<div class="fn" id="pid-unlink">
+<h4><a class="self" href="#pid-unlink"><code>unlink</code></a></h4>
+<pre class="code sig"><code>unlink <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p>Removes the link between the calling process and this one.</p>
+<h5>Examples</h5>
+<pre class="code"><code>worker<span class="tok-op">.</span><span class="tok-method">unlink</span></code></pre>
+
+</div>
+<div class="fn" id="pid-monitor">
+<h4><a class="self" href="#pid-monitor"><code>monitor</code></a></h4>
+<pre class="code sig"><code>monitor <span class="tok-op">:</span> <a class="xref" href="#type-reference"><span class="tok-type">Reference</span></a></code></pre>
+<p>Starts monitoring this process, and returns the reference that identifies the monitor.</p>
+<p>When the monitored process exits, the caller receives a message about it. Unlike <code>link</code>, a monitor is one-directional and does not propagate the exit. Pass the reference to <code>demonitor</code> to stop.</p>
+<p class="returns"><strong>Returns</strong> the monitor reference</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> ref <span class="tok-op">=</span> worker<span class="tok-op">.</span><span class="tok-method">monitor</span>
+ref<span class="tok-op">.</span><span class="tok-method">demonitor</span></code></pre>
+
+</div>
+<div class="fn" id="pid-alive?">
+<h4><a class="self" href="#pid-alive?"><code>alive?</code></a></h4>
+<pre class="code sig"><code>alive? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the process is still running.</p>
+<p>Inherently a snapshot: the process may exit immediately after you ask. Monitor it when the answer has to stay true.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the process is alive</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">self</span><span class="tok-op">.</span><span class="tok-method">alive?</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="type-task">
+<h2><span class="kind kind-type">type</span> <code>Task&lt;A&gt;</code></h2>
+<p>A handle on work running in another process, with a result you can await.</p>
+<p>Created by <code>Task.start</code>.</p>
+<section class="members" id="make-task">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="task-await">
+<h4><a class="self" href="#task-await"><code>await</code></a></h4>
+<pre class="code sig"><code>await <span class="tok-op">:</span> <span class="tok-type">X</span></code></pre>
+<p>Waits for the task's result, for as long as it takes.</p>
+<p class="returns"><strong>Returns</strong> the task's result</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-number">1</span> <span class="tok-op">+</span> <span class="tok-number">1</span> <span class="tok-keyword">end</span><span class="tok-op">.</span><span class="tok-method">await</span>   <span class="tok-comment"># =&gt; 2</span></code></pre>
+
+<pre class="code sig"><code><span class="tok-fn">await</span><span class="tok-punct">(</span>timeout<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">X</span></code></pre>
+<p>Waits for the task's result, giving up after <code>timeout</code> milliseconds.</p>
+<p>Answers <code>None</code> if the task has not finished in time. The task itself is not stopped.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>timeout</code></dt><dd>how long to wait, in milliseconds</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the task's result, or <code>None</code> on timeout</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> t <span class="tok-op">=</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-fn">slowThing</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-keyword">end</span>
+t<span class="tok-op">.</span><span class="tok-method">await</span><span class="tok-punct">(</span><span class="tok-number">1000</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="type-reference">
+<h2><span class="kind kind-type">type</span> <code>Reference</code></h2>
+<p>A monitor reference, returned by <code>monitor</code> and passed back to <code>demonitor</code>.</p>
+<section class="members" id="make-reference">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="reference-demonitor">
+<h4><a class="self" href="#reference-demonitor"><code>demonitor</code></a></h4>
+<pre class="code sig"><code>demonitor <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p>Stops the monitor this reference identifies.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> ref <span class="tok-op">=</span> worker<span class="tok-op">.</span><span class="tok-method">monitor</span>
+ref<span class="tok-op">.</span><span class="tok-method">demonitor</span></code></pre>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="type-process">
+<h2><span class="kind kind-type">type</span> <code>Process&lt;A&gt;</code></h2>
+<p>A typed process handle: like a <a class="xref" href="#type-pid"><code>Pid</code></a>, but it remembers what kind of message the process accepts.</p>
+<section class="members" id="make-process">
+<h3>Methods</h3>
+<p>A spawned Process&lt;X&gt; is a typed process handle backed by the same runtime pid. It therefore supports the ordinary pid lifecycle operations without erasing its message type.</p>
+
+<div class="functions">
+<div class="fn" id="process-send">
+<h4><a class="self" href="#process-send"><code>send</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">send</span><span class="tok-punct">(</span>msg<span class="tok-op">:</span> <span class="tok-type">X</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Sends <code>msg</code> to the process. Unlike <a class="xref" href="#pid-send"><code>Pid.send</code></a>, the message type is checked.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>msg</code></dt><dd>the message to send</dd></div>
+</dl>
+
+</div>
+<div class="fn" id="process-sendfrom">
+<h4><a class="self" href="#process-sendfrom"><code>sendFrom</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">sendFrom</span><span class="tok-punct">(</span>msg<span class="tok-op">:</span> <span class="tok-type">X</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Sends the sender-bearing pair <code>{Process.self, msg}</code>, with the message type checked.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>msg</code></dt><dd>the message to send</dd></div>
+</dl>
+
+</div>
+<div class="fn" id="process-link">
+<h4><a class="self" href="#process-link"><code>link</code></a></h4>
+<pre class="code sig"><code>link <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p>Links the calling process to this one. See <a class="xref" href="#pid-link"><code>Pid.link</code></a>.</p>
+
+</div>
+<div class="fn" id="process-unlink">
+<h4><a class="self" href="#process-unlink"><code>unlink</code></a></h4>
+<pre class="code sig"><code>unlink <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p>Removes the link between the calling process and this one.</p>
+
+</div>
+<div class="fn" id="process-monitor">
+<h4><a class="self" href="#process-monitor"><code>monitor</code></a></h4>
+<pre class="code sig"><code>monitor <span class="tok-op">:</span> <a class="xref" href="#type-reference"><span class="tok-type">Reference</span></a></code></pre>
+<p>Starts monitoring this process. See <a class="xref" href="#pid-monitor"><code>Pid.monitor</code></a>.</p>
+<p class="returns"><strong>Returns</strong> the monitor reference</p>
+
+</div>
+<div class="fn" id="process-alive?">
+<h4><a class="self" href="#process-alive?"><code>alive?</code></a></h4>
+<pre class="code sig"><code>alive? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the process is still running.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the process is alive</p>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="type-processexitreason">
+<h2><span class="kind kind-type">type</span> <code>ProcessExitReason</code></h2>
+<p>A process termination reason. This remains open because the BEAM permits any term as an exit reason; conventional values include <code>:normal</code>, <code>:shutdown</code>, and structured application errors.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>Any</code></li>
+</ul>
+
+</section>
+<section class="entity" id="record-reply">
+<h2><span class="kind kind-record">record</span> <code>Reply&lt;A&gt;</code></h2>
+<p>What a synchronous <code>slot</code> returns: an answer for the caller, and optionally a new state and a reason to stop.</p>
+<p><code>reply</code> answers the caller immediately. A slot may omit it only when it sends a deferred response with <code>from.reply(...)</code>. <code>new</code> installs the next serving state; omitting it preserves the current state. <code>stop</code> terminates the server after applying the transition. Within a <code>serving X</code> block, the checker narrows <code>new</code> from <code>Any?</code> to <code>X?</code>.</p>
+<pre class="code"><code>slot allowed? <span class="tok-op">-&gt;</span> <span class="tok-type">Reply</span><span class="tok-op">&lt;</span><span class="tok-type">Bool</span><span class="tok-op">&gt;</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">let</span> allowed <span class="tok-op">=</span> <span class="tok-op">@</span><span class="tok-field">remaining</span> <span class="tok-op">&gt;</span> <span class="tok-number">0</span>
+  new<span class="tok-op">.</span><span class="tok-method">remaining</span> <span class="tok-op">=</span> allowed <span class="tok-keyword">then</span> <span class="tok-op">@</span><span class="tok-field">remaining</span> <span class="tok-op">-</span> <span class="tok-number">1</span> <span class="tok-keyword">else</span> <span class="tok-op">@</span><span class="tok-field">remaining</span>
+  <span class="tok-keyword">return</span> <span class="tok-punct">{</span> new<span class="tok-punct">,</span> reply<span class="tok-op">:</span> allowed <span class="tok-punct">}</span>
+<span class="tok-keyword">end</span>
+
+slot stop <span class="tok-op">-&gt;</span> <span class="tok-type">Reply</span><span class="tok-op">&lt;</span><span class="tok-type">Integer</span><span class="tok-op">&gt;</span> <span class="tok-op">=</span> <span class="tok-punct">{</span> stop<span class="tok-op">:</span> <span class="tok-op">:</span>normal<span class="tok-punct">,</span> reply<span class="tok-op">:</span> <span class="tok-op">@</span><span class="tok-field">remaining</span> <span class="tok-punct">}</span></code></pre>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>reply</code></dt><dd><code>A</code></dd></div>
+<div class="field"><dt><code>new</code></dt><dd><code>Any?</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>stop</code></dt><dd><code><a class="xref" href="#type-processexitreason">ProcessExitReason</a>?</code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="type-from">
+<h2><span class="kind kind-type">type</span> <code>From&lt;A&gt;</code></h2>
+<p>The identity of a pending caller, for a slot that answers later rather than immediately. Hand it <code>reply</code> when the answer is ready.</p>
+<section class="members" id="make-from">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="from-reply">
+<h4><a class="self" href="#from-reply"><code>reply</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">reply</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">X</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Answers the pending call this value identifies.</p>
+<p>A slot that cannot answer immediately, because it is waiting on something else: omits <code>reply</code> from its transition and calls this later instead.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the answer to send</dd></div>
+</dl>
+<h5>Examples</h5>
+<p class="caption"><em>Answering after the work is done</em></p>
+<pre class="code"><code><span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">from</span><span class="tok-op">.</span><span class="tok-method">reply</span><span class="tok-punct">(</span><span class="tok-fn">expensiveThing</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="from-pid">
+<h4><a class="self" href="#from-pid"><code>pid</code></a></h4>
+<pre class="code sig"><code>pid <span class="tok-op">:</span> <a class="xref" href="#type-pid"><span class="tok-type">Pid</span></a></code></pre>
+<p>Returns the waiting caller's <a class="xref" href="#type-pid"><code>Pid</code></a>.</p>
+<p class="returns"><strong>Returns</strong> the caller</p>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="type-callerror">
+<h2><span class="kind kind-type">type</span> <code>CallError</code></h2>
+<p>Why a call into a server failed: it took too long, the process is gone, or it crashed handling the call.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>Timeout</code></li>
+<li><code>NoProcess</code></li>
+<li><code>CallFailed</code></li>
+</ul>
+
+</section>
+<section class="entity" id="record-server">
+<h2><span class="kind kind-record">record</span> <code>Server&lt;X&gt;</code></h2>
+<p>A running server and the default timeout for calls into it.</p>
+<p>Returned by <code>Process.spawn</code>. Every <code>slot</code> declared in the type's <code>serving</code> block becomes a method on it, answering a <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><code>Result</code></a>.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>process</code></dt><dd><code><a class="xref" href="#type-process">Process</a>&lt;X&gt;</code></dd></div>
+<div class="field"><dt><code>timeout</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+<section class="members" id="make-server">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="server-within">
+<h4><a class="self" href="#server-within"><code>within</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">within</span><span class="tok-punct">(</span>timeout<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-server"><span class="tok-type">Server</span></a><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns the same server with a different default call timeout, in milliseconds.</p>
+<p>The server is untouched: this is a new view of it, so one slow call can be given more room without changing anything for other callers.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>timeout</code></dt><dd>the call timeout in milliseconds</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> a view of the server with that timeout</p>
+<h5>Examples</h5>
+<p class="caption"><em>Giving one call longer to answer</em></p>
+<pre class="code"><code>api<span class="tok-op">.</span><span class="tok-method">within</span><span class="tok-punct">(</span><span class="tok-number">30000</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">rebuildIndex</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="server-link">
+<h4><a class="self" href="#server-link"><code>link</code></a></h4>
+<pre class="code sig"><code>link <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p>Links the calling process to the server. See <a class="xref" href="#pid-link"><code>Pid.link</code></a>.</p>
+<h5>Examples</h5>
+<pre class="code"><code>api<span class="tok-op">.</span><span class="tok-method">link</span></code></pre>
+
+</div>
+<div class="fn" id="server-unlink">
+<h4><a class="self" href="#server-unlink"><code>unlink</code></a></h4>
+<pre class="code sig"><code>unlink <span class="tok-op">:</span> <span class="tok-type">Void</span></code></pre>
+<p>Removes the link between the calling process and the server.</p>
+
+</div>
+<div class="fn" id="server-monitor">
+<h4><a class="self" href="#server-monitor"><code>monitor</code></a></h4>
+<pre class="code sig"><code>monitor <span class="tok-op">:</span> <a class="xref" href="#type-reference"><span class="tok-type">Reference</span></a></code></pre>
+<p>Starts monitoring the server. See <a class="xref" href="#pid-monitor"><code>Pid.monitor</code></a>.</p>
+<p class="returns"><strong>Returns</strong> the monitor reference</p>
+
+</div>
+<div class="fn" id="server-alive?">
+<h4><a class="self" href="#server-alive?"><code>alive?</code></a></h4>
+<pre class="code sig"><code>alive? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the server is still running.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the server is alive</p>
+<h5>Examples</h5>
+<pre class="code"><code>api<span class="tok-op">.</span><span class="tok-method">alive?</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="module-process">
+<h2><span class="kind kind-module">module</span> <code>Process</code></h2>
+<p>Spawning servers, running external commands, and the ambient process operations.</p>
+<div class="functions">
+<div class="fn" id="function-process-spawn">
+<h3><a class="self" href="#function-process-spawn"><code>spawn</code></a></h3>
+<pre class="code sig"><code><span class="tok-keyword">spawn</span><span class="tok-punct">(</span>state<span class="tok-op">:</span> <span class="tok-type">X</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-server"><span class="tok-type">Server</span></a><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-op">&gt;</span></code></pre>
+<p>Starts a process running the <code>serving</code> implementation attached to <code>state</code>'s type, and returns a handle on it.</p>
+<p>The state you pass is the server's initial state. Every <code>slot</code> in the <code>serving</code> block becomes a method on the returned <a class="xref" href="#record-server"><code>Server</code></a>, and each answers a <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><code>Result</code></a>: a call can time out or find the process gone.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>state</code></dt><dd>the server's initial state</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> a handle on the running server</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> api <span class="tok-op">=</span> <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-keyword">spawn</span><span class="tok-punct">(</span><span class="tok-type">RateLimiter</span> <span class="tok-punct">{</span> remaining<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+api<span class="tok-op">.</span><span class="tok-method">allowed?</span><span class="tok-punct">(</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(true)</span>
+api<span class="tok-op">.</span><span class="tok-method">allowed?</span><span class="tok-punct">(</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(true)</span>
+api<span class="tok-op">.</span><span class="tok-method">allowed?</span><span class="tok-punct">(</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(false)</span>
+api<span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-process-run">
+<h3><a class="self" href="#function-process-run"><code>run</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">run</span><span class="tok-punct">(</span>command<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> args<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-processresult"><span class="tok-type">ProcessResult</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span>
+<span class="tok-fn">run</span><span class="tok-punct">(</span>command<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> args<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-processresult"><span class="tok-type">ProcessResult</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Runs an executable with an argument vector and captures its output.</p>
+<p>No shell is involved, so nothing is glob-expanded or word-split and arguments containing spaces need no quoting. Output is captured as UTF-8 strings.</p>
+<p>A non-zero exit status is still <code>Ok</code>: the program ran and said something, which is information, not a failure to run it. <a class="xref" href="/prelude/0.4.0-beta.4-dev/json/#type-json-error"><code>Error</code></a> means the child could not be started at all.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>command</code></dt><dd>the executable to run</dd></div>
+<div class="param"><dt><code>args</code></dt><dd>its arguments, one per element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the captured result, or why it could not start</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">echo</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>r<span class="tok-punct">)</span>    <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>r<span class="tok-op">.</span><span class="tok-method">stdout</span><span class="tok-op">.</span><span class="tok-method">trim</span><span class="tok-punct">)</span>   <span class="tok-comment"># prints: hello</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+<p class="caption"><em>A non-zero status is still Ok</em></p>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">false</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(ProcessResult { exitCode: 1, ... })</span></code></pre>
+<p class="caption"><em>A command that does not exist is an Error</em></p>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">no-such-command</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Error(&quot;executable not found&quot;)</span></code></pre>
+<p class="caption"><em>Reading a command's output as data</em></p>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">git</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">rev-parse</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">HEAD</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+  <span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>r<span class="tok-op">|</span> r<span class="tok-op">.</span><span class="tok-method">stdout</span><span class="tok-op">.</span><span class="tok-method">trim</span> <span class="tok-punct">}</span>
+  <span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">unknown</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-process-stream">
+<h3><a class="self" href="#function-process-stream"><code>stream</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">stream</span><span class="tok-punct">(</span>command<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> args<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>Runs an executable with the CALLER's stdout and stderr, so its output appears as it is produced rather than in one block when it exits.</p>
+<p>Answers the exit code; nothing is captured: that is the trade, and it is what a long-running child a person is watching needs (kexhq/kex#187).</p>
+<p><code>run</code> remains the one to use when the output is data to be READ.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>command</code></dt><dd>the executable to run</dd></div>
+<div class="param"><dt><code>args</code></dt><dd>its arguments, one per element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the exit code, or why it could not start</p>
+<h5>Examples</h5>
+<p class="caption"><em>Watching a build as it runs</em></p>
+<pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">stream</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">make</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">-j8</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span>    <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build succeeded</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>code<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">build failed with </span><span class="tok-string">${</span>code<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre>
+
+</div>
+<div class="fn" id="function-process-exec">
+<h3><a class="self" href="#function-process-exec"><code>exec</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">exec</span><span class="tok-punct">(</span>command<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> args<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Runs an executable and returns just its exit code, discarding its output.</p>
+<p>A command that could not be started answers <code>127</code>, the shell's convention for &quot;command not found&quot;. Use <code>run</code> when you need the output or want to tell a failed start from a failed run.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>command</code></dt><dd>the executable to run</dd></div>
+<div class="param"><dt><code>args</code></dt><dd>its arguments, one per element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the exit code, or <code>127</code> if it could not start</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">exec</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">true</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>              <span class="tok-comment"># =&gt; 0</span>
+<span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">exec</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">false</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>             <span class="tok-comment"># =&gt; 1</span>
+<span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">exec</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">no-such-command</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 127</span></code></pre>
+<p class="caption"><em>Testing for a tool's presence</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> haveGit <span class="tok-op">=</span> <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">exec</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">git</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">--version</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-number">0</span></code></pre>
+
+</div>
+<div class="fn" id="function-process-self">
+<h3><a class="self" href="#function-process-self"><code>self</code></a></h3>
+<pre class="code sig"><code>self <span class="tok-op">:</span> <a class="xref" href="#type-pid"><span class="tok-type">Pid</span></a></code></pre>
+<p>Returns the calling process's own <a class="xref" href="#type-pid"><code>Pid</code></a>.</p>
+<p class="returns"><strong>Returns</strong> this process's identifier</p>
+<h5>Examples</h5>
+<p class="caption"><em>Telling another process where to answer</em></p>
+<pre class="code"><code>worker<span class="tok-op">.</span><span class="tok-method">send</span><span class="tok-punct">(</span><span class="tok-punct">(</span><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">self</span><span class="tok-punct">,</span> <span class="tok-op">:</span>ping<span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-process-exit">
+<h3><a class="self" href="#function-process-exit"><code>exit</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">exit</span><span class="tok-punct">(</span>pid<span class="tok-op">:</span> <a class="xref" href="#type-pid"><span class="tok-type">Pid</span></a><span class="tok-punct">,</span> reason<span class="tok-op">:</span> <span class="tok-type">X</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Sends an exit signal carrying <code>reason</code> to <code>pid</code>.</p>
+<p><code>:normal</code> is the ordinary shutdown reason; <code>:kill</code> cannot be trapped.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>pid</code></dt><dd>the process to signal</dd></div>
+<div class="param"><dt><code>reason</code></dt><dd>the exit reason</dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">exit</span><span class="tok-punct">(</span>worker<span class="tok-punct">,</span> <span class="tok-op">:</span>shutdown<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-process-register">
+<h3><a class="self" href="#function-process-register"><code>register</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">register</span><span class="tok-punct">(</span>pid<span class="tok-op">:</span> <a class="xref" href="#type-pid"><span class="tok-type">Pid</span></a><span class="tok-punct">,</span> name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span>
+<span class="tok-fn">register</span><span class="tok-punct">(</span>pid<span class="tok-op">:</span> <a class="xref" href="#type-process"><span class="tok-type">Process</span></a><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-op">&gt;</span><span class="tok-punct">,</span> name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Registers <code>pid</code> under the atom <code>name</code>, so it can be found by name rather than by passing the <a class="xref" href="#type-pid"><code>Pid</code></a> around.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>pid</code></dt><dd>the process to register</dd></div>
+<div class="param"><dt><code>name</code></dt><dd>the name to register it under</dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">register</span><span class="tok-punct">(</span><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">self</span><span class="tok-punct">,</span> <span class="tok-op">:</span><span class="tok-keyword">main</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-process-whereis">
+<h3><a class="self" href="#function-process-whereis"><code>whereIs</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">whereIs</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Pid?</span></code></pre>
+<p>Returns the <a class="xref" href="#type-pid"><code>Pid</code></a> registered under <code>name</code>, or <code>None</code> when nothing is.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code></dt><dd>the registered name</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the process, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">whereIs</span><span class="tok-punct">(</span><span class="tok-op">:</span><span class="tok-keyword">main</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; Just(pid)</span>
+<span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">whereIs</span><span class="tok-punct">(</span><span class="tok-op">:</span>not_there<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; None</span></code></pre>
+<p class="caption"><em>Sending to a named process if it is there</em></p>
+<pre class="code"><code><span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-method">whereIs</span><span class="tok-punct">(</span><span class="tok-op">:</span>logger<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>pid<span class="tok-op">|</span> pid<span class="tok-op">.</span><span class="tok-method">send</span><span class="tok-punct">(</span>message<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="type-process-shared">
+<h2><span class="kind kind-type">type</span> <code>Shared&lt;X&gt;</code></h2>
+<p>A named, typed slot of state that every process can read without asking another process for it.</p>
+<p>State kept in a <code>serving</code> process is copied into the caller on every read, which is costly for a large value read by every request. A <a class="xref" href="#type-process-shared"><code>Shared</code></a> value is stored once for the whole node (on the BEAM, in <code>persistent_term</code>): reading it copies nothing, however large it is.</p>
+<p>The price is on the other side: replacing a value makes the runtime scan every process for references to the old one. So it suits state that is read constantly and written rarely, such as configuration or a loaded site, and not a counter.</p>
+<p>Get a handle with <code>Process.Shared.named</code>. The slot is identified by its name alone, so two handles with the same name are the same slot; the type parameter is what a handle promises to store and read back, so give every handle on one name the same one.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Loading once, reading from every request handler</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> site <span class="tok-op">:</span> <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-type">Shared</span><span class="tok-op">&lt;</span><span class="tok-type">Site</span><span class="tok-op">&gt;</span> <span class="tok-op">=</span> <span class="tok-type">Process</span><span class="tok-op">.</span><span class="tok-type">Shared</span><span class="tok-op">.</span><span class="tok-method">named</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">site</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+site<span class="tok-op">.</span><span class="tok-method">put</span><span class="tok-punct">(</span><span class="tok-fn">loadSite</span><span class="tok-punct">(</span>root<span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-op">...</span>
+<span class="tok-keyword">let</span> current <span class="tok-op">=</span> site<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span>emptySite<span class="tok-punct">)</span></code></pre>
+<section class="members" id="make-shared">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="shared-put">
+<h4><a class="self" href="#shared-put"><code>put</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">put</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">X</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Stores <code>value</code>, replacing whatever the slot held.</p>
+<p>Expensive: see <code>Process.Shared</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the value to store</dd></div>
+</dl>
+
+</div>
+<div class="fn" id="shared-get">
+<h4><a class="self" href="#shared-get"><code>get</code></a></h4>
+<pre class="code sig"><code>get <span class="tok-op">:</span> <span class="tok-type">X?</span></code></pre>
+<p>The stored value, or <code>None</code> when nothing has been stored yet.</p>
+<p>Cheap, whatever the value's size.</p>
+<p class="returns"><strong>Returns</strong> the stored value</p>
+
+</div>
+<div class="fn" id="shared-delete">
+<h4><a class="self" href="#shared-delete"><code>delete</code></a></h4>
+<pre class="code sig"><code>delete <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Empties the slot.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> when it held a value</p>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="module-process-shared">
+<h2><span class="kind kind-module">module</span> <code>Process.Shared</code></h2>
+<div class="functions">
+<div class="fn" id="function-process-shared-named">
+<h3><a class="self" href="#function-process-shared-named"><code>named</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">named</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-process"><span class="tok-type">Process</span></a><span class="tok-op">.</span><a class="xref" href="#type-process-shared"><span class="tok-type">Shared</span></a><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-op">&gt;</span></code></pre>
+<p>The handle on the slot called <code>name</code>. Nothing is stored or read until <code>put</code> or <code>get</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code></dt><dd>the slot's name</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> a handle on the slot</p>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="record-processresult">
+<h2><span class="kind kind-record">record</span> <code>ProcessResult</code></h2>
+<p>What an external command left behind: its exit status and its output.</p>
+<p>Returned inside <code>Ok</code> by <code>Process.run</code>, whatever the exit status.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>exitCode</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>stdout</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>stderr</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="module-task">
+<h2><span class="kind kind-module">module</span> <code>Task</code></h2>
+<p>Running work in another process and collecting the answer.</p>
+<div class="functions">
+<div class="fn" id="function-task-sleep">
+<h3><a class="self" href="#function-task-sleep"><code>sleep</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">sleep</span><span class="tok-punct">(</span>duration<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/units/#record-duration"><span class="tok-type">Duration</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Suspends for an elapsed duration. Negative durations are treated as zero.</p>
+
+</div>
+<div class="fn" id="function-task-start">
+<h3><a class="self" href="#function-task-start"><code>start</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">start</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">X</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-task"><span class="tok-type">Task</span></a></code></pre>
+<p>Runs <code>f</code> in a new process and returns a handle on its result.</p>
+<p>The block starts immediately, so starting several tasks and awaiting them afterwards is what makes them run at the same time.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>f</code></dt><dd>the work to run</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> a handle on the result</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> t <span class="tok-op">=</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-number">1</span> <span class="tok-op">+</span> <span class="tok-number">1</span> <span class="tok-keyword">end</span>
+t<span class="tok-op">.</span><span class="tok-method">await</span>   <span class="tok-comment"># =&gt; 2</span></code></pre>
+<p class="caption"><em>Two pieces of work at once</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> a <span class="tok-op">=</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-fn">slowThing</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">end</span>
+<span class="tok-keyword">let</span> b <span class="tok-op">=</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-fn">slowThing</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">end</span>
+<span class="tok-punct">(</span>a<span class="tok-op">.</span><span class="tok-method">await</span><span class="tok-punct">,</span> b<span class="tok-op">.</span><span class="tok-method">await</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="function-task-awaitall">
+<h3><a class="self" href="#function-task-awaitall"><code>awaitAll</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">awaitAll</span><span class="tok-punct">(</span>tasks<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#type-task"><span class="tok-type">Task</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">X</span><span class="tok-punct">]</span></code></pre>
+<p>Waits for every task in <code>tasks</code> and returns their results, in the order the tasks were given.</p>
+<p>Each result comes back wrapped in a <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><code>Result</code></a>, so one task failing does not cost you the others' answers. That differs from <a class="xref" href="#task-await"><code>Task.await</code></a> on a single task, which hands back the value itself.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>tasks</code></dt><dd>the tasks to wait for</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> their results, in order</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-keyword">let</span> tasks <span class="tok-op">=</span> <span class="tok-punct">[</span><span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-number">1</span> <span class="tok-keyword">end</span><span class="tok-punct">,</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-number">2</span> <span class="tok-keyword">end</span><span class="tok-punct">]</span>
+<span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">awaitAll</span><span class="tok-punct">(</span>tasks<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [Ok(1), Ok(2)]</span></code></pre>
+<p class="caption"><em>Fanning work out over a list</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> results <span class="tok-op">=</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">awaitAll</span><span class="tok-punct">(</span>paths<span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> <span class="tok-type">Task</span><span class="tok-op">.</span><span class="tok-method">start</span> <span class="tok-keyword">do</span> <span class="tok-fn">process</span><span class="tok-punct">(</span>p<span class="tok-punct">)</span> <span class="tok-keyword">end</span> <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="function-worker">
+<h2><span class="kind kind-function">function</span> <code>worker</code></h2>
+<pre class="code sig"><code><span class="tok-fn">worker</span><span class="tok-punct">(</span>block<span class="tok-op">:</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><a class="xref" href="#type-pid"><span class="tok-type">Pid</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-punct">,</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><a class="xref" href="#type-pid"><span class="tok-type">Pid</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span></code></pre>
+<p>Wraps a spawn block into a worker spec for <code>Supervisor.start</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>block</code></dt><dd>the block that spawns the worker</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the worker spec</p>
+
+</section>

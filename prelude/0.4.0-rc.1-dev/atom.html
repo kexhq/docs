@@ -1,0 +1,60 @@
+<section class="entity" id="module-atom">
+<h2><span class="kind kind-module">module</span> <code>Atom</code></h2>
+<p>Atoms are named values such as <code>:ok</code>, <code>:error</code>, and <code>:reset</code>. Use them for labels, statuses, and message tags. Atoms with the same name are equal; an atom and a string are different values.</p>
+<pre class="code"><code><span class="tok-op">:</span>ok <span class="tok-op">==</span> <span class="tok-op">:</span>ok                    <span class="tok-comment"># =&gt; true</span>
+<span class="tok-op">:</span>ok <span class="tok-op">==</span> <span class="tok-op">:</span>error                 <span class="tok-comment"># =&gt; false</span>
+<span class="tok-op">:</span>ok<span class="tok-op">.</span><span class="tok-method">string</span>                    <span class="tok-comment"># =&gt; &quot;ok&quot;</span></code></pre>
+<p>Write atoms with a leading colon. Node names can include <code>@</code>; use quotes for names containing spaces or punctuation:</p>
+<pre class="code"><code><span class="tok-op">:</span>app<span class="tok-op">@</span><span class="tok-field">localhost</span>
+<span class="tok-op">:</span><span class="tok-string">&quot;</span><span class="tok-string">app@host.example.com</span><span class="tok-string">&quot;</span>
+<span class="tok-op">:</span><span class="tok-string">&quot;</span><span class="tok-string">two words</span><span class="tok-string">&quot;</span></code></pre>
+<p>To convert text to an atom:</p>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-keyword">as</span><span class="tok-punct">(</span><span class="tok-type">Atom</span><span class="tok-punct">)</span>     <span class="tok-comment"># converts a string literal at compile time</span>
+<span class="tok-type">Atom</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>  <span class="tok-comment"># creates or finds an atom at run time</span>
+<span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Atom</span><span class="tok-punct">)</span>    <span class="tok-comment"># finds an existing atom: Just(:hello), or None</span></code></pre>
+<p>On the BEAM, atoms are never freed. Use <code>text.to(Atom)</code> for external input to avoid creating an unbounded number of atoms.</p>
+<div class="functions">
+<div class="fn" id="function-atom-from">
+<h3><a class="self" href="#function-atom-from"><code>from</code></a></h3>
+<pre class="code sig"><code><span class="tok-keyword">from</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#make-atom"><span class="tok-type">Atom</span></a></code></pre>
+<p>Returns the atom whose name is <code>text</code>.</p>
+<p>On the BEAM atoms are never freed, and a node holds at most about a million. Build atoms from a bounded set of names — node names, config keys — never from untrusted input; <code>text.to(Atom)</code> is the safe form for that, since it only finds atoms that already exist.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code></dt><dd>the atom's name</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the atom</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Atom</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">ok</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-op">:</span>ok                <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">Atom</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app@</span><span class="tok-string">${</span>host<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>              <span class="tok-comment"># =&gt; :&quot;app@myhost&quot;</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="make-atom">
+<h2><span class="kind kind-type">type</span> <code>Atom</code></h2>
+
+<div class="functions">
+<div class="fn" id="atom-string">
+<h3><a class="self" href="#atom-string"><code>string</code></a></h3>
+<pre class="code sig"><code>string <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.1-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the atom's name as a string, without the leading colon.</p>
+<p class="returns"><strong>Returns</strong> the name</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-op">:</span>ok<span class="tok-op">.</span><span class="tok-method">string</span>                    <span class="tok-comment"># =&gt; &quot;ok&quot;</span>
+<span class="tok-op">:</span><span class="tok-string">&quot;</span><span class="tok-string">b@host.example.com</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">string</span>  <span class="tok-comment"># =&gt; &quot;b@host.example.com&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="atom-to">
+<h3><a class="self" href="#atom-to"><code>to</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">to</span><span class="tok-punct">(</span>_<span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></code></pre>
+<p>Returns the atom's name as text, like <code>string</code>, through the universal conversion. The name, not the displayed form: <code>:ok</code> converts to <code>&quot;ok&quot;</code>, not <code>&quot;:ok&quot;</code>, so <code>text.to(Atom)</code> and this are inverses.</p>
+<p class="returns"><strong>Returns</strong> the name, always <code>Just</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-op">:</span>hello<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>                       <span class="tok-comment"># =&gt; Just(&quot;hello&quot;)</span>
+<span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Atom</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">flatMap</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>a<span class="tok-op">|</span> a<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Just(&quot;hello&quot;)</span></code></pre>
+
+</div>
+</div>
+</section>

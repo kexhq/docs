@@ -1,0 +1,229 @@
+<section class="entity" id="module-data">
+<h2><span class="kind kind-module">module</span> <code>Data</code></h2>
+<p>A first-in-first-out queue.</p>
+<p>Opt-in: nothing here is in scope until <code>using Data.Queue</code>.</p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Data</span><span class="tok-op">.</span><span class="tok-type">Queue</span></code></pre>
+<p>A banker's queue: <code>front</code> holds the elements ready to leave, <code>back</code> holds what was most recently added, reversed. <code>enqueue</code> conses onto <code>back</code>; <code>dequeue</code> takes <code>front</code>'s head, and only rotates <code>back</code> (reversing it into <code>front</code>) when <code>front</code> runs out. Both operations are amortized O(1), versus the O(n) <code>enqueue</code> a single-list queue would pay for.</p>
+<pre class="code"><code><span class="tok-keyword">let</span> q <span class="tok-op">=</span> <span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+q<span class="tok-op">.</span><span class="tok-method">enqueue</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>    <span class="tok-comment"># =&gt; [1, 2, 3, 4]</span>
+q<span class="tok-op">.</span><span class="tok-method">dequeue</span>             <span class="tok-comment"># =&gt; Just((1, Queue(2, 3)))</span>
+q<span class="tok-op">.</span><span class="tok-method">peek</span>                <span class="tok-comment"># =&gt; Just(1)</span></code></pre>
+<p><code>items</code> is +@front + @back.reverse+, so the queue is not opaque: it is always a real list you can hand to anything, the same promise <code>Data.Set</code> makes.</p>
+<p>Unlike a set, a queue's representation is NOT canonical: <code>Queue.from([1,2])</code> and <code>Queue.from([1]).enqueue(2)</code> hold the same elements in different <code>front</code>/<code>back</code> splits, so they are structurally unequal even though they answer the same to every method. <code>==</code> is therefore overloaded to compare <code>items</code> rather than the record fields directly, but that overload only reaches ordinary <code>==</code> calls. Two such queues used as map keys, or matched against each other as record patterns, still compare structurally on both backends, and can disagree with <code>==</code>.</p>
+<p>Every method answers with a new queue rather than changing the receiver. <code>enqueue!</code> and <code>dequeue!</code> come free from the <code>!</code> rebinding form.</p>
+</section>
+<section class="entity" id="record-data-queue">
+<h2><span class="kind kind-record">record</span> <code>Queue&lt;A&gt;</code></h2>
+<p>A queue of elements, split into a ready-to-leave <code>front</code> and a most-recently-added, reversed <code>back</code>.</p>
+<p>Build one with <code>Queue.from</code> rather than by hand.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>front</code></dt><dd><code>[A]</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>back</code></dt><dd><code>[A]</code> <span class="opt">optional</span></dd></div>
+</dl>
+<p class="implements">Implements <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-enumerable"><code>Enumerable</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-foldable"><code>Foldable</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#trait-monoid"><code>Monoid</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#trait-showable"><code>Showable</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/blankable/#trait-blankable"><code>Blankable</code></a>.</p>
+<section class="members" id="make-queue">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="queue-reduce">
+<h4><a class="self" href="#queue-reduce"><code>reduce</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-reduce" title="Implements Enumerable.reduce">Enumerable</a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-reduce" title="Implements Foldable.reduce">Foldable</a></h4>
+<pre class="code sig"><code><span class="tok-fn">reduce</span><span class="tok-punct">(</span>acc<span class="tok-op">:</span> <span class="tok-type">B</span><span class="tok-punct">,</span> f<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">B</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <span class="tok-type">B</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">B</span></code></pre>
+<p>Folds from front to back.</p>
+<p>This is <a class="xref" href="#record-data-queue"><code>Queue</code></a>'s <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-enumerable"><code>Enumerable</code></a>/<a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-foldable"><code>Foldable</code></a> primitive.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>acc</code></dt><dd>the initial accumulator</dd></div>
+<div class="param"><dt><code>f</code></dt><dd>combines the accumulator with each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the final accumulator</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reduce</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>sum<span class="tok-punct">,</span> x<span class="tok-op">|</span> sum <span class="tok-op">+</span> x <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; 6</span></code></pre>
+
+</div>
+<div class="fn" id="queue-identity">
+<h4><a class="self" href="#queue-identity"><code>identity</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/algebra/#monoid-identity" title="Implements Monoid.identity">Monoid</a></h4>
+<pre class="code sig"><code>identity <span class="tok-op">:</span> <a class="xref" href="#record-data-queue"><span class="tok-type">Queue</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>The empty queue: the <a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#trait-monoid"><code>Monoid</code></a> identity.</p>
+<p class="returns"><strong>Returns</strong> the empty queue</p>
+
+</div>
+<div class="fn" id="queue-combine">
+<h4><a class="self" href="#queue-combine"><code>combine</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/algebra/#monoid-combine" title="Implements Monoid.combine">Monoid</a></h4>
+<pre class="code sig"><code><span class="tok-fn">combine</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-queue"><span class="tok-type">Queue</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-queue"><span class="tok-type">Queue</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Combines two queues, this one's elements followed by the argument's.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the queue to append</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> this queue's elements, then <code>other</code>'s</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">combine</span><span class="tok-punct">(</span><span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>   <span class="tok-comment"># =&gt; [1, 2, 3, 4]</span></code></pre>
+
+</div>
+<div class="fn" id="queue-items">
+<h4><a class="self" href="#queue-items"><code>items</code></a></h4>
+<pre class="code sig"><code>items <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p>Returns the elements front to back. Never opaque: this is a real list.</p>
+<p class="returns"><strong>Returns</strong> the elements, front first</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">enqueue</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>   <span class="tok-comment"># =&gt; [1, 2, 3]</span></code></pre>
+
+</div>
+<div class="fn" id="queue-enqueue">
+<h4><a class="self" href="#queue-enqueue"><code>enqueue</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">enqueue</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-queue"><span class="tok-type">Queue</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a new queue with <code>value</code> added at the back.</p>
+<p>Use <code>enqueue!</code> to rebind the receiver variable.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the element to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> a queue with <code>value</code> at the back</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">enqueue</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>   <span class="tok-comment"># =&gt; [1, 2, 3]</span></code></pre>
+
+</div>
+<div class="fn" id="queue-dequeue">
+<h4><a class="self" href="#queue-dequeue"><code>dequeue</code></a></h4>
+<pre class="code sig"><code>dequeue <span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span><span class="tok-punct">,</span> <a class="xref" href="#record-data-queue"><span class="tok-type">Queue</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span><span class="tok-op">?</span></code></pre>
+<p>Returns the front element and the queue without it, wrapped in <code>Just</code>, or <code>None</code> for an empty queue.</p>
+<p>Rotates <code>back</code> into <code>front</code> (reversing it) when <code>front</code> has run out: the one case that is not O(1), and only amortized so because each element is reversed at most once over the queue's lifetime.</p>
+<p>Use <code>dequeue!</code> to rebind the receiver variable.</p>
+<p class="returns"><strong>Returns</strong> the front element and the rest, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">dequeue</span>   <span class="tok-comment"># =&gt; Just((1, Queue(2, 3)))</span>
+<span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">dequeue</span>             <span class="tok-comment"># =&gt; None</span></code></pre>
+
+</div>
+<div class="fn" id="queue-peek">
+<h4><a class="self" href="#queue-peek"><code>peek</code></a></h4>
+<pre class="code sig"><code>peek <span class="tok-op">:</span> <span class="tok-type">A?</span></code></pre>
+<p>Returns the front element wrapped in <code>Just</code>, or <code>None</code> for an empty queue.</p>
+<p class="returns"><strong>Returns</strong> the front element, or <code>None</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">peek</span>   <span class="tok-comment"># =&gt; Just(1)</span>
+<span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">peek</span>          <span class="tok-comment"># =&gt; None</span></code></pre>
+
+</div>
+<div class="fn" id="queue-count">
+<h4><a class="self" href="#queue-count"><code>count</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-count" title="Implements Foldable.count">Foldable</a></h4>
+<pre class="code sig"><code>count <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Returns the number of elements.</p>
+<p class="returns"><strong>Returns</strong> the number of elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span>   <span class="tok-comment"># =&gt; 3</span></code></pre>
+
+</div>
+<div class="fn" id="queue-empty?">
+<h4><a class="self" href="#queue-empty?"><code>empty?</code></a></h4>
+<pre class="code sig"><code>empty? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the queue has no elements.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> for the empty queue</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">empty?</span>         <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">empty?</span>     <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="queue-op-eq-eq">
+<h4><a class="self" href="#queue-op-eq-eq"><code>==</code></a></h4>
+<pre class="code sig"><code><span class="tok-op">==</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-queue"><span class="tok-type">Queue</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Compares two queues by their elements, front to back: NOT by their <code>front</code>/<code>back</code> split, which is not canonical. See the file header.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the queue to compare against</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when both hold the same elements in the same order</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">enqueue</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+<div class="fn" id="queue-op-plus">
+<h4><a class="self" href="#queue-op-plus"><code>+</code></a></h4>
+<pre class="code sig"><code><span class="tok-op">+</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-queue"><span class="tok-type">Queue</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-queue"><span class="tok-type">Queue</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span>
+<span class="tok-op">+</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-queue"><span class="tok-type">Queue</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Appends another queue's elements, or a plain list's.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the elements to append</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> this queue's elements, then <code>other</code>'s</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">+</span> <span class="tok-punct">[</span><span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">]</span>            <span class="tok-comment"># =&gt; Queue(1, 2, 3, 4)</span>
+<span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">+</span> <span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Queue(1, 2, 3)</span></code></pre>
+
+</div>
+<div class="fn" id="queue-showvalue">
+<h4><a class="self" href="#queue-showvalue"><code>showValue</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/kex/#showable-showvalue" title="Implements Showable.showValue">Showable</a></h4>
+<pre class="code sig"><code>showValue <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Renders the queue as <code>Queue(...)</code>, front to back.</p>
+<p class="returns"><strong>Returns</strong> the rendered queue</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">showValue</span>   <span class="tok-comment"># =&gt; &quot;Queue(1, 2, 3)&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="queue-blank?">
+<h4><a class="self" href="#queue-blank?"><code>blank?</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/blankable/#blankable-blank?" title="Implements Blankable.blank?">Blankable</a></h4>
+<pre class="code sig"><code>blank? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the queue has no elements. The <a class="xref" href="/prelude/0.4.0-beta.4-dev/blankable/#trait-blankable"><code>Blankable</code></a> view of <code>empty?</code>.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> for the empty queue</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">blank?</span>         <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">blank?</span>     <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+</div>
+</section><h3>From <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-enumerable"><code>Enumerable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-map"><code>map</code></a></dt><dd>Applies <code>f</code> to each item and collects the results into a list.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-mapindexed"><code>mapIndexed</code></a></dt><dd>Applies <code>f</code> to each item and its 0-based position, and collects the results into a list.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-filter"><code>filter</code></a></dt><dd>Returns the items for which <code>pred</code> answers <code>true</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-flatmap"><code>flatMap</code></a></dt><dd>Applies <code>f</code> to each item, expecting a list back, and concatenates the results into one flat list.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-collect"><code>collect</code></a></dt><dd>Applies <code>f</code> to each item, expecting an <code>Optional</code> back, and returns the values that were present: unwrapped.</dd></div>
+</dl>
+<h3>From <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-foldable"><code>Foldable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-each"><code>each</code></a></dt><dd>Calls <code>f</code> with each item, for its side effects.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-eachindexed"><code>eachIndexed</code></a></dt><dd>Calls <code>f</code> with each item and its 0-based position, for its side effects.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-all?"><code>all?</code></a></dt><dd>Returns <code>true</code> when every item satisfies <code>pred</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-any?"><code>any?</code></a></dt><dd>Returns <code>true</code> when at least one item satisfies <code>pred</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-find"><code>find</code></a></dt><dd>Returns the first item satisfying <code>pred</code>, or <code>None</code> when nothing does.</dd></div>
+</dl>
+<h3>From <a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#trait-monoid"><code>Monoid</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#monoid-repeat"><code>repeat</code></a></dt><dd>Combines this value with itself <code>n</code> times.</dd></div>
+</dl>
+<h3>From <a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#trait-showable"><code>Showable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#showable-to"><code>to</code></a></dt><dd></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="module-data-queue">
+<h2><span class="kind kind-module">module</span> <code>Data.Queue</code></h2>
+<p>Constructors for <a class="xref" href="#record-data-queue"><code>Queue</code></a>.</p>
+<div class="functions">
+<div class="fn" id="function-data-queue-from">
+<h3><a class="self" href="#function-data-queue-from"><code>from</code></a></h3>
+<pre class="code sig"><code><span class="tok-keyword">from</span><span class="tok-punct">(</span>items<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-queue"><span class="tok-type">Queue</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Builds a queue from a list, front to back.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>items</code></dt><dd>the elements, front first</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the queue, ready to <code>dequeue</code> in the same order</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">peek</span>   <span class="tok-comment"># =&gt; Just(1)</span></code></pre>
+
+</div>
+<div class="fn" id="constant-data-queue-empty">
+<h3><a class="self" href="#constant-data-queue-empty"><code>empty</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code>empty <span class="tok-op">:</span> <a class="xref" href="#record-data-queue"><span class="tok-type">Queue</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>The queue with no elements. Also the <a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#trait-monoid"><code>Monoid</code></a> identity.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Queue</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">empty?</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+</div>
+</section>
+
