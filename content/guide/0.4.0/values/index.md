@@ -49,8 +49,8 @@ let high8 = 0xFF # 255 (largets 8bit integer in hex)
 let perm = 0o7   # Octal (base 8), 7 in decimal and hexadecimal, too
 let oct  = 0o777 # 511 in decimal
 
-let bits = 0b111  # 7 in decimal
-let ten  = 0b1010 # 10
+let bits = 0b111       # 7 in decimal
+let ten  = 0b1010      # 10
 let all  = 0b1111_1111 # 255 in decimal (all bits in the byte is 1)
 ```
 
@@ -139,7 +139,7 @@ end
 `to` is a runtime conversion function and might fail, so after it ran we also have to unwrap its value via `try`. Next chapters will talk more about `Optional` and `Result` types.
 
 > [!CAUTION]
-> Due to [representational](https://en.wikipedia.org/wiki/IEEE_754) limitations, avoid comparing floating-point numbers via `==`. For example:
+> Due to [representational](https://en.wikipedia.org/wiki/IEEE_754) limitations, avoid comparing floating-point numbers via `==`. For example, this comparision fails:
 >
 > ```kex
 > main do
@@ -159,14 +159,14 @@ end
 
 ### Number type
 
-Most algorithms doesn't care if the underlying type is an `Integer` or `Float`. They just work on "numbers". So, Kex ships with a type hierarchy where both `Integer` and `Float` descends from the type `Number`:
+Most algorithms doesn't care if the underlying type is an `Integer` or `Float`. They just work with "numbers". So, Kex ships with a type hierarchy where both `Integer` and `Float` descends from the type `Number`:
 
 ```kex
 # Quadratic equation solver
 let solveQuadratic(a: Number, b: Number, c: Number) -> (Number, Number) do
-  let root = Math.sqrt(b^2 - 4*a*c)
-  let pos = (-b + root) / 2 * a
-  let neg = (-b - root) / 2 * a
+  let root = Math.sqrt(b^2 - 4*a*c) # b^2 means b is raised to the second power = (b*b)
+  let pos = (-b + root) / 2*a
+  let neg = (-b - root) / 2*a
   return (neg, pos)
 end
 
@@ -240,7 +240,7 @@ One of the most useful `String` feature is [interpolation](https://en.wikipedia.
 ```kex
 main do
   let name  = "Adam"             # String
-  let hello = "Hello, ${name}!"  # Also String
+  let hello = "Hello, ${name}!"  # Also a String
   IO.printLine(hello)
 
   let age = 23
@@ -253,7 +253,7 @@ Hello Adam!
 You are 23 years old.
 ```
 
-Strings can have an arbitrary length, only constrained by the available memory. In literals, strings are defined between either `""` or \`\` for multiline strings:
+Strings can have an arbitrary length, only constrained by the available memory. In literals, strings are defined between either `""` or \`\` (backticks) for multiline strings:
 
 ```kex
 main do
@@ -282,7 +282,7 @@ int main(int argc, char *argv[]) {
 
 There are multiple differences between `""` and multiline strings. The first, is that as their name suggests, multiline strings can spread accross multiple lines in the source prgoram, without termination or escaping.
 
-The other big difference, is by-default multiline strings doesn't support interpolation. The `$` prefix has to be used for interpolation:
+The other big difference, is by-default multiline strings doesn't support interpolation. The `$` prefix has to be used before the backticks to enable interpolation:
 
 ```kex
 main do
@@ -310,6 +310,8 @@ int main(int argc, char *argv[]) {
   printf("Hello, Adam!")
 }
 ```
+
+Since interpolation is optional non-interpolated multiline strings can contain `$`, `{` and `}` without an issue.
 
 The last big difference is that you can use `""` and `''` without escaping in multiline strings, this makes them very useful for single line strings as well:
 
@@ -398,7 +400,7 @@ The opposite angle also works. Strings could be created from characters:
 ```kex
 main do
   let hello = ['h', 'e', 'l', 'l', 'o']  # [Char]
-  let s = hello.join                     # "hello" : String
+  let s = hello.join                     # s : String = "hello"
   IO.printLine(s)
 end
 ```
