@@ -26,17 +26,17 @@ The standard library comes with many handy functions already defined. Later chap
 main do
   let numbers = [1, 2, 3, 4, 5]
 
-  let evens = numbers.filter { |n| n.even? }
-  let squares = evens.map { |n| n * n }
-  let sum = squares.sum
-  let f = numbers.first
-  let last = numbers[4]
+  let evens = numbers.filter { |n| n.even? } # => [2, 4]
+  let squares = evens.map { |n| n * n }      # => [4, 16]
+  let sum = squares.sum                      # => 20
+  let f = numbers.first                      # => 1
+  let last = numbers[4]                      # => Just(5)
 
   IO.printLine(evens)
   IO.printLine(squares)
   IO.printLine(sum)
   IO.printLine(f)
-  IO.printLine(last)
+  IO.printLine(last) # printLine won't display Just, Ok
 end
 ```
 

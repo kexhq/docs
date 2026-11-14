@@ -24,7 +24,28 @@ main do
 end
 ```
 
-In the example above `let` binds the value `10`  to the binding called `x`. `let` bindings are always immutable, reassigning them is an error:
+In the example above the `let` keyword binds the value `10` to the binding called `x`.
+
+### Binding names
+
+Binding names must start with a letter or `_`*,* altough starting with `_` is reserved for internal identifiers.
+
+| Binding name | Problem | Valid |
+| --- | --- | --- |
+| `helloWorld` | - | ✅ |
+| `y` | - | ✅ |
+| `hello_world2` | - | ✅ |
+| `A` | Single capital letters are reserved for types (see later) | ❌ |
+| `Something` | Identifiers starting with captial letters are used for types, not bindings | ❌ |
+| `1more` | Cannot start with number | ❌ |
+| `.aaa` | Cannot start with a dot | ❌ |
+| `__nice` | Valid, but discouraged | ✅ |
+| `LANG` | Valid, usually used for "magic" bindings, for "constants" like `PI` | ✅ |
+| `make` | Reserved Kex keyword | ❌ |
+| `árvíztűrő` |  | ✅ |
+| `Φ` |  | ✅ |
+
+`let` bindings are always immutable, reassigning them is an error:
 
 ```kex filename="error_immutable.kex"
 main do
@@ -209,7 +230,7 @@ end
 >
 > ```kex
 > let remainingQuotaFor(file: WebUpload, user: User) do
->   user.canUpload? then user.fileQuota - file.size else user.fileQuota
+>   user.canUpload? then (user.fileQuota - file.size) else user.fileQuota
 > end
 > ```
 
@@ -329,7 +350,7 @@ main do
 end
 ```
 
-### Loop without condition
+### Looping without conditions
 
 Sometimes, especially when handling events, it makes sense to create loops without conditions. You could either use `while true do ... end` or the much more expressive `loop`. Keywords `break` and `next` works exactly the same within `loop`s:
 
@@ -350,4 +371,4 @@ main do
 end
 ```
 
-Continue with [Values and collections](../values/).
+Continue with [Values and primitive types.](../values/)
