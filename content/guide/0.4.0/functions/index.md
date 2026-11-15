@@ -127,7 +127,7 @@ end
 99 bottles of beer on the wall
 ```
 
-## Multiple function bodies
+## Multiple clauses
 
 The separate type declaration comes very useful when we specialize functions:
 
@@ -441,7 +441,7 @@ end
 
 ## Uniform Function Call Syntax and chaining
 
-One of the most useful features of functions in Kex that the first parameter could be moved out from the parameter list when calling. This is usually referred to as [UFCS (Uniform Function Call Syntax)](https://en.wikipedia.org/wiki/Uniform_function_call_syntax):
+One of the most useful features of functions in Kex that the first parameter could be moved out from the parameter list before the function when calling. This is usually referred to as [UFCS (Uniform Function Call Syntax)](https://en.wikipedia.org/wiki/Uniform_function_call_syntax):
 
 ```kex
 let fact(n: Integer) = (2..n).product
