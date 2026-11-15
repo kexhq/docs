@@ -6,7 +6,7 @@ path: "/guide/0.4.0/functions/"
 draft: false
 template: "page"
 ---
-Functions are one of the most important building block of the language. It allows computations to be  organized into reusable values. Functions can also receive parameters, which can change the computation.
+Functions are one of the most important building block of the language. It allows computations to be organized into reusable units. Functions can also receive parameters, which can change the computation.
 
 ## Syntax
 
@@ -28,13 +28,13 @@ Short pure functions are defined very similarly to normal bindings via `let`. Th
 
 Here the return type was not declared, but since the compiler knew both `x`'s and `2`'s type (both being `Integer`), it was able to infer that  a multiplication between them would also yield an `Integer`.
 
-Most functions include multiple computations and might not fit into a single line. In those cases `do ... end` can be used, see the previous `solveQuadratic` example:
+Most functions include multiple computations and might not fit into a single line. In those cases `do ... end` can be used, see the previous `solveQuadratic` [example](https://www.wolframalpha.com/input?i=2x%5E2+-+5x+%2B+3+%3D+0):
 
 ```kex
 let solveQuadratic(a: Number, b: Number, c: Number) -> (Number, Number) do
   let root = Math.sqrt(b^2 - 4*a*c)
-  let pos = (-b + root) / 2*a
-  let neg = (-b - root) / 2*a
+  let pos = (-b + root) / (2*a)
+  let neg = (-b - root) / (2*a)
   return (neg, pos)
 end
 
@@ -47,8 +47,8 @@ end
 ```
 
 ```output filename="OUTPUT"
-4.0
-6.0
+1.0
+1.5
 ```
 
 The return type comes after the arrow `->` , `(Number, Number)` tuple. The `return` keyword stops the evaulation of the function and immidiately returns with `(neg, pos)`.
@@ -58,8 +58,8 @@ If `return` is omitted, the function will return with its last evaluated value, 
 ```kex
 let solveQuadratic(a: Number, b: Number, c: Number) -> (Number, Number) do
   let root = Math.sqrt(b^2 - 4*a*c)
-  let pos = (-b + root) / 2*a
-  let neg = (-b - root) / 2*a
+  let pos = (-b + root) / (2*a)
+  let neg = (-b - root) / (2*a)
   (neg, pos)
 end
 ```
@@ -102,12 +102,12 @@ bottlesOf : Integer -> String -> String
 let bottlesOf(nr, something) = "${nr} bottles of ${something} on the wall"
 
 main do
-  IO.printLine(bottlesOf(99, "plinka"))
+  IO.printLine(bottlesOf(99, "pálinka"))
 end
 ```
 
 ```output filename="OUTPUT"
-99 bottles of plinka on the wall
+99 bottles of pálinka on the wall
 ```
 
 The function's last parameters can define default arguments:
@@ -117,13 +117,13 @@ bottlesOf : Integer -> String -> String
 let bottlesOf(nr, something = "beer") = "${nr} bottles of ${something} on the wall"
 
 main do
-  IO.printLine(bottlesOf(99, "plinka"))
+  IO.printLine(bottlesOf(99, "pálinka"))
   IO.printLine(bottlesOf(99))
 end
 ```
 
 ```output filename="OUTPUT"
-99 bottles of plinka on the wall
+99 bottles of pálinka on the wall
 99 bottles of beer on the wall
 ```
 
@@ -242,8 +242,8 @@ end
 > let fact(n) = (2..n).product  # product over range (2..n)
 >
 > main do
->   IO.printLine(fib(4))
->   IO.printLine(fib(5))
+>   IO.printLine(fact(4))
+>   IO.printLine(fact(5))
 > end
 > ```
 
@@ -267,7 +267,7 @@ end
 Kex wants to clearly separate pure functions from impure ones, so when users see pure functions they can be sure that the functions they are working with does no "spooky action at a distance". Examples of impure side-effects include:
 
 - Writing to the screen
-- Accessing the keyboard in any way
+- Accessing devices, operating system functions, like reading from the keyboard in any way
 - Network calls
 - File operations
 - Modifying someone else's memory (including any global state)
@@ -283,7 +283,7 @@ end
 
 main do
   let n = 4
-  IO.printLine("${n}! = {fact(n)}")  # can call both pure and impure functions
+  IO.printLine("${n}! = ${fact(n)}")  # can call both pure and impure functions
 end
 ```
 
@@ -342,7 +342,7 @@ end
 ```
 
 > [!TIP]
-> Always prefer pure functions if possible. Pure functions always produce the same result, it is guaranteed that no spooky action would be done by it. It is easier to test, reuse and run concurrently.
+> **Always prefer pure functions if possible.** Pure functions always produce the same result, it is guaranteed that no spooky action would be done by it. It is easier to test, reuse and run concurrently.
 
 ## Blocks and lambdas
 
@@ -523,7 +523,7 @@ end
 
 ```output filename="OUTPUT"
 7
-6
+4
 ```
 
 We got back our original `double` function and it will be typed as `Integer -> Integer`.
@@ -556,6 +556,7 @@ Even operators are allowed to be partially applied:
 ```kex
 main do
   let doubles = (1..5).map(~(*)(2))
+  IO.printLine(doubles)
 end
 ```
 
