@@ -11,7 +11,7 @@ entities:
 
 Cross-file relations: which make blocks extend which type, which traits a type implements, and who implements each trait.
 
-Extraction documents one file at a time, but a reader thinks in types. The methods of `Integer` live in number.kex, time.kex, units.kex and algebra.kex; the fact that a `List` is `Enumerable` — and so has `map`, `filter` and `find` — is written on a make block, not on the type. These indexes are what let the List page say where its methods come from, and the Enumerable page say who implements it.
+Extraction documents one file at a time, but a reader thinks in types. The methods of `Integer` live in number.kex, period.kex, units.kex and algebra.kex; the fact that a `List` is `Enumerable` — and so has `map`, `filter` and `find` — is written on a make block, not on the type. These indexes are what let the List page say where its methods come from, and the Enumerable page say who implements it.
 
 ## module `Tey.Docgen.Relations`
 

@@ -35,10 +35,10 @@ The ratio of a circle's circumference to its diameter.
 Math.PI   # => 3.141592653589793
 ```
 
-_Degrees to radians_
+_The circumference of a circle_
 
 ```kex
-let radians(deg: Float) -> Float = deg * Math.PI / 180.0
+2.0 * Math.PI * radius
 ```
 
 
@@ -266,7 +266,61 @@ Math.atan2(1.0, -1.0)   # => 2.356194490192345     (135°)
 _The bearing from one point to another, in degrees_
 
 ```kex
-Math.atan2(y2 - y1, x2 - x1) * 180.0 / Math.PI
+Math.rad2Deg(Math.atan2(y2 - y1, x2 - x1))
+```
+
+### `deg2Rad`
+
+```kex
+deg2Rad(degrees: Number) -> Float
+```
+
+Converts an angle from degrees to radians, the unit every trigonometric function here expects.
+
+**Parameters**
+
+  - `degrees` — the angle in degrees
+
+**Returns**: the same angle in radians
+
+**Examples**
+
+```kex
+Math.deg2Rad(180)    # => 3.141592653589793
+Math.deg2Rad(90.0)   # => 1.5707963267948966
+```
+
+_The sine of an angle given in degrees_
+
+```kex
+Math.sin(Math.deg2Rad(30.0))
+```
+
+### `rad2Deg`
+
+```kex
+rad2Deg(radians: Number) -> Float
+```
+
+Converts an angle from radians to degrees: the inverse of `deg2Rad`.
+
+**Parameters**
+
+  - `radians` — the angle in radians
+
+**Returns**: the same angle in degrees
+
+**Examples**
+
+```kex
+Math.rad2Deg(Math.PI)         # => 180.0
+Math.rad2Deg(Math.PI / 2.0)   # => 90.0
+```
+
+_The bearing from one point to another, in degrees_
+
+```kex
+Math.rad2Deg(Math.atan2(y2 - y1, x2 - x1))
 ```
 
 ### `sinh`

@@ -391,7 +391,7 @@ Bounded HTTP server resources, default graceful-shutdown duration and request bo
 
   - `maximumHandlers` : [Integer](../number.md#make-integer) (optional)
   - `backlog` : [Integer](../number.md#make-integer) (optional)
-  - `gracefulShutdown` : [Duration](../units.md#record-duration) (optional)
+  - `gracefulShutdown` : Duration (optional)
   - `maximumBodyBytes` : [Integer](../number.md#make-integer) (optional)
 
 
@@ -407,13 +407,13 @@ A request over a size limit is a `Limit` error, and one over a time limit a `Tim
 _A link preview: a short deadline and a small answer_
 
 ```kex
-RequestOptions { timeout: Duration.seconds(2), maximumBodyBytes: 262144 }
+RequestOptions { timeout: 2.second, maximumBodyBytes: 262144 }
 ```
 
 **Fields**
 
-  - `connectTimeout` : [Duration](../units.md#record-duration) (optional)
-  - `timeout` : [Duration](../units.md#record-duration) (optional)
+  - `connectTimeout` : Duration (optional)
+  - `timeout` : Duration (optional)
   - `maximumBodyBytes` : [Integer](../number.md#make-integer) (optional)
   - `maximumHeaderBytes` : [Integer](../number.md#make-integer) (optional)
 

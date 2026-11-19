@@ -34,8 +34,8 @@ _Fixed delays: three waits of 250 milliseconds_
 
 ```kex
 let schedule = Retry.Schedule {
-  attempts: 4, delay: 250.milliseconds, backoff: 1.0,
-  maximumDelay: 250.milliseconds, jitter: 0.0
+  attempts: 4, delay: 250.millisecond, backoff: 1.0,
+  maximumDelay: 250.millisecond, jitter: 0.0
 }
 Retry.run(schedule: schedule) do
   Error("not ready")
@@ -47,8 +47,8 @@ _Exponential delays: 200, 400, 800, 1600 milliseconds_
 
 ```kex
 let schedule = Retry.Schedule {
-  attempts: 5, delay: 200.milliseconds, backoff: 2.0,
-  maximumDelay: 5.seconds, jitter: 0.0
+  attempts: 5, delay: 200.millisecond, backoff: 2.0,
+  maximumDelay: 5.second, jitter: 0.0
 }
 Retry.run(schedule: schedule) do
   Error("busy")
@@ -60,8 +60,8 @@ _Capped delays: 500 ms, 1 s, 2 s, 2 s, 2 s_
 
 ```kex
 Retry.Schedule {
-  attempts: 6, delay: 500.milliseconds, backoff: 2.0,
-  maximumDelay: 2.seconds, jitter: 0.0
+  attempts: 6, delay: 500.millisecond, backoff: 2.0,
+  maximumDelay: 2.second, jitter: 0.0
 }
 ```
 
@@ -82,7 +82,7 @@ end
 _Set retry options directly_
 
 ```kex
-Retry.run(attempts: 5, delay: 200.milliseconds, jitter: 0.0) do
+Retry.run(attempts: 5, delay: 200.millisecond, jitter: 0.0) do
   Ok("ready")
 end
 # => Ok("ready")
@@ -92,8 +92,8 @@ _Limit the time spent sleeping_
 
 ```kex
 Retry.run(
-  attempts: 5, delay: 1.seconds, backoff: 2.0,
-  jitter: 0.0, maximumTotalDelay: Just(2.seconds)
+  attempts: 5, delay: 1.second, backoff: 2.0,
+  jitter: 0.0, maximumTotalDelay: Just(2.second)
 ) do
   Error("busy")
 end
@@ -104,8 +104,8 @@ _Test jitter without waiting_
 
 ```kex
 Retry.run(
-  attempts: 2, delay: 4.seconds, jitter: 0.25,
-  sleeper: { |wait| Assert.equal(wait, 3.seconds) },
+  attempts: 2, delay: 4.second, jitter: 0.25,
+  sleeper: { |wait| Assert.equal(wait, 3.second) },
   random: { 0.0 }
 ) do
   Error("temporary")
@@ -242,11 +242,11 @@ Defaults: three attempts, starting with a 100 ms wait, doubling up to 5 seconds,
 **Fields**
 
   - `attempts` : [Integer](../number.md#make-integer) (optional)
-  - `delay` : [Duration](../units.md#record-duration) (optional)
+  - `delay` : Duration (optional)
   - `backoff` : [Float](../number.md#make-float) (optional)
-  - `maximumDelay` : [Duration](../units.md#record-duration) (optional)
+  - `maximumDelay` : Duration (optional)
   - `jitter` : [Float](../number.md#make-float) (optional)
-  - `maximumTotalDelay` : [Duration](../units.md#record-duration)? (optional)
+  - `maximumTotalDelay` : Duration? (optional)
 
 
 
@@ -281,8 +281,8 @@ The callback runs only when another attempt is allowed. It does not run for the 
   - `nextAttempt` : [Integer](../number.md#make-integer)
   - `maximumAttempts` : [Integer](../number.md#make-integer)
   - `remainingAttempts` : [Integer](../number.md#make-integer)
-  - `delay` : [Duration](../units.md#record-duration)
-  - `totalDelay` : [Duration](../units.md#record-duration)
+  - `delay` : Duration
+  - `totalDelay` : Duration
   - `result` : X
 
 

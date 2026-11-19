@@ -31,7 +31,7 @@ Every type is inspectable through a structural fallback, so `inspected` and `IO.
 Just("hi").inspected   # => "Just(\"hi\")"
 ```
 
-Implemented by [`Binary`](binary.md#make-binary), [`Period`](time.md#make-period), [`Date`](time.md#make-date), [`Time`](time.md#make-time), [`DateTime`](time.md#make-datetime), [`URI`](uri.md#make-uri), [`URL`](uri.md#make-url), [`Headers`](net/http.md#make-headers).
+Implemented by [`Binary`](binary.md#make-binary), [`Date`](date.md#make-date), [`DateTime`](date_time.md#make-datetime), [`Period`](period.md#make-period), [`Time`](time.md#make-time), [`URI`](uri.md#make-uri), [`URL`](uri.md#make-url), [`Headers`](net/http.md#make-headers).
 
 ### Provided functions
 
@@ -71,7 +71,7 @@ Just("hello").showValue    # => "hello"
 None.showValue             # => ""
 ```
 
-Implemented by [`Binary`](binary.md#make-binary), [`Complex`](complex.md#make-complex), [`Optional<Showable>`](#make-optional-showable), [`Result<X, E>`](#make-result), [`Regex`](regex.md#make-regex), [`Duration`](time.md#make-duration), [`Period`](time.md#make-period), [`Date`](time.md#make-date), [`Time`](time.md#make-time), [`DateTime`](time.md#make-datetime), [`TimeError`](time.md#make-timeerror), [`Measure`](units.md#make-measure), [`URI`](uri.md#make-uri), [`URL`](uri.md#make-url), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack), [`Headers`](net/http.md#make-headers).
+Implemented by [`Binary`](binary.md#make-binary), [`Complex`](complex.md#make-complex), [`Date`](date.md#make-date), [`DateTime`](date_time.md#make-datetime), [`Optional<Showable>`](#make-optional-showable), [`Result<X, E>`](#make-result), [`Period`](period.md#make-period), [`Regex`](regex.md#make-regex), [`Time`](time.md#make-time), [`TimeError`](time.md#make-timeerror), [`Measure<D>`](units.md#make-measure), [`URI`](uri.md#make-uri), [`URL`](uri.md#make-url), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack), [`Headers`](net/http.md#make-headers).
 
 ### Provided functions
 

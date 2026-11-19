@@ -68,7 +68,7 @@ A filesystem path. An alias for `String`, so every `String` function applies to 
 
 
 
-## type `FileModes`
+## type `FileMode`
 
 How a file should be opened: `Read` to read it, `Write` to replace it, `Append` to add to its end, `ReadWrite` for both. The mode chosen decides what type the resulting `FileHandle` has, and therefore which operations the compiler will let you call on it.
 
@@ -78,28 +78,6 @@ How a file should be opened: `Read` to read it, `Write` to replace it, `Append` 
   - `Write`
   - `Append`
   - `ReadWrite`
-
-
-
-## type `ReadPermission`
-
-Whether a `FileHandle` may be read from. Part of the handle's type rather than a runtime flag, so reading from a write-only handle is a compile error.
-
-**Variants**
-
-  - `CanRead`
-  - `CannotRead`
-
-
-
-## type `WritePermission`
-
-Whether a `FileHandle` may be written to. Part of the handle's type, so writing to a read-only handle is a compile error.
-
-**Variants**
-
-  - `CanWrite`
-  - `CannotWrite`
 
 
 
@@ -149,7 +127,7 @@ What one `stat` of a path says about it.
 
   - `kind` : [FileKind](#type-fs-filekind)
   - `size` : [Integer](number.md#make-integer)
-  - `modified` : [DateTime](time.md#record-datetime)
+  - `modified` : [DateTime](date_time.md#record-datetime)
 
 
 
@@ -162,14 +140,14 @@ A capability: every member reaches the real filesystem, so a test can replace th
 ### `open` (foul)
 
 ```kex
-open(path: FilePath, mode: Read) -> Result<FileHandle<CanRead, CannotWrite>, FileError>
-open(path: FilePath, mode: Write) -> Result<FileHandle<CannotRead, CanWrite>, FileError>
-open(path: FilePath, mode: Append) -> Result<FileHandle<CannotRead, CanWrite>, FileError>
-open(path: FilePath, mode: ReadWrite) -> Result<FileHandle<CanRead, CanWrite>, FileError>
-open(path: FilePath, mode: Read, block: (FileHandle<CanRead, CannotWrite> -> A)) -> Result<A, FileError>
-open(path: FilePath, mode: Write, block: (FileHandle<CannotRead, CanWrite> -> A)) -> Result<A, FileError>
-open(path: FilePath, mode: Append, block: (FileHandle<CannotRead, CanWrite> -> A)) -> Result<A, FileError>
-open(path: FilePath, mode: ReadWrite, block: (FileHandle<CanRead, CanWrite> -> A)) -> Result<A, FileError>
+open(path: FilePath, mode: FileMode.Read) -> Result<FileHandle<CanRead, CannotWrite>, FileError>
+open(path: FilePath, mode: FileMode.Write) -> Result<FileHandle<CannotRead, CanWrite>, FileError>
+open(path: FilePath, mode: FileMode.Append) -> Result<FileHandle<CannotRead, CanWrite>, FileError>
+open(path: FilePath, mode: FileMode.ReadWrite) -> Result<FileHandle<CanRead, CanWrite>, FileError>
+open(path: FilePath, mode: FileMode.Read, block: (FileHandle<CanRead, CannotWrite> -> A)) -> Result<A, FileError>
+open(path: FilePath, mode: FileMode.Write, block: (FileHandle<CannotRead, CanWrite> -> A)) -> Result<A, FileError>
+open(path: FilePath, mode: FileMode.Append, block: (FileHandle<CannotRead, CanWrite> -> A)) -> Result<A, FileError>
+open(path: FilePath, mode: FileMode.ReadWrite, block: (FileHandle<CanRead, CanWrite> -> A)) -> Result<A, FileError>
 ```
 
 Opens `path` and returns a `FileHandle` for it.
@@ -192,7 +170,7 @@ Close the handle when you are done with it.
 _Reading a file line by line_
 
 ```kex
-match FS.File.open("log.txt", Read) do
+match FS.File.open("log.txt", FS.Read) do
   Ok(handle) => do
     IO.printLine(handle.getLine.or(""))
     handle.close
@@ -204,7 +182,7 @@ end
 _Writing a report_
 
 ```kex
-match FS.File.open("report.txt", Write) do
+match FS.File.open("report.txt", FS.Write) do
   Ok(handle) => do
     rows.each { |row| handle.printLine(row) }
     handle.close
@@ -216,7 +194,7 @@ end
 _A failure names the path_
 
 ```kex
-FS.File.open("missing/x.txt", Read)   # => Error(OpenFailed("missing/x.txt"))
+FS.File.open("missing/x.txt", FS.Read)   # => Error(OpenFailed("missing/x.txt"))
 ```
 
 ### `read` (foul)
@@ -648,7 +626,7 @@ Unlike `readLines`, the file is read a line at a time off a handle held open for
 
 A `Feed` rather than a `Stream` because that is what a file honestly is: reading consumes, and there is no rewinding. Taking twice walks forward rather than answering the same lines again. On a file small enough to replay, `toStream` buys that back.
 
-The feed ends at the last line, so asking for more lines than the file has answers just the lines there are: unlike `Stream.Sequence`, which is deliberately infinite.
+The feed ends at the last line, so asking for more lines than the file has answers just the lines there are: unlike `Stream.from`, which is deliberately infinite.
 
 ```kex
 FS.File.feed("two-lines.txt").map { |lines| lines.take(5) }.or([])

@@ -153,7 +153,7 @@ Types that have a total order.
 
 Implemented by `Number`, which covers both `Integer` and `Float`, and by `String`.
 
-Implemented by [`Number`](#make-number), [`String`](#make-string).
+Implemented by [`Number`](#make-number), [`String`](#make-string), [`Measure<D>`](units.md#make-measure).
 
 ### Required functions
 

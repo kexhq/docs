@@ -244,7 +244,7 @@ end
 
 report(IO.out, results)
 report(IO.error, warnings)
-report(FS.File.open("report.txt", Write).try, results)
+report(FS.File.open("report.txt", FS.Write).try, results)
 ```
 
 

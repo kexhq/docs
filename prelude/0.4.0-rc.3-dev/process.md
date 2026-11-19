@@ -4,7 +4,6 @@ version: "0.4.0-rc.3-dev"
 source: process.kex
 title: Process
 entities:
-  - { kind: type, name: "Pid" }
   - { kind: type, name: "Task" }
   - { kind: type, name: "Reference" }
   - { kind: type, name: "Process" }
@@ -15,7 +14,6 @@ entities:
   - { kind: record, name: "Server" }
   - { kind: module, name: "Process" }
   - { kind: record, name: "ProcessResult" }
-  - { kind: make, name: "Pid" }
   - { kind: make, name: "Process<X>" }
   - { kind: make, name: "Server<X>" }
   - { kind: make, name: "From<X>" }
@@ -65,120 +63,6 @@ Process.run("git", ["rev-parse", "HEAD"])
 ```
 
 Backed by Kex.Intrinsic.Process and the BEAM runtime.
-
-## type `Pid`
-
-An opaque BEAM process identifier.
-
-Obtained from `Process.self` or `Process.whereIs`. Send it messages, link to it, monitor it, or ask whether it is still alive.
-
-### Functions
-
-#### `send`
-
-```kex
-send(msg: X) -> Void
-```
-
-Sends `msg` to the process, unchanged, as a raw BEAM term.
-
-Sending never blocks and never fails, even when the process is gone: that is the BEAM's model, not an oversight. Monitor the process when delivery matters.
-
-**Parameters**
-
-  - `msg` — the message to send
-
-**Examples**
-
-```kex
-worker.send(:stop)
-worker.send(("job", 42))
-```
-
-#### `sendFrom`
-
-```kex
-sendFrom(msg: X) -> Void
-```
-
-Sends the conventional Erlang sender-bearing pair `{Process.self, msg}`, so the receiver knows where to answer.
-
-**Parameters**
-
-  - `msg` — the message to send
-
-**Examples**
-
-```kex
-server.sendFrom(:status)   # the server receives (senderPid, :status)
-```
-
-#### `link`
-
-```kex
-link -> Void
-```
-
-Links the calling process to this one, so that either one exiting abnormally takes the other down.
-
-Linking is bidirectional and is how a group of processes is made to fail together. Use `monitor` when you want to be told about a death without sharing it.
-
-**Examples**
-
-```kex
-worker.link
-```
-
-#### `unlink`
-
-```kex
-unlink -> Void
-```
-
-Removes the link between the calling process and this one.
-
-**Examples**
-
-```kex
-worker.unlink
-```
-
-#### `monitor`
-
-```kex
-monitor -> Reference
-```
-
-Starts monitoring this process, and returns the reference that identifies the monitor.
-
-When the monitored process exits, the caller receives a message about it. Unlike `link`, a monitor is one-directional and does not propagate the exit. Pass the reference to `demonitor` to stop.
-
-**Returns**: the monitor reference
-
-**Examples**
-
-```kex
-let ref = worker.monitor
-ref.demonitor
-```
-
-#### `alive?`
-
-```kex
-alive? -> Bool
-```
-
-Returns `true` when the process is still running.
-
-Inherently a snapshot: the process may exit immediately after you ask. Monitor it when the answer has to stay true.
-
-**Returns**: `true` when the process is alive
-
-**Examples**
-
-```kex
-Process.self.alive?   # => true
-```
 
 ## type `Task<A>`
 
@@ -248,7 +132,7 @@ ref.demonitor
 
 ## type `Process<A>`
 
-A typed process handle: like a `Pid`, but it remembers what kind of message the process accepts.
+A process: what `spawn` makes, `Process.self` is, and `Process.whereIs` finds. `A` is the kind of message it accepts, so sending it anything else is refused. A process obtained without a declared message type takes its `A` from where it is used (`Ping(Process.self)` where a `Process<String>` goes).
 
 ### Functions
 
@@ -260,11 +144,20 @@ A spawned Process<X> is a typed process handle backed by the same runtime pid. I
 send(msg: X) -> Void
 ```
 
-Sends `msg` to the process. Unlike `Pid.send`, the message type is checked.
+Sends `msg` to the process. Only a message of the kind it accepts goes.
+
+Sending never blocks and never fails, even when the process is gone: that is the BEAM's model, not an oversight. Monitor the process when delivery matters.
 
 **Parameters**
 
   - `msg` — the message to send
+
+**Examples**
+
+```kex
+worker.send(:stop)
+worker.send(("job", 42))
+```
 
 #### `sendFrom`
 
@@ -272,11 +165,17 @@ Sends `msg` to the process. Unlike `Pid.send`, the message type is checked.
 sendFrom(msg: X) -> Void
 ```
 
-Sends the sender-bearing pair `{Process.self, msg}`, with the message type checked.
+Sends the sender-bearing pair `(Process.self, msg)`, so the receiver knows where to answer.
 
 **Parameters**
 
   - `msg` — the message to send
+
+**Examples**
+
+```kex
+server.sendFrom(:status)   # the server receives (sender, :status)
+```
 
 #### `link`
 
@@ -284,7 +183,15 @@ Sends the sender-bearing pair `{Process.self, msg}`, with the message type check
 link -> Void
 ```
 
-Links the calling process to this one. See `Pid.link`.
+Links the calling process to this one, so that either one exiting abnormally takes the other down.
+
+Linking is bidirectional and is how a group of processes is made to fail together. Use `monitor` when you want to be told about a death without sharing it.
+
+**Examples**
+
+```kex
+worker.link
+```
 
 #### `unlink`
 
@@ -294,15 +201,30 @@ unlink -> Void
 
 Removes the link between the calling process and this one.
 
+**Examples**
+
+```kex
+worker.unlink
+```
+
 #### `monitor`
 
 ```kex
 monitor -> Reference
 ```
 
-Starts monitoring this process. See `Pid.monitor`.
+Starts monitoring this process, and returns the reference that identifies the monitor.
+
+When the monitored process exits, the caller receives a message about it. Unlike `link`, a monitor is one-directional and does not propagate the exit. Pass the reference to `demonitor` to stop.
 
 **Returns**: the monitor reference
+
+**Examples**
+
+```kex
+let ref = worker.monitor
+ref.demonitor
+```
 
 #### `alive?`
 
@@ -312,7 +234,15 @@ alive? -> Bool
 
 Returns `true` when the process is still running.
 
+Inherently a snapshot: the process may exit immediately after you ask. Monitor it when the answer has to stay true.
+
 **Returns**: `true` when the process is alive
+
+**Examples**
+
+```kex
+Process.self.alive?   # => true
+```
 
 ## type `ProcessExitReason`
 
@@ -381,10 +311,10 @@ end
 #### `pid`
 
 ```kex
-pid -> Pid
+pid -> Process<A>
 ```
 
-Returns the waiting caller's `Pid`.
+Returns the waiting caller.
 
 **Returns**: the caller
 
@@ -443,7 +373,7 @@ api.within(30000).rebuildIndex()
 link -> Void
 ```
 
-Links the calling process to the server. See `Pid.link`.
+Links the calling process to the server. See `Process.link`.
 
 **Examples**
 
@@ -465,7 +395,7 @@ Removes the link between the calling process and the server.
 monitor -> Reference
 ```
 
-Starts monitoring the server. See `Pid.monitor`.
+Starts monitoring the server. See `Process.monitor`.
 
 **Returns**: the monitor reference
 
@@ -629,12 +559,12 @@ let haveGit = Process.exec("git", ["--version"]) == 0
 ### `self` (foul)
 
 ```kex
-self -> Pid
+self -> Process<A>
 ```
 
-Returns the calling process's own `Pid`.
+Returns the calling process.
 
-**Returns**: this process's identifier
+**Returns**: this process
 
 **Examples**
 
@@ -647,7 +577,7 @@ worker.send((Process.self, :ping))
 ### `exit` (foul)
 
 ```kex
-exit(pid: Pid, reason: X) -> Void
+exit(pid: Process<A>, reason: X) -> Void
 ```
 
 Sends an exit signal carrying `reason` to `pid`.
@@ -668,30 +598,31 @@ Process.exit(worker, :shutdown)
 ### `register` (foul)
 
 ```kex
-register(pid: Pid, name: Atom) -> Void
-register(pid: Process<X>, name: Atom) -> Void
+register(process: Process<X>, name: Atom) -> Void
 ```
 
-Registers `pid` under the atom `name`, so it can be found by name rather than by passing the `Pid` around.
+Registers `process` under the atom `name`, so it can be found by name rather than by passing it around.
 
 **Parameters**
 
-  - `pid` — the process to register
+  - `process` — the process to register
   - `name` — the name to register it under
 
 **Examples**
 
 ```kex
+let logger = spawn do logLoop() end
+Process.register(logger, :logger)
 Process.register(Process.self, :main)
 ```
 
 ### `whereIs` (foul)
 
 ```kex
-whereIs(name: Atom) -> Pid?
+whereIs(name: Atom) -> Process<A>?
 ```
 
-Returns the `Pid` registered under `name`, or `None` when nothing is.
+Returns the process registered under `name`, or `None` when nothing is.
 
 **Parameters**
 
@@ -764,12 +695,12 @@ Cheap, whatever the value's size.
 #### `delete` (foul)
 
 ```kex
-delete -> Bool
+delete -> X?
 ```
 
 Empties the slot.
 
-**Returns**: `true` when it held a value
+**Returns**: the value it held, or `None` when it held none
 
 ## module `Process.Shared`
 
@@ -880,8 +811,8 @@ Supervision trees: processes that restart the processes under them when they cra
 ### `start` (foul)
 
 ```kex
-start(restart: Atom, children: Block<[(Atom, Block<Pid>)]>) -> Result<Pid, Any>
-start(restart: Atom, children: [(Atom, Block<Pid>)]) -> Result<Pid, Any>
+start(restart: Atom, children: Block<[(Atom, Block<Process<A>>)]>) -> Result<Process<A>, Any>
+start(restart: Atom, children: [(Atom, Block<Process<A>>)]) -> Result<Process<A>, Any>
 ```
 
 Starts a supervisor over the children its block lists, one per line — +Supervisor.worker+s and nested +Supervisor.supervisor+s. When a child crashes, `restart` decides which of its siblings restart with it:
@@ -915,10 +846,10 @@ end
 ### `worker`
 
 ```kex
-worker(start: Block<Pid>) -> (Atom, Block<Pid>)
+worker(start: Block<Process<A>>) -> (Atom, Block<Process<A>>)
 ```
 
-A child that runs the block to start, and again to restart. The block must spawn the worker and return its `Pid`.
+A child that runs the block to start, and again to restart. The block must spawn the worker and return it.
 
 **Parameters**
 
@@ -935,8 +866,8 @@ Supervisor.worker { spawn do cacheLoop([]) end }
 ### `supervisor`
 
 ```kex
-supervisor(restart: Atom, children: Block<[(Atom, Block<Pid>)]>) -> (Atom, Block<Pid>)
-supervisor(restart: Atom, children: [(Atom, Block<Pid>)]) -> (Atom, Block<Pid>)
+supervisor(restart: Atom, children: Block<[(Atom, Block<Process<A>>)]>) -> (Atom, Block<Process<A>>)
+supervisor(restart: Atom, children: [(Atom, Block<Process<A>>)]) -> (Atom, Block<Process<A>>)
 ```
 
 A child that is itself a supervisor over the children its block lists, one per line. Its parent starts it, and restarts it — with all its children — when the parent's restart strategy says so. Takes the same `restart:` strategies as `Supervisor.start`. BEAM backend only.

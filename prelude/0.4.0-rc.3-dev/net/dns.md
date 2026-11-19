@@ -103,8 +103,8 @@ Positive answers honor their DNS TTL up to `maximumTtl`. Failed lookups are cach
 **Fields**
 
   - `entries` : [Integer](../number.md#make-integer) (optional)
-  - `maximumTtl` : [Duration](../units.md#record-duration) (optional)
-  - `negativeTtl` : [Duration](../units.md#record-duration) (optional)
+  - `maximumTtl` : Duration (optional)
+  - `negativeTtl` : Duration (optional)
 
 
 
@@ -129,7 +129,7 @@ Isolated resolver configuration. An empty search list only queries the name as w
   - `nameservers` : [[Nameserver](#record-net-dns-nameserver)]
   - `search` : [[Name](#record-net-dns-name)] (optional)
   - `retries` : [Integer](../number.md#make-integer) (optional)
-  - `timeout` : [Duration](../units.md#record-duration) (optional)
+  - `timeout` : Duration (optional)
 
 
 
@@ -332,7 +332,7 @@ let nameserver = Nameserver {
 }
 Resolver.custom(ResolverOptions {
   nameservers: [nameserver],
-  timeout: 100.milliseconds
+  timeout: 100.millisecond
 }).try
 ```
 

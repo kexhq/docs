@@ -211,10 +211,10 @@ addAnnotation(p: Pending, info: Kex.AST.AnnotationInfo) -> Pending
 noteFunction(accum: [Pending], info: Kex.AST.FunctionInfo, prefix: String) -> [Pending]
 ```
 
-### `isConstantBinding` (foul)
+### `constantBinding?` (foul)
 
 ```kex
-isConstantBinding(info: Kex.AST.FunctionInfo) -> Bool
+constantBinding?(info: Kex.AST.FunctionInfo) -> Bool
 ```
 
 A binding with no parameter list is a constant — unless it is `foul`, in which case it is a zero-argument FUNCTION that Kex auto-calls. `IO.out` is a handle that is always the same one; `IO.getLine` reads a new line every time it is named, and calling that a constant is a lie about both what it does and when it happens.
@@ -348,7 +348,7 @@ A function with nothing to name its parameters by still reads as a function: `co
 ### `paramText` (foul)
 
 ```kex
-paramText(name: String, typeName: String, hasDefault: Bool) -> String
+paramText(name: String, typeName: String, optional: Bool) -> String
 ```
 
 ### `parenthesized` (foul)
@@ -437,10 +437,10 @@ matchingParamList(ref: Kex.AST.TypeRef, paramLists: [[ParamSig]]) -> [ParamSig]?
 matchingParamLists(ref: Kex.AST.TypeRef, paramLists: [[ParamSig]]) -> [[ParamSig]]
 ```
 
-### `paramsMatch` (foul)
+### `paramsMatch?` (foul)
 
 ```kex
-paramsMatch(ref: Kex.AST.TypeRef, names: [ParamSig]) -> Bool
+paramsMatch?(ref: Kex.AST.TypeRef, names: [ParamSig]) -> Bool
 ```
 
 ### `flattenToArity` (foul)
@@ -538,15 +538,15 @@ Accumulator entries: finished entities or functions still collecting.
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
-  - `qualifiedName` : [String](../../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
-  - `annotations` : [[Kex.AST.AnnotationInfo](../../../../prelude/0.4.0-rc.3-dev/kex/ast.md#record-kex-ast-annotationinfo)]
+  - `name` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `qualifiedName` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `annotations` : [[Kex.AST.AnnotationInfo](../../../../prelude/0.4.0-rc.4-dev/kex/ast.md#record-kex-ast-annotationinfo)]
   - `paramLists` : [[[ParamSig](#record-tey-docgen-extract-paramsig)]]
-  - `clauseCount` : [Integer](../../../../prelude/0.4.0-rc.3-dev/number.md#make-integer)
+  - `clauseCount` : [Integer](../../../../prelude/0.4.0-rc.4-dev/number.md#make-integer)
   - `doc` : [Doc](../../tey/docgen/model.md#record-tey-docgen-model-doc)
-  - `line` : [Integer](../../../../prelude/0.4.0-rc.3-dev/number.md#make-integer)
-  - `returnType` : [String](../../../../prelude/0.4.0-rc.3-dev/string.md#make-string) (optional)
-  - `isFoul` : [Bool](../../../../prelude/0.4.0-rc.3-dev/truthyable.md#make-bool) (optional)
+  - `line` : [Integer](../../../../prelude/0.4.0-rc.4-dev/number.md#make-integer)
+  - `returnType` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
+  - `foul?` : [Bool](../../../../prelude/0.4.0-rc.4-dev/truthyable.md#make-bool) (optional)
 
 
 
@@ -556,9 +556,9 @@ One parameter as a clause declares it. `named` is false for a pattern parameter 
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
-  - `typeName` : [String](../../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
-  - `named` : [Bool](../../../../prelude/0.4.0-rc.3-dev/truthyable.md#make-bool)
-  - `hasDefault` : [Bool](../../../../prelude/0.4.0-rc.3-dev/truthyable.md#make-bool)
+  - `name` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `typeName` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `named?` : [Bool](../../../../prelude/0.4.0-rc.4-dev/truthyable.md#make-bool)
+  - `default?` : [Bool](../../../../prelude/0.4.0-rc.4-dev/truthyable.md#make-bool)
 
 

@@ -49,8 +49,8 @@ The names `culture` writes dates with: its own when it carries them, and English
 **Examples**
 
 ```kex
-Culture.timeNames(Culture.of("HU_HU").or(Culture.DEFAULT)).months.first   # => Just("január")
-Culture.timeNames(Culture.DEFAULT).months.first                          # => Just("January")
+Culture.timeNames(Culture.of("HU_HU").or(Culture.DEFAULT)).month.first   # => Just("január")
+Culture.timeNames(Culture.DEFAULT).month.first                          # => Just("January")
 ```
 
 ### `DEFAULT` (constant)

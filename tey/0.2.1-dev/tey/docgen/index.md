@@ -16,7 +16,7 @@ The build driver: scan → extract → PackageModel, then emit everything derive
 ### `buildCommand` (foul)
 
 ```kex
-buildCommand(parsed: OptionParser.ParsedOptions) -> Integer
+buildCommand(parsed: ParsedOptions) -> Integer
 ```
 
 ### `externalLinks` (foul)

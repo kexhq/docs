@@ -479,13 +479,13 @@ let catchAll? = Kex.AST.patternRefText(pattern) == "_"
 
 One field inside a record or map-shaped pattern.
 
-`pattern` is `None` for shorthand such as `{ name }`. `stringKey` keeps `{"name": value}` distinct from the atom-key spelling `{ name: value }`.
+`pattern` is `None` for shorthand such as `{ name }`. `stringKey?` keeps `{"name": value}` distinct from the atom-key spelling `{ name: value }`.
 
 **Fields**
 
   - `name` : [String](../string.md#make-string)
   - `pattern` : [PatternRef](#type-kex-ast-patternref)?
-  - `stringKey` : [Bool](../truthyable.md#make-bool)
+  - `stringKey?` : [Bool](../truthyable.md#make-bool)
 
 
 
@@ -649,7 +649,7 @@ The fixed portion of a generated `make` declaration.
 
 **Fields**
 
-  - `isFinal` : [Bool](../truthyable.md#make-bool)
+  - `final?` : [Bool](../truthyable.md#make-bool)
   - `implements` : [[TypeRef](#type-kex-ast-typeref)]
   - `body` : [[CompiledItem](#type-kex-ast-compileditem)]
   - `location` : [Location](#record-kex-ast-location)
@@ -674,14 +674,14 @@ The program entry point, including documentation and recovery clauses.
 
 One declared function parameter.
 
-`name` is absent for a destructuring parameter; `pattern` preserves that destructuring shape. `hasDefault` records whether an initializer appeared.
+`name` is absent for a destructuring parameter; `pattern` preserves that destructuring shape. `default?` records whether an initializer appeared.
 
 **Fields**
 
   - `name` : [String](../string.md#make-string)?
   - `pattern` : [PatternRef](#type-kex-ast-patternref)?
   - `type` : [TypeRef](#type-kex-ast-typeref)?
-  - `hasDefault` : [Bool](../truthyable.md#make-bool)
+  - `default?` : [Bool](../truthyable.md#make-bool)
 
 
 
@@ -697,7 +697,7 @@ Multi-clause functions place all clauses in one `FunctionInfo`, preserving sourc
   - `body` : [[Expression](#type-kex-ast-expression)]
   - `returnType` : [TypeRef](#type-kex-ast-typeref)?
   - `rescueInfo` : [RescueInfo](#record-kex-ast-rescueinfo)?
-  - `hasParamList` : [Bool](../truthyable.md#make-bool)
+  - `paramList?` : [Bool](../truthyable.md#make-bool)
 
 
 
@@ -711,8 +711,8 @@ A named function and all of its pattern-matching clauses.
 
   - `name` : [String](../string.md#make-string)
   - `doc` : [String](../string.md#make-string)?
-  - `isFoul` : [Bool](../truthyable.md#make-bool)
-  - `predicate` : [Bool](../truthyable.md#make-bool)
+  - `foul?` : [Bool](../truthyable.md#make-bool)
+  - `predicate?` : [Bool](../truthyable.md#make-bool)
   - `clauses` : [[ClauseInfo](#record-kex-ast-clauseinfo)]
   - `location` : [Location](#record-kex-ast-location)
 
@@ -722,14 +722,14 @@ A named function and all of its pattern-matching clauses.
 
 A standalone function type signature.
 
-`implicitThis` distinguishes `:>` receiver signatures from module-level `:` signatures without making a tool inspect punctuation in the original source.
+`implicitThis?` distinguishes `:>` receiver signatures from module-level `:` signatures without making a tool inspect punctuation in the original source.
 
 **Fields**
 
   - `name` : [String](../string.md#make-string)
   - `type` : [TypeRef](#type-kex-ast-typeref)
   - `doc` : [String](../string.md#make-string)?
-  - `implicitThis` : [Bool](../truthyable.md#make-bool)
+  - `implicitThis?` : [Bool](../truthyable.md#make-bool)
   - `location` : [Location](#record-kex-ast-location)
 
 
@@ -770,7 +770,7 @@ One field declared by a record type.
 
   - `name` : [String](../string.md#make-string)
   - `type` : [TypeRef](#type-kex-ast-typeref)
-  - `hasDefault` : [Bool](../truthyable.md#make-bool)
+  - `default?` : [Bool](../truthyable.md#make-bool)
 
 
 
@@ -812,7 +812,7 @@ A `make` implementation block.
 
   - `target` : [TypeRef](#type-kex-ast-typeref)
   - `doc` : [String](../string.md#make-string)?
-  - `isFinal` : [Bool](../truthyable.md#make-bool)
+  - `final?` : [Bool](../truthyable.md#make-bool)
   - `implements` : [[TypeRef](#type-kex-ast-typeref)]
   - `body` : [Node]
   - `location` : [Location](#record-kex-ast-location)
@@ -863,7 +863,7 @@ A `public` or `private` section and the declarations it contains.
 
 **Fields**
 
-  - `isPublic` : [Bool](../truthyable.md#make-bool)
+  - `public?` : [Bool](../truthyable.md#make-bool)
   - `items` : [Node]
   - `location` : [Location](#record-kex-ast-location)
 

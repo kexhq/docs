@@ -58,7 +58,7 @@ Every value is a `Measure` from the prelude, so its arithmetic and `to(String)` 
 ### `size`
 
 ```kex
-size(value: Number, unit: DataUnit) -> Measure
+size(value: Number, unit: DataUnit) -> Measure<Quantity.Data>
 ```
 
 `value` of the given data unit, as a `Measure`.
@@ -106,7 +106,7 @@ Decimal and binary units convert freely, because both are counted in bytes under
 ### `byteSize`
 
 ```kex
-byteSize(value: Number) -> Measure
+byteSize(value: Number) -> Measure<Quantity.Data>
 ```
 
 `value` bytes.
@@ -134,7 +134,7 @@ FS.File.size("report.pdf").map { |n| n.byte.showValue }
 ### `byte`
 
 ```kex
-byte(value: Number) -> Measure
+byte(value: Number) -> Measure<Quantity.Data>
 ```
 
 `value` bytes, as a `Measure`.
@@ -159,7 +159,7 @@ payload.length.byte.to(String)   # => Just("2.0 B")
 ### `kilobyte`
 
 ```kex
-kilobyte(value: Number) -> Measure
+kilobyte(value: Number) -> Measure<Quantity.Data>
 ```
 
 `value` kilobytes, 1000 bytes each.
@@ -179,7 +179,7 @@ kilobyte(value: Number) -> Measure
 ### `megabyte`
 
 ```kex
-megabyte(value: Number) -> Measure
+megabyte(value: Number) -> Measure<Quantity.Data>
 ```
 
 `value` megabytes, 1000000 bytes each.
@@ -199,7 +199,7 @@ megabyte(value: Number) -> Measure
 ### `gigabyte`
 
 ```kex
-gigabyte(value: Number) -> Measure
+gigabyte(value: Number) -> Measure<Quantity.Data>
 ```
 
 `value` gigabytes, 10^9 bytes each.
@@ -219,7 +219,7 @@ gigabyte(value: Number) -> Measure
 ### `terabyte`
 
 ```kex
-terabyte(value: Number) -> Measure
+terabyte(value: Number) -> Measure<Quantity.Data>
 ```
 
 `value` terabytes, 10^12 bytes each.
@@ -239,7 +239,7 @@ terabyte(value: Number) -> Measure
 ### `kibibyte`
 
 ```kex
-kibibyte(value: Number) -> Measure
+kibibyte(value: Number) -> Measure<Quantity.Data>
 ```
 
 `value` kibibytes, 1024 bytes each.
@@ -259,7 +259,7 @@ kibibyte(value: Number) -> Measure
 ### `mebibyte`
 
 ```kex
-mebibyte(value: Number) -> Measure
+mebibyte(value: Number) -> Measure<Quantity.Data>
 ```
 
 `value` mebibytes, 1024^2 bytes each.
@@ -279,7 +279,7 @@ mebibyte(value: Number) -> Measure
 ### `gibibyte`
 
 ```kex
-gibibyte(value: Number) -> Measure
+gibibyte(value: Number) -> Measure<Quantity.Data>
 ```
 
 `value` gibibytes, 1024^3 bytes each.
@@ -299,7 +299,7 @@ gibibyte(value: Number) -> Measure
 ### `tebibyte`
 
 ```kex
-tebibyte(value: Number) -> Measure
+tebibyte(value: Number) -> Measure<Quantity.Data>
 ```
 
 `value` tebibytes, 1024^4 bytes each.

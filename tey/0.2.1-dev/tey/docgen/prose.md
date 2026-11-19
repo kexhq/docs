@@ -20,7 +20,7 @@ Nothing here knows what the prose IS. A guide, a book, a package's own handbook 
 ### `proseCommand` (foul)
 
 ```kex
-proseCommand(parsed: OptionParser.ParsedOptions) -> Integer
+proseCommand(parsed: ParsedOptions) -> Integer
 ```
 
 ### `readPages` (foul)
@@ -102,9 +102,9 @@ A page and the things only its frontmatter knows: where it sorts, the HTML its M
 **Fields**
 
   - `page` : [SourcePage](../../tey/docgen/model.md#record-tey-docgen-model-sourcepage)
-  - `order` : [Integer](../../../../prelude/0.4.0-rc.3-dev/number.md#make-integer)
-  - `body` : [String](../../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
-  - `description` : [String](../../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
-  - `markdown` : [String](../../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
+  - `order` : [Integer](../../../../prelude/0.4.0-rc.4-dev/number.md#make-integer)
+  - `body` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `description` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `markdown` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
 
 

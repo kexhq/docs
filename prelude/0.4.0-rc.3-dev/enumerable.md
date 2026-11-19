@@ -24,7 +24,7 @@ A type becomes `Foldable` by implementing one function, `reduce`; the rest: `eac
 
 Blocks are applied via Kex.Intrinsic.Fun.applyItem, which auto-splats a pair item into a two-argument block. That is what lets a `Map` traversal be written `{ |key, value| ... }` even though the fold hands over one tuple.
 
-Implemented by [`[X]`](list.md#make-list), [`Map<K, V>`](map.md#make-map), [`Range`](range.md#make-range), [`String`](string.md#make-string), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack).
+Implemented by [`[X]`](list.md#make-list), [`Map<K, V>`](map.md#make-map), [`Range<A>`](range.md#make-range), [`String`](string.md#make-string), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack).
 
 ### Required functions
 
@@ -271,7 +271,7 @@ Like `Foldable`, a type joins by implementing `reduce` alone. The defaults here 
 { a: 1, b: 2 }.filter { |k, v| v > 1 }   # => { :b: 2 }
 ```
 
-Implemented by [`[X]`](list.md#make-list), [`Map<K, V>`](map.md#make-map), [`Range`](range.md#make-range), [`String`](string.md#make-string), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack).
+Implemented by [`[X]`](list.md#make-list), [`Map<K, V>`](map.md#make-map), [`Range<A>`](range.md#make-range), [`String`](string.md#make-string), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack).
 
 ### Required functions
 
@@ -419,6 +419,8 @@ collect(f: (T -> B?)) -> [B]
 Applies `f` to each item, expecting an `Optional` back, and returns the values that were present: unwrapped.
 
 This is filter and map fused into one pass, which is what you want whenever the test and the transformation are the same operation. Parsing is the classic case: an item either yields a value or it does not.
+
+Typed in place: its body applies `f` through an intrinsic, so nothing could be inferred from it, and every `xs.collect { ... }` was `Any` to the checker and to completion (`make lsp-sweep`). (A `name :>` line in a trait declares a required function instead.)
 
 **Parameters**
 

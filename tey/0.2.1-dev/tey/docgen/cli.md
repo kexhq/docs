@@ -29,7 +29,7 @@ A built-in Tey command. Everything after the command word is docgen's own vocabu
 ### `options` (foul)
 
 ```kex
-options -> OptionParser.OptionConfig
+options -> OptionConfig
 ```
 
 A function rather than a module-level constant: on BEAM, calling a make-method (`.parse`, `.help`) on a module-level constant fails with "Undefined function" — the dispatcher doesn't resolve the constant.
@@ -42,10 +42,10 @@ The three subcommands are declared here, the way Tey declares its own, so `tey d
 dispatch(args: [String]) -> Integer
 ```
 
-### `strict` (foul)
+### `strict?` (foul)
 
 ```kex
-strict(parsed: OptionParser.ParsedOptions) -> Bool
+strict?(parsed: ParsedOptions) -> Bool
 ```
 
 After a command word, OptionParser hands an option it does not know on to the command as an argument, for commands with a vocabulary of their own. These three have none beyond the options above, so one left over is a typo — and `--sorce src` silently documenting the wrong directory is worse than an error.

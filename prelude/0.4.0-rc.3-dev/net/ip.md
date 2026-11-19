@@ -18,7 +18,7 @@ using Net.IP
 
 let address = Address.parse("192.0.2.42").try
 let network = Network.parse("192.0.2.0/24").try
-network.contains(address)   # => true
+network.contains?(address)   # => true
 ```
 
 
@@ -177,10 +177,10 @@ Returns canonical CIDR text, including the prefix length.
 Network.parse("192.0.2.99/24").try.string   # => "192.0.2.0/24"
 ```
 
-#### `contains`
+#### `contains?`
 
 ```kex
-contains(address: Address) -> Bool
+contains?(address: Address) -> Bool
 ```
 
 Returns `true` when `address` falls within this network.
@@ -199,7 +199,7 @@ _Checking an application allowlist_
 
 ```kex
 let office = Network.parse("198.51.100.0/24").try
-let allowed? = office.contains(requestAddress)
+let allowed? = office.contains?(requestAddress)
 ```
 
 #### `prefix`

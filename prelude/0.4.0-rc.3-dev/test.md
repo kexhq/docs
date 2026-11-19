@@ -42,7 +42,7 @@ A file named `<name>.spec.kex` automatically loads the declarations of `<name>.k
 ## function `describe`
 
 ```kex
-describe(label: String, block: Block<Void>) -> Void
+describe(label: String, block: Block<Result<Void, Any>>) -> Void
 ```
 
 Groups related test cases under a label, and runs them.
@@ -69,12 +69,12 @@ end
 ## function `it`
 
 ```kex
-it(label: String, block: Block<Void>) -> Void
+it(label: String, block: Block<Result<Void, Any>>) -> Void
 ```
 
 Defines a single test case, and runs it.
 
-The block runs, and anything thrown inside it: typically a failed `assert`: marks the test failed without aborting the rest of the suite. This is a foul function: it prints.
+The block runs, and anything thrown inside it: typically a failed `assert`: marks the test failed without aborting the rest of the suite. A failing `.try` in the block is its result, and fails the test the same way: the body needs no `Ok` or `rescue` of its own. This is a foul function: it prints.
 
 **Parameters**
 
@@ -105,8 +105,8 @@ end
 ## function `before`
 
 ```kex
-before(block: Block<Void>) -> Void
-before(block: Atom) -> Block<Void> -> Void
+before(block: Block<Result<Void, Any>>) -> Void
+before(block: Atom) -> Block<Result<Void, Any>> -> Void
 ```
 
 Registers setup to run before the current group's tests.
@@ -134,8 +134,8 @@ end
 ## function `after`
 
 ```kex
-after(block: Block<Void>) -> Void
-after(block: Atom) -> Block<Void> -> Void
+after(block: Block<Result<Void, Any>>) -> Void
+after(block: Atom) -> Block<Result<Void, Any>> -> Void
 ```
 
 Registers cleanup to run after the current group's tests.

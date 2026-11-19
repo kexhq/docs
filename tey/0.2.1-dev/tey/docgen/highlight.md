@@ -103,10 +103,10 @@ lexIdentifier(cs: [Char], out: [Tok]) -> ([Tok], [Char])
 classifyWord(word: String, prevDot: Bool, nextCh: Char) -> String
 ```
 
-### `previousIsDot` (foul)
+### `previousDot?` (foul)
 
 ```kex
-previousIsDot(out: [Tok]) -> Bool
+previousDot?(out: [Tok]) -> Bool
 ```
 
 The most recent token that is not whitespace: out is newest-first, so a plain find walks backwards in time.
@@ -189,17 +189,17 @@ Local copy of Tey.Docgen.Html.esc — duplicating four replaces keeps the module
 textOf(cs: [Char]) -> String
 ```
 
-### `startsWithChars` (foul)
+### `startsWithChars?` (foul)
 
 ```kex
-startsWithChars(cs: [Char], s: String) -> Bool
+startsWithChars?(cs: [Char], s: String) -> Bool
 ```
 
 ## record `Tok`
 
 **Fields**
 
-  - `cls` : [String](../../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
-  - `text` : [String](../../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
+  - `cls` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `text` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
 
 

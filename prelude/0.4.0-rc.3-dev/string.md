@@ -68,6 +68,24 @@ end
 # => {"a": 3, "b": 1, "n": 2}
 ```
 
+### `each` (from Foldable)
+
+```kex
+each(f: (Char -> Void)) -> Void
+```
+
+Calls `f` with each character, for its side effects.
+
+**Parameters**
+
+  - `f` — called once per character
+
+**Examples**
+
+```kex
+"ab".each { |c| IO.printLine(c) }
+```
+
 ### `mapChars`
 
 ```kex
@@ -1138,27 +1156,6 @@ Removes `suffix` from the end of the string when it is there, and otherwise retu
 "notes.txt".removeSuffix(".txt")   # => "notes"
 ```
 
-### `repeat`
-
-```kex
-repeat(n: Integer) -> String
-```
-
-Returns the string repeated `n` times; `""` when `n` is 0 or less. Ruby spells this `*`.
-
-**Parameters**
-
-  - `n` — how many copies
-
-**Returns**: the copies, joined
-
-**Examples**
-
-```kex
-"ab".repeat(3)    # => "ababab"
-"-".repeat(10)    # => "----------"
-```
-
 ### `padLeft`
 
 ```kex
@@ -1492,6 +1489,10 @@ _Selecting files by extension_
 paths.filter { |p| p.endsWith?(".kex") }
 ```
 
+### From [`Monoid`](algebra.md#trait-monoid)
+
+  - [`repeat`](algebra.md#monoid-repeat) — Combines this value with itself `n` times.
+
 ### From [`Comparable`](comparable.md#trait-comparable)
 
   - [`max`](comparable.md#comparable-max) — What every ordered type gets from `compare` alone.
@@ -1511,7 +1512,6 @@ paths.filter { |p| p.endsWith?(".kex") }
 
 ### From [`Foldable`](enumerable.md#trait-foldable)
 
-  - [`each`](enumerable.md#foldable-each) — Calls `f` with each item, for its side effects.
   - [`eachIndexed`](enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
   - [`all?`](enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`.
   - [`any?`](enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`.

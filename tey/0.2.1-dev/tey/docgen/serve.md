@@ -16,7 +16,7 @@ Serves a generated output directory over HTTP. Tey runs on the BEAM, so Net.HTTP
 ### `serveCommand` (foul)
 
 ```kex
-serveCommand(parsed: OptionParser.ParsedOptions) -> Integer
+serveCommand(parsed: ParsedOptions) -> Integer
 ```
 
 ### `routesFor` (foul)
@@ -51,7 +51,7 @@ contentTypeFor(path: String) -> String
 
 **Fields**
 
-  - `route` : [String](../../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
-  - `path` : [String](../../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
+  - `route` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `path` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
 
 

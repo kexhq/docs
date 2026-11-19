@@ -309,7 +309,7 @@ The clock is frozen: every reading is `at`, zone included, so `Date.today()` is 
 `onNow` answers instead when a test wants a rule rather than a fixture. A block keeps the clock of the region it was written in, so a rule written outside the `with` reads the real one. That is how to get a clock that still runs, which code measuring elapsed time needs: a frozen clock makes every interval zero.
 
 ```kex
-with Time.Clock = Mock.Clock { onNow: Just({ DateTime.now() + 3.days }) } do
+with Time.Clock = Mock.Clock { onNow: Just({ DateTime.now() + 3.day }) } do
   let started = DateTime.epochNanos()
   runTheThing()
   assert(DateTime.epochNanos() > started)
@@ -318,7 +318,7 @@ end
 
 **Fields**
 
-  - `at` : [DateTime](time.md#record-datetime) (optional)
+  - `at` : [DateTime](date_time.md#record-datetime) (optional)
   - `onNow` : [Tick](#type-tick)? (optional)
 
 Implements `Time.Clock`.

@@ -334,7 +334,7 @@ A timeout applies to this wait only; it does not become a read timeout on the re
 _Accepting one client in a small test server_
 
 ```kex
-let client = listener.accept(5.seconds).try
+let client = listener.accept(5.second).try
 ```
 
 ### `closed?` (foul)
@@ -407,7 +407,7 @@ Buffer values of zero leave sizing to the operating system. `noDelay?` disables 
 
 **Fields**
 
-  - `connectTimeout` : [Duration](../units.md#record-duration) (optional)
+  - `connectTimeout` : Duration (optional)
   - `noDelay?` : [Bool](../truthyable.md#make-bool) (optional)
   - `keepAlive?` : [Bool](../truthyable.md#make-bool) (optional)
   - `sendBuffer` : [Integer](../number.md#make-integer) (optional)
@@ -671,7 +671,7 @@ Curated socket policy. Broadcast is opt-in. The receive timeout applies to each 
   - `broadcast?` : [Bool](../truthyable.md#make-bool) (optional)
   - `multicastTtl` : [Integer](../number.md#make-integer) (optional)
   - `multicastLoopback?` : [Bool](../truthyable.md#make-bool) (optional)
-  - `receiveTimeout` : [Duration](../units.md#record-duration) (optional)
+  - `receiveTimeout` : Duration (optional)
 
 
 
@@ -1043,8 +1043,8 @@ Connection and read deadlines for a local IPC client.
 
 **Fields**
 
-  - `connectTimeout` : [Duration](../units.md#record-duration) (optional)
-  - `receiveTimeout` : [Duration](../units.md#record-duration) (optional)
+  - `connectTimeout` : Duration (optional)
+  - `receiveTimeout` : Duration (optional)
 
 
 
@@ -1058,8 +1058,8 @@ Listener queue, stale-socket policy, and per-operation deadlines.
 
   - `backlog` : [Integer](../number.md#make-integer) (optional)
   - `removeStale?` : [Bool](../truthyable.md#make-bool) (optional)
-  - `acceptTimeout` : [Duration](../units.md#record-duration) (optional)
-  - `receiveTimeout` : [Duration](../units.md#record-duration) (optional)
+  - `acceptTimeout` : Duration (optional)
+  - `receiveTimeout` : Duration (optional)
 
 
 
@@ -1245,7 +1245,7 @@ Client handshake policy. TLS 1.2/1.3 are enabled; verification defaults on.
 
 ## type `Net.Socket.TCP.TCPConnection`
 
-Implements [`Closeable`](../filehandle.md#trait-closeable).
+Implements [`Closeable`](../file_handle.md#trait-closeable).
 
 ### `close` (foul) (from Closeable)
 
@@ -1259,7 +1259,7 @@ Idempotently closes a connected stream.
 
 ## type `Net.Socket.TCP.TCPListener`
 
-Implements [`Closeable`](../filehandle.md#trait-closeable).
+Implements [`Closeable`](../file_handle.md#trait-closeable).
 
 ### `close` (foul) (from Closeable)
 
@@ -1273,7 +1273,7 @@ Idempotently closes a listener and releases its port.
 
 ## type `Net.Socket.UDP.Socket`
 
-Implements [`Closeable`](../filehandle.md#trait-closeable).
+Implements [`Closeable`](../file_handle.md#trait-closeable).
 
 ### `close` (foul) (from Closeable)
 
@@ -1287,7 +1287,7 @@ Idempotently closes the socket.
 
 ## type `Net.Socket.Unix.UnixConnection`
 
-Implements [`Closeable`](../filehandle.md#trait-closeable).
+Implements [`Closeable`](../file_handle.md#trait-closeable).
 
 ### `close` (foul) (from Closeable)
 
@@ -1301,7 +1301,7 @@ Idempotently closes a stream.
 
 ## type `Net.Socket.Unix.UnixListener`
 
-Implements [`Closeable`](../filehandle.md#trait-closeable).
+Implements [`Closeable`](../file_handle.md#trait-closeable).
 
 ### `close` (foul) (from Closeable)
 
@@ -1315,7 +1315,7 @@ Closes the listener and unlinks only the path it successfully created.
 
 ## type `Net.Socket.TLS.TLSConnection`
 
-Implements [`Closeable`](../filehandle.md#trait-closeable).
+Implements [`Closeable`](../file_handle.md#trait-closeable).
 
 ### `close` (foul) (from Closeable)
 

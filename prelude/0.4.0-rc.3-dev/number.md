@@ -471,6 +471,14 @@ Returns `true` when the number is less than zero.
 0.negative?   # => false
 ```
 
+### `countTo`
+
+```kex
+countTo(limit, block)
+```
+
+`times` when compiled: `block` applied to each index from this one up to `limit`, a recursion the specialize-blocks pass copies into the caller with the block in place.
+
 ### From [`Monoid`](algebra.md#trait-monoid)
 
   - [`repeat`](algebra.md#monoid-repeat) — Combines this value with itself `n` times.
@@ -479,7 +487,7 @@ Returns `true` when the number is less than zero.
 
   - [Algebra](algebra.md#make-integer): [`identity`](algebra.md#integer-identity), [`combine`](algebra.md#integer-combine), [`inverse`](algebra.md#integer-inverse)
   - [Blankable](blankable.md#make-integer): [`blank?`](blankable.md#integer-blank?)
-  - [Time](time.md#make-integer): [`nanoseconds`](time.md#integer-nanoseconds), [`microseconds`](time.md#integer-microseconds), [`milliseconds`](time.md#integer-milliseconds), [`seconds`](time.md#integer-seconds), [`minutes`](time.md#integer-minutes), [`hours`](time.md#integer-hours), [`days`](time.md#integer-days), [`weeks`](time.md#integer-weeks), [`months`](time.md#integer-months), [`years`](time.md#integer-years)
+  - [Period](period.md#make-integer): [`month`](period.md#integer-month), [`year`](period.md#integer-year)
   - [Truthyable](truthyable.md#make-integer): [`truthy?`](truthyable.md#integer-truthy?)
   - [Units](units.md#make-integer): [`nanosecond`](units.md#integer-nanosecond), [`microsecond`](units.md#integer-microsecond), [`millisecond`](units.md#integer-millisecond), [`second`](units.md#integer-second), [`minute`](units.md#integer-minute), [`hour`](units.md#integer-hour), [`day`](units.md#integer-day), [`week`](units.md#integer-week), [`timeMeasure`](units.md#integer-timemeasure)
   - [Units.Data](units/data.md#make-integer): [`<`](units/data.md#integer-op-lt), [`>`](units/data.md#integer-op-gt), [`<=`](units/data.md#integer-op-lt-eq), [`>=`](units/data.md#integer-op-gt-eq)
@@ -683,7 +691,6 @@ Returns `true` when the number is less than zero.
 ### Defined in other modules
 
   - [Blankable](blankable.md#make-float): [`blank?`](blankable.md#float-blank?)
-  - [Time](time.md#make-float): [`nanoseconds`](time.md#float-nanoseconds), [`microseconds`](time.md#float-microseconds), [`milliseconds`](time.md#float-milliseconds), [`seconds`](time.md#float-seconds), [`minutes`](time.md#float-minutes), [`hours`](time.md#float-hours), [`days`](time.md#float-days), [`weeks`](time.md#float-weeks)
   - [Truthyable](truthyable.md#make-float): [`truthy?`](truthyable.md#float-truthy?)
   - [Units](units.md#make-float): [`nanosecond`](units.md#float-nanosecond), [`microsecond`](units.md#float-microsecond), [`millisecond`](units.md#float-millisecond), [`second`](units.md#float-second), [`minute`](units.md#float-minute), [`hour`](units.md#float-hour), [`day`](units.md#float-day), [`week`](units.md#float-week), [`timeMeasure`](units.md#float-timemeasure)
 

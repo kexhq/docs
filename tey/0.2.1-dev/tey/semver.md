@@ -33,10 +33,10 @@ stable?(text: String) -> Bool
 
 Whether a version is a full release rather than a pre-release. This is the question a download page asks: "what is the current stable Kex?".
 
-### `satisfies`
+### `satisfies?`
 
 ```kex
-satisfies(versionText: String, requirement: String) -> Bool
+satisfies?(versionText: String, requirement: String) -> Bool
 ```
 
 ### `intersect`
@@ -47,7 +47,7 @@ intersect(a: String, b: String) -> String
 
 The requirement satisfied only by versions satisfying BOTH, for when two packages in one graph each ask for the same dependency.
 
-Concatenation, because `satisfies` already reads a requirement as a list of space-separated clauses that must ALL hold: `~> 0.1` and `>= 0.1.5` intersect to `~> 0.1 >= 0.1.5`, which is exactly the question "satisfies both". No interval arithmetic, no second implementation of the operators to keep in step with the first.
+Concatenation, because `satisfies?` already reads a requirement as a list of space-separated clauses that must ALL hold: `~> 0.1` and `>= 0.1.5` intersect to `~> 0.1 >= 0.1.5`, which is exactly the question "satisfies both". No interval arithmetic, no second implementation of the operators to keep in step with the first.
 
 An empty intersection is not detected here, and deliberately: `~> 0.1 ~> 0.2` is perfectly well formed and simply matches nothing. Emptiness is a fact about the versions a repository actually publishes, so it is discovered where the tags are (`highest`), where the error can also say what WAS available.
 
@@ -70,7 +70,7 @@ The version inside a resolved ref: `refs/tags/v0.1.1` and `v0.1.1` both give `0.
 ### `channelRank`
 
 ```kex
-channelRank(channel: String) -> Integer
+channelRank(_: String) -> Integer
 ```
 
 Channel precedence, lowest first: prealpha < alpha < beta < rc < release. Plain semver would order these alphabetically — putting `beta` BEFORE `prealpha` — which is not what the words mean, so the ranking is explicit.
@@ -109,10 +109,10 @@ The highest tag that satisfies the requirement — the whole point of writing a 
 
 **Fields**
 
-  - `major` : [Integer](../../../prelude/0.4.0-rc.3-dev/number.md#make-integer)
-  - `minor` : [Integer](../../../prelude/0.4.0-rc.3-dev/number.md#make-integer)
-  - `patch` : [Integer](../../../prelude/0.4.0-rc.3-dev/number.md#make-integer)
-  - `preRelease` : [String](../../../prelude/0.4.0-rc.3-dev/string.md#make-string) (optional)
+  - `major` : [Integer](../../../prelude/0.4.0-rc.4-dev/number.md#make-integer)
+  - `minor` : [Integer](../../../prelude/0.4.0-rc.4-dev/number.md#make-integer)
+  - `patch` : [Integer](../../../prelude/0.4.0-rc.4-dev/number.md#make-integer)
+  - `preRelease` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
 
 Implements `Comparable`.
 

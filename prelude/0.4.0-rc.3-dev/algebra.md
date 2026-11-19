@@ -96,11 +96,11 @@ repeat(n: Integer) -> This
 
 Combines this value with itself `n` times.
 
-Repeating zero times gives the identity: `""` for a string, `0` for an integer, `[]` for a list. A negative count is invalid and ends the program.
+Repeating zero times, or a negative number of times, gives the identity: `""` for a string, `0` for an integer, `[]` for a list. Ruby spells the string case `*`.
 
 **Parameters**
 
-  - `n` — how many copies to combine; must not be negative
+  - `n` — how many copies to combine
 
 **Returns**: the repeated value
 

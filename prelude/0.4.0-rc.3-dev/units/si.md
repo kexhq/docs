@@ -30,7 +30,7 @@ Every value is a `Measure` from the prelude, so the arithmetic, conversion and c
 ### `meter`
 
 ```kex
-meter(value: Number) -> Measure
+meter(value: Number) -> Measure<Quantity.Length>
 ```
 
 `value` metres, as a `Measure`.
@@ -51,7 +51,7 @@ meter(value: Number) -> Measure
 ### `gram`
 
 ```kex
-gram(value: Number) -> Measure
+gram(value: Number) -> Measure<Quantity.Mass>
 ```
 
 `value` grams, as a `Measure`.
@@ -71,7 +71,7 @@ gram(value: Number) -> Measure
 ### `kelvin`
 
 ```kex
-kelvin(value: Number) -> Measure
+kelvin(value: Number) -> Measure<Quantity.Temperature>
 ```
 
 `value` kelvin, as a `Measure`.
@@ -91,7 +91,7 @@ kelvin(value: Number) -> Measure
 ### `liter`
 
 ```kex
-liter(value: Number) -> Measure
+liter(value: Number) -> Measure<Quantity.Volume>
 ```
 
 `value` litres, as a `Measure`.
@@ -111,7 +111,7 @@ liter(value: Number) -> Measure
 ### `newton`
 
 ```kex
-newton(value: Number) -> Measure
+newton(value: Number) -> Measure<Quantity.Force>
 ```
 
 `value` newtons, as a `Measure`.
@@ -133,7 +133,7 @@ _Force times distance is energy_
 ### `joule`
 
 ```kex
-joule(value: Number) -> Measure
+joule(value: Number) -> Measure<Quantity.Energy>
 ```
 
 `value` joules, as a `Measure`.
@@ -153,7 +153,7 @@ joule(value: Number) -> Measure
 ### `watt`
 
 ```kex
-watt(value: Number) -> Measure
+watt(value: Number) -> Measure<Quantity.Power>
 ```
 
 `value` watts, as a `Measure`.
@@ -180,7 +180,7 @@ _Power times time is energy_
 ### `volt`
 
 ```kex
-volt(value: Number) -> Measure
+volt(value: Number) -> Measure<Quantity.Voltage>
 ```
 
 `value` volts, as a `Measure`.
@@ -200,7 +200,7 @@ volt(value: Number) -> Measure
 ### `ampere`
 
 ```kex
-ampere(value: Number) -> Measure
+ampere(value: Number) -> Measure<Quantity.Current>
 ```
 
 `value` amperes, as a `Measure`.
@@ -222,7 +222,7 @@ _Voltage times current is power_
 ### `ohm`
 
 ```kex
-ohm(value: Number) -> Measure
+ohm(value: Number) -> Measure<Quantity.Resistance>
 ```
 
 `value` ohms, as a `Measure`.
@@ -242,7 +242,7 @@ ohm(value: Number) -> Measure
 ### `coulomb`
 
 ```kex
-coulomb(value: Number) -> Measure
+coulomb(value: Number) -> Measure<Quantity.Charge>
 ```
 
 `value` coulombs, as a `Measure`.

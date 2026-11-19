@@ -31,7 +31,7 @@ The answer comes from the compiler where it can: a checked expression knows thin
 
   - `name` : [String](string.md#make-string)
   - `args` : [[Type](#record-type)]
-  - `pure` : [Bool](truthyable.md#make-bool)
+  - `pure?` : [Bool](truthyable.md#make-bool)
 
 ### Functions
 
@@ -339,9 +339,8 @@ IO.printError("expected a list, got ${Type.of(value).to(String)}")
 _Taking a type from the caller_
 
 ```kex
-let select(as: T) -> Result<[T], String> do
-  let model = Type.of(as)        # the caller's record type
-  ...                            # rows decoded with model.construct
+let select(as: Type<T>) -> Result<[T], String> do
+  ...                            # rows decoded with as.construct
 end
 select(as: User)                 # => Result<[User], String>
 ```

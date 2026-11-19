@@ -13,7 +13,7 @@ entities:
 
 Distributed Kex: this BEAM node, and the other nodes it is connected to.
 
-A node is one running BEAM VM with a name. Once two nodes share a cookie and are connected, a `Pid` from one works on the other: `send`, `link` and `monitor` cross the network unchanged, and so do typed `Process` and `Server` handles.
+A node is one running BEAM VM with a name. Once two nodes share a cookie and are connected, a `Process` from one works on the other: `send`, `link` and `monitor` cross the network unchanged, and so do `Server` handles.
 
 Name a node when starting it (`kex --sname a --cookie secret app.kex`), or from inside the program with `Node.start`:
 
@@ -103,17 +103,17 @@ Node.start(:app)   # => Ok(:app@myhost)
 ### `stop` (foul)
 
 ```kex
-stop -> Bool
+stop -> Result<Void, String>
 ```
 
 Stops distribution: the node drops its name and every connection.
 
-**Returns**: whether it was distributed and has now stopped
+**Returns**: `Ok` once stopped; an `Error` when the node was not distributed
 
 ### `connect` (foul)
 
 ```kex
-connect(node: Atom) -> Bool
+connect(node: Atom) -> Result<Void, String>
 ```
 
 Connects to the node named `node`. Both nodes must share a cookie.
@@ -122,18 +122,18 @@ Connects to the node named `node`. Both nodes must share a cookie.
 
   - `node` — the node to connect to
 
-**Returns**: whether the connection is up
+**Returns**: `Ok` once the connection is up, or why it is not
 
 **Examples**
 
 ```kex
-Node.connect(:b@myhost)   # => true
+Node.connect(:b@myhost)   # => Ok(())
 ```
 
 ### `disconnect` (foul)
 
 ```kex
-disconnect(node: Atom) -> Bool
+disconnect(node: Atom) -> Result<Void, String>
 ```
 
 Drops the connection to `node`.
@@ -142,7 +142,7 @@ Drops the connection to `node`.
 
   - `node` — the node to disconnect from
 
-**Returns**: whether a connection was dropped
+**Returns**: `Ok` once dropped; an `Error` when there was no connection to drop
 
 ### `setCookie` (foul)
 
@@ -162,7 +162,7 @@ Sets the cookie this node presents when connecting. Nodes connect only when thei
 send(node: Atom, name: Atom, message: X) -> Void
 ```
 
-Sends `message` to the process registered as `name` on `node`, unchanged. Like `Pid.send`, it never blocks and never fails.
+Sends `message` to the process registered as `name` on `node`, unchanged. Like `Process.send`, it never blocks and never fails.
 
 **Parameters**
 
@@ -179,10 +179,10 @@ Node.send(:b@myhost, :logger, (:info, "started"))
 ### `whereIs` (foul)
 
 ```kex
-whereIs(node: Atom, name: Atom) -> Pid?
+whereIs(node: Atom, name: Atom) -> Process<A>?
 ```
 
-The `Pid` registered as `name` on `node`, or `None`.
+The process registered as `name` on `node`, or `None`.
 
 **Parameters**
 
@@ -200,10 +200,10 @@ Node.whereIs(:b@myhost, :logger).map { |pid| pid.send(:flush) }
 ### `spawn` (foul)
 
 ```kex
-spawn(node: Atom, block: Block<X>) -> Pid
+spawn(node: Atom, block: Block<X>) -> Process<A>
 ```
 
-Runs `block` in a new process on `node` and returns its `Pid`.
+Runs `block` in a new process on `node` and returns it.
 
 The block is a function of THIS program. When `node` has not loaded the module it belongs to, that module's compiled code is sent over and loaded first. A module `node` already has is left as it is.
 

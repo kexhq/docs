@@ -308,8 +308,8 @@ One scanned `<% ... %>` region: its node, and the whitespace trims its delimiter
 **Fields**
 
   - `node` : Node
-  - `leftTrim` : [Bool](truthyable.md#make-bool)
-  - `rightTrim` : [Bool](truthyable.md#make-bool)
+  - `leftTrim?` : [Bool](truthyable.md#make-bool)
+  - `rightTrim?` : [Bool](truthyable.md#make-bool)
 
 
 

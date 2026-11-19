@@ -485,7 +485,7 @@ providedFromHtml(written: String, own: [String], page: SourcePage, model: Packag
 elsewhereHtml(name: String, page: SourcePage, model: PackageModel) -> String
 ```
 
-Other modules that add functions to this type: `make Integer` in time.kex is where `5.seconds` comes from.
+Other modules that add functions to this type: `make Integer` in period.kex is where `1.month` comes from.
 
 ### `fieldRow` (foul)
 
@@ -889,9 +889,9 @@ ups(n: Integer) -> String
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
-  - `href` : [String](../../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
-  - `summary` : [String](../../../../prelude/0.4.0-rc.3-dev/string.md#make-string)
-  - `isFoul` : [Bool](../../../../prelude/0.4.0-rc.3-dev/truthyable.md#make-bool) (optional)
+  - `name` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `href` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `summary` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `foul?` : [Bool](../../../../prelude/0.4.0-rc.4-dev/truthyable.md#make-bool) (optional)
 
 

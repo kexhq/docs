@@ -94,7 +94,8 @@ Must stay pure: the compiler evaluates it on the tree-walk interpreter at compil
 ### `re`
 
 ```kex
-re(parts, values) -> Result<Regex, RegexError>
+re(source: String) -> Result<Regex, RegexError>
+re(parts: [String], values: [Any]) -> Regex
 ```
 
 A short alias for `regex`, in both its forms.

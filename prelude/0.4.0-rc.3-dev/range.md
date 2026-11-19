@@ -5,12 +5,12 @@ source: range.kex
 title: Range
 entities:
   - { kind: type, name: "Range" }
-  - { kind: make, name: "Range" }
+  - { kind: make, name: "Range<A>" }
 ---
 
 # Range
 
-## type `Range`
+## type `Range<A>`
 
 A span between two bounds, written `(1..10)` or `('a'..'z')`.
 
@@ -37,7 +37,7 @@ Implements [`Enumerable`](enumerable.md#trait-enumerable), [`Foldable`](enumerab
 #### `reduce` (from Enumerable, Foldable)
 
 ```kex
-reduce(acc: A, f: (A -> B -> A)) -> A
+reduce(acc: B, f: (B -> A -> B)) -> B
 ```
 
 Folds over the range's elements in ascending order.
@@ -55,6 +55,44 @@ This is `Range`'s `Enumerable` primitive; the traversal functions are built on i
 
 ```kex
 (1..4).reduce(0) { |sum, n| sum + n }   # => 10
+```
+
+#### `each` (from Foldable)
+
+```kex
+each(f: (A -> Void)) -> Void
+```
+
+Calls `f` with each element in ascending order, for its side effects.
+
+**Parameters**
+
+  - `f` — called with each element
+
+**Examples**
+
+```kex
+(1..3).each { |n| IO.printLine(n) }
+```
+
+#### `map` (from Enumerable)
+
+```kex
+map(f: (A -> B)) -> [B]
+```
+
+Transforms each element by applying `f`, in ascending order.
+
+**Parameters**
+
+  - `f` — the transformation
+
+**Returns**: the results, as a list
+
+**Examples**
+
+```kex
+(1..3).map { |n| n * n }   # => [1, 4, 9]
 ```
 
 #### `sum`
@@ -585,9 +623,16 @@ Returns the elements that do NOT satisfy `pred`, as a list.
 (1..5).reject { |n| n.even? }   # => [1, 3, 5]
 ```
 
+#### `countThrough`
+
+```kex
+countThrough(at: Integer, last: Integer, f)
+```
+
+`f` applied to each integer from `at` through `last`.
+
 ### From [`Enumerable`](enumerable.md#trait-enumerable)
 
-  - [`map`](enumerable.md#enumerable-map) — Applies `f` to each item and collects the results into a list.
   - [`mapIndexed`](enumerable.md#enumerable-mapindexed) — Applies `f` to each item and its 0-based position, and collects the results into a list.
   - [`filter`](enumerable.md#enumerable-filter) — Returns the items for which `pred` answers `true`.
   - [`flatMap`](enumerable.md#enumerable-flatmap) — Applies `f` to each item, expecting a list back, and concatenates the results into one flat list.
@@ -595,7 +640,6 @@ Returns the elements that do NOT satisfy `pred`, as a list.
 
 ### From [`Foldable`](enumerable.md#trait-foldable)
 
-  - [`each`](enumerable.md#foldable-each) — Calls `f` with each item, for its side effects.
   - [`eachIndexed`](enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
   - [`all?`](enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`.
   - [`any?`](enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`.
