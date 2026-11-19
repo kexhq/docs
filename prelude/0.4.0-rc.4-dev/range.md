@@ -14,13 +14,22 @@ entities:
 
 A span between two bounds, written `(1..10)` or `('a'..'z')`.
 
-A range stores its endpoints on both backends without building a list. Integer and character ranges can be enumerated with both ends included. Float ranges describe continuous bounds, for example `(-1.0..1.0)` for random sampling; `items` and traversal functions cannot enumerate them. A range whose lower endpoint exceeds its upper endpoint enumerates as an empty list.
+A range stores its endpoints on both backends without building a list. Integer and character ranges can be enumerated with both ends included. Float ranges describe continuous bounds, for example `(-1.0..1.0)` for random sampling; `items` and traversal functions cannot enumerate them. A range whose lower endpoint exceeds its upper endpoint enumerates as an empty list, so `(1..count).each` does nothing for a `count` of 0.
 
 ```kex
 (1..5).items          # => [1, 2, 3, 4, 5]
 (1..5).sum            # => 15
 5.in?(1..10)          # => true
 ('a'..'e').items      # => ['a', 'b', 'c', 'd', 'e']
+```
+
+To count down, or by another step, give the range a step with `by` (or use `Integer.downTo`); it stays two endpoints and a step, built into no list:
+
+```kex
+(1..10).by(2).items   # => [1, 3, 5, 7, 9]
+(10..1).by(-3).items  # => [10, 7, 4, 1]
+10.downTo(8).items    # => [10, 9, 8]
+(1..4).reverse.items  # => [4, 3, 2, 1]
 ```
 
 It is `Enumerable` and `Foldable`, so the traversal functions work directly, and the list operations below answer in list terms. Use `items` when you want a real list to hand to something else.
@@ -40,7 +49,7 @@ Implements [`Enumerable`](enumerable.md#trait-enumerable), [`Foldable`](enumerab
 reduce(acc: B, f: (B -> A -> B)) -> B
 ```
 
-Folds over the range's elements in ascending order.
+Folds over the range's elements in order.
 
 This is `Range`'s `Enumerable` primitive; the traversal functions are built on it. A range stays structurally minimal, so the fold runs over its materialized items.
 
@@ -63,7 +72,7 @@ This is `Range`'s `Enumerable` primitive; the traversal functions are built on i
 each(f: (A -> Void)) -> Void
 ```
 
-Calls `f` with each element in ascending order, for its side effects.
+Calls `f` with each element in order, for its side effects.
 
 **Parameters**
 
@@ -81,7 +90,7 @@ Calls `f` with each element in ascending order, for its side effects.
 map(f: (A -> B)) -> [B]
 ```
 
-Transforms each element by applying `f`, in ascending order.
+Transforms each element by applying `f`, in order.
 
 **Parameters**
 
@@ -128,7 +137,7 @@ contains?(value: A) -> Bool
 
 Returns `true` when `value` lies between the endpoints, both included.
 
-Only the endpoints are compared: nothing is enumerated, so this is cheap for a range of any size and works for a continuous `Float` range too. A range whose lower endpoint exceeds its upper endpoint contains nothing.
+Only the endpoints are compared: nothing is enumerated, so this is cheap for a range of any size and works for a continuous `Float` range too. A range whose lower endpoint exceeds its upper endpoint contains nothing. A stepped range contains only the values its step reaches.
 
 **Parameters**
 
@@ -143,6 +152,33 @@ Only the endpoints are compared: nothing is enumerated, so this is cheap for a r
 (1..10).contains?(11)         # => false
 (0.0..1.0).contains?(0.25)    # => true
 ('a'..'f').contains?('c')     # => true
+(1..10).by(3).contains?(7)    # => true
+(1..10).by(3).contains?(8)    # => false
+```
+
+#### `by`
+
+```kex
+by(step: Integer) -> Range<A>
+```
+
+Returns the range enumerated by `step` from its first endpoint towards its last, instead of by 1. The sign of `step` is the direction: a negative step counts down, and a range whose end lies the other way from its start is empty. The last endpoint is included only when the step lands on it. Nothing is enumerated until the range is traversed.
+
+A step of 0 is an error, as is a step on a `Float` range.
+
+**Parameters**
+
+  - `step` — the distance between consecutive elements
+
+**Returns**: the stepped range
+
+**Examples**
+
+```kex
+(1..10).by(2).items      # => [1, 3, 5, 7, 9]
+(10..1).by(-1).items     # => [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+(1..10).by(-1).items     # => []
+('a'..'g').by(3).items   # => ['a', 'd', 'g']
 ```
 
 #### `items`
@@ -336,17 +372,17 @@ Returns the smallest element, or `None` for an empty range.
 #### `reverse`
 
 ```kex
-reverse -> [A]
+reverse -> Range<A>
 ```
 
-Returns the elements as a list, in descending order.
+Returns the same elements in the opposite order, as a range: nothing is enumerated. It starts at the last element the step reaches, so `(1..10).by(3).reverse` is `(10..1).by(-3)` and `(1..9).by(3).reverse` is `(7..1).by(-3)`. An empty range stays empty.
 
-**Returns**: the elements, reversed
+**Returns**: the range, reversed
 
 **Examples**
 
 ```kex
-(1..4).reverse   # => [4, 3, 2, 1]
+(1..4).reverse.items   # => [4, 3, 2, 1]
 ```
 
 _Counting down_
@@ -361,7 +397,7 @@ _Counting down_
 sort -> [A]
 ```
 
-Returns the elements as a sorted list. A range is already ascending, so this is the identity: it exists so that generic code can call it.
+Returns the elements as a sorted list, ascending whatever the range's step.
 
 **Returns**: the elements, sorted
 
@@ -630,6 +666,14 @@ countThrough(at: Integer, last: Integer, f)
 ```
 
 `f` applied to each integer from `at` through `last`.
+
+#### `countBy`
+
+```kex
+countBy(at: Integer, last: Integer, step: Integer, f)
+```
+
+`f` applied to each integer from `at` towards `last` by `step`.
 
 ### From [`Enumerable`](enumerable.md#trait-enumerable)
 

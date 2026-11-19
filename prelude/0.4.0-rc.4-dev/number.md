@@ -256,6 +256,33 @@ _Repeating an action that needs no index_
 end
 ```
 
+### `downTo`
+
+```kex
+downTo(last: Integer) -> Range<Integer>
+```
+
+Returns the range from this integer down to `last`, both included, counting by -1: `(this..last).by(-1)`. It is empty when `last` is larger. Nothing is enumerated until the range is traversed.
+
+**Parameters**
+
+  - `last` — the last element
+
+**Returns**: the descending range
+
+**Examples**
+
+```kex
+10.downTo(7).items   # => [10, 9, 8, 7]
+1.downTo(3).items    # => []
+```
+
+_Counting down_
+
+```kex
+3.downTo(1).each { |n| IO.printLine(n) }   # prints 3, 2, 1
+```
+
 ### `floor`
 
 ```kex
