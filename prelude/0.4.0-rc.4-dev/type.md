@@ -165,7 +165,7 @@ A field missing from `values` takes its declared default, or `None` when it is o
 Type.named("User").construct({"id": "u1", "email": "ada@example.com"})
 # => Ok(User { id: u1, email: ada@example.com, admin?: false })
 Type.named("User").construct({"id": "u1", "mail": "x"})
-# => Error("Unknown field \"mail\" for User")
+# => Error("unknown field \"mail\" for User")
 ```
 
 #### `variant`
@@ -211,7 +211,7 @@ Parses `text` as a value of this type: what a database cell, a form field or a q
 
 ```kex
 Type.named("Integer").parse("42")    # => Ok(42)
-Type.named("Integer").parse("4x")    # => Error("Expected Integer, got \"4x\"")
+Type.named("Integer").parse("4x")    # => Error("expected Integer, got \"4x\"")
 Type.named("Kind").parse("channel")  # => Ok(Channel)
 ```
 
