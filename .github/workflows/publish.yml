@@ -9,22 +9,29 @@ name: Publish
 # repository's `reference` branch and then sends `reference-updated`; an edit
 # to the authored pages arrives as a push to main. Either way the whole site
 # is rebuilt from both.
+#
+# A pull request runs the same build without publishing, as the `build`
+# check the main branch's ruleset requires: a change that breaks the site
+# fails before it merges.
 on:
   push:
     branches: [main]
+  pull_request:
   repository_dispatch:
     types: [reference-updated]
   workflow_dispatch:
 
+# Publishes share one group, so a newer one replaces one still running; each
+# pull request builds in a group of its own, so a PR never cancels a publish.
 concurrency:
-  group: publish
+  group: ${{ github.event_name == 'pull_request' && format('build-{0}', github.ref) || 'publish' }}
   cancel-in-progress: true
 
 permissions:
   contents: write
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -105,6 +112,7 @@ jobs:
         run: kex --run scripts/finish.kex -- . https://docs.kex.run
 
       - name: Publish to gh-pages
+        if: github.event_name != 'pull_request'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
