@@ -1,0 +1,681 @@
+<div class="intro">
+<p>Calendar days. A <a class="xref" href="#record-date"><code>Date</code></a> is a year, a month and a day, with no time and no zone; <a class="xref" href="#type-weekday"><code>Weekday</code></a> names its day of the week. The time of day is in time.kex, the instant in date_time.kex, and calendar spans in period.kex.</p>
+</div>
+<section class="entity" id="type-weekday">
+<h2><span class="kind kind-type">type</span> <code>Weekday</code> <a class="permalink" href="#type-weekday" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Weekday names in ISO order (Monday is day 1).</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>Monday</code></li>
+<li><code>Tuesday</code></li>
+<li><code>Wednesday</code></li>
+<li><code>Thursday</code></li>
+<li><code>Friday</code></li>
+<li><code>Saturday</code></li>
+<li><code>Sunday</code></li>
+</ul>
+<h3>Defined in other modules</h3>
+<dl class="params elsewhere">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-rc.3-dev/time/#make-weekday">Time</a></dt><dd><a class="xref" href="/prelude/0.4.0-rc.3-dev/time/#weekday-number"><code>number</code></a>, <a class="xref" href="/prelude/0.4.0-rc.3-dev/time/#weekday-name"><code>name</code></a>, <a class="xref" href="/prelude/0.4.0-rc.3-dev/time/#weekday-weekend?"><code>weekend?</code></a></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-date">
+<h2><span class="kind kind-record">record</span> <code>Date</code> <a class="permalink" href="#record-date" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A calendar day: a year, a month and a day, with no time and no zone.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> due <span class="tok-op">=</span> <span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+due<span class="tok-op">.</span><span class="tok-method">iso</span>              <span class="tok-comment"># =&gt; &quot;2026-07-30&quot;</span>
+due<span class="tok-op">.</span><span class="tok-method">weekday</span><span class="tok-op">.</span><span class="tok-method">name</span>     <span class="tok-comment"># =&gt; &quot;Thursday&quot;</span>
+<span class="tok-punct">(</span>due <span class="tok-op">+</span> <span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-method">day</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>  <span class="tok-comment"># =&gt; &quot;2026-08-09&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>Build one with <code>Date.of</code>, which validates, rather than with the record literal, which does not.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>year</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>month</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>day</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer">Integer</a></code></dd></div>
+</dl>
+<p class="implements">Implements <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#trait-inspectable"><code>Inspectable</code></a>, <a class="xref" href="/prelude/0.4.0-rc.3-dev/kex/#trait-showable"><code>Showable</code></a>.</p>
+<section class="summary">
+<h3><a href="#module-date">On the <code>Date</code> module</a></h3>
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#function-date-format"><code>Date.format</code></a></dt><dd>Builds a <code>DateFormat</code> from a CLDR pattern, for <code>to(String, format)</code> on a <code>Date</code>, a <code>Time</code> or a <code>DateTime</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-validateformat"><code>Date.validateFormat</code></a></dt><dd>Checks a <code>Date.format</code> pattern during compilation, pointing at the first character that does not fit.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-of"><code>Date.of</code></a></dt><dd>Builds a validated calendar date.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-fromepochday"><code>Date.fromEpochDay</code></a></dt><dd>The calendar date a count of days since 1970-01-01 lands on, negative before it.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-parse"><code>Date.parse</code></a></dt><dd>Parses an ISO 8601 calendar date, <code>2026-07-30</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-now"><code>Date.now</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Today's date, in this machine's zone.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-today"><code>Date.today</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Today's date, in this machine's zone.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-tomorrow"><code>Date.tomorrow</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>The day after today, in this machine's zone.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-yesterday"><code>Date.yesterday</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>The day before today, in this machine's zone.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-utcnow"><code>Date.utcNow</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Today's date in UTC, whatever this machine's zone is.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-utctoday"><code>Date.utcToday</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Today's date in UTC, whatever this machine's zone is.</dd></div>
+</dl>
+<h3><a href="#make-date">Functions</a></h3>
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#date-inspectvalue"><code>inspectValue</code></a></dt><dd>Renders the date structurally, for debugging output.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-showvalue"><code>showValue</code></a></dt><dd>Renders the date in ISO form, so interpolation and <code>IO.printLine</code> show <code>2026-07-30</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-epochday"><code>epochDay</code></a></dt><dd>Days since 1970-01-01, negative before it.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-weekday"><code>weekday</code></a></dt><dd>The day of the week this date falls on.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-dayofyear"><code>dayOfYear</code></a></dt><dd>The day's position in its year, counting from 1 on January 1st.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-leapyear?"><code>leapYear?</code></a></dt><dd>Returns <code>true</code> when this date falls in a leap year.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-daysinmonth"><code>daysInMonth</code></a></dt><dd>The number of days in THIS date's month.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-op-plus"><code>+</code></a></dt><dd>Advances the date by a fixed span, whole days only.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-op-minus"><code>-</code></a></dt><dd>Moves the date back by a fixed span, whole days only.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-adddays"><code>addDays</code></a></dt><dd>The date <code>count</code> days later.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-addweeks"><code>addWeeks</code></a></dt><dd>The date <code>count</code> weeks later.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-addmonths"><code>addMonths</code></a></dt><dd>No <code>date.tomorrow</code>/<code>date.yesterday</code> functions: on BEAM a make-block function flattens onto the same name as the <code>Date.tomorrow()</code>/<code>Date.yesterday()</code> module functions above and one of the two has to win.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-addyears"><code>addYears</code></a></dt><dd>The date <code>count</code> calendar years later, with the day clamped: February 29th plus one year is February 28th.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-startofmonth"><code>startOfMonth</code></a></dt><dd>The first day of this date's month.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-endofmonth"><code>endOfMonth</code></a></dt><dd>The last day of this date's month, whatever its length.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-startofyear"><code>startOfYear</code></a></dt><dd>January 1st of this date's year.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-endofyear"><code>endOfYear</code></a></dt><dd>December 31st of this date's year.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-startofweek"><code>startOfWeek</code></a></dt><dd>The Monday of this date's week.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-endofweek"><code>endOfWeek</code></a></dt><dd>The Sunday of this date's week.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-daysuntil"><code>daysUntil</code></a></dt><dd>Whole days from this date to <code>other</code>, negative when <code>other</code> is earlier.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-until"><code>until</code></a></dt><dd>The span from this date to <code>other</code>, as a <code>Duration</code> of whole days.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-monthsuntil"><code>monthsUntil</code></a></dt><dd>Whole calendar months from this date to <code>other</code>, negative when <code>other</code> is earlier.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-yearsuntil"><code>yearsUntil</code></a></dt><dd>Whole calendar years from this date to <code>other</code>, negative when <code>other</code> is earlier.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-before?"><code>before?</code></a></dt><dd>Returns <code>true</code> when this date is earlier than <code>other</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-after?"><code>after?</code></a></dt><dd>Returns <code>true</code> when this date is later than <code>other</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-compareto"><code>compareTo</code></a></dt><dd>Orders this date against another.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-iso"><code>iso</code></a></dt><dd>The date as ISO 8601 text, <code>2026-07-30</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#date-at"><code>at</code></a></dt><dd>This date at a given time of day and offset, as a <code>DateTime</code>.</dd></div>
+</dl>
+<h3>Defined in other modules</h3>
+<dl class="params elsewhere">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-rc.3-dev/date_format/#make-date">DateFormat</a></dt><dd><a class="xref" href="/prelude/0.4.0-rc.3-dev/date_format/#date-to"><code>to</code></a></dd></div>
+</dl>
+</section>
+<section class="members" id="make-date">
+<h3>Functions</h3>
+
+<div class="functions">
+<div class="fn" id="date-inspectvalue">
+<div class="fn-head">
+<h4><a class="self" href="#date-inspectvalue"><code>inspectValue</code></a> <a class="tag-trait" href="/prelude/0.4.0-rc.3-dev/kex/#inspectable-inspectvalue" title="Implements Inspectable.inspectValue">Inspectable</a> <a class="permalink" href="#date-inspectvalue" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">inspectValue</span><span class="tok-punct">(</span>colors<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Renders the date structurally, for debugging output.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>colors</code></dt><dd>whether to include ANSI color escapes</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the rendered date</p>
+
+</div>
+<div class="fn" id="date-showvalue">
+<div class="fn-head">
+<h4><a class="self" href="#date-showvalue"><code>showValue</code></a> <a class="tag-trait" href="/prelude/0.4.0-rc.3-dev/kex/#showable-showvalue" title="Implements Showable.showValue">Showable</a> <a class="permalink" href="#date-showvalue" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">showValue</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Renders the date in ISO form, so interpolation and <code>IO.printLine</code> show <code>2026-07-30</code>.</p>
+<p class="returns"><strong>Returns</strong> the ISO 8601 date</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">due </span><span class="tok-string">${</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-string">}</span><span class="tok-string">&quot;</span>   <span class="tok-comment"># =&gt; &quot;due 2026-07-30&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-epochday">
+<div class="fn-head">
+<h4><a class="self" href="#date-epochday"><code>epochDay</code></a> <a class="permalink" href="#date-epochday" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">epochDay</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+<p>Days since 1970-01-01, negative before it.</p>
+<p>The date's identity as a number: comparison and day arithmetic go through it.</p>
+<p class="returns"><strong>Returns</strong> days since the Unix epoch</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">1970</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">epochDay</span>    <span class="tok-comment"># =&gt; 0</span>
+<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">epochDay</span>   <span class="tok-comment"># =&gt; 20664</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-weekday">
+<div class="fn-head">
+<h4><a class="self" href="#date-weekday"><code>weekday</code></a> <a class="permalink" href="#date-weekday" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">weekday</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-weekday"><span class="tok-type">Weekday</span></a></span></code></pre>
+</div>
+<p>The day of the week this date falls on.</p>
+<p class="returns"><strong>Returns</strong> the day of the week</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">weekday</span>        <span class="tok-comment"># =&gt; Thursday</span>
+<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">weekday</span><span class="tok-op">.</span><span class="tok-method">name</span>   <span class="tok-comment"># =&gt; &quot;Thursday&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-dayofyear">
+<div class="fn-head">
+<h4><a class="self" href="#date-dayofyear"><code>dayOfYear</code></a> <a class="permalink" href="#date-dayofyear" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">dayOfYear</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+<p>The day's position in its year, counting from 1 on January 1st.</p>
+<p class="returns"><strong>Returns</strong> the day of the year</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">dayOfYear</span>    <span class="tok-comment"># =&gt; 1</span>
+<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">dayOfYear</span>   <span class="tok-comment"># =&gt; 211</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-leapyear?">
+<div class="fn-head">
+<h4><a class="self" href="#date-leapyear?"><code>leapYear?</code></a> <a class="permalink" href="#date-leapyear?" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">leapYear?</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> when this date falls in a leap year.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> in a leap year</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2024</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">leapYear?</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">leapYear?</span>   <span class="tok-comment"># =&gt; false</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-daysinmonth">
+<div class="fn-head">
+<h4><a class="self" href="#date-daysinmonth"><code>daysInMonth</code></a> <a class="permalink" href="#date-daysinmonth" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">daysInMonth</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+<p>The number of days in THIS date's month.</p>
+<p>No Result: a Date's month is in range by construction, unlike <code>Time.daysInMonth</code>'s two loose integers.</p>
+<p class="returns"><strong>Returns</strong> the length of this month</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2024</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">daysInMonth</span>   <span class="tok-comment"># =&gt; 29</span>
+<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">daysInMonth</span>   <span class="tok-comment"># =&gt; 31</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-op-plus">
+<div class="fn-head">
+<h4><a class="self" href="#date-op-plus"><code>+</code></a> <a class="permalink" href="#date-op-plus" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-op">+</span><span class="tok-punct">(</span>span<span class="tok-op">:</span> <span class="tok-type">Duration</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>Advances the date by a fixed span, whole days only.</p>
+<p>A Duration with a sub-day remainder truncates toward zero, so +date + 36.hour+ advances exactly one day. Use a <a class="xref" href="/prelude/0.4.0-rc.3-dev/period/#record-period"><code>Period</code></a> when the calendar should get a say.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>span</code></dt><dd>the elapsed span to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the later date</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span> <span class="tok-op">+</span> <span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-method">day</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-08-09&quot;</span>
+<span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span> <span class="tok-op">+</span> <span class="tok-number">36</span><span class="tok-op">.</span><span class="tok-method">hour</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>  <span class="tok-comment"># =&gt; &quot;2026-07-31&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-op-minus">
+<div class="fn-head">
+<h4><a class="self" href="#date-op-minus"><code>-</code></a> <a class="permalink" href="#date-op-minus" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-op">-</span><span class="tok-punct">(</span>span<span class="tok-op">:</span> <span class="tok-type">Duration</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>Moves the date back by a fixed span, whole days only.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>span</code></dt><dd>the elapsed span to subtract</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the earlier date</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span> <span class="tok-op">-</span> <span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-method">day</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-07-20&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-adddays">
+<div class="fn-head">
+<h4><a class="self" href="#date-adddays"><code>addDays</code></a> <a class="permalink" href="#date-adddays" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">addDays</span><span class="tok-punct">(</span>count<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>The date <code>count</code> days later. A negative count moves backwards.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>count</code></dt><dd>how many days to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the shifted date</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">addDays</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>    <span class="tok-comment"># =&gt; &quot;2026-07-31&quot;</span>
+<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">addDays</span><span class="tok-punct">(</span><span class="tok-op">-</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-07-29&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-addweeks">
+<div class="fn-head">
+<h4><a class="self" href="#date-addweeks"><code>addWeeks</code></a> <a class="permalink" href="#date-addweeks" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">addWeeks</span><span class="tok-punct">(</span>count<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>The date <code>count</code> weeks later. A negative count moves backwards.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>count</code></dt><dd>how many weeks to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the shifted date</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">addWeeks</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-08-13&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-addmonths">
+<div class="fn-head">
+<h4><a class="self" href="#date-addmonths"><code>addMonths</code></a> <a class="permalink" href="#date-addmonths" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">addMonths</span><span class="tok-punct">(</span>count<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>No <code>date.tomorrow</code>/<code>date.yesterday</code> functions: on BEAM a make-block function flattens onto the same name as the <code>Date.tomorrow()</code>/<code>Date.yesterday()</code> module functions above and one of the two has to win. The module functions win: <code>Date.tomorrow()</code> is the spelling people reach for, and <code>date.addDays(1)</code> already says the rest.</p>
+<p>The date <code>count</code> calendar months later, with the day clamped into the target month.</p>
+<p>One month after January 31st is the last day of February, not March 3rd. A negative count moves backwards.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>count</code></dt><dd>how many months to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the shifted date</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">31</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">addMonths</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>    <span class="tok-comment"># =&gt; &quot;2026-02-28&quot;</span>
+<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">addMonths</span><span class="tok-punct">(</span><span class="tok-op">-</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-06-30&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-addyears">
+<div class="fn-head">
+<h4><a class="self" href="#date-addyears"><code>addYears</code></a> <a class="permalink" href="#date-addyears" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">addYears</span><span class="tok-punct">(</span>count<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>The date <code>count</code> calendar years later, with the day clamped: February 29th plus one year is February 28th.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>count</code></dt><dd>how many years to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the shifted date</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2024</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">29</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">addYears</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2025-02-28&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-startofmonth">
+<div class="fn-head">
+<h4><a class="self" href="#date-startofmonth"><code>startOfMonth</code></a> <a class="permalink" href="#date-startofmonth" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">startOfMonth</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>The first day of this date's month.</p>
+<p class="returns"><strong>Returns</strong> the first of the month</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">startOfMonth</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-07-01&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-endofmonth">
+<div class="fn-head">
+<h4><a class="self" href="#date-endofmonth"><code>endOfMonth</code></a> <a class="permalink" href="#date-endofmonth" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">endOfMonth</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>The last day of this date's month, whatever its length.</p>
+<p class="returns"><strong>Returns</strong> the last of the month</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">endOfMonth</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-07-31&quot;</span>
+<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2024</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">endOfMonth</span><span class="tok-op">.</span><span class="tok-method">iso</span>    <span class="tok-comment"># =&gt; &quot;2024-02-29&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-startofyear">
+<div class="fn-head">
+<h4><a class="self" href="#date-startofyear"><code>startOfYear</code></a> <a class="permalink" href="#date-startofyear" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">startOfYear</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>January 1st of this date's year.</p>
+<p class="returns"><strong>Returns</strong> the first of the year</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">startOfYear</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-01-01&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-endofyear">
+<div class="fn-head">
+<h4><a class="self" href="#date-endofyear"><code>endOfYear</code></a> <a class="permalink" href="#date-endofyear" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">endOfYear</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>December 31st of this date's year.</p>
+<p class="returns"><strong>Returns</strong> the last of the year</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">endOfYear</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-12-31&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-startofweek">
+<div class="fn-head">
+<h4><a class="self" href="#date-startofweek"><code>startOfWeek</code></a> <a class="permalink" href="#date-startofweek" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">startOfWeek</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>The Monday of this date's week.</p>
+<p>The week runs Monday to Sunday, matching the ISO weekday numbering <code>weekday.number</code> reports.</p>
+<p class="returns"><strong>Returns</strong> the Monday of this week</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">startOfWeek</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-07-27&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-endofweek">
+<div class="fn-head">
+<h4><a class="self" href="#date-endofweek"><code>endOfWeek</code></a> <a class="permalink" href="#date-endofweek" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">endOfWeek</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>The Sunday of this date's week.</p>
+<p class="returns"><strong>Returns</strong> the Sunday of this week</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">endOfWeek</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-08-02&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-daysuntil">
+<div class="fn-head">
+<h4><a class="self" href="#date-daysuntil"><code>daysUntil</code></a> <a class="permalink" href="#date-daysuntil" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">daysUntil</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+<p>Whole days from this date to <code>other</code>, negative when <code>other</code> is earlier.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the date to measure to</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the number of days</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">daysUntil</span><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">8</span><span class="tok-punct">,</span> <span class="tok-number">9</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 10</span>
+<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">8</span><span class="tok-punct">,</span> <span class="tok-number">9</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">daysUntil</span><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; -10</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-until">
+<div class="fn-head">
+<h4><a class="self" href="#date-until"><code>until</code></a> <a class="permalink" href="#date-until" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">until</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Duration</span></span></code></pre>
+</div>
+<p>The span from this date to <code>other</code>, as a <code>Duration</code> of whole days.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the date to measure to</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the elapsed span</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">until</span><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">8</span><span class="tok-punct">,</span> <span class="tok-number">9</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">wholeDays</span>   <span class="tok-comment"># =&gt; 10</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-monthsuntil">
+<div class="fn-head">
+<h4><a class="self" href="#date-monthsuntil"><code>monthsUntil</code></a> <a class="permalink" href="#date-monthsuntil" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">monthsUntil</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+<p>Whole calendar months from this date to <code>other</code>, negative when <code>other</code> is earlier.</p>
+<p>Truncated, not rounded: a partial month does not count, so January 15th to February 14th is 0 months.</p>
+<p>The count is the exact inverse of <code>addMonths</code>, which is why the correction below asks <code>addMonths</code> rather than comparing day-of-month fields: January 31st plus one month IS February 28th, so January 31st to February 28th is one month, even though 28 &lt; 31. Comparing the day fields answers 0 there and contradicts the addition this same file performs.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the date to measure to</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the number of whole months</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">15</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">monthsUntil</span><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">14</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 0</span>
+<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">31</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">monthsUntil</span><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">28</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 1</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-yearsuntil">
+<div class="fn-head">
+<h4><a class="self" href="#date-yearsuntil"><code>yearsUntil</code></a> <a class="permalink" href="#date-yearsuntil" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">yearsUntil</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+<p>Whole calendar years from this date to <code>other</code>, negative when <code>other</code> is earlier. Truncated, like <code>monthsUntil</code>.</p>
+<p>This is how to compute an age.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the date to measure to</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the number of whole years</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2020</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">yearsUntil</span><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 6</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>Someone's age today</em></p>
+<div class="code-block"><pre class="code"><code>born<span class="tok-op">.</span><span class="tok-method">yearsUntil</span><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">today</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-before?">
+<div class="fn-head">
+<h4><a class="self" href="#date-before?"><code>before?</code></a> <a class="permalink" href="#date-before?" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">before?</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> when this date is earlier than <code>other</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the date to compare against</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when this date comes first</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">before?</span><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">8</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-after?">
+<div class="fn-head">
+<h4><a class="self" href="#date-after?"><code>after?</code></a> <a class="permalink" href="#date-after?" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">after?</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> when this date is later than <code>other</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the date to compare against</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when this date comes second</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">8</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">after?</span><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-compareto">
+<div class="fn-head">
+<h4><a class="self" href="#date-compareto"><code>compareTo</code></a> <a class="permalink" href="#date-compareto" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">compareTo</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/comparable/#type-ordering"><span class="tok-type">Ordering</span></a></span></code></pre>
+</div>
+<p>Orders this date against another.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the date to compare against</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>Less</code>, <code>Equal</code> or <code>Greater</code></p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">compareTo</span><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">8</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Less</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>Sorting dates</em></p>
+<div class="code-block"><pre class="code"><code>dates<span class="tok-op">.</span><span class="tok-method">sort</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>a<span class="tok-punct">,</span> b<span class="tok-op">|</span> a<span class="tok-op">.</span><span class="tok-method">compareTo</span><span class="tok-punct">(</span>b<span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-bool">Less</span> <span class="tok-punct">}</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-iso">
+<div class="fn-head">
+<h4><a class="self" href="#date-iso"><code>iso</code></a> <a class="permalink" href="#date-iso" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">iso</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>The date as ISO 8601 text, <code>2026-07-30</code>.</p>
+<p class="returns"><strong>Returns</strong> the ISO 8601 date</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-07-30&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="date-at">
+<div class="fn-head">
+<h4><a class="self" href="#date-at"><code>at</code></a> <a class="permalink" href="#date-at" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">at</span><span class="tok-punct">(</span>time<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/time/#record-time"><span class="tok-type">Time</span></a><span class="tok-punct">,</span> offset<span class="tok-op">:</span> <span class="tok-type">Duration</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/date_time/#record-datetime"><span class="tok-type">DateTime</span></a></span></code></pre>
+</div>
+<p>This date at a given time of day and offset, as a <a class="xref" href="/prelude/0.4.0-rc.3-dev/date_time/#record-datetime"><code>DateTime</code></a>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>time</code></dt><dd>the time of day</dd></div>
+<div class="param"><dt><code>offset</code></dt><dd>the offset from UTC</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the instant</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">at</span><span class="tok-punct">(</span><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">9</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">,</span> <span class="tok-type">Duration</span><span class="tok-op">.</span><span class="tok-method">zero</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>
+<span class="tok-comment"># =&gt; &quot;2026-07-30T09:00:00Z&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="module-date">
+<h2><span class="kind kind-module">module</span> <code>Date</code> <a class="permalink" href="#module-date" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Building calendar dates, and asking what today is.</p>
+<section class="summary">
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#function-date-format"><code>format</code></a></dt><dd>Builds a <code>DateFormat</code> from a CLDR pattern, for <code>to(String, format)</code> on a <code>Date</code>, a <code>Time</code> or a <code>DateTime</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-validateformat"><code>validateFormat</code></a></dt><dd>Checks a <code>Date.format</code> pattern during compilation, pointing at the first character that does not fit.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-of"><code>of</code></a></dt><dd>Builds a validated calendar date.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-fromepochday"><code>fromEpochDay</code></a></dt><dd>The calendar date a count of days since 1970-01-01 lands on, negative before it.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-parse"><code>parse</code></a></dt><dd>Parses an ISO 8601 calendar date, <code>2026-07-30</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-now"><code>now</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Today's date, in this machine's zone.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-today"><code>today</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Today's date, in this machine's zone.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-tomorrow"><code>tomorrow</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>The day after today, in this machine's zone.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-yesterday"><code>yesterday</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>The day before today, in this machine's zone.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-utcnow"><code>utcNow</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Today's date in UTC, whatever this machine's zone is.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-date-utctoday"><code>utcToday</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Today's date in UTC, whatever this machine's zone is.</dd></div>
+</dl>
+</section>
+<div class="functions">
+<div class="fn" id="function-date-format">
+<div class="fn-head">
+<h3><a class="self" href="#function-date-format"><code>format</code></a> <a class="permalink" href="#function-date-format" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">format</span><span class="tok-punct">(</span>parts<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> values<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">Any</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">DateFormat</span></span></code></pre>
+</div>
+<p>Builds a <code>DateFormat</code> from a CLDR pattern, for <code>to(String, format)</code> on a <a class="xref" href="#record-date"><code>Date</code></a>, a <a class="xref" href="/prelude/0.4.0-rc.3-dev/time/#record-time"><code>Time</code></a> or a <a class="xref" href="/prelude/0.4.0-rc.3-dev/date_time/#record-datetime"><code>DateTime</code></a>.</p>
+<p>A pattern that does not fit makes <code>to(String, format)</code> answer <code>None</code>; <code>DateFormat.parse</code> says where it goes wrong, and <code>validateFormat</code> is the companion check for the tagged literal. Letters are fields, repeated for width; quote literal letters, as in <code>'at'</code>, and write <code>''</code> for a quote itself. Anything else is written as it stands.</p>
+<ul>
+<li><code>yyyy</code> the year, <code>yy</code> its last two digits</li>
+<li><code>M</code> / <code>MM</code> the month number, <code>MMM</code> / <code>MMMM</code> its short / full name</li>
+<li><code>d</code> / <code>dd</code> the day of the month</li>
+<li><code>EEE</code> / <code>EEEE</code> the short / full weekday name</li>
+<li><code>H</code> / <code>HH</code> the hour 0-23, <code>h</code> / <code>hh</code> the hour 1-12, <code>a</code> AM or PM</li>
+<li><code>m</code> / <code>mm</code> minutes, <code>s</code> / <code>ss</code> seconds, <code>S</code> up to <code>SSSSSSSSS</code> the fraction of a second</li>
+<li><code>XXX</code> the offset as <code>-05:00</code>, or <code>Z</code> for UTC; <code>xxx</code> the same without <code>Z</code> (<code>XX</code> / <code>xx</code> write <code>-0500</code>, and one letter writes <code>-05</code>)</li>
+</ul>
+<p>Names come from the culture passed to <code>to(String, format, culture:)</code>, English without one.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>parts</code></dt><dd>the literal pieces of the tagged literal</dd></div>
+<div class="param"><dt><code>values</code></dt><dd>the interpolated values</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the format</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> d <span class="tok-op">=</span> <span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">11</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+d<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">format</span>`yyyy<span class="tok-op">-</span><span class="tok-type">MM</span><span class="tok-op">-</span>dd`<span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; Just(&quot;2026-11-07&quot;)</span>
+d<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">format</span>`<span class="tok-type">EEE</span><span class="tok-punct">,</span> d <span class="tok-type">MMM</span> yyyy`<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(&quot;Sat, 7 Nov 2026&quot;)</span>
+d<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">format</span>`d <span class="tok-type">MMMM</span> yyyy`<span class="tok-punct">,</span> culture<span class="tok-op">:</span> <span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">HU_HU</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-type">DEFAULT</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; Just(&quot;7 november 2026&quot;)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-date-validateformat">
+<div class="fn-head">
+<h3><a class="self" href="#function-date-validateformat"><code>validateFormat</code></a> <a class="permalink" href="#function-date-validateformat" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">validateFormat</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/tagged_validation/#module-taggedvalidation"><span class="tok-type">TaggedValidation</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/tagged_validation/#type-taggedvalidation-issue"><span class="tok-type">Issue</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Checks a <code>Date.format</code> pattern during compilation, pointing at the first character that does not fit.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>source</code></dt><dd>the pattern</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the problem found, if any</p>
+
+</div>
+<div class="fn" id="function-date-of">
+<div class="fn-head">
+<h3><a class="self" href="#function-date-of"><code>of</code></a> <a class="permalink" href="#function-date-of" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">of</span><span class="tok-punct">(</span>year<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> month<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> day<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-date"><span class="tok-type">Date</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/time/#type-timeerror"><span class="tok-type">TimeError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Builds a validated calendar date.</p>
+<p>The month and the day are both range-checked, and the day is checked against that month's actual length, so February 30th is an <code>Error</code>, and a <a class="xref" href="#record-date"><code>Date</code></a> you hold is always a real day. The record literal <code>Date { ... }</code> bypasses this, so prefer it for anything derived from input.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>year</code></dt><dd>the calendar year</dd></div>
+<div class="param"><dt><code>month</code></dt><dd>the month, 1 through 12</dd></div>
+<div class="param"><dt><code>day</code></dt><dd>the day of the month</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the date, or why it is not one</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>d<span class="tok-op">|</span> d<span class="tok-op">.</span><span class="tok-method">iso</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(&quot;2026-07-30&quot;)</span>
+<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">13</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span>                     <span class="tok-comment"># =&gt; Error(InvalidDate(2026, 13, 1))</span>
+<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2023</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">29</span><span class="tok-punct">)</span>                     <span class="tok-comment"># =&gt; Error(InvalidDate(2023, 2, 29))</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>Taking the date or failing loudly</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> due <span class="tok-op">=</span> <span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span>year<span class="tok-punct">,</span> month<span class="tok-punct">,</span> day<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-date-fromepochday">
+<div class="fn-head">
+<h3><a class="self" href="#function-date-fromepochday"><code>fromEpochDay</code></a> <a class="permalink" href="#function-date-fromepochday" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">fromEpochDay</span><span class="tok-punct">(</span>day<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>The calendar date a count of days since 1970-01-01 lands on, negative before it.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>day</code></dt><dd>days since the Unix epoch</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the calendar date</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">fromEpochDay</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>       <span class="tok-comment"># =&gt; &quot;1970-01-01&quot;</span>
+<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">fromEpochDay</span><span class="tok-punct">(</span><span class="tok-number">20664</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-07-30&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-date-parse">
+<div class="fn-head">
+<h3><a class="self" href="#function-date-parse"><code>parse</code></a> <a class="permalink" href="#function-date-parse" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-date"><span class="tok-type">Date</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/time/#type-timeerror"><span class="tok-type">TimeError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Parses an ISO 8601 calendar date, <code>2026-07-30</code>.</p>
+<p>The result is validated as well as parsed, so a well-formed but impossible date is <code>InvalidDate</code> rather than <code>InvalidFormat</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code></dt><dd>the text to parse</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the date, or why it could not be read</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>d<span class="tok-op">|</span> d<span class="tok-op">.</span><span class="tok-method">iso</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(&quot;2026-07-30&quot;)</span>
+<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">nope</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>                           <span class="tok-comment"># =&gt; Error(InvalidFormat(&quot;nope&quot;))</span>
+<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-02-30</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>                     <span class="tok-comment"># =&gt; Error(InvalidDate(2026, 2, 30))</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-date-now">
+<div class="fn-head">
+<h3><a class="self" href="#function-date-now"><code>now</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-date-now" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">now</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>Today's date, in this machine's zone. The same as <code>Date.today()</code>.</p>
+<p><code>Date.today()</code> reads better in most code; <code>now</code> exists so every type in this file answers the same question the same way: <code>Date.now()</code>, <code>Time.now()</code> and <code>DateTime.now()</code>.</p>
+<p class="returns"><strong>Returns</strong> today's date</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">now</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-07-30&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-date-today">
+<div class="fn-head">
+<h3><a class="self" href="#function-date-today"><code>today</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-date-today" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">today</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>Today's date, in this machine's zone.</p>
+<p>Pinned by replacing <a class="xref" href="/prelude/0.4.0-rc.3-dev/time/#module-time-clock"><code>Time.Clock</code></a> in a test, like everything else that reads the clock.</p>
+<p class="returns"><strong>Returns</strong> today's date</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">today</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-07-30&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>Testing code that depends on today</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">with</span> <span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-type">Clock</span> <span class="tok-op">=</span> <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Clock</span> <span class="tok-punct">{</span> at<span class="tok-op">:</span> <span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30T00:00:00Z</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span> <span class="tok-punct">}</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">today</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">2026-07-30</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-date-tomorrow">
+<div class="fn-head">
+<h3><a class="self" href="#function-date-tomorrow"><code>tomorrow</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-date-tomorrow" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">tomorrow</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>The day after today, in this machine's zone.</p>
+<p class="returns"><strong>Returns</strong> tomorrow's date</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">tomorrow</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-07-31&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-date-yesterday">
+<div class="fn-head">
+<h3><a class="self" href="#function-date-yesterday"><code>yesterday</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-date-yesterday" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">yesterday</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>The day before today, in this machine's zone.</p>
+<p class="returns"><strong>Returns</strong> yesterday's date</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">yesterday</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-07-29&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-date-utcnow">
+<div class="fn-head">
+<h3><a class="self" href="#function-date-utcnow"><code>utcNow</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-date-utcnow" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">utcNow</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>Today's date in UTC, whatever this machine's zone is. The same as <code>Date.utcToday()</code>, under the name every type in this file shares.</p>
+<p class="returns"><strong>Returns</strong> today's UTC date</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">utcNow</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-07-30&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-date-utctoday">
+<div class="fn-head">
+<h3><a class="self" href="#function-date-utctoday"><code>utcToday</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-date-utctoday" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">utcToday</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>Today's date in UTC, whatever this machine's zone is.</p>
+<p class="returns"><strong>Returns</strong> today's UTC date</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">utcToday</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-07-30&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+

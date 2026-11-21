@@ -1,0 +1,846 @@
+<div class="intro">
+<p>Calendar dates, wall-clock times, and instants.</p>
+<p>Three civil types, each a plain record:</p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span>      a calendar day<span class="tok-punct">,</span> no time <span class="tok-keyword">and</span> no <span class="tok-fn">zone</span>       <span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-op">-</span><span class="tok-number">07</span><span class="tok-op">-</span><span class="tok-number">30</span><span class="tok-punct">)</span>
+<span class="tok-type">Time</span>      a time of day<span class="tok-punct">,</span> no date <span class="tok-keyword">and</span> no <span class="tok-fn">zone</span>        <span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-op">:</span><span class="tok-number">03</span><span class="tok-op">:</span><span class="tok-number">00</span><span class="tok-punct">)</span>
+<span class="tok-type">DateTime</span>  both<span class="tok-punct">,</span> plus a fixed offset <span class="tok-keyword">from</span> <span class="tok-type">UTC</span>        <span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-op">-</span><span class="tok-number">07</span><span class="tok-op">-</span><span class="tok-number">30</span><span class="tok-type">T14</span><span class="tok-op">:</span><span class="tok-number">03</span><span class="tok-op">:</span><span class="tok-number">00</span><span class="tok-op">+</span><span class="tok-number">02</span><span class="tok-op">:</span><span class="tok-number">00</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>Two span types connect them, and which one you want depends on whether the calendar gets a say:</p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Duration</span>  fixed elapsed time<span class="tok-punct">,</span> a count of <span class="tok-fn">seconds</span>   <span class="tok-punct">(</span><span class="tok-number">36</span><span class="tok-op">.</span><span class="tok-method">hour</span><span class="tok-punct">,</span> <span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-method">day</span><span class="tok-punct">)</span>
+<span class="tok-type">Period</span>    a calendar step<span class="tok-punct">,</span> resolved by the <span class="tok-fn">calendar</span> <span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">month</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">year</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p><code>36.hour</code> is always 129600 seconds; <code>1.month</code> is however long that particular month turns out to be. So <code>date + 1.month</code> clamps January 31st to the last day of February, while <code>date + 30.day</code> counts thirty days.</p>
+<p>A time <a class="xref" href="/prelude/0.4.0-rc.4-dev/units/#record-measure"><code>Measure</code></a> such as <code>5.second</code> is a third thing and deliberately NOT a Duration: a Measure describes a measurement, a Duration describes elapsed time. The plural <code>5.second</code> builds the Duration.</p>
+<p>Values are built through their own module and used through functions:</p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> due <span class="tok-op">=</span> <span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>           <span class="tok-comment"># Date</span>
+due<span class="tok-op">.</span><span class="tok-method">weekday</span><span class="tok-op">.</span><span class="tok-method">name</span>                             <span class="tok-comment"># &quot;Thursday&quot;</span>
+<span class="tok-punct">(</span>due <span class="tok-op">+</span> <span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-method">day</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>                          <span class="tok-comment"># &quot;2026-08-09&quot;</span>
+<span class="tok-punct">(</span>due <span class="tok-op">+</span> <span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">month</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>                         <span class="tok-comment"># &quot;2026-08-30&quot;</span>
+<span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">now</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>                            <span class="tok-comment"># e.g. &quot;14:03:00&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>Anything that reads the clock is replaceable: <a class="xref" href="#module-time-clock"><code>Time.Clock</code></a> is a capability, and <code>with Time.Clock = Mock.Clock { at: ... }</code> pins it for a block.</p>
+<p>Zones are fixed offsets: UTC, an explicit <code>+02:00</code>, or whatever this machine's zone resolves to at a given instant. Named IANA zones and their DST rules are not modeled: <code>Time.now()</code> asks the host for the offset in effect at that moment, so it is right now, but it cannot say what the offset WILL be for some future local time.</p>
+<p>Each type has its own file: Date and Weekday in date.kex, DateTime in date_time.kex, Period in period.kex, Duration's operations in duration.kex, and pattern formatting in date_format.kex. This file holds Time, the clock, TimeError, and the calendar arithmetic the others are written on. The records and ADTs stay at file level so <code>make</code> blocks, callers, and every module can see them.</p>
+</div>
+<section class="entity" id="type-timeerror">
+<h2><span class="kind kind-type">type</span> <code>TimeError</code> <a class="permalink" href="#type-timeerror" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A field out of range, or text that is not a date/time.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>InvalidDate(Integer, Integer, Integer)</code></li>
+<li><code>InvalidTime(Integer, Integer, Integer)</code></li>
+<li><code>InvalidFormat(String)</code></li>
+</ul>
+<p class="implements">Implements <a class="xref" href="/prelude/0.4.0-rc.4-dev/kex/#trait-showable"><code>Showable</code></a>.</p>
+<section class="members" id="make-timeerror">
+<h3>Functions</h3>
+
+<div class="functions">
+<div class="fn" id="timeerror-showvalue">
+<div class="fn-head">
+<h4><a class="self" href="#timeerror-showvalue"><code>showValue</code></a> <a class="tag-trait" href="/prelude/0.4.0-rc.4-dev/kex/#showable-showvalue" title="Implements Showable.showValue">Showable</a> <a class="permalink" href="#timeerror-showvalue" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">showValue</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Shows the failure as the sentence <code>Time.errorMessage</code> writes, so <code>&quot;${e}&quot;</code> explains itself rather than printing the constructor.</p>
+<p class="returns"><strong>Returns</strong> the message</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">${</span><span class="tok-type">InvalidDate</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">13</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-string">}</span><span class="tok-string">&quot;</span>   <span class="tok-comment"># =&gt; &quot;not a calendar date: 2026-13-1&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section><h3>From <a class="xref" href="/prelude/0.4.0-rc.4-dev/kex/#trait-showable"><code>Showable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-rc.4-dev/kex/#showable-to"><code>to</code></a></dt><dd></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-time">
+<h2><span class="kind kind-record">record</span> <code>Time</code> <a class="permalink" href="#record-time" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A time of day, with no date and no zone.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> t <span class="tok-op">=</span> <span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+t<span class="tok-op">.</span><span class="tok-method">iso</span>                  <span class="tok-comment"># =&gt; &quot;14:03:00&quot;</span>
+<span class="tok-punct">(</span>t <span class="tok-op">+</span> <span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">hour</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>      <span class="tok-comment"># =&gt; &quot;16:03:00&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>Arithmetic wraps within the day: there is no date to carry into. Reach for <a class="xref" href="/prelude/0.4.0-rc.4-dev/date_time/#record-datetime"><code>DateTime</code></a> when the day rolling over matters.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>hour</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>minute</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>second</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>nanosecond</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer">Integer</a></code></dd></div>
+</dl>
+<p class="implements">Implements <a class="xref" href="/prelude/0.4.0-rc.4-dev/kex/#trait-inspectable"><code>Inspectable</code></a>, <a class="xref" href="/prelude/0.4.0-rc.4-dev/kex/#trait-showable"><code>Showable</code></a>.</p>
+<section class="summary">
+<h3><a href="#module-time">On the <code>Time</code> module</a></h3>
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#function-time-of"><code>Time.of</code></a></dt><dd>Builds a validated time of day.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-midnight"><code>Time.midnight</code></a></dt><dd>Midnight, 00:00:00.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-fromsecondssincemidnight"><code>Time.fromSecondsSinceMidnight</code></a></dt><dd>Builds a time of day from a count of seconds since midnight.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-parse"><code>Time.parse</code></a></dt><dd>Parses an ISO 8601 time of day.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-now"><code>Time.now</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>The current time of day, in this machine's zone.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-utcnow"><code>Time.utcNow</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>The current time of day in UTC, whatever this machine's zone is.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-parseoffset"><code>Time.parseOffset</code></a></dt><dd>Parses an ISO 8601 zone designator into an offset.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-momentat"><code>Time.momentAt</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>The civil instant <code>nanos</code> after the Unix epoch, in this machine's zone as it stands at that instant.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-nanosof"><code>Time.nanosOf</code></a></dt><dd>Nanoseconds since the Unix epoch for a civil datetime.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-leapyear?"><code>Time.leapYear?</code></a></dt><dd>Public because the <code>make</code> blocks below live at file level and reach them by qualification; they are equally useful on their own.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-daysinmonth"><code>Time.daysInMonth</code></a></dt><dd>The number of days in a month.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-daysinvalidmonth"><code>Time.daysInValidMonth</code></a></dt><dd>The number of days in a month, with the range check already done.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-daysfromcivil"><code>Time.daysFromCivil</code></a></dt><dd>The number of days from 1970-01-01 to a calendar date, negative before it.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-civilfromdays"><code>Time.civilFromDays</code></a></dt><dd>The calendar date a count of days since 1970-01-01 lands on.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-weekdayfromepochday"><code>Time.weekdayFromEpochDay</code></a></dt><dd>The weekday a count of days since 1970-01-01 falls on.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-weekdaynumber"><code>Time.weekdayNumber</code></a></dt><dd>The ISO number of a weekday: Monday is 1, Sunday is 7.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-weekdayname"><code>Time.weekdayName</code></a></dt><dd>The English name of a weekday.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-errormessage"><code>Time.errorMessage</code></a></dt><dd>Renders a <code>TimeError</code> as a sentence for the user.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-formatdate"><code>Time.formatDate</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-formatdatetime"><code>Time.formatDateTime</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-formattime"><code>Time.formatTime</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-formatfraction"><code>Time.formatFraction</code></a></dt><dd>Fractional seconds, in the 3/6/9-digit groupings ISO 8601 output conventionally uses, whichever is the shortest that loses nothing.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-formatoffset"><code>Time.formatOffset</code></a></dt><dd>±HH:MM, the shape an ISO 8601 offset takes.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-withnanosecond"><code>Time.withNanosecond</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-floordiv"><code>Time.floorDiv</code></a></dt><dd>Kex's <code>/</code> truncates toward zero; instants before the epoch need the floor.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-truncatedby"><code>Time.truncatedBy</code></a></dt><dd>A Duration holds Float seconds, so it is rounded to the nanosecond, the finest unit it names, before truncating: 7.nanosecond is 7e-9 seconds, and dividing that by 1e-9 directly gives 6.999...</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-pad2"><code>Time.pad2</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-padto"><code>Time.padTo</code></a></dt><dd>Left-pad with zeros to a fixed width.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-padyear"><code>Time.padYear</code></a></dt><dd>Years keep four digits where they fit; ISO 8601 has no fixed spelling beyond that, so wider years render as-is.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-digitsin"><code>Time.digitsIn</code></a></dt><dd>Digits, with the failure reported against the WHOLE input rather than the fragment that failed: <code>Time.parse(&quot;2:03 pm&quot;)</code> should complain about &quot;2:03 pm&quot;, not about &quot;03 pm&quot;.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-fixeddigitsin"><code>Time.fixedDigitsIn</code></a></dt><dd>The same, for a field ISO 8601 writes at a fixed width: &quot;14&quot;, never &quot;2&quot;.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-digitstointeger"><code>Time.digitsToInteger</code></a></dt><dd>ASCII digits only: Integer.parse would also take a sign or surrounding space, and none of those belongs inside an ISO 8601 field.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-parsefraction"><code>Time.parseFraction</code></a></dt><dd>&quot;.5&quot; is 500000000ns: the digits are padded out to nanosecond scale.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-splitoffset"><code>Time.splitOffset</code></a></dt><dd>Splits &quot;14:03:00+02:00&quot; into its time and offset halves.</dd></div>
+</dl>
+<h3><a href="#make-time">Functions</a></h3>
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#time-inspectvalue"><code>inspectValue</code></a></dt><dd>Renders the time structurally, for debugging output.</dd></div>
+<div class="param"><dt><a class="xref" href="#time-showvalue"><code>showValue</code></a></dt><dd>Renders the time in ISO form, so interpolation and <code>IO.printLine</code> show <code>14:03:00</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#time-secondssincemidnight"><code>secondsSinceMidnight</code></a></dt><dd>Seconds from midnight to this time of day, ignoring the nanosecond field.</dd></div>
+<div class="param"><dt><a class="xref" href="#time-before?"><code>before?</code></a></dt><dd>Returns <code>true</code> when this time of day is earlier than <code>other</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#time-after?"><code>after?</code></a></dt><dd>Returns <code>true</code> when this time of day is later than <code>other</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#time-op-plus"><code>+</code></a></dt><dd>Advances the time of day by a span, wrapping within the day.</dd></div>
+<div class="param"><dt><a class="xref" href="#time-op-minus"><code>-</code></a></dt><dd>Moves the time of day back by a span, wrapping within the day.</dd></div>
+<div class="param"><dt><a class="xref" href="#time-addseconds"><code>addSeconds</code></a></dt><dd>The time of day <code>count</code> seconds later, wrapping within the day.</dd></div>
+<div class="param"><dt><a class="xref" href="#time-addminutes"><code>addMinutes</code></a></dt><dd>The time of day <code>count</code> minutes later, wrapping within the day.</dd></div>
+<div class="param"><dt><a class="xref" href="#time-addhours"><code>addHours</code></a></dt><dd>The time of day <code>count</code> hours later, wrapping within the day.</dd></div>
+<div class="param"><dt><a class="xref" href="#time-until"><code>until</code></a></dt><dd>Elapsed time from this time of day to <code>other</code>, within the same day.</dd></div>
+<div class="param"><dt><a class="xref" href="#time-iso"><code>iso</code></a></dt><dd>The time of day as ISO 8601 text, with fractional seconds only when they are non-zero.</dd></div>
+<div class="param"><dt><a class="xref" href="#time-compareto"><code>compareTo</code></a></dt><dd>Orders this time of day against another, nanoseconds included.</dd></div>
+</dl>
+<h3>Defined in other modules</h3>
+<dl class="params elsewhere">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-rc.4-dev/date_format/#make-time">DateFormat</a></dt><dd><a class="xref" href="/prelude/0.4.0-rc.4-dev/date_format/#time-to"><code>to</code></a></dd></div>
+</dl>
+</section>
+<section class="members" id="make-time">
+<h3>Functions</h3>
+
+<div class="functions">
+<div class="fn" id="time-inspectvalue">
+<div class="fn-head">
+<h4><a class="self" href="#time-inspectvalue"><code>inspectValue</code></a> <a class="tag-trait" href="/prelude/0.4.0-rc.4-dev/kex/#inspectable-inspectvalue" title="Implements Inspectable.inspectValue">Inspectable</a> <a class="permalink" href="#time-inspectvalue" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">inspectValue</span><span class="tok-punct">(</span>colors<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Renders the time structurally, for debugging output.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>colors</code></dt><dd>whether to include ANSI color escapes</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the rendered time</p>
+
+</div>
+<div class="fn" id="time-showvalue">
+<div class="fn-head">
+<h4><a class="self" href="#time-showvalue"><code>showValue</code></a> <a class="tag-trait" href="/prelude/0.4.0-rc.4-dev/kex/#showable-showvalue" title="Implements Showable.showValue">Showable</a> <a class="permalink" href="#time-showvalue" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">showValue</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Renders the time in ISO form, so interpolation and <code>IO.printLine</code> show <code>14:03:00</code>.</p>
+<p class="returns"><strong>Returns</strong> the ISO 8601 time</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">starts at </span><span class="tok-string">${</span><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-string">}</span><span class="tok-string">&quot;</span>   <span class="tok-comment"># =&gt; &quot;starts at 14:03:00&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="time-secondssincemidnight">
+<div class="fn-head">
+<h4><a class="self" href="#time-secondssincemidnight"><code>secondsSinceMidnight</code></a> <a class="permalink" href="#time-secondssincemidnight" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">secondsSinceMidnight</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+<p>Seconds from midnight to this time of day, ignoring the nanosecond field.</p>
+<p class="returns"><strong>Returns</strong> seconds since midnight</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">secondsSinceMidnight</span>   <span class="tok-comment"># =&gt; 50580</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="time-before?">
+<div class="fn-head">
+<h4><a class="self" href="#time-before?"><code>before?</code></a> <a class="permalink" href="#time-before?" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">before?</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-time"><span class="tok-type">Time</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> when this time of day is earlier than <code>other</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the time to compare against</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when this time comes first</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">before?</span><span class="tok-punct">(</span><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">15</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="time-after?">
+<div class="fn-head">
+<h4><a class="self" href="#time-after?"><code>after?</code></a> <a class="permalink" href="#time-after?" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">after?</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-time"><span class="tok-type">Time</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> when this time of day is later than <code>other</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the time to compare against</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when this time comes second</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">15</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">after?</span><span class="tok-punct">(</span><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="time-op-plus">
+<div class="fn-head">
+<h4><a class="self" href="#time-op-plus"><code>+</code></a> <a class="permalink" href="#time-op-plus" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-op">+</span><span class="tok-punct">(</span>span<span class="tok-op">:</span> <span class="tok-type">Duration</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-time"><span class="tok-type">Time</span></a></span></code></pre>
+</div>
+<p>Advances the time of day by a span, wrapping within the day.</p>
+<p>A Time has no date to carry into, so 23:00 + 2.hour is 01:00. Reach for <a class="xref" href="/prelude/0.4.0-rc.4-dev/date_time/#record-datetime"><code>DateTime</code></a> when the day rolling over is something you need to see.</p>
+<p>Sub-second spans count: the nanoseconds carry into the seconds.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>span</code></dt><dd>the elapsed span to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the later time of day</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span> <span class="tok-op">+</span> <span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">hour</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>            <span class="tok-comment"># =&gt; &quot;16:03:00&quot;</span>
+<span class="tok-punct">(</span><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">23</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span> <span class="tok-op">+</span> <span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">hour</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>            <span class="tok-comment"># =&gt; &quot;01:00:00&quot;</span>
+<span class="tok-punct">(</span><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span> <span class="tok-op">+</span> <span class="tok-number">500</span><span class="tok-op">.</span><span class="tok-method">millisecond</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;14:03:00.500&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="time-op-minus">
+<div class="fn-head">
+<h4><a class="self" href="#time-op-minus"><code>-</code></a> <a class="permalink" href="#time-op-minus" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-op">-</span><span class="tok-punct">(</span>span<span class="tok-op">:</span> <span class="tok-type">Duration</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-time"><span class="tok-type">Time</span></a></span></code></pre>
+</div>
+<p>Moves the time of day back by a span, wrapping within the day.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>span</code></dt><dd>the elapsed span to subtract</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the earlier time of day</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">midnight</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">-</span> <span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">second</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;23:59:59&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="time-addseconds">
+<div class="fn-head">
+<h4><a class="self" href="#time-addseconds"><code>addSeconds</code></a> <a class="permalink" href="#time-addseconds" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">addSeconds</span><span class="tok-punct">(</span>count<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-time"><span class="tok-type">Time</span></a></span></code></pre>
+</div>
+<p>The time of day <code>count</code> seconds later, wrapping within the day.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>count</code></dt><dd>how many seconds to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the shifted time of day</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">addSeconds</span><span class="tok-punct">(</span><span class="tok-number">60</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;14:04:00&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="time-addminutes">
+<div class="fn-head">
+<h4><a class="self" href="#time-addminutes"><code>addMinutes</code></a> <a class="permalink" href="#time-addminutes" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">addMinutes</span><span class="tok-punct">(</span>count<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-time"><span class="tok-type">Time</span></a></span></code></pre>
+</div>
+<p>The time of day <code>count</code> minutes later, wrapping within the day.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>count</code></dt><dd>how many minutes to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the shifted time of day</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">addMinutes</span><span class="tok-punct">(</span><span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;14:33:00&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="time-addhours">
+<div class="fn-head">
+<h4><a class="self" href="#time-addhours"><code>addHours</code></a> <a class="permalink" href="#time-addhours" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">addHours</span><span class="tok-punct">(</span>count<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-time"><span class="tok-type">Time</span></a></span></code></pre>
+</div>
+<p>The time of day <code>count</code> hours later, wrapping within the day.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>count</code></dt><dd>how many hours to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the shifted time of day</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">23</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">addHours</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;01:00:00&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="time-until">
+<div class="fn-head">
+<h4><a class="self" href="#time-until"><code>until</code></a> <a class="permalink" href="#time-until" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">until</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-time"><span class="tok-type">Time</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Duration</span></span></code></pre>
+</div>
+<p>Elapsed time from this time of day to <code>other</code>, within the same day.</p>
+<p>Negative when <code>other</code> is earlier. Sub-second precision is kept.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the time to measure to</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the elapsed span</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">until</span><span class="tok-punct">(</span><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">15</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">wholeMinutes</span>   <span class="tok-comment"># =&gt; 60</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="time-iso">
+<div class="fn-head">
+<h4><a class="self" href="#time-iso"><code>iso</code></a> <a class="permalink" href="#time-iso" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">iso</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>The time of day as ISO 8601 text, with fractional seconds only when they are non-zero.</p>
+<p class="returns"><strong>Returns</strong> the ISO 8601 time</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">iso</span>              <span class="tok-comment"># =&gt; &quot;14:03:00&quot;</span>
+<span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">123456789</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;14:03:00.123456789&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="time-compareto">
+<div class="fn-head">
+<h4><a class="self" href="#time-compareto"><code>compareTo</code></a> <a class="permalink" href="#time-compareto" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">compareTo</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-time"><span class="tok-type">Time</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/comparable/#type-ordering"><span class="tok-type">Ordering</span></a></span></code></pre>
+</div>
+<p>Orders this time of day against another, nanoseconds included.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the time to compare against</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>Less</code>, <code>Equal</code> or <code>Greater</code></p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">compareTo</span><span class="tok-punct">(</span><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">15</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Less</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="module-time">
+<h2><span class="kind kind-module">module</span> <code>Time</code> <a class="permalink" href="#module-time" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Building times of day, controlling the clock in tests, and the calendar arithmetic the other time files are written on.</p>
+<section class="summary">
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#function-time-of"><code>of</code></a></dt><dd>Builds a validated time of day.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-midnight"><code>midnight</code></a></dt><dd>Midnight, 00:00:00.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-fromsecondssincemidnight"><code>fromSecondsSinceMidnight</code></a></dt><dd>Builds a time of day from a count of seconds since midnight.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-parse"><code>parse</code></a></dt><dd>Parses an ISO 8601 time of day.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-now"><code>now</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>The current time of day, in this machine's zone.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-utcnow"><code>utcNow</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>The current time of day in UTC, whatever this machine's zone is.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-parseoffset"><code>parseOffset</code></a></dt><dd>Parses an ISO 8601 zone designator into an offset.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-momentat"><code>momentAt</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>The civil instant <code>nanos</code> after the Unix epoch, in this machine's zone as it stands at that instant.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-nanosof"><code>nanosOf</code></a></dt><dd>Nanoseconds since the Unix epoch for a civil datetime.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-leapyear?"><code>leapYear?</code></a></dt><dd>Public because the <code>make</code> blocks below live at file level and reach them by qualification; they are equally useful on their own.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-daysinmonth"><code>daysInMonth</code></a></dt><dd>The number of days in a month.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-daysinvalidmonth"><code>daysInValidMonth</code></a></dt><dd>The number of days in a month, with the range check already done.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-daysfromcivil"><code>daysFromCivil</code></a></dt><dd>The number of days from 1970-01-01 to a calendar date, negative before it.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-civilfromdays"><code>civilFromDays</code></a></dt><dd>The calendar date a count of days since 1970-01-01 lands on.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-weekdayfromepochday"><code>weekdayFromEpochDay</code></a></dt><dd>The weekday a count of days since 1970-01-01 falls on.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-weekdaynumber"><code>weekdayNumber</code></a></dt><dd>The ISO number of a weekday: Monday is 1, Sunday is 7.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-weekdayname"><code>weekdayName</code></a></dt><dd>The English name of a weekday.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-errormessage"><code>errorMessage</code></a></dt><dd>Renders a <code>TimeError</code> as a sentence for the user.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-formatdate"><code>formatDate</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-formatdatetime"><code>formatDateTime</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-formattime"><code>formatTime</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-formatfraction"><code>formatFraction</code></a></dt><dd>Fractional seconds, in the 3/6/9-digit groupings ISO 8601 output conventionally uses, whichever is the shortest that loses nothing.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-formatoffset"><code>formatOffset</code></a></dt><dd>±HH:MM, the shape an ISO 8601 offset takes.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-withnanosecond"><code>withNanosecond</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-floordiv"><code>floorDiv</code></a></dt><dd>Kex's <code>/</code> truncates toward zero; instants before the epoch need the floor.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-truncatedby"><code>truncatedBy</code></a></dt><dd>A Duration holds Float seconds, so it is rounded to the nanosecond, the finest unit it names, before truncating: 7.nanosecond is 7e-9 seconds, and dividing that by 1e-9 directly gives 6.999...</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-pad2"><code>pad2</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-padto"><code>padTo</code></a></dt><dd>Left-pad with zeros to a fixed width.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-padyear"><code>padYear</code></a></dt><dd>Years keep four digits where they fit; ISO 8601 has no fixed spelling beyond that, so wider years render as-is.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-digitsin"><code>digitsIn</code></a></dt><dd>Digits, with the failure reported against the WHOLE input rather than the fragment that failed: <code>Time.parse(&quot;2:03 pm&quot;)</code> should complain about &quot;2:03 pm&quot;, not about &quot;03 pm&quot;.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-fixeddigitsin"><code>fixedDigitsIn</code></a></dt><dd>The same, for a field ISO 8601 writes at a fixed width: &quot;14&quot;, never &quot;2&quot;.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-digitstointeger"><code>digitsToInteger</code></a></dt><dd>ASCII digits only: Integer.parse would also take a sign or surrounding space, and none of those belongs inside an ISO 8601 field.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-parsefraction"><code>parseFraction</code></a></dt><dd>&quot;.5&quot; is 500000000ns: the digits are padded out to nanosecond scale.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-time-splitoffset"><code>splitOffset</code></a></dt><dd>Splits &quot;14:03:00+02:00&quot; into its time and offset halves.</dd></div>
+</dl>
+</section>
+<div class="functions">
+<div class="fn" id="function-time-of">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-of"><code>of</code></a> <a class="permalink" href="#function-time-of" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">of</span><span class="tok-punct">(</span>hour<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> minute<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> second<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> nanosecond<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-time"><span class="tok-type">Time</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-timeerror"><span class="tok-type">TimeError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Builds a validated time of day.</p>
+<p>Every field is range-checked, so a <a class="xref" href="#record-time"><code>Time</code></a> you hold is always a real time. Leap seconds are not modeled, so a second of 60 is rejected.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>hour</code></dt><dd>the hour, 0 through 23</dd></div>
+<div class="param"><dt><code>minute</code></dt><dd>the minute, 0 through 59</dd></div>
+<div class="param"><dt><code>second</code></dt><dd>the second, 0 through 59</dd></div>
+<div class="param"><dt><code>nanosecond</code></dt><dd>the sub-second part, 0 through 999999999; omitted for 0</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the time, or why it is not one</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>t<span class="tok-op">|</span> t<span class="tok-op">.</span><span class="tok-method">iso</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(&quot;14:03:00&quot;)</span>
+<span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">25</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span>                     <span class="tok-comment"># =&gt; Error(InvalidTime(25, 0, 0))</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>With sub-second precision</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">,</span> <span class="tok-number">123456789</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>t<span class="tok-op">|</span> t<span class="tok-op">.</span><span class="tok-method">iso</span> <span class="tok-punct">}</span>
+<span class="tok-comment"># =&gt; Ok(&quot;14:03:00.123456789&quot;)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-time-midnight">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-midnight"><code>midnight</code></a> <a class="permalink" href="#function-time-midnight" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">midnight</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-time"><span class="tok-type">Time</span></a></span></code></pre>
+</div>
+<p>Midnight, 00:00:00. The start of a day.</p>
+<p class="returns"><strong>Returns</strong> 00:00:00</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">midnight</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>                   <span class="tok-comment"># =&gt; &quot;00:00:00&quot;</span>
+<span class="tok-punct">(</span><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">midnight</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">-</span> <span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">second</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>     <span class="tok-comment"># =&gt; &quot;23:59:59&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-time-fromsecondssincemidnight">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-fromsecondssincemidnight"><code>fromSecondsSinceMidnight</code></a> <a class="permalink" href="#function-time-fromsecondssincemidnight" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">fromSecondsSinceMidnight</span><span class="tok-punct">(</span>count<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> nanosecond<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-time"><span class="tok-type">Time</span></a></span></code></pre>
+</div>
+<p>Builds a time of day from a count of seconds since midnight.</p>
+<p>Wraps, so 86400 is midnight again and -1 is 23:59:59, which is what makes it total where <code>Time.of</code> is fallible.</p>
+<p>Declared before the two-argument form: the interpreter resolves an overloaded module function to its LAST definition regardless of arity, so a delegating overload has to come first or it recurses into itself.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>count</code></dt><dd>seconds since midnight; wraps outside 0..86399</dd></div>
+<div class="param"><dt><code>nanosecond</code></dt><dd>the sub-second part; omitted for 0</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the time of day</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">fromSecondsSinceMidnight</span><span class="tok-punct">(</span><span class="tok-number">50580</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;14:03:00&quot;</span>
+<span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">fromSecondsSinceMidnight</span><span class="tok-punct">(</span><span class="tok-number">86400</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;00:00:00&quot;</span>
+<span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">fromSecondsSinceMidnight</span><span class="tok-punct">(</span><span class="tok-op">-</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>      <span class="tok-comment"># =&gt; &quot;23:59:59&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-time-parse">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-parse"><code>parse</code></a> <a class="permalink" href="#function-time-parse" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-time"><span class="tok-type">Time</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-timeerror"><span class="tok-type">TimeError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Parses an ISO 8601 time of day.</p>
+<p>Accepts <code>14:03</code>, <code>14:03:00</code>, or <code>14:03:00.123456789</code>. Anything else is <code>InvalidFormat</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code></dt><dd>the text to parse</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the time, or why it could not be read</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">14:03</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>t<span class="tok-op">|</span> t<span class="tok-op">.</span><span class="tok-method">iso</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(&quot;14:03:00&quot;)</span>
+<span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">xx</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>                        <span class="tok-comment"># =&gt; Error(InvalidFormat(&quot;xx&quot;))</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-time-now">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-now"><code>now</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-time-now" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">now</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-time"><span class="tok-type">Time</span></a></span></code></pre>
+</div>
+<p>The current time of day, in this machine's zone.</p>
+<p>Reads <a class="xref" href="#module-time-clock"><code>Time.Clock</code></a> like everything else here does, so it is pinned by replacing that capability in a test.</p>
+<p class="returns"><strong>Returns</strong> the current time of day</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">now</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;14:03:00&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-time-utcnow">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-utcnow"><code>utcNow</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-time-utcnow" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">utcNow</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-time"><span class="tok-type">Time</span></a></span></code></pre>
+</div>
+<p>The current time of day in UTC, whatever this machine's zone is.</p>
+<p class="returns"><strong>Returns</strong> the current UTC time of day</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">utcNow</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;12:03:00&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-time-parseoffset">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-parseoffset"><code>parseOffset</code></a> <a class="permalink" href="#function-time-parseoffset" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parseOffset</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Duration</span><span class="tok-punct">,</span> <a class="xref" href="#type-timeerror"><span class="tok-type">TimeError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Parses an ISO 8601 zone designator into an offset.</p>
+<p>Accepts <code>Z</code>, +<code>02:00</code>, <code>-05:30</code>, or the empty string (all meaning UTC for the first and last).</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code></dt><dd>the zone designator</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the offset, or why it could not be read</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">parseOffset</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">+02:00</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>d<span class="tok-op">|</span> d<span class="tok-op">.</span><span class="tok-method">wholeSeconds</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Ok(7200)</span>
+<span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">parseOffset</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Z</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>d<span class="tok-op">|</span> d<span class="tok-op">.</span><span class="tok-method">wholeSeconds</span> <span class="tok-punct">}</span>        <span class="tok-comment"># =&gt; Ok(0)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-time-momentat">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-momentat"><code>momentAt</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-time-momentat" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">momentAt</span><span class="tok-punct">(</span>nanos<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/date_time/#record-datetime"><span class="tok-type">DateTime</span></a></span></code></pre>
+</div>
+<p>The civil instant <code>nanos</code> after the Unix epoch, in this machine's zone as it stands at that instant. Foul because the zone is ambient.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>nanos</code></dt><dd>nanoseconds since the Unix epoch</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> that instant, in the local zone</p>
+
+</div>
+<div class="fn" id="function-time-nanosof">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-nanosof"><code>nanosOf</code></a> <a class="permalink" href="#function-time-nanosof" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">nanosOf</span><span class="tok-punct">(</span>moment<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/date_time/#record-datetime"><span class="tok-type">DateTime</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+<p>Nanoseconds since the Unix epoch for a civil datetime. A plain function rather than a <a class="xref" href="/prelude/0.4.0-rc.4-dev/date_time/#record-datetime"><code>DateTime</code></a> function: on BEAM a function named <code>epochNanos</code> flattens onto the same name as the <code>DateTime.epochNanos()</code> module function, and the arity-0 one wins: silently, answering for the host clock instead of for <code>moment</code>.</p>
+
+</div>
+<div class="fn" id="function-time-leapyear?">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-leapyear?"><code>leapYear?</code></a> <a class="permalink" href="#function-time-leapyear?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">leapYear?</span><span class="tok-punct">(</span>year<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Public because the <code>make</code> blocks below live at file level and reach them by qualification; they are equally useful on their own.</p>
+<p>Returns <code>true</code> when <code>year</code> is a leap year in the proleptic Gregorian calendar.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>year</code></dt><dd>the calendar year</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> for a leap year</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">leapYear?</span><span class="tok-punct">(</span><span class="tok-number">2024</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">leapYear?</span><span class="tok-punct">(</span><span class="tok-number">1900</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; false</span>
+<span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">leapYear?</span><span class="tok-punct">(</span><span class="tok-number">2000</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-time-daysinmonth">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-daysinmonth"><code>daysInMonth</code></a> <a class="permalink" href="#function-time-daysinmonth" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">daysInMonth</span><span class="tok-punct">(</span>year<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> month<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-timeerror"><span class="tok-type">TimeError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>The number of days in a month.</p>
+<p>Year first, matching <code>Date.of(year, month, day)</code> and every other date-shaped signature in this file.</p>
+<p>Returns <code>Error(InvalidDate(year, month, 1))</code> when the month is outside 1 through 12.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>year</code></dt><dd>the calendar year, which decides February's length</dd></div>
+<div class="param"><dt><code>month</code></dt><dd>the month, 1 through 12</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the day count, or why the month is not one</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">daysInMonth</span><span class="tok-punct">(</span><span class="tok-number">2024</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(29)</span>
+<span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">daysInMonth</span><span class="tok-punct">(</span><span class="tok-number">2023</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(28)</span>
+<span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">daysInMonth</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">13</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; Error(InvalidDate(2026, 13, 1))</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-time-daysinvalidmonth">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-daysinvalidmonth"><code>daysInValidMonth</code></a> <a class="permalink" href="#function-time-daysinvalidmonth" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">daysInValidMonth</span><span class="tok-punct">(</span>year<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> month<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+<p>The number of days in a month, with the range check already done.</p>
+<p>Every caller inside this file has a month it built or validated itself. Use <code>daysInMonth</code> for a month that came from outside.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>year</code></dt><dd>the calendar year</dd></div>
+<div class="param"><dt><code>month</code></dt><dd>the month, assumed to be 1 through 12</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the day count</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">daysInValidMonth</span><span class="tok-punct">(</span><span class="tok-number">2024</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 29</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-time-daysfromcivil">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-daysfromcivil"><code>daysFromCivil</code></a> <a class="permalink" href="#function-time-daysfromcivil" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">daysFromCivil</span><span class="tok-punct">(</span>year<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> month<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> day<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+<p>The number of days from 1970-01-01 to a calendar date, negative before it.</p>
+<p>Howard Hinnant's civil-calendar algorithms: exact across the whole proleptic Gregorian range, and they need only truncating integer division: the semantics Kex's <code>/</code> already has.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>year</code></dt><dd>the calendar year</dd></div>
+<div class="param"><dt><code>month</code></dt><dd>the month, 1 through 12</dd></div>
+<div class="param"><dt><code>day</code></dt><dd>the day of the month</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> days since the Unix epoch</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">daysFromCivil</span><span class="tok-punct">(</span><span class="tok-number">1970</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 0</span>
+<span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">daysFromCivil</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; 20664</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-time-civilfromdays">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-civilfromdays"><code>civilFromDays</code></a> <a class="permalink" href="#function-time-civilfromdays" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">civilFromDays</span><span class="tok-punct">(</span>epochDay<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/date/#record-date"><span class="tok-type">Date</span></a></span></code></pre>
+</div>
+<p>The calendar date a count of days since 1970-01-01 lands on. The inverse of <code>daysFromCivil</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>epochDay</code></dt><dd>days since the Unix epoch</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the calendar date</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">civilFromDays</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>       <span class="tok-comment"># =&gt; &quot;1970-01-01&quot;</span>
+<span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">civilFromDays</span><span class="tok-punct">(</span><span class="tok-number">20664</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># =&gt; &quot;2026-07-30&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-time-weekdayfromepochday">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-weekdayfromepochday"><code>weekdayFromEpochDay</code></a> <a class="permalink" href="#function-time-weekdayfromepochday" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">weekdayFromEpochDay</span><span class="tok-punct">(</span>epochDay<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/date/#type-weekday"><span class="tok-type">Weekday</span></a></span></code></pre>
+</div>
+<p>The weekday a count of days since 1970-01-01 falls on.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>epochDay</code></dt><dd>days since the Unix epoch</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the day of the week</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">weekdayFromEpochDay</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Thursday   (1970-01-01 was a Thursday)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-time-weekdaynumber">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-weekdaynumber"><code>weekdayNumber</code></a> <a class="permalink" href="#function-time-weekdaynumber" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">weekdayNumber</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+<p>The ISO number of a weekday: Monday is 1, Sunday is 7.</p>
+<p><code>weekday.number</code> is the readable way to ask.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>weekday</code></dt><dd>the day of the week</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> its ISO number, 1 through 7</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">weekdayNumber</span><span class="tok-punct">(</span><span class="tok-type">Monday</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 1</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-time-weekdayname">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-weekdayname"><code>weekdayName</code></a> <a class="permalink" href="#function-time-weekdayname" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">weekdayName</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>The English name of a weekday.</p>
+<p><code>weekday.name</code> is the readable way to ask.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>weekday</code></dt><dd>the day of the week</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> its English name</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">weekdayName</span><span class="tok-punct">(</span><span class="tok-type">Sunday</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;Sunday&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-time-errormessage">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-errormessage"><code>errorMessage</code></a> <a class="permalink" href="#function-time-errormessage" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">errorMessage</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Renders a <a class="xref" href="#type-timeerror"><code>TimeError</code></a> as a sentence for the user.</p>
+<p>A plain function rather than an <a class="xref" href="/prelude/0.4.0-rc.4-dev/errorable/#trait-errorable"><code>Errorable</code></a> implementation: a <code>message</code> function here joins the same BEAM dispatcher as ParseError's <code>message</code> FIELD and breaks it (spec/record_field_method_collision.kex).</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>error</code></dt><dd>the failure to describe</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the message to show</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">errorMessage</span><span class="tok-punct">(</span><span class="tok-type">InvalidDate</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">13</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; &quot;not a calendar date: 2026-13-1&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>Reporting a rejected date</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span>input<span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>date<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>date<span class="tok-op">.</span><span class="tok-method">iso</span><span class="tok-punct">)</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">errorMessage</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-time-formatdate">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-formatdate"><code>formatDate</code></a> <a class="permalink" href="#function-time-formatdate" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">formatDate</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/date/#record-date"><span class="tok-type">Date</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-time-formatdatetime">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-formatdatetime"><code>formatDateTime</code></a> <a class="permalink" href="#function-time-formatdatetime" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">formatDateTime</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/date_time/#record-datetime"><span class="tok-type">DateTime</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-time-formattime">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-formattime"><code>formatTime</code></a> <a class="permalink" href="#function-time-formattime" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">formatTime</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <a class="xref" href="#record-time"><span class="tok-type">Time</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-time-formatfraction">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-formatfraction"><code>formatFraction</code></a> <a class="permalink" href="#function-time-formatfraction" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">formatFraction</span><span class="tok-punct">(</span>nanosecond<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Fractional seconds, in the 3/6/9-digit groupings ISO 8601 output conventionally uses, whichever is the shortest that loses nothing. A whole second renders no fraction at all, so <code>14:03:00</code> is unchanged.</p>
+<p>Without this the nanosecond field was kept on the value and compared, but never rendered: <code>Time.parse(&quot;14:03:00.5&quot;)</code> and <code>Time.parse(&quot;14:03:00&quot;)</code> produced different values that printed identically, and every parse/format round-trip silently dropped sub-second precision.</p>
+
+</div>
+<div class="fn" id="function-time-formatoffset">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-formatoffset"><code>formatOffset</code></a> <a class="permalink" href="#function-time-formatoffset" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">formatOffset</span><span class="tok-punct">(</span>offset<span class="tok-op">:</span> <span class="tok-type">Duration</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>±HH:MM, the shape an ISO 8601 offset takes. UTC renders as &quot;Z&quot;.</p>
+
+</div>
+<div class="fn" id="function-time-withnanosecond">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-withnanosecond"><code>withNanosecond</code></a> <a class="permalink" href="#function-time-withnanosecond" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">withNanosecond</span><span class="tok-punct">(</span>moment<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/date_time/#record-datetime"><span class="tok-type">DateTime</span></a><span class="tok-punct">,</span> nanosecond<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/date_time/#record-datetime"><span class="tok-type">DateTime</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-time-floordiv">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-floordiv"><code>floorDiv</code></a> <a class="permalink" href="#function-time-floordiv" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">floorDiv</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> divisor<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+<p>Kex's <code>/</code> truncates toward zero; instants before the epoch need the floor.</p>
+
+</div>
+<div class="fn" id="function-time-truncatedby">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-truncatedby"><code>truncatedBy</code></a> <a class="permalink" href="#function-time-truncatedby" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">truncatedBy</span><span class="tok-punct">(</span>seconds<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-float"><span class="tok-type">Float</span></a><span class="tok-punct">,</span> unit<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-float"><span class="tok-type">Float</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+<p>A Duration holds Float seconds, so it is rounded to the nanosecond, the finest unit it names, before truncating: 7.nanosecond is 7e-9 seconds, and dividing that by 1e-9 directly gives 6.999... and so 6.</p>
+
+</div>
+<div class="fn" id="function-time-pad2">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-pad2"><code>pad2</code></a> <a class="permalink" href="#function-time-pad2" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">pad2</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-time-padto">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-padto"><code>padTo</code></a> <a class="permalink" href="#function-time-padto" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">padTo</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> width<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Left-pad with zeros to a fixed width. A value already that wide is left alone rather than truncated: losing digits would be worse than a field one character too long.</p>
+
+</div>
+<div class="fn" id="function-time-padyear">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-padyear"><code>padYear</code></a> <a class="permalink" href="#function-time-padyear" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">padYear</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Years keep four digits where they fit; ISO 8601 has no fixed spelling beyond that, so wider years render as-is.</p>
+
+</div>
+<div class="fn" id="function-time-digitsin">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-digitsin"><code>digitsIn</code></a> <a class="permalink" href="#function-time-digitsin" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">digitsIn</span><span class="tok-punct">(</span>fragment<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> whole<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-timeerror"><span class="tok-type">TimeError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Digits, with the failure reported against the WHOLE input rather than the fragment that failed: <code>Time.parse(&quot;2:03 pm&quot;)</code> should complain about &quot;2:03 pm&quot;, not about &quot;03 pm&quot;.</p>
+
+</div>
+<div class="fn" id="function-time-fixeddigitsin">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-fixeddigitsin"><code>fixedDigitsIn</code></a> <a class="permalink" href="#function-time-fixeddigitsin" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">fixedDigitsIn</span><span class="tok-punct">(</span>fragment<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> width<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> whole<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-timeerror"><span class="tok-type">TimeError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>The same, for a field ISO 8601 writes at a fixed width: &quot;14&quot;, never &quot;2&quot;.</p>
+
+</div>
+<div class="fn" id="function-time-digitstointeger">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-digitstointeger"><code>digitsToInteger</code></a> <a class="permalink" href="#function-time-digitstointeger" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">digitsToInteger</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-timeerror"><span class="tok-type">TimeError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>ASCII digits only: Integer.parse would also take a sign or surrounding space, and none of those belongs inside an ISO 8601 field.</p>
+
+</div>
+<div class="fn" id="function-time-parsefraction">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-parsefraction"><code>parseFraction</code></a> <a class="permalink" href="#function-time-parsefraction" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parseFraction</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> whole<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-timeerror"><span class="tok-type">TimeError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>&quot;.5&quot; is 500000000ns: the digits are padded out to nanosecond scale. The caller has seen the &quot;.&quot;, so an empty fraction is malformed, not zero.</p>
+
+</div>
+<div class="fn" id="function-time-splitoffset">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-splitoffset"><code>splitOffset</code></a> <a class="permalink" href="#function-time-splitoffset" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">splitOffset</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Splits &quot;14:03:00+02:00&quot; into its time and offset halves. A missing offset reads as UTC, matching what a zero offset formats back to.</p>
+
+</div>
+</div>
+</section>
+<section class="entity" id="module-time-clock">
+<h2><span class="kind kind-module">module</span> <code>Time.Clock</code> <a class="permalink" href="#module-time-clock" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>The clock: the one place the current instant comes from.</p>
+<p>Anything that asks what time it is (<code>Time.now</code>, <code>Date.today</code>, <code>DateTime.utcNow</code>) reads this, so replacing it replaces the whole calendar. It is a capability, so the replacement is for a lexical region: it reaches every call made from the region and every process spawned in it, it nests, and it cannot outlive its block. This is what makes code that calls <code>Date.today()</code> testable:</p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">with</span> <span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-type">Clock</span> <span class="tok-op">=</span> <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Clock</span> <span class="tok-punct">{</span> at<span class="tok-op">:</span> <span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30T14:03:00Z</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span> <span class="tok-punct">}</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">today</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span>   <span class="tok-comment"># &quot;2026-07-30&quot;, always</span>
+<span class="tok-keyword">end</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p><code>now</code> is the whole interface. Its answer carries the zone as its offset, so one member covers both ambient inputs: what time it is, and where. <a class="xref" href="/prelude/0.4.0-rc.4-dev/mock/#record-mock-clock"><code>Mock.Clock</code></a> is the ready-made stand-in; any record that implements <code>now</code> is one too.</p>
+<div class="functions">
+<div class="fn" id="function-time-clock-now">
+<div class="fn-head">
+<h3><a class="self" href="#function-time-clock-now"><code>now</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-time-clock-now" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">now</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/date_time/#record-datetime"><span class="tok-type">DateTime</span></a></span></code></pre>
+</div>
+<p>The current instant, in this machine's zone as it stands right now.</p>
+<p class="returns"><strong>Returns</strong> the current instant</p>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="make-weekday">
+<h2><span class="kind kind-make">extends</span> <code>Weekday</code> <a class="permalink" href="#make-weekday" title="Copy link" aria-label="Copy link">#</a></h2>
+<p class="home-note">More functions for <a class="xref" href="/prelude/0.4.0-rc.4-dev/date/#type-weekday"><code>Weekday</code></a>, added by this module.</p>
+
+<div class="functions">
+<div class="fn" id="weekday-number">
+<div class="fn-head">
+<h3><a class="self" href="#weekday-number"><code>number</code></a> <a class="permalink" href="#weekday-number" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">number</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+<p>This weekday's ISO number: Monday is 1, Sunday is 7.</p>
+<p class="returns"><strong>Returns</strong> the ISO number, 1 through 7</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Monday</span><span class="tok-op">.</span><span class="tok-method">number</span>   <span class="tok-comment"># =&gt; 1</span>
+<span class="tok-type">Sunday</span><span class="tok-op">.</span><span class="tok-method">number</span>   <span class="tok-comment"># =&gt; 7</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="weekday-name">
+<div class="fn-head">
+<h3><a class="self" href="#weekday-name"><code>name</code></a> <a class="permalink" href="#weekday-name" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">name</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>This weekday's English name.</p>
+<p class="returns"><strong>Returns</strong> the name</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">,</span> <span class="tok-number">30</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">weekday</span><span class="tok-op">.</span><span class="tok-method">name</span>   <span class="tok-comment"># =&gt; &quot;Thursday&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="weekday-weekend?">
+<div class="fn-head">
+<h3><a class="self" href="#weekday-weekend?"><code>weekend?</code></a> <a class="permalink" href="#weekday-weekend?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">weekend?</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> for Saturday and Sunday.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> on a weekend day</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Saturday</span><span class="tok-op">.</span><span class="tok-method">weekend?</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">Monday</span><span class="tok-op">.</span><span class="tok-method">weekend?</span>     <span class="tok-comment"># =&gt; false</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>Counting working days in a range</em></p>
+<div class="code-block"><pre class="code"><code>days<span class="tok-op">.</span><span class="tok-method">count</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>d<span class="tok-op">|</span> <span class="tok-op">!</span>d<span class="tok-op">.</span><span class="tok-method">weekday</span><span class="tok-op">.</span><span class="tok-method">weekend?</span> <span class="tok-punct">}</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>

@@ -1,0 +1,542 @@
+<section class="entity" id="make-string">
+<h2><span class="kind kind-type">type</span> <code>String</code></h2>
+<p class="implements">Implements <a class="xref" href="/prelude/0.4.0-alpha/algebra/#trait-monoid"><code>Monoid</code></a>, <a class="xref" href="/prelude/0.4.0-alpha/blankable/#trait-blankable"><code>Blankable</code></a>, <a class="xref" href="/prelude/0.4.0-alpha/enumerable/#trait-enumerable"><code>Enumerable</code></a>, <a class="xref" href="/prelude/0.4.0-alpha/enumerable/#trait-foldable"><code>Foldable</code></a>, <a class="xref" href="/prelude/0.4.0-alpha/truthyable/#trait-truthyable"><code>Truthyable</code></a>.</p>
+
+<div class="functions">
+<div class="fn" id="string-reduce">
+<h3><a class="self" href="#string-reduce"><code>reduce</code></a> <a class="tag-trait" href="/prelude/0.4.0-alpha/enumerable/#enumerable-reduce" title="Implements Enumerable.reduce">Enumerable</a> <a class="tag-trait" href="/prelude/0.4.0-alpha/enumerable/#foldable-reduce" title="Implements Foldable.reduce">Foldable</a></h3>
+<pre class="code sig"><code><span class="tok-fn">reduce</span><span class="tok-punct">(</span>acc<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">,</span> f<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#make-char"><span class="tok-type">Char</span></a> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span></code></pre>
+<p>Enumerable primitive and string-preserving higher-order operations. The private List intrinsics understand String's [Char] representation; the public methods remain owned here in Kex source.</p>
+
+</div>
+<div class="fn" id="string-mapchars">
+<h3><a class="self" href="#string-mapchars"><code>mapChars</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">mapChars</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <span class="tok-punct">(</span><a class="xref" href="#make-char"><span class="tok-type">Char</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>No <code>map</code> override: the Enumerable default collects into a list, which is what <code>(Char -&gt; B) -&gt; [B]</code> says. A String-in/String-out mapping is a different operation with a different type, so it gets its own name.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>f</code></dt><dd></dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">mapChars</span><span class="tok-punct">(</span><span class="tok-op">&amp;</span><span class="tok-op">.</span><span class="tok-method">upperCase</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;HI&quot;</span>
+<span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">map</span><span class="tok-punct">(</span><span class="tok-op">&amp;</span><span class="tok-op">.</span><span class="tok-method">upperCase</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; ['H', 'I']  (a list, per Enumerable)</span></code></pre>
+
+</div>
+<div class="fn" id="string-filter">
+<h3><a class="self" href="#string-filter"><code>filter</code></a> <a class="tag-trait" href="/prelude/0.4.0-alpha/enumerable/#enumerable-filter" title="Implements Enumerable.filter">Enumerable</a></h3>
+<pre class="code sig"><code><span class="tok-fn">filter</span><span class="tok-punct">(</span>pred<span class="tok-op">:</span> <span class="tok-punct">(</span><a class="xref" href="#make-char"><span class="tok-type">Char</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="string-uniq">
+<h3><a class="self" href="#string-uniq"><code>uniq</code></a></h3>
+<pre class="code sig"><code>uniq <span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a></code></pre>
+
+</div>
+<div class="fn" id="string-first">
+<h3><a class="self" href="#string-first"><code>first</code></a></h3>
+<pre class="code sig"><code>first <span class="tok-op">:</span> <span class="tok-type">Char?</span></code></pre>
+<p>A String is its OWN type, not a [Char] — <code>chars</code> converts between them. So the sequence operations below are declared here rather than inherited from List, and they answer in String's terms: <code>take</code>/<code>drop</code>/<code>sort</code> hand back a String, while <code>first</code>/<code>last</code> hand back a Char. The List intrinsics they delegate to already understand the String representation, so there is one implementation for both backends.</p>
+<p>Returns the first character, or None when the string is empty.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">first</span>   <span class="tok-comment"># =&gt; Just('h')</span>
+<span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">first</span>     <span class="tok-comment"># =&gt; None</span></code></pre>
+
+</div>
+<div class="fn" id="string-last">
+<h3><a class="self" href="#string-last"><code>last</code></a></h3>
+<pre class="code sig"><code>last <span class="tok-op">:</span> <span class="tok-type">Char?</span></code></pre>
+<p>Returns the last character, or None when the string is empty.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">last</span>   <span class="tok-comment"># =&gt; Just('i')</span></code></pre>
+
+</div>
+<div class="fn" id="string-get">
+<h3><a class="self" href="#string-get"><code>get</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">get</span><span class="tok-punct">(</span>i<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Char?</span>
+<span class="tok-fn">get</span><span class="tok-punct">(</span>i<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> default<span class="tok-op">:</span> <a class="xref" href="#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#make-char"><span class="tok-type">Char</span></a></code></pre>
+<p>Returns the character at <code>i</code>, or None when out of range.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>i</code></dt><dd></dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 'i'</span></code></pre>
+
+</div>
+<div class="fn" id="string-take">
+<h3><a class="self" href="#string-take"><code>take</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">take</span><span class="tok-punct">(</span>n<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the first <code>n</code> characters.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>n</code></dt><dd></dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;he&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="string-drop">
+<h3><a class="self" href="#string-drop"><code>drop</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">drop</span><span class="tok-punct">(</span>n<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns everything after the first <code>n</code> characters.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>n</code></dt><dd></dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">drop</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;llo&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="string-reject">
+<h3><a class="self" href="#string-reject"><code>reject</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">reject</span><span class="tok-punct">(</span>pred<span class="tok-op">:</span> <span class="tok-punct">(</span><a class="xref" href="#make-char"><span class="tok-type">Char</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the characters that do NOT satisfy the predicate — filter's complement.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>pred</code></dt><dd></dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">reject</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>c<span class="tok-op">|</span> c <span class="tok-op">==</span> 'l' <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; &quot;heo&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="string-sort">
+<h3><a class="self" href="#string-sort"><code>sort</code></a></h3>
+<pre class="code sig"><code>sort <span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the characters in ascending order.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">sort</span>   <span class="tok-comment"># =&gt; &quot;ehllo&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="string-indexof">
+<h3><a class="self" href="#string-indexof"><code>indexOf</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">indexOf</span><span class="tok-punct">(</span>c<span class="tok-op">:</span> <a class="xref" href="#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer?</span></code></pre>
+<p>Returns the index of the first occurrence of <code>c</code>, or None.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>c</code></dt><dd></dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">indexOf</span><span class="tok-punct">(</span>'l'<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 2</span></code></pre>
+
+</div>
+<div class="fn" id="string-findindex">
+<h3><a class="self" href="#string-findindex"><code>findIndex</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">findIndex</span><span class="tok-punct">(</span>pred<span class="tok-op">:</span> <span class="tok-punct">(</span><a class="xref" href="#make-char"><span class="tok-type">Char</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer?</span></code></pre>
+<p>Returns the index of the first character satisfying the predicate, or None. Goes through <code>chars</code> because there is no direct intrinsic.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>pred</code></dt><dd></dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">findIndex</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>c<span class="tok-op">|</span> c <span class="tok-op">==</span> 'l' <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; 2</span></code></pre>
+
+</div>
+<div class="fn" id="string-zip">
+<h3><a class="self" href="#string-zip"><code>zip</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">zip</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">Y</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><a class="xref" href="#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">,</span> <span class="tok-type">Y</span><span class="tok-punct">)</span><span class="tok-punct">]</span></code></pre>
+<p>Pairs each character with the element at the same index in <code>other</code>, stopping at the shorter of the two.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd></dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">ab</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">zip</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [('a', 1), ('b', 2)]</span></code></pre>
+
+</div>
+<div class="fn" id="string-partition">
+<h3><a class="self" href="#string-partition"><code>partition</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">partition</span><span class="tok-punct">(</span>pred<span class="tok-op">:</span> <span class="tok-punct">(</span><a class="xref" href="#make-char"><span class="tok-type">Char</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span></code></pre>
+<p>Splits into the characters that satisfy the predicate and those that do not, in that order.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>pred</code></dt><dd></dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">partition</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>c<span class="tok-op">|</span> c <span class="tok-op">==</span> 'l' <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; (&quot;ll&quot;, &quot;heo&quot;)</span></code></pre>
+
+</div>
+<div class="fn" id="string-count">
+<h3><a class="self" href="#string-count"><code>count</code></a> <a class="tag-trait" href="/prelude/0.4.0-alpha/enumerable/#foldable-count" title="Implements Foldable.count">Foldable</a></h3>
+<pre class="code sig"><code>count <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Returns the number of characters in the string.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">count</span>   <span class="tok-comment"># =&gt; 5</span>
+<span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">count</span>        <span class="tok-comment"># =&gt; 0</span></code></pre>
+
+</div>
+<div class="fn" id="string-length">
+<h3><a class="self" href="#string-length"><code>length</code></a></h3>
+<pre class="code sig"><code>length <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Compatibility spelling retained as a source-owned String method.</p>
+
+</div>
+<div class="fn" id="string-empty?">
+<h3><a class="self" href="#string-empty?"><code>empty?</code></a></h3>
+<pre class="code sig"><code>empty? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> if the string contains no characters.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">empty?</span>       <span class="tok-comment"># =&gt; true</span>
+<span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">empty?</span>     <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="string-enclose">
+<h3><a class="self" href="#string-enclose"><code>enclose</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">enclose</span><span class="tok-punct">(</span>wrapper<span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a>
+<span class="tok-fn">enclose</span><span class="tok-punct">(</span>left<span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> right<span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns an enclosed string, with <code>wrapper</code> on both ends.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>wrapper</code></dt><dd>String</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> String</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">enclose</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">*</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;*hello*&quot;</span>
+<span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">enclose</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">__</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;__hello__&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="string-at">
+<h3><a class="self" href="#string-at"><code>at</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">at</span><span class="tok-punct">(</span>i<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Char?</span></code></pre>
+<p>Returns the character at position <code>i</code> (0-based), or <code>None</code> if out of range.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>i</code></dt><dd></dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">at</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just('e')</span>
+<span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">at</span><span class="tok-punct">(</span><span class="tok-number">9</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; None</span></code></pre>
+
+</div>
+<div class="fn" id="string-second">
+<h3><a class="self" href="#string-second"><code>second</code></a></h3>
+<pre class="code sig"><code>second <span class="tok-op">:</span> <span class="tok-type">Char?</span></code></pre>
+<p>Returns the second character wrapped in <code>Just</code>, or <code>None</code> when absent.</p>
+
+</div>
+<div class="fn" id="string-third">
+<h3><a class="self" href="#string-third"><code>third</code></a></h3>
+<pre class="code sig"><code>third <span class="tok-op">:</span> <span class="tok-type">Char?</span></code></pre>
+<p>Returns the third character wrapped in <code>Just</code>, or <code>None</code> when absent.</p>
+
+</div>
+<div class="fn" id="string-rest">
+<h3><a class="self" href="#string-rest"><code>rest</code></a></h3>
+<pre class="code sig"><code>rest <span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns all characters after the first.</p>
+
+</div>
+<div class="fn" id="string-chars">
+<h3><a class="self" href="#string-chars"><code>chars</code></a></h3>
+<pre class="code sig"><code>chars <span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">]</span></code></pre>
+<p>Returns a list of the individual characters in the string.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">chars</span>   <span class="tok-comment"># =&gt; ['h', 'i']</span></code></pre>
+
+</div>
+<div class="fn" id="string-bytes">
+<h3><a class="self" href="#string-bytes"><code>bytes</code></a></h3>
+<pre class="code sig"><code>bytes <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">Byte</span><span class="tok-punct">]</span></code></pre>
+<p>Returns the string's UTF-8 encoding, one Byte per byte.</p>
+<p><code>chars</code> is the TEXT view of a String and <code>bytes</code> is the STORAGE view, so they differ for anything outside ASCII: &quot;é&quot; is one Char and two Bytes.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">bytes</span>    <span class="tok-comment"># =&gt; [104, 105]</span>
+<span class="tok-string">&quot;</span><span class="tok-string">é</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">bytes</span>     <span class="tok-comment"># =&gt; [195, 169]</span>
+<span class="tok-string">&quot;</span><span class="tok-string">é</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">chars</span>     <span class="tok-comment"># =&gt; ['é']</span></code></pre>
+
+</div>
+<div class="fn" id="string-split">
+<h3><a class="self" href="#string-split"><code>split</code></a></h3>
+<pre class="code sig"><code>split <span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+<p>Splits on every occurrence of <code>sep</code>. With no argument, splits into individual characters.</p>
+<p>Separator-less: one part per character, as the example above shows. Only the intrinsic had this form, so the walker answered <code>&quot;hi&quot;.split</code> with &quot;'this' used outside of a method context&quot; while BEAM returned the parts. Declared BEFORE the separator form, as <code>sort</code> is in list.kex: the walker resolves a no-argument call against the first clause of that name.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>sep</code></dt><dd></dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">a,b,c</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">split</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">,</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]</span>
+<span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">split</span>           <span class="tok-comment"># =&gt; [&quot;h&quot;, &quot;i&quot;]</span></code></pre>
+
+<pre class="code sig"><code><span class="tok-fn">split</span><span class="tok-punct">(</span>sep<span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a> <span class="tok-op">|</span> <span class="tok-type">Regex</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span>
+split <span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+
+</div>
+<div class="fn" id="string-lines">
+<h3><a class="self" href="#string-lines"><code>lines</code></a></h3>
+<pre class="code sig"><code>lines <span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></code></pre>
+<p>Splits into lines on <code>\n</code>, dropping a single trailing newline so a file ending in one does not yield a final empty line. Windows line endings are not stripped — split on <code>\r\n</code> explicitly if that matters.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">a\nb</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">lines</span>      <span class="tok-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;]</span>
+<span class="tok-string">&quot;</span><span class="tok-string">a\nb\n</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">lines</span>    <span class="tok-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;]</span>
+<span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">lines</span>          <span class="tok-comment"># =&gt; []</span></code></pre>
+
+</div>
+<div class="fn" id="string-indentrest">
+<h3><a class="self" href="#string-indentrest"><code>indentRest</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">indentRest</span><span class="tok-punct">(</span>prefix<span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Indents every line but the first by <code>prefix</code>. That is what splicing a multi-line value into an indented <code>${...}</code> hole needs: the hole's own indentation already covers line one, the rest have to catch up. Blank lines stay blank, and — through <code>lines</code> — one trailing newline is dropped, so a block does not push a stray empty line into its slot.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>prefix</code></dt><dd></dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">a\nb\n</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">indentRest</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">  </span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;a\n  b&quot;</span>
+<span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">indentRest</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">  </span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; &quot;a&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="string-replace">
+<h3><a class="self" href="#string-replace"><code>replace</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">replace</span><span class="tok-punct">(</span>pattern<span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> replacement<span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Replaces every literal occurrence of <code>pattern</code>. An empty pattern matches at every character boundary, including both ends.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>pattern</code></dt><dd></dd></div>
+<div class="param"><dt><code>replacement</code></dt><dd></dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">a-b-c</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">replace</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">-</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">+</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;a+b+c&quot;</span>
+<span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">replace</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">-</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; &quot;-a-b-c-&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="string-substitute">
+<h3><a class="self" href="#string-substitute"><code>substitute</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">substitute</span><span class="tok-punct">(</span>replacements<span class="tok-op">:</span> <span class="tok-punct">{</span><a class="xref" href="#make-string"><span class="tok-type">String</span></a><span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a><span class="tok-punct">}</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Replaces every key of <code>replacements</code> with its value, in one pass over the map. The keys are the placeholders exactly as written — no syntax is imposed, and nothing is reserved — so <code>$NAME$</code>, <code>__NAME__</code>, <code>{{name}}</code> and <code>%name%</code> are all equally valid, and a template needs no escaping to be a template. <code>$NAME$</code> is the convention to reach for when there is no reason to prefer another.</p>
+<p>Note that a placeholder is NOT <code>${name}</code>: that is interpolation, which the compiler resolves before this ever sees the string.</p>
+<p>This is what a template wants instead of a chain of <code>.replace</code> calls: the chain reads as a pipeline when it is really a substitution table, and it quietly depends on its own order, since an earlier replacement's OUTPUT is still visible to every later one.</p>
+<p>Substitutions are applied in the map's canonical key order and each is applied to the result of the last, so a value that itself contains a key can still be rewritten by a later one. Keep values placeholder-free when that matters.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>replacements</code></dt><dd></dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">Hello, $WHO$!</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">substitute</span><span class="tok-punct">(</span><span class="tok-punct">{</span><span class="tok-string">&quot;</span><span class="tok-string">$WHO$</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">world</span><span class="tok-string">&quot;</span><span class="tok-punct">}</span><span class="tok-punct">)</span>           <span class="tok-comment"># =&gt; &quot;Hello, world!&quot;</span>
+<span class="tok-string">&quot;</span><span class="tok-string">$A$ and $B$</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">substitute</span><span class="tok-punct">(</span><span class="tok-punct">{</span><span class="tok-string">&quot;</span><span class="tok-string">$A$</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">x</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">$B$</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">y</span><span class="tok-string">&quot;</span><span class="tok-punct">}</span><span class="tok-punct">)</span>       <span class="tok-comment"># =&gt; &quot;x and y&quot;</span>
+<span class="tok-string">&quot;</span><span class="tok-string">__A__</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">substitute</span><span class="tok-punct">(</span><span class="tok-punct">{</span><span class="tok-string">&quot;</span><span class="tok-string">__A__</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">any key works</span><span class="tok-string">&quot;</span><span class="tok-punct">}</span><span class="tok-punct">)</span>           <span class="tok-comment"># =&gt; &quot;any key works&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="string-trim">
+<h3><a class="self" href="#string-trim"><code>trim</code></a></h3>
+<pre class="code sig"><code>trim <span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Removes leading and trailing whitespace.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">  hello  </span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">trim</span>   <span class="tok-comment"># =&gt; &quot;hello&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="string-uppercase">
+<h3><a class="self" href="#string-uppercase"><code>upperCase</code></a></h3>
+<pre class="code sig"><code>upperCase <span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the string with all characters converted to upper case.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">upperCase</span>   <span class="tok-comment"># =&gt; &quot;HELLO&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="string-lowercase">
+<h3><a class="self" href="#string-lowercase"><code>lowerCase</code></a></h3>
+<pre class="code sig"><code>lowerCase <span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the string with all characters converted to lower case.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">HELLO</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">lowerCase</span>   <span class="tok-comment"># =&gt; &quot;hello&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="string-capitalize">
+<h3><a class="self" href="#string-capitalize"><code>capitalize</code></a></h3>
+<pre class="code sig"><code>capitalize <span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the string with its first character upper-cased and the rest LOWER-cased, matching Ruby's String#capitalize — so &quot;hELLO&quot; becomes &quot;Hello&quot;, not &quot;HELLO&quot;. Unlike <code>upperCase</code>, which shouts the whole string.</p>
+<p>Needed to build type names from data: a generated <code>type %name = ...</code> inside a <code>compiled do</code> block requires an upper-case identifier, so a list of lower-case words has to be capitalized first.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">capitalize</span>          <span class="tok-comment"># =&gt; &quot;Hello&quot;</span>
+<span class="tok-string">&quot;</span><span class="tok-string">hELLO</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">capitalize</span>          <span class="tok-comment"># =&gt; &quot;Hello&quot;   (tail is lower-cased)</span>
+<span class="tok-string">&quot;</span><span class="tok-string">already Capital</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">capitalize</span> <span class="tok-comment"># =&gt; &quot;Already capital&quot;</span>
+<span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">capitalize</span>               <span class="tok-comment"># =&gt; &quot;&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="string-reverse">
+<h3><a class="self" href="#string-reverse"><code>reverse</code></a></h3>
+<pre class="code sig"><code>reverse <span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Returns the string with its characters in reverse order.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">reverse</span>   <span class="tok-comment"># =&gt; &quot;olleh&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="string-contains?">
+<h3><a class="self" href="#string-contains?"><code>contains?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">contains?</span><span class="tok-punct">(</span>sub<span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> if <code>sub</code> appears anywhere within the string.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>sub</code></dt><dd></dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello world</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">world</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-string">&quot;</span><span class="tok-string">hello world</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">xyz</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="string-startswith?">
+<h3><a class="self" href="#string-startswith?"><code>startsWith?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">startsWith?</span><span class="tok-punct">(</span>prefix<span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> if the string begins with <code>prefix</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>prefix</code></dt><dd></dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">startsWith?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hel</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">startsWith?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">llo</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="string-endswith?">
+<h3><a class="self" href="#string-endswith?"><code>endsWith?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">endsWith?</span><span class="tok-punct">(</span>suffix<span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> if the string ends with <code>suffix</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>suffix</code></dt><dd></dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">endsWith?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">llo</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">endsWith?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hel</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+</div><h3>From <a class="xref" href="/prelude/0.4.0-alpha/algebra/#trait-monoid"><code>Monoid</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-alpha/algebra/#monoid-repeat"><code>repeat</code></a></dt><dd>Combines this value with itself <code>n</code> times.</dd></div>
+</dl>
+<h3>From <a class="xref" href="/prelude/0.4.0-alpha/enumerable/#trait-enumerable"><code>Enumerable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-alpha/enumerable/#enumerable-map"><code>map</code></a></dt><dd>Transforms each item by applying <code>f</code>, collecting the results into a list.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-alpha/enumerable/#enumerable-mapindexed"><code>mapIndexed</code></a></dt><dd>Transforms each item together with its 0-based position, collecting the results into a list.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-alpha/enumerable/#enumerable-flatmap"><code>flatMap</code></a></dt><dd>Maps each item to a list and concatenates the results.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-alpha/enumerable/#enumerable-collect"><code>collect</code></a></dt><dd>Maps each item through <code>f</code> (returning an <code>Optional</code>), keeping and unwrapping the <code>Just(y)</code> results and dropping <code>None</code>.</dd></div>
+</dl>
+<h3>From <a class="xref" href="/prelude/0.4.0-alpha/enumerable/#trait-foldable"><code>Foldable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-alpha/enumerable/#foldable-each"><code>each</code></a></dt><dd>Applies <code>f</code> to each item for its side effects.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-alpha/enumerable/#foldable-eachindexed"><code>eachIndexed</code></a></dt><dd>Applies <code>f</code> to each item together with its 0-based position, for side effects.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-alpha/enumerable/#foldable-all?"><code>all?</code></a></dt><dd>True if every item satisfies <code>pred</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-alpha/enumerable/#foldable-any?"><code>any?</code></a></dt><dd>True if at least one item satisfies <code>pred</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-alpha/enumerable/#foldable-find"><code>find</code></a></dt><dd>The first item satisfying <code>pred</code> wrapped in Just, or None.</dd></div>
+</dl>
+<h3>Defined in other modules</h3>
+<dl class="params elsewhere">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-alpha/algebra/#make-string">Algebra</a></dt><dd><a class="xref" href="/prelude/0.4.0-alpha/algebra/#string-identity"><code>identity</code></a>, <a class="xref" href="/prelude/0.4.0-alpha/algebra/#string-combine"><code>combine</code></a></dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-string">Blankable</a></dt><dd><a class="xref" href="/prelude/0.4.0-alpha/blankable/#string-blank?"><code>blank?</code></a></dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-alpha/truthyable/#make-string">Truthyable</a></dt><dd><a class="xref" href="/prelude/0.4.0-alpha/truthyable/#string-truthy?"><code>truthy?</code></a></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="make-char">
+<h2><span class="kind kind-type">type</span> <code>Char</code></h2>
+
+<div class="functions">
+<div class="fn" id="char-string">
+<h3><a class="self" href="#char-string"><code>string</code></a></h3>
+<pre class="code sig"><code>string <span class="tok-op">:</span> <a class="xref" href="#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>A Char and a String are distinct types, so converting between them is explicit. <code>to(String)</code> is the fallible protocol and answers <code>String?</code> like every other conversion; <code>string</code> is the total one, because a character is always one character of text and has no failure case to report. It is the single-character counterpart of <a class="xref" href="#string-chars"><code>String.chars</code></a> and <code>[Char].join(&quot;&quot;)</code>.</p>
+<pre class="code"><code>'a'<span class="tok-op">.</span><span class="tok-method">string</span>                      <span class="tok-comment"># =&gt; &quot;a&quot;</span>
+'a'<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">)</span>                  <span class="tok-comment"># =&gt; Just(&quot;a&quot;)</span>
+<span class="tok-string">&quot;</span><span class="tok-string">hi</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">chars</span><span class="tok-op">.</span><span class="tok-method">map</span><span class="tok-punct">(</span><span class="tok-op">&amp;</span><span class="tok-op">.</span><span class="tok-method">string</span><span class="tok-punct">)</span>        <span class="tok-comment"># =&gt; [&quot;h&quot;, &quot;i&quot;]</span></code></pre>
+
+</div>
+<div class="fn" id="char-uppercase">
+<h3><a class="self" href="#char-uppercase"><code>upperCase</code></a></h3>
+<pre class="code sig"><code>upperCase <span class="tok-op">:</span> <a class="xref" href="#make-char"><span class="tok-type">Char</span></a></code></pre>
+<p>Converts this character to upper/lower case while preserving Char.</p>
+
+</div>
+<div class="fn" id="char-lowercase">
+<h3><a class="self" href="#char-lowercase"><code>lowerCase</code></a></h3>
+<pre class="code sig"><code>lowerCase <span class="tok-op">:</span> <a class="xref" href="#make-char"><span class="tok-type">Char</span></a></code></pre>
+
+</div>
+<div class="fn" id="char-digit?">
+<h3><a class="self" href="#char-digit?"><code>digit?</code></a></h3>
+<pre class="code sig"><code>digit? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> if the character is a decimal digit (<code>0</code>..<code>9</code>).</p>
+<h5>Examples</h5>
+<pre class="code"><code>'<span class="tok-number">3</span>'<span class="tok-op">.</span><span class="tok-method">digit?</span>   <span class="tok-comment"># =&gt; true</span>
+'a'<span class="tok-op">.</span><span class="tok-method">digit?</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="char-alpha?">
+<h3><a class="self" href="#char-alpha?"><code>alpha?</code></a></h3>
+<pre class="code sig"><code>alpha? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+
+</div>
+<div class="fn" id="char-letter?">
+<h3><a class="self" href="#char-letter?"><code>letter?</code></a></h3>
+<pre class="code sig"><code>letter? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+
+</div>
+<div class="fn" id="char-upper?">
+<h3><a class="self" href="#char-upper?"><code>upper?</code></a></h3>
+<pre class="code sig"><code>upper? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+
+</div>
+<div class="fn" id="char-lower?">
+<h3><a class="self" href="#char-lower?"><code>lower?</code></a></h3>
+<pre class="code sig"><code>lower? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+
+</div>
+<div class="fn" id="char-space?">
+<h3><a class="self" href="#char-space?"><code>space?</code></a></h3>
+<pre class="code sig"><code>space? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+
+</div>
+<div class="fn" id="char-codepoint">
+<h3><a class="self" href="#char-codepoint"><code>codepoint</code></a></h3>
+<pre class="code sig"><code>codepoint <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Returns this character's numeric codepoint.</p>
+
+</div>
+<div class="fn" id="char-in?">
+<h3><a class="self" href="#char-in?"><code>in?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">in?</span><span class="tok-punct">(</span>range<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/range/#type-range"><span class="tok-type">Range</span></a><span class="tok-op">&lt;</span><a class="xref" href="#make-char"><span class="tok-type">Char</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> if the character falls within the given range (inclusive).</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>range</code></dt><dd></dd></div>
+</dl>
+<h5>Examples</h5>
+<pre class="code"><code>'b'<span class="tok-op">.</span><span class="tok-method">in?</span><span class="tok-punct">(</span>'a'<span class="tok-op">.</span><span class="tok-op">.</span>'z'<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span>
+'<span class="tok-type">B</span>'<span class="tok-op">.</span><span class="tok-method">in?</span><span class="tok-punct">(</span>'a'<span class="tok-op">.</span><span class="tok-op">.</span>'z'<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="module-string">
+<h2><span class="kind kind-module">module</span> <code>String</code></h2>
+<div class="functions">
+<div class="fn" id="function-string-fromcodepoint">
+<h3><a class="self" href="#function-string-fromcodepoint"><code>fromCodepoint</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">fromCodepoint</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></code></pre>
+<p>Constructs a one-codepoint UTF-8 string. Surrogates and values outside the Unicode scalar range return None.</p>
+
+</div>
+<div class="fn" id="function-string-frombytes">
+<h3><a class="self" href="#function-string-frombytes"><code>fromBytes</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">fromBytes</span><span class="tok-punct">(</span>values<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">Byte</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></code></pre>
+<p>Rebuilds a String from its UTF-8 bytes — the inverse of <code>bytes</code>. A String is TEXT, so bytes outside 0..255 or a malformed encoding return None rather than a string that would decode to replacement characters.</p>
+<pre class="code"><code><span class="tok-type">String</span><span class="tok-op">.</span><span class="tok-method">fromBytes</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">104</span><span class="tok-punct">,</span> <span class="tok-number">105</span><span class="tok-punct">]</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; Just(&quot;hi&quot;)</span>
+<span class="tok-type">String</span><span class="tok-op">.</span><span class="tok-method">fromBytes</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">195</span><span class="tok-punct">,</span> <span class="tok-number">169</span><span class="tok-punct">]</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; Just(&quot;é&quot;)</span>
+<span class="tok-type">String</span><span class="tok-op">.</span><span class="tok-method">fromBytes</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">255</span><span class="tok-punct">]</span><span class="tok-punct">)</span>         <span class="tok-comment"># =&gt; None</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="make-tuple">
+<h2><span class="kind kind-type">type</span> <code>Tuple</code></h2>
+
+<div class="functions">
+<div class="fn" id="tuple-items">
+<h3><a class="self" href="#tuple-items"><code>items</code></a></h3>
+<pre class="code sig"><code>items <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">Any</span><span class="tok-punct">]</span></code></pre>
+<p>Returns the tuple's elements as a list.</p>
+<p>A tuple is not a list — its arity is part of its type — so the List methods do not apply to it. This is the explicit conversion.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>   <span class="tok-comment"># =&gt; [1, &quot;a&quot;]</span></code></pre>
+
+</div>
+</div>
+</section>

@@ -1,0 +1,30 @@
+---
+package: prelude
+version: "0.4.0-alpha.2"
+source: prelude.kex
+title: Prelude
+entities:
+
+---
+
+# Prelude
+
+The prelude is the part of the standard library every Kex file can see without asking for it. The modules listed below need no import — `List`, `Map`, `String`, `IO` and the rest are simply there, and so are the traits that make ordinary syntax work on your own types (`Enumerable` behind `.map`, `Truthyable` behind `if`, `Errorable` behind `.try`).
+
+What is NOT here is deliberate, for either of two reasons.
+
+A library that reaches outside the program — the filesystem (`FS`), regular expressions (`Regex`), JSON (`JSON`), the parser combinators (`Parsing`) — stays one `using` away, so a file's imports say what it touches.
+
+So does a library most files simply do not need, however pure it is: bit twiddling (`Bits`), sets and other containers (`Data.Set`), hashing (`Digest`), command lines (`OptionParser`), the sandboxed evaluator (`Evaluator`). The prelude is a global scope, and every name in it is a name every program has to route around — so the bar is "nearly every file wants this", not "this is useful".
+
+```kex
+using FS
+
+main do
+  IO.printLine(FS.File.read("config.txt").or(""))   # IO is free, FS is asked for
+end
+```
+
+Keep this file declarative: each bare `using` names a sibling stdlib source file, and the toolchain expands them in order when it builds or loads the prelude.
+
+

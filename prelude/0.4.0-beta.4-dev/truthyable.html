@@ -1,0 +1,174 @@
+<section class="entity" id="trait-truthyable">
+<h2><span class="kind kind-trait">trait</span> <code>Truthyable</code></h2>
+<p><a class="xref" href="#trait-truthyable"><code>Truthyable</code></a>: what counts as true when a value is used as a condition.</p>
+<p>The rule is Crystal's, and it is short: only <code>false</code>, <code>None</code> and <code>()</code> are falsy. Everything else is truthy, including <code>0</code>, <code>&quot;&quot;</code> and <code>[]</code>, which some languages treat as false and Kex deliberately does not.</p>
+<pre class="code"><code><span class="tok-number">0</span><span class="tok-op">.</span><span class="tok-method">truthy?</span>       <span class="tok-comment"># =&gt; true</span>
+<span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">truthy?</span>      <span class="tok-comment"># =&gt; true</span>
+<span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">truthy?</span>      <span class="tok-comment"># =&gt; true</span>
+<span class="tok-bool">None</span><span class="tok-op">.</span><span class="tok-method">truthy?</span>    <span class="tok-comment"># =&gt; false</span>
+<span class="tok-bool">false</span><span class="tok-op">.</span><span class="tok-method">truthy?</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+<p>When you want the &quot;is there anything here&quot; question instead, that is <a class="xref" href="/prelude/0.4.0-beta.4-dev/blankable/#trait-blankable"><code>Blankable</code></a>'s <code>blank?</code> / <code>present?</code>.</p>
+<p>There is no NaN to consider: a float operation that would produce one raises instead, matching BEAM (see nonFiniteFloatError in src/interpreter/value.cxx).</p>
+<p class="implements">Implemented by <a class="xref" href="#make-bool"><code>Bool</code></a>, <a class="xref" href="#make-integer"><code>Integer</code></a>, <a class="xref" href="#make-float"><code>Float</code></a>, <a class="xref" href="#make-string"><code>String</code></a>, <a class="xref" href="#make-optional"><code>Optional&lt;X&gt;</code></a>, <a class="xref" href="#make-list"><code>[X]</code></a>, <a class="xref" href="#make-map"><code>Map&lt;K, V&gt;</code></a>.</p>
+<h3>Required methods</h3>
+<p class="group-note">An implementor writes these.</p>
+
+<div class="functions">
+<div class="fn" id="truthyable-truthy?">
+<h4><a class="self" href="#truthyable-truthy?"><code>truthy?</code></a></h4>
+<pre class="code sig"><code>truthy? <span class="tok-op">:</span> <a class="xref" href="#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the value counts as true in a condition.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> unless the value is <code>false</code>, <code>None</code> or <code>()</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-method">truthy?</span>        <span class="tok-comment"># =&gt; true</span>
+<span class="tok-bool">None</span><span class="tok-op">.</span><span class="tok-method">truthy?</span>     <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+</div>
+
+</section>
+<section class="entity" id="make-bool">
+<h2><span class="kind kind-type">type</span> <code>Bool</code></h2>
+<p class="implements">Implements <a class="xref" href="/prelude/0.4.0-beta.4-dev/blankable/#trait-blankable"><code>Blankable</code></a>, <a class="xref" href="#trait-truthyable"><code>Truthyable</code></a>.</p>
+
+<div class="functions">
+<div class="fn" id="bool-truthy?">
+<h3><a class="self" href="#bool-truthy?"><code>truthy?</code></a> <a class="tag-trait" href="#truthyable-truthy?" title="Implements Truthyable.truthy?">Truthyable</a></h3>
+<pre class="code sig"><code>truthy? <span class="tok-op">:</span> <a class="xref" href="#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns the boolean itself.</p>
+<p class="returns"><strong>Returns</strong> the value</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-bool">true</span><span class="tok-op">.</span><span class="tok-method">truthy?</span>    <span class="tok-comment"># =&gt; true</span>
+<span class="tok-bool">false</span><span class="tok-op">.</span><span class="tok-method">truthy?</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="bool-not">
+<h3><a class="self" href="#bool-not"><code>not</code></a></h3>
+<pre class="code sig"><code><span class="tok-keyword">not</span> <span class="tok-op">:</span> <a class="xref" href="#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns the negation of this boolean.</p>
+<p><code>!flag</code> says the same thing, and is the spelling to reach for when the value is already to hand. This one exists for the position <code>!</code> cannot take: the end of a chain, where what is being negated is whatever the chain just produced. <code>falsy?</code> answers the same question for any <a class="xref" href="#trait-truthyable"><code>Truthyable</code></a> value; <code>not</code> is the one that both takes and answers a <a class="xref" href="#make-bool"><code>Bool</code></a>.</p>
+<p class="returns"><strong>Returns</strong> <code>false</code> for <code>true</code>, and <code>true</code> for <code>false</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-bool">true</span><span class="tok-op">.</span><span class="tok-keyword">not</span>    <span class="tok-comment"># =&gt; false</span>
+<span class="tok-bool">false</span><span class="tok-op">.</span><span class="tok-keyword">not</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<p class="caption"><em>At the end of a chain</em></p>
+<pre class="code"><code>book<span class="tok-op">.</span><span class="tok-method">borrowed?</span><span class="tok-op">.</span><span class="tok-keyword">not</span></code></pre>
+
+</div>
+</div><h3>Defined in other modules</h3>
+<dl class="params elsewhere">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/blankable/#make-bool">Blankable</a></dt><dd><a class="xref" href="/prelude/0.4.0-beta.4-dev/blankable/#bool-blank?"><code>blank?</code></a></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="make-integer">
+<h2><span class="kind kind-make">extends</span> <code>Integer</code></h2>
+<p class="home-note">More methods of <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><code>Integer</code></a>, added by this module.</p>
+<p class="implements">Implements <a class="xref" href="#trait-truthyable"><code>Truthyable</code></a>.</p>
+
+<div class="functions">
+<div class="fn" id="integer-truthy?">
+<h3><a class="self" href="#integer-truthy?"><code>truthy?</code></a> <a class="tag-trait" href="#truthyable-truthy?" title="Implements Truthyable.truthy?">Truthyable</a></h3>
+<pre class="code sig"><code>truthy? <span class="tok-op">:</span> <a class="xref" href="#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Always <code>true</code>, including for zero.</p>
+<p>Zero is a number, not an absence. Compare it explicitly when zero means something: <code>count == 0</code>.</p>
+<p class="returns"><strong>Returns</strong> always <code>true</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">0</span><span class="tok-op">.</span><span class="tok-method">truthy?</span>    <span class="tok-comment"># =&gt; true</span>
+<span class="tok-number">42</span><span class="tok-op">.</span><span class="tok-method">truthy?</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="make-float">
+<h2><span class="kind kind-make">extends</span> <code>Float</code></h2>
+<p class="home-note">More methods of <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-float"><code>Float</code></a>, added by this module.</p>
+<p class="implements">Implements <a class="xref" href="#trait-truthyable"><code>Truthyable</code></a>.</p>
+
+<div class="functions">
+<div class="fn" id="float-truthy?">
+<h3><a class="self" href="#float-truthy?"><code>truthy?</code></a> <a class="tag-trait" href="#truthyable-truthy?" title="Implements Truthyable.truthy?">Truthyable</a></h3>
+<pre class="code sig"><code>truthy? <span class="tok-op">:</span> <a class="xref" href="#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Always <code>true</code>, including for zero.</p>
+<p class="returns"><strong>Returns</strong> always <code>true</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">0.0</span><span class="tok-op">.</span><span class="tok-method">truthy?</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="make-string">
+<h2><span class="kind kind-make">extends</span> <code>String</code></h2>
+<p class="home-note">More methods of <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><code>String</code></a>, added by this module.</p>
+<p class="implements">Implements <a class="xref" href="#trait-truthyable"><code>Truthyable</code></a>.</p>
+
+<div class="functions">
+<div class="fn" id="string-truthy?">
+<h3><a class="self" href="#string-truthy?"><code>truthy?</code></a> <a class="tag-trait" href="#truthyable-truthy?" title="Implements Truthyable.truthy?">Truthyable</a></h3>
+<pre class="code sig"><code>truthy? <span class="tok-op">:</span> <a class="xref" href="#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Always <code>true</code>, including for the empty string.</p>
+<p>Use <code>blank?</code> from <a class="xref" href="/prelude/0.4.0-beta.4-dev/blankable/#trait-blankable"><code>Blankable</code></a> when an empty or whitespace-only string should count as nothing.</p>
+<p class="returns"><strong>Returns</strong> always <code>true</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">truthy?</span>      <span class="tok-comment"># =&gt; true</span>
+<span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">blank?</span>       <span class="tok-comment"># =&gt; true   (the question usually meant)</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="make-optional">
+<h2><span class="kind kind-make">extends</span> <code>Optional&lt;X&gt;</code></h2>
+<p class="home-note">More methods of <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-optional"><code>Optional</code></a>, added by this module.</p>
+<p class="implements">Implements <a class="xref" href="#trait-truthyable"><code>Truthyable</code></a>.</p>
+
+<div class="functions">
+<div class="fn" id="optional-truthy?">
+<h3><a class="self" href="#optional-truthy?"><code>truthy?</code></a> <a class="tag-trait" href="#truthyable-truthy?" title="Implements Truthyable.truthy?">Truthyable</a></h3>
+<pre class="code sig"><code>truthy? <span class="tok-op">:</span> <a class="xref" href="#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> for a <code>Just</code> and <code>false</code> for <code>None</code>.</p>
+<p>The one type where truthiness is genuinely about presence, which is what makes an optional usable directly as a condition.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> when a value is present</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">truthy?</span>    <span class="tok-comment"># =&gt; true</span>
+<span class="tok-bool">None</span><span class="tok-op">.</span><span class="tok-method">truthy?</span>       <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="make-list">
+<h2><span class="kind kind-make">extends</span> <code>[X]</code></h2>
+<p class="home-note">More methods of <a class="xref" href="/prelude/0.4.0-beta.4-dev/list/#type-list"><code>List</code></a>, added by this module.</p>
+<p class="implements">Implements <a class="xref" href="#trait-truthyable"><code>Truthyable</code></a>.</p>
+
+<div class="functions">
+<div class="fn" id="list-truthy?">
+<h3><a class="self" href="#list-truthy?"><code>truthy?</code></a> <a class="tag-trait" href="#truthyable-truthy?" title="Implements Truthyable.truthy?">Truthyable</a></h3>
+<pre class="code sig"><code>truthy? <span class="tok-op">:</span> <a class="xref" href="#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Always <code>true</code>, including for the empty list.</p>
+<p>Use <code>empty?</code> or <code>blank?</code> when an empty list should count as nothing.</p>
+<p class="returns"><strong>Returns</strong> always <code>true</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">truthy?</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">blank?</span>    <span class="tok-comment"># =&gt; true   (the question usually meant)</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="make-map">
+<h2><span class="kind kind-make">extends</span> <code>Map&lt;K, V&gt;</code></h2>
+<p class="home-note">More methods of <a class="xref" href="/prelude/0.4.0-beta.4-dev/map/#type-map"><code>Map</code></a>, added by this module.</p>
+<p class="implements">Implements <a class="xref" href="#trait-truthyable"><code>Truthyable</code></a>.</p>
+
+<div class="functions">
+<div class="fn" id="map-truthy?">
+<h3><a class="self" href="#map-truthy?"><code>truthy?</code></a> <a class="tag-trait" href="#truthyable-truthy?" title="Implements Truthyable.truthy?">Truthyable</a></h3>
+<pre class="code sig"><code>truthy? <span class="tok-op">:</span> <a class="xref" href="#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Always <code>true</code>, including for the empty map.</p>
+<p class="returns"><strong>Returns</strong> always <code>true</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">{</span><span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">truthy?</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-punct">{</span><span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">blank?</span>    <span class="tok-comment"># =&gt; true   (the question usually meant)</span></code></pre>
+
+</div>
+</div>
+</section>

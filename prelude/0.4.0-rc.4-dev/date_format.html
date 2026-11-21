@@ -1,0 +1,179 @@
+<div class="intro">
+<p>Writing dates, times of day and instants by a CLDR pattern: the <code>DateFormat</code> record and module, and <code>to(String, format)</code> on <a class="xref" href="/prelude/0.4.0-rc.4-dev/date/#record-date"><code>Date</code></a>, <a class="xref" href="/prelude/0.4.0-rc.4-dev/time/#record-time"><code>Time</code></a> and <a class="xref" href="/prelude/0.4.0-rc.4-dev/date_time/#record-datetime"><code>DateTime</code></a>.</p>
+</div>
+<section class="entity" id="record-dateformat">
+<h2><span class="kind kind-record">record</span> <code>DateFormat</code> <a class="permalink" href="#record-dateformat" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>How <code>to(String, format)</code> writes a date, a time of day or an instant: a CLDR pattern such as <code>&quot;yyyy-MM-dd HH:mm&quot;</code>, described at <code>Date.format</code>. Build one with the <code>Date.format</code> tagged literal, or with <code>DateFormat.parse</code>, which says where a pattern known only at run time goes wrong.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>pattern</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string">String</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="module-dateformat">
+<h2><span class="kind kind-module">module</span> <code>DateFormat</code> <a class="permalink" href="#module-dateformat" title="Copy link" aria-label="Copy link">#</a></h2>
+<div class="functions">
+<div class="fn" id="function-dateformat-parse">
+<div class="fn-head">
+<h3><a class="self" href="#function-dateformat-parse"><code>parse</code></a> <a class="permalink" href="#function-dateformat-parse" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parse</span><span class="tok-punct">(</span>pattern<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">DateFormat</span><span class="tok-punct">,</span> <span class="tok-type">ParseError</span><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Checks a pattern known only at run time. <code>Date.format</code> describes the patterns.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>pattern</code></dt><dd>the pattern</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the format, or where the pattern goes wrong</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">DateFormat</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">yyyy-MM-dd</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(DateFormat { pattern: &quot;yyyy-MM-dd&quot; })</span>
+<span class="tok-type">DateFormat</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">yyyy-QQ</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; Error(ParseError { position: 5, ... })</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-dateformat-pieces">
+<div class="fn-head">
+<h3><a class="self" href="#function-dateformat-pieces"><code>pieces</code></a> <a class="permalink" href="#function-dateformat-pieces" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">pieces</span><span class="tok-punct">(</span>pattern<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-punct">[</span><a class="xref" href="#type-dateformat-piece"><span class="tok-type">Piece</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Splits a pattern into its fields and its literal text. Otherwise the index of its first problem, and what that problem is.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>pattern</code></dt><dd>the pattern</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the pieces, or the problem</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">DateFormat</span><span class="tok-op">.</span><span class="tok-method">pieces</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">d MMM</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok([PatternField('d', 1), PatternText(&quot; &quot;), PatternField('M', 3)])</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-dateformat-renderparts">
+<div class="fn-head">
+<h3><a class="self" href="#function-dateformat-renderparts"><code>renderParts</code></a> <a class="permalink" href="#function-dateformat-renderparts" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">renderParts</span><span class="tok-punct">(</span>format<span class="tok-op">:</span> <span class="tok-type">DateFormat</span><span class="tok-punct">,</span> date<span class="tok-op">:</span> <span class="tok-type">Date?</span><span class="tok-punct">,</span> time<span class="tok-op">:</span> <span class="tok-type">Time?</span><span class="tok-punct">,</span> offset<span class="tok-op">:</span> <span class="tok-type">Duration?</span><span class="tok-punct">,</span> culture<span class="tok-op">:</span> <span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-type">Culture</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></span></code></pre>
+</div>
+<p>Writes <code>date</code>, <code>time</code> and <code>offset</code> (whichever the value has) by the pieces of a pattern, with <code>culture</code>'s names. <code>None</code> when the pattern asks for a field the value does not have, such as an hour of a <a class="xref" href="/prelude/0.4.0-rc.4-dev/date/#record-date"><code>Date</code></a>.</p>
+<p>The <code>to(String, format)</code> functions on <a class="xref" href="/prelude/0.4.0-rc.4-dev/date/#record-date"><code>Date</code></a>, <a class="xref" href="/prelude/0.4.0-rc.4-dev/time/#record-time"><code>Time</code></a> and <a class="xref" href="/prelude/0.4.0-rc.4-dev/date_time/#record-datetime"><code>DateTime</code></a> are the way to reach this.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>format</code></dt><dd>the pattern</dd></div>
+<div class="param"><dt><code>date</code></dt><dd>the calendar date, when the value has one</dd></div>
+<div class="param"><dt><code>time</code></dt><dd>the time of day, when the value has one</dd></div>
+<div class="param"><dt><code>offset</code></dt><dd>the offset from UTC, when the value has one</dd></div>
+<div class="param"><dt><code>culture</code></dt><dd>where month, weekday and day-period names come from</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the text, or <code>None</code></p>
+
+</div>
+<div class="fn" id="function-dateformat-datelayout">
+<div class="fn-head">
+<h3><a class="self" href="#function-dateformat-datelayout"><code>dateLayout</code></a> <a class="permalink" href="#function-dateformat-datelayout" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">dateLayout</span><span class="tok-punct">(</span>culture<span class="tok-op">:</span> <span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-type">Culture</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>The pattern a culture writes its dates in: year, month and day in its order, joined by its date separator. ISO order without a time section.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>culture</code></dt><dd>the culture</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the pattern, such as <code>&quot;dd.MM.yyyy&quot;</code></p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">DateFormat</span><span class="tok-op">.</span><span class="tok-method">dateLayout</span><span class="tok-punct">(</span><span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">DE_DE</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-type">DEFAULT</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;dd.MM.yyyy&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-dateformat-timelayout">
+<div class="fn-head">
+<h3><a class="self" href="#function-dateformat-timelayout"><code>timeLayout</code></a> <a class="permalink" href="#function-dateformat-timelayout" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">timeLayout</span><span class="tok-punct">(</span>culture<span class="tok-op">:</span> <span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-type">Culture</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>The pattern a culture writes a time of day in: hours, minutes and seconds joined by its time separator, on a 12-hour clock with a day period where the culture reads time that way.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>culture</code></dt><dd>the culture</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the pattern, such as <code>&quot;HH:mm:ss&quot;</code> or <code>&quot;h:mm:ss a&quot;</code></p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">DateFormat</span><span class="tok-op">.</span><span class="tok-method">timeLayout</span><span class="tok-punct">(</span><span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">EN_US</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-type">DEFAULT</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;h:mm:ss a&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+<section class="entity" id="type-dateformat-piece">
+<h2><span class="kind kind-type">type</span> <code>Piece</code> <a class="permalink" href="#type-dateformat-piece" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>One piece of a pattern: a field letter written <code>width</code> times, or text written as it stands.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>PatternField(Char, Integer)</code></li>
+<li><code>PatternText(String)</code></li>
+</ul>
+
+</section>
+<section class="entity" id="make-date">
+<h2><span class="kind kind-make">extends</span> <code>Date</code> <a class="permalink" href="#make-date" title="Copy link" aria-label="Copy link">#</a></h2>
+<p class="home-note">More functions for <a class="xref" href="/prelude/0.4.0-rc.4-dev/date/#record-date"><code>Date</code></a>, added by this module.</p>
+
+<div class="functions">
+<div class="fn" id="date-to">
+<div class="fn-head">
+<h3><a class="self" href="#date-to"><code>to</code></a> <a class="permalink" href="#date-to" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">to</span><span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/type/#record-type"><span class="tok-type">Type</span></a><span class="tok-punct">,</span> format<span class="tok-op">:</span> <span class="tok-type">DateFormat</span><span class="tok-punct">,</span> culture<span class="tok-op">:</span> <span class="tok-type">Culture</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></span></code></pre>
+</div>
+<p>Writes the date by a CLDR pattern, with English month and weekday names. Patterns are described at <code>Date.format</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>String</code></dt><dd>the target type</dd></div>
+<div class="param"><dt><code>format</code></dt><dd>the pattern</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the text, or <code>None</code> when the pattern asks for a time field, which a date does not have</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">11</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">format</span>`yyyy<span class="tok-op">-</span><span class="tok-type">MM</span><span class="tok-op">-</span>dd`<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(&quot;2026-11-07&quot;)</span>
+<span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">2026</span><span class="tok-punct">,</span> <span class="tok-number">11</span><span class="tok-punct">,</span> <span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">format</span>`<span class="tok-type">EEEE</span><span class="tok-punct">,</span> d <span class="tok-type">MMMM</span> yyyy`<span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; Just(&quot;Saturday, 7 November 2026&quot;)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+<section class="entity" id="make-time">
+<h2><span class="kind kind-make">extends</span> <code>Time</code> <a class="permalink" href="#make-time" title="Copy link" aria-label="Copy link">#</a></h2>
+<p class="home-note">More functions for <a class="xref" href="/prelude/0.4.0-rc.4-dev/time/#record-time"><code>Time</code></a>, added by this module.</p>
+
+<div class="functions">
+<div class="fn" id="time-to">
+<div class="fn-head">
+<h3><a class="self" href="#time-to"><code>to</code></a> <a class="permalink" href="#time-to" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">to</span><span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/type/#record-type"><span class="tok-type">Type</span></a><span class="tok-punct">,</span> format<span class="tok-op">:</span> <span class="tok-type">DateFormat</span><span class="tok-punct">,</span> culture<span class="tok-op">:</span> <span class="tok-type">Culture</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></span></code></pre>
+</div>
+<p>Writes the time of day by a CLDR pattern. Patterns are described at <code>Date.format</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>String</code></dt><dd>the target type</dd></div>
+<div class="param"><dt><code>format</code></dt><dd>the pattern</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the text, or <code>None</code> when the pattern asks for a date or an offset field, which a time of day does not have</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">format</span>`<span class="tok-type">HH</span><span class="tok-op">:</span>mm`<span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; Just(&quot;14:03&quot;)</span>
+<span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-number">14</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">format</span>`h<span class="tok-op">:</span>mm a`<span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; Just(&quot;2:03 PM&quot;)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+<section class="entity" id="make-datetime">
+<h2><span class="kind kind-make">extends</span> <code>DateTime</code> <a class="permalink" href="#make-datetime" title="Copy link" aria-label="Copy link">#</a></h2>
+<p class="home-note">More functions for <a class="xref" href="/prelude/0.4.0-rc.4-dev/date_time/#record-datetime"><code>DateTime</code></a>, added by this module.</p>
+
+<div class="functions">
+<div class="fn" id="datetime-to">
+<div class="fn-head">
+<h3><a class="self" href="#datetime-to"><code>to</code></a> <a class="permalink" href="#datetime-to" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">to</span><span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/type/#record-type"><span class="tok-type">Type</span></a><span class="tok-punct">,</span> format<span class="tok-op">:</span> <span class="tok-type">DateFormat</span><span class="tok-punct">,</span> culture<span class="tok-op">:</span> <span class="tok-type">Culture</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></span></code></pre>
+</div>
+<p>Writes the instant by a CLDR pattern, as read at its own offset. Patterns are described at <code>Date.format</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>String</code></dt><dd>the target type</dd></div>
+<div class="param"><dt><code>format</code></dt><dd>the pattern</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the text, or <code>None</code> for a pattern that is not valid</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30T14:03:00+02:00</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-punct">,</span> <span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">format</span>`yyyy<span class="tok-op">-</span><span class="tok-type">MM</span><span class="tok-op">-</span>dd <span class="tok-type">HH</span><span class="tok-op">:</span>mm <span class="tok-type">XXX</span>`<span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; Just(&quot;2026-07-30 14:03 +02:00&quot;)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
