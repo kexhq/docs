@@ -19,7 +19,7 @@ Serves a generated output directory over HTTP. Tey runs on the BEAM, so Net.HTTP
 serveCommand(parsed: ParsedOptions) -> Integer
 ```
 
-### `routesFor` (foul)
+### `routesFor`
 
 ```kex
 routesFor(prefix: String, name: String) -> [String]
@@ -41,7 +41,7 @@ serveFile(filePath: String, _request: Request<Binary>, _context: Context) -> Res
 
 A route handler once `filePath` is applied: `~serveFile(path)`. Reads the file as bytes, not text: the site ships images and fonts beside its HTML, and decoding those as UTF-8 would turn them into a 404.
 
-### `contentTypeFor` (foul)
+### `contentTypeFor`
 
 ```kex
 contentTypeFor(path: String) -> String

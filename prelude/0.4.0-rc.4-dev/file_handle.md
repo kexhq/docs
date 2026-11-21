@@ -2,7 +2,7 @@
 package: prelude
 version: "0.4.0-rc.4-dev"
 source: file_handle.kex
-title: File_handle
+title: FileHandle
 entities:
   - { kind: type, name: "ReadError" }
   - { kind: type, name: "WriteError" }
@@ -19,7 +19,7 @@ entities:
   - { kind: make, name: "FileHandle<R, W>" }
 ---
 
-# File_handle
+# FileHandle
 
 ## type `ReadError`
 

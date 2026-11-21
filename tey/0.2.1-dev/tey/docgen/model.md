@@ -21,7 +21,7 @@ Extraction produces these records; Markdown, JSON and the search index are all d
 emptyDoc -> Doc
 ```
 
-### `kindOf` (foul)
+### `kindOf`
 
 ```kex
 kindOf(entity: Entity) -> String
@@ -29,7 +29,7 @@ kindOf(entity: Entity) -> String
 
 The kind label used in indexes and JSON for each entity variant.
 
-### `nameOf` (foul)
+### `nameOf`
 
 ```kex
 nameOf(entity: Entity) -> String
@@ -37,19 +37,19 @@ nameOf(entity: Entity) -> String
 
 The primary display name of an entity (a make's is its target type).
 
-### `qualifiedNameOf` (foul)
+### `qualifiedNameOf`
 
 ```kex
 qualifiedNameOf(entity: Entity) -> String
 ```
 
-### `lineOf` (foul)
+### `lineOf`
 
 ```kex
 lineOf(entity: Entity) -> Integer
 ```
 
-### `anchorOf` (foul)
+### `anchorOf`
 
 ```kex
 anchorOf(entity: Entity) -> String
@@ -57,7 +57,7 @@ anchorOf(entity: Entity) -> String
 
 The anchor id an entity's HTML section renders at. Lives here — not in the HTML renderer — because the cross-link index and the sidebar compute the same ids, and the HTML must match whatever they resolved to.
 
-### `anchorNameOf` (foul)
+### `anchorNameOf`
 
 ```kex
 anchorNameOf(entity: Entity) -> String
@@ -65,7 +65,7 @@ anchorNameOf(entity: Entity) -> String
 
 A make's anchor is keyed by its full target spelling (type params included), a module's by its qualified name — the section ids are derived from the same texts.
 
-### `memberAnchorOf` (foul)
+### `memberAnchorOf`
 
 ```kex
 memberAnchorOf(owner: String, name: String) -> String
@@ -73,7 +73,7 @@ memberAnchorOf(owner: String, name: String) -> String
 
 The anchor of a function documented inside a trait or make section: scoped by its owner, because `count` is a member of both `[X]` and `String`, and one page can hold several owners.
 
-### `ownerSlugOf` (foul)
+### `ownerSlugOf`
 
 ```kex
 ownerSlugOf(owner: String) -> String
@@ -81,13 +81,13 @@ ownerSlugOf(owner: String) -> String
 
 An owner spelled as a type: `[X]` -> "list", `[Number]` -> "list-number", `FileHandle<CanRead, W>` -> "filehandle-canread". Type variables (a lone capital, optionally numbered) say nothing about WHICH methods these are, so they are dropped rather than baked into every anchor.
 
-### `typeVariable?` (foul)
+### `typeVariable?`
 
 ```kex
 typeVariable?(word: String) -> Bool
 ```
 
-### `wordsOf` (foul)
+### `wordsOf`
 
 ```kex
 wordsOf(text: String) -> [String]
@@ -95,13 +95,13 @@ wordsOf(text: String) -> [String]
 
 Identifier-ish runs of a type text: letters, digits, `_`, `?`, `!`.
 
-### `wordSplit` (foul)
+### `wordSplit`
 
 ```kex
 wordSplit(rest: String, word: String, out: [String]) -> [String]
 ```
 
-### `slugOf` (foul)
+### `slugOf`
 
 ```kex
 slugOf(name: String) -> String
@@ -109,7 +109,7 @@ slugOf(name: String) -> String
 
 An id-safe spelling of a name: lower case, every run of punctuation one dash. `?` and `!` survive — they are part of Kex names (`empty?`) and legal in a fragment.
 
-### `operatorSlug` (foul)
+### `operatorSlug`
 
 ```kex
 operatorSlug(name: String) -> String
@@ -117,13 +117,13 @@ operatorSlug(name: String) -> String
 
 An operator method has no letters to slug: `+` is "op-plus", `<=>` is "op-lt-eq-gt" — distinct, stable and readable in a URL.
 
-### `operatorCharName` (foul)
+### `operatorCharName`
 
 ```kex
 operatorCharName(c: Char) -> String
 ```
 
-### `baseTypeOf` (foul)
+### `baseTypeOf`
 
 ```kex
 baseTypeOf(target: String) -> String

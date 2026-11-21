@@ -43,13 +43,13 @@ reportDocDrift(pages: [SourcePage]) -> ()
 
 A @return tag that names a different type than the signature declares is a doc comment that has drifted from its code (`min : X?` documented as returning `Number?`). The page shows the signature's type; this says where the tag disagrees so the comment can be fixed.
 
-### `normalizeType` (foul)
+### `normalizeType`
 
 ```kex
 normalizeType(text: String) -> String
 ```
 
-### `optString` (foul)
+### `optString`
 
 ```kex
 optString(value: String?) -> String
@@ -65,7 +65,7 @@ A source tree with a `prelude.kex` has a subset that is visible without an impor
 
 Returns (the file, the modules it makes visible, its opening comment).
 
-### `leadingComment` (foul)
+### `leadingComment`
 
 ```kex
 leadingComment(lines: [String]) -> String
@@ -73,13 +73,13 @@ leadingComment(lines: [String]) -> String
 
 The file's opening comment block, `#` markers stripped, ready for the same Rdoc parse every other doc comment goes through.
 
-### `commentBody` (foul)
+### `commentBody`
 
 ```kex
 commentBody(line: String) -> String
 ```
 
-### `fileHeader` (foul)
+### `fileHeader`
 
 ```kex
 fileHeader(lines: [String]) -> String
@@ -87,7 +87,7 @@ fileHeader(lines: [String]) -> String
 
 The file's opening comment, when it is its own block: a blank line after it, not a declaration. A comment that runs straight into a declaration is that declaration's doc, and the page gets no intro.
 
-### `usingName` (foul)
+### `usingName`
 
 ```kex
 usingName(line: String) -> String
@@ -153,7 +153,7 @@ writeHtml(pages: [SourcePage], versionDir: String, out: String, model: PackageMo
 
 HTML mirrors the Markdown layout: one page per source file, plus the version landing page, the site-root redirect and the shared stylesheet.
 
-### `dirNameOf` (foul)
+### `dirNameOf`
 
 ```kex
 dirNameOf(urlPath: String) -> String
@@ -173,7 +173,7 @@ ensureDirectory(path: String) -> ()
 writeIndexFiles(pages: [SourcePage], model: PackageModel, out: String) -> ()
 ```
 
-### `versionManifestJson` (foul)
+### `versionManifestJson`
 
 ```kex
 versionManifestJson(pages: [SourcePage], model: PackageModel) -> String
@@ -181,7 +181,7 @@ versionManifestJson(pages: [SourcePage], model: PackageModel) -> String
 
 One version's pages, with the package and version they belong to, so a reader of the file needs nothing but the file. Page paths stay relative to the version directory — the URL prefix is `<package>/<version>/`, and whoever assembles the site is the one that knows the site root.
 
-### `manifestJson` (foul)
+### `manifestJson`
 
 ```kex
 manifestJson(pages: [SourcePage]) -> String
@@ -195,7 +195,7 @@ accumulateVersions(out: String, model: PackageModel) -> [VersionEntry]
 
 The output directory is the published site, so a build must not clobber the versions other builds published: read what is there, upsert this (package, version), write the union back, newest first.
 
-### `upsertVersion` (foul)
+### `upsertVersion`
 
 ```kex
 upsertVersion(current: VersionEntry, existing: [VersionEntry]) -> [VersionEntry]
@@ -209,61 +209,61 @@ This build's entry first, the other packages' and versions' kept: the pure half 
 readVersionEntries(out: String) -> [VersionEntry]
 ```
 
-### `parseVersionEntry` (foul)
+### `parseVersionEntry`
 
 ```kex
 parseVersionEntry(v: Any) -> VersionEntry
 ```
 
-### `jsonText` (foul)
+### `jsonText`
 
 ```kex
 jsonText(value: Any?) -> String
 ```
 
-### `labelOrPackage` (foul)
+### `labelOrPackage`
 
 ```kex
 labelOrPackage(model: PackageModel) -> String
 ```
 
-### `versionsJson` (foul)
+### `versionsJson`
 
 ```kex
 versionsJson(entries: [VersionEntry]) -> String
 ```
 
-### `versionEntryValue` (foul)
+### `versionEntryValue`
 
 ```kex
 versionEntryValue(e: VersionEntry) -> Any
 ```
 
-### `llmsTxt` (foul)
+### `llmsTxt`
 
 ```kex
 llmsTxt(pages: [SourcePage], model: PackageModel) -> String
 ```
 
-### `llmsFullTxt` (foul)
+### `llmsFullTxt`
 
 ```kex
 llmsFullTxt(pages: [SourcePage], model: PackageModel) -> String
 ```
 
-### `robotsTxt` (foul)
+### `robotsTxt`
 
 ```kex
 robotsTxt(baseUrl: String) -> String
 ```
 
-### `sitemapXml` (foul)
+### `sitemapXml`
 
 ```kex
 sitemapXml(pages: [SourcePage], model: PackageModel) -> String
 ```
 
-### `normalizeBaseUrl` (foul)
+### `normalizeBaseUrl`
 
 ```kex
 normalizeBaseUrl(url: String) -> String

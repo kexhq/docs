@@ -29,13 +29,13 @@ proseCommand(parsed: ParsedOptions) -> Integer
 readPages(files: [String], source: String, accum: [ProsePage]) -> [ProsePage]
 ```
 
-### `pageOf` (foul)
+### `pageOf`
 
 ```kex
 pageOf(fileName: String, text: String) -> ProsePage
 ```
 
-### `stripSuffix` (foul)
+### `stripSuffix`
 
 ```kex
 stripSuffix(name: String, suffix: String) -> String
@@ -55,7 +55,7 @@ Both renderings, from the same parsed page: HTML for readers, Markdown for crawl
 writeProseLoop(pages: [ProsePage], index: Integer, versionDir: String, model: PackageModel) -> ()
 ```
 
-### `proseIndexHtml` (foul)
+### `proseIndexHtml`
 
 ```kex
 proseIndexHtml(pages: [ProsePage], model: PackageModel) -> String
@@ -63,13 +63,13 @@ proseIndexHtml(pages: [ProsePage], model: PackageModel) -> String
 
 The book's own spine: chapters in author order with their descriptions, not the module grid reference builds get. Deliberately separate from `versionIndexHtml` — `tey docs build` keeps documenting any package, and nothing about a book leaks into it.
 
-### `chapterItem` (foul)
+### `chapterItem`
 
 ```kex
 chapterItem(prose: ProsePage) -> String
 ```
 
-### `prevNextHtml` (foul)
+### `prevNextHtml`
 
 ```kex
 prevNextHtml(pages: [ProsePage], index: Integer) -> String
@@ -77,19 +77,19 @@ prevNextHtml(pages: [ProsePage], index: Integer) -> String
 
 Chapter footer: the siblings around this one, so the book reads forward as well as sideways. First and last chapters link one way only.
 
-### `prevLink` (foul)
+### `prevLink`
 
 ```kex
 prevLink(pages: [ProsePage], index: Integer, up: String) -> String
 ```
 
-### `nextLink` (foul)
+### `nextLink`
 
 ```kex
 nextLink(pages: [ProsePage], index: Integer, up: String) -> String
 ```
 
-### `chapterNav` (foul)
+### `chapterNav`
 
 ```kex
 chapterNav(prev: String, nextHtml: String) -> String

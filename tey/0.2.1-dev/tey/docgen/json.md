@@ -13,55 +13,55 @@ Model records → JSON artifacts. This is the single boundary where typed record
 
 ## module `Tey.Docgen.Json`
 
-### `modelJson` (foul)
+### `modelJson`
 
 ```kex
 modelJson(model: PackageModel) -> String
 ```
 
-### `moduleIndexValue` (foul)
+### `moduleIndexValue`
 
 ```kex
 moduleIndexValue(m: Tey.Docgen.Model.ModuleIndexEntry) -> Any
 ```
 
-### `linkValue` (foul)
+### `linkValue`
 
 ```kex
 linkValue(l: Tey.Docgen.Model.LinkEntry) -> Any
 ```
 
-### `labelOrPackage` (foul)
+### `labelOrPackage`
 
 ```kex
 labelOrPackage(model: PackageModel) -> String
 ```
 
-### `pageValue` (foul)
+### `pageValue`
 
 ```kex
 pageValue(page: SourcePage) -> Any
 ```
 
-### `entityValue` (foul)
+### `entityValue`
 
 ```kex
 entityValue(e: Entity) -> Any
 ```
 
-### `variantsValue` (foul)
+### `variantsValue`
 
 ```kex
 variantsValue(variants: [VariantEntry]?) -> Any
 ```
 
-### `fieldValue` (foul)
+### `fieldValue`
 
 ```kex
 fieldValue(f: FieldEntry) -> Any
 ```
 
-### `fieldValues` (foul)
+### `fieldValues`
 
 ```kex
 fieldValues(fields: [FieldEntry]) -> Any
@@ -69,49 +69,49 @@ fieldValues(fields: [FieldEntry]) -> Any
 
 A named helper so the lambda's element type comes from the [FieldEntry] parameter, not from the surrounding map literal's value type.
 
-### `functionValue` (foul)
+### `functionValue`
 
 ```kex
 functionValue(f: FunctionEntry) -> Any
 ```
 
-### `docValue` (foul)
+### `docValue`
 
 ```kex
 docValue(doc: Doc) -> Any
 ```
 
-### `returnsValue` (foul)
+### `returnsValue`
 
 ```kex
 returnsValue(doc: Doc) -> Any
 ```
 
-### `searchJson` (foul)
+### `searchJson`
 
 ```kex
 searchJson(model: PackageModel) -> String
 ```
 
-### `searchEntries` (foul)
+### `searchEntries`
 
 ```kex
 searchEntries(model: PackageModel) -> [SearchEntry]
 ```
 
-### `pageSearchEntries` (foul)
+### `pageSearchEntries`
 
 ```kex
 pageSearchEntries(page: SourcePage) -> [SearchEntry]
 ```
 
-### `entitySearchEntries` (foul)
+### `entitySearchEntries`
 
 ```kex
 entitySearchEntries(e: Entity, page: SourcePage) -> [SearchEntry]
 ```
 
-### `entityTypes` (foul)
+### `entityTypes`
 
 ```kex
 entityTypes(e: Entity) -> [String]
@@ -119,37 +119,37 @@ entityTypes(e: Entity) -> [String]
 
 The type names an entity is "about" — the search-by-type dimension. For a function that is its signature's types; for a record its field types; for a type its parents and variant fields; for a trait/make the types its methods mention; for a module the union of its children.
 
-### `variantFieldTypes` (foul)
+### `variantFieldTypes`
 
 ```kex
 variantFieldTypes(variants: [VariantEntry]?) -> [String]
 ```
 
-### `childSearchEntries` (foul)
+### `childSearchEntries`
 
 ```kex
 childSearchEntries(e: Entity, page: SourcePage) -> [SearchEntry]
 ```
 
-### `functionSearchEntry` (foul)
+### `functionSearchEntry`
 
 ```kex
 functionSearchEntry(f: FunctionEntry, page: SourcePage, owner: String) -> SearchEntry
 ```
 
-### `searchValue` (foul)
+### `searchValue`
 
 ```kex
 searchValue(entry: SearchEntry) -> Any
 ```
 
-### `entitySignatures` (foul)
+### `entitySignatures`
 
 ```kex
 entitySignatures(e: Entity) -> [String]
 ```
 
-### `entitySummary` (foul)
+### `entitySummary`
 
 ```kex
 entitySummary(e: Entity) -> String

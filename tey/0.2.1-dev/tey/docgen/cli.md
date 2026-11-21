@@ -58,7 +58,7 @@ printUsage -> Integer
 
 The generated help, then what a build leaves behind — the one part of this command's story that no option or subcommand declares.
 
-### `outputsHelp` (foul)
+### `outputsHelp`
 
 ```kex
 outputsHelp -> String

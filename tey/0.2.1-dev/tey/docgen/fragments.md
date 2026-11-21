@@ -39,7 +39,7 @@ write(pages: [SourcePage], versionDir: String, model: PackageModel) -> Integer
 writePage(page: SourcePage, versionDir: String, model: PackageModel) -> ()
 ```
 
-### `unitData` (foul)
+### `unitData`
 
 ```kex
 unitData(model: PackageModel, source: String, toc: [TocEntry]) -> Any
@@ -47,13 +47,13 @@ unitData(model: PackageModel, source: String, toc: [TocEntry]) -> Any
 
 Everything a theme might show beside the body: which unit and version this is (the header badge), where the source lives, and the page's sections for an "On this page" list.
 
-### `tocValue` (foul)
+### `tocValue`
 
 ```kex
 tocValue(t: TocEntry) -> Any
 ```
 
-### `tocHtml` (foul)
+### `tocHtml`
 
 ```kex
 tocHtml(toc: [TocEntry]) -> String
@@ -61,13 +61,13 @@ tocHtml(toc: [TocEntry]) -> String
 
 The rail as markup too, so a theme template can place it without walking JSON: a template language that sees the data as `Any` cannot iterate it. A page with a single section has nothing to navigate.
 
-### `tocClass` (foul)
+### `tocClass`
 
 ```kex
 tocClass(t: TocEntry) -> String
 ```
 
-### `unitRoot` (foul)
+### `unitRoot`
 
 ```kex
 unitRoot(model: PackageModel) -> String
@@ -75,13 +75,13 @@ unitRoot(model: PackageModel) -> String
 
 "/prelude/0.4.0/": where the unit is mounted.
 
-### `pageUrl` (foul)
+### `pageUrl`
 
 ```kex
 pageUrl(model: PackageModel, urlPath: String) -> String
 ```
 
-### `navTree` (foul)
+### `navTree`
 
 ```kex
 navTree(pages: [SourcePage], model: PackageModel) -> Any
@@ -89,13 +89,13 @@ navTree(pages: [SourcePage], model: PackageModel) -> Any
 
 The page tree, nested the way the standalone sidebar nests it: a module family (Net, Net.DNS, Net.HTTP) is one branch.
 
-### `navNode` (foul)
+### `navNode`
 
 ```kex
 navNode(page: SourcePage, pages: [SourcePage], model: PackageModel) -> Any
 ```
 
-### `tocOf` (foul)
+### `tocOf`
 
 ```kex
 tocOf(page: SourcePage, model: PackageModel) -> [TocEntry]
@@ -103,7 +103,7 @@ tocOf(page: SourcePage, model: PackageModel) -> [TocEntry]
 
 The sections a reader can jump to, in page order: each declaration with a section of its own, the functions and constants listed under it, and the declarations a module holds. The members are what make the rail worth having on the page of one long type: `List` is a single section fifty functions deep.
 
-### `tocAt` (foul)
+### `tocAt`
 
 ```kex
 tocAt(entities: [Entity], nested: Bool, page: SourcePage, model: PackageModel) -> [TocEntry]
@@ -117,7 +117,7 @@ The `kind` of a rail entry that is a member rather than a declaration.
 
 
 
-### `memberToc` (foul)
+### `memberToc`
 
 ```kex
 memberToc(e: Entity, entities: [Entity], model: PackageModel) -> [TocEntry]
@@ -125,25 +125,25 @@ memberToc(e: Entity, entities: [Entity], model: PackageModel) -> [TocEntry]
 
 What the section of `e` lists, under the anchors the renderer gives them: a type's functions come from the make blocks folded into it.
 
-### `functionToc` (foul)
+### `functionToc`
 
 ```kex
 functionToc(functions: [FunctionEntry], owner: String) -> [TocEntry]
 ```
 
-### `memberEntry` (foul)
+### `memberEntry`
 
 ```kex
 memberEntry(name: String, anchor: String) -> TocEntry
 ```
 
-### `tocTitle` (foul)
+### `tocTitle`
 
 ```kex
 tocTitle(e: Entity) -> String
 ```
 
-### `descriptionOf` (foul)
+### `descriptionOf`
 
 ```kex
 descriptionOf(page: SourcePage) -> String
@@ -151,7 +151,7 @@ descriptionOf(page: SourcePage) -> String
 
 One sentence for the page's <meta name="description">: the file's intro, else what its first declaration says, else its title.
 
-### `absolutize` (foul)
+### `absolutize`
 
 ```kex
 absolutize(html: String, model: PackageModel, urlPath: String) -> String
@@ -159,13 +159,13 @@ absolutize(html: String, model: PackageModel, urlPath: String) -> String
 
 Every relative href in a fragment, rewritten to a site path: from the page at `urlPath`, "../net.html#module-net" is "/prelude/0.4.0/net/#module-net" and "index.html" is "/prelude/0.4.0/". A fragment-only href ("#x"), an absolute one and an external URL stay as they are.
 
-### `sitePath` (foul)
+### `sitePath`
 
 ```kex
 sitePath(href: String, base: [String]) -> String
 ```
 
-### `normalize` (foul)
+### `normalize`
 
 ```kex
 normalize(base: [String], rel: [String]) -> [String]
