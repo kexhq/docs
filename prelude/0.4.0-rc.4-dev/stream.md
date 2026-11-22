@@ -154,7 +154,7 @@ _Multiples of three, formatted_
 
 ```kex
 Stream.from(1) { |n| n + 1 }
-  .filter { |n| n.modulo(3) == 0 }
+  .filter { |n| n.dividesBy?(3) }
   .map { |n| "#${n}" }
   .take(3)
 # => ["#3", "#6", "#9"]
