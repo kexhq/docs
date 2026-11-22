@@ -803,14 +803,6 @@ formatOffset(offset: Duration) -> String
 withNanosecond(moment: DateTime, nanosecond: Integer) -> DateTime
 ```
 
-### `floorDiv`
-
-```kex
-floorDiv(value: Integer, divisor: Integer) -> Integer
-```
-
-Kex's `/` truncates toward zero; instants before the epoch need the floor.
-
 ### `truncatedBy`
 
 ```kex
