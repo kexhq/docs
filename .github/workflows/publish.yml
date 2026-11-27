@@ -50,51 +50,21 @@ jobs:
           repository: Marqraft/cli
           path: .marqraft-cli
 
-      # The same toolchain Marqraft's own CI builds (Marqraft/cli,
-      # .github/workflows/ci.yml): Kex and Tey from kexhq/kex main, with a
-      # `tey` on PATH that forwards to the checkout's launcher. The released
-      # toolchains predate what Marqraft needs.
-      - name: Check out Kex
-        uses: actions/checkout@v4
-        with:
-          repository: kexhq/kex
-          ref: main
-          path: .kex-src
-
-      # Kex and Marqraft need OTP 27+ (Kex refuses to build on anything
-      # older), and ubuntu-latest's erlang-base is OTP 25. Installed before
-      # Kex so everything runs on one OTP.
+      # Kex and Tey from a pinned release: building Kex from kexhq/kex main
+      # took most of each run and broke the site whenever main moved. Bump
+      # KEX_VERSION together with Marqraft/cli's main.
+      # Kex needs OTP 27+, and ubuntu-latest's erlang-base is OTP 25.
       - uses: erlef/setup-beam@v1
         with:
           otp-version: "27"
 
-      - name: Install Kex build dependencies
+      - name: Install Kex and Tey
+        env:
+          KEX_VERSION: 0.4.0-rc.4
         run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake libgmp-dev libpcre2-dev libreadline-dev \
-            libssl-dev libboost-context-dev
-
-      # --parallel 1: an unbounded build OOM-kills the compiler on this
-      # runner (see Marqraft's CI).
-      - name: Build Kex and Tey
-        working-directory: .kex-src
-        run: |
-          cmake -B build -G "Unix Makefiles" -DKEX_BOOST_STATIC=ON
-          cmake --build build --parallel 1
-          make build-tey
-          make tey-run
-
-      - name: Put kex and tey on PATH
-        run: |
-          mkdir -p "$HOME/.local/bin"
-          cat > "$HOME/.local/bin/tey" <<WRAP
-          #!/bin/sh
-          export TEY_ERL="$(command -v erl)"
-          exec "$GITHUB_WORKSPACE/.kex-src/tey-run" "\$@"
-          WRAP
-          chmod +x "$HOME/.local/bin/tey"
-          ln -s "$GITHUB_WORKSPACE/.kex-src/build/kex" "$HOME/.local/bin/kex"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          curl -fsSL "https://raw.githubusercontent.com/kexhq/kex/v$KEX_VERSION/install.sh" | sh -s -- --kex "$KEX_VERSION"
+          echo "$HOME/.local/share/tey/dist/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/share/tey/bin" >> "$GITHUB_PATH"
 
       - name: Build marq
         working-directory: .marqraft-cli
