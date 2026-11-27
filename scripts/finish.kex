@@ -62,12 +62,12 @@ end
 
 foul authoredPages(site: String) -> [Page] do
   let root = FS.Path.join(site, "content")
-  return markdownFiles(root, "").flatMap { |file| authoredPage(site, FS.Path.join(root, file)) }.sort { |a, b| a.path < b.path }
+  return markdownFiles(root, "").into { |file| authoredPage(site, FS.Path.join(root, file)) }.sort { |a, b| a.path < b.path }
 end
 
 foul markdownFiles(dir: String, prefix: String) -> [String] do
   let names = FS.Directory.list(dir).or([]).sort
-  return names.flatMap { |name|
+  return names.into { |name|
     let rel = prefix.empty? then name else "${prefix}/${name}"
     let full = FS.Path.join(dir, name)
     FS.File.directory?(full) then markdownFiles(full, rel) else (name.endsWith?(".md") then [rel] else [])
@@ -104,8 +104,8 @@ end
 foul generatedUnits(site: String) -> [Unit] do
   let dir = FS.Path.join(site, "generated")
   let packages = FS.Directory.directories(dir).or([]).sort
-  return packages.flatMap { |package|
-    let units = FS.Directory.directories(FS.Path.join(dir, package)).or([]).sort.flatMap { |version|
+  return packages.into { |package|
+    let units = FS.Directory.directories(FS.Path.join(dir, package)).or([]).sort.into { |version|
       unitOf(FS.Path.join(FS.Path.join(dir, package), version))
     }
     let newest = units.map { |u| u.generatedAt }.reduce("", { |a, b| a > b then a else b })
@@ -119,18 +119,28 @@ foul unitOf(unitDir: String) -> [Unit] do
     Ok(body) => match JSON.parse(body) do
       Error(_) => []
       Ok(value) => do
-        let package = text(value["package"])
-        let version = text(value["version"])
-        let pages = match value["pages"] do
-          None => []
-          Just(items) => items.map { |item|
-            let path = text(item["path"])
-            Page { title: text(item["title"]), path: "/${package}/${version}/${path}/", markdown: FS.Path.join(unitDir, "${path}.md") }
+        let fields = object(value)
+        let package = text(fields.get("package"))
+        let version = text(fields.get("version"))
+        let pages = match fields.get("pages").or([]) do
+          items: [Any] => items.map { |item|
+            let entry = object(item)
+            let path = text(entry.get("path"))
+            Page { title: text(entry.get("title")), path: "/${package}/${version}/${path}/", markdown: FS.Path.join(unitDir, "${path}.md") }
           }
+          _ => []
         end
-        [Unit { label: text(value["label"]), version: version, generatedAt: text(value["generatedAt"]), listed: false, pages: pages }]
+        [Unit { label: text(fields.get("label")), version: version, generatedAt: text(fields.get("generatedAt")), listed: false, pages: pages }]
       end
     end
+  end
+end
+
+# A decoded JSON value is an `Any` until a type pattern narrows it.
+foul object(value: Any) -> {String: Any} do
+  match value do
+    fields: {String: Any} => fields
+    _ => {}
   end
 end
 
@@ -192,8 +202,8 @@ foul writeTwin(dist: String, page: Page) -> () do
 end
 
 foul llmsFull(site: String, guide: [Page], units: [Unit]) -> String do
-  let guideTexts = guide.flatMap { |p| bodyOf(p, true) }
-  let unitTexts = units.filter { |u| u.listed }.flatMap { |u| u.pages.flatMap { |p| bodyOf(p, false) } }
+  let guideTexts = guide.into { |p| bodyOf(p, true) }
+  let unitTexts = units.filter { |u| u.listed }.into { |u| u.pages.into { |p| bodyOf(p, false) } }
   return (guideTexts + unitTexts).join("\n\n---\n\n") + "\n"
 end
 
@@ -211,7 +221,7 @@ foul bodyOf(page: Page, authored: Bool) -> [String] do
 end
 
 foul sitemap(sections: [Section], baseUrl: String) -> String do
-  let urls = sections.flatMap { |s| s.pages }.map { |p| "  <url><loc>${baseUrl}${p.path}</loc></url>" }.join("\n")
+  let urls = sections.into { |s| s.pages }.map { |p| "  <url><loc>${baseUrl}${p.path}</loc></url>" }.join("\n")
   return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n${urls}\n</urlset>\n"
 end
 
