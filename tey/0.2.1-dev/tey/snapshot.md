@@ -17,7 +17,9 @@ entities:
 create(name: String, declaredPath: String, declaringRoot: String) -> Result<Tey.Lockfile.Dependency, String>
 ```
 
-Turns a path dependency into an immutable, content-addressed cache entry. The declared path remains in the lockfile for explanation; builds use the snapshot identified by `sha256`, never the live directory.
+Copies a path dependency into the cache as an immutable snapshot named by its content digest, and returns its lockfile entry.
+
+The lockfile keeps the declared path for reference, but builds use the snapshot named by `sha256`, never the live directory. Fails when the directory is missing, its `package.kex` cannot be read or names another package, or a symbolic link in it is broken or points outside it.
 
 ### `cachedPath` (foul)
 
@@ -25,11 +27,15 @@ Turns a path dependency into an immutable, content-addressed cache entry. The de
 cachedPath(dependency: Tey.Lockfile.Dependency) -> String
 ```
 
+Returns the cache directory of a dependency's snapshot.
+
 ### `verify` (foul)
 
 ```kex
 verify(dependency: Tey.Lockfile.Dependency) -> Result<String, String>
 ```
+
+Returns the snapshot directory of `dependency` after checking that it is in the cache and that its content still matches the locked `sha256`.
 
 ### `sourceFiles` (foul)
 
@@ -37,7 +43,7 @@ verify(dependency: Tey.Lockfile.Dependency) -> Result<String, String>
 sourceFiles(root: String) -> [String]
 ```
 
-The files a snapshot of `root` holds, relative to it: everything but VCS metadata, build output and `.teyignore` matches.
+Returns the files a snapshot of `root` holds, relative to it and sorted: everything except VCS metadata, build output, `package.local.kex`, `tey.lock` and paths matched by `.teyignore`.
 
 ### `contentDigest` (foul)
 
@@ -45,4 +51,4 @@ The files a snapshot of `root` holds, relative to it: everything but VCS metadat
 contentDigest(root: String) -> Result<String, String>
 ```
 
-The content digest a snapshot of `root` is published under.
+Returns the content digest a snapshot of `root` is published under.

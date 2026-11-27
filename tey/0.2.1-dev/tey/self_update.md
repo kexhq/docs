@@ -17,7 +17,7 @@ entities:
 currentPrefix -> String?
 ```
 
-Where this Tey is installed, or None when it cannot be told — outside an installed launcher (a source checkout, `erl` by hand) there is nothing safe to overwrite. `tey/bin/tey` exports TEY_EBIN before invoking the BEAM, so a released install always knows.
+Returns the prefix this Tey is installed under, or `None` when it is not running from an installed launcher (a source checkout, or `erl` started by hand), where there is nothing safe to overwrite. The `bin/tey` launcher exports `TEY_INSTALL_EBIN`, so a released install always knows.
 
 ### `installEbin` (foul)
 
@@ -25,7 +25,7 @@ Where this Tey is installed, or None when it cannot be told — outside an insta
 installEbin -> String?
 ```
 
-The launcher's own runtime directory. TEY_EBIN can instead name the Tey paired with the selected Kex (see `installPaired`), which is not an install to upgrade — TEY_INSTALL_EBIN always names the launcher's.
+Returns the launcher's own runtime directory, from `TEY_INSTALL_EBIN`, or from `TEY_EBIN` when that is unset. `TEY_EBIN` alone is not enough: it may name the Tey paired with the selected Kex (see `installPaired`), which is not the install to upgrade.
 
 ### `prefixOf`
 
@@ -33,7 +33,7 @@ The launcher's own runtime directory. TEY_EBIN can instead name the Tey paired w
 prefixOf(ebin: String) -> String?
 ```
 
-TEY_EBIN with the trailing `/lib/kex/tey/ebin` stripped. Anything else — unset, empty, a checkout's `tey/ebin` — is None: there is no install prefix to upgrade in place.
+Returns `ebin` with its trailing `/lib/kex/tey/ebin` removed. Any other path, such as a checkout's `tey/ebin`, gives `None`: there is no install prefix to upgrade in place.
 
 ### `homebrewManaged?`
 
@@ -41,7 +41,7 @@ TEY_EBIN with the trailing `/lib/kex/tey/ebin` stripped. Anything else — unset
 homebrewManaged?(prefix: String) -> Bool
 ```
 
-Whether this install belongs to Homebrew, whose keg bookkeeping Tey must not fight: that Tey upgrades with `brew upgrade tey`.
+Returns `true` when the install at `prefix` belongs to Homebrew, which upgrades it with `brew upgrade tey`.
 
 ### `manifestVersion`
 
@@ -49,7 +49,7 @@ Whether this install belongs to Homebrew, whose keg bookkeeping Tey must not fig
 manifestVersion(text: String) -> String?
 ```
 
-The `version("...")` line of a `package.kex` manifest, read as plain text. The manifest reader cannot be used here: it parses a LOCAL package through the selected compiler, and this text was just downloaded, not installed.
+Returns the version from the `version("...")` line of a `package.kex` manifest, read as plain text, or `None` when there is no valid one. The manifest reader does not fit here, since it compiles a local package and this text has only been downloaded.
 
 ### `compareVersions`
 
@@ -57,9 +57,9 @@ The `version("...")` line of a `package.kex` manifest, read as plain text. The m
 compareVersions(a: String, b: String) -> Ordering
 ```
 
-Ordering for two version strings, for the already-newest guard. Something unparsable compares as older: a hand-edited development version must never read as "newer than every release" and refuse its own upgrade.
+Compares two version strings, for the already-newest check. A version that does not parse compares as older, so a hand-edited development version is never treated as newer than every release and can still be upgraded.
 
-Written over `newer?` rather than `compare` on purpose: a trait method from another module's `make ..., implement: Comparable` does not dispatch to a custom record from outside that module on the BEAM backend, while a plain `let` like `newer?` calls anywhere.
+It is built on `newer?` and not `compare`: on the BEAM backend, a trait function from another module's `make ..., implement: Comparable` does not dispatch to a record from outside that module, while a plain `let` such as `newer?` can be called from anywhere.
 
 ### `carryBakedErlText`
 
@@ -67,7 +67,9 @@ Written over `newer?` rather than `compare` on purpose: a trait method from anot
 carryBakedErlText(oldLauncher: String, newLauncher: String) -> String
 ```
 
-A source install (`make -C tey install`) bakes an absolute `erl` into `bin/tey`; release archives bake a bare `erl` resolved from PATH. Upgrading must not silently move the former onto the latter, so the old absolute path is carried into the new launcher. Anything else (no line, a relative `erl`, the dev placeholder) leaves the new launcher exactly as published.
+Returns `newLauncher` with the absolute `erl` path of `oldLauncher` carried over.
+
+A source install (`make -C tey install`) writes an absolute `erl` path into `bin/tey`, while release archives use a bare `erl` found on `PATH`. An upgrade keeps the absolute path. In every other case (no `BAKED_ERL` line, a relative `erl`, the development placeholder) the new launcher is returned unchanged.
 
 ### `tagFor`
 
@@ -75,11 +77,11 @@ A source install (`make -C tey install`) bakes an absolute `erl` into `bin/tey`;
 tagFor(tags: [String], version: String) -> String?
 ```
 
-The tag naming a Kex version, resolved against a tag list read once — `Tey.Toolchain.releaseTag` answers the same question but re-lists the tags on every call, which a pinned-version scan cannot afford.
+Returns the tag in `tags` that names a Kex version, written with or without a leading `v`. Unlike `Tey.Toolchain.releaseTag`, it takes a tag list that was fetched once, which a scan over many versions needs.
 
 ### `firstSelfUpgrading` (constant)
 
-The oldest Tey with an `upgrade` command. Pinning an older one would strand the install — 0.2.0 cannot run `tey upgrade` to come back — so it is refused, with the installer as the deliberate way there.
+The oldest Tey with an `upgrade` command. Pinning an older one is refused, because that Tey could not run `tey upgrade` to come back; the installer is the way to get one.
 
 
 
@@ -89,7 +91,9 @@ The oldest Tey with an `upgrade` command. Pinning an older one would strand the 
 installedVersion(prefix: String) -> String
 ```
 
-The version of the Tey installed at `prefix`, which is not always the one running: with a Kex selected whose own Tey is unpacked beside it (see `installPaired`), the launcher runs that one instead. Comparing the running version against a release then answers "already the newest" while the install itself stays old. The installed launcher is asked directly, pointed at its own runtime; if that cannot be read, the running version is the answer — the behaviour before, and never a reason to downgrade.
+Returns the version of the Tey installed at `prefix`.
+
+That is not always the running Tey: when the selected Kex has its own Tey unpacked beside it (see `installPaired`), the launcher runs that one. Comparing the running version would then report the install as up to date while it stays old. So the installed launcher is asked directly, pointed at its own runtime. If its answer cannot be read, the running version is returned.
 
 ### `upgradeLatest` (foul)
 
@@ -97,7 +101,7 @@ The version of the Tey installed at `prefix`, which is not always the one runnin
 upgradeLatest(includePre: Bool) -> Result<UpgradeOutcome, String>
 ```
 
-`tey upgrade` — the newest released Tey: the one the newest Kex release's manifest declares. Stable Kex releases unless `includePre` (`--pre`), which is how a pre-release Tey is reached without knowing its number.
+Runs `tey upgrade`: installs the Tey declared by the newest Kex release's manifest. Only stable releases count unless `includePre` (`--pre`) is set, which reaches a pre-release Tey without knowing its number.
 
 ### `upgradePinned` (foul)
 
@@ -105,7 +109,7 @@ upgradeLatest(includePre: Bool) -> Result<UpgradeOutcome, String>
 upgradePinned(version: String) -> Result<UpgradeOutcome, String>
 ```
 
-`tey upgrade <version>` — exactly that Tey, from the newest release (stable first, then pre-releases) whose manifest declares it. An older version is allowed: pinning is explicit, and it is the way back from a bad release.
+Runs `tey upgrade <version>`: installs exactly that Tey, from the newest release whose manifest declares it, looking at stable releases first and then pre-releases. Older versions are allowed, which is the way back from a bad release, but not ones older than `firstSelfUpgrading`.
 
 ### `installPaired` (foul)
 
@@ -113,17 +117,17 @@ upgradePinned(version: String) -> Result<UpgradeOutcome, String>
 installPaired(kexVersion: String) -> Result<String?, String>
 ```
 
-The Tey a Kex release ships, unpacked beside that toolchain so `bin/tey` runs it whenever that Kex is selected: Kex and Tey are developed and released as a pair, and a pre-release is only tested properly as that pair. Nothing installed is replaced — not even a Homebrew keg — which is what makes this safe to do on every `tey kex install`.
+Unpacks the Tey that a Kex release ships beside that toolchain, so `bin/tey` runs it whenever that Kex is selected. Kex and Tey are released as a pair, and a pre-release is only tested as that pair. Nothing installed is replaced, not even a Homebrew keg, so `tey kex install` does this every time.
 
-The answer is the Tey version unpacked, or None when it was already there: tags do not move, so neither does what they carry.
+Returns the Tey version unpacked, or `None` when it was already there; a tag's contents never change.
 
 ## type `UpgradeOutcome`
 
-Upgrading Tey itself (`tey upgrade`), for installs that came from a release archive rather than a package manager — see `install.sh` at the repository root. A Homebrew-managed Tey is brew's to upgrade and is refused here.
+Upgrades Tey itself (`tey upgrade`) when it was installed from a release archive by `install.sh`. A Tey installed by Homebrew is refused; upgrade it with `brew upgrade tey`.
 
-Tey has its own version and its own cadence (`tey/package.kex`), so it cannot reuse the Kex tag list directly: the newest Tey is the one the newest Kex release's manifest declares. That manifest is read over plain HTTPS (raw.githubusercontent.com) with the same curl-then-wget idiom `Tey.Toolchain.download` already uses — no GitHub API, no rate limits, no clone. The archive itself is the `tey-<version>.tar.gz` the release workflow publishes beside the Kex archives, under the same tag.
+Tey has its own version number (`tey/package.kex`), so the newest Tey is the one declared by the newest Kex release's manifest. The manifest is fetched over HTTPS from raw.githubusercontent.com with curl, or wget when curl is missing, as `Tey.Toolchain.download` does; the GitHub API is not used, so there are no rate limits. The archive is the `tey-<version>.tar.gz` that the release workflow publishes under the same tag as the Kex archives.
 
-What `tey upgrade` found: either the version it installed and where, or why there was nothing to install.
+The result of `tey upgrade`: the version installed and where, or why nothing was installed.
 
 **Variants**
 

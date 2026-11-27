@@ -12,7 +12,9 @@ entities:
 
 ## module `Atom`
 
-Atoms are named values such as `:ok`, `:error`, and `:reset`. Use them for labels, statuses, and message tags. Atoms with the same name are equal; an atom and a string are different values.
+Named constants such as `:ok`, `:error` and `:reset`, used for labels, statuses and message tags.
+
+Atoms with the same name are equal, and an atom never equals a string.
 
 ```kex
 :ok == :ok                    # => true
@@ -20,7 +22,7 @@ Atoms are named values such as `:ok`, `:error`, and `:reset`. Use them for label
 :ok.string                    # => "ok"
 ```
 
-Write atoms with a leading colon. Node names can include `@`; use quotes for names containing spaces or punctuation:
+An atom is written with a leading colon. The name may include `@`, as node names do; quote a name that contains spaces or other punctuation:
 
 ```kex
 :app@localhost
@@ -31,12 +33,12 @@ Write atoms with a leading colon. Node names can include `@`; use quotes for nam
 To convert text to an atom:
 
 ```kex
-"hello".as(Atom)     # converts a string literal at compile time
-Atom.from("hello")  # creates or finds an atom at run time
-"hello".to(Atom)    # finds an existing atom: Just(:hello), or None
+"hello".as(Atom)    # a string literal, converted at compile time
+Atom.from("hello")  # creates the atom at run time if it does not exist
+"hello".to(Atom)    # Just(:hello) if the atom exists, otherwise None
 ```
 
-On the BEAM, atoms are never freed. Use `text.to(Atom)` for external input to avoid creating an unbounded number of atoms.
+On the BEAM atoms are never freed, so use `text.to(Atom)` for external input. The interpreter (`kex -R`) has no atom table, and there `to(Atom)` converts any string.
 
 ### `from`
 
@@ -46,7 +48,7 @@ from(text: String) -> Atom
 
 Returns the atom whose name is `text`.
 
-On the BEAM atoms are never freed, and a node holds at most about a million. Build atoms from a bounded set of names — node names, config keys — never from untrusted input; `text.to(Atom)` is the safe form for that, since it only finds atoms that already exist.
+The atom is created if it does not exist yet. On the BEAM atoms are never freed and a node holds at most about a million, so only build atoms from a bounded set of names, such as node names or configuration keys. For untrusted input use `text.to(Atom)`, which only finds existing atoms.
 
 **Parameters**
 
@@ -58,7 +60,7 @@ On the BEAM atoms are never freed, and a node holds at most about a million. Bui
 
 ```kex
 Atom.from("ok") == :ok                # => true
-Atom.from("app@${host}")              # => :"app@myhost"
+Atom.from("app@${host}")              # => :app@myhost
 ```
 
 ## type `Atom`
@@ -86,7 +88,9 @@ Returns the atom's name as a string, without the leading colon.
 to(String) -> String?
 ```
 
-Returns the atom's name as text, like `string`, through the universal conversion. The name, not the displayed form: `:ok` converts to `"ok"`, not `":ok"`, so `text.to(Atom)` and this are inverses.
+Returns the atom's name wrapped in `Just`, as `string` does without the wrapper.
+
+The result has no colon: `:ok` converts to `"ok"`, so this undoes `text.to(Atom)`.
 
 **Returns**: the name, always `Just`
 
@@ -94,7 +98,7 @@ Returns the atom's name as text, like `string`, through the universal conversion
 
 ```kex
 :hello.to(String)                       # => Just("hello")
-"hello".to(Atom).flatMap { |a| a.to(String) }   # => Just("hello")
+"hello".to(Atom).into { |a| a.to(String) }   # => Just("hello")
 ```
 
 

@@ -13,7 +13,7 @@ entities:
 
 Console input and output.
 
-`IO` is a capability: every function in it touches the outside world, so it can only be called from `foul` code (or from `main`). Reading a line and printing a line are the two workhorses; `inspect` is the debugging tool that can be dropped into the middle of a chain without changing its value.
+`IO` is a capability: its functions act on the outside world, so only `foul` code and `main` can call them. The exception is `inspect`, which writes a debugging view of a value and returns the value, so it can go in the middle of a chain.
 
 ```kex
 main do
@@ -31,7 +31,7 @@ printLine(msg: Showable) -> Void
 
 Writes `msg` to stdout followed by a newline.
 
-Any `Showable` value is accepted, not just strings: numbers, lists, maps and records print through their own `show` implementation. Called with no argument it prints an empty line.
+Any `Showable` value prints through its `show`, so numbers, lists, maps and records need no conversion. With no argument it prints an empty line.
 
 **Parameters**
 
@@ -48,7 +48,7 @@ IO.printLine([1, 2, 3])      # prints: [1, 2, 3]
 IO.printLine                 # prints an empty line
 ```
 
-_Interpolation is usually clearer than several arguments_
+_Interpolating values into the line_
 
 ```kex
 let user = "ada"
@@ -61,9 +61,9 @@ IO.printLine("logged in as ${user}")   # prints: logged in as ada
 print(msg: Showable) -> Void
 ```
 
-Writes `msg` to stdout without a trailing newline.
+Writes `msg` to stdout without a newline.
 
-Use it to build a line from several pieces, or to write a prompt that the cursor should stay on.
+Use it to build a line from several pieces, or to print a prompt that the answer is typed next to.
 
 **Parameters**
 
@@ -92,17 +92,17 @@ let answer = IO.getLine.or("n")
 inspect(val: A) -> A
 ```
 
-Writes a colored, structured rendering of `val` to stderr and returns `val` unchanged.
+Writes a colored rendering of `val` and its type to stderr, and returns `val` unchanged.
 
-Because it returns its argument, `inspect` can be spliced into the middle of a chain to see what is flowing through it, then removed again without touching the surrounding code. It writes to stderr, so it does not disturb a program whose stdout is piped somewhere. The type checker treats it as pure, so it is allowed inside pure functions.
+Since it returns its argument, `inspect` can be put in the middle of a chain to see what passes through, and taken out again later. It writes to stderr, so a program's piped stdout stays clean. The type checker treats it as pure, so pure functions can call it too.
 
-Use `inspected` instead when you want the rendering as a `String` rather than written out.
+To get the rendering as a `String`, use `inspected`.
 
 **Parameters**
 
   - `val` — any inspectable value
 
-**Returns**: the same value, unchanged
+**Returns**: `val`, unchanged
 
 **Examples**
 
@@ -111,7 +111,7 @@ _Watching an intermediate step of a chain_
 ```kex
 [1, 2, 3, 4]
   .map { |n| n * 3 }
-  .inspect             # stderr: [3, 6, 9, 12] : [Int]
+  .inspect             # stderr: [3, 6, 9, 12] : [Integer]
   .filter(~even?)      # => [6, 12]
 ```
 
@@ -130,7 +130,7 @@ getLine -> String?
 
 Reads one line from stdin, without its line ending.
 
-The same read as `IO.in.getLine`: `None` both at the end of the input and on a failed read, which is what interactive code wants. Use `IO.readLine` when the two need telling apart.
+Returns `None` at the end of the input and also when the read fails, which is usually what interactive code wants. Use `IO.readLine` to tell the two apart. Same as `IO.in.getLine`.
 
 **Returns**: the line, or `None` at end of input or on failure
 
@@ -148,15 +148,15 @@ let answer = IO.getLine.or("")
 readLine -> Result<String?, ReadError>
 ```
 
-Reads one line from stdin, without its line ending, reporting a failure.
+Reads one line from stdin, without its line ending, and reports a failed read as an error.
 
-The same read as `IO.in.readLine`: `Ok(None)` at end of input, which is what makes it usable as a loop condition, and an `Error` only when the input cannot be read as text.
+Returns `Ok(None)` at the end of the input, and an `Error` only when the input cannot be read as text. Same as `IO.in.readLine`.
 
 **Returns**: the line, `Ok(None)` at end of input, or why it could not be read
 
 **Examples**
 
-_Draining stdin line by line_
+_Copying stdin to stdout line by line_
 
 ```kex
 foul echoAll -> Void do
@@ -177,9 +177,9 @@ end
 getChar -> String?
 ```
 
-Reads a single character from stdin, as `IO.in.getChar` does.
+Reads one character from stdin, as a one-character `String`.
 
-Note that the character is a one-character `String`, not a `Char`.
+Same as `IO.in.getChar`.
 
 **Returns**: the character, or `None` at end of input or on failure
 
@@ -198,7 +198,7 @@ printError(msg: Showable) -> Void
 
 Writes `msg` to stderr followed by a newline.
 
-Diagnostics belong on stderr so that a program's real output can be piped or redirected on its own. Unlike a raised error, this only prints: it does not stop the program.
+Diagnostics go to stderr so that the program's output on stdout can be piped or redirected on its own. It only prints; the program keeps running.
 
 **Parameters**
 
@@ -212,7 +212,7 @@ _Reporting a problem without exiting_
 IO.printError("config file not found: using defaults")
 ```
 
-_Keeping stdout clean for the real result_
+_Keeping stdout for the result_
 
 ```kex
 IO.printError("scanning ${dir}...")   # progress, on stderr
@@ -225,17 +225,17 @@ IO.printLine(results.join("\n"))      # the output, on stdout
 out : FileHandle<CannotRead, CanWrite>
 ```
 
-The three standard streams, as ordinary handle VALUES.
+Standard output, as a handle.
 
-`IO.printLine(x)` and `IO.out.printLine(x)` both write to standard output. Pass a handle to a function that accepts a sink to choose where it writes.
+`IO.printLine(x)` and `IO.out.printLine(x)` both write to stdout. The handle is for passing to a function that takes a `Writable`, so the caller chooses where it writes. `IO.error` and `IO.in` are the other two standard streams.
 
-Typestate says what each one permits: writing to `IO.in`, or reading from `IO.out`, is a compile error, exactly as it is for a file opened `Read`.
+The handle types say what each stream allows: writing to `IO.in` or reading from `IO.out` is a compile error, as it is for a file opened `Read`.
 
-Obtaining a standard-stream handle is pure; reading or writing through it is `foul`. `Mock.IO` captures writes through both `IO.out` and `IO.printLine`. A `with IO = ...` override replaces module calls only.
+Getting a handle is pure; reading or writing through it is `foul`. `Mock.IO` captures writes made through `IO.out` as well as through `IO.printLine`, but a `with IO = ...` override replaces only calls to the `IO` functions.
 
 **Examples**
 
-_Handing a library somewhere to write_
+_Letting the caller choose where a report goes_
 
 ```kex
 foul report(out: Writable, lines: [String]) -> Void do
@@ -255,7 +255,7 @@ report(FS.File.open("report.txt", FS.Write).try, results)
 error : FileHandle<CannotRead, CanWrite>
 ```
 
-Standard error, as a handle. The sink `IO.printError` writes to, reachable as a value.
+Standard error, as a handle: where `IO.printError` writes.
 
 **Examples**
 
@@ -271,11 +271,11 @@ IO.error.printLine("config file not found")
 in : FileHandle<CanRead, CannotWrite>
 ```
 
-Standard input, as a handle. The source `IO.getLine`, `IO.readLine` and `IO.getChar` read from, reachable as a value.
+Standard input, as a handle: where `IO.getLine`, `IO.readLine` and `IO.getChar` read from.
 
 **Examples**
 
-_Reading from a file or from a pipe, with one function_
+_One function for reading a file or a pipe_
 
 ```kex
 foul firstLine(source: Readable) -> String do

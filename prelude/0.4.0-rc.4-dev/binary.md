@@ -13,9 +13,9 @@ entities:
 
 ## type `Binary`
 
-An opaque, immutable sequence of bytes. A `Binary` never implicitly becomes text.
+An immutable sequence of bytes, such as a file's contents, an HTTP body or a digest.
 
-`[Byte]` is the materialized list of bytes, while `Binary` is the storage form. A file, an HTTP body, or a digest is a `Binary`. On the BEAM it is a native binary, so slicing shares storage instead of copying. None of the operations here walks a character list.
+`Binary` is the compact storage form; `[Byte]` is the same bytes as a list. On BEAM, `take` and `drop` share the original's storage instead of copying it.
 
 ```kex
 let data = Binary.fromHex("00686900").try
@@ -25,14 +25,14 @@ data.take(2).hex       # => "0068"
 data.showValue         # => "#Binary<4 bytes>"
 ```
 
-The type is opaque on purpose: there is no field to reach through, so text operations cannot be run on bytes by accident. Conversions are always explicit in both directions, and both directions can fail. Runtime conversions through `to` always return an `Optional<T>`:
+The type is opaque, so string functions cannot be run on bytes by mistake. Converting to or from text is always explicit, and `to` returns an optional, since the conversion can fail:
 
 ```kex
-"árvíz".to(Binary)                  #  => Just(#Binary<7 bytes>) : Binary?
+"árvíz".to(Binary)                  # => Just(#Binary<7 bytes>)
 Binary.fromBytes([255]).to(String)  # => None
 ```
 
-`Showable` and `Inspectable` deliberately render the length alone. Neither ever decodes or interpolates the payload, so printing a binary cannot leak its contents or fail on bytes that are not text. Use `hex`, `base64`, or `to(String)` when you actually want to see it.
+Printing a binary shows only its length. It never shows the bytes, so it cannot leak them, and it cannot fail on bytes that are not text. Use `hex`, `base64` or `to(String)` to see the contents.
 
 Implements [`Showable`](kex.md#trait-showable), [`Inspectable`](kex.md#trait-inspectable).
 
@@ -44,9 +44,9 @@ Implements [`Showable`](kex.md#trait-showable), [`Inspectable`](kex.md#trait-ins
 bytes -> [Byte]
 ```
 
-The bytes, as a list.
+Returns the bytes as a list.
 
-The explicit, allocating conversion out of binary storage. Reach for `length`, `at`, `take`, and `drop` when you do not need the whole list.
+This copies every byte into a new list. `length`, `at`, `take` and `drop` work on the binary directly.
 
 **Returns**: every byte, in order
 
@@ -62,7 +62,7 @@ Binary.fromHex("0068").try.bytes   # => [0, 104]
 length -> Integer
 ```
 
-Number of bytes held.
+Returns the number of bytes.
 
 **Returns**: the byte count
 
@@ -78,7 +78,7 @@ Number of bytes held.
 count -> Integer
 ```
 
-Number of bytes held. The same as `length`, as on `List` and `String`.
+Returns the number of bytes; the same as `length`.
 
 **Returns**: the byte count
 
@@ -94,7 +94,7 @@ Number of bytes held. The same as `length`, as on `List` and `String`.
 empty? -> Bool
 ```
 
-Whether it holds no bytes at all.
+Returns `true` when the binary has no bytes.
 
 **Returns**: `true` when the binary is empty
 
@@ -110,9 +110,9 @@ Binary.fromBytes([]).empty?   # => true
 at(index: Integer) -> Byte?
 ```
 
-The byte at `index`, counting from zero.
+Returns the byte at `index`, counting from zero, or `None` when the index is outside the binary.
 
-A negative index counts back from the end, as on a `List`: `-1` is the last byte. Answers `None` for an index outside the binary, so an index you did not check is something you handle rather than something that stops the program.
+A negative index counts back from the end, as on a list: `-1` is the last byte.
 
 **Parameters**
 
@@ -137,7 +137,7 @@ get(index: Integer) -> Byte?
 get(index: Integer, default: Byte) -> Byte
 ```
 
-The byte at `index`, counting from zero. The same as `at`, matching the `get` that `List` and `String` carry.
+Returns the byte at `index`, or `None` when the index is outside the binary; the same as `at`.
 
 **Parameters**
 
@@ -158,9 +158,9 @@ Binary.fromBytes([104, 105]).get(9)   # => None
 take(count: Integer) -> Binary
 ```
 
-The first `count` bytes.
+Returns the first `count` bytes.
 
-Clamped at both ends, like the list operations: a `count` of zero or less answers the empty binary, and an oversized one answers the whole binary.
+A `count` of zero or less gives the empty binary, and one past the end gives the whole binary.
 
 **Parameters**
 
@@ -183,9 +183,9 @@ data.take(999) == data # => true
 drop(count: Integer) -> Binary
 ```
 
-Everything after the first `count` bytes.
+Returns the bytes after the first `count`.
 
-Clamped at both ends: a `count` of zero or less answers the whole binary, and an oversized one answers the empty binary. `take(n)` and `drop(n)` therefore always concatenate back to the original.
+A `count` of zero or less gives the whole binary, and one past the end gives the empty binary, so +take(n) + drop(n)+ is always the original.
 
 **Parameters**
 
@@ -227,7 +227,7 @@ Binary.fromBytes([104]) + Binary.fromBytes([105])   # => #Binary<2 bytes>
 hex -> String
 ```
 
-The bytes as lowercase hexadecimal text, two digits per byte.
+Returns the bytes as lowercase hexadecimal text, two digits per byte.
 
 **Returns**: the hexadecimal encoding
 
@@ -243,7 +243,7 @@ Binary.fromBytes([0, 104, 255]).hex   # => "0068ff"
 base64 -> String
 ```
 
-The bytes as standard base64 text (RFC 4648), with canonical padding.
+Returns the bytes as standard, padded base64 text (RFC 4648).
 
 **Returns**: the base64 encoding
 
@@ -259,7 +259,7 @@ Binary.fromBytes([0, 104, 105, 255]).base64   # => "AGhp/w=="
 showValue -> String
 ```
 
-The length-only rendering: never the payload.
+Renders the binary as its length, never its contents.
 
 **Returns**: `#Binary<N bytes>`
 
@@ -275,7 +275,7 @@ Binary.fromBytes([104, 105]).showValue   # => "#Binary<2 bytes>"
 inspectValue(_: Bool) -> String
 ```
 
-The length-only rendering: never the payload. The same as `showValue`.
+Renders the binary as its length, never its contents; the same as `showValue`.
 
 **Returns**: `#Binary<N bytes>`
 
@@ -285,15 +285,15 @@ The length-only rendering: never the payload. The same as `showValue`.
 to(String) -> String?
 ```
 
-Decodes the payload as UTF-8, or answers `None` when the bytes are not valid text.
+Decodes the bytes as UTF-8, or returns `None` when they are not valid UTF-8.
 
-This deliberately differs from `showValue`, which reveals only the byte count. Converting asks to inspect the actual payload and therefore makes the possibility of invalid text explicit.
+Unlike `showValue`, this exposes the contents.
 
 **Returns**: the decoded text, or `None` for invalid UTF-8
 
 **Examples**
 
-_Decoding a text response while handling a binary one_
+_Printing a response body that may not be text_
 
 ```kex
 match response.body.to(String) do
@@ -310,9 +310,7 @@ end
 empty : Binary
 ```
 
-The binary holding no bytes.
-
-Backed by `Binary.fromBytes([])`, this is the natural starting value this library uses, just like (`Headers.empty`).
+The binary with no bytes.
 
 **Examples**
 
@@ -330,13 +328,13 @@ fromBytes(values: [Byte]) -> Binary
 
 Builds a binary from a list of bytes.
 
-Total: every `Byte` is in `0..255` by construction, so there is no rejection case. `Binary.fromBytes([])` is the empty binary.
+It cannot fail, since every `Byte` is already in `0..255`.
 
 **Parameters**
 
   - `values` — the bytes to store
 
-**Returns**: the bytes, in binary storage
+**Returns**: the bytes as a binary
 
 **Examples**
 
@@ -353,13 +351,13 @@ fromHex(text: String) -> Binary?
 
 Decodes lowercase hexadecimal text.
 
-Strict, so that decoding is the exact inverse of `hex`: uppercase digits, an odd length, whitespace, a `0x` prefix, and any non-hex character all answer `None` rather than being repaired.
+It accepts exactly what `hex` produces. Uppercase digits, an odd length, whitespace, a `0x` prefix or any other character give `None`.
 
 **Parameters**
 
   - `text` — the hexadecimal text
 
-**Returns**: the bytes, or `None` when the text is not canonical hex
+**Returns**: the bytes, or `None` when the text is not lowercase hex
 
 **Examples**
 
@@ -370,10 +368,10 @@ Binary.fromHex("AB")     # => None
 Binary.fromHex("a")      # => None
 ```
 
-_Reading a compact identifier from configuration_
+_Reading an identifier from the environment_
 
 ```kex
-let key = env.get("CACHE_KEY").flatMap(~Binary.fromHex)
+let key = ENV.get("CACHE_KEY").into { |text| Binary.fromHex(text) }
 let cacheEnabled? = key.present?
 ```
 
@@ -385,13 +383,13 @@ fromBase64(text: String) -> Binary?
 
 Decodes standard base64 text (RFC 4648).
 
-Strict, so that decoding is the exact inverse of `base64`: the URL-safe alphabet, missing or malformed padding, whitespace, and any other noncanonical encoding all answer `None`.
+It accepts exactly what `base64` produces. The URL-safe alphabet, missing or wrong padding, whitespace and any other variant give `None`.
 
 **Parameters**
 
   - `text` — the base64 text
 
-**Returns**: the bytes, or `None` when the text is not canonical base64
+**Returns**: the bytes, or `None` when the text is not standard, padded base64
 
 **Examples**
 
@@ -401,8 +399,8 @@ Binary.fromBase64("AGhp_w==")   # => None
 Binary.fromBase64("AGhp/w")     # => None
 ```
 
-_Loading binary key material from an environment variable_
+_Loading key material from an environment variable_
 
 ```kex
-let signingKey = ENV.get("SIGNING_KEY").flatMap(~Binary.fromBase64)
+let signingKey = ENV.get("SIGNING_KEY").into { |text| Binary.fromBase64(text) }
 ```

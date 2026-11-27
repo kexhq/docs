@@ -5,6 +5,9 @@ source: range.kex
 title: Range
 entities:
   - { kind: type, name: "Range" }
+  - { kind: trait, name: "Discrete" }
+  - { kind: make, name: "Integer" }
+  - { kind: make, name: "Char" }
   - { kind: make, name: "Range<A>" }
 ---
 
@@ -14,7 +17,7 @@ entities:
 
 A span between two bounds, written `(1..10)` or `('a'..'z')`.
 
-A range stores its endpoints on both backends without building a list. Integer and character ranges can be enumerated with both ends included. Float ranges describe continuous bounds, for example `(-1.0..1.0)` for random sampling; `items` and traversal functions cannot enumerate them. A range whose lower endpoint exceeds its upper endpoint enumerates as an empty list, so `(1..count).each` does nothing for a `count` of 0.
+Both ends are included. A range holds only its endpoints (and a step), so a large one costs nothing until you enumerate it. Integer and character ranges can be enumerated. A Float range such as `(-1.0..1.0)` is a pair of bounds, useful for `contains?` or random sampling, and cannot be enumerated. A range whose lower end is above its upper end is empty, so `(1..count).each` does nothing when `count` is 0.
 
 ```kex
 (1..5).items          # => [1, 2, 3, 4, 5]
@@ -23,7 +26,7 @@ A range stores its endpoints on both backends without building a list. Integer a
 ('a'..'e').items      # => ['a', 'b', 'c', 'd', 'e']
 ```
 
-To count down, or by another step, give the range a step with `by` (or use `Integer.downTo`); it stays two endpoints and a step, built into no list:
+To count down or by another step, use `by` or `Integer.downTo`:
 
 ```kex
 (1..10).by(2).items   # => [1, 3, 5, 7, 9]
@@ -32,16 +35,45 @@ To count down, or by another step, give the range a step with `by` (or use `Inte
 (1..4).reverse.items  # => [4, 3, 2, 1]
 ```
 
-It is `Enumerable` and `Foldable`, so the traversal functions work directly, and the list operations below answer in list terms. Use `items` when you want a real list to hand to something else.
+A range of Integers or Chars (a `Discrete` type) is `Enumerable` and `Foldable`, and the list functions below return lists. A Float range has only `contains?`. Use `items` to get the elements as a list.
 
 ```kex
 (1..10).items.filter(~even?)   # => [2, 4, 6, 8, 10]
 (1..3).items.each { |n| IO.printLine(n) }
 ```
 
-Implements [`Enumerable`](enumerable.md#trait-enumerable), [`Foldable`](enumerable.md#trait-foldable).
+Implements [`Enumerable<A>`](enumerable.md#trait-enumerable), [`Foldable<A>`](enumerable.md#trait-foldable).
 
 ### Functions
+
+Functions every range has, Float ranges included.
+
+#### `contains?`
+
+```kex
+contains?(value: A) -> Bool
+```
+
+Returns `true` when `value` lies between the endpoints, both included.
+
+A range with the default step only compares `value` with the endpoints, so this is cheap for any size of range and works for a `Float` range. A range whose lower end is above its upper end contains nothing. A stepped range contains only the values its step reaches.
+
+**Parameters**
+
+  - `value` — the value to test
+
+**Returns**: `true` when the value is in range
+
+**Examples**
+
+```kex
+(1..10).contains?(5)          # => true
+(1..10).contains?(11)         # => false
+(0.0..1.0).contains?(0.25)    # => true
+('a'..'f').contains?('c')     # => true
+(1..10).by(3).contains?(7)    # => true
+(1..10).by(3).contains?(8)    # => false
+```
 
 #### `reduce` (from Enumerable, Foldable)
 
@@ -51,7 +83,7 @@ reduce(acc: B, f: (B -> A -> B)) -> B
 
 Folds over the range's elements in order.
 
-This is `Range`'s `Enumerable` primitive; the traversal functions are built on it. A range stays structurally minimal, so the fold runs over its materialized items.
+The `Enumerable` functions are built on it. It builds the list of elements first.
 
 **Parameters**
 
@@ -90,7 +122,7 @@ Calls `f` with each element in order, for its side effects.
 map(f: (A -> B)) -> [B]
 ```
 
-Transforms each element by applying `f`, in order.
+Returns a list of `f` applied to each element, in order.
 
 **Parameters**
 
@@ -129,42 +161,17 @@ Returns the product of the range's elements.
 (1..5).product   # => 120   (five factorial)
 ```
 
-#### `contains?`
-
-```kex
-contains?(value: A) -> Bool
-```
-
-Returns `true` when `value` lies between the endpoints, both included.
-
-Only the endpoints are compared: nothing is enumerated, so this is cheap for a range of any size and works for a continuous `Float` range too. A range whose lower endpoint exceeds its upper endpoint contains nothing. A stepped range contains only the values its step reaches.
-
-**Parameters**
-
-  - `value` — the value to test
-
-**Returns**: `true` when the value is in range
-
-**Examples**
-
-```kex
-(1..10).contains?(5)          # => true
-(1..10).contains?(11)         # => false
-(0.0..1.0).contains?(0.25)    # => true
-('a'..'f').contains?('c')     # => true
-(1..10).by(3).contains?(7)    # => true
-(1..10).by(3).contains?(8)    # => false
-```
-
 #### `by`
 
 ```kex
 by(step: Integer) -> Range<A>
 ```
 
-Returns the range enumerated by `step` from its first endpoint towards its last, instead of by 1. The sign of `step` is the direction: a negative step counts down, and a range whose end lies the other way from its start is empty. The last endpoint is included only when the step lands on it. Nothing is enumerated until the range is traversed.
+Returns the range counted by `step` from its first endpoint towards its last.
 
-A step of 0 is an error, as is a step on a `Float` range.
+A negative step counts down, and a range whose end lies the other way from its start is empty. The last endpoint is included only when the step lands on it.
+
+A step of 0 is a run-time error. `by` on a `Float` range is a type error.
 
 **Parameters**
 
@@ -189,9 +196,9 @@ items -> [A]
 
 Returns the range's elements as a list.
 
-This is where a range stops being two numbers and becomes real data, so it is also where a very large range starts to cost something.
+This builds the whole list, so it costs memory for a very large range.
 
-**Returns**: the elements, in ascending order
+**Returns**: the elements, in the range's order
 
 **Examples**
 
@@ -213,8 +220,6 @@ first -> A?
 ```
 
 Returns the first element, or `None` for an empty range.
-
-The list operations, over the materialized items. A range is an ordered collection, so `(1..5).first` and `(1..5).length` operate on its materialized elements. Floating bounds do not define such a collection.
 
 **Returns**: the first element, or `None`
 
@@ -311,7 +316,7 @@ Returns how many elements the range has.
 count -> Integer
 ```
 
-Returns how many elements the range has. The same as `length`.
+Returns how many elements the range has, as `length` does.
 
 **Returns**: the number of elements
 
@@ -369,13 +374,95 @@ Returns the smallest element, or `None` for an empty range.
 (1..10).min   # => Just(1)
 ```
 
+#### `minBy`
+
+```kex
+minBy(f: (A -> B)) -> A?
+```
+
+Returns the element with the smallest `f` key wrapped in `Just`, or `None` for an empty range. The first of several tying elements wins.
+
+**Parameters**
+
+  - `f` — the key each element is compared by
+
+**Returns**: the element with the smallest key, or `None`
+
+**Examples**
+
+```kex
+(1..10).minBy { |n| (n - 4).abs }   # => Just(4)
+```
+
+#### `maxBy`
+
+```kex
+maxBy(f: (A -> B)) -> A?
+```
+
+Returns the element with the largest `f` key wrapped in `Just`, or `None` for an empty range. The first of several tying elements wins.
+
+**Parameters**
+
+  - `f` — the key each element is compared by
+
+**Returns**: the element with the largest key, or `None`
+
+**Examples**
+
+```kex
+(1..10).maxBy { |n| n % 7 }   # => Just(6)
+```
+
+#### `sortBy`
+
+```kex
+sortBy(f: (A -> B)) -> [A]
+```
+
+Returns the elements as a list sorted by the key `f` gives each one, smallest key first. The sort is stable: elements with equal keys keep their order.
+
+**Parameters**
+
+  - `f` — the key each element is sorted by
+
+**Returns**: the sorted elements
+
+**Examples**
+
+```kex
+(1..6).sortBy { |n| n % 3 }   # => [3, 6, 1, 4, 2, 5]
+```
+
+#### `groupBy`
+
+```kex
+groupBy(f: (A -> K)) -> {K: [A]}
+```
+
+Groups the elements by the key `f` gives each one. Each group keeps its elements in ascending order.
+
+**Parameters**
+
+  - `f` — the key each element is grouped under
+
+**Returns**: each key with the elements that produced it
+
+**Examples**
+
+```kex
+(1..6).groupBy { |n| n.even? }   # => { false: [1, 3, 5], true: [2, 4, 6] }
+```
+
 #### `reverse`
 
 ```kex
 reverse -> Range<A>
 ```
 
-Returns the same elements in the opposite order, as a range: nothing is enumerated. It starts at the last element the step reaches, so `(1..10).by(3).reverse` is `(10..1).by(-3)` and `(1..9).by(3).reverse` is `(7..1).by(-3)`. An empty range stays empty.
+Returns a range of the same elements in the opposite order.
+
+It starts at the last element the step reaches, so `(1..10).by(3).reverse` is `(10..1).by(-3)` and `(1..9).by(3).reverse` is `(7..1).by(-3)`. An empty range stays empty.
 
 **Returns**: the range, reversed
 
@@ -397,7 +484,7 @@ _Counting down_
 sort -> [A]
 ```
 
-Returns the elements as a sorted list, ascending whatever the range's step.
+Returns the elements as a list in ascending order, whatever the step.
 
 **Returns**: the elements, sorted
 
@@ -431,7 +518,7 @@ Returns the elements as a list, ordered by `comparator`.
 uniq -> [A]
 ```
 
-Returns the elements as a list with duplicates removed. A range has none, so this is the identity: it exists so that generic code can call it.
+Returns the elements as a list with duplicates removed. A range has no duplicates, so this is the same as `items`.
 
 **Returns**: the distinct elements
 
@@ -475,7 +562,7 @@ at(index: Integer) -> A?
 
 Returns the element at index `index`, counting from 0, or `None` when out of range.
 
-Note that the index counts positions, not values: `(10..20).at(0)` is `Just(10)`.
+The index counts positions, not values: `(10..20).at(0)` is `Just(10)`.
 
 **Parameters**
 
@@ -645,7 +732,7 @@ Returns the elements as a list with `value` added at the end.
 reject(pred: (A -> Bool)) -> [A]
 ```
 
-Returns the elements that do NOT satisfy `pred`, as a list.
+Returns the elements that fail `pred`, as a list.
 
 **Parameters**
 
@@ -677,16 +764,42 @@ countBy(at: Integer, last: Integer, step: Integer, f)
 
 ### From [`Enumerable`](enumerable.md#trait-enumerable)
 
-  - [`mapIndexed`](enumerable.md#enumerable-mapindexed) — Applies `f` to each item and its 0-based position, and collects the results into a list.
-  - [`filter`](enumerable.md#enumerable-filter) — Returns the items for which `pred` answers `true`.
-  - [`flatMap`](enumerable.md#enumerable-flatmap) — Applies `f` to each item, expecting a list back, and concatenates the results into one flat list.
-  - [`collect`](enumerable.md#enumerable-collect) — Applies `f` to each item, expecting an `Optional` back, and returns the values that were present: unwrapped.
+  - [`mapIndexed`](enumerable.md#enumerable-mapindexed) — Applies `f` to each item and its 0-based position, and returns the results as a list.
+  - [`filter`](enumerable.md#enumerable-filter) — Returns the items for which `pred` returns `true`.
+  - [`into`](enumerable.md#enumerable-into) — Applies `f`, which returns a list, to each item and concatenates the results.
+  - [`collect`](enumerable.md#enumerable-collect) — Applies `f`, which returns an `Optional`, to each item and returns the present values, unwrapped.
 
 ### From [`Foldable`](enumerable.md#trait-foldable)
 
   - [`eachIndexed`](enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
-  - [`all?`](enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`.
-  - [`any?`](enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`.
-  - [`none?`](enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`all?`](enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`, and `true` for an empty collection.
+  - [`any?`](enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`, and `false` for an empty collection.
+  - [`none?`](enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`, the opposite of `any?`.
   - [`one?`](enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
   - [`find`](enumerable.md#foldable-find) — Returns the first item satisfying `pred`, or `None` when nothing does.
+
+## trait `Discrete`
+
+The element types with a next value, whose ranges can be enumerated: Integer and Char.
+
+A Float range has no next value, so it has `contains?` and none of the traversal functions; `(0.0..1.0).sum` is a type error.
+
+Implemented by [`Integer`](#make-integer), [`Char`](#make-char).
+
+
+
+## extends `Integer`
+
+More functions for [`Integer`](number.md#make-integer), added by this module.
+
+Implements [`Discrete`](#trait-discrete).
+
+
+
+## extends `Char`
+
+More functions for [`Char`](string.md#make-char), added by this module.
+
+Implements [`Discrete`](#trait-discrete).
+
+

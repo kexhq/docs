@@ -23,7 +23,7 @@ home -> String
 repository -> String
 ```
 
-Where `tey kex list` looks for releases. Overridable so a fork or a mirror can be used without patching Tey.
+Returns the Git repository Tey reads Kex releases from. `TEY_KEX_REPO` overrides it, for a fork or a mirror.
 
 ### `binDirectory` (foul)
 
@@ -31,7 +31,7 @@ Where `tey kex list` looks for releases. Overridable so a fork or a mirror can b
 binDirectory -> String
 ```
 
-The directory holding the `kex` shim. It is what a user puts on PATH once; selecting a version repoints the shim rather than asking them to edit PATH again.
+Returns the directory holding the `kex` shim. A user puts it on PATH once, and `tey kex use` repoints the shim inside it.
 
 ### `shimPath` (foul)
 
@@ -45,7 +45,7 @@ shimPath -> String
 selected -> String?
 ```
 
-The version `tey kex use` last selected, if any.
+Returns the version `tey kex use` last selected, or `None`.
 
 ### `installedVersions` (foul)
 
@@ -53,7 +53,9 @@ The version `tey kex use` last selected, if any.
 installedVersions -> [String]
 ```
 
-Versions installed under this Tey home, newest first. Staging leftovers are not installations, and neither is a directory whose `bin/kex` is gone — a half-removed toolchain must not be offered as one somebody can run.
+Returns the versions installed under the Tey home, newest first.
+
+Leftover staging directories and directories without a `bin/kex` are not listed.
 
 ### `binaryOf` (foul)
 
@@ -61,7 +63,7 @@ Versions installed under this Tey home, newest first. Staging leftovers are not 
 binaryOf(version: String) -> String
 ```
 
-The `bin/kex` naming an installed version — the toolchain layout every consumer (the shim, `resolved`, the listings) agrees on, in one place.
+Returns the path of an installed version's `bin/kex`.
 
 ### `installed?` (foul)
 
@@ -75,7 +77,9 @@ installed?(version: String) -> Bool
 pairedTeyEbin(version: String) -> String
 ```
 
-Where the Tey released with a Kex version lives — `bin/tey` reads the same path. Beside the toolchain rather than inside it: reinstalling a Kex replaces its whole directory, and a Tey running from there would lose its modules mid-run.
+Returns the `ebin` directory of the Tey released with a Kex version, the same path `bin/tey` reads.
+
+It sits beside the toolchain, not inside it, because reinstalling a Kex replaces the toolchain's whole directory and a Tey running from there would lose its modules.
 
 ### `availableVersions` (foul)
 
@@ -83,7 +87,7 @@ Where the Tey released with a Kex version lives — `bin/tey` reads the same pat
 availableVersions -> Result<[String], String>
 ```
 
-Released versions, newest first, read from the repository's tags. Tags that are not versions are skipped rather than reported as junk.
+Returns the released versions, newest first, read from the repository's tags. Tags that are not versions are skipped.
 
 ### `newestFirst`
 
@@ -97,7 +101,7 @@ newestFirst(versions: [String]) -> [String]
 latestStable -> Result<String, String>
 ```
 
-The newest RELEASED version — what `tey kex install` picks when asked for no version in particular, and what a download page means by "the current Kex". Pre-releases are opt-in by name.
+Returns the newest stable release, which `tey kex install` picks when no version is given. Pre-releases are left out.
 
 ### `latestIncludingPreReleases` (foul)
 
@@ -105,7 +109,7 @@ The newest RELEASED version — what `tey kex install` picks when asked for no v
 latestIncludingPreReleases -> Result<String, String>
 ```
 
-The newest version of ANY channel — what `tey kex install --pre` picks. This is how you get onto a beta or an rc without knowing its number: during a pre-stability run there may be nothing else published at all.
+Returns the newest release including pre-releases, which `tey kex install --pre` picks. Before a stable release exists, this may be the only way to get one without knowing its number.
 
 ### `installedKex` (foul)
 
@@ -119,7 +123,9 @@ installedKex -> String?
 bundled -> String?
 ```
 
-The Kex bundled beside Tey — what a package manager lays down so the first `tey` command has a compiler without a ten-minute build. It is a SEED, not an installation: `kex` below adopts it into the Tey home on first use, and from then on Tey manages that copy like any other version. Nothing outside the Tey home is ever put on PATH, which is the whole point — two `kex` binaries under two managers drift apart.
+Returns the Kex bundled beside Tey, named by `TEY_BUNDLED_KEX`, or `None` when there is none.
+
+A package manager installs it so the first `tey` command has a compiler without a long build. It is not an installation in the Tey home: `resolved` runs it where it lies, and `tey kex use <its version>` copies it into the home, after which Tey manages it like any other version.
 
 ### `bundledVersion` (foul)
 
@@ -127,7 +133,9 @@ The Kex bundled beside Tey — what a package manager lays down so the first `te
 bundledVersion -> String?
 ```
 
-Which version the bundled Kex is. Answering means RUNNING it, so this is not something to ask inside a loop — but it is the only way to know: the seed is a plain install tree with no version recorded beside it.
+Returns the version of the bundled Kex, or `None`.
+
+The only way to find out is to run it, so avoid calling this in a loop.
 
 ### `selectableToolchains` (foul)
 
@@ -135,9 +143,9 @@ Which version the bundled Kex is. Answering means RUNNING it, so this is not som
 selectableToolchains -> [Toolchain]
 ```
 
-Every version `tey kex use` can select, newest first: the ones in the Tey home, plus the bundled one — each carrying the binary that runs it, which is what a listing meant for tools (`kex list --installed --json`) needs.
+Returns every toolchain `tey kex use` can select, newest first: the ones in the Tey home and the bundled one, each with the binary that runs it.
 
-The seed belongs here even though it is not installed. It is a real compiler already on the disk, and on a fresh keg it is the one a bare `kex` runs — so leaving it out made `tey kex use <that version>` refuse a version the user had just watched run, with no way back to it short of downloading a second copy of what was already there.
+`tey kex list --installed --json` prints this. The bundled Kex is included although it is not installed, because on a fresh install it is the one a bare `kex` runs, and `tey kex use` must be able to select it.
 
 ### `selectableVersions` (foul)
 
@@ -145,7 +153,7 @@ The seed belongs here even though it is not installed. It is a real compiler alr
 selectableVersions -> [String]
 ```
 
-Every version `tey kex use` can select, newest first.
+Returns every version `tey kex use` can select, newest first.
 
 ### `resolveSelector` (foul)
 
@@ -153,9 +161,9 @@ Every version `tey kex use` can select, newest first.
 resolveSelector(selector: String) -> String?
 ```
 
-Turns what someone typed after `tey kex use` into a version number.
+Turns the argument of `tey kex use` into a version number.
 
-`latest` means the newest Kex this machine can select — NOT the newest released one. `use` selects among what is already here; reaching for something unreleased-and-undownloaded is what `tey kex install` is for, and quietly downloading from a command that reads like "switch to" would be a surprise.
+`latest` means the newest version already on this machine, not the newest release: `use` never downloads anything. `tey kex install` does that.
 
 ### `kex` (foul)
 
@@ -163,9 +171,9 @@ Turns what someone typed after `tey kex use` into a version number.
 kex -> String
 ```
 
-The compiler every Tey command shells out to.
+Returns the compiler every Tey command runs.
 
-In order: an explicit TEY_KEX, the selected toolchain, the bundled seed (adopted on the spot), and only then a bare `kex` from PATH. That last one is a fallback for a source checkout, not a supported installation — a `kex` somebody else installed is a `kex` Tey cannot update, and it silently becomes a different version from the one `tey kex list` reports.
+It is `resolved`'s answer (`TEY_KEX`, then the selected toolchain, then the bundled Kex where it lies), or else a bare `kex` from PATH. That last one is a fallback for a source checkout: Tey cannot update it, and it may not be the version `tey kex list` reports.
 
 ### `activeInfo` (foul)
 
@@ -173,7 +181,9 @@ In order: an explicit TEY_KEX, the selected toolchain, the bundled seed (adopted
 activeInfo -> Result<ToolchainInfo, String>
 ```
 
-Read the machine contract from the selected compiler. Keeping this in one call prevents dependency resolution and OTP validation from accidentally observing two different binaries if selection changes between them.
+Reads `kex --info` from the selected compiler.
+
+Callers that need several facts read them from one call, so they cannot come from two different binaries if the selection changes in between.
 
 ### `runtimeOtpFloor` (foul)
 
@@ -181,11 +191,9 @@ Read the machine contract from the selected compiler. Keeping this in one call p
 runtimeOtpFloor -> Integer?
 ```
 
-The OTP release that compiled the selected toolchain's runtime beams — the oldest Erlang that can load them, since a `.beam` cannot be read by a runtime older than the `erlc` that produced it.
+Returns the OTP release that compiled the selected toolchain's runtime beams, which is the oldest Erlang that can load them.
 
-Read from `kex --info` rather than guessed: the number is a build-time constant inside the binary (KEX_RUNTIME_OTP_FLOOR) and Tey has no other way to see it. `--version` is prose and may be reworded; `--info` is the contract (tests/info_cli_test.cxx pins it).
-
-`None` when the toolchain is too old to have `--info`, when the field is absent, or when it is `null` because the compiler was built without erlc. All three mean the same thing to a caller — "this toolchain does not say" — and none of them is an error worth stopping a build for.
+It comes from `kex --info`. It is `None` when the toolchain is too old to have `--info`, when the field is missing, or when it is `null` because the compiler was built without `erlc`. A caller should not treat any of these as an error.
 
 ### `runningOtpRelease` (foul)
 
@@ -193,7 +201,7 @@ Read from `kex --info` rather than guessed: the number is a build-time constant 
 runningOtpRelease -> Integer?
 ```
 
-The OTP actually about to run, asked of `erl` itself.
+Returns the OTP release of the `erl` that will run, by asking it.
 
 ### `erl` (foul)
 
@@ -201,7 +209,7 @@ The OTP actually about to run, asked of `erl` itself.
 erl -> String
 ```
 
-The `erl` Tey and Kex will spawn. KEX_ERL mirrors what the compiler itself honours, so overriding it moves both rather than half of the pair.
+Returns the `erl` that Tey and Kex will run. `KEX_ERL` overrides it for both, as it does for the compiler.
 
 ### `resolved` (foul)
 
@@ -209,11 +217,11 @@ The `erl` Tey and Kex will spawn. KEX_ERL mirrors what the compiler itself honou
 resolved -> String?
 ```
 
-The compiler Tey would run, or None when there is none to run.
+Returns the compiler Tey would run, or `None` when there is none.
 
-The bundled Kex is used WHERE IT LIES rather than copied into the Tey home first. Copying is an install, and an install is not something to do behind someone's back on their first command — it is also impossible where it would be most useful, since Homebrew's post-install sandbox cannot write to the user's home at all. So a fresh Homebrew keg is runnable immediately, nothing is written until `tey kex install` is typed, and a selected version always wins over the bundled one.
+It tries `TEY_KEX`, then the selected toolchain, then the bundled Kex. The bundled one is run where it lies, not copied into the Tey home: nothing is installed until the user asks, and Homebrew's post-install sandbox could not write to the home anyway. A selected version always wins over it.
 
-Without the last-resort fallback to a bare `kex` from PATH that `kex` above keeps: `kex` on PATH is Tey's own dispatcher, and answering it with its own name would send it round in a circle.
+Unlike `kex`, this has no fallback to a bare `kex` from PATH, because that `kex` is Tey's own dispatcher and would call itself.
 
 ### `installBundled` (foul)
 
@@ -221,7 +229,7 @@ Without the last-resort fallback to a bare `kex` from PATH that `kex` above keep
 installBundled -> Result<String, String>
 ```
 
-Takes the bundled Kex into the Tey home so Tey manages it like any other version: `tey kex list` shows it, `tey kex use` can come back to it, and uninstalling whatever replaces it leaves something behind. Only ever done when asked — see `resolved`.
+Copies the bundled Kex into the Tey home and selects it, so Tey manages it like any other version. This only happens when the user selects the bundled version with `tey kex use`.
 
 ### `selectionHealthy?` (foul)
 
@@ -229,7 +237,7 @@ Takes the bundled Kex into the Tey home so Tey manages it like any other version
 selectionHealthy? -> Bool
 ```
 
-Whether the selected toolchain is actually there. A `current` naming a version somebody deleted leaves every command failing on a path that does not exist, which reads like a broken Tey rather than a missing Kex.
+Returns `false` when the selected version is no longer installed, so a caller can report a missing Kex instead of failing on a path that does not exist.
 
 ### `startupProblem` (foul)
 
@@ -237,9 +245,9 @@ Whether the selected toolchain is actually there. A `current` naming a version s
 startupProblem(prefix: String) -> String?
 ```
 
-Installs a released version by name. The published archive for this machine is the fast path — unpacking one takes seconds where building takes minutes, and it needs no compiler, which is the point: whatever installs Tey should not also have to be able to build Kex.
+Returns why the toolchain installed at `prefix` cannot start, or `None` when `kex --version` runs.
 
-Falling back to a source build rather than failing keeps the platforms without a published archive working, and covers a release whose upload is incomplete. Why an installed toolchain's `kex` cannot start on this machine, or None when it runs. A release archive is a prebuilt binary that loads readline, GMP, PCRE2 and OpenSSL from the system (and needs glibc 2.38+ on Linux); "installed" followed by a loader error on the first `kex` is the worst way to learn one of those is missing.
+A release archive is a prebuilt binary that loads readline, GMP, PCRE2 and OpenSSL from the system, and on Linux needs glibc 2.38 or later. This finds a missing library right after the install, not on the first real command.
 
 ### `installRelease` (foul)
 
@@ -247,13 +255,19 @@ Falling back to a source build rather than failing keeps the platforms without a
 installRelease(version: String) -> Result<String, String>
 ```
 
+Installs a released version and selects it, returning its prefix.
+
+It uses the published archive for this machine when there is one, which takes seconds and needs no C++ compiler. When there is no archive for this machine it builds from source. A corrupt archive, or a release that cannot be looked up at all, is an error and does not fall back to a build.
+
 ### `releaseBase` (foul)
 
 ```kex
 releaseBase -> String
 ```
 
-Where the release archives live. Derived from the repository so a fork only has to set TEY_KEX_REPO, and overridable on its own for a mirror.
+Returns the base URL of the release archives.
+
+It is derived from `repository`, so a fork only has to set `TEY_KEX_REPO`. `TEY_KEX_RELEASES` overrides it for a mirror.
 
 ### `releaseTarget` (foul)
 
@@ -261,7 +275,7 @@ Where the release archives live. Derived from the repository so a fork only has 
 releaseTarget -> Result<String, String>
 ```
 
-The archive naming this machine, matching what the release workflow builds: `kex-0.4.0-macos-arm64.tar.gz`.
+Returns this machine's part of a release archive name, such as `macos-arm64` in `kex-0.4.0-macos-arm64.tar.gz`.
 
 ### `installSource` (foul)
 
@@ -269,7 +283,9 @@ The archive naming this machine, matching what the release workflow builds: `kex
 installSource(source: String, version: String) -> Result<String, String>
 ```
 
-Installs compiler, runtime BEAM modules and stdlib sources together. The source tree's CMake install layout is the toolchain ABI Tey manages.
+Builds the Kex source tree at `source` with CMake, installs it as `version` and selects it, returning its prefix.
+
+The compiler, runtime BEAM modules and stdlib sources are installed together, in the CMake install layout that every Tey toolchain has.
 
 ### `uninstall` (foul)
 
@@ -277,7 +293,9 @@ Installs compiler, runtime BEAM modules and stdlib sources together. The source 
 uninstall(version: String) -> Result<String, String>
 ```
 
-Removes an installed toolchain. Refuses to leave the shim pointing at nothing: removing the SELECTED version also clears the selection, and the caller is told to pick another.
+Removes an installed toolchain and returns its former prefix.
+
+Removing the selected version also clears the selection and removes the shim, so the caller should ask the user to select another.
 
 ### `use` (foul)
 
@@ -285,15 +303,17 @@ Removes an installed toolchain. Refuses to leave the shim pointing at nothing: r
 use(version: String) -> Result<Void, String>
 ```
 
+Selects an installed version, or the bundled one, and points the shim at it.
+
 ### `download` (foul)
 
 ```kex
 download(url: String, path: String) -> Result<Void, String>
 ```
 
-The archive download/verify/hash/tag/publish helpers below are public because `Tey.SelfUpdate` (`tey upgrade`) reuses the exact same release mechanics for Tey's own archives that Kex toolchains already trust — same URLs, same checksums, same staged swaps. No behavior change; only visibility.
+Downloads `url` to `path` with curl, or with wget when curl is missing.
 
-curl, then wget: one of the two is on essentially every machine that can reach a release, and this way Tey needs neither an HTTP library nor a compiler to fetch one.
+The file appears at `path` only once the download is complete. This and the helpers below are public because `Tey.SelfUpdate` (`tey upgrade`) uses them for Tey's own archives.
 
 ### `verifyArchive` (foul)
 
@@ -301,7 +321,9 @@ curl, then wget: one of the two is on essentially every machine that can reach a
 verifyArchive(archive: String, checksumUrl: String) -> Result<Void, String>
 ```
 
-The published `.sha256` is `<hash>  <filename>`, the format both sha256sum and shasum write and read.
+Downloads the checksum at `checksumUrl` and checks `archive` against it.
+
+The file is in the `<hash>  <filename>` format that sha256sum and shasum write.
 
 ### `checksumOf` (foul)
 
@@ -309,7 +331,7 @@ The published `.sha256` is `<hash>  <filename>`, the format both sha256sum and s
 checksumOf(path: String) -> Result<String, String>
 ```
 
-Hashed with an external tool rather than read in: the archive is tens of megabytes of binary, and this keeps all of it out of the process.
+Returns the SHA-256 of the file at `path`, computed by sha256sum or shasum so the file is never read into memory.
 
 ### `releaseTag` (foul)
 
@@ -317,7 +339,7 @@ Hashed with an external tool rather than read in: the archive is tens of megabyt
 releaseTag(version: String) -> Result<String, String>
 ```
 
-The tag naming this version in the repository — `0.3.0` or `v0.3.0`.
+Returns the repository tag for `version`, either `0.3.0` or `v0.3.0`.
 
 ### `versionOf`
 
@@ -325,7 +347,14 @@ The tag naming this version in the repository — `0.3.0` or `v0.3.0`.
 versionOf(tag: String) -> String?
 ```
 
-`v0.3.0` → Just("0.3.0"). A tag that is not a version is None, which `collect` drops: a toolchain is named by its version, not by a label.
+Returns the version a tag names, without a leading `v`, or `None` when the tag is not a version.
+
+**Examples**
+
+```kex
+Tey.Toolchain.versionOf("v0.3.0")    # => Just("0.3.0")
+Tey.Toolchain.versionOf("nightly")   # => None
+```
 
 ### `publish` (foul)
 
@@ -333,34 +362,40 @@ versionOf(tag: String) -> String?
 publish(staging: String, prefix: String) -> Result<String, String>
 ```
 
-Swaps a finished staging tree in for `prefix`. A reinstall keeps the old tree until the new one is in place and puts it back if the move fails, so a failed upgrade leaves the previous toolchain working rather than none.
+Moves a finished staging tree to `prefix`, and returns `prefix`.
+
+When `prefix` already holds a toolchain, the old tree is kept until the new one is in place and put back if the move fails, so a failed reinstall leaves the previous toolchain working.
 
 ## record `ToolchainInfo`
 
-Facts reported by the compiler Tey selected for this project. This is deliberately not Kex.VERSION: that names the compiler which built Tey itself, and a package may select a newer (or older) compiler to build its own sources.
+What the selected compiler reports about itself through `kex --info`.
+
+The version here can differ from `Kex.VERSION`, which names the compiler that built Tey itself: a project may select a newer or older compiler.
 
 **Fields**
 
-  - `version` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `reportedRuntimeOtpFloor` : [Integer](../../../prelude/0.4.0-rc.4-dev/number.md#make-integer)? (optional)
+  - `version` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `reportedRuntimeOtpFloor` : [Integer](../../../prelude/0.4.0-rc.5-dev/number.md#make-integer)? (optional)
 
 
 
 ## record `Toolchain`
 
-One selectable Kex: the version `tey kex use` names it by, the binary that runs it, and whether it is the bundled seed lying beside Tey rather than an installation in the Tey home.
+A Kex that `tey kex use` can select: its version, the binary that runs it, and whether it is the bundled one beside Tey and not an installation in the Tey home.
 
 **Fields**
 
-  - `version` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `binary` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `bundled?` : [Bool](../../../prelude/0.4.0-rc.4-dev/truthyable.md#make-bool) (optional)
+  - `version` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `binary` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `bundled?` : [Bool](../../../prelude/0.4.0-rc.5-dev/truthyable.md#make-bool) (optional)
 
 
 
 ## type `ArchiveFailure`
 
-Why a published archive could not be installed. The distinction is the point: one of these is routine and one of them is not.
+Why a published archive could not be installed.
+
+`Unavailable` means there is no usable archive for this machine, and a source build may follow. `Corrupt` means the archive did not match its checksum or did not unpack. `Unreachable` means the release's tag could not be looked up.
 
 **Variants**
 

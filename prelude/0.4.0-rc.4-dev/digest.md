@@ -13,14 +13,16 @@ entities:
 
 Cryptographic content digests.
 
-A digest of a `String` is returned as a lowercase hex string, so a Kex program never has to handle backend-specific binary values: it compares with `==`, prints directly, and goes into a map key unchanged. A digest of a `Binary` is the raw digest bytes, as a `Binary`.
+Nothing here is in scope until `using Digest`.
+
+The digest of a `String` is a lowercase hex string, which compares with `==`, prints as it is and works as a map key. The digest of a `Binary` is the raw digest bytes, as a `Binary`.
 
 ```kex
 Digest.sha256("hello")
 # => "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
 ```
 
-SHA-256 is a content fingerprint: use it to tell whether two things are the same, to key a cache, or to check that a download arrived intact. It is not a password hash: a purpose-built password KDF is what that needs.
+Use SHA-256 to tell whether two contents are the same, to key a cache, or to check that a download arrived intact. Do not use it to hash passwords; that needs a purpose-built password hashing function.
 
 ### `sha256`
 
@@ -66,7 +68,7 @@ fileSha256(path: String) -> Result<String, ReadError>
 
 Returns the SHA-256 digest of the file at `path`, or `ReadFailed` when the file cannot be read.
 
-Reads the file for you, so a large file does not have to be pulled into a `String` first.
+The file is read for you, so it never has to be loaded into a `String`.
 
 **Parameters**
 

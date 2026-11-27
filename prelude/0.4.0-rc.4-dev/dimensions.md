@@ -11,11 +11,24 @@ entities:
 
 ## module `Dimensions`
 
-Dimension algebra, implemented with ordinary Kex maps and integers.
+Dimension algebra at run time: a dimension maps base dimensions to integer exponents.
 
-A base dimension is identified by the type of a marker value. Reuse that marker type to share a dimension across modules. Its display name and the marker's field values do not participate in dimensional arithmetic.
+A base dimension is identified by the type of a marker value, so modules that use the same marker type share the dimension. The marker's field values play no part.
 
-Multiplication adds exponents, division subtracts them, and integer powers multiply them. Zero exponents are removed so cancellation is structural.
+Multiplying adds exponents, dividing subtracts them, and raising to an integer power multiplies them. Zero exponents are dropped, so a dimension that cancels out equals `Dimensions.one`.
+
+```kex
+using Dimensions
+
+record Distance do
+end
+
+record Span do
+end
+
+let speed = Dimensions.base(Distance {}) / Dimensions.base(Span {})
+speed.exponentOf(Span {})   # => -1
+```
 
 ### `one` (constant)
 
@@ -23,7 +36,7 @@ Multiplication adds exponents, division subtracts them, and integer powers multi
 one : Dimension
 ```
 
-The dimension with no remaining base factors.
+Returns the dimensionless dimension, the identity for `*`.
 
 
 
@@ -33,7 +46,7 @@ The dimension with no remaining base factors.
 base(marker: A) -> Dimension
 ```
 
-Defines a base dimension using the nominal type of a marker value.
+Returns the base dimension named by the type of `marker`, to the first power.
 
 **Parameters**
 
@@ -47,7 +60,7 @@ Defines a base dimension using the nominal type of a marker value.
 fromPowers(powers: {Type: Integer}) -> Dimension
 ```
 
-Normalizes a map of base identities and powers.
+Returns the dimension with the given exponents, dropping any that are zero.
 
 **Parameters**
 
@@ -57,9 +70,9 @@ Normalizes a map of base identities and powers.
 
 ## record `Dimension`
 
-A normalized map from base identities to integer exponents.
+A dimension: base dimension types mapped to their non-zero exponents.
 
-Construct dimensions with `Dimensions.base` and compose them with arithmetic. If importing a map, use `Dimensions.fromPowers` to remove zero exponents. This runtime representation does not itself provide static measure typing.
+Build one with `Dimensions.base` and combine with `*`, `/` and `^`. To build one from a map, use `Dimensions.fromPowers`, which drops zero exponents. This is a run-time value; the type checker does not track it.
 
 **Fields**
 
@@ -73,9 +86,9 @@ Construct dimensions with `Dimensions.base` and compose them with arithmetic. If
 dimensionless? -> Bool
 ```
 
-Whether every base factor has cancelled.
+Returns `true` when every base dimension has cancelled out.
 
-**Returns**: true for a dimensionless quantity
+**Returns**: `true` for a dimensionless quantity
 
 #### `exponentOf`
 
@@ -83,7 +96,7 @@ Whether every base factor has cancelled.
 exponentOf(marker: A) -> Integer
 ```
 
-The exponent of the supplied marker's dimension, or zero if absent.
+Returns the exponent of the base dimension named by `marker`'s type, or 0 when it is absent.
 
 **Parameters**
 
@@ -97,7 +110,7 @@ The exponent of the supplied marker's dimension, or zero if absent.
 *(other: Dimension) -> Dimension
 ```
 
-Composes dimensions by adding their base exponents.
+Multiplies two dimensions, adding their exponents.
 
 **Parameters**
 
@@ -111,7 +124,7 @@ Composes dimensions by adding their base exponents.
 /(other: Dimension) -> Dimension
 ```
 
-Composes dimensions by subtracting the denominator's exponents.
+Divides two dimensions, subtracting `other`'s exponents.
 
 **Parameters**
 
@@ -125,7 +138,7 @@ Composes dimensions by subtracting the denominator's exponents.
 ^(exponent: Integer) -> Dimension
 ```
 
-Raises a dimension to an integer power, including zero and negatives.
+Raises the dimension to an integer power, which may be zero or negative.
 
 **Parameters**
 

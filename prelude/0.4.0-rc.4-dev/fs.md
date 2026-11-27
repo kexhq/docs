@@ -11,9 +11,7 @@ entities:
 
 ## module `FS`
 
-The filesystem: reading and writing files, walking directories, and manipulating paths.
-
-`FS` is not in the prelude: start with `using FS`.
+Files, directories and paths. Bring them into scope with `using FS`.
 
 ```kex
 using FS
@@ -26,17 +24,17 @@ main do
 end
 ```
 
-It is organised in three parts:
+It has three parts:
 
 ```kex
 FS.File        reading, writing, copying and deleting files
 FS.Directory   creating, listing and removing directories
-FS.Path        pure path arithmetic, with no filesystem access at all
+FS.Path        path arithmetic, which never touches the filesystem
 ```
 
-The first two are capabilities: everything in them touches the real filesystem, so they can only be called from `foul` code, and a test can replace the whole of `FS.File` for a lexical region rather than mutating global state. `FS.Path` is ordinary pure code.
+`FS.File` and `FS.Directory` use the real filesystem, so only `foul` code can call them. `FS.File` is a capability: a test can swap it for a fake within a block with `with FS.File = ... do ... end`.
 
-Anything that can fail answers with a `Result` carrying a `FileError`, so a missing file or a failed write is an ordinary value you handle rather than an exception you catch. Questions about the filesystem (`exists?`, `file?`, `directory?`) answer a `Bool`, and only a value that may simply be absent, such as `Directory.home`, answers an `Optional`.
+Functions that can fail return a `Result` with a `FileError`, so a missing file is a value to match on. Questions such as `exists?`, `file?` and `directory?` return a `Bool`, and `Directory.home`, which may not be known, returns an `Optional`.
 
 ### `permissionMode`
 
@@ -44,7 +42,9 @@ Anything that can fail answers with a `Result` carrying a `FileError`, so a miss
 permissionMode(permissions: [Permission]) -> Integer
 ```
 
-The POSIX mode `FS.File.changePermission` gives a file: the owner gets every listed permission, everyone else gets them without `Writable`.
+Returns the POSIX mode `FS.File.changePermission` gives a file.
+
+The owner gets every listed permission, and everyone else gets the same without `Writable`.
 
 **Parameters**
 
@@ -60,7 +60,7 @@ FS.permissionMode([FS.Readable, FS.Writable])   # => 420, which is 0o644
 
 ## type `FilePath`
 
-A filesystem path. An alias for `String`, so every `String` function applies to one; `FS.Path` adds the path-aware operations.
+A filesystem path. It is another name for `String`, so every `String` function works on one; `FS.Path` has the path functions.
 
 **Variants**
 
@@ -70,7 +70,7 @@ A filesystem path. An alias for `String`, so every `String` function applies to 
 
 ## type `FileMode`
 
-How a file should be opened: `Read` to read it, `Write` to replace it, `Append` to add to its end, `ReadWrite` for both. The mode chosen decides what type the resulting `FileHandle` has, and therefore which operations the compiler will let you call on it.
+How to open a file: `Read` to read it, `Write` to replace it, `Append` to add to its end, `ReadWrite` for both. The mode sets the type of the `FileHandle` you get, and so which functions you can call on it.
 
 **Variants**
 
@@ -83,7 +83,7 @@ How a file should be opened: `Read` to read it, `Write` to replace it, `Append` 
 
 ## type `Permission`
 
-Something a file may allow, for `FS.File.changePermission`. Named for the intent rather than for POSIX bits, so the same list means the right thing on every system.
+Something a file may allow, for `FS.File.changePermission`.
 
 **Variants**
 
@@ -95,9 +95,9 @@ Something a file may allow, for `FS.File.changePermission`. Named for the intent
 
 ## type `FileError`
 
-A file operation that failed, carrying the path (or paths) it failed on.
+A file operation that failed, with the path or paths it failed on.
 
-Every variant but `InvalidUtf8` means the filesystem refused the operation its name gives: opening, reading, writing, creating, deleting, copying from the first path to the second, renaming the first to the second, or changing permissions. `InvalidUtf8` means the bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence.
+Each variant but `InvalidUtf8` names the operation the filesystem refused: opening, reading, writing, creating, deleting, copying from the first path to the second, renaming the first to the second, or changing permissions. `InvalidUtf8` means the file was read but is not valid UTF-8; it carries the byte offset of the first bad sequence.
 
 **Variants**
 
@@ -115,13 +115,15 @@ Every variant but `InvalidUtf8` means the filesystem refused the operation its n
 
 ## type `FileKind`
 
-What a path names, as `FS.File.info` reports it: a regular `:file`, a `:directory`, a `:symlink` (the link itself, never what it points at), or `:other` for devices, sockets and pipes.
+What a path names, as `FS.File.info` reports it.
+
+A regular `:file`, a `:directory`, a `:symlink` (the link itself, not what it points to), or `:other` for devices, sockets and pipes.
 
 
 
 ## record `FileInfo`
 
-What one `stat` of a path says about it.
+The kind, size and modification time of a path, from `FS.File.info`.
 
 **Fields**
 
@@ -135,7 +137,7 @@ What one `stat` of a path says about it.
 
 Reading and writing files.
 
-A capability: every member reaches the real filesystem, so a test can replace the whole thing for a lexical region with `with FS.File = ...` to test file operations without touching the filesystem. `FS.Path` operations only manipulate path strings.
+This is a capability, so a test can replace all of it within a block with `with FS.File = ... do ... end` and run file code without touching the disk. `Mock.Files` is a ready-made in-memory replacement.
 
 ### `open` (foul)
 
@@ -152,11 +154,9 @@ open(path: FilePath, mode: FileMode.ReadWrite, block: (FileHandle<CanRead, CanWr
 
 Opens `path` and returns a `FileHandle` for it.
 
-The mode decides the handle's type, and the type decides what you may do with it: a handle opened `Read` has no `write`, a handle opened `Write` has no `read`. That is checked at compile time, not at run time.
+The mode sets the handle's type, and the compiler checks its use: a handle opened `Read` has no `write`, and one opened `Write` has no `read`.
 
-Use the whole-file `read` and `write` below when a file fits in memory and you have no reason to hold it open; reach for a handle when you want to stream through a large file or make many small writes.
-
-Close the handle when you are done with it.
+When the file fits in memory, the whole-file `read` and `write` are simpler. Use a handle to stream through a large file or to make many small writes, and close it when you are done; the block form of `open` closes it for you.
 
 **Parameters**
 
@@ -205,7 +205,7 @@ read(path: FilePath) -> Result<String, FileError>
 
 Reads the whole file and decodes it as UTF-8 text.
 
-Answers `Error(ReadFailed(path))` when the file does not exist or cannot be read, and `Error(InvalidUtf8(path, offset))` when the bytes are not valid UTF-8, so a missing or non-text file is something you handle rather than something that stops the program. Reach for `FS.File.readBytes` when the contents are not text.
+Returns `Error(ReadFailed(path))` when the file does not exist or cannot be read, and `Error(InvalidUtf8(path, offset))` when it is not valid UTF-8. Use `FS.File.readBytes` for contents that are not text.
 
 **Parameters**
 
@@ -240,7 +240,7 @@ readBytes(path: FilePath) -> Result<Binary, FileError>
 
 Reads the whole file as raw bytes, without decoding it as text.
 
-The byte counterpart of `FS.File.read`: it never validates UTF-8, so it round trips images, archives, and any other non-text payload losslessly. Answers `Error(ReadFailed(path))` when the file cannot be read.
+Use it for images, archives and anything else that is not text. Returns `Error(ReadFailed(path))` when the file cannot be read.
 
 **Parameters**
 
@@ -268,7 +268,7 @@ writeBytes(path: FilePath, content: Binary) -> Result<Void, FileError>
 
 Writes `content` to `path` as raw bytes, replacing whatever was there.
 
-The byte counterpart of `FS.File.write`: the payload lands on disk exactly as given, with no encoding step. Answers `Error(WriteFailed(path))` when the write fails.
+The bytes are written exactly as given. Returns `Error(WriteFailed(path))` when the write fails.
 
 **Parameters**
 
@@ -286,7 +286,7 @@ FS.File.writeBytes("out.bin", Binary.fromBytes([0, 255])).ok?   # => true
 _Copying a file without decoding it_
 
 ```kex
-FS.File.readBytes(source).flatMap { |data| FS.File.writeBytes(target, data) }
+FS.File.readBytes(source).into { |data| FS.File.writeBytes(target, data) }
 ```
 
 ### `write` (foul)
@@ -297,7 +297,7 @@ write(path: FilePath, content: String) -> Result<Void, FileError>
 
 Writes `content` to `path`, replacing whatever was there.
 
-Creates the file if it does not exist. The containing directory must already exist: see `FS.Directory.create`. Answers `Error(WriteFailed(path))` when the write fails.
+Creates the file if it does not exist, but not its directory; create that first with `FS.Directory.create`. Returns `Error(WriteFailed(path))` when the write fails.
 
 **Parameters**
 
@@ -334,7 +334,7 @@ append(path: FilePath, content: String) -> Result<Void, FileError>
 
 Adds `content` to the end of `path`, keeping what is already there.
 
-Creates the file if it does not exist, so it is safe to append to a log that has not been started yet.
+Creates the file if it does not exist.
 
 **Parameters**
 
@@ -363,7 +363,7 @@ end
 exists?(path: FilePath) -> Bool
 ```
 
-Returns `true` when something exists at `path`: a file, a directory, or anything else. Use `file?` or `directory?` when the kind matters.
+Returns whether anything exists at `path`, whether a file, a directory or something else. Use `file?` or `directory?` when the kind matters.
 
 **Parameters**
 
@@ -394,7 +394,7 @@ end
 file?(path: FilePath) -> Bool
 ```
 
-Returns `true` when `path` exists and is a regular file: not a directory.
+Returns whether `path` exists and is a regular file.
 
 **Parameters**
 
@@ -415,7 +415,7 @@ FS.File.file?("src")         # => false
 directory?(path: FilePath) -> Bool
 ```
 
-Returns `true` when `path` exists and is a directory.
+Returns whether `path` exists and is a directory.
 
 **Parameters**
 
@@ -444,7 +444,7 @@ delete(path: FilePath) -> Result<Void, FileError>
 
 Deletes the file at `path`.
 
-Answers `DeleteFailed` when the file does not exist or cannot be removed. Use `FS.Directory.delete` for a directory.
+Returns `DeleteFailed` when the file does not exist or cannot be removed. Use `FS.Directory.delete` for a directory.
 
 **Parameters**
 
@@ -500,7 +500,7 @@ FS.File.write(path, updated)
 rename(src: FilePath, dst: FilePath) -> Result<Void, FileError>
 ```
 
-Renames (or moves) the file at `src` to `dst`.
+Renames or moves the file at `src` to `dst`.
 
 **Parameters**
 
@@ -528,11 +528,11 @@ FS.File.rename("${path}.tmp", path)
 changePermission(path: FilePath, permissions: [Permission]) -> Result<Void, FileError>
 ```
 
-Sets what may be done with the file at `path`, portably.
+Sets what may be done with the file at `path`, in a way that works on every system.
 
-The file ends up with exactly the listed permissions: anything left out is taken away. The owner gets all of them; everyone else gets the same without `Writable`. On POSIX that is `0o755` for all three, `0o644` for `[Readable, Writable]` and `0o444` for `[Readable]`. On Windows only `Writable` has an effect, as the read-only attribute: files there are always readable, and whether one runs is decided by its extension.
+The file gets exactly the listed permissions, and loses any left out. The owner gets all of them and everyone else the same without `Writable`: on POSIX that is `0o755` for all three, `0o644` for `[Readable, Writable]` and `0o444` for `[Readable]`. On Windows only `Writable` has an effect, through the read-only attribute.
 
-Use `changeMode` when you need exact POSIX bits, such as a file only its owner may read.
+Use `changeMode` for exact POSIX bits, such as a file only its owner may read.
 
 **Parameters**
 
@@ -563,14 +563,14 @@ Process.run(script, [])
 changeMode(path: FilePath, mode: Integer) -> Result<Void, FileError>
 ```
 
-Sets the POSIX permission bits of the file at `path` to `mode`: what `chmod` does with a numeric mode.
+Sets the POSIX permission bits of the file at `path` to `mode`, as `chmod` does with a numeric mode.
 
-`mode` is most readably written in octal: `0o600` is a file only its owner may read and write. The bits are replaced, not added to, and a mode outside `0o0000..0o7777` is refused. This is the POSIX escape hatch: on Windows only the owner-write bit means anything. Prefer `changePermission`, which says what you want rather than how POSIX spells it.
+Write `mode` in octal: `0o600` lets only the owner read and write. The bits are replaced, not added to, and a mode outside `0o0000..0o7777` is a `ModeFailed` error. On Windows only the owner-write bit has an effect. `changePermission` covers the common cases on every system.
 
 **Parameters**
 
   - `path` — the file whose mode to change
-  - `mode` — the permission bits, as in `chmod`
+  - `mode` — the permission bits, as for `chmod`
 
 **Returns**: `Ok` when the mode was changed, or `ModeFailed`
 
@@ -588,9 +588,9 @@ readLines(path: FilePath) -> Result<[String], FileError>
 
 Reads the file and returns its lines, without their newlines.
 
-Answers why when the file cannot be read, as `FS.File.read` does. A trailing newline does not produce a final empty line, so the count is the number of lines you would see in an editor.
+Fails as `FS.File.read` does. A trailing newline does not add an empty last line, so the count matches what an editor shows.
 
-NOT `lines`: FilePath is an alias for String, so a receiver function named `lines` here is indistinguishable from String's own `lines` at every call site, and merely saying `using FS` made `text.lines` ambiguous. `readLines` also says what it does: it reads the file.
+It is not called `lines` because a `FilePath` is a `String`, and that name would clash with `String.lines`.
 
 **Parameters**
 
@@ -620,13 +620,11 @@ FS.File.readLines("hosts")
 feed(path: FilePath) -> Result<Feed<String>, FileError>
 ```
 
-Returns a lazy `Feed` of the file's lines, or `ReadFailed` when the file cannot be opened.
+Returns the file's lines as a lazy `Feed`, or `ReadFailed` when the file cannot be opened.
 
-Unlike `readLines`, the file is read a line at a time off a handle held open for the feed's lifetime, so this is the way to walk a file too large to hold in memory: nothing but the current line is retained.
+The file is read one line at a time from a handle that stays open while the feed is in use, so only the current line is held in memory. Use it for files too large for `readLines`.
 
-A `Feed` rather than a `Stream` because that is what a file honestly is: reading consumes, and there is no rewinding. Taking twice walks forward rather than answering the same lines again. On a file small enough to replay, `toStream` buys that back.
-
-The feed ends at the last line, so asking for more lines than the file has answers just the lines there are: unlike `Stream.from`, which is deliberately infinite.
+Reading from a feed consumes it: taking twice gives the next lines, not the same ones again. Call `toStream` on it when a small file needs to be read more than once. The feed ends at the last line, so taking more lines than the file has returns the lines there are.
 
 ```kex
 FS.File.feed("two-lines.txt").map { |lines| lines.take(5) }.or([])
@@ -666,7 +664,7 @@ size(path: FilePath) -> Result<Integer, FileError>
 
 Returns the file's size in bytes, or `ReadFailed` when it cannot be read.
 
-Bytes, not characters: a file of non-ASCII text has more bytes than it has characters.
+A file of non-ASCII text has more bytes than characters.
 
 **Parameters**
 
@@ -693,9 +691,9 @@ paths.filter { |p| FS.File.size(p).or(0) < 1048576 }
 absolute(path: FilePath) -> Result<String, FileError>
 ```
 
-Resolves `path` against the process's current directory and returns the absolute form, or `ReadFailed` when it cannot be resolved.
+Returns `path` made absolute against the current directory, or `ReadFailed` when it cannot be resolved.
 
-This is the one path operation that is not in `FS.Path`, because it is not lexical: it asks the process where it is.
+It lives here and not in `FS.Path` because it depends on the current directory. Use `canonical` to also resolve `..` and symlinks.
 
 **Parameters**
 
@@ -721,9 +719,9 @@ IO.printError("failed: ${FS.File.absolute(path).or(path)}")
 canonical(path: FilePath) -> Result<String, FileError>
 ```
 
-The canonical form of `path`: absolute, with every `.`, `..` and symlink resolved, like `realpath(3)`.
+Returns the canonical form of `path`: absolute, with every `.`, `..` and symlink resolved, like `realpath(3)`.
 
-Unlike `absolute` this reads the filesystem, so a path that does not exist (or a symlink loop) is an error. Use it to keep reads and writes inside a directory: compare the real path's prefix, and neither `../` nor a symlink can escape.
+It reads the filesystem, so a path that does not exist or a symlink loop is a `ReadFailed` error. To keep reads and writes inside a directory, check that the canonical path starts with the directory's canonical path; neither `../` nor a symlink can get around that.
 
 **Parameters**
 
@@ -734,7 +732,7 @@ Unlike `absolute` this reads the filesystem, so a path that does not exist (or a
 **Examples**
 
 ```kex
-FS.File.canonical("/tmp/../etc")   # => Ok("/private/etc") on macOS
+FS.File.canonical("/tmp/../etc")   # => Ok("/etc") on Linux
 ```
 
 ### `symlink?` (foul)
@@ -743,7 +741,7 @@ FS.File.canonical("/tmp/../etc")   # => Ok("/private/etc") on macOS
 symlink?(path: FilePath) -> Bool
 ```
 
-Whether `path` is itself a symlink, without following it. A dangling link is still a symlink.
+Returns whether `path` is itself a symlink. A link to nothing still counts.
 
 **Parameters**
 
@@ -763,9 +761,9 @@ FS.File.symlink?("current")   # => true
 info(path: FilePath) -> Result<FileInfo, FileError>
 ```
 
-The kind, size and modification time of `path`, read in one `lstat`.
+Returns the kind, size and modification time of `path` in one call.
 
-One call answers what `file?`, `directory?`, `symlink?` and `size` would otherwise ask separately, which is what walking a tree or fingerprinting it for changes wants. A symlink is described as itself, not followed.
+It covers what `file?`, `directory?`, `symlink?` and `size` would ask one by one, which suits walking a tree or checking it for changes. A symlink is described as itself, not followed.
 
 **Parameters**
 
@@ -793,7 +791,7 @@ let changed = FS.File.info(path).try != before
 
 Path arithmetic: joining, splitting, normalising and comparing paths.
 
-Everything here is pure string manipulation with no filesystem access, so the answer is the same whether or not the path exists, which also means these functions can be called from ordinary pure code, unlike `FS.File`. POSIX separators only for now.
+These functions only look at the text of the path, never the filesystem, so the result is the same whether or not the path exists, and they can be called from code that is not `foul`. Only the POSIX separator `/` is understood.
 
 ```kex
 FS.Path.join("src", "main.kex")            # => "src/main.kex"
@@ -826,7 +824,7 @@ join(a: FilePath, b: FilePath, c: FilePath) -> String
 
 Joins two path parts with a single separator and normalises the result.
 
-Repeated separators collapse, so `join("a/", "/b")` is `"a/b"` and not `"a//b"`. An absolute second part does NOT restart the path, the way Ruby's `Pathname#join` would: use that part on its own if that is what you mean.
+Repeated separators collapse, so `join("a/", "/b")` is `"a/b"`. An absolute second part does not start the path over, as it would with Ruby's `Pathname#join`.
 
 **Parameters**
 
@@ -855,9 +853,9 @@ FS.Path.join(outputDir, FS.Path.basename(source))
 joinAll(parts: [FilePath]) -> String
 ```
 
-Joins any number of path parts, skipping empty ones, and normalises the result. An empty list gives `"."`.
+Joins any number of path parts, skipping empty ones, and normalises the result.
 
-The list form is `joinAll`, not another `join` overload: a list receiver already has `List.join`, and a second one-argument `join` on the same receiver would be indistinguishable from it.
+An empty list gives `"."`.
 
 **Parameters**
 
@@ -887,7 +885,7 @@ normalize(path: FilePath) -> String
 
 Resolves `.` and `..` in a path, lexically.
 
-Because it is lexical it never follows a symlink and never touches the disk. A leading `..` in a RELATIVE path is kept: there is no way to know what it escapes to, while one in an absolute path is dropped, since `/` has no parent.
+It does not look at the disk or follow symlinks. A leading `..` is kept in a relative path and dropped in an absolute one, since `/` has no parent.
 
 **Parameters**
 
@@ -943,7 +941,7 @@ FS.Path.segments(path).count
 absolute?(path: FilePath) -> Bool
 ```
 
-Returns `true` when the path starts at the root.
+Returns whether the path starts at the root.
 
 **Parameters**
 
@@ -964,7 +962,7 @@ FS.Path.absolute?("src/main")     # => false
 relative?(path: FilePath) -> Bool
 ```
 
-Returns `true` when the path does not start at the root. The opposite of `absolute?`.
+Returns whether the path does not start at the root, the opposite of `absolute?`.
 
 **Parameters**
 
@@ -987,7 +985,7 @@ dirname(path: FilePath) -> String
 
 Returns the path's parent directory.
 
-A child of the root has `"/"` as its parent; a bare name has `"."`, the current directory. The path is read as written, as POSIX `dirname` reads it: `".."` is a name here, not resolved, so `dirname("a/b/..")` is `"a/b"`. Use `normalize` first when that is not what you want.
+A child of the root has `"/"` as its parent, and a bare name has `"."`. Like POSIX `dirname`, it does not resolve `..`: `dirname("a/b/..")` is `"a/b"`. Call `normalize` first to resolve it.
 
 **Parameters**
 
@@ -1015,9 +1013,9 @@ FS.Directory.create(FS.Path.dirname(target))
 basename(path: FilePath) -> String
 ```
 
-Returns the last segment of the path: the file or directory name.
+Returns the last segment of the path, the file or directory name.
 
-The root itself answers `"/"`, and an empty path answers `""`. Like `dirname`, it reads the path as written: `basename("a/b/..")` is `".."`.
+The root gives `"/"` and an empty path `""`. Like `dirname`, it does not resolve `..`: `basename("a/b/..")` is `".."`.
 
 **Parameters**
 
@@ -1047,7 +1045,7 @@ extension(path: FilePath) -> String
 
 Returns the file extension, including its leading dot, or `""` when there is none.
 
-Only the last extension counts, so `"a.tar.gz"` has `".gz"`. A leading dot is part of the NAME rather than an extension, so `".gitignore"` has none.
+Only the last extension counts, so `"a.tar.gz"` has `".gz"`. A leading dot belongs to the name, so `".gitignore"` has no extension.
 
 **Parameters**
 
@@ -1078,7 +1076,7 @@ stem(path: FilePath) -> String
 
 Returns the basename with its extension removed.
 
-A name that IS its extension (`".gitignore"`) keeps it, because it has none to drop.
+`".gitignore"` stays as it is, since it has no extension.
 
 **Parameters**
 
@@ -1108,7 +1106,7 @@ withExtension(path: FilePath, wanted: String) -> String
 
 Returns the path with its extension replaced by `wanted`.
 
-The new extension may be written with or without its leading dot; an empty one removes the extension entirely.
+`wanted` may be written with or without its leading dot, and an empty one removes the extension. A path with no file name, such as `"."` or `"/"`, comes back unchanged.
 
 **Parameters**
 
@@ -1137,9 +1135,9 @@ FS.Path.withExtension(FS.Path.join(outDir, FS.Path.basename(src)), "o")
 relativeTo(path: FilePath, base: FilePath) -> String
 ```
 
-Expresses `path` relative to `base`, walking up with `..` as needed.
+Returns `path` relative to `base`, going up with `..` as needed.
 
-Purely lexical, so it answers only when both sides are anchored the same way; a relative path against an absolute base, or the reverse, comes back unchanged. A path that IS the base answers `"."`.
+It works on the text alone, so both must be absolute or both relative; otherwise `path` comes back normalised but otherwise unchanged. A path equal to `base` gives `"."`.
 
 **Parameters**
 
@@ -1166,7 +1164,7 @@ matches.each { |p| IO.printLine(FS.Path.relativeTo(p, projectRoot)) }
 
 Creating, listing and removing directories.
 
-Like `FS.File`, everything here reaches the real filesystem and so is `foul`. Listings answer with a `Result`, so a directory that cannot be read is a value you handle rather than an exception.
+Everything here uses the real filesystem, so only `foul` code can call it. Unlike `FS.File`, it is not a capability and cannot be swapped out in a test.
 
 ### `exists?` (foul)
 
@@ -1174,18 +1172,19 @@ Like `FS.File`, everything here reaches the real filesystem and so is `foul`. Li
 exists?(path: FilePath) -> Bool
 ```
 
-Returns `true` when something exists at `path`.
+Returns whether a directory exists at `path`. A file there gives `false`; use `FS.File.exists?` to ask about anything at all.
 
 **Parameters**
 
   - `path` — the path to test
 
-**Returns**: `true` when the path exists
+**Returns**: `true` when `path` is a directory
 
 **Examples**
 
 ```kex
-FS.Directory.exists?("src")   # => true
+FS.Directory.exists?("src")         # => true
+FS.Directory.exists?("README.md")   # => false
 ```
 
 ### `directory?` (foul)
@@ -1194,7 +1193,7 @@ FS.Directory.exists?("src")   # => true
 directory?(path: FilePath) -> Bool
 ```
 
-Returns `true` when `path` exists and is a directory.
+Returns whether `path` exists and is a directory.
 
 **Parameters**
 
@@ -1215,7 +1214,7 @@ FS.Directory.directory?("README.md")  # => false
 file?(path: FilePath) -> Bool
 ```
 
-Returns `true` when `path` exists and is a regular file.
+Returns whether `path` exists and is a regular file.
 
 **Parameters**
 
@@ -1235,7 +1234,7 @@ FS.Directory.file?("README.md")   # => true
 create(path: FilePath) -> Result<Void, FileError>
 ```
 
-Creates the directory at `path`, and any missing parents along the way, as `mkdir -p` does. A directory that is already there is `Ok`.
+Creates the directory at `path` and any missing parents, as `mkdir -p` does. A directory that already exists is `Ok`.
 
 **Parameters**
 
@@ -1261,7 +1260,9 @@ FS.Directory.create(outDir).try
 delete(path: FilePath) -> Result<Void, FileError>
 ```
 
-Removes the directory at `path`, which must be empty. A file or a symlink at `path` is left alone and answers `DeleteFailed`.
+Removes the directory at `path`, which must be empty.
+
+A file or symlink at `path` is left alone and gives `DeleteFailed`, as does a directory that is not empty.
 
 Use `deleteAll` to remove a directory together with its contents.
 
@@ -1283,9 +1284,9 @@ FS.Directory.delete("empty")   # => Ok(())
 deleteAll(path: FilePath) -> Result<Void, FileError>
 ```
 
-Removes the directory at `path` and everything inside it, recursively. A path that is not a directory, a file or a symlink included, is left alone and answers `DeleteFailed`.
+Removes the directory at `path` and everything in it.
 
-This deletes data and cannot be undone: check the path before calling it, particularly when it was computed or came from user input.
+A path that is not a directory, such as a file or a symlink, is left alone and gives `DeleteFailed`. The deletion cannot be undone, so check the path first, especially one that was computed or came from a user.
 
 **Parameters**
 
@@ -1312,9 +1313,9 @@ FS.Directory.create(tmpDir)
 list(path: FilePath) -> Result<[String], FileError>
 ```
 
-Lists the names in `path`: both files and directories, one level deep.
+Returns the names of the files and directories directly inside `path`.
 
-The results are bare names, not paths; join them with `path` to get something you can open. Answers `ReadFailed` when the directory cannot be read.
+They are bare names, not paths, sorted; join each with `path` to open it. Returns `ReadFailed` when the directory cannot be read.
 
 **Parameters**
 
@@ -1325,7 +1326,7 @@ The results are bare names, not paths; join them with `path` to get something yo
 **Examples**
 
 ```kex
-FS.Directory.list("src")   # => Ok(["main.kex", "lexer"])
+FS.Directory.list("src")   # => Ok(["lexer", "main.kex"])
 ```
 
 _Turning names into usable paths_
@@ -1340,7 +1341,7 @@ FS.Directory.list(dir).or([]).map { |name| FS.Path.join(dir, name) }
 files(path: FilePath) -> Result<[String], FileError>
 ```
 
-Lists only the regular files in `path`, one level deep.
+Returns the names of the regular files directly inside `path`.
 
 **Parameters**
 
@@ -1368,7 +1369,7 @@ FS.Directory.files(dir)
 directories(path: FilePath) -> Result<[String], FileError>
 ```
 
-Lists only the subdirectories of `path`, one level deep.
+Returns the names of the directories directly inside `path`.
 
 **Parameters**
 
@@ -1396,7 +1397,7 @@ end
 current -> String
 ```
 
-Returns the process's current working directory, as an absolute path.
+Returns the current working directory as an absolute path.
 
 **Returns**: the current directory
 
@@ -1442,9 +1443,9 @@ temporary -> String
 
 Returns the directory this system puts temporary files in.
 
-Total, unlike `home`: it answers `TMPDIR` when the environment sets one (`TEMP` or `TMP` on Windows) and falls back to `/tmp`, so there is always somewhere to write. The path never ends in a separator, so it composes with `FS.Path.join` directly.
+It is `TMPDIR`, `TEMP` or `TMP` from the environment, the first one set, and `/tmp` when none is. The path never ends in a separator.
 
-The directory is shared with every other process on the machine, so pick a name unlikely to collide and delete it when you are done.
+Other processes share the directory, so pick names that will not collide, or use `createTemporary`, and delete what you create.
 
 **Returns**: the temporary directory
 
@@ -1470,7 +1471,7 @@ createTemporary(prefix: String) -> Result<FilePath, FileError>
 
 Creates a fresh, empty directory under `temporary` and returns its path.
 
-The name is `prefix` followed by a random suffix, so concurrent callers using the same prefix each get their own directory. Nothing removes it for you: `deleteAll` it when you are done.
+The name is `prefix`, a dash and a random suffix, so callers using the same prefix each get their own directory. Nothing removes it for you; call `deleteAll` when you are done.
 
 **Parameters**
 

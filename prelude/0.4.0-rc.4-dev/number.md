@@ -29,13 +29,13 @@ entities:
 
 ## type `Integer`
 
-Implements [`Monoid`](algebra.md#trait-monoid), [`Group`](algebra.md#trait-group), [`Blankable`](blankable.md#trait-blankable), [`Truthyable`](truthyable.md#trait-truthyable).
+Implements [`Monoid`](algebra.md#trait-monoid), [`Group`](algebra.md#trait-group), [`Blankable`](blankable.md#trait-blankable), [`Discrete`](range.md#trait-discrete), [`Truthyable`](truthyable.md#trait-truthyable).
 
 Whole numbers, of arbitrary size.
 
-`Integer` has no width limit: factorials and cryptographic moduli are ordinary values, not a special big-number type you have to opt into.
+`Integer` has no width limit, so a factorial or a cryptographic modulus is an `Integer` like any other.
 
-`Integer` and `Float` are one numeric tower: they compare and order across the boundary, so `0 == 0.0` is `true` and `[1, 2.5, 3].sort` works. What differs is the arithmetic. `/` on two integers is integer division, and `sqrt` answers a `Float` because a square root generally is one.
+`Integer` and `Float` compare and sort together: `0 == 0.0` is `true` and `[1, 2.5, 3].sort` works. Their arithmetic differs. `/` on two integers is integer division, and `sqrt` always returns a `Float`.
 
 ```kex
 7 / 2          # => 3      (integer division)
@@ -93,7 +93,7 @@ dividesBy?(n: Integer) -> Bool
 
 Returns `true` when the integer divides evenly by `n`.
 
-Zero is divisible by every non-zero integer, and nothing is divisible by zero — not even zero itself.
+Zero is divisible by every non-zero integer. Nothing is divisible by zero, not even zero.
 
 **Parameters**
 
@@ -152,7 +152,7 @@ sqrt -> Float
 
 Returns the square root as a `Float`.
 
-The result is a `Float` even when the root is exact, because in general it is not. Round or floor it when you need an integer back.
+The result is a `Float` even when the root is exact. Round or floor it to get an integer back.
 
 **Returns**: the square root
 
@@ -172,7 +172,7 @@ modulo(n: Integer) -> Integer
 
 Returns `this` modulo `n`.
 
-The result takes the sign of `n`, which is mathematical modulo rather than the C-style remainder other languages give. That is what makes it safe for wrapping an index that may have gone negative.
+The result takes the sign of `n`, unlike the C-style remainder, so `(-1).modulo(3)` is `2`. That makes it the one to use for wrapping an index that may have gone negative.
 
 **Parameters**
 
@@ -230,7 +230,7 @@ times(block: Block<Void>) -> Void
 
 Calls `f` exactly `this` times, passing the 0-based iteration index.
 
-This is the counting loop. When you want the numbers themselves rather than a count of repetitions, `(1..n).items.each` often reads better.
+When the loop is about the numbers themselves, `(1..n).each` often reads better.
 
 **Parameters**
 
@@ -262,7 +262,7 @@ end
 downTo(last: Integer) -> Range<Integer>
 ```
 
-Returns the range from this integer down to `last`, both included, counting by -1: `(this..last).by(-1)`. It is empty when `last` is larger. Nothing is enumerated until the range is traversed.
+Returns the range from this integer down to `last`, both included, counting by -1. It is empty when `last` is larger.
 
 **Parameters**
 
@@ -289,7 +289,7 @@ _Counting down_
 floor -> Integer
 ```
 
-Returns the integer unchanged. Present so that code written against `Number` works whichever half of the tower it is handed.
+Returns the integer unchanged, so code that floors a `Number` works on integers too.
 
 **Returns**: the same integer
 
@@ -337,9 +337,9 @@ Returns the integer unchanged. The `Integer` counterpart of `Float.round`.
 pow(exponent: Integer) -> Integer
 ```
 
-Raises the integer to a non-negative integer power, exactly: integers have no size limit, so `2.pow(100)` is the whole 31-digit number, where `Math.pow` answers a `Float`.
+Raises the integer to an integer power, exactly. `2.pow(100)` is the whole 31-digit number; `Math.pow` returns a `Float`.
 
-A negative exponent gives the reciprocal truncated toward zero, the way `/` divides integers: `0` for any base but `1` and `-1`.
+A negative exponent gives the reciprocal truncated toward zero, as `/` does: `0` for any base but `1` and `-1`.
 
 **Parameters**
 
@@ -361,7 +361,7 @@ A negative exponent gives the reciprocal truncated toward zero, the way `/` divi
 div(n: Integer) -> Integer
 ```
 
-Divides and rounds toward negative infinity: the quotient that goes with `modulo`. Plain `/` truncates toward zero instead, so the two differ only when the signs do. Ruby's `/` on integers is this one.
+Divides and rounds toward negative infinity, the quotient that goes with `modulo`. Plain `/` truncates toward zero, so the two differ when the signs differ. Ruby's `/` on integers behaves like this one.
 
 **Parameters**
 
@@ -382,7 +382,7 @@ Divides and rounds toward negative infinity: the quotient that goes with `modulo
 divmod(n: Integer) -> (Integer, Integer)
 ```
 
-The floored quotient and the `modulo` remainder together, so that +q * n + r == this+ always holds.
+Returns the floored quotient and the `modulo` remainder together, so +q * n + r == this+ always holds.
 
 **Parameters**
 
@@ -403,7 +403,7 @@ The floored quotient and the `modulo` remainder together, so that +q * n + r == 
 gcd(n: Integer) -> Integer
 ```
 
-The greatest common divisor, always non-negative. `0.gcd(0)` is `0`.
+Returns the greatest common divisor, never negative. `0.gcd(0)` is `0`.
 
 **Parameters**
 
@@ -424,7 +424,7 @@ The greatest common divisor, always non-negative. `0.gcd(0)` is `0`.
 lcm(n: Integer) -> Integer
 ```
 
-The least common multiple, always non-negative. Zero with anything is `0`.
+Returns the least common multiple, never negative. It is `0` when either integer is zero.
 
 **Parameters**
 
@@ -444,7 +444,7 @@ The least common multiple, always non-negative. Zero with anything is `0`.
 digits -> [Integer]
 ```
 
-The decimal digits of the integer's magnitude, least significant first, as Ruby's `digits` answers them. `.reverse` gives reading order.
+Returns the decimal digits of the integer's magnitude, least significant first, as Ruby's `digits` does. `.reverse` gives reading order.
 
 **Returns**: the digits, ones place first
 
@@ -525,9 +525,9 @@ Implements [`Blankable`](blankable.md#trait-blankable), [`Truthyable`](truthyabl
 
 Double-precision floating-point numbers.
 
-A Kex `Float` is always finite. An operation that would produce `NaN` or `Infinity` raises instead: the same rule the BEAM enforces, where those two values cannot exist at all. So a `Float` you are holding is always a real number, and there is no `nan?` to check for.
+A Kex `Float` is always finite. An operation that would produce `NaN` or `Infinity` raises, so there is no `nan?` to check for.
 
-`Float` and `Integer` compare and order across the boundary; see `Integer` for the rest of the numeric tower.
+`Float` and `Integer` compare and sort together; see `Integer`.
 
 ```kex
 3.7.floor      # => 3
@@ -564,7 +564,7 @@ _An approximate-equality test_
 sqrt -> Float
 ```
 
-Returns the square root. Raises for a negative receiver, which has no real root.
+Returns the square root. Raises for a negative float.
 
 **Returns**: the square root
 
@@ -602,7 +602,7 @@ Returns `true` when the float falls inside `range`, endpoints included.
 floor -> Integer
 ```
 
-Returns the largest integer that is not greater than the float: it always rounds toward negative infinity, which is what separates it from `toInteger` for negative values.
+Returns the largest integer not greater than the float. It rounds toward negative infinity, so for negative values it differs from `toInteger`.
 
 **Returns**: the floor
 
@@ -620,7 +620,7 @@ Returns the largest integer that is not greater than the float: it always rounds
 ceil -> Integer
 ```
 
-Returns the smallest integer that is not less than the float: it always rounds toward positive infinity.
+Returns the smallest integer not less than the float.
 
 **Returns**: the ceiling
 
@@ -662,7 +662,7 @@ Returns the nearest integer, with halves rounding away from zero.
 toInteger -> Integer
 ```
 
-Truncates toward zero and returns the result as an `Integer`: it drops the fractional part rather than rounding, so it differs from both `floor` and `round` for negative values.
+Drops the fractional part and returns an `Integer`. For negative values this differs from `floor`.
 
 **Returns**: the truncated value
 
@@ -725,83 +725,48 @@ Returns `true` when the number is less than zero.
 
 Reading integers out of text.
 
-Use `parse` when a failure needs explaining and `"42".to(Integer)` when it does not: `to` answers a plain `Optional`, `parse` answers a `Result` carrying a `ParseError` that says where it stopped and what it had read so far.
+`"42".to(Integer)` returns an `Optional`. Use `parse` when the caller needs to know why the text is not a number: its `ParseError` has one case per reason.
 
 ### `parse`
 
 ```kex
-parse(s: String) -> Result<Integer, ParseError>
-parse(s: String, culture: Culture) -> Result<Integer, ParseError>
-parse(s: String, culture: Integer) -> Result<Integer, ParseError>
+parse(text: String, radix: Integer = …, culture: Culture = …) -> Result<Integer, ParseError<Integer>>
 ```
 
-Parses the whole string as a base-10 integer.
+Parses `text` as an integer: an optional sign, then digits in `radix`. Group separators must follow `culture`'s grouping; digits with no separator read in every culture.
 
-The string must be entirely consumed: leading or trailing characters make it an `Error`, with a `ParseError` describing where parsing stopped. Use `parsePrefix` when a trailing remainder is expected. For localized text, pass `culture:` explicitly.
+A number followed by other text is a `Trailing` error carrying the number and the rest, so matching on it reads a number off the front of `"10 USD"`.
 
 **Parameters**
 
-  - `s` — the text to parse
+  - `text` — the text to read
+  - `radix` — the base, 2 to 36; digits above 9 in either case
+  - `culture` — whose group separator to accept
 
-**Returns**: the integer, or a described failure
+**Returns**: the integer, or why not
 
 **Examples**
 
 ```kex
-Integer.parse("42")     # => Ok(42)
-Integer.parse("-7")     # => Ok(-7)
-Integer.parse("4x")     # => Error(ParseError { ... rest: "x" ... })
+Integer.parse("42")                 # => Ok(42)
+Integer.parse("ff", radix: 16)      # => Ok(255)
+Integer.parse("10 USD")             # => Error(Trailing(10, " USD"))
+Integer.parse("abc")                # => Error(NoDigits(0))
+```
+
+_In a culture_
+
+```kex
+let hu = Culture.of("HU_HU").or(Culture.DEFAULT)
+Integer.parse("1 500", culture: hu)   # => Ok(1500)
+Integer.parse("1500", culture: hu)    # => Ok(1500)
+Integer.parse("1 50", culture: hu)    # => Error(BadGrouping(2))
 ```
 
 _Reading a setting with a fallback_
 
 ```kex
 let port = Integer.parse(raw).or(8080)
-```
-
-_Reporting why the input was rejected_
-
-```kex
-match Integer.parse(raw) do
-  Ok(n)    => IO.printLine("port ${n}")
-  Error(e) => IO.printError("bad port: ${e.message}")
-end
-```
-
-### `parsePrefix`
-
-```kex
-parsePrefix(s: String) -> (Integer, String)?
-parsePrefix(s: String, culture: Culture) -> (Integer, String)?
-```
-
-Parses an integer from the front of the string and returns it together with whatever text was left over.
-
-This is the building block for hand-written scanners: parse a number, keep going from the remainder. Answers `None` when the string does not begin with a number at all.
-
-**Parameters**
-
-  - `s` — the text to parse from
-
-**Returns**: the value and the unconsumed remainder
-
-**Examples**
-
-```kex
-Integer.parsePrefix("42abc")   # => Just((42, "abc"))
-Integer.parsePrefix("abc")     # => None
-```
-
-_Reading a leading count off a line_
-
-```kex
-match Integer.parsePrefix("3 items") do
-  Just(pair) => do
-    let (count, rest) = pair
-    IO.printLine("${count} of${rest}")   # prints: 3 of items
-  end
-  None => IO.printError("no leading count")
-end
 ```
 
 ## module `Float`
@@ -811,60 +776,32 @@ Reading floating-point numbers out of text.
 ### `parse`
 
 ```kex
-parse(s: String) -> Result<Float, ParseError>
-parse(s: String, culture: Culture) -> Result<Float, ParseError>
+parse(text: String, culture: Culture = …) -> Result<Float, ParseError<Float>>
 ```
 
-Parses the whole string as a float.
-
-The string must be entirely consumed; anything left over makes it an `Error` carrying a `ParseError`. For localized text, pass `culture:` explicitly.
+Parses `text` as a float: an optional sign, digits (grouped by `culture`'s rules if separators appear), an optional decimal part after the culture's decimal separator, and an optional exponent (`e3`, `E-2`). A whole number parses too: `"5"` gives `5.0`.
 
 **Parameters**
 
-  - `s` — the text to parse
+  - `text` — the text to read
+  - `culture` — whose decimal and group separators to accept
 
-**Returns**: the float, or a described failure
+**Returns**: the float, or why not
 
 **Examples**
 
 ```kex
-Float.parse("3.5")     # => Ok(3.5)
-Float.parse("-0.25")   # => Ok(-0.25)
-Float.parse("3.5m")    # => Error(ParseError { ... rest: "m" ... })
+Float.parse("3.5")       # => Ok(3.5)
+Float.parse("1e3")       # => Ok(1000.0)
+Float.parse("12.5kg")    # => Error(Trailing(12.5, "kg"))
+Float.parse("1e999")     # => Error(OutOfRange)
 ```
 
-_Averaging a column of text values_
+_In a culture_
 
 ```kex
-rows.map { |r| Float.parse(r).or(0.0) }.sum / rows.count.to(Float).or(1.0)
-```
-
-### `parsePrefix`
-
-```kex
-parsePrefix(s: String) -> (Float, String)?
-parsePrefix(s: String, culture: Culture) -> (Float, String)?
-```
-
-Parses a float from the front of the string and returns it together with the unconsumed remainder. Answers `None` when the string does not begin with a number.
-
-**Parameters**
-
-  - `s` — the text to parse from
-
-**Returns**: the value and the remainder
-
-**Examples**
-
-```kex
-Float.parsePrefix("3.5rest")   # => Just((3.5, "rest"))
-Float.parsePrefix("rest")      # => None
-```
-
-_Splitting a measurement from its unit_
-
-```kex
-Float.parsePrefix("12.5kg")   # => Just((12.5, "kg"))
+let hu = Culture.of("HU_HU").or(Culture.DEFAULT)
+Float.parse("1,44", culture: hu)   # => Ok(1.44)
 ```
 
 ### `MAX` (constant)
@@ -875,7 +812,7 @@ MAX : Float
 
 The largest finite `Float`.
 
-A Kex `Float` is always finite, so there is no infinity to start from: this is the bound to use instead, say as the first "smallest so far".
+Kex has no float infinity, so this is the starting value for a running minimum.
 
 **Examples**
 
@@ -891,15 +828,13 @@ let smallest = readings.reduce(Float.MAX) { |low, x| x < low then x else low }
 MIN : Float
 ```
 
-The most negative finite `Float`: `-Float.MAX`. Not the smallest positive one, which some languages call MIN.
+The most negative finite `Float`, `-Float.MAX`. Some languages use MIN for the smallest positive float; Kex does not.
 
 
 
 ## module `Float32`
 
-The bounds of the sized numeric types: `Int8.MAX`, `UInt64.MAX`, `Float32.MIN` and so on. `Integer` has none: it is arbitrary-precision. For a float type, `MIN` is the most negative finite value, not the smallest positive one.
-
-The range of a 32-bit float.
+The range of a 32-bit float. As for every sized float type, `MIN` is the most negative finite value.
 
 ### `MAX` (constant)
 
@@ -1163,31 +1098,39 @@ The smallest Byte: 0.
 
 ## module `Number`
 
-Reading a number out of text without deciding in advance which half of the numeric tower it belongs to.
+Reading a number from text that may hold either an integer or a float, and writing numbers by a digit pattern.
 
 ### `parse`
 
 ```kex
-parse(s: String) -> Result<Number, ParseError>
-parse(s: String, culture: Culture) -> Result<Number, ParseError>
+parse(text: String, culture: Culture = …) -> Result<Number, ParseError<Number>>
 ```
 
-Parses the whole string as an `Integer` or a `Float`, whichever the text describes.
+Parses `text` as an `Integer` or a `Float`, whichever it describes. A fraction or an exponent makes it a `Float`; otherwise the grammar is `Float.parse`'s.
 
-Use it when the input's shape is not known ahead of time: a config value, a CSV column that may hold either. For localized text, pass `culture:` explicitly.
+Use it for input such as a config value or a CSV column that may hold either kind.
 
 **Parameters**
 
-  - `s` — the text to parse
+  - `text` — the text to read
+  - `culture` — whose decimal and group separators to accept
 
-**Returns**: the number, or a described failure
+**Returns**: the number, or why not
 
 **Examples**
 
 ```kex
 Number.parse("42")     # => Ok(42)
 Number.parse("3.5")    # => Ok(3.5)
-Number.parse("x")      # => Error(ParseError { ... })
+Number.parse("x")      # => Error(NoDigits(0))
+```
+
+_In a culture_
+
+```kex
+let hu = Culture.of("HU_HU").or(Culture.DEFAULT)
+Number.parse("1 500,5", culture: hu)   # => Ok(1500.5)
+Number.parse("1 500", culture: hu)     # => Ok(1500)
 ```
 
 ### `format`
@@ -1198,7 +1141,7 @@ format(parts: [String], values: [Any]) -> NumberFormat
 
 Builds a `NumberFormat` from a digit pattern, for `to(String, format)`.
 
-The pattern is checked during compilation (by `validateFormat`), so a mistake in it fails the build instead of leaving text out at run time.
+The pattern is checked during compilation, so a bad pattern is a build error.
 
 - `0` is a required digit: `000` pads the integer part to three digits,
   and `.00` always writes two decimals.
@@ -1232,7 +1175,7 @@ The integer part always has at least one digit, so `#.00` writes `0.50`, never `
 validateFormat(source: String) -> [TaggedValidation.Issue]
 ```
 
-Checks a `Number.format` pattern during compilation, pointing at the first character that does not fit.
+Checks a `Number.format` pattern during compilation and reports the first character that does not fit.
 
 **Parameters**
 
@@ -1242,7 +1185,7 @@ Checks a `Number.format` pattern during compilation, pointing at the first chara
 
 ## record `NumberFormat`
 
-How `to(String, format)` writes a number: a digit pattern such as `"#.00"`, described at `Number.format`. Build one with `Number.format`, which checks the pattern during compilation, or with `NumberFormat.parse` for a pattern known only at run time.
+A digit pattern such as `"#.00"` for `to(String, format)`; the patterns are described at `Number.format`. Build one with `Number.format`, which checks the pattern during compilation, or with `NumberFormat.parse` for a pattern known only at run time.
 
 **Fields**
 
@@ -1255,10 +1198,10 @@ How `to(String, format)` writes a number: a digit pattern such as `"#.00"`, desc
 ### `parse`
 
 ```kex
-parse(pattern: String) -> Result<NumberFormat, ParseError>
+parse(pattern: String) -> Result<NumberFormat, PatternError>
 ```
 
-Checks a digit pattern known only at run time. `Number.format` describes the patterns.
+Checks a digit pattern known only at run time and returns it as a `NumberFormat`. `Number.format` describes the patterns.
 
 **Parameters**
 
@@ -1270,7 +1213,7 @@ Checks a digit pattern known only at run time. `Number.format` describes the pat
 
 ```kex
 NumberFormat.parse("#.00")   # => Ok(NumberFormat { pattern: "#.00" })
-NumberFormat.parse("#.#0")   # => Error(ParseError { position: 3, ... })
+NumberFormat.parse("#.#0")   # => Error(PatternError { message: "...", position: 3 })
 ```
 
 ### `layout`
@@ -1279,7 +1222,7 @@ NumberFormat.parse("#.#0")   # => Error(ParseError { position: 3, ... })
 layout(pattern: String) -> Result<(Integer, Integer, Integer), (Integer, String)>
 ```
 
-What a pattern writes: the fewest integer digits, the fewest decimals and the most decimals. Otherwise the index of its first problem, and what that problem is.
+Returns what a pattern writes: the fewest integer digits, the fewest decimals and the most decimals. For a bad pattern it returns the index of the first problem and a message.
 
 **Parameters**
 
@@ -1338,13 +1281,13 @@ trailingZeros(text: String, width: Integer) -> String
 
 ### From [`Comparable`](comparable.md#trait-comparable)
 
-  - [`max`](comparable.md#comparable-max) — What every ordered type gets from `compare` alone.
-  - [`min`](comparable.md#comparable-min) — Returns the smaller of this value and `other`; this value when they are equal.
-  - [`clamp`](comparable.md#comparable-clamp) — Returns this value limited to the range `low` to `high`: `low` when it is below, `high` when it is above, and itself otherwise.
-  - [`<`](comparable.md#comparable-op-lt) — The ordering operators, from `compare` alone: whatever is `Comparable` can be written with `<` and `>`, a record as much as a number.
-  - [`>`](comparable.md#comparable-op-gt) — 
-  - [`<=`](comparable.md#comparable-op-lt-eq) — 
-  - [`>=`](comparable.md#comparable-op-gt-eq) — 
+  - [`max`](comparable.md#comparable-max) — Returns the larger of this value and `other`, or this value when they are equal.
+  - [`min`](comparable.md#comparable-min) — Returns the smaller of this value and `other`, or this value when they are equal.
+  - [`clamp`](comparable.md#comparable-clamp) — Returns this value limited to `low`..`high`: `low` when it is below, `high` when it is above, and the value itself otherwise.
+  - [`<`](comparable.md#comparable-op-lt) — Returns `true` when this value orders before `other`.
+  - [`>`](comparable.md#comparable-op-gt) — Returns `true` when this value orders after `other`.
+  - [`<=`](comparable.md#comparable-op-lt-eq) — Returns `true` when this value orders before `other` or equal to it.
+  - [`>=`](comparable.md#comparable-op-gt-eq) — Returns `true` when this value orders after `other` or equal to it.
 
 ### Defined in other modules
 

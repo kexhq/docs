@@ -13,31 +13,31 @@ entities:
 
 A last-in-first-out stack.
 
-Opt-in: nothing here is in scope until `using Data.Stack`.
+Nothing here is in scope until `using Data.Stack`.
 
 ```kex
 using Data.Stack
 ```
 
-Elements are stored top first, so `push`, `pop` and `peek` are all list-head operations: none of them pay for the size of the stack. `items` reverses that internal order, so it reads bottom-to-top, the order you would have pushed them in:
+`push`, `pop` and `peek` take constant time. `items` lists the elements bottom to top, the order they were pushed in:
 
 ```kex
 let s = Stack.from([1, 2, 3])
-s.peek                # => Just(3)
-s.push(4).items       # => [1, 2, 3, 4]
-s.pop                 # => Just((3, Stack(1, 2)))
-Stack.empty.pop       # => None
+s.peek                                         # => Just(3)
+s.push(4).items                                # => [1, 2, 3, 4]
+s.pop.map { |top, rest| (top, rest.items) }    # => Just((3, [1, 2]))
+Stack.empty.pop                                # => None
 ```
 
-Updates return a new stack rather than changing the receiver. `push!` and `pop!` come free from the `!` rebinding form, the same as `add!`/`delete!` do for `Data.Set`: they build a new stack and rebind the receiver variable rather than modifying anything in place.
+Every update returns a new stack. `push!` rebinds the variable to the result, as `add!` does for `Data.Set`.
 
 
 
 ## record `Stack<A>`
 
-A stack of elements, held top first.
+A stack of elements.
 
-Build one with `Stack.from` rather than by hand: the record literal takes elements in storage order (top first), which reads backwards from the `items` a caller normally thinks in.
+Build one with `Stack.from`. The record literal takes its elements top first, the reverse of `items`.
 
 ```kex
 Stack.from([1, 2, 3]).items   # => [1, 2, 3]
@@ -47,7 +47,7 @@ Stack.from([1, 2, 3]).items   # => [1, 2, 3]
 
   - `elements` : [A] (optional)
 
-Implements [`Enumerable`](../enumerable.md#trait-enumerable), [`Foldable`](../enumerable.md#trait-foldable), [`Monoid`](../algebra.md#trait-monoid), [`Showable`](../kex.md#trait-showable), [`Blankable`](../blankable.md#trait-blankable).
+Implements [`Enumerable<A>`](../enumerable.md#trait-enumerable), [`Foldable<A>`](../enumerable.md#trait-foldable), [`Monoid`](../algebra.md#trait-monoid), [`Showable`](../kex.md#trait-showable), [`Blankable`](../blankable.md#trait-blankable).
 
 ### Functions
 
@@ -57,9 +57,7 @@ Implements [`Enumerable`](../enumerable.md#trait-enumerable), [`Foldable`](../en
 reduce(acc: B, f: (B -> A -> B)) -> B
 ```
 
-Folds from the bottom up to the top: the order `items` lists them in, so `map`, `each` and `items` all agree.
-
-This is `Stack`'s `Enumerable`/`Foldable` primitive.
+Folds the elements from bottom to top, the order of `items`. `map`, `each` and the other `Enumerable` functions use the same order.
 
 **Parameters**
 
@@ -80,7 +78,7 @@ Stack.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
 identity -> Stack<A>
 ```
 
-The empty stack: the `Monoid` identity.
+Returns the empty stack, the `Monoid` identity.
 
 **Returns**: the empty stack
 
@@ -90,7 +88,7 @@ The empty stack: the `Monoid` identity.
 combine(other: Stack<A>) -> Stack<A>
 ```
 
-Combines two stacks by pushing the argument's elements on top of this one, top element last.
+Pushes the elements of `other` onto this stack, bottom first, so the top of `other` ends up on top.
 
 **Parameters**
 
@@ -110,7 +108,7 @@ Stack.from([1, 2]).combine(Stack.from([3, 4])).items   # => [1, 2, 3, 4]
 items -> [A]
 ```
 
-Returns the elements bottom-to-top: the order you would have pushed them in.
+Returns the elements bottom to top, the order they were pushed in.
 
 **Returns**: the elements, bottom first
 
@@ -128,7 +126,7 @@ push(value: A) -> Stack<A>
 
 Returns a new stack with `value` pushed on top.
 
-Use `push!` to rebind the receiver variable.
+`s.push!(value)` rebinds `s` to the result.
 
 **Parameters**
 
@@ -148,17 +146,16 @@ Stack.from([1, 2]).push(3).items   # => [1, 2, 3]
 pop -> (A, Stack<A>)?
 ```
 
-Returns the top element and the stack without it, wrapped in `Just`, or `None` for an empty stack.
-
-Use `pop!` to rebind the receiver variable.
+Returns the top element and the stack without it, or `None` for an empty stack.
 
 **Returns**: the top element and the rest, or `None`
 
 **Examples**
 
 ```kex
-Stack.from([1, 2, 3]).pop   # => Just((3, Stack(1, 2)))
-Stack.empty.pop             # => None
+Stack.from([1, 2, 3]).pop.map { |top, rest| (top, rest.items) }
+# => Just((3, [1, 2]))
+Stack.empty.pop   # => None
 ```
 
 #### `peek`
@@ -167,7 +164,7 @@ Stack.empty.pop             # => None
 peek -> A?
 ```
 
-Returns the top element wrapped in `Just`, or `None` for an empty stack.
+Returns the top element, or `None` for an empty stack.
 
 **Returns**: the top element, or `None`
 
@@ -218,9 +215,9 @@ Stack.from([1]).empty?     # => false
 +(other: [A]) -> Stack<A>
 ```
 
-Pushes another stack's elements, or a plain list's, on top.
+Pushes the elements of another stack or of a list onto this one.
 
-The list form reads bottom-to-top, the same as `Stack.from`: the last element of the list ends up on top.
+A list is read bottom to top, as by `Stack.from`, so its last element ends up on top.
 
 **Parameters**
 
@@ -231,8 +228,8 @@ The list form reads bottom-to-top, the same as `Stack.from`: the last element of
 **Examples**
 
 ```kex
-Stack.from([1, 2]) + [3, 4]             # => Stack(1, 2, 3, 4)
-Stack.from([1, 2]) + Stack.from([3])    # => Stack(1, 2, 3)
+(Stack.from([1, 2]) + [3, 4]).items            # => [1, 2, 3, 4]
+(Stack.from([1, 2]) + Stack.from([3])).items   # => [1, 2, 3]
 ```
 
 #### `showValue` (from Showable)
@@ -241,7 +238,7 @@ Stack.from([1, 2]) + Stack.from([3])    # => Stack(1, 2, 3)
 showValue -> String
 ```
 
-Renders the stack as `Stack(...)`, bottom-to-top.
+Writes the stack as `Stack(...)`, bottom to top.
 
 **Returns**: the rendered stack
 
@@ -257,7 +254,7 @@ Stack.from([1, 2, 3]).showValue   # => "Stack(1, 2, 3)"
 blank? -> Bool
 ```
 
-Returns `true` when the stack has no elements. The `Blankable` view of `empty?`.
+Returns `true` when the stack has no elements, like `empty?`.
 
 **Returns**: `true` for the empty stack
 
@@ -270,19 +267,19 @@ Stack.from([1]).blank?     # => false
 
 ### From [`Enumerable`](../enumerable.md#trait-enumerable)
 
-  - [`map`](../enumerable.md#enumerable-map) — Applies `f` to each item and collects the results into a list.
-  - [`mapIndexed`](../enumerable.md#enumerable-mapindexed) — Applies `f` to each item and its 0-based position, and collects the results into a list.
-  - [`filter`](../enumerable.md#enumerable-filter) — Returns the items for which `pred` answers `true`.
-  - [`flatMap`](../enumerable.md#enumerable-flatmap) — Applies `f` to each item, expecting a list back, and concatenates the results into one flat list.
-  - [`collect`](../enumerable.md#enumerable-collect) — Applies `f` to each item, expecting an `Optional` back, and returns the values that were present: unwrapped.
+  - [`map`](../enumerable.md#enumerable-map) — Applies `f` to each item and returns the results as a list.
+  - [`mapIndexed`](../enumerable.md#enumerable-mapindexed) — Applies `f` to each item and its 0-based position, and returns the results as a list.
+  - [`filter`](../enumerable.md#enumerable-filter) — Returns the items for which `pred` returns `true`.
+  - [`into`](../enumerable.md#enumerable-into) — Applies `f`, which returns a list, to each item and concatenates the results.
+  - [`collect`](../enumerable.md#enumerable-collect) — Applies `f`, which returns an `Optional`, to each item and returns the present values, unwrapped.
 
 ### From [`Foldable`](../enumerable.md#trait-foldable)
 
   - [`each`](../enumerable.md#foldable-each) — Calls `f` with each item, for its side effects.
   - [`eachIndexed`](../enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
-  - [`all?`](../enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`.
-  - [`any?`](../enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`.
-  - [`none?`](../enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`all?`](../enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`, and `true` for an empty collection.
+  - [`any?`](../enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`, and `false` for an empty collection.
+  - [`none?`](../enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`, the opposite of `any?`.
   - [`one?`](../enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
   - [`find`](../enumerable.md#foldable-find) — Returns the first item satisfying `pred`, or `None` when nothing does.
 
@@ -304,7 +301,7 @@ Constructors for `Stack`.
 from(items: [A]) -> Stack<A>
 ```
 
-Builds a stack from a list, read bottom-to-top: the last element is on top.
+Builds a stack from a list read bottom to top, so the last element is on top.
 
 **Parameters**
 
@@ -324,7 +321,7 @@ Stack.from([1, 2, 3]).peek   # => Just(3)
 empty : Stack<A>
 ```
 
-The stack with no elements. Also the `Monoid` identity.
+Returns an empty stack.
 
 **Examples**
 

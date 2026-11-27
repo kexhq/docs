@@ -11,11 +11,11 @@ entities:
 
 ## module `Template`
 
-An ERB-shaped template scanner: template text in, a template AST out.
+ERB-style templates: scanning template text into nodes, and filling simple templates at run time.
 
-Opt-in: nothing here is in scope until `using Template`.
+Nothing here is in scope until `using Template`.
 
-This is the scanning stage only (see the Template proposal for the fuller design): it turns template source into a flat list of +Node+s: plain text, and the four kinds of `<% %>` region, plus whatever frontmatter tags sit ahead of the body. It does not evaluate anything and does not know Kex syntax; the text inside a hole is kept as-is, for a later stage to parse and lower into real Kex.
+`Template.scan` turns template text into its frontmatter and a flat list of +Node+s: plain text and the four kinds of `<% %>` region. It does not run anything or parse Kex; the text inside a tag is kept as written. `Template.render` fills a template that only substitutes values, from a map. A template with Kex control flow is compiled instead, with `Template.html(Kex.embed(path))` or `Template.text(Kex.embed(path))`.
 
 ```kex
 using Template
@@ -23,12 +23,12 @@ using Template
 let source = "---\ntitle: Welcome\nparams: [name, library: Bool]\n---\nHi <%= name %>!"
 let parsed = Template.scan(source).try
 parsed.frontmatter.get("title")    # => Just(Scalar("Welcome"))
-parsed.parameters                  # => [TemplateParam { name: "name", type: "" },
-                                    #     TemplateParam { name: "library", type: "Bool" }]
+parsed.parameters.map { |p| (p.name, p.type) }
+# => [("name", ""), ("library", "Bool")]
 parsed.nodes                       # => [Text("Hi "), Interpolate("name"), Text("!")]
 ```
 
-A template file carries its host's extension ahead of `.ket`, so an editor can highlight it as what it is — `README.md.ket`, `profile.html.ket`:
+A template file's name puts the extension of what it produces before `.ket`, such as `README.md.ket` or `profile.html.ket`, so an editor can highlight it:
 
 ```kex
 ---
@@ -50,22 +50,19 @@ A Kex application.
 ## Syntax
 
 ```kex
-<%= expr %>     interpolate (escaping is a later stage's job)
-<%== expr %>    interpolate raw, no escaping
-<% ... %>       a Kex control region: `if`/`match` arms, block bodies, `let`
-<%# ... %>      comment, emits nothing
-<%- ... -%>     whitespace control: trims the line's leading indent before
-                the tag, and the newline right after it. A `<% %>` or
-                `<%# %>` tag standing alone on its line does this on its
-                own, so the markers are for a tag sharing its line with
-                real content
-<%%             a literal `<%`, for a template that generates ERB-shaped
-                output itself
+<%= expr %>     inserts the value, HTML-escaped by Template.html and
+                Template.render
+<%== expr %>    inserts the value without escaping
+<% ... %>       Kex control code: if and match arms, block bodies, let
+<%# ... %>      a comment, which produces nothing
+<%- ... -%>     trims the indentation before the tag and the newline
+                after it (see Whitespace below)
+<%%             a literal <%, for a template that writes ERB itself
 ```
 
 ## Layouts
 
-A layout is an ordinary template that takes the page as a block. Neither template reads the other: the Kex code that calls them composes them, and the block's result is inserted raw, since it is already rendered (and, from `Template.html`, already escaped).
+A layout is a template that takes the page as a block. The two templates do not refer to each other; the Kex code that calls them puts them together. Insert the block's result with `<%== %>`, since it is already rendered, and already escaped if it came from `Template.html`.
 
 ```kex
 ---
@@ -82,34 +79,34 @@ let signin(email: String) -> String = frame("Sign in") { form(email) }
 
 ## Whitespace
 
-A tag that emits nothing — `<% %>` and `<%# %>` — and stands alone on its line takes that line with it. Only whitespace may share the line with it: the indent before it and the newline after it are scaffolding, never content, so a template reads the way its output does:
+A `<% %>` or `<%# %>` tag that is alone on its line, with only whitespace around it, removes the whole line from the output, its indentation and newline included. So the template reads the way its output does:
 
 ```kex
 <% if dependencies.count > 0 %>
 ## Dependencies
 <% end %>
 
-# => "## Dependencies\n"   — no blank line where the tags were
+# => "## Dependencies\n", with no blank lines where the tags were
 ```
 
-The `<%- -%>` markers are for the case this does not cover: a tag sharing its line with real content, where what to trim is a judgement call rather than obvious.
+The `<%-` and `-%>` markers are for a tag that shares its line with other content, where only the author knows what should be trimmed:
 
 ```kex
 Total: <%= total %> <%- if pending > 0 %>(<%= pending %> pending)<% end %>
 ```
 
-An interpolation is never trimmed, on its own line or not. It stands in for content, so the whitespace around it is content too:
+An interpolation is never trimmed, even alone on its line. It stands for content, so the whitespace around it is content too:
 
 ```kex
 <%= greeting %>
 <%= name %>
 
-# => "Hi\nAda\n"          — both newlines survive
+# => "Hi\nAda\n", with both newlines kept
 ```
 
 ## Frontmatter
 
-A template file may open with a `---` line, generic `key: value` tags up to a closing `---` line, and then the body. This is metadata for whatever reads the template (a title, a list of tags) and there is nothing template-specific about it: it is scanned the same generic way whatever key is used.
+A template may start with a `---` line, then `key: value` lines, then a closing `---` line before the body. The keys are for whatever reads the template, such as a title or a list of tags, and the scanner reads every key the same way. A value is a plain string or a `[a, b, c]` list.
 
 ```kex
 ---
@@ -119,7 +116,7 @@ tags: [changelog, public]
 # <%= title %>
 ```
 
-A template's parameters, when a later stage needs them declared rather than inferred, are just another frontmatter key: conventionally `params`, a list of names each with an optional `: Type`:
+By convention, a template declares its parameters under `params`, as a list of names, each with an optional `: Type`:
 
 ```kex
 ---
@@ -128,7 +125,7 @@ params: [name, library: Bool, dependencies: [Dependency]]
 # <%= name %>
 ```
 
-Nothing in the scanner treats `params` specially while scanning: it is metadata like any other key, a `[a, b, c]` list same as `tags` above. `Parsed#parameters` is a convenience reader for it: it splits each entry on its first colon into a `TemplateParam { name, type }` (`type` is `""` for a bare name), so a caller does not need to know the key name, match on `Tag` itself, or split each entry by hand. `type` is raw text, same as everywhere else in this module: turning `[Dependency]` into a real, resolved Kex type is later work, not this module's.
+`Parsed.parameters` reads that list and splits each entry at its first colon into a `TemplateParam`. The type stays text: `[Dependency]` is the string `"[Dependency]"`, not a resolved Kex type.
 
 ### `scan`
 
@@ -136,13 +133,13 @@ Nothing in the scanner treats `params` specially while scanning: it is metadata 
 scan(source: String) -> Result<Parsed, TemplateError>
 ```
 
-Scans template source into a `Parsed` template, or says where it broke.
+Scans template text into its frontmatter and nodes.
 
 **Parameters**
 
-  - `source` — the template file's full text
+  - `source` — the template's full text
 
-**Returns**: the scanned template, or why not
+**Returns**: the scanned template, or what is wrong with it
 
 **Examples**
 
@@ -151,14 +148,14 @@ Template.scan("Hi <%= name %>!").map(~nodes)
 # => Ok([Text("Hi "), Interpolate("name"), Text("!")])
 ```
 
-_A control tag on a line of its own leaves no blank line behind_
+_A control tag alone on its line leaves no blank line behind_
 
 ```kex
 Template.scan("<% if admin %>\nWelcome back.\n<% end %>\n").try.nodes
 # => [Control("if admin"), Text("Welcome back.\n"), Control("end")]
 ```
 
-_Where the template broke, as a position in the source_
+_An unclosed tag, reported at its position_
 
 ```kex
 Template.scan("Hi <%= name")
@@ -171,13 +168,15 @@ Template.scan("Hi <%= name")
 escapeHtml(text: String) -> String
 ```
 
-Escapes `&`, `<`, `>`, double quotes and single quotes for HTML text and quoted attribute values. `Template.html` escapes `<%= %>` holes this way; `<%== %>` inserts text without escaping. This does not validate URLs or escape JavaScript or CSS.
+Escapes `&`, `<`, `>`, double quotes and single quotes, so the text is safe in HTML content and in quoted attribute values.
+
+`Template.html` escapes `<%= %>` tags this way. It does not make text safe inside a URL, a script or a style sheet.
 
 **Parameters**
 
   - `text` — the text to escape
 
-**Returns**: the same text, HTML-safe
+**Returns**: the escaped text
 
 **Examples**
 
@@ -192,18 +191,18 @@ Template.escapeHtml("<b>Tom & Jerry</b>")
 renderParsed(parsed: Parsed, context: {String: String}) -> Result<String, TemplateError>
 ```
 
-Fills an already-scanned template from a runtime `context` map.
+Fills a scanned template with the values in `context`.
 
-`<%= %>` inserts HTML-escaped text and `<%== %>` inserts raw text. Runtime rendering supports substitutions only: a `<% ... %>` control region returns `UnsupportedControl`. Use `Template.html` or `Template.text` for templates with Kex control flow that are known at compile time.
+`<%= %>` inserts the value HTML-escaped, and `<%== %>` inserts it as is. Only substitution is supported: a `<% ... %>` control tag gives an `UnsupportedControl` error. For templates with control flow, use `Template.html` or `Template.text`, which compile the template.
 
-Hole names are trimmed and looked up as complete keys. A hole written `<%= dep.name %>` reads the `"dep.name"` key, rather than a field of a value stored under `"dep"`.
+Each tag's trimmed text is looked up as a key, whole. `<%= dep.name %>` reads the `"dep.name"` key; it does not read a field of a value under `"dep"`.
 
 **Parameters**
 
-  - `parsed` — a template already scanned by `Template.scan`
-  - `context` — a value for every `<%= %>`/`<%== %>` hole the template uses, keyed by the hole's exact (trimmed) text
+  - `parsed` — a template scanned by `Template.scan`
+  - `context` — a value for every `<%= %>` and `<%== %>` tag, keyed by the tag's trimmed text
 
-**Returns**: the rendered text, or why not
+**Returns**: the rendered text, or why it could not be rendered
 
 **Examples**
 
@@ -213,14 +212,14 @@ Template.renderParsed(parsed, { "name": "<Ada>" })
 # => Ok("Hi &lt;Ada&gt;!")
 ```
 
-_A hole `context` does not cover_
+_A tag that +context+ has no value for_
 
 ```kex
 Template.renderParsed(Template.scan("<%= missing %>").try, {})
 # => Error(UndefinedVariable("missing"))
 ```
 
-_Control flow is refused, not silently skipped_
+_A control tag_
 
 ```kex
 Template.renderParsed(Template.scan("<% if x %>y<% end %>").try, {})
@@ -233,14 +232,14 @@ Template.renderParsed(Template.scan("<% if x %>y<% end %>").try, {})
 render(source: String, context: {String: String}) -> Result<String, TemplateError>
 ```
 
-`Template.scan(source).try` then `renderParsed` — see its doc comment for what this does and, as importantly, what it refuses to do.
+Scans `source` and fills it with the values in `context`, as `Template.renderParsed` does.
 
 **Parameters**
 
-  - `source` — the template's full text, scanned fresh
-  - `context` — see `renderParsed`
+  - `source` — the template's full text
+  - `context` — a value for every `<%= %>` and `<%== %>` tag, keyed by the tag's trimmed text
 
-**Returns**: the rendered text, or why not
+**Returns**: the rendered text, or why it could not be scanned or rendered
 
 **Examples**
 
@@ -251,9 +250,9 @@ Template.render("Hi <%= name %>!", { "name": "Ada" })
 
 ## type `Node`
 
-One piece of a scanned template.
+One piece of a scanned template: plain text, or one kind of tag with the text inside it.
 
-Hole and control content is carried as raw text: the Kex source that was between the delimiters, trimmed of surrounding whitespace. Turning that text into real, type-checked Kex expressions is later work; a `Node` only records what KIND of region it is and what text it held.
+The text inside a tag is the Kex source between the delimiters, with the surrounding whitespace trimmed. It is not parsed.
 
 **Variants**
 
@@ -267,7 +266,7 @@ Hole and control content is carried as raw text: the Kex source that was between
 
 ## type `Tag`
 
-A frontmatter value: a plain scalar, or a `[a, b, c]` list.
+A frontmatter value: a plain string, or a `[a, b, c]` list.
 
 **Variants**
 
@@ -278,7 +277,9 @@ A frontmatter value: a plain scalar, or a `[a, b, c]` list.
 
 ## type `TemplateError`
 
-Why a template's text could not be scanned or rendered, and where (or, for `render`/`renderParsed`, what stopped it).
+The reason a template could not be scanned or rendered.
+
+`UnterminatedTag` carries the character position of the tag that is not closed. `MalformedFrontmatterLine` carries the offending line. `UndefinedVariable` and `UnsupportedControl` come from `Template.render` and `Template.renderParsed`, and carry the tag's text.
 
 **Variants**
 
@@ -292,7 +293,9 @@ Why a template's text could not be scanned or rendered, and where (or, for `rend
 
 ## record `TemplateParam`
 
-One entry from a `params: [...]` frontmatter list: a name, and its optional `: Type` annotation. `type` is raw text: `""` for a bare name, never a resolved Kex type: the same way a frontmatter `Tag` is text and not a parsed value.
+One entry of a `params: [...]` frontmatter list: a name and its type.
+
+`type` is the text after the colon, or `""` for a bare name. It is not resolved to a Kex type.
 
 **Fields**
 
@@ -303,7 +306,9 @@ One entry from a `params: [...]` frontmatter list: a name, and its optional `: T
 
 ## record `TagScan`
 
-One scanned `<% ... %>` region: its node, and the whitespace trims its delimiters asked for. It is internal to scanning, not part of the public API, but declared at module scope rather than inside `private do`. Nested there, this record's fields lose their names under BEAM codegen and the value round-trips as an untagged tuple (`Undefined method: leftTrim for Tuple`), even though the same code is fine on the tree-walking interpreter.
+One scanned `<% ... %>` tag and the whitespace trims its delimiters ask for. Used inside the scanner only.
+
+It is declared outside `private do` because a record nested there loses its field names on BEAM.
 
 **Fields**
 
@@ -315,7 +320,7 @@ One scanned `<% ... %>` region: its node, and the whitespace trims its delimiter
 
 ## record `Parsed`
 
-A scanned template: its frontmatter tags, and its body as a node list.
+A scanned template: its frontmatter, and its body as a list of nodes.
 
 **Fields**
 
@@ -330,13 +335,16 @@ A scanned template: its frontmatter tags, and its body as a node list.
 parameters -> [TemplateParam]
 ```
 
-The template's declared parameters, out of a `params: [...]` frontmatter key: `[]` when the template declares none, or when `params` holds a bare scalar rather than a list.
+Returns the parameters declared under the template's `params` key, in the order written.
 
-**Returns**: the declared parameters, in the order written
+Returns `[]` when there is no `params` key, or when its value is not a list.
+
+**Returns**: the declared parameters
 
 **Examples**
 
 ```kex
-parsed.parameters
-# => [TemplateParam { name: "name", type: "" }, TemplateParam { name: "library", type: "Bool" }]
+Template.scan("---\nparams: [name, library: Bool]\n---\n").try
+  .parameters.map { |p| (p.name, p.type) }
+# => [("name", ""), ("library", "Bool")]
 ```

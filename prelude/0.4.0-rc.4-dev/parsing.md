@@ -13,9 +13,9 @@ entities:
 
 Parser combinators, for reading a text format you define yourself.
 
-Opt-in: nothing here is in scope until `using Parsing`.
+Nothing here is in scope until `using Parsing`.
 
-An `Input` is an immutable cursor over a string. A parser takes one and answers either the value it read together with an advanced cursor, or a `ParseError` saying where it gave up. Because the cursor is immutable, a failed attempt costs nothing: the caller still holds the position it started from and can try something else.
+An `Input` is an immutable cursor over a string. A parser takes one and returns the value it read with an advanced cursor, or a `ParseError` saying where it stopped. After a failure the caller still has the cursor it started with, so it can try something else from the same place.
 
 ```kex
 using Parsing
@@ -29,15 +29,15 @@ main do
 end
 ```
 
-The building blocks are `char` and `charWhen` for one character, `string` for a literal, `takeWhile` for a run, and `many` / `some` / `choice` for repetition and alternatives. `JSON` in this same stdlib is written with them.
+The building blocks are `char` and `charWhen` for one character, `string` for a literal, `takeWhile` for a run, and `many` / `some` / `choice` for repetition and alternatives. The stdlib's `JSON` parser is built from them.
 
 
 
 ## type `ParseError`
 
-Why a parser gave up, and at which position.
+Why a parser stopped, and at which position.
 
-`Expected` carries what the grammar WANTED rather than what it found: the difference between "unexpected `d`" and "expected `version(`". It is what `label` and `string` report.
+`Unexpected` carries the text that was found, `"EOF"` at the end of the input. `Expected` carries what the grammar wanted, as `string` reports it. `NoMatch` means no alternative of a `choice` matched.
 
 ```kex
 Input { input: "abc" }.char('z')      # => Error(Unexpected("a", 0))
@@ -50,13 +50,17 @@ Input { input: "abc" }.string("abd")  # => Error(Expected("abd", 0))
   - `Expected(String, Integer)`
   - `NoMatch(Integer)`
 
+Implements [`Errorable`](errorable.md#trait-errorable).
 
+### Defined in other modules
+
+  - [Errorable](errorable.md#make-parseerror): [`message`](errorable.md#parseerror-message)
 
 ## record `Input`
 
-An immutable cursor over a string: the text, and where in it you are.
+An immutable cursor over a string: the text and a position in it.
 
-Create one with `Input { input: text }` and pass it to a parser. Every operation that consumes input answers a NEW cursor rather than moving this one, which is what makes backtracking free.
+Create one with `Input { input: text }` and pass it to a parser. Every function that consumes input returns a new cursor and leaves this one where it was.
 
 **Fields**
 
@@ -67,9 +71,7 @@ Create one with `Input { input: text }` and pass it to a parser. Every operation
 
 #### `peek`
 
-The character at the cursor, or `None` at the end of the input.
-
-Looking does not consume: the cursor is unchanged.
+Returns the character at the cursor without consuming it, or `None` at the end of the input.
 
 **Returns**: `Char?` — the current character, or `None`
 
@@ -86,9 +88,7 @@ Input { input: "abc", pos: 3 }.peek   # => None
 peekAt(offset: Integer) -> Char?
 ```
 
-The character `offset` positions ahead of the cursor, or `None` when that is outside the input.
-
-The lookahead a grammar needs when one character is not enough to decide. A negative offset looks backwards.
+Returns the character `offset` positions ahead of the cursor, or `None` when that is outside the input. A negative offset looks backwards.
 
 **Parameters**
 
@@ -105,9 +105,7 @@ Input { input: "abc" }.peekAt(9)   # => None
 
 #### `atEnd?`
 
-Returns `true` when the cursor has consumed the whole input.
-
-The check a top-level parser makes at the end, to be sure nothing was left over.
+Returns `true` when the cursor has consumed the whole input. A top-level parser checks it to be sure nothing is left over.
 
 **Returns**: `Bool` — `true` at the end of the input
 
@@ -120,7 +118,7 @@ Input { input: "abc", pos: 3 }.atEnd?   # => true
 
 #### `advance`
 
-A cursor one character further on.
+Returns a cursor one character further on.
 
 **Returns**: `Input` — the advanced cursor
 
@@ -136,7 +134,7 @@ Input { input: "abc" }.advance.peek   # => Just('b')
 advanceBy(count: Integer) -> Input
 ```
 
-A cursor `count` characters further on.
+Returns a cursor `count` characters further on.
 
 **Parameters**
 
@@ -152,9 +150,7 @@ Input { input: "abc 123" }.advanceBy(4).peek   # => Just('1')
 
 #### `remaining`
 
-Everything from the cursor to the end of the input, as a `String`.
-
-Useful for reporting an error, or for handing the tail to something that does not speak `Input`.
+Returns the text from the cursor to the end of the input, for an error message or for code that does not take an `Input`.
 
 **Returns**: `String` — the unconsumed remainder
 
@@ -170,9 +166,9 @@ Input { input: "abc 123", pos: 4 }.remaining   # => "123"
 charWhen(pred: (Char -> Bool)) -> Result<(Char, Input), ParseError>
 ```
 
-Reads one character, if it satisfies `pred`.
+Reads one character if it satisfies `pred`.
 
-Answers the character and the advanced cursor, or an `Unexpected` error naming what was there instead: `"EOF"` at the end of the input.
+Otherwise returns an `Unexpected` error with the character found, or `"EOF"` at the end of the input.
 
 **Parameters**
 
@@ -183,7 +179,8 @@ Answers the character and the advanced cursor, or an `Unexpected` error naming w
 **Examples**
 
 ```kex
-Input { input: "abc" }.charWhen(~alpha?)   # => Ok(('a', cursor at 1))
+Input { input: "abc" }.charWhen(~alpha?)
+# => Ok(('a', Parsing.Input { pos: 1, input: "abc" }))
 Input { input: "123" }.charWhen(~alpha?)   # => Error(Unexpected("1", 0))
 ```
 
@@ -210,7 +207,8 @@ Reads one specific character.
 **Examples**
 
 ```kex
-Input { input: "abc" }.char('a')   # => Ok(('a', cursor at 1))
+Input { input: "abc" }.char('a')
+# => Ok(('a', Parsing.Input { pos: 1, input: "abc" }))
 Input { input: "abc" }.char('z')   # => Error(Unexpected("a", 0))
 ```
 
@@ -226,9 +224,7 @@ let (_, afterComma) = cursor.char(',').try
 whiteSpaces -> Input
 ```
 
-A cursor advanced past any run of whitespace.
-
-Cannot fail: no whitespace at all leaves the cursor where it was, which is what makes it safe to call between every token of a grammar.
+Returns the cursor moved past any whitespace. With no whitespace it stays where it was, so it can go between any two tokens of a grammar.
 
 **Returns**: the cursor, past the whitespace
 
@@ -250,9 +246,9 @@ let (value, rest) = parseValue(cursor.whiteSpaces).try
 many(f: (Input -> Result<(T, Input), ParseError>)) -> ([T], Input)
 ```
 
-Applies `f` as many times as it succeeds, collecting the results.
+Applies `f` as many times as it succeeds and collects the results.
 
-Cannot fail: zero matches is an empty list, which is what makes it right for the optional parts of a grammar. A parser that succeeds without consuming anything stops the loop rather than spinning forever.
+It cannot fail: no match gives an empty list. It also stops when `f` succeeds without consuming anything.
 
 **Parameters**
 
@@ -264,14 +260,14 @@ Cannot fail: zero matches is an empty list, which is what makes it right for the
 
 ```kex
 Input { input: "abc 1" }.many { |p| p.charWhen(~alpha?) }
-# => (['a', 'b', 'c'], cursor at 3)
+# => (['a', 'b', 'c'], Parsing.Input { pos: 3, input: "abc 1" })
 ```
 
-_Zero matches is not an error_
+_No match is not an error_
 
 ```kex
 Input { input: "123" }.many { |p| p.charWhen(~alpha?) }
-# => ([], cursor at 0)
+# => ([], Parsing.Input { pos: 0, input: "123" })
 ```
 
 #### `some`
@@ -280,9 +276,9 @@ Input { input: "123" }.many { |p| p.charWhen(~alpha?) }
 some(f: (Input -> Result<(T, Input), ParseError>)) -> Result<([T], Input), ParseError>
 ```
 
-Applies `f` at least once, then as many more times as it succeeds.
+Applies `f` once, then as many more times as it succeeds.
 
-The one-or-more counterpart of `many`: the first failure IS a failure, so use it where the grammar requires something to be there.
+Unlike `many`, it fails when the first attempt fails. Use it where the grammar needs at least one match.
 
 **Parameters**
 
@@ -294,7 +290,7 @@ The one-or-more counterpart of `many`: the first failure IS a failure, so use it
 
 ```kex
 Input { input: "abc" }.some { |p| p.charWhen(~alpha?) }
-# => Ok((['a', 'b', 'c'], cursor at 3))
+# => Ok((['a', 'b', 'c'], Parsing.Input { pos: 3, input: "abc" }))
 Input { input: "123" }.some { |p| p.charWhen(~alpha?) }
 # => Error(Unexpected("1", 0))
 ```
@@ -307,7 +303,7 @@ string(expected: String) -> Result<(String, Input), ParseError>
 
 Reads an exact literal.
 
-A keyword grammar is mostly literals: `version(` is one token to a reader and eight calls to `char`, and matching it here reports the failure at the START of the literal, which is where a person looking at the error expects the caret.
+On a mismatch the `Expected` error names the whole literal and points at its start, not at the first character that differs.
 
 **Parameters**
 
@@ -318,7 +314,8 @@ A keyword grammar is mostly literals: `version(` is one token to a reader and ei
 **Examples**
 
 ```kex
-Input { input: "abc" }.string("abc")   # => Ok(("abc", cursor at 3))
+Input { input: "abc" }.string("abc")
+# => Ok(("abc", Parsing.Input { pos: 3, input: "abc" }))
 Input { input: "abc" }.string("abd")   # => Error(Expected("abd", 0))
 ```
 
@@ -334,9 +331,9 @@ let (_, rest) = cursor.string("version(").try
 takeWhile(pred: (Char -> Bool)) -> (String, Input)
 ```
 
-Reads every character while `pred` holds, as a `String`.
+Reads characters while `pred` holds and returns them as a `String`.
 
-`many(charWhen(...))` gives a [Char] the caller has to join, and a run of characters is almost always wanted as text. Cannot fail: an empty run is an empty String, which is what makes it safe for the optional parts of a grammar.
+It cannot fail: when the first character does not match, the text is empty. `many` with `charWhen` does the same but returns a list of characters.
 
 **Parameters**
 
@@ -347,8 +344,10 @@ Reads every character while `pred` holds, as a `String`.
 **Examples**
 
 ```kex
-Input { input: "abc 123" }.takeWhile(~alpha?)   # => ("abc", cursor at 3)
-Input { input: "123" }.takeWhile(~alpha?)       # => ("", cursor at 0)
+Input { input: "abc 123" }.takeWhile(~alpha?)
+# => ("abc", Parsing.Input { pos: 3, input: "abc 123" })
+Input { input: "123" }.takeWhile(~alpha?)
+# => ("", Parsing.Input { pos: 0, input: "123" })
 ```
 
 _Reading an identifier_
@@ -363,9 +362,9 @@ let name = cursor.takeWhile { |c| c.alpha? || c == '_' }
 choice(alts: ([(Input) -> Result<(T, Input), ParseError>])) -> Result<(T, Input), ParseError>
 ```
 
-Tries each parser in `alts` in turn, and answers the first that succeeds.
+Tries each parser in `alts` in turn from the same position and returns the first success.
 
-This is alternation: how a grammar says "a value is a string, or a number, or an object". Because the cursor is immutable, a failed alternative costs nothing. When none of them match, the answer is `NoMatch` at the position they all started from.
+When none matches, it returns `NoMatch` at the starting position.
 
 **Parameters**
 
@@ -380,4 +379,5 @@ cursor.choice([
   { |p| p.charWhen(~digit?) },
   { |p| p.charWhen(~alpha?) }
 ])
+# => Ok(('x', Parsing.Input { pos: 1, input: "x1" })) for input "x1"
 ```

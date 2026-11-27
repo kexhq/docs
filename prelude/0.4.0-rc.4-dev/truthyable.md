@@ -18,9 +18,9 @@ entities:
 
 ## trait `Truthyable`
 
-`Truthyable`: what counts as true when a value is used as a condition.
+Types whose values can be asked whether they count as true.
 
-The rule is Crystal's, and it is short: only `false`, `None` and `()` are falsy. Everything else is truthy, including `0`, `""` and `[]`, which some languages treat as false and Kex deliberately does not.
+Only `false` and `None` are falsy. Every other value is truthy, including `0`, `""` and `[]`. `if` and `while` take only a `Bool`, so call `truthy?` or `falsy?` to apply this rule; `Assert.truthy` uses it too.
 
 ```kex
 0.truthy?       # => true
@@ -30,9 +30,7 @@ None.truthy?    # => false
 false.truthy?   # => false
 ```
 
-When you want the "is there anything here" question instead, that is `Blankable`'s `blank?` / `present?`.
-
-There is no NaN to consider: a float operation that would produce one raises instead, matching BEAM (see nonFiniteFloatError in src/interpreter/value.cxx).
+To ask whether a value is empty, use `Blankable`'s `blank?` and `present?`.
 
 Implemented by [`Bool`](#make-bool), [`Integer`](#make-integer), [`Float`](#make-float), [`String`](#make-string), [`Optional<X>`](#make-optional), [`[X]`](#make-list), [`Map<K, V>`](#make-map).
 
@@ -44,9 +42,9 @@ Implemented by [`Bool`](#make-bool), [`Integer`](#make-integer), [`Float`](#make
 truthy? -> Bool
 ```
 
-Returns `true` when the value counts as true in a condition.
+Returns `true` unless the value is `false` or `None`.
 
-**Returns**: `true` unless the value is `false`, `None` or `()`
+**Returns**: `true` unless the value is `false` or `None`
 
 **Examples**
 
@@ -84,9 +82,9 @@ false.truthy?   # => false
 not -> Bool
 ```
 
-Returns the negation of this boolean.
+Returns the negation of this boolean, the same as `!flag`.
 
-`!flag` says the same thing, and is the spelling to reach for when the value is already to hand. This one exists for the position `!` cannot take: the end of a chain, where what is being negated is whatever the chain just produced. `falsy?` answers the same question for any `Truthyable` value; `not` is the one that both takes and answers a `Bool`.
+It reads better than `!` at the end of a chain.
 
 **Returns**: `false` for `true`, and `true` for `false`
 
@@ -119,9 +117,7 @@ Implements [`Truthyable`](#trait-truthyable).
 truthy? -> Bool
 ```
 
-Always `true`, including for zero.
-
-Zero is a number, not an absence. Compare it explicitly when zero means something: `count == 0`.
+Always returns `true`, including for zero. Write `count == 0` when zero matters.
 
 **Returns**: always `true`
 
@@ -144,7 +140,7 @@ Implements [`Truthyable`](#trait-truthyable).
 truthy? -> Bool
 ```
 
-Always `true`, including for zero.
+Always returns `true`, including for zero.
 
 **Returns**: always `true`
 
@@ -166,17 +162,15 @@ Implements [`Truthyable`](#trait-truthyable).
 truthy? -> Bool
 ```
 
-Always `true`, including for the empty string.
-
-Use `blank?` from `Blankable` when an empty or whitespace-only string should count as nothing.
+Always returns `true`, including for the empty string. Use `blank?` to treat an empty or whitespace-only string as nothing.
 
 **Returns**: always `true`
 
 **Examples**
 
 ```kex
-"".truthy?      # => true
-"".blank?       # => true   (the question usually meant)
+"".truthy?   # => true
+"".blank?    # => true
 ```
 
 ## extends `Optional<X>`
@@ -191,9 +185,7 @@ Implements [`Truthyable`](#trait-truthyable).
 truthy? -> Bool
 ```
 
-Returns `true` for a `Just` and `false` for `None`.
-
-The one type where truthiness is genuinely about presence, which is what makes an optional usable directly as a condition.
+Returns `true` for a `Just`, even `Just(false)`, and `false` for `None`.
 
 **Returns**: `true` when a value is present
 
@@ -216,9 +208,7 @@ Implements [`Truthyable`](#trait-truthyable).
 truthy? -> Bool
 ```
 
-Always `true`, including for the empty list.
-
-Use `empty?` or `blank?` when an empty list should count as nothing.
+Always returns `true`, including for the empty list. Use `empty?` or `blank?` to test for an empty list.
 
 **Returns**: always `true`
 
@@ -226,7 +216,7 @@ Use `empty?` or `blank?` when an empty list should count as nothing.
 
 ```kex
 [].truthy?   # => true
-[].blank?    # => true   (the question usually meant)
+[].blank?    # => true
 ```
 
 ## extends `Map<K, V>`
@@ -241,7 +231,7 @@ Implements [`Truthyable`](#trait-truthyable).
 truthy? -> Bool
 ```
 
-Always `true`, including for the empty map.
+Always returns `true`, including for the empty map.
 
 **Returns**: always `true`
 
@@ -249,5 +239,5 @@ Always `true`, including for the empty map.
 
 ```kex
 {}.truthy?   # => true
-{}.blank?    # => true   (the question usually meant)
+{}.blank?    # => true
 ```

@@ -11,7 +11,11 @@ entities:
 
 ## module `Net.Socket`
 
-Process-owned TCP byte streams and listeners. All blocking operations return typed `NetError` values; close operations are idempotent.
+TCP, UDP and Unix-domain sockets, and TLS client connections.
+
+Every socket is owned by a process of its own. Functions that can fail return a `NetError`, and closing a socket twice is harmless. Without a timeout argument, accepting and receiving give up after 30 seconds with a `Timeout` error.
+
+Sockets work on BEAM only. On the tree-walking interpreter every operation returns an `UnsupportedBackend` error unless the capability is replaced with a mock such as `Mock.TCP`.
 
 ```kex
 using Net
@@ -35,9 +39,11 @@ connect(endpoint: Endpoint) -> Result<TCPConnection, NetError>
 connect(endpoint: Endpoint, options: ConnectOptions) -> Result<TCPConnection, NetError>
 ```
 
-Connects to a TCP endpoint with the backend's bounded connect deadline.
+Connects to a TCP endpoint.
 
-**Returns**: a stream or `Connect`/`Timeout`
+Without options, the connect timeout is 10 seconds; `ConnectOptions` sets it and the socket settings.
+
+**Returns**: the connection, or a `Connect` or `Timeout` error
 
 **Examples**
 
@@ -55,9 +61,9 @@ connectTo(address: String) -> Result<TCPConnection, NetError>
 connectTo(address: String, block: (TCPConnection -> A)) -> Result<A, NetError>
 ```
 
-Connects to a "host:port" address with the default options.
+Connects to a `"host:port"` address with the default options.
 
-A separate name (not a `connect` overload) until #619 is fixed: mixing arities and same-arity type overloads breaks call resolution.
+It has its own name, not a `connect` overload, because of kexhq/kex#619: mixing overloads by arity and by type breaks call resolution.
 
 **Examples**
 
@@ -74,9 +80,11 @@ listen(endpoint: Endpoint) -> Result<TCPListener, NetError>
 listen(endpoint: Endpoint, options: ListenOptions) -> Result<TCPListener, NetError>
 ```
 
-Binds and starts listening. Port zero selects an ephemeral local port.
+Starts listening on an endpoint, which must have a numeric address.
 
-**Returns**: a listener or `Connect`
+With port 0 the operating system picks a free port.
+
+**Returns**: the listener, or a `Connect` error
 
 **Examples**
 
@@ -94,11 +102,11 @@ bind(address: String) -> Result<TCPListener, NetError>
 bind(address: String, block: (TCPListener -> A)) -> Result<A, NetError>
 ```
 
-Binds and starts listening on a "host:port" address.
+Starts listening on a `"host:port"` address.
 
 **Examples**
 
-_A Rosetta-style echo server socket_
+_The socket for an echo server_
 
 ```kex
 let listener = TCP.bind("127.0.0.1:12321").try
@@ -110,9 +118,9 @@ let listener = TCP.bind("127.0.0.1:12321").try
 sendAll(connection: TCPConnection, data: Binary) -> Result<Integer, NetError>
 ```
 
-Sends every byte, retrying partial operating-system writes internally.
+Sends all of `data` and returns the number of bytes sent.
 
-On failure, `NetError.progress` records how many bytes were accepted before the error. Do not blindly retry the whole payload when progress is present.
+On failure, `NetError.progress` says how many bytes were sent before the error, so retrying the whole payload could send part of it twice.
 
 **Examples**
 
@@ -128,7 +136,7 @@ connection.sendAll("status\n".to(Binary).try).try
 put(connection: TCPConnection, content: Binary) -> Result<Void, NetError>
 ```
 
-Writes `content` verbatim: raw bytes, no rendering, no trailing newline.
+Sends `content` as it is, with nothing added.
 
 **Examples**
 
@@ -144,7 +152,7 @@ connection.put(chunk).try
 write(connection: TCPConnection, content: Showable) -> Result<Void, NetError>
 ```
 
-Writes `content` with no trailing newline.
+Sends `content` as text, without a newline.
 
 **Examples**
 
@@ -160,7 +168,7 @@ connection.write("name? ").try
 writeLine(connection: TCPConnection, content: Showable) -> Result<Void, NetError>
 ```
 
-Writes `content` followed by a newline.
+Sends `content` as text, followed by a newline.
 
 **Examples**
 
@@ -176,7 +184,7 @@ connection.writeLine("hello").try
 print(connection: TCPConnection, content: Showable) -> Void
 ```
 
-Writes `content` with no trailing newline, ignoring a failure. Use `write` when a failure matters.
+Sends `content` as text, without a newline, and ignores a failure. Use `write` to find out about one.
 
 **Examples**
 
@@ -192,7 +200,7 @@ connection.print("name? ")
 printLine(connection: TCPConnection, content: Showable) -> Void
 ```
 
-Writes `content` followed by a newline, ignoring a failure. Use `writeLine` when a failure matters.
+Sends `content` as text, followed by a newline, and ignores a failure. Use `writeLine` to find out about one.
 
 **Examples**
 
@@ -208,9 +216,9 @@ connection.printLine("hello")
 readLine(connection: TCPConnection) -> Result<String?, NetError>
 ```
 
-Reads the next line as text, without its newline.
+Reads the next line as text, without its line ending.
 
-Answers `Ok(None)` at end of input, like `FileHandle.readLine`. Lines are capped at 64 KiB; a longer line fails with `Limit` instead of growing without bound.
+Returns `Ok(None)` at the end of the input, as `FileHandle.readLine` does. A line longer than 64 KiB is a `Limit` error, and one that is not valid UTF-8 is a `Parse` error.
 
 **Examples**
 
@@ -229,7 +237,9 @@ end
 getLine(connection: TCPConnection) -> String?
 ```
 
-Reads the next line as text, without its newline: `readLine` for when the end of input and a failed read mean the same thing.
+Reads the next line as text, without its line ending, or returns `None` at the end of the input or on any failure.
+
+Use `readLine` to tell the end of the input from an error.
 
 **Examples**
 
@@ -245,9 +255,9 @@ IO.printLine(connection.getLine.or("(closed)"))
 receiveChunk(connection: TCPConnection, limit: Integer, timeout: Duration) -> Result<Binary, NetError>
 ```
 
-Receives up to `limit` bytes; EOF is reported as `Closed`.
+Receives whatever bytes are available, at most `limit` of them.
 
-A successful result is one available chunk, not necessarily a complete application message. Use `receiveExactly`, `receiveUntil`, or `receiveLine` when the protocol supplies a boundary.
+The chunk need not be a whole message. When the protocol marks where a message ends, use `receiveExactly`, `receiveUntil` or `receiveLine`. The end of the stream is a `Closed` error.
 
 **Examples**
 
@@ -263,9 +273,9 @@ let chunk = connection.receiveChunk(16 * 1024).try
 receiveExactly(connection: TCPConnection, count: Integer, timeout: Duration) -> Result<Binary, NetError>
 ```
 
-Receives exactly `count` bytes or returns a typed EOF/timeout failure.
+Receives exactly `count` bytes.
 
-Useful after a protocol header has declared the payload length.
+Use it once a header has said how long the payload is. The stream ending first is a `Closed` error, and running out of time a `Timeout` error.
 
 **Examples**
 
@@ -281,13 +291,13 @@ let header = connection.receiveExactly(4).try
 receiveUntil(connection: TCPConnection, delimiter: Binary, limit: Integer, timeout: Duration) -> Result<Binary, NetError>
 ```
 
-Receives through the first `delimiter` without exceeding `limit` bytes.
+Receives bytes up to and including the first `delimiter`, reading at most `limit` bytes.
 
-The delimiter is included in the returned bytes. An empty delimiter is a `Parse` error; reaching the bound first is a `Limit` error.
+An empty delimiter is a `Parse` error, and reaching `limit` first is a `Limit` error.
 
 **Examples**
 
-_Read through the end of an HTTP header section_
+_Reading to the end of an HTTP header section_
 
 ```kex
 connection.receiveUntil("\r\n\r\n".to(Binary).try, 65536).try
@@ -299,13 +309,13 @@ connection.receiveUntil("\r\n\r\n".to(Binary).try, 65536).try
 receiveLine(connection: TCPConnection, limit: Integer, timeout: Duration) -> Result<Binary, NetError>
 ```
 
-Receives through a newline without exceeding `limit` bytes.
+Receives bytes up to and including a newline, reading at most `limit` bytes.
 
-The newline remains in the returned binary. Decode and trim only after a complete bounded line has been received.
+The newline is kept. `readLine` returns the line as text instead.
 
 **Examples**
 
-_Reading a response line with a defensive 8 KiB limit_
+_Reading a response line of at most 8 KiB_
 
 ```kex
 let line = connection.receiveLine(8192).try.to(String).try.trim
@@ -317,7 +327,7 @@ let line = connection.receiveLine(8192).try.to(String).try.trim
 shutdownWrite(connection: TCPConnection) -> Result<Void, NetError>
 ```
 
-Half-closes the write side while leaving reads available.
+Closes the sending side of the connection, so the peer sees the end of the stream, while receiving still works.
 
 ### `accept` (foul)
 
@@ -325,9 +335,9 @@ Half-closes the write side while leaving reads available.
 accept(listener: TCPListener, timeout: Duration) -> Result<TCPConnection, NetError>
 ```
 
-Waits for and returns the next connection accepted by the listener.
+Waits for the next incoming connection and returns it.
 
-A timeout applies to this wait only; it does not become a read timeout on the returned connection.
+The timeout covers only this wait. It does not carry over to reads on the connection.
 
 **Examples**
 
@@ -343,7 +353,9 @@ let client = listener.accept(5.second).try
 closed?(connection: TCPConnection) -> Bool
 ```
 
-**Returns**: whether the connected stream owner has stopped
+Returns `true` once the connection is closed.
+
+**Returns**: `true` when the connection's owner process has stopped
 
 ### `localAddress` (foul)
 
@@ -351,7 +363,7 @@ closed?(connection: TCPConnection) -> Bool
 localAddress(connection: TCPConnection) -> Result<Endpoint, NetError>
 ```
 
-Returns the bound local endpoint, including an ephemeral assigned port.
+Returns the local endpoint, including a port the operating system picked.
 
 ### `peerAddress` (foul)
 
@@ -372,25 +384,25 @@ IO.printLine("accepted ${peer.host}:${peer.port.string}")
 
 ## type `Plain`
 
-Marker for an unencrypted stream.
+Marks a stream as unencrypted.
 
 
 
 ## type `TCPConnection`
 
-An opaque connected TCP stream.
+A connected TCP stream.
 
 
 
 ## type `TCPListener`
 
-An opaque TCP listening socket.
+A TCP socket listening for connections.
 
 
 
 ## record `Endpoint`
 
-A host name or numeric address paired with a validated port.
+A host name or numeric address, and a port.
 
 **Fields**
 
@@ -401,9 +413,9 @@ A host name or numeric address paired with a validated port.
 
 ## record `ConnectOptions`
 
-Connection deadlines and operating-system socket policy.
+Options for `TCP.connect`: the connect timeout and socket settings.
 
-Buffer values of zero leave sizing to the operating system. `noDelay?` disables Nagle's algorithm, which is usually right for request/response traffic; bulk-transfer protocols may prefer fewer, larger packets.
+A buffer size of 0 leaves the size to the operating system. `noDelay?` turns off Nagle's algorithm, which suits request and response traffic; bulk transfers may do better with it on, sending fewer, larger packets.
 
 **Fields**
 
@@ -417,9 +429,9 @@ Buffer values of zero leave sizing to the operating system. `noDelay?` disables 
 
 ## record `ListenOptions`
 
-Listener queue and policy inherited by accepted connections.
+Options for `TCP.listen`: the size of the queue of waiting connections, and socket settings that accepted connections inherit.
 
-`backlog` bounds connections waiting for `accept`. Buffer values of zero keep the platform defaults rather than requesting a particular byte size.
+`backlog` limits how many connections can wait for `accept`. A buffer size of 0 keeps the operating system's default.
 
 **Fields**
 
@@ -440,11 +452,11 @@ Listener queue and policy inherited by accepted connections.
 host(name: String, port: Net.Port) -> Endpoint
 ```
 
-Pairs a hostname or numeric address with a port.
+Builds an endpoint from a host name or numeric address and a port.
 
-Resolution happens when connecting, so this preserves `name` exactly as supplied rather than validating it as an `IP.Address`.
+The name is kept as given and looked up only when connecting. To listen, give a numeric address.
 
-**Returns**: the remote or listening endpoint
+**Returns**: the endpoint
 
 **Examples**
 
@@ -460,15 +472,15 @@ TCP.Endpoint.host("cache.internal", Port.from(6379).try)
 any(port: Net.Port) -> Endpoint
 ```
 
-Builds an IPv4 wildcard endpoint for listening on every local interface.
+Builds an endpoint for listening on every local IPv4 interface (`0.0.0.0`).
 
-Be deliberate with this in development: unlike `loopback`, it may expose the service to other machines on the network.
+Unlike `loopback`, it can make the service reachable from other machines on the network.
 
-**Returns**: an IPv4 wildcard listening endpoint
+**Returns**: the IPv4 wildcard endpoint
 
 **Examples**
 
-_Exposing a production service on port 8080_
+_Serving on port 8080_
 
 ```kex
 TCP.Endpoint.any(Port.from(8080).try)
@@ -480,11 +492,11 @@ TCP.Endpoint.any(Port.from(8080).try)
 loopback(port: Net.Port) -> Endpoint
 ```
 
-Builds an IPv4 loopback endpoint reachable only from this machine.
+Builds an endpoint on the IPv4 loopback address, `127.0.0.1`, which only this machine can reach.
 
-Port zero lets the operating system choose a free port, which is useful for tests; ask `localAddress` which port was assigned after listening.
+With port 0 the operating system picks a free port, which suits tests; `localAddress` tells you which one it picked.
 
-**Returns**: an IPv4 loopback endpoint
+**Returns**: the loopback endpoint
 
 **Examples**
 
@@ -500,11 +512,11 @@ TCP.Endpoint.loopback(Port.from(0).try)
 parse(address: String) -> Result<Endpoint, NetError>
 ```
 
-Splits a "host:port" address instead of assembling an endpoint by parts.
+Parses a `"host:port"` address into an endpoint.
 
-Only the port is validated here; the host rides through to the backend, which reports `Resolve` for an unknown name. The host may itself contain colons, so an IPv6 literal needs no brackets.
+Only the port is checked here. An unknown host is reported when it is used, as a `Resolve` error. The port is whatever follows the last colon, so an IPv6 address is written without brackets.
 
-**Returns**: the endpoint or a `Parse` failure
+**Returns**: the endpoint, or a `Parse` error
 
 **Examples**
 
@@ -523,7 +535,9 @@ bind(endpoint: Endpoint) -> Result<Socket, NetError>
 bind(endpoint: Endpoint, options: BindOptions) -> Result<Socket, NetError>
 ```
 
-Binds a datagram socket. Port zero selects an ephemeral local port.
+Opens a datagram socket bound to an endpoint.
+
+With port 0 the operating system picks a free port. Without options, each `receiveFrom` waits up to 30 seconds.
 
 **Examples**
 
@@ -541,9 +555,9 @@ bindTo(address: String) -> Result<Socket, NetError>
 bindTo(address: String, block: (Socket -> A)) -> Result<A, NetError>
 ```
 
-Binds a datagram socket on a "host:port" address.
+Opens a datagram socket bound to a `"host:port"` address.
 
-A separate name (not a `bind` overload) until #619 is fixed: mixing arities and same-arity type overloads breaks call resolution.
+It has its own name, not a `bind` overload, because of kexhq/kex#619: mixing overloads by arity and by type breaks call resolution.
 
 **Examples**
 
@@ -559,9 +573,9 @@ let socket = UDP.bindTo("127.0.0.1:0").try
 sendTo(socket: Socket, endpoint: Endpoint, data: Binary) -> Result<Integer, NetError>
 ```
 
-Sends one complete datagram and returns its byte count.
+Sends `data` as one datagram and returns the number of bytes sent.
 
-Datagram boundaries are preserved: one `sendTo` corresponds to one `receiveFrom`, unless the packet is lost by the network.
+The receiver gets it as one datagram from one `receiveFrom`, if the network delivers it at all.
 
 **Examples**
 
@@ -577,9 +591,9 @@ socket.sendTo(collector, "orders:1|c".to(Binary).try).try
 receiveFrom(socket: Socket, limit: Integer) -> Result<Datagram, NetError>
 ```
 
-Receives one datagram no larger than `limit` bytes.
+Receives one datagram of at most `limit` bytes.
 
-Oversized packets fail with `Limit` instead of being silently truncated, so a caller never mistakes a prefix for a complete message.
+A larger datagram is a `Limit` error; it is never cut short.
 
 **Examples**
 
@@ -596,7 +610,9 @@ socket.sendTo(packet.source, packet.data).try
 closed?(socket: Socket) -> Bool
 ```
 
-**Returns**: whether the socket owner has stopped
+Returns `true` once the socket is closed.
+
+**Returns**: `true` when the socket's owner process has stopped
 
 ### `localAddress` (foul)
 
@@ -604,7 +620,7 @@ closed?(socket: Socket) -> Bool
 localAddress(socket: Socket) -> Result<Endpoint, NetError>
 ```
 
-Returns the bound endpoint, including an ephemeral assigned port.
+Returns the local endpoint, including a port the operating system picked.
 
 ### `joinMulticast` (foul)
 
@@ -612,7 +628,9 @@ Returns the bound endpoint, including an ephemeral assigned port.
 joinMulticast(socket: Socket, group: Net.IP.Address, interface: Net.IP.Address) -> Result<Void, NetError>
 ```
 
-Joins an IPv4 multicast group on the selected local interface. The group must be multicast and the interface must be an IPv4 address.
+Joins an IPv4 multicast group on a local interface.
+
+`group` must be a multicast address, and `interface` the IPv4 address of the local interface.
 
 ### `leaveMulticast` (foul)
 
@@ -620,11 +638,11 @@ Joins an IPv4 multicast group on the selected local interface. The group must be
 leaveMulticast(socket: Socket, group: Net.IP.Address, interface: Net.IP.Address) -> Result<Void, NetError>
 ```
 
-Leaves a membership previously joined with the same group and interface.
+Leaves a multicast group joined earlier with the same `group` and `interface`.
 
 ## type `Socket`
 
-Connectionless datagrams. A receive limit rejects an oversized datagram instead of returning a silently truncated payload.
+Datagram sockets. Each `sendTo` sends one datagram, and each `receiveFrom` receives one whole datagram or an error.
 
 ```kex
 let socket = UDP.bind(UDP.Endpoint.loopback(Port.from(0).try)).try
@@ -634,13 +652,13 @@ let packet = socket.receiveFrom(1024).try
 socket.close
 ```
 
-An opaque bound datagram socket.
+A bound datagram socket.
 
 
 
 ## record `Endpoint`
 
-A datagram address paired with a validated port.
+A host name or numeric address, and a port.
 
 **Fields**
 
@@ -651,9 +669,9 @@ A datagram address paired with a validated port.
 
 ## record `Datagram`
 
-A received datagram and its source endpoint.
+A received datagram and the endpoint it came from.
 
-Reply to `source` rather than the socket's local address: UDP has no connection that remembers which peer sent the packet.
+UDP has no connections, so `source` is the only record of who sent it. Send a reply there.
 
 **Fields**
 
@@ -664,7 +682,9 @@ Reply to `source` rather than the socket's local address: UDP has no connection 
 
 ## record `BindOptions`
 
-Curated socket policy. Broadcast is opt-in. The receive timeout applies to each `receiveFrom` call; multicast TTL is bounded to the IP hop-limit range.
+Options for `UDP.bind`.
+
+Broadcast is off unless `broadcast?` is set. `receiveTimeout` applies to each `receiveFrom`, and `multicastTtl` must be a valid IP hop limit.
 
 **Fields**
 
@@ -683,9 +703,9 @@ Curated socket policy. Broadcast is opt-in. The receive timeout applies to each 
 host(name: String, port: Net.Port) -> Endpoint
 ```
 
-Pairs a hostname or numeric address with a UDP port.
+Builds an endpoint from a host name or numeric address and a port.
 
-**Returns**: an endpoint using `name` exactly as supplied
+**Returns**: the endpoint, with `name` kept as given
 
 **Examples**
 
@@ -701,9 +721,9 @@ UDP.Endpoint.host("metrics.internal", Port.from(8125).try)
 any(port: Net.Port) -> Endpoint
 ```
 
-Builds an IPv4 wildcard endpoint for receiving on every local interface.
+Builds an endpoint for receiving on every local IPv4 interface (`0.0.0.0`).
 
-**Returns**: an IPv4 wildcard endpoint
+**Returns**: the IPv4 wildcard endpoint
 
 **Examples**
 
@@ -719,9 +739,9 @@ UDP.Endpoint.any(Port.from(9999).try)
 loopback(port: Net.Port) -> Endpoint
 ```
 
-Builds an IPv4 loopback endpoint reachable only from this machine.
+Builds an endpoint on the IPv4 loopback address, `127.0.0.1`, which only this machine can reach.
 
-**Returns**: an IPv4 loopback endpoint
+**Returns**: the loopback endpoint
 
 **Examples**
 
@@ -737,11 +757,11 @@ UDP.Endpoint.loopback(Port.from(0).try)
 parse(address: String) -> Result<Endpoint, NetError>
 ```
 
-Splits a "host:port" address instead of assembling an endpoint by parts.
+Parses a `"host:port"` address into an endpoint.
 
-Only the port is validated here; the host rides through to the backend, which reports `Resolve` for an unknown name. The host may itself contain colons, so an IPv6 literal needs no brackets.
+Only the port is checked here. An unknown host is reported when it is used, as a `Resolve` error. The port is whatever follows the last colon, so an IPv6 address is written without brackets.
 
-**Returns**: the endpoint or a `Parse` failure
+**Returns**: the endpoint, or a `Parse` error
 
 **Examples**
 
@@ -760,9 +780,9 @@ connect(address: Address) -> Result<UnixConnection, NetError>
 connect(address: Address, options: ConnectOptions) -> Result<UnixConnection, NetError>
 ```
 
-Connects to a filesystem-domain listener.
+Connects to a Unix-domain listener.
 
-Unix sockets avoid opening a network port and are a good fit for two processes on the same machine, such as a CLI and its background daemon.
+A Unix socket needs no network port, which suits two processes on one machine, such as a command-line tool and its background daemon. Without options, connecting times out after 10 seconds and each receive after 30.
 
 **Examples**
 
@@ -777,9 +797,9 @@ listen(address: Address) -> Result<UnixListener, NetError>
 listen(address: Address, options: ListenOptions) -> Result<UnixListener, NetError>
 ```
 
-Binds a new path; an existing filesystem entry is never removed implicitly.
+Starts listening at a path where nothing exists yet.
 
-This conservative default protects regular files and also avoids taking over a socket that may still belong to a running service.
+Anything already at the path stays, and listening fails. That protects regular files and avoids taking over a socket a running service may still be using.
 
 ### `connectTo` (foul)
 
@@ -805,11 +825,11 @@ bind(path: String) -> Result<UnixListener, NetError>
 bind(path: String, block: (UnixListener -> A)) -> Result<A, NetError>
 ```
 
-Binds and starts listening on the socket at `path`.
+Starts listening at `path`.
 
 **Examples**
 
-_A Rosetta-style IPC listener_
+_A listener for local clients_
 
 ```kex
 let listener = Unix.bind("/tmp/my-app.sock").try
@@ -821,7 +841,7 @@ let listener = Unix.bind("/tmp/my-app.sock").try
 sendAll(connection: UnixConnection, data: Binary) -> Result<Integer, NetError>
 ```
 
-Sends every byte and returns the count.
+Sends all of `data` and returns the number of bytes sent.
 
 ### `put` (foul)
 
@@ -829,7 +849,7 @@ Sends every byte and returns the count.
 put(connection: UnixConnection, content: Binary) -> Result<Void, NetError>
 ```
 
-Writes `content` verbatim: raw bytes, no rendering, no trailing newline.
+Sends `content` as it is, with nothing added.
 
 **Examples**
 
@@ -845,7 +865,7 @@ connection.put(chunk).try
 write(connection: UnixConnection, content: Showable) -> Result<Void, NetError>
 ```
 
-Writes `content` with no trailing newline.
+Sends `content` as text, without a newline.
 
 **Examples**
 
@@ -861,7 +881,7 @@ connection.write("name? ").try
 writeLine(connection: UnixConnection, content: Showable) -> Result<Void, NetError>
 ```
 
-Writes `content` followed by a newline.
+Sends `content` as text, followed by a newline.
 
 **Examples**
 
@@ -877,7 +897,7 @@ connection.writeLine("hello").try
 print(connection: UnixConnection, content: Showable) -> Void
 ```
 
-Writes `content` with no trailing newline, ignoring a failure. Use `write` when a failure matters.
+Sends `content` as text, without a newline, and ignores a failure. Use `write` to find out about one.
 
 **Examples**
 
@@ -893,7 +913,7 @@ connection.print("name? ")
 printLine(connection: UnixConnection, content: Showable) -> Void
 ```
 
-Writes `content` followed by a newline, ignoring a failure. Use `writeLine` when a failure matters.
+Sends `content` as text, followed by a newline, and ignores a failure. Use `writeLine` to find out about one.
 
 **Examples**
 
@@ -909,9 +929,9 @@ connection.printLine("hello")
 readLine(connection: UnixConnection) -> Result<String?, NetError>
 ```
 
-Reads the next line as text, without its newline.
+Reads the next line as text, without its line ending.
 
-Answers `Ok(None)` at end of input, like `FileHandle.readLine`. Lines are capped at 64 KiB; a longer line fails with `Limit` instead of growing without bound.
+Returns `Ok(None)` at the end of the input, as `FileHandle.readLine` does. A line longer than 64 KiB is a `Limit` error, and one that is not valid UTF-8 is a `Parse` error.
 
 **Examples**
 
@@ -930,7 +950,9 @@ end
 getLine(connection: UnixConnection) -> String?
 ```
 
-Reads the next line as text, without its newline: `readLine` for when the end of input and a failed read mean the same thing.
+Reads the next line as text, without its line ending, or returns `None` at the end of the input or on any failure.
+
+Use `readLine` to tell the end of the input from an error.
 
 **Examples**
 
@@ -946,7 +968,7 @@ IO.printLine(connection.getLine.or("(closed)"))
 receiveChunk(connection: UnixConnection, limit: Integer) -> Result<Binary, NetError>
 ```
 
-Receives one bounded chunk; EOF is `Closed`.
+Receives whatever bytes are available, at most `limit` of them. The end of the stream is a `Closed` error.
 
 ### `receiveExactly` (foul)
 
@@ -954,7 +976,7 @@ Receives one bounded chunk; EOF is `Closed`.
 receiveExactly(connection: UnixConnection, count: Integer) -> Result<Binary, NetError>
 ```
 
-Receives exactly `count` bytes or returns a typed EOF/timeout failure.
+Receives exactly `count` bytes. The stream ending first is a `Closed` error, and running out of time a `Timeout` error.
 
 ### `receiveUntil` (foul)
 
@@ -962,11 +984,11 @@ Receives exactly `count` bytes or returns a typed EOF/timeout failure.
 receiveUntil(connection: UnixConnection, delimiter: Binary, limit: Integer) -> Result<Binary, NetError>
 ```
 
-Receives through `delimiter`, including it, within an explicit bound.
+Receives bytes up to and including the first `delimiter`, reading at most `limit` bytes.
 
 **Examples**
 
-_Read through the next newline_
+_Reading to the next newline_
 
 ```kex
 connection.receiveUntil("\n".to(Binary).try, 4096).try
@@ -978,7 +1000,7 @@ connection.receiveUntil("\n".to(Binary).try, 4096).try
 receiveLine(connection: UnixConnection, limit: Integer) -> Result<Binary, NetError>
 ```
 
-Receives through a newline without exceeding `limit` bytes.
+Receives bytes up to and including a newline, reading at most `limit` bytes.
 
 ### `shutdownWrite` (foul)
 
@@ -986,7 +1008,7 @@ Receives through a newline without exceeding `limit` bytes.
 shutdownWrite(connection: UnixConnection) -> Result<Void, NetError>
 ```
 
-Half-closes the write side while leaving reads available.
+Closes the sending side of the connection, so the peer sees the end of the stream, while receiving still works.
 
 ### `accept` (foul)
 
@@ -994,7 +1016,7 @@ Half-closes the write side while leaving reads available.
 accept(listener: UnixListener) -> Result<UnixConnection, NetError>
 ```
 
-Waits for and returns the next stream connection.
+Waits for the next incoming connection and returns it.
 
 ### `closed?` (foul)
 
@@ -1002,11 +1024,13 @@ Waits for and returns the next stream connection.
 closed?(connection: UnixConnection) -> Bool
 ```
 
-**Returns**: whether the stream owner has stopped
+Returns `true` once the connection is closed.
+
+**Returns**: `true` when the connection's owner process has stopped
 
 ## type `UnixConnection`
 
-Filesystem-domain streams for local IPC. The listener owns and removes only the socket path it successfully created.
+Unix-domain stream sockets, for talking to another process on the same machine. A listener removes its socket file when closed, and only a file it created.
 
 ```kex
 let address = Unix.Address.path("/tmp/my-service.sock").try
@@ -1015,19 +1039,19 @@ let client = Unix.connect(address).try
 listener.close
 ```
 
-An opaque connected filesystem-domain byte stream.
+A connected Unix-domain stream.
 
 
 
 ## type `UnixListener`
 
-An opaque filesystem-domain stream listener.
+A Unix-domain socket listening for connections.
 
 
 
 ## record `Address`
 
-A validated absolute filesystem socket path.
+The absolute path of a Unix-domain socket. Make one with `Unix.Address.path`.
 
 **Fields**
 
@@ -1039,7 +1063,7 @@ A validated absolute filesystem socket path.
 
 ## record `ConnectOptions`
 
-Connection and read deadlines for a local IPC client.
+Options for `Unix.connect`: the connect and receive timeouts.
 
 **Fields**
 
@@ -1050,9 +1074,9 @@ Connection and read deadlines for a local IPC client.
 
 ## record `ListenOptions`
 
-Listener queue, stale-socket policy, and per-operation deadlines.
+Options for `Unix.listen`: the queue size, whether to remove a leftover socket file, and the accept and receive timeouts.
 
-`removeStale?` removes only a filesystem socket, never a regular file or directory that happens to occupy the requested path.
+`removeStale?` removes only a socket file at the path, never a regular file or a directory.
 
 **Fields**
 
@@ -1071,11 +1095,11 @@ Listener queue, stale-socket policy, and per-operation deadlines.
 path(value: String) -> Result<Address, NetError>
 ```
 
-Validates a nonempty absolute Unix-domain socket path.
+Checks that `value` is an absolute path and makes it a socket address.
 
-Relative paths are rejected so ownership and cleanup always refer to one unambiguous filesystem entry.
+A relative path is a `Parse` error, so a listener always knows exactly which file to remove.
 
-**Returns**: the address, or `Parse`
+**Returns**: the address, or a `Parse` error
 
 **Examples**
 
@@ -1093,11 +1117,11 @@ Unix.Address.path("/tmp/my-app.sock").try
 connect(endpoint: Net.Socket.TCP.Endpoint, config: ClientConfig) -> Result<TLSConnection, NetError>
 ```
 
-Opens a direct TLS connection with a bounded handshake deadline.
+Connects to `endpoint` and performs the TLS handshake.
 
-`serverName` drives both certificate hostname verification and SNI. Pass the DNS name from the URL, not an address it happened to resolve to.
+The certificate is checked against `serverName`, which is also sent as SNI. Give the host name from the URL, not an address it resolved to.
 
-**Returns**: a TLS stream or typed failure
+**Returns**: the connection, or why it failed
 
 **Examples**
 
@@ -1117,7 +1141,7 @@ let connection = TLS.connect(endpoint, TLS.ClientConfig {
 sendAll(connection: TLSConnection, data: Binary) -> Result<Integer, NetError>
 ```
 
-Sends every plaintext byte through the TLS stream.
+Encrypts and sends all of `data`, and returns the number of bytes sent.
 
 ### `put` (foul)
 
@@ -1125,7 +1149,7 @@ Sends every plaintext byte through the TLS stream.
 put(connection: TLSConnection, content: Binary) -> Result<Void, NetError>
 ```
 
-Writes `content` verbatim: raw bytes, no rendering, no trailing newline.
+Sends `content` as it is, with nothing added.
 
 **Examples**
 
@@ -1141,7 +1165,7 @@ connection.put(chunk).try
 write(connection: TLSConnection, content: Showable) -> Result<Void, NetError>
 ```
 
-Writes `content` with no trailing newline.
+Sends `content` as text, without a newline.
 
 **Examples**
 
@@ -1157,7 +1181,7 @@ connection.write("name? ").try
 writeLine(connection: TLSConnection, content: Showable) -> Result<Void, NetError>
 ```
 
-Writes `content` followed by a newline.
+Sends `content` as text, followed by a newline.
 
 **Examples**
 
@@ -1173,7 +1197,7 @@ connection.writeLine("hello").try
 print(connection: TLSConnection, content: Showable) -> Void
 ```
 
-Writes `content` with no trailing newline, ignoring a failure. Use `write` when a failure matters.
+Sends `content` as text, without a newline, and ignores a failure. Use `write` to find out about one.
 
 **Examples**
 
@@ -1189,7 +1213,7 @@ connection.print("name? ")
 printLine(connection: TLSConnection, content: Showable) -> Void
 ```
 
-Writes `content` followed by a newline, ignoring a failure. Use `writeLine` when a failure matters.
+Sends `content` as text, followed by a newline, and ignores a failure. Use `writeLine` to find out about one.
 
 **Examples**
 
@@ -1205,7 +1229,7 @@ connection.printLine("hello")
 receiveChunk(connection: TLSConnection, limit: Integer) -> Result<Binary, NetError>
 ```
 
-Receives one decrypted chunk no larger than `limit`.
+Receives and decrypts whatever bytes are available, at most `limit` of them.
 
 ### `closed?` (foul)
 
@@ -1213,11 +1237,13 @@ Receives one decrypted chunk no larger than `limit`.
 closed?(connection: TLSConnection) -> Bool
 ```
 
-**Returns**: whether the TLS connection owner has stopped
+Returns `true` once the connection is closed.
+
+**Returns**: `true` when the connection's owner process has stopped
 
 ## type `TLSConnection`
 
-TLS client streams. Certificate and hostname verification are enabled by default; disabling verification must be an explicit configuration choice.
+TLS client connections. The server's certificate and host name are checked unless `verify?` is set to `false`.
 
 ```kex
 let endpoint = TCP.Endpoint.host("example.test", Port.from(443).try)
@@ -1227,13 +1253,13 @@ let tls = TLS.connect(endpoint, TLS.ClientConfig {
 tls.close
 ```
 
-An opaque verified or explicitly unverified TLS byte stream.
+A TLS connection.
 
 
 
 ## record `ClientConfig`
 
-Client handshake policy. TLS 1.2/1.3 are enabled; verification defaults on.
+Options for `TLS.connect`: the server name to check and to send (SNI), whether to verify the certificate, and the ALPN protocols to offer. TLS 1.2 and 1.3 are allowed.
 
 **Fields**
 
@@ -1253,7 +1279,7 @@ Implements [`Closeable`](../file_handle.md#trait-closeable).
 close -> Void
 ```
 
-Idempotently closes a connected stream.
+Closes the connection. Closing it again does nothing.
 
 
 
@@ -1267,7 +1293,7 @@ Implements [`Closeable`](../file_handle.md#trait-closeable).
 close -> Void
 ```
 
-Idempotently closes a listener and releases its port.
+Closes the listener and frees its port. Closing it again does nothing.
 
 
 
@@ -1281,7 +1307,7 @@ Implements [`Closeable`](../file_handle.md#trait-closeable).
 close -> Void
 ```
 
-Idempotently closes the socket.
+Closes the socket. Closing it again does nothing.
 
 
 
@@ -1295,7 +1321,7 @@ Implements [`Closeable`](../file_handle.md#trait-closeable).
 close -> Void
 ```
 
-Idempotently closes a stream.
+Closes the connection. Closing it again does nothing.
 
 
 
@@ -1309,7 +1335,7 @@ Implements [`Closeable`](../file_handle.md#trait-closeable).
 close -> Void
 ```
 
-Closes the listener and unlinks only the path it successfully created.
+Closes the listener and removes its socket file, if this listener created it.
 
 
 
@@ -1323,15 +1349,15 @@ Implements [`Closeable`](../file_handle.md#trait-closeable).
 close -> Void
 ```
 
-Idempotently closes the TLS stream.
+Closes the TLS connection. Closing it again does nothing.
 
 
 
 ## module `Net.Socket.Mock`
 
-Failure-injection stand-ins for the socket capabilities.
+Stand-ins for the socket capabilities, for testing how code handles a failure.
 
-Lives here rather than in `Mock` because the prebuilt companions only cover top-level stdlib files: this subdir module compiles per run, so only code compiled alongside it can implement its capabilities.
+They are here, not in `mock.kex`, because only code compiled together with this module can implement its capabilities.
 
 
 
@@ -1339,7 +1365,7 @@ Lives here rather than in `Mock` because the prebuilt companions only cover top-
 
 A stand-in for the `Net.Socket.TCP` capability.
 
-Constructors answer `failure` when set, so a test can force a refused connection or a timeout deterministically; everything else answers a canned `MockEmpty`, because a refused constructor leaves no connection for it to run on. Scripted success needs backend connection devices, which do not exist yet — until then, test success paths against loopback (see `spec/net_socket_text_beam.kex`).
+Every function that would open a connection or listener returns `failure` when it is set, so a test can force a refused connection or a timeout. Otherwise they, and every function on a connection, return a `MockEmpty` error. The mock cannot make a working connection; test that path against a loopback listener (see `spec/net_socket_text_beam.kex`).
 
 ```kex
 with Net.Socket.TCP = Mock.TCP {} do
@@ -1483,7 +1509,7 @@ peerAddress(connection)
 
 ## record `UDP`
 
-A stand-in for the `Net.Socket.UDP` capability. Same deal as `Mock.TCP`: constructors answer `failure` when set, everything else answers canned `MockEmpty`.
+A stand-in for the `Net.Socket.UDP` capability. It fails the same way as `Mock.TCP`: with `failure` when it is set, and with `MockEmpty` otherwise.
 
 ```kex
 with Net.Socket.UDP = Mock.UDP {} do
@@ -1549,7 +1575,7 @@ leaveMulticast(socket, group, interface)
 
 ## record `Unix`
 
-A stand-in for the `Net.Socket.Unix` capability. Same deal as `Mock.TCP`: constructors answer `failure` when set, everything else answers canned `MockEmpty`.
+A stand-in for the `Net.Socket.Unix` capability. It fails the same way as `Mock.TCP`: with `failure` when it is set, and with `MockEmpty` otherwise.
 
 ```kex
 with Net.Socket.Unix = Mock.Unix {} do
@@ -1681,7 +1707,7 @@ closed?(handle)
 
 ## record `TLS`
 
-A stand-in for the `Net.Socket.TLS` capability. Same deal as `Mock.TCP`: constructors answer `failure` when set, everything else answers canned `MockEmpty`.
+A stand-in for the `Net.Socket.TLS` capability. It fails the same way as `Mock.TCP`: with `failure` when it is set, and with `MockEmpty` otherwise.
 
 ```kex
 with Net.Socket.TLS = Mock.TLS {} do

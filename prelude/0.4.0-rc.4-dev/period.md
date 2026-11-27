@@ -12,18 +12,20 @@ entities:
 
 # Period
 
-Calendar spans: `1.month`, `2.year`, resolved by the calendar they are added on. Fixed elapsed time is a `Duration`, in duration.kex.
+Calendar spans such as `1.month` and `2.year`, whose length depends on the date they are added to. Elapsed time is a `Duration`, in duration.kex.
 
 ## record `Period`
 
-A calendar span. Months and years have no fixed length: February is 28 days or 29, a year 365 or 366, so they cannot live in a `Duration`, which is a count of seconds and nothing else. A Period carries the calendar fields themselves and lets the calendar resolve them:
+A span of calendar years, months and days.
+
+February has 28 or 29 days and a year 365 or 366, so a month or a year is not a fixed number of seconds and cannot be a `Duration`. A `Period` keeps the calendar fields, and adding it to a date clamps the day to the end of a shorter month:
 
 ```kex
-Date.of(2026, 1, 31).try + 1.month        # 2026-02-28, not 2026-03-03
+Date.of(2026, 1, 31).try + 1.month        # 2026-02-28
 Date.of(2024, 2, 29).try + 1.year         # 2025-02-28
 ```
 
-Use a Duration for elapsed time (`36.hour` is always 129600 seconds) and a Period for calendar steps (`1.month` is however long that month is).
+Use a `Duration` for elapsed time (`36.hour` is always 129600 seconds) and a `Period` for calendar steps.
 
 **Fields**
 
@@ -41,7 +43,7 @@ Implements [`Inspectable`](kex.md#trait-inspectable), [`Showable`](kex.md#trait-
 inspectValue(colors: Bool) -> String
 ```
 
-Renders the period structurally, for debugging output.
+Returns the period's fields, for debugging output.
 
 **Parameters**
 
@@ -55,7 +57,7 @@ Renders the period structurally, for debugging output.
 showValue -> String
 ```
 
-Renders the period as its ISO 8601 form, so interpolation and `IO.printLine` show `P1Y2M3D`.
+Returns the ISO 8601 form, which is what interpolation and `IO.printLine` show.
 
 **Returns**: the ISO 8601 duration
 
@@ -71,7 +73,7 @@ Renders the period as its ISO 8601 form, so interpolation and `IO.printLine` sho
 +(other: Period) -> Period
 ```
 
-Adds two calendar spans, field by field.
+Returns the sum of two spans, field by field.
 
 **Parameters**
 
@@ -91,7 +93,7 @@ Adds two calendar spans, field by field.
 -(other: Period) -> Period
 ```
 
-Subtracts a calendar span, field by field. Fields may go negative.
+Returns the difference of two spans, field by field. Fields can go negative.
 
 **Parameters**
 
@@ -111,7 +113,7 @@ Subtracts a calendar span, field by field. Fields may go negative.
 negated -> Period
 ```
 
-The same span with every field's sign flipped: a step backwards.
+Returns the span with the sign of every field flipped.
 
 **Returns**: the negated span
 
@@ -127,7 +129,7 @@ Period.of(1, 2, 3).negated.iso   # => "P-1Y-2M-3D"
 *(factor: Integer) -> Period
 ```
 
-Multiplies every field by `factor`.
+Returns the span with every field multiplied by `factor`.
 
 **Parameters**
 
@@ -147,7 +149,7 @@ Multiplies every field by `factor`.
 zero? -> Bool
 ```
 
-Returns `true` when every field is zero.
+Returns whether every field is zero.
 
 **Returns**: `true` for a zero span
 
@@ -164,9 +166,9 @@ Period.of(0, 1, 0).zero?     # => false
 totalMonths -> Integer
 ```
 
-The years and months of the span, as one count of months.
+Returns the years and months of the span as one count of months.
 
-Years and months are one quantity for arithmetic: a month is 1/12 of a year exactly, unlike days, which are not a fixed fraction of a month. This is why `date + span` applies them together rather than one after the other.
+A year is always 12 months, while a month has no fixed number of days, so +date + span+ adds the years and months in one step and the days after.
 
 **Returns**: the total months, ignoring days
 
@@ -182,9 +184,9 @@ Period.of(1, 2, 3).totalMonths   # => 14
 normalized -> Period
 ```
 
-The same span with excess months carried into years.
+Returns the span with whole years of months carried into `years`.
 
-14 months becomes 1 year 2 months. Days are left alone: there is no fixed number of them in a month to carry by.
+14 months becomes 1 year 2 months. Days are not carried, since a month has no fixed number of them.
 
 **Returns**: the normalised span
 
@@ -200,9 +202,9 @@ The same span with excess months carried into years.
 iso -> String
 ```
 
-The span as an ISO 8601 duration, `P1Y2M3D`.
+Returns the span as an ISO 8601 duration such as `P1Y2M3D`.
 
-A zero period is `P0D`, the shortest spelling the grammar allows: `P` alone is not valid.
+The empty span is `P0D`, because a bare `P` is not valid ISO 8601.
 
 **Returns**: the ISO 8601 duration
 
@@ -211,7 +213,7 @@ A zero period is `P0D`, the shortest spelling the grammar allows: `P` alone is n
 ```kex
 Period.of(1, 2, 3).iso   # => "P1Y2M3D"
 Period.zero().iso        # => "P0D"
-2.month.iso             # => "P2M"
+2.month.iso              # => "P2M"
 ```
 
 ### From [`Showable`](kex.md#trait-showable)
@@ -222,7 +224,9 @@ Period.zero().iso        # => "P0D"
 
 More functions for [`Integer`](number.md#make-integer), added by this module.
 
-Calendar spans on `Integer`: `1.month`, `2.year`. A `Period`, not a `Duration`: `4.week` is exactly 28 days, `1.month` one calendar month, however long that month turns out to be. The time units (`5.second`, `90.minute`, `2.week`) are in units.kex.
+The calendar spans `1.month` and `2.year` on `Integer`.
+
+These return a `Period`. The fixed time units (`5.second`, `90.minute`, `2.week`) return a `Duration` and live in units.kex; `4.week` is always 28 days.
 
 ### `month`
 
@@ -230,7 +234,7 @@ Calendar spans on `Integer`: `1.month`, `2.year`. A `Period`, not a `Duration`: 
 month -> Period
 ```
 
-This many calendar months, as a `Period`.
+Returns a `Period` of this many calendar months.
 
 **Returns**: the calendar span
 
@@ -252,7 +256,7 @@ _The calendar clamps a day that does not exist_
 year -> Period
 ```
 
-This many calendar years, as a `Period`.
+Returns a `Period` of this many calendar years.
 
 **Returns**: the calendar span
 
@@ -264,7 +268,7 @@ This many calendar years, as a `Period`.
 
 ## module `Period`
 
-Building calendar spans.
+Constructors for `Period`.
 
 ### `zero`
 
@@ -272,7 +276,7 @@ Building calendar spans.
 zero -> Period
 ```
 
-A span of nothing.
+Returns the empty span.
 
 **Returns**: the zero span
 
@@ -289,7 +293,7 @@ Period.zero().zero?   # => true
 of(years: Integer, months: Integer, days: Integer) -> Period
 ```
 
-A span of the given years, months and days together.
+Returns a span of the given years, months and days.
 
 **Parameters**
 
@@ -311,7 +315,7 @@ Period.of(1, 2, 3).iso   # => "P1Y2M3D"
 years(count: Integer) -> Period
 ```
 
-A span of `count` calendar years.
+Returns a span of `count` calendar years.
 
 **Parameters**
 
@@ -331,7 +335,7 @@ A span of `count` calendar years.
 months(count: Integer) -> Period
 ```
 
-A span of `count` calendar months.
+Returns a span of `count` calendar months.
 
 **Parameters**
 
@@ -351,7 +355,7 @@ A span of `count` calendar months.
 days(count: Integer) -> Period
 ```
 
-A span of `count` days, as a calendar step.
+Returns a span of `count` calendar days.
 
 **Parameters**
 
@@ -371,7 +375,7 @@ Period.days(10).iso   # => "P10D"
 weeks(count: Integer) -> Period
 ```
 
-A span of `count` weeks, recorded as that many times seven days.
+Returns a span of `count` weeks, stored as `count * 7` days.
 
 **Parameters**
 

@@ -27,9 +27,9 @@ entities:
 
 Processes, tasks and external commands.
 
-Kex's concurrency is the BEAM's: lightweight processes that share nothing and communicate by message. There are three things here, and they answer different questions.
+Kex's concurrency is the BEAM's: lightweight processes that share nothing and talk by sending messages. This file has three parts.
 
-`Task` runs one piece of work somewhere else and gives you the answer back:
+`Task` runs one piece of work in another process and hands back its result:
 
 ```kex
 let a = Task.start do expensiveThing(1) end
@@ -37,7 +37,7 @@ let b = Task.start do expensiveThing(2) end
 (a.await, b.await)
 ```
 
-`serving` plus `Process.spawn` gives a piece of state its own process, with typed calls into it:
+`serving` with `Process.spawn` gives a piece of state its own process, with typed calls into it:
 
 ```kex
 record RateLimiter do
@@ -56,17 +56,15 @@ let api = Process.spawn(RateLimiter { remaining: 2 })
 api.allowed?()   # => Ok(true)
 ```
 
-`Process.run` and `Process.stream` run an external program.
+`Process.run` and `Process.stream` run an external program:
 
 ```kex
 Process.run("git", ["rev-parse", "HEAD"])
 ```
 
-Backed by Kex.Intrinsic.Process and the BEAM runtime.
-
 ## type `Task<A>`
 
-A handle on work running in another process, with a result you can await.
+A handle on work running in another process, whose result you can await.
 
 Created by `Task.start`.
 
@@ -78,7 +76,7 @@ Created by `Task.start`.
 await -> Result<X, Any>
 ```
 
-Waits for the task's result, for as long as it takes.
+Waits for the task's result, with no time limit.
 
 **Returns**: the result or failure reason
 
@@ -94,7 +92,7 @@ await(timeout: Integer) -> Result<X, Any>
 
 Waits for the task's result, giving up after `timeout` milliseconds.
 
-Answers `Error(:timeout)` if the task has not finished in time. The task itself is not stopped.
+Returns `Error(:timeout)` if the task has not finished in time. The task keeps running.
 
 **Parameters**
 
@@ -105,8 +103,8 @@ Answers `Error(:timeout)` if the task has not finished in time. The task itself 
 **Examples**
 
 ```kex
-let t = Task.start do slowThing() end
-t.await(1000)
+let t = Task.start do Task.sleep(2.second) end
+t.await(100)   # => Error(:timeout)
 ```
 
 ## type `Reference`
@@ -132,11 +130,11 @@ ref.demonitor
 
 ## type `Process<A>`
 
-A process: what `spawn` makes, `Process.self` is, and `Process.whereIs` finds. `A` is the kind of message it accepts, so sending it anything else is refused. A process obtained without a declared message type takes its `A` from where it is used (`Ping(Process.self)` where a `Process<String>` goes).
+A process: what `spawn` makes, what `Process.self` returns, and what `Process.whereIs` finds. `A` is the type of message it accepts, and sending it anything else is a type error. A process obtained without a declared message type takes its `A` from where it is used (`Ping(Process.self)` where a `Process<String>` is expected).
 
 ### Functions
 
-A spawned Process<X> is a typed process handle backed by the same runtime pid. It therefore supports the ordinary pid lifecycle operations without erasing its message type.
+Messaging, linking and monitoring a process.
 
 #### `send`
 
@@ -144,9 +142,9 @@ A spawned Process<X> is a typed process handle backed by the same runtime pid. I
 send(msg: X) -> Void
 ```
 
-Sends `msg` to the process. Only a message of the kind it accepts goes.
+Sends `msg` to the process. `msg` must be of the type the process accepts.
 
-Sending never blocks and never fails, even when the process is gone: that is the BEAM's model, not an oversight. Monitor the process when delivery matters.
+Sending never blocks and never fails, even when the process is gone. Monitor the process when you need to know it is still there.
 
 **Parameters**
 
@@ -165,7 +163,7 @@ worker.send(("job", 42))
 sendFrom(msg: X) -> Void
 ```
 
-Sends the sender-bearing pair `(Process.self, msg)`, so the receiver knows where to answer.
+Sends the pair `(Process.self, msg)`, so the receiver knows where to reply.
 
 **Parameters**
 
@@ -183,9 +181,9 @@ server.sendFrom(:status)   # the server receives (sender, :status)
 link -> Void
 ```
 
-Links the calling process to this one, so that either one exiting abnormally takes the other down.
+Links the calling process to this one, so that if either exits abnormally the other exits too.
 
-Linking is bidirectional and is how a group of processes is made to fail together. Use `monitor` when you want to be told about a death without sharing it.
+Links work in both directions. Use `monitor` to be told about an exit without exiting yourself.
 
 **Examples**
 
@@ -215,7 +213,7 @@ monitor -> Reference
 
 Starts monitoring this process, and returns the reference that identifies the monitor.
 
-When the monitored process exits, the caller receives a message about it. Unlike `link`, a monitor is one-directional and does not propagate the exit. Pass the reference to `demonitor` to stop.
+When the monitored process exits, the caller receives a message about it. Unlike `link`, a monitor works in one direction and the caller does not exit with it. Call `demonitor` on the reference to stop.
 
 **Returns**: the monitor reference
 
@@ -234,7 +232,7 @@ alive? -> Bool
 
 Returns `true` when the process is still running.
 
-Inherently a snapshot: the process may exit immediately after you ask. Monitor it when the answer has to stay true.
+The process may exit right after you ask. Monitor it when you need to know when it goes.
 
 **Returns**: `true` when the process is alive
 
@@ -246,7 +244,7 @@ Process.self.alive?   # => true
 
 ## type `ProcessExitReason`
 
-A process termination reason. This remains open because the BEAM permits any term as an exit reason; conventional values include `:normal`, `:shutdown`, and structured application errors.
+Why a process ended. The BEAM allows any term as an exit reason, so this is `Any`; the usual ones are `:normal`, `:shutdown` and application error values.
 
 **Variants**
 
@@ -256,9 +254,9 @@ A process termination reason. This remains open because the BEAM permits any ter
 
 ## record `Reply<A>`
 
-What a synchronous `slot` returns: an answer for the caller, and optionally a new state and a reason to stop.
+What a synchronous `slot` returns: the reply for the caller, and optionally a new state and a reason to stop.
 
-`reply` answers the caller immediately. A slot may omit it only when it sends a deferred response with `from.reply(...)`. `new` installs the next serving state; omitting it preserves the current state. `stop` terminates the server after applying the transition. Within a `serving X` block, the checker narrows `new` from `Any?` to `X?`.
+`reply` goes back to the caller at once. A slot may leave it out only when it answers later with `from.reply(...)`. `new` is the next state; leave it out to keep the current one. `stop` ends the server after the transition. Inside a `serving X` block the checker narrows `new` from `Any?` to `X?`.
 
 ```kex
 slot allowed? -> Reply<Bool> do
@@ -280,7 +278,7 @@ slot stop -> Reply<Integer> = { stop: :normal, reply: @remaining }
 
 ## type `From<A>`
 
-The identity of a pending caller, for a slot that answers later rather than immediately. Hand it `reply` when the answer is ready.
+A caller still waiting for its reply, for a slot that answers later. Call `reply` on it when the answer is ready.
 
 ### Functions
 
@@ -290,9 +288,9 @@ The identity of a pending caller, for a slot that answers later rather than imme
 reply(value: X) -> Void
 ```
 
-Answers the pending call this value identifies.
+Sends `value` as the reply to the waiting caller.
 
-A slot that cannot answer immediately, because it is waiting on something else: omits `reply` from its transition and calls this later instead.
+A slot that cannot reply at once, because it is waiting on something else, leaves `reply` out of its `Reply` and calls this later.
 
 **Parameters**
 
@@ -320,7 +318,7 @@ Returns the waiting caller.
 
 ## type `CallError`
 
-Why a call into a server failed: it took too long, the process is gone, or it crashed handling the call.
+Why a call into a server failed: it timed out, the process is gone, or it crashed while handling the call.
 
 **Variants**
 
@@ -334,7 +332,7 @@ Why a call into a server failed: it took too long, the process is gone, or it cr
 
 A running server and the default timeout for calls into it.
 
-Returned by `Process.spawn`. Every `slot` declared in the type's `serving` block exposes a function taking this `Server` as its receiver and returning a `Result`.
+Returned by `Process.spawn`. Each `slot` in the type's `serving` block becomes a function on this `Server` that returns a `Result`.
 
 **Fields**
 
@@ -349,9 +347,9 @@ Returned by `Process.spawn`. Every `slot` declared in the type's `serving` block
 within(timeout: Integer) -> Server<X>
 ```
 
-Returns the same server with a different default call timeout, in milliseconds.
+Returns a handle on the same server with a different call timeout, in milliseconds.
 
-The server is untouched: this is a new view of it, so one slow call can be given more room without changing anything for other callers.
+The server and other handles on it are unchanged, so one slow call can be given longer without affecting anyone else.
 
 **Parameters**
 
@@ -417,7 +415,7 @@ api.alive?   # => true
 
 ## module `Process`
 
-Spawning servers, running external commands, and the ambient process operations.
+Spawning servers, running external commands, and operations on the calling process.
 
 ### `spawn` (foul)
 
@@ -425,9 +423,9 @@ Spawning servers, running external commands, and the ambient process operations.
 spawn(state: X) -> Server<X>
 ```
 
-Starts a process running the `serving` implementation attached to `state`'s type, and returns a handle on it.
+Starts a process running the `serving` block of `state`'s type, with `state` as its initial state, and returns a handle on it.
 
-The state you pass is the server's initial state. Every `slot` in the `serving` block exposes a function taking the returned `Server` as its receiver. Each returns a `Result`: a call can time out or find the process gone.
+Each `slot` in the `serving` block becomes a function on the returned `Server`. Each returns a `Result`, because a call can time out or find the process gone.
 
 **Parameters**
 
@@ -452,11 +450,11 @@ run(command: String, args: [String]) -> Result<ProcessResult, String>
 run(command: String, args: [String], timeoutMs: Integer) -> Result<ProcessResult, String>
 ```
 
-Runs an executable with an argument vector and captures its output.
+Runs an executable with a list of arguments and captures its output.
 
-No shell is involved, so nothing is glob-expanded or word-split and arguments containing spaces need no quoting. Output is captured as UTF-8 strings.
+No shell is involved: nothing is glob-expanded or split on spaces, and an argument containing spaces needs no quoting. Output is read as UTF-8.
 
-A non-zero exit status is still `Ok`: the program ran and said something, which is information, not a failure to run it. `Error` means the child could not be started at all.
+A non-zero exit status is still `Ok`; check `exitCode` on the result. `Error` means the program could not be started at all.
 
 **Parameters**
 
@@ -500,11 +498,9 @@ Process.run("git", ["rev-parse", "HEAD"])
 stream(command: String, args: [String]) -> Result<Integer, String>
 ```
 
-Runs an executable with the CALLER's stdin, stdout and stderr, so its output appears as it is produced rather than in one block when it exits, and a child that reads the terminal — a REPL, a prompt — has it.
+Runs an executable connected to the caller's stdin, stdout and stderr, and returns its exit code.
 
-Answers the exit code; nothing is captured: that is the trade, and it is useful for commands whose progress should appear in the terminal.
-
-`run` remains the one to use when the output is data to be READ.
+Output appears as the program writes it, and a program that reads the terminal (a REPL, a password prompt) can. Nothing is captured; use `run` when you need the output as a string.
 
 **Parameters**
 
@@ -531,9 +527,9 @@ end
 exec(command: String, args: [String]) -> Integer
 ```
 
-Runs an executable and returns just its exit code, discarding its output.
+Runs an executable and returns its exit code, discarding its output.
 
-A command that could not be started answers `127`, the shell's convention for "command not found". Use `run` when you need the output or want to tell a failed start from a failed run.
+A command that could not be started gives `127`, the shell's code for "command not found". Use `run` when you need the output or must tell a failed start from a failed run.
 
 **Parameters**
 
@@ -582,7 +578,7 @@ exit(pid: Process<A>, reason: X) -> Void
 
 Sends an exit signal carrying `reason` to `pid`.
 
-`:normal` is the ordinary shutdown reason; `:kill` cannot be trapped.
+`:normal` is the usual shutdown reason; `:kill` cannot be trapped.
 
 **Parameters**
 
@@ -601,7 +597,7 @@ Process.exit(worker, :shutdown)
 register(process: Process<X>, name: Atom) -> Void
 ```
 
-Registers `process` under the atom `name`, so it can be found by name rather than by passing it around.
+Registers `process` under the atom `name`, so other processes can find it with `whereIs`.
 
 **Parameters**
 
@@ -645,13 +641,13 @@ Process.whereIs(:logger).map { |pid| pid.send(message) }
 
 ## type `Shared<X>`
 
-A named, typed slot of state that every process can read without asking another process for it.
+A named, typed slot that any process can read directly.
 
-State kept in a `serving` process is copied into the caller on every read, which is costly for a large value read by every request. A `Shared` value is stored once for the whole node (on the BEAM, in `persistent_term`): reading it copies nothing, however large it is.
+State kept in a `serving` process is copied into the caller on every read, which is costly for a large value that every request reads. A `Shared` value is stored once for the whole node (on the BEAM, in `persistent_term`), and reading it copies nothing however large it is.
 
-The price is on the other side: replacing a value makes the runtime scan every process for references to the old one. So it suits state that is read constantly and written rarely, such as configuration or a loaded site, and not a counter.
+Writing is the expensive part: replacing a value makes the runtime scan every process for references to the old one. Use it for state that is read constantly and written rarely, such as configuration or a loaded site, not for a counter.
 
-Get a handle with `Process.Shared.named`. The slot is identified by its name alone, so two handles with the same name are the same slot; the type parameter is what a handle promises to store and read back, so give every handle on one name the same one.
+Get a handle with `Process.Shared.named`. The name alone identifies the slot, so two handles with the same name share it. Nothing checks that they agree on the type parameter, so give every handle on one name the same one.
 
 **Examples**
 
@@ -674,7 +670,7 @@ put(value: X) -> Void
 
 Stores `value`, replacing whatever the slot held.
 
-Expensive: see `Process.Shared`.
+This is expensive; see `Process.Shared`.
 
 **Parameters**
 
@@ -686,9 +682,9 @@ Expensive: see `Process.Shared`.
 get -> X?
 ```
 
-The stored value, or `None` when nothing has been stored yet.
+Returns the stored value, or `None` when nothing has been stored yet.
 
-Cheap, whatever the value's size.
+This is cheap whatever the value's size.
 
 **Returns**: the stored value
 
@@ -698,7 +694,7 @@ Cheap, whatever the value's size.
 delete -> X?
 ```
 
-Empties the slot.
+Empties the slot and returns what it held.
 
 **Returns**: the value it held, or `None` when it held none
 
@@ -710,7 +706,7 @@ Empties the slot.
 named(name: String) -> Process.Shared<X>
 ```
 
-The handle on the slot called `name`. Nothing is stored or read until `put` or `get`.
+Returns the handle on the slot called `name`. Nothing is stored or read until `put` or `get`.
 
 **Parameters**
 
@@ -720,9 +716,9 @@ The handle on the slot called `name`. Nothing is stored or read until `put` or `
 
 ## record `ProcessResult`
 
-What an external command left behind: its exit status and its output.
+The exit status and output of an external command.
 
-Returned inside `Ok` by `Process.run`, whatever the exit status.
+`Process.run` returns it inside `Ok` whatever the exit status.
 
 **Fields**
 
@@ -742,7 +738,17 @@ Running work in another process and collecting the answer.
 sleep(duration: Duration) -> Void
 ```
 
-Suspends for an elapsed duration. Negative durations are treated as zero.
+Suspends the calling process for `duration`. A negative duration counts as zero.
+
+**Parameters**
+
+  - `duration` — how long to sleep
+
+**Examples**
+
+```kex
+Task.sleep(500.millisecond)
+```
 
 ### `start` (foul)
 
@@ -752,7 +758,7 @@ start(f: Block<X>) -> Task<X>
 
 Runs `f` in a new process and returns a handle on its result.
 
-The block starts immediately, so starting several tasks and awaiting them afterwards is what makes them run at the same time.
+The block starts at once. To run several pieces of work at the same time, start all the tasks first and await them afterwards.
 
 **Parameters**
 
@@ -781,9 +787,9 @@ let b = Task.start do slowThing("b") end
 awaitAll(tasks: [Task<X>]) -> [Result<X, Any>]
 ```
 
-Waits for every task in `tasks` and returns their results, in the order the tasks were given.
+Waits for every task in `tasks` and returns their results in the same order.
 
-Each result comes back wrapped in a `Result`, so one task failing does not cost you the others' answers, just as with `await` on a single task.
+Each result is a `Result`, as from `await`, so one failed task does not lose the others' results.
 
 **Parameters**
 
@@ -815,13 +821,13 @@ start(restart: Atom, children: Block<[(Atom, Block<Process<A>>)]>) -> Result<Pro
 start(restart: Atom, children: [(Atom, Block<Process<A>>)]) -> Result<Process<A>, Any>
 ```
 
-Starts a supervisor over the children its block lists, one per line — +Supervisor.worker+s and nested +Supervisor.supervisor+s. When a child crashes, `restart` decides which of its siblings restart with it:
+Starts a supervisor over the children its block lists, one per line: +Supervisor.worker+s and nested +Supervisor.supervisor+s. When a child crashes, `restart` decides which children restart:
 
-- `:only_crashed` — just the crashed child
-- `:crashed_and_newer` — it and the children listed after it
-- `:all` — every child
+- `:only_crashed`: the crashed child
+- `:crashed_and_newer`: it and the children listed after it
+- `:all`: every child
 
-The interpreter supports `:only_crashed` without nesting only.
+The interpreter (`kex -R`) supports only `:only_crashed`, and no nested supervisors.
 
 **Parameters**
 
@@ -849,7 +855,7 @@ end
 worker(start: Block<Process<A>>) -> (Atom, Block<Process<A>>)
 ```
 
-A child that runs the block to start, and again to restart. The block must spawn the worker and return it.
+Returns a child spec whose block is run to start the child and again to restart it. The block must spawn the worker and return it.
 
 **Parameters**
 
@@ -870,7 +876,9 @@ supervisor(restart: Atom, children: Block<[(Atom, Block<Process<A>>)]>) -> (Atom
 supervisor(restart: Atom, children: [(Atom, Block<Process<A>>)]) -> (Atom, Block<Process<A>>)
 ```
 
-A child that is itself a supervisor over the children its block lists, one per line. Its parent starts it, and restarts it — with all its children — when the parent's restart strategy says so. Takes the same `restart:` strategies as `Supervisor.start`. BEAM backend only.
+Returns a child spec for a supervisor over the children its block lists, one per line.
+
+The parent starts it, and restarts it with all its children when the parent's strategy says so. `restart` takes the same strategies as `Supervisor.start`. It needs the BEAM backend (plain `kex`); `kex -R` does not support it.
 
 **Parameters**
 

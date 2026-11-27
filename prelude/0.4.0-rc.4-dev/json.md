@@ -18,9 +18,9 @@ parse(text: String) -> Result<Any, JSONError>
 parse(text: String, options: {Atom: Bool}) -> Result<Any, JSONError>
 ```
 
-Parses a JSON document, strictly.
+Parses a strict JSON document.
 
-The whole text must be one JSON value with nothing after it: trailing input is `TrailingInput`, not a silently ignored tail. Objects come back as maps with string keys, arrays as lists, `null` as `None`.
+The text must be one JSON value; anything after it is a `TrailingInput` error. Objects come back as maps with string keys, arrays as lists, and `null` as `None`.
 
 **Parameters**
 
@@ -45,6 +45,49 @@ match JSON.parse(FS.File.read("config.json").or("")) do
 end
 ```
 
+### `fields`
+
+```kex
+fields(value: Any) -> {String: Any}
+```
+
+Returns the fields of a parsed object, or `{}` for any other value.
+
+`parse` returns `Any`; use this to read it as an object.
+
+**Parameters**
+
+  - `value` — a parsed value
+
+**Returns**: its fields, or `{}` when it is no object
+
+**Examples**
+
+```kex
+JSON.fields(JSON.parse("{\"a\": 1}").or({}))["a"]   # => Just(1)
+JSON.fields(JSON.parse("[1]").or({}))                # => {}
+```
+
+### `items`
+
+```kex
+items(value: Any) -> [Any]
+```
+
+Returns the elements of a parsed array, or `[]` for any other value.
+
+**Parameters**
+
+  - `value` — a parsed value
+
+**Returns**: its elements, or `[]` when it is no array
+
+**Examples**
+
+```kex
+JSON.items(JSON.parse("[1, 2]").or([]))   # => [1, 2]
+```
+
 ### `stringify`
 
 ```kex
@@ -53,9 +96,9 @@ stringify(value: Any) -> String
 
 Renders a Kex value as strict JSON text.
 
-Maps become objects, lists become arrays, `None` becomes `null`, and strings are escaped. A map written with atom keys (the usual Kex spelling) renders with those names as strings, so `{ name: "Ada" }` becomes `{"name":"Ada"}`. Object keys come out in canonical key order.
+Maps become objects, lists arrays, `None` `null`, and strings are escaped. Atom keys become strings, so `{ name: "Ada" }` becomes `{"name":"Ada"}`. Object keys come out in the map's key order.
 
-Records become objects of their fields, in declaration order; tuples become arrays; atoms, characters and constructors without a payload (`Monday`) become strings. A constructor that carries a payload, such as `Ok(1)`, has no JSON shape of its own and renders as `null` (`Just(x)` is the exception: it is `x`), as does anything else the encoder does not recognise, so this never raises.
+Records become objects with their fields in declaration order, tuples become arrays, and atoms, characters and constructors without a payload (`Monday`) become strings. `Just(x)` renders as `x`. Any other constructor with a payload, such as `Ok(1)`, renders as `null`, as does anything else with no JSON form, so `stringify` never fails.
 
 **Parameters**
 
@@ -67,7 +110,7 @@ Records become objects of their fields, in declaration order; tuples become arra
 
 ```kex
 JSON.stringify({ name: "Ada", n: 1, ok: true })
-# => '{"n":1,"name":"Ada","ok":true}'
+# => "{\"n\":1,\"name\":\"Ada\",\"ok\":true}"
 JSON.stringify([1, 2, 3])
 # => "[1,2,3]"
 ```
@@ -86,7 +129,7 @@ JSON.parse(JSON.stringify({ "a": 1 }))   # => Ok({ "a": 1 })
 
 ## type `JSONError`
 
-Why a document could not be parsed. Every variant carries the position in the input where the parser stopped, so a caller can point at the problem.
+Why a document could not be parsed. Every variant except `UnknownOption` carries the character position where the parser stopped.
 
 ```kex
 JSON.parse("[1, 2")    # => Error(UnexpectedEnd(5))

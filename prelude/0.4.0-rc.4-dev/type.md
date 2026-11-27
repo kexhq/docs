@@ -7,25 +7,25 @@ entities:
   - { kind: record, name: "Type" }
   - { kind: module, name: "Type" }
   - { kind: make, name: "Type.Field" }
-  - { kind: make, name: "Type" }
+  - { kind: make, name: "Type<T>" }
 ---
 
 # Type
 
-## record `Type`
+## record `Type<T>`
 
 Types as values.
 
-`Type.of(x)` answers what a value IS, as something you can hold, print, compare, and take apart:
+`Type.of(x)` returns the type of a value as a record you can print, compare and take apart:
 
 ```kex
-Type.of(42)                     # Type { name: "Integer", args: [] }
-Type.of([1, 2]).to(String)        # "[Integer]"
-Type.of(x) == Type.of(y)        # structural equality, like any record
-Type.of(due).fieldNames         # ["year", "month", "day"]
+Type.of(42)                  # => Type { args: [], name: "Integer", pure?: true }
+Type.of([1, 2]).to(String)   # => Just("[Integer]")
+Type.of(x) == Type.of(y)     # compares like any record
+Type.of(due).fieldNames      # => ["year", "month", "day"]
 ```
 
-The answer comes from the compiler where it can: a checked expression knows things a value cannot carry, such as the unused half of a `Result` or the element type of an empty list. Where the checker has no concrete answer: gradual code, `--no-check`, a value arriving from another process: the value itself is asked instead. That fallback is honest but lossy: an empty list has no element to inspect, and a `Result` only ever holds one side.
+Where it can, the answer comes from the type checker, which knows things a value does not carry, such as the error type of an `Ok` or the element type of an empty list. Where the checker has no concrete type (untyped code, `--no-check`, a value received from another process), the value itself is inspected, and that answer is less complete: an empty list has no element to look at, and a `Result` holds only one side.
 
 **Fields**
 
@@ -43,9 +43,9 @@ Reflection functions on runtime type values.
 fields -> [Type.Field]
 ```
 
-Returns a record type's fields, in declaration order: each one's name, declared type, and whether a value may leave it out. Anything that is not a record answers with an empty list.
+Returns a record type's fields in declaration order, or `[]` for anything that is not a record.
 
-The types are the DECLARED ones, as written: `Integer?` is `Type { name: "Option", args: [Integer] }` and a type parameter keeps its own name. That is what a decoder derived from a record needs: which parser each field takes, and which fields it may skip.
+Each field has its name, its declared type and whether it may be left out. The types are as declared: `Integer?` is `Type { name: "Option", args: [Integer] }`, and a type parameter keeps its own name.
 
 **Returns**: the fields, or `[]`
 
@@ -70,7 +70,7 @@ Type.of(user).fields.filter { |f| f.optional? || f.default? }.map(&.name)
 fieldNames -> [String]
 ```
 
-Returns a record type's field names, in declaration order: `fields` when only the names matter. Anything that is not a record answers with an empty list.
+Returns a record type's field names in declaration order, or `[]` for anything that is not a record.
 
 **Returns**: the field names, or `[]`
 
@@ -93,7 +93,7 @@ Type.of(value).fieldNames.map { |name| "${name}: ..." }.join(", ")
 constructors -> [Type.Constructor]
 ```
 
-Returns a sum type's constructors, in declaration order: each one's name and the declared types of its arguments. Anything that is not a sum type answers with an empty list.
+Returns a sum type's constructors in declaration order, each with its name and argument types, or `[]` for anything that is not a sum type.
 
 **Returns**: the constructors, or `[]`
 
@@ -111,7 +111,7 @@ Type.of(42).constructors                         # => []
 constructorNames -> [String]
 ```
 
-Returns a sum type's constructor names, in declaration order: `constructors` when only the names matter. Anything that is not a sum type answers with an empty list.
+Returns a sum type's constructor names in declaration order, or `[]` for anything that is not a sum type.
 
 **Returns**: the constructor names, or `[]`
 
@@ -133,7 +133,7 @@ IO.printLine("one of: ${Type.of(shape).constructorNames.join(", ")}")
 constructorValues -> [String]
 ```
 
-The text of each nullary constructor in a database cell or form value, in declaration order. `ReadOnly` is `read_only`.
+Returns the stored spelling of each constructor without arguments, in snake case and declaration order: `ReadOnly` is `"read_only"`.
 
 #### `constructorValue`
 
@@ -141,29 +141,29 @@ The text of each nullary constructor in a database cell or form value, in declar
 constructorValue(value: Any) -> String?
 ```
 
-The stored value of a nullary constructor of this type.
+Returns the stored spelling of `value`, a constructor of this type without arguments, or `None` when it is not one.
 
 #### `construct`
 
 ```kex
-construct(values: {String: Any}) -> Result<Any, String>
+construct(values: {String: Any}) -> Result<T, String>
 ```
 
-Builds a record of this type from values by field name: the other half of `fields`, for a library mapping data it does not define (database rows, decoded JSON, form fields) onto the caller's records.
+Builds a record of this type from a map of field names to values.
 
-A field missing from `values` takes its declared default, or `None` when it is optional. A required field that is missing, a key that names no field, and a value of the wrong type are each an error naming the field. Values are not converted: `"5"` is not an `Integer`, so convert first (`"5".to(Integer)`), using `fields` for the declared types.
+Use it in a library that maps data it does not define, such as database rows, decoded JSON or form fields, onto the caller's records. A field missing from `values` takes its default, or `None` when it is optional. A missing required field, a key that names no field and a value of the wrong type are each an error naming the field. Values are not converted: `"5"` is not an `Integer`, so convert first, with `Type.Field.parse` or `"5".to(Integer)`.
 
 **Parameters**
 
   - `values` — the field values, by field name
 
-**Returns**: the record, or what was wrong
+**Returns**: the record, or what was wrong. It is a `User` for `Type.of(User)`; for a type found by name (`Type.named`) the checker cannot know `T`, and the value is checked where it is used
 
 **Examples**
 
 ```kex
 Type.named("User").construct({"id": "u1", "email": "ada@example.com"})
-# => Ok(User { id: u1, email: ada@example.com, admin?: false })
+# => Ok(User { admin?: false, email: "ada@example.com", id: "u1" })
 Type.named("User").construct({"id": "u1", "mail": "x"})
 # => Error("unknown field \"mail\" for User")
 ```
@@ -171,10 +171,12 @@ Type.named("User").construct({"id": "u1", "mail": "x"})
 #### `variant`
 
 ```kex
-variant(name: String, args: [Any]) -> Result<Any, String>
+variant(name: String, args: [Any]) -> Result<T, String>
 ```
 
-Builds the constructor `name` of this sum type from its arguments: reading `"Direct"` from a database back into `Direct`. The arguments are checked against the constructor's declared types, and their count against its arity.
+Builds the value of this sum type's constructor `name` from its arguments, for example turning `"Direct"` read from a database back into `Direct`.
+
+The arguments are checked against the constructor's declared types and number.
 
 **Parameters**
 
@@ -194,12 +196,12 @@ Type.named("Kind").variant("Nope")           # => Error("Kind has no constructor
 #### `parse`
 
 ```kex
-parse(text: String) -> Result<Any, String>
+parse(text: String) -> Result<T, String>
 ```
 
-Parses `text` as a value of this type: what a database cell, a form field or a query parameter holds is text, and `construct` takes typed values.
+Parses `text` as a value of this type, for turning text from a database cell, form field or query parameter into a value for `construct`.
 
-`String`, `Integer`, `Float`, `Bool` (`"true"` or `"false"`) and `Char` (one character) are read as written. `T?` parses a `T` and wraps it in `Just`. A sum type's nullary constructor accepts its exact name, case-insensitive name, or snake-case stored spelling: `"channel"` is `Channel`, and `"read_only"` is `ReadOnly`. Ambiguous normalized names are rejected. There is no null: text always stands for a value, and a caller with an absent one leaves it out of `construct`'s map.
+`String`, `Integer`, `Float`, `Bool` (`"true"` or `"false"`) and `Char` (one character) are read as written. `T?` parses a `T` and wraps it in `Just`; no text parses as `None`, so leave an absent value out of `construct`'s map. A constructor without arguments is read from its exact name, its name in any case, or its snake-case spelling: `"channel"` is `Channel` and `"read_only"` is `ReadOnly`. A spelling that matches more than one constructor is an error.
 
 **Parameters**
 
@@ -229,7 +231,7 @@ The nullary constructor `text` names, including its snake-case value. Exact cons
 record? -> Bool
 ```
 
-Returns `true` when the type is a record: that is, when it has fields.
+Returns `true` when the type is a record with at least one field.
 
 **Returns**: `true` for a record type
 
@@ -246,7 +248,7 @@ Type.of(42).record?                     # => false
 adt? -> Bool
 ```
 
-Returns `true` when the type is a sum type: that is, when it has constructors.
+Returns `true` when the type is a sum type.
 
 **Returns**: `true` for an ADT
 
@@ -263,7 +265,7 @@ Type.of(42).adt?          # => false
 to(String) -> String?
 ```
 
-Renders the type the way it is written in SOURCE, not the way it is stored.
+Returns the type as it is written in source, always wrapped in `Just`.
 
 A list reads as `[Integer]`, a tuple as `(Integer, String)`, an optional as `String?`, a map as `{String: Integer}`, and a function as its signature.
 
@@ -290,7 +292,7 @@ die("cannot serialise a ${Type.of(value)}")
 showValue -> String
 ```
 
-The type as source, as `to(String)` gives it; also what interpolation shows.
+Returns the type as it is written in source. String interpolation uses this.
 
 **Returns**: the type, as source
 
@@ -307,27 +309,25 @@ Building and obtaining `Type` values.
 ### `of`
 
 ```kex
-of(value: Any) -> Type
+of(value: A) -> Type<A>
 ```
 
 Returns the type of `value`.
 
-The entry point to everything else here. Prefer it over matching on the `Type` record directly.
-
-A record or sum type's own name, passed as a value, stands for that type: `Type.of(User)` is `User`'s type. That is how a library takes a type from its caller, typed as the generic parameter it binds.
+The name of a record or sum type, used as a value, stands for the type itself: `Type.of(User)` is `User`'s type. A library can take a `Type<T>` parameter this way and so learn its `T` from the caller.
 
 **Parameters**
 
   - `value` — the value to inspect
 
-**Returns**: its type
+**Returns**: its type, from the checker where it has one
 
 **Examples**
 
 ```kex
-Type.of(42)                # => Type { name: "Integer", args: [] }
-Type.of([1, 2]).to(String)   # => "[Integer]"
-Type.of("hi").to(String)     # => "String"
+Type.of(42)                  # => Type { args: [], name: "Integer", pure?: true }
+Type.of([1, 2]).to(String)   # => Just("[Integer]")
+Type.of("hi").to(String)     # => Just("String")
 ```
 
 _Reporting an unexpected value_
@@ -342,7 +342,7 @@ _Taking a type from the caller_
 let select(as: Type<T>) -> Result<[T], String> do
   ...                            # rows decoded with as.construct
 end
-select(as: User)                 # => Result<[User], String>
+select(as: User)                 # a Result<[User], String>
 ```
 
 ### `named`
@@ -351,7 +351,7 @@ select(as: User)                 # => Result<[User], String>
 named(name: String) -> Type
 ```
 
-Builds a type from its name, for comparing against something you already know.
+Returns the type with this name and no arguments, for comparing with `Type.of`.
 
 **Parameters**
 
@@ -377,7 +377,7 @@ Type.of(parsed) == Type.named("Date")
 generic(name: String, args: [Type]) -> Type
 ```
 
-Builds a type that takes arguments, from its name and those arguments.
+Returns the type with this name and these type arguments.
 
 **Parameters**
 
@@ -398,7 +398,7 @@ Type.of([1]) == Type.generic("List", [Type.named("Integer")])   # => true
 function(params: [Type], result: Type) -> Type
 ```
 
-Builds a function type from its parameter types and its result type: in the order a signature is written.
+Returns the function type with these parameter types and result type.
 
 **Parameters**
 
@@ -420,9 +420,9 @@ Type.function([Type.named("String")], Type.named("String")).to(String)
 returnedBy(function: Any) -> Type
 ```
 
-Returns the type a named function returns, as answered by the compiler.
+Returns the return type of a named function, as the checker sees it.
 
-Named functions only. A lambda or a function VALUE carries no signature at runtime, and an overloaded name has no single answer: both are compile errors rather than a guess.
+Only a named function works. Passing a lambda, a function held in a variable or an overloaded name is a compile error.
 
 **Parameters**
 
@@ -442,9 +442,9 @@ Type.returnedBy(Date.parse).to(String)   # => "Result<Date, TimeError>"
 fieldValues(value: Any) -> [Any]?
 ```
 
-Returns a record's field values, in declaration order: the same order as `Type.of(record).fields`, so the two zip into name/value pairs. Anything that is not a record answers `None`; a tuple's elements are `items`.
+Returns a record's field values in declaration order, or `None` for anything that is not a record.
 
-What a generic encoder needs: it reads a record's values without knowing its type, the way `construct` builds one.
+The order is that of `Type.of(record).fields`, so the two zip into name/value pairs. This lets generic code such as an encoder read a record without knowing its type. A tuple is not a record; use its `items`.
 
 **Parameters**
 
@@ -471,7 +471,7 @@ Type.of(user).fields.map(&.name).zip(Type.fieldValues(user).or([]))
 parsed(_: Any?, _expected: Type, _text: String) -> Result<Any, String>
 ```
 
-The result of a conversion that answers `None` for text it cannot read.
+Turns the result of a text conversion into a `Result`, with an error naming `expected` and `text` when the conversion gave `None`.
 
 ## record `Field`
 
@@ -506,7 +506,9 @@ A sum type's constructor, as `Type.constructors` describes it.
 parse(text: String) -> Result<Any, String>
 ```
 
-Parses `text` as a value of this field's declared type: `Type.parse`, with the field named in the error. What a library reads from a database row or a form is text, and `Type.construct` takes typed values, so this is the step between them.
+Parses `text` as a value of this field's declared type, as `Type.parse` does, with the field's name in the error.
+
+Use it to turn text from a database row or a form into the typed values `construct` takes.
 
 **Parameters**
 

@@ -25,7 +25,7 @@ entities:
 
 Why a read failed.
 
-`ReadFailed` means the source refused the read. `InvalidUtf8` means bytes were read but are not valid UTF-8, and carries the byte offset of the first malformed sequence, relative to that one operation. A failed read consumes the bytes it attempted to read and never substitutes U+FFFD: use `readBytes` instead of a text read when you need the original bytes.
+`ReadFailed` means the source refused the read. `InvalidUtf8` means the bytes read are not valid UTF-8; it carries the offset of the first bad byte, counted from the start of that read. A failed text read still consumes the bytes it read, and never replaces bad bytes with U+FFFD. Use `readBytes` when the input may not be text.
 
 **Variants**
 
@@ -36,7 +36,7 @@ Why a read failed.
 
 ## type `WriteError`
 
-Why a write failed: the sink refused it. A closed handle, a full device, or standard input all answer `WriteFailed`.
+Why a write failed. Writing to a closed handle, to a full device or to standard input all give `WriteFailed`.
 
 **Variants**
 
@@ -46,11 +46,11 @@ Why a write failed: the sink refused it. A closed handle, a full device, or stan
 
 ## trait `Readable`
 
-`Readable`: a source of bytes and text.
+A source of bytes and text.
 
-`IO.in` and file handles opened for reading are `Readable`. Accept this trait when your function should work with either source.
+`IO.in` and file handles opened for reading are `Readable`. Take this trait as a parameter type when a function should read from either.
 
-Two families read text. The `read` family (`readLine`, `read`, `readBytes`) answers a `Result`, so a failed read can be told apart from the end of the input. The `get` family is the short form: `getLine` answers an `Optional`, `None` both at the end and on a failed read, which is what most interactive code wants. `get` itself is the primitive the rest stand on: the next chunk of raw bytes.
+`readLine`, `read` and `readBytes` return a `Result`, so a failed read can be told from the end of the input. `getLine` returns `None` in both cases, which is usually enough for interactive code. `get` returns the next chunk of raw bytes.
 
 ```kex
 foul firstLine(source: Readable) -> String do
@@ -71,7 +71,7 @@ Implemented by [`FileHandle<CanRead, W>`](#make-filehandle-canread).
 get -> Result<Binary?, ReadError>
 ```
 
-Reads the next chunk of bytes: whatever the source has ready, up to its buffer size. Standard input answers one line at a time, newline included.
+Reads the next chunk of bytes, as much as the source has ready up to its buffer size. Standard input gives one line at a time, newline included.
 
 **Returns**: the next chunk, `Ok(None)` at end of input, or the failure
 
@@ -91,7 +91,7 @@ Reads the next line, without its newline.
 getLine -> String?
 ```
 
-Reads the next line, without its newline: `readLine` for when the end of the input and a failed read mean the same thing.
+Reads the next line, without its newline. Unlike `readLine`, it returns `None` both at the end of the input and on a failed read.
 
 **Returns**: the next line, or `None` at end of input or on failure
 
@@ -103,7 +103,7 @@ read -> Result<String, ReadError>
 
 Reads everything remaining, as one `String`.
 
-Draining an exhausted source answers `Ok("")`.
+At the end of the input it returns `Ok("")`.
 
 **Returns**: the remaining contents, or the failure
 
@@ -115,7 +115,7 @@ readBytes -> Result<Binary, ReadError>
 
 Reads everything remaining as raw bytes, without decoding it as text.
 
-The byte counterpart of `read`: it returns the remaining bytes without validating UTF-8. Bytes consumed by a failed text read are not returned by a subsequent `readBytes` call. Draining an exhausted source answers `Ok(Binary.fromBytes([]))`.
+Bytes already consumed by a failed text read are not returned again. At the end of the input it returns `Ok` with an empty `Binary`.
 
 **Returns**: the remaining bytes, or the failure
 
@@ -133,11 +133,11 @@ Returns `true` when the source has reached its end.
 
 ## trait `Writable`
 
-`Writable`: a sink for bytes and text.
+A destination for bytes and text.
 
-Accept a `Writable` parameter to let callers choose standard output, standard error, or a file as the destination.
+Take a `Writable` parameter to let callers send output to standard output, standard error or a file.
 
-Two families write text. The `write` family (`put`, `write`, `writeLine`) answers a `Result`, for when a failed write matters. The `print` family (`print`, `printLine`) answers `Void`, for output where there is nothing useful to do about a failure. `put` is the primitive the rest stand on: raw bytes, verbatim.
+`put`, `write` and `writeLine` return a `Result`, for when a failed write matters. `print` and `printLine` return `Void` and ignore failures. `put` writes raw bytes as they are.
 
 ```kex
 foul report(out: Writable, lines: [String]) -> Void do
@@ -161,7 +161,7 @@ put(content: Binary) -> Result<Void, WriteError>
 
 Writes `content` verbatim, with no trailing newline.
 
-It never renders the value, so a `Binary` reaches the sink as its bytes rather than as the `#Binary<N bytes>` that `Showable` would print.
+The bytes are written as they are, not as the `#Binary<N bytes>` that `write` would print.
 
 **Parameters**
 
@@ -225,9 +225,9 @@ Writes `content` followed by a newline, ignoring a failure. Use `writeLine` when
 
 ## trait `Closeable`
 
-`Closeable`: anything that holds a releasable resource.
+Anything that holds a resource to release.
 
-File handles, socket connections, listeners, and datagram sockets are all `Closeable`. Closing is idempotent everywhere, so a shared cleanup path never has to track who closed what.
+File handles, socket connections, listeners and datagram sockets are `Closeable`. Closing something already closed does nothing, so cleanup code need not track what was closed.
 
 ```kex
 foul shutdown(first: Closeable, second: Closeable) -> Void do
@@ -248,7 +248,7 @@ Implemented by [`FileHandle<R, W>`](#make-filehandle), [`Net.Socket.TCP.TCPConne
 close -> Void
 ```
 
-Releases the underlying resource. Idempotent: closing twice is fine.
+Releases the resource. Closing twice is harmless.
 
 
 
@@ -256,7 +256,7 @@ Releases the underlying resource. Idempotent: closing twice is fine.
 
 An open file, obtained from `FS.File.open`.
 
-The two type parameters record what the handle is allowed to do: `R` is `CanRead` or `CannotRead`, `W` is `CanWrite` or `CannotWrite`. `FS.File.open` picks them from the mode you pass, so calling `printLine` on a handle opened `Read` is a compile error rather than a run-time failure.
+The two type parameters say what the handle may do: `R` is `CanRead` or `CannotRead`, `W` is `CanWrite` or `CannotWrite`. `FS.File.open` sets them from the mode, so calling `printLine` on a handle opened `Read` is a type error.
 
 ```kex
 using FS
@@ -272,9 +272,9 @@ main do
 end
 ```
 
-Reach for a handle when you want to walk a large file a line at a time, or make many small writes. When a file fits comfortably in memory, `FS.File.read` and `FS.File.write` are shorter and need no closing. To be rid of the closing entirely, pass `FS.File.open` a block.
+Use a handle to read a large file a line at a time or to make many small writes. When a file fits in memory, `FS.File.read` and `FS.File.write` are shorter and need no closing. Passing `FS.File.open` a block closes the handle for you.
 
-The handle functions are `foul`: obtaining a handle is not an effect, but reading or writing through one is, so a function that does so is `foul` no matter where the handle came from. Injection makes a thing substitutable, not pure.
+Reading or writing through a handle is `foul`, so a function that does it is `foul` too, even when the handle was passed in as a parameter.
 
 Implements [`Readable`](#trait-readable), [`Writable`](#trait-writable), [`Closeable`](#trait-closeable).
 
@@ -286,7 +286,9 @@ Implements [`Readable`](#trait-readable), [`Writable`](#trait-writable), [`Close
 seek(offset: Integer) -> Result<Void, ReadError>
 ```
 
-Moves the handle's cursor to an absolute byte offset from the start of the file. Read and write share one cursor, so this repositions both — a `getLine` right after `seek(0)` starts over from the top, and a `print` right after does too, overwriting from that point.
+Moves the handle's position to `offset` bytes from the start of the file.
+
+Reads and writes share one position, so after `seek(0)` a `getLine` reads the first line again and a `print` overwrites from the start.
 
 **Parameters**
 
@@ -296,12 +298,12 @@ Moves the handle's cursor to an absolute byte offset from the start of the file.
 
 **Examples**
 
-_Reading a length-prefixed record, then rewinding past it_
+_Reading the first line twice_
 
 ```kex
-let length = handle.getLine.or("0").to(Integer).or(0)
-let record = handle.readBytes.try
+let first = handle.getLine
 handle.seek(0)
+handle.getLine == first   # => true
 ```
 
 #### `reset` (foul)
@@ -310,7 +312,7 @@ handle.seek(0)
 reset -> Result<Void, ReadError>
 ```
 
-Moves the handle's cursor back to the start of the file — the same as `seek(0)`, for the common case of re-reading a handle from the top.
+Moves the handle's position back to the start of the file, as `seek(0)` does.
 
 **Returns**: `Ok` on success, or why the reset failed
 
@@ -332,7 +334,7 @@ close -> Void
 
 Closes the handle, flushing anything still buffered.
 
-Close every handle you open. A written file is not guaranteed to be complete on disk until its handle is closed. Passing `FS.File.open` a block closes the handle for you.
+Close every handle you open: a written file may be incomplete on disk until its handle is closed. Passing `FS.File.open` a block closes the handle for you.
 
 **Examples**
 
@@ -423,7 +425,7 @@ let header = handle.getLine.or("")
 getChar -> String?
 ```
 
-Reads a single character from the handle, as a one-character `String`: one complete Unicode scalar, not one byte.
+Reads one character from the handle, a whole Unicode scalar value rather than one byte, as a one-character `String`.
 
 **Returns**: the next character, or `None` at end of file or on failure
 
@@ -441,7 +443,7 @@ read -> Result<String, ReadError>
 
 Reads everything remaining in the file and returns it as one `String`.
 
-Reads from the current position, so calling it after a `readLine` gives the rest of the file rather than the whole of it.
+It reads from the current position, so after a `readLine` it returns the rest of the file.
 
 **Returns**: the remaining contents
 
@@ -466,7 +468,7 @@ readBytes -> Result<Binary, ReadError>
 
 Reads all remaining bytes from the handle without decoding them.
 
-Unlike `read`, this accepts arbitrary binary data and cannot fail because the input is not valid UTF-8. It starts at the handle's current position.
+Unlike `read`, it cannot fail on invalid UTF-8. It starts at the handle's current position.
 
 **Returns**: the remaining bytes
 
@@ -502,11 +504,9 @@ feed -> Result<Feed<String>, ReadError>
 
 Returns the handle's remaining lines as a lazy `Feed`.
 
-Lines are read on demand off the handle's own position, so this is how to look at the start of a very large file, or process one without holding it all in memory. The feed shares the handle's cursor: interleaving `readLine` with it advances one position through one open file.
+Lines are read as the feed is consumed, so you can look at the start of a very large file, or process it, without holding it all in memory. The feed shares the handle's position, so mixing `readLine` calls with it reads through the same file. Taking more lines than the file has returns the lines there are.
 
-The feed ends at the last line, so taking more lines than the file has answers just the lines there are.
-
-NOT part of `Readable`: a feed is neither pure nor reusable, so requiring it of every `Readable` would put a foul, one-shot operation on types that have no such cursor to offer. It stays a FileHandle function.
+This is not part of `Readable`, so `IO.in` does not have it.
 
 **Returns**: the lines as a feed, or `ReadFailed` for a handle that cannot be read line by line
 
@@ -528,7 +528,7 @@ handle.feed
 put(content: Binary) -> Result<Void, WriteError>
 ```
 
-Writes `content` verbatim, without text encoding or a trailing newline.
+Writes the bytes of `content` as they are, with no trailing newline.
 
 **Parameters**
 
@@ -630,7 +630,7 @@ handle.printLine("")
 
 ## type `CanRead`
 
-What a `FileHandle` allows, as its type arguments: `FileHandle<CanRead, CannotWrite>` reads and cannot write. They are types and nothing else (no value is ever one), so reading from a write-only handle is a compile error rather than a runtime check.
+The type arguments of `FileHandle` that say what it allows: `FileHandle<CanRead, CannotWrite>` can read and cannot write. These types have no values. They exist so that reading from a write-only handle is a type error.
 
 
 

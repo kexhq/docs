@@ -11,9 +11,9 @@ entities:
 
 ## module `Net.DNS`
 
-Typed DNS lookup with explicit resolver ownership and bounded caching.
+DNS lookups, with resolvers that own a bounded cache.
 
-Use `DNS.addresses` for an occasional hostname lookup. Own a `Resolver` when a service performs repeated lookups, needs cache statistics, or must query a particular nameserver. Resolver ownership makes both caching and cleanup visible instead of hiding process-wide state behind every lookup.
+Use `DNS.addresses` for an occasional lookup. Open a `Resolver` when a service looks names up repeatedly, wants cache statistics or must query a particular nameserver; the cache lives in the resolver and is freed when you close it. On the interpreter (`kex -R`), lookups work only through a mock.
 
 ```kex
 using Net.DNS
@@ -28,9 +28,9 @@ resolver.close
 
 ## record `Name`
 
-A validated DNS name with caller-facing and IDNA ASCII spellings.
+A validated DNS name, in the caller's spelling and in IDNA ASCII.
 
-`display` keeps the readable form supplied by the caller; `ascii` is the wire-safe IDNA form used in DNS queries. Keeping both lets an error message say what the user typed without sending noncanonical labels to a resolver.
+`display` is the name as the caller wrote it, for messages. `ascii` is the IDNA form sent in queries.
 
 **Fields**
 
@@ -41,7 +41,7 @@ A validated DNS name with caller-facing and IDNA ASCII spellings.
 
 ## type `RecordType`
 
-Record families supported by `Resolver.lookup`.
+The record types `Resolver.lookup` can ask for.
 
 **Variants**
 
@@ -57,7 +57,7 @@ Record families supported by `Resolver.lookup`.
 
 ## type `DNSSECStatus`
 
-DNSSEC state reported by the underlying resolver. Kex does not independently validate DNSSEC and therefore commonly reports `Indeterminate`.
+The DNSSEC state the system resolver reported. Kex does not validate DNSSEC itself, so this is often `Indeterminate`.
 
 **Variants**
 
@@ -70,7 +70,7 @@ DNSSEC state reported by the underlying resolver. Kex does not independently val
 
 ## type `DNSRecord`
 
-Typed DNS resource records, preserving MX/SRV priorities and TXT chunks.
+A DNS resource record. MX and SRV records keep their priorities (and SRV its weight and port), and a TXT record keeps its separate strings.
 
 **Variants**
 
@@ -85,7 +85,7 @@ Typed DNS resource records, preserving MX/SRV priorities and TXT chunks.
 
 ## record `LookupResponse`
 
-Records and the reported DNSSEC state from one lookup.
+The records from one lookup and their DNSSEC state.
 
 **Fields**
 
@@ -96,9 +96,9 @@ Records and the reported DNSSEC state from one lookup.
 
 ## record `CacheOptions`
 
-Bounds for a resolver-owned positive and negative cache.
+Limits for a resolver's cache.
 
-Positive answers honor their DNS TTL up to `maximumTtl`. Failed lookups are cached for `negativeTtl`, preventing a missing hostname from hammering the configured nameserver on every request.
+`entries` caps the number of cached names. An answer is kept for its DNS TTL, but no longer than `maximumTtl`. A failed lookup is kept for `negativeTtl`, so a missing hostname is not sent to the nameserver on every request.
 
 **Fields**
 
@@ -110,7 +110,7 @@ Positive answers honor their DNS TTL up to `maximumTtl`. Failed lookups are cach
 
 ## record `Nameserver`
 
-One DNS server used by a custom resolver.
+A DNS server for `Resolver.custom` to query.
 
 **Fields**
 
@@ -121,7 +121,9 @@ One DNS server used by a custom resolver.
 
 ## record `ResolverOptions`
 
-Isolated resolver configuration. An empty search list only queries the name as written; search domains are tried in order for single-label names.
+Settings for `Resolver.custom`.
+
+With an empty `search` list only the name as written is queried. Otherwise the search domains are tried in order for a name with a single label. `retries` and `timeout` apply to each query.
 
 **Fields**
 
@@ -135,9 +137,9 @@ Isolated resolver configuration. An empty search list only queries the name as w
 
 ## record `CacheStatistics`
 
-Lifetime cache counters. `clear` empties entries but keeps these counters.
+A resolver's cache counters, counted since it was opened. `entries` is the current number of cached names; `clear` resets it but not the counters.
 
-Compare `hits` with `misses` when tuning `entries` or TTL bounds. A rising `evictions` count means the resolver is seeing more distinct names than its cache can retain.
+Compare `hits` with `misses` when tuning `CacheOptions`. A rising `evictions` count means the resolver sees more distinct names than its cache holds.
 
 **Fields**
 
@@ -151,7 +153,7 @@ Compare `hits` with `misses` when tuning `entries` or TTL bounds. A rising `evic
 
 ## type `Resolver`
 
-An opaque, process-safe resolver that owns its cache.
+A resolver and its cache. Any process may use it.
 
 ### Functions
 
@@ -163,13 +165,13 @@ addresses(name: Name) -> Result<[Net.IP.Address], NetError>
 
 Resolves AAAA and A records, returning IPv6 addresses first.
 
-This is the convenient operation for connecting to a host. Use `lookup` when record type, TTL-related behavior, or DNSSEC status matters.
+Use it to find a host to connect to. Use `lookup` for other record types or the DNSSEC state.
 
 **Parameters**
 
   - `name` — the validated hostname
 
-**Returns**: addresses or `Resolve`
+**Returns**: the addresses, or a `Resolve` error
 
 **Examples**
 
@@ -186,14 +188,14 @@ let addresses = resolver.addresses(host).try
 lookup(kind: RecordType, name: Name) -> Result<LookupResponse, NetError>
 ```
 
-Looks up one supported resource-record family.
+Looks up the records of one type for `name`.
 
 **Parameters**
 
-  - `kind` — the requested family
-  - `name` — the validated owner name
+  - `kind` — the record type to ask for
+  - `name` — the validated name
 
-**Returns**: typed records or `Resolve`
+**Returns**: the records, or a `Resolve` error
 
 **Examples**
 
@@ -210,9 +212,7 @@ response.records.each { |record| IO.inspect(record) }
 clear -> Void
 ```
 
-Empties cached entries without resetting lifetime counters.
-
-Existing statistics remain meaningful across a manual refresh, while the next lookup is forced back to DNS.
+Empties the cache, so the next lookup of each name goes to DNS. The `statistics` counters are kept.
 
 **Examples**
 
@@ -228,9 +228,9 @@ resolver.clear
 statistics -> CacheStatistics
 ```
 
-Reports current occupancy and lifetime cache counters.
+Returns the number of cached names and the cache counters.
 
-**Returns**: current entries and lifetime counters
+**Returns**: the cache's size and counters
 
 **Examples**
 
@@ -247,13 +247,13 @@ IO.printLine("DNS cache: ${stats.hits} hits, ${stats.misses} misses")
 close -> Void
 ```
 
-Idempotently closes the resolver.
+Closes the resolver and frees its cache.
 
-Calls after closing fail with `Closed`; closing again is harmless.
+Lookups after closing fail with a `Closed` error. Closing twice is harmless.
 
 ## module `Net.DNS.Name`
 
-Validation and IDNA conversion for DNS names.
+Parsing DNS names.
 
 ### `parse`
 
@@ -261,13 +261,13 @@ Validation and IDNA conversion for DNS names.
 parse(text: String) -> Result<Name, NetError>
 ```
 
-Validates a name and converts Unicode labels to IDNA ASCII.
+Parses a hostname, converting Unicode labels to IDNA ASCII.
 
 **Parameters**
 
   - `text` — a dotted hostname, optionally with a trailing dot
 
-**Returns**: the name, or `Parse`
+**Returns**: the name, or a `Parse` error
 
 **Examples**
 
@@ -281,7 +281,7 @@ resolver.addresses(name).try
 
 ## module `Net.DNS.Resolver`
 
-Constructors for long-lived, cache-owning resolvers.
+Opening resolvers.
 
 ### `system` (foul)
 
@@ -289,9 +289,9 @@ Constructors for long-lived, cache-owning resolvers.
 system(cache: CacheOptions) -> Result<Resolver, NetError>
 ```
 
-Opens a resolver using system configuration and default cache bounds.
+Opens a resolver that uses the system's DNS configuration and the default `CacheOptions`.
 
-Reuse the returned resolver for the lifetime of a service so repeated names benefit from its bounded cache, then close it during shutdown.
+Keep it for the life of a service so repeated names are answered from its cache, and close it at shutdown.
 
 **Returns**: a resolver handle
 
@@ -311,15 +311,15 @@ resolver.close
 custom(options: ResolverOptions) -> Result<Resolver, NetError>
 ```
 
-Opens an isolated resolver with typed nameservers and query bounds.
+Opens a resolver that queries the given nameservers.
 
-This does not inherit the machine's search domains or nameservers. It is useful for tests, service discovery, and applications with their own DNS policy.
+It ignores the machine's nameservers and search domains. Use it for tests, service discovery, or an application with its own DNS settings.
 
 **Parameters**
 
   - `options` — nameservers, search domains, retry count, per-query timeout, and cache bounds
 
-**Returns**: a resolver, or `Parse`
+**Returns**: a resolver, or a `Parse` error
 
 **Examples**
 
@@ -338,7 +338,7 @@ Resolver.custom(ResolverOptions {
 
 ## module `Net.DNS.DNS`
 
-Convenience lookup operations for callers that do not need resolver ownership or cache reuse.
+One-off lookups, for callers that do not need a `Resolver` of their own.
 
 ### `addresses` (foul)
 
@@ -346,15 +346,15 @@ Convenience lookup operations for callers that do not need resolver ownership or
 addresses(name: Name) -> Result<[Net.IP.Address], NetError>
 ```
 
-Resolves a name once with a short-lived system resolver.
+Resolves a name to its addresses with a resolver opened for this one lookup.
 
-Prefer this for command-line tools and one-off checks. A server that looks up names repeatedly should own a `Resolver` so it can reuse cached answers.
+Use it in command-line tools and one-off checks. A server that looks up names repeatedly should open a `Resolver`, which caches answers.
 
 **Parameters**
 
   - `name` — the validated hostname
 
-**Returns**: addresses or `Resolve`
+**Returns**: the addresses, or a `Resolve` error
 
 **Examples**
 

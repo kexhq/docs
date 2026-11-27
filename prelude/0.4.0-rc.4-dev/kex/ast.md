@@ -13,9 +13,9 @@ entities:
 
 Parses Kex source code into a structured AST, at run time.
 
-Opt-in: nothing here is in scope until `using Kex.AST`.
+Nothing here is in scope until `using Kex.AST`.
 
-This is the entry point for tools that read Kex source: linters, formatters, documentation generators, code search. The AST includes module definitions, function signatures, type/record definitions, traits, make blocks, and the doc-comments extracted from `#` lines, which is how the standard library's own documentation is generated.
+Use it to write tools that read Kex source, such as linters, formatters, documentation generators and code search. The AST covers modules, function signatures, types and records, traits, make blocks, and the doc comments attached to them; `tey docs` builds the standard library's reference from it.
 
 ```kex
 using Kex.AST
@@ -28,7 +28,7 @@ main do
 end
 ```
 
-Everything answers a `Result`, so a source file that does not parse is a value you handle rather than an exception.
+The parsing functions return a `Result`, with a `ParseError` when the source does not parse.
 
 ### `parse`
 
@@ -39,7 +39,7 @@ parse(source: String, filename: String) -> Result<Program, ParseError>
 
 Parses Kex source text into a structured AST.
 
-Pass `filename` when you have one: it is what appears in every `Location` and in the error message, so diagnostics can point at a real file.
+Pass `filename` when you have one; it is recorded in every `Location`, including the one in a `ParseError`.
 
 **Parameters**
 
@@ -70,7 +70,7 @@ parseFile(path: FS.FilePath) -> Result<Program, ParseError>
 
 Reads a file and parses it, reporting locations against its path.
 
-A file that cannot be read is an `Error` like one that cannot be parsed.
+A file that cannot be read also gives an `Error`, with no location.
 
 **Parameters**
 
@@ -104,7 +104,7 @@ parseType(source: String) -> Result<TypeRef, ParseError>
 
 Parses a type expression on its own, without a surrounding program.
 
-Use it to read a type written in data: a signature in a config file, a type named on a command line. `typeRefText` renders the result back.
+Use it for a type that arrives as text, such as a signature in a config file or a type named on the command line. `typeRefText` renders the result back.
 
 **Parameters**
 
@@ -129,7 +129,7 @@ parseExpression(source: String) -> Result<Expression, ParseError>
 
 Parses a single expression on its own, without a surrounding program.
 
-This gives you the expression's SHAPE. To evaluate one instead, use `Evaluator.runExpression`.
+This gives the expression's structure. To evaluate it, use `Evaluator.runExpression`.
 
 **Parameters**
 
@@ -173,7 +173,7 @@ toSource(node: SyntaxNode) -> String
 
 Reprints a syntax tree as the source it was parsed from, byte for byte.
 
-Every node prints its own tokens and its nested nodes in order, never a slice of the original text, so a rearranged tree prints the rearranged program, its comments moving with it.
+Each node prints its own tokens and nested nodes in order; nothing is copied from the original text. A rearranged tree therefore prints the rearranged program, with comments moved along with their code.
 
 **Parameters**
 
@@ -194,7 +194,7 @@ Kex.AST.parseSyntax(source).map { |tree| Kex.AST.toSource(tree) }   # => Ok(sour
 elementSource(element: SyntaxElement) -> String
 ```
 
-The source of one child of a node: a token's trivia and text, or a nested node reprinted.
+Returns the source of one child of a node: a token's trivia and text, or a nested node reprinted.
 
 **Parameters**
 
@@ -208,9 +208,9 @@ The source of one child of a node: a token's trivia and text, or a nested node r
 commentsBefore(parent: SyntaxNode, index: Integer) -> [String]
 ```
 
-The comments written on their own lines directly above the child at `index`: the ones that belong to it, move with it when a formatter moves it, and hold a `# kex:disable-next-line` meant for it.
+Returns the comments on their own lines directly above the child at `index`. These belong to the child: a formatter moves them with it, and a `# kex:disable-next-line` among them applies to it.
 
-A comment at the end of the previous line trails that line instead, and is not included.
+A comment at the end of the previous line belongs to that line and is not included.
 
 **Parameters**
 
@@ -232,9 +232,7 @@ Kex.AST.commentsBefore(tree, 3)   # => ["# about y"]
 blankLinesBefore(parent: SyntaxNode, index: Integer) -> Integer
 ```
 
-How many blank lines separate the child at `index` from what precedes it.
-
-Kept as a count, not a flag: a formatter preserves one blank line between declarations and collapses longer runs, which needs to know how many there were.
+Returns how many blank lines separate the child at `index` from what precedes it.
 
 **Parameters**
 
@@ -256,7 +254,7 @@ Kex.AST.blankLinesBefore(tree, 4)   # => 2
 linesBefore(parent: SyntaxNode, index: Integer) -> [String]
 ```
 
-The whole lines between the child at `index` and the code before it, as the trivia of the `Newline` tokens that end them. The newline that ends the previous line of code is not one of them: what sits in front of it trails that code.
+Returns the whole lines between the child at `index` and the code before it, taken from the trivia of the `Newline` tokens that end them. The newline ending the previous line of code is not included, since what sits in front of it belongs to that code.
 
 **Parameters**
 
@@ -273,7 +271,7 @@ typeRefText(typeRef: TypeRef) -> String
 
 Renders a `TypeRef` back to the way it is written in source.
 
-A list reads as `[Integer]`, a map as `{String: Integer}`, an optional as `String?`: the spelling a reader would recognise, not the constructor tree behind it.
+A list reads as `[Integer]`, a map as `{String: Integer}` and an optional as `String?`.
 
 **Parameters**
 
@@ -314,7 +312,8 @@ Kex.AST.patternRefText(BindPattern("n"))            # => "n"
 ### `patternFieldText`
 
 ```kex
-patternFieldText(name, _, _) -> String
+patternFieldText(_: PatternField) -> String
+patternFieldText(name: String, _: PatternRef?, _: Bool) -> String
 ```
 
 ### `referenceText`
@@ -325,7 +324,7 @@ referenceText(reference: TypeRef | PatternRef) -> String
 
 Renders either a type or a pattern back to source.
 
-The one call to reach for when a node may carry either: it dispatches to `typeRefText` or `patternRefText` as appropriate.
+Use it when a node may hold either kind; it calls `typeRefText` or `patternRefText` as needed.
 
 **Parameters**
 
@@ -344,7 +343,7 @@ Kex.AST.referenceText(AnyType)           # => "Any"
 
 Where in a source file something appeared.
 
-Line and column are 1-based, for reporting to a person; the offsets are 0-based byte positions, for slicing the source.
+Line and column are 1-based, for messages to a person. The offsets are 0-based byte positions, for slicing the source.
 
 **Fields**
 
@@ -376,13 +375,17 @@ Why a source file could not be parsed.
   - `message` : [String](../string.md#make-string)
   - `location` : [Location](#record-kex-ast-location)?
 
+Implements [`Errorable`](../errorable.md#trait-errorable).
 
+### Defined in other modules
+
+  - [Errorable](../errorable.md#make-parseerror): [`message`](../errorable.md#parseerror-message)
 
 ## record `SyntaxToken`
 
 One token of a lossless syntax tree, exactly as written.
 
-Where `parse` gives a program's meaning, `parseSyntax` gives its text: nothing is normalised or dropped, so `toSource` reprints the file byte for byte. Use it when building a formatter or a linter.
+`parseSyntax` keeps everything `parse` drops, such as spacing and comments, so `toSource` reprints the file byte for byte. Use it to build a formatter, or a linter that rewrites code.
 
 **Fields**
 
@@ -441,6 +444,7 @@ A type as it was written in source.
   - `ParameterBlockType([TypeRef], TypeRef)`
   - `AtomType(String)`
   - `TypeQuery(String, Expression)`
+  - `TypeSplice(Expression)`
   - `TypeVar(String)`
   - `AnyType`
   - `NoneType`
@@ -449,9 +453,9 @@ A type as it was written in source.
 
 ## type `PatternRef`
 
-Structured representation of patterns.
+A pattern as it was written in source.
 
-Pattern nodes describe what a declaration or match arm accepts; they do not contain runtime values. A linter can distinguish a wildcard from a binding, for example, without reparsing source text.
+Pattern nodes describe what a function clause or match arm accepts. A linter can tell a wildcard from a binding, for example, without reparsing the text.
 
 **Examples**
 
@@ -479,7 +483,7 @@ let catchAll? = Kex.AST.patternRefText(pattern) == "_"
 
 One field inside a record or map-shaped pattern.
 
-`pattern` is `None` for shorthand such as `{ name }`. `stringKey?` keeps `{"name": value}` distinct from the atom-key spelling `{ name: value }`.
+`pattern` is `None` for shorthand such as `{ name }`. `stringKey?` is `true` for the string-key spelling `{"name": value}` and `false` for the atom-key `{ name: value }`.
 
 **Fields**
 
@@ -491,9 +495,9 @@ One field inside a record or map-shaped pattern.
 
 ## type `Expression`
 
-Structured representation of expression AST nodes.
+An expression as it was written in source.
 
-Expressions retain syntax-level distinctions that matter to tools: a receiver call is not flattened into a generic call, `var` is distinct from `let`, and a trailing `if` remains recognizable. Walk these constructors when writing a linter or code search; use `Evaluator` when the goal is to execute an expression rather than inspect it.
+Expressions keep the syntax distinctions tools care about: a call with a receiver is its own node, `var` is distinct from `let`, and a trailing `if` can be told apart from a block `if`. To run an expression, use `Evaluator`.
 
 **Variants**
 
@@ -586,7 +590,7 @@ One lambda parameter and its optional source annotation.
 
 The structured recovery clauses attached to a function or expression.
 
-Named rescue arms live in `arms`; a catch-all rescue keeps its optional binding and body separately. `inlineReturn` represents the compact rescue form rather than inventing a synthetic block.
+Rescue arms with patterns are in `arms`. A catch-all rescue has its optional binding and its body in separate fields. `inlineReturn` holds the value of the compact `rescue return X` form.
 
 **Fields**
 
@@ -632,9 +636,9 @@ One explicitly initialized field in a record literal.
 
 ## type `GeneratedTemplate`
 
-A declaration template whose name (and, for a make block, target) is computed by a `compiled do` expression.
+A declaration template whose name, or for a make block its target, is computed by a `compiled do` expression.
 
-Tools normally encounter this only while inspecting metaprogramming code. After expansion, generated declarations appear as ordinary +Node+s.
+It appears only in code that generates declarations. After expansion, the generated declarations are ordinary +Node+s.
 
 **Variants**
 
@@ -674,7 +678,7 @@ The program entry point, including documentation and recovery clauses.
 
 One declared function parameter.
 
-`name` is absent for a destructuring parameter; `pattern` preserves that destructuring shape. `default?` records whether an initializer appeared.
+`name` is `None` for a destructuring parameter, whose shape is in `pattern`. `default?` is `true` when the parameter has a default value.
 
 **Fields**
 
@@ -689,7 +693,7 @@ One declared function parameter.
 
 One clause of a function, including its patterns and body.
 
-Multi-clause functions place all clauses in one `FunctionInfo`, preserving source order so tooling can reason about which pattern is tried first.
+All clauses of a function are in one `FunctionInfo`, in source order, which is the order their patterns are tried in.
 
 **Fields**
 
@@ -705,7 +709,7 @@ Multi-clause functions place all clauses in one `FunctionInfo`, preserving sourc
 
 A named function and all of its pattern-matching clauses.
 
-`doc` contains the normalized `#` comment immediately attached to the declaration. Documentation generators can therefore share the same parsed structure as linters instead of scanning comments independently.
+`doc` holds the doc comment directly above the declaration, without its `#` markers, or `None` when there is none.
 
 **Fields**
 
@@ -722,7 +726,7 @@ A named function and all of its pattern-matching clauses.
 
 A standalone function type signature.
 
-`implicitThis?` distinguishes `:>` receiver signatures from module-level `:` signatures without making a tool inspect punctuation in the original source.
+`implicitThis?` is `true` for a receiver signature written with `:>`, and `false` for a module-level signature written with `:`.
 
 **Fields**
 
@@ -749,7 +753,7 @@ One constructor of an algebraic data type.
 
 A type alias or algebraic data type declaration.
 
-`variants` is present for an ADT and absent for an alias or abstract type. `parents` preserves declared bounds and inherited type relationships.
+`variants` is set for an algebraic data type and `None` for an alias or an abstract type. `parents` lists the declared bounds and parent types.
 
 **Fields**
 
@@ -806,7 +810,7 @@ A trait declaration and the signatures or default functions in its body.
 
 A `make` implementation block.
 
-`target` is the receiver type, `implements` lists explicit traits, and `body` retains functions and visibility sections in declaration order.
+`target` is the receiver type and `implements` lists the traits named in `implement:`. `body` holds the functions and visibility sections in declaration order.
 
 **Fields**
 
@@ -846,7 +850,7 @@ A module and its declarations in source order.
 
 ## record `ConstantInfo`
 
-A named constant declaration. The AST reader never evaluates its value.
+A named constant declaration. Its value is not evaluated, and is not part of the record.
 
 **Fields**
 
@@ -924,7 +928,7 @@ A compile-time block and its declarations or expressions in source order.
 
 Any top-level or declaration-level AST node.
 
-A source tool can match only the declarations it understands and leave the rest alone. The program's `schemaVersion` lets persisted consumers reject a tree whose possible node shapes have changed.
+A tool can match the declarations it cares about and skip the rest with a `_` arm. A tool that stores trees should check the program's `schemaVersion`, which changes when node shapes do.
 
 **Examples**
 
@@ -933,7 +937,7 @@ _Listing documented functions in a parsed file_
 ```kex
 program.items.each do |node|
   match node do
-    FunctionDef(info) if info.doc.present? => IO.printLine(info.name)
+    FunctionDef(info) when info.doc.present? => IO.printLine(info.name)
     _ => ()
   end
 end
@@ -960,9 +964,9 @@ end
 
 ## type `TypeRef | PatternRef`
 
-Source-like conversion through the standard `to(String)` spelling.
+Lets `to(String)` render a type or pattern as source, the same text `referenceText` gives.
 
-Useful in diagnostics: a tool can interpolate the type or pattern it found without manually dispatching between the two reference families.
+Use it in diagnostics to show the type or pattern a tool found, whichever kind it is.
 
 **Examples**
 

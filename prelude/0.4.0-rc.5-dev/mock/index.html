@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mock | Standard Library 0.4.0-rc.5-dev | kex docs</title>
+    <meta name="description" content="Test stand-ins for the filesystem, the environment, the clock and the console.">
+    <link rel="canonical" href="https://docs.kex.run/prelude/0.4.0-rc.5-dev/mock/">
+    <meta property="og:url" content="https://docs.kex.run/prelude/0.4.0-rc.5-dev/mock/">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="kex docs">
+    <meta property="og:title" content="Mock">
+    <meta name="twitter:title" content="Mock">
+    <meta property="og:description" content="Test stand-ins for the filesystem, the environment, the clock and the console.">
+    <meta name="twitter:description" content="Test stand-ins for the filesystem, the environment, the clock and the console.">
+    <meta property="og:image" content="https://docs.kex.run/social.png">
+    <meta name="twitter:image" content="https://docs.kex.run/social.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="theme-color" content="#fcf5e2">
+    <link rel="icon" href="/_theme/icon.png" type="image/png" sizes="403x403">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>/* Krix: the Kex documentation stylesheet, from Tey docgen (tey/src/tey/docgen/css.kex, MIT).
+   Marqraft additions follow the original rules. */
+/* kex docs — design tokens ported from kex.run (see module comment) */
+
+:root {
+  --bg: #fcf5e2;
+  --bg-subtle: #f6ecd0;
+  --bg-muted: #f0e2bc;
+  --bg-sunken: #ead9a8;
+  --ink: #2a1c0a;
+  --ink-soft: #54380f;
+  --muted: #7a5a25;
+  --faint: #9c7a3c;
+  --line: #ecdcb4;
+  --line-strong: #dbc78c;
+  --accent: #b06a14;
+  --accent-strong: #8a4f0a;
+  --accent-soft: #f4e2b8;
+  --accent-ink: #5a3408;
+  --code-bg: #1b140a;
+  --code-bg-soft: #221a0e;
+  --code-border: #382a16;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+/* JetBrains Mono ships programming ligatures (-> to a single arrow, =>,
+   !=, ...) on by default. They read well in code blocks, so they stay
+   there — but in the search box the reader is TYPING, and -> must
+   appear exactly as entered. Disable ligatures there only. */
+.search-modal-panel input, .search-page-box input {
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0, "dlig" 0;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse 90% 50% at 50% -10%, rgba(236, 178, 94, 0.28), transparent 70%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+::selection { background: var(--accent-soft); color: var(--accent-ink); }
+
+a { color: inherit; text-decoration: none; }
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.wrap { width: 100%; max-width: 76rem; margin-inline: auto; padding-inline: 1.5rem; }
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(252, 245, 226, 0.85);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+
+.top-inner { display: flex; align-items: center; gap: 0.75rem; height: 3.5rem; }
+
+/* ── Search ─────────────────────────────────────────────────────────── */
+
+.search-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  height: 2.1rem;
+  min-width: 14rem;
+  padding: 0 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-soft);
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.search-trigger:hover { border-color: var(--accent); color: var(--ink); }
+.search-trigger kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  padding: 0.2rem 0.35rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  color: var(--faint);
+}
+
+/* The modal is frosted glass: a translucent warm panel over a blurred
+   backdrop, in the same voice as the sticky header. */
+/* Above everything the page draws, including Marqraft's formatting toolbar
+   while authoring (z-index 2147481000); below its top bar and dialogs. */
+.search-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2147482000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+  background: rgba(42, 28, 10, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.search-modal[hidden] { display: none; }
+
+.search-modal-panel {
+  width: min(44rem, 92vw);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 253, 248, 0.82);
+  backdrop-filter: blur(28px) saturate(140%);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
+  border: 1px solid rgba(236, 220, 180, 0.9);
+  box-shadow: 0 24px 72px rgba(42, 28, 10, 0.35);
+}
+
+.search-modal-panel input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1.05rem 1.3rem;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(236, 220, 180, 0.9);
+  outline: none;
+}
+.search-modal-panel input::placeholder { color: var(--faint); }
+
+.search-modal-results { max-height: 55vh; overflow-y: auto; padding: 0.5rem; }
+
+.search-hit {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.1rem;
+  border-radius: 10px;
+  text-decoration: none;
+}
+.search-hit:hover { background: rgba(246, 236, 208, 0.6); }
+.search-hit.selected { background: rgba(244, 226, 184, 0.9); }
+
+.search-head { display: flex; align-items: baseline; gap: 0.6rem; }
+
+.search-kind {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-strong);
+}
+/* Each kind has its own hue, so a scan down the list separates
+   functions from types from modules at a glance. */
+.search-kind-module { color: #6b5bd2; }
+.search-kind-function { color: #2f855a; }
+.search-kind-make { color: #b06a14; }
+.search-kind-trait { color: #c2498a; }
+.search-kind-record { color: #2b6cb0; }
+.search-kind-type { color: #0f8a8a; }
+.search-kind-constant { color: #9a5a13; }
+/* The site's own pages and their sections (Marqraft's search index). */
+.search-kind-page { color: var(--accent-strong); }
+.search-kind-section { color: var(--muted); }
+.search-name { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--ink); }
+.search-qual { margin-left: auto; font-family: var(--font-mono); font-size: 12px; color: var(--muted); text-align: right; }
+.search-sig {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 12.5px;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-empty { padding: 0.8rem 0.9rem; font-size: 13px; color: var(--faint); }
+
+.search-modal-footer {
+  border-top: 1px solid rgba(236, 220, 180, 0.9);
+  padding: 0.55rem 0.9rem;
+  font-size: 12.5px;
+}
+.search-modal-footer a { color: var(--accent-strong); text-decoration: none; }
+.search-modal-footer a:hover { text-decoration: underline; }
+
+/* The empty state: an explainer, example chips, and this page's items. */
+.search-hint, .search-local { padding: 0.8rem 1rem 0.6rem; }
+
+.search-hint-title { margin: 0 0 0.25rem; font-size: 13px; font-weight: 600; color: var(--ink); }
+.search-hint-body { margin: 0 0 0.6rem; font-size: 12.5px; color: var(--muted); }
+
+.search-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
+.search-chip {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 0.25rem 0.6rem;
+  color: var(--ink-soft);
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.search-chip:hover { border-color: var(--accent); color: var(--ink); }
+
+.search-local { border-top: 1px solid rgba(236, 220, 180, 0.7); }
+
+/* ── Full search page ──────────────────────────────────────────────── */
+
+.search-page { max-width: 52rem; }
+
+.search-page-box input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.85rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--ink);
+  background: rgba(246, 236, 208, 0.6);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  outline: none;
+}
+.search-page-box input:focus { border-color: var(--accent); }
+
+.search-page-results { margin-top: 1.25rem; }
+
+.search-page-hit {
+  display: block;
+  padding: 0.8rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+}
+.search-page-hit:hover { background: var(--bg-subtle); }
+
+.search-summary {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.brand-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  padding-top: 0.2rem;
+}
+
+.spacer { flex: 1; }
+
+.pkg-badge {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+}
+
+/* The version in the badge; with sibling versions Marqraft renders it as a
+   select that opens the same page in the chosen version. */
+.pkg-badge .marq-versions {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.back { font-size: 13.5px; color: var(--muted); }
+.back:hover { color: var(--accent-strong); }
+
+/* ── Layout ─────────────────────────────────────────────────────────── */
+
+.layout {
+  display: grid;
+  gap: 3rem;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  padding-block: 2.5rem;
+}
+
+/* The home page belongs to no collection, so it has no sidebar. */
+.layout.home { grid-template-columns: minmax(0, 1fr); }
+
+/* The module list is longer than the viewport, and it is stuck to it —
+   so it needs its own scrollbar, or everything past the fold is
+   unreachable. The height is what is left below the sticky header. */
+.side nav {
+  position: sticky;
+  top: 5rem;
+  max-height: calc(100vh - 6.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.35rem;
+}
+
+.side-heading {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+
+.side-list { list-style: none; margin: 0; padding: 0; }
+
+.side-list > li > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.side-list > li > a:hover { background: var(--bg-subtle); color: var(--ink); }
+
+.side-list > li > a.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+.side-sub { list-style: none; margin: 0.15rem 0 0.4rem; padding: 0 0 0 1.1rem; }
+
+.side-sub a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.15rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--faint);
+}
+
+.side-sub a:hover { color: var(--accent-strong); background: var(--bg-subtle); }
+
+/* Nested modules ("FS" → "FS.Path"): same voice as the top list, one
+   step quieter and indented under their parent. */
+.side-nest { list-style: none; margin: 0; padding: 0 0 0.25rem 0.75rem; }
+.side-nest > li > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.18rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--faint);
+}
+.side-nest > li > a:hover { background: var(--bg-subtle); color: var(--ink); }
+.side-nest > li > a.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+/* Cross-reference links inside code spans: the code face stays, the
+   colour signals "this goes somewhere". */
+a.xref { color: var(--accent-strong); text-decoration: none; border-bottom: 1px solid color-mix(in oklab, var(--accent) 45%, transparent); }
+a.xref:hover { border-bottom-color: var(--accent-strong); }
+
+.content { min-width: 0; max-width: 48rem; }
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--faint);
+  margin-bottom: 1rem;
+}
+
+.crumbs a:hover { color: var(--accent-strong); }
+.crumbs .sep { opacity: 0.6; }
+
+/* ── Prose ──────────────────────────────────────────────────────────── */
+
+.prose { color: var(--ink-soft); font-size: 1.0125rem; line-height: 1.75; }
+
+.prose h1 { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 1rem; line-height: 1.15; }
+
+/* The standalone index pages (site root, package versions) carry their
+   h1 directly in .content.prose — unlike the entity pages, which get
+   top breathing room from .layout's padding. Give those a little air
+   under the header. */
+.content.prose > h1 { margin-top: 2rem; }
+
+.prose h1 .ver {
+  font-family: var(--font-mono);
+  font-size: 0.45em;
+  font-weight: 500;
+  color: var(--muted);
+  vertical-align: middle;
+  letter-spacing: 0;
+}
+
+.prose h2 {
+  font-size: 1.35rem;
+  font-weight: 650;
+  margin: 2.6rem 0 0.9rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+
+.prose h3 { font-size: 1.05rem; font-weight: 600; margin: 1.6rem 0 0.5rem; }
+
+.prose h5 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  margin: 1.4rem 0 0.4rem;
+}
+
+.prose p { margin: 0 0 1.1rem; }
+
+.prose a { color: var(--accent-strong); text-decoration: underline; text-decoration-color: var(--accent-soft); text-underline-offset: 3px; }
+.prose a:hover { text-decoration-color: currentColor; }
+
+.prose code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  background: var(--bg-muted);
+  border: 1px solid var(--line);
+  padding: 0.12rem 0.4rem;
+  border-radius: 6px;
+  color: var(--muted);
+}
+
+.prose strong { color: var(--ink); font-weight: 600; }
+
+.lede { font-size: 1.05rem; color: var(--muted); }
+
+/* ── Entities ───────────────────────────────────────────────────────── */
+
+/* Anchor navigation lands a heading below the sticky header, not under
+   it: reserve the header's height (3.5rem) plus breathing room. */
+.entity, .fn { scroll-margin-top: 4.75rem; }
+
+.entity h2 code { font-size: 0.95em; }
+
+.kind {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  padding: 0.1rem 0.45rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+/* Each declaration kind has its own hue — the same palette as the
+   search results — so a module, a trait and a make are told apart at
+   a glance rather than all reading as one amber badge. */
+.kind-module { color: #6b5bd2; border-color: #d6cdf3; background: #efeafc; }
+.kind-function { color: #2f855a; border-color: #c6e6d4; background: #e8f4ec; }
+.kind-make { color: #b06a14; border-color: #ecd6ac; background: #f7ecd6; }
+.kind-trait { color: #c2498a; border-color: #efcfe0; background: #f9ecf3; }
+.kind-record { color: #2b6cb0; border-color: #c8dcf0; background: #e9f1fa; }
+.kind-type { color: #0f8a8a; border-color: #c0e4e2; background: #e4f4f3; }
+.kind-constant { color: #9a5a13; border-color: #e6d2b4; background: #f6ecdd; }
+
+.fields, .params { margin: 0 0 1.1rem; }
+
+.field, .param {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.field dt, .param dt { flex-shrink: 0; }
+.field dd, .param dd { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+.opt {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--faint);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 0.5rem;
+  margin-left: 0.4rem;
+}
+
+.variants { margin: 0 0 1.1rem; padding-left: 1.3rem; list-style: disc; }
+.variants li { margin: 0.3rem 0; }
+.variants .abstract { color: var(--faint); }
+
+.fn {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 0.9rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.fn h4 { margin: 0 0 0.4rem; font-size: 1rem; }
+.fn p:last-child, .fn pre:last-child { margin-bottom: 0; }
+
+.fn h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+
+/* The heading of a member links to itself, so a reader can copy a
+   deep link without hunting for a pilcrow. */
+a.self { color: inherit; text-decoration: none; }
+a.self:hover code { border-color: var(--accent); }
+
+/* A method's signature leads its box: the call shape first, prose after. */
+pre.code.sig { margin-bottom: 0.8rem; padding: 0.6rem 0.9rem; }
+pre.code a.xref { color: inherit; border-bottom: 1px dotted color-mix(in oklab, #e6a960 60%, transparent); }
+
+/* "Implements Monoid, Enumerable." / "Implemented by ...": where a
+   type's methods come from, said right under its heading. */
+.implements, .home-note {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin: 0 0 1.1rem;
+}
+
+/* A member group inside a type: "Methods", "On [Number]". */
+.members { margin-top: 1.8rem; }
+.members > h3, .entity > h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.3rem;
+}
+
+/* Which trait a member fulfils: a small link chip beside its name. */
+.tag-trait, .tag-kind, .tag-foul {
+  margin-left: 0.5rem;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid #efcfe0;
+  border-radius: 999px;
+  background: #f9ecf3;
+  color: #c2498a;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  text-decoration: none;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.tag-kind { border-color: #e6d2b4; background: #f6ecdd; color: #9a5a13; }
+/* Foul: may touch the outside world. The one chip that is a warning. */
+.tag-foul { border-color: #efcdc3; background: #fbece7; color: #b4432b; font-weight: 600; }
+.index .tag-foul { font-size: 11px; padding: 0.1rem 0.45rem; }
+.tag-trait:hover { border-color: #c2498a; }
+
+/* Methods a type gets from a trait without writing them. */
+.inherited dt, .elsewhere dt { min-width: 9rem; }
+
+/* ── Reference: finding a member ────────────────────────────────────── */
+
+/* What a declaration offers, ahead of the full entries: one line per
+   member, so a long type is read as a list before it is read as a page. */
+.summary { margin: 1.4rem 0 2.4rem; }
+.summary > h3 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  margin: 1.5rem 0 0.3rem;
+}
+.summary > h3:first-child { margin-top: 0; }
+.summary > h3 a, .summary > h3 a.xref { color: inherit; text-decoration: none; border-bottom: 0; }
+.summary > h3 code:not(pre code) { font-size: 1em; letter-spacing: 0; text-transform: none; }
+.summary .params { margin-bottom: 0; }
+.summary .param { padding: 0.28rem 0; }
+.summary dd { font-size: 0.9rem; }
+/* One name column for the whole list, as wide as its longest name and
+   its chip, so every summary starts on the same edge. */
+.summary .params { display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 1.2rem; }
+.summary .param { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; }
+
+/* A member's entry is a card headed by its signature: a band across the
+   top, flush with the card's edges, rather than a box inside a box. The
+   band is light, so the dark surface is left to the examples and the two
+   are told apart at a glance. What the signature does not say shares the
+   band with it, at the right: whether the member is foul, the traits it
+   fulfils, its permalink. */
+.fn {
+  --fn-band: #faf7e4;
+  overflow: hidden;
+  padding: 0.95rem 1.2rem 1rem;
+  border-radius: 12px;
+}
+.fn:has(> .fn-head) { padding-top: 0; }
+.fn-head, .fn > pre.code.sig {
+  margin: 0 -1.2rem 0.95rem;
+  padding: 0.75rem 1.2rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--fn-band);
+}
+.fn-head { display: flex; align-items: flex-start; gap: 0.9rem; }
+.fn pre.code.sig {
+  border: 0;
+  border-radius: 0;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+/* A signature keeps its line: one longer than its room scrolls there,
+   beside the chips, never under them. */
+.sig-line { display: block; }
+.fn-head > pre.code.sig { flex: 1; min-width: 0; margin: 0; padding: 0; background: none; }
+/* A further overload: its own band, part-way down the card. */
+.fn > pre.code.sig { margin-top: 1.2rem; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+/* The token colours are made for the dark code surface. On the band every
+   token starts from the band's own ink, and only what helps read a
+   signature is picked out: the name, the types, the default values. */
+.fn pre.code.sig span { color: inherit; }
+.fn pre.code.sig .tok-fn { color: var(--ink); font-weight: 700; }
+.fn pre.code.sig .tok-type { color: var(--accent-strong); }
+.fn pre.code.sig .tok-op, .fn pre.code.sig .tok-punct { color: var(--faint); }
+.fn pre.code.sig :is(.tok-string, .tok-number, .tok-bool, .tok-atom) { color: var(--accent); }
+.fn pre.code.sig a.xref { border-bottom-color: color-mix(in oklab, var(--accent) 45%, transparent); }
+
+/* The heading beside a signature repeats its name, so only its chips show. */
+.fn-head > :is(h3, h4) {
+  order: 2;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  line-height: 1;
+}
+.fn-head > :is(h3, h4) a.self { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.fn :is(h3, h4) :is(.tag-trait, .tag-kind, .tag-foul) { margin-left: 0; }
+.fn > :is(h3, h4) a.self + :is(.tag-trait, .tag-kind, .tag-foul, .permalink) { margin-left: 0.5rem; }
+.fn h5 { margin: 0.9rem 0 0.35rem; }
+
+/* Parameters as two aligned columns, and what comes back labelled the
+   same way: inside a card the rules between rows are one frame too many. */
+.fn .params { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.35rem 1rem; margin-bottom: 0.9rem; }
+.fn .param { display: contents; }
+.fn .returns { color: var(--muted); font-size: 0.95rem; }
+.fn .returns strong {
+  margin-right: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+
+/* A block of example code, and the control that copies it: in the block's
+   corner, waiting for the pointer like a card's permalink. */
+.code-block { position: relative; margin: 0 0 1.1rem; }
+.code-block > pre.code { margin: 0; }
+.fn .code-block:last-child { margin-bottom: 0; }
+.copy-code {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  height: 1.6rem;
+  padding: 0 0.55rem;
+  border: 1px solid var(--code-border);
+  border-radius: 6px;
+  background: var(--code-bg-soft);
+  box-shadow: 0 0 0 0.35rem var(--code-bg);
+  color: #c9bfa9;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, opacity 0.15s;
+}
+.copy-code:hover { color: #fff; border-color: #e6a960; }
+.copy-code.copied { color: #8fd3a8; border-color: #3d6b4c; }
+@media (hover: hover) {
+  .copy-code { opacity: 0; }
+  .code-block:hover .copy-code, .copy-code:focus-visible, .copy-code.copied { opacity: 1; }
+}
+
+/* The address of a declaration or member: a link to its own anchor that
+   the page script also copies to the clipboard. */
+.prose a.permalink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  vertical-align: middle;
+  transition: color 0.15s, border-color 0.15s, opacity 0.15s;
+}
+.prose a.permalink:hover { color: var(--accent-strong); border-color: var(--accent); }
+.prose a.permalink.copied { color: #2f855a; border-color: #c6e6d4; background: #e8f4ec; }
+.entity > h2 a.permalink { margin-left: 0.4rem; }
+/* With a pointer, a permalink waits for it: beside a declaration's heading,
+   and in the corner of a member's card, where it takes no room from the
+   signature until the card is under the pointer. Without one it is always
+   there, in the row. */
+@media (hover: hover) {
+  .entity > h2 a.permalink { opacity: 0; }
+  .entity > h2:hover a.permalink, .entity > h2 a.permalink:focus-visible, .entity > h2 a.permalink.copied { opacity: 1; }
+  .fn { position: relative; }
+  .fn-head a.permalink {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.9rem;
+    opacity: 0;
+    background: var(--bg);
+    box-shadow: 0 0 0 0.4rem var(--fn-band);
+  }
+  .fn:hover .fn-head a.permalink, .fn-head a.permalink:focus-visible, .fn-head a.permalink.copied { opacity: 1; }
+  /* The chips step aside for it rather than sit under it. */
+  .fn-head :is(.tag-trait, .tag-kind, .tag-foul) { transition: transform 0.15s; }
+  .fn:hover .fn-head :is(.tag-trait, .tag-kind, .tag-foul) { transform: translateX(-2.1rem); }
+}
+
+.prose ul { margin: 0 0 1.1rem; padding-left: 1.3rem; }
+.prose li { margin: 0.25rem 0; }
+
+/* A file's opening comment: what the page is about, before any one
+   declaration. */
+.intro { font-size: 1.02rem; margin-bottom: 1.6rem; }
+
+.caption { margin: 0 0 0.3rem; color: var(--muted); font-size: 0.95rem; }
+
+.returns { color: var(--muted); }
+.returns strong { color: var(--ink-soft); }
+
+.deprecated {
+  border-left: 3px solid var(--accent);
+  background: var(--bg-subtle);
+  padding: 0.7rem 1rem;
+  margin: 1.2rem 0;
+  border-radius: 0 8px 8px 0;
+}
+
+/* ── Code surface ───────────────────────────────────────────────────── */
+
+pre.code {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 1.1rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #e9e0cf;
+}
+
+pre.code code { font-family: inherit; }
+
+.tok-comment { color: #94876a; font-style: italic; }
+.tok-keyword { color: #f0c987; }
+.tok-type    { color: #e6a960; }
+.tok-string  { color: #c9e0a0; }
+.tok-interp  { color: #e9e0cf; }
+.tok-number  { color: #ffc18a; }
+.tok-fn      { color: #ffe0a0; }
+.tok-method  { color: #ffe0a0; }
+.tok-op      { color: #d8b878; }
+.tok-punct   { color: #a89a78; }
+.tok-const   { color: #e6a960; }
+.tok-field   { color: #f0e8d4; }
+.tok-bool    { color: #ffc18a; }
+
+/* ── Cards (version index) ──────────────────────────────────────────── */
+
+.cards {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  margin-top: 1.6rem;
+}
+
+/* Section headings on the index and the prelude page: what separates
+   "given to you" from "one using away". */
+.group {
+  margin: 2.6rem 0 0.2rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.group-note { margin: 0; color: var(--muted); font-size: 0.92rem; }
+
+/* "prelude": this page needs no import. It sits on the page heading,
+   beside the module name it qualifies. */
+.tag-prelude {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+h1 .tag-prelude { font-size: 11px; vertical-align: 0.45em; }
+
+.prelude-list {
+  list-style: none;
+  margin: 1.2rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+}
+
+.prelude-list li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.prelude-note {
+  color: var(--faint);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.card:hover { border-color: var(--line-strong); background: var(--bg-subtle); }
+
+.card-title { display: block; font-family: var(--font-mono); font-weight: 600; color: var(--ink); }
+.card:hover .card-title { color: var(--accent-strong); }
+.card-meta { display: block; margin-top: 0.25rem; font-size: 12.5px; color: var(--faint); }
+
+/* ── Footer ─────────────────────────────────────────────────────────── */
+
+.foot {
+  border-top: 1px solid var(--line);
+  margin-top: 3rem;
+  padding: 1.4rem 0 2rem;
+  font-size: 13px;
+  color: var(--faint);
+}
+
+.foot a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.foot a:hover { color: var(--accent-strong); }
+.foot-links, .foot-links .marq-menu, .foot-links li { display: inline; margin: 0; padding: 0; }
+.foot-links li::before { content: " · "; }
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .layout { grid-template-columns: 1fr; }
+  .side { display: none; }
+}
+
+/* ── Marqraft additions ───────────────────────────────────────────────── */
+
+/* Settings: links follow the accent, the column follows the content width. */
+.prose a, a.xref { color: var(--marq-accent, var(--accent-strong)); }
+.content { max-width: var(--marq-contentWidth, 48rem); }
+.site-logo { height: 1.4rem; margin-right: 0.4rem; vertical-align: -0.2rem; }
+
+/* The navigation binding renders nested ul/li/a; style it as the docgen sidebar. */
+.side-tree ul { list-style: none; margin: 0; padding: 0; }
+.side-tree li > a,
+.side-tree li > .marq-nav-row > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.side-tree li > a:hover,
+.side-tree li > .marq-nav-row > a:hover { background: var(--bg-subtle); color: var(--ink); }
+.side-tree a[aria-current=page] { background: var(--accent-soft); color: var(--accent-ink); font-weight: 500; }
+.side-tree ul ul { padding: 0 0 0.25rem 0.75rem; }
+.side-tree ul ul a { padding-block: 0.18rem; font-size: 12.5px; color: var(--faint); }
+.marq-draft {
+  margin-left: 0.4rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+/* Chapter list on the index page. */
+.chapters ul { list-style: none; margin: 0.8rem 0 0; padding: 0; counter-reset: chapter; }
+.chapters ul ul { padding-left: 1.4rem; margin: 0; }
+.chapters li > a, .chapters li > .marq-nav-row > a {
+  display: block;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+.chapters a:hover { color: var(--accent-strong); }
+
+/* Reading order: the docgen "prevnext" footer. */
+.marq-pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2.6rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+.marq-pager a { text-decoration: none; display: flex; flex-direction: column; }
+.marq-pager small { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--faint); }
+.marq-pager span { color: var(--accent-strong); }
+.marq-pager-previous span::before { content: "← "; }
+.marq-pager-next { margin-left: auto; text-align: right; }
+.marq-pager-next span::after { content: " →"; }
+
+/* Prose elements docgen leaves to the browser. */
+.prose ul, .prose ol { margin: 0 0 1.1rem; padding-left: 1.4rem; }
+.prose li { margin: 0.2rem 0; }
+.prose li > ul, .prose li > ol { margin: 0.2rem 0; }
+.prose blockquote {
+  margin: 0 0 1.1rem;
+  padding: 0.7rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--bg-subtle);
+  border-radius: 0 8px 8px 0;
+  color: var(--muted);
+}
+.prose blockquote p:last-child { margin-bottom: 0; }
+.prose hr { border: 0; border-top: 1px solid var(--line); margin: 2rem 0; }
+.prose img { max-width: 100%; border-radius: 10px; border: 1px solid var(--line); }
+.table-scroll { overflow-x: auto; margin: 0 0 1.1rem; }
+/* A framed grid: an outline rounded like code blocks and callouts, lines
+   between cells, a shaded header and light banding. Borders sit on the
+   cells' right and bottom sides (separate, not collapsed, so the outline
+   can be rounded), and the last column and row drop theirs. */
+.prose table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  margin: 0 0 1.1rem;
+  font-size: 0.93rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.table-scroll > table { margin: 0; }
+.prose th, .prose td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.5rem 0.8rem;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.prose :is(th, td):last-child { border-right: 0; }
+.prose tr:last-child > :is(th, td) { border-bottom: 0; }
+.prose th { font-weight: 600; color: var(--ink); background: var(--bg-subtle); border-bottom-color: var(--line-strong); }
+.prose tbody tr:nth-child(even) > td { background: color-mix(in srgb, var(--bg-subtle) 45%, transparent); }
+.prose pre:not(.code) {
+  background: var(--code-bg); color: #e9e0cf; border: 1px solid var(--code-border);
+  border-radius: 10px; padding: 0.9rem 1.1rem; overflow-x: auto; font-family: var(--font-mono); font-size: 0.85rem;
+}
+
+/* Blocks. */
+/* A Code block is a window, as on kex.run: a bar with three dots, the
+   filename (or the language) and a Copy button, over the code, with an
+   optional caption under the window. */
+.marq-code { margin: 0 0 1.1rem; }
+.marq-code > .marq-code-bar + pre.code,
+.marq-code > .marq-code-bar + pre { margin: 0; border-top: 0; border-radius: 0 0 10px 10px; }
+.marq-code-bar {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.5rem 0.9rem;
+  background: var(--code-bg-soft);
+  border: 1px solid var(--code-border); border-bottom-color: color-mix(in srgb, var(--code-border) 70%, transparent);
+  border-radius: 10px 10px 0 0;
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.4;
+}
+.marq-code-dots { display: flex; gap: 6px; flex-shrink: 0; }
+.marq-code-dots i { width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; }
+.marq-code-dots i:nth-child(2) { background: #febc2e; }
+.marq-code-dots i:nth-child(3) { background: #28c840; }
+.marq-code-file { color: #b8ab8e; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.marq-code-language { color: #7d7159; text-transform: lowercase; }
+.marq-code-copy {
+  margin-left: auto; padding: 0.15rem 0.5rem; border: 0; border-radius: 6px;
+  background: transparent; color: #94876a; font: inherit; font-size: 11px; cursor: pointer;
+}
+.marq-code-copy:hover { background: rgba(255, 255, 255, 0.06); color: #e9e0cf; }
+/* Output uses the supported literal code block with its own plain transcript style. */
+.marq-code[data-language="output"] {
+  border-left: 3px solid var(--accent);
+  border-radius: 0;
+  background: var(--code-bg);
+}
+.marq-code[data-language="output"] .marq-code-bar {
+  padding: 0.65rem 1rem 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.marq-code[data-language="output"] .marq-code-dots,
+.marq-code[data-language="output"] .marq-code-copy,
+.marq-code[data-language="output"] .marq-code-language,
+.marq-code[data-language="output"] figcaption { display: none; }
+.marq-code[data-language="output"] .marq-code-file {
+  color: #b8ab8e;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  overflow: visible;
+  text-overflow: clip;
+  text-transform: uppercase;
+}
+.marq-code[data-language="output"] pre.code,
+.marq-code[data-language="output"] > .marq-code-bar + pre.code {
+  margin: 0;
+  padding: 0.45rem 1rem 0.85rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.marq-code figcaption { margin-top: 0.45rem; font-size: 12.5px; color: var(--muted); text-align: center; }
+.marq-tabs { border: 1px solid var(--line); border-radius: 10px; padding: 0.4rem 1.1rem; margin: 0 0 1.1rem; background: rgba(255, 255, 255, 0.35); }
+.marq-area + .marq-area { border-top: 1px solid var(--line); }
+.marq-area h3 { margin: 0.8rem 0 0.4rem; font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--faint); }
+/* GitHub alerts: > [!NOTE], [!TIP], [!IMPORTANT], [!WARNING], [!CAUTION]. */
+.markdown-alert { margin: 0 0 1.1rem; padding: 0.7rem 1rem; border-left: 3px solid var(--accent); background: var(--bg-subtle); border-radius: 0 8px 8px 0; }
+.markdown-alert-note { border-left-color: #2b6cb0; background: #e9f1fa; }
+.markdown-alert-tip { border-left-color: #2f855a; background: #e8f4ec; }
+.markdown-alert-important { border-left-color: #6b5bd2; background: #efeafc; }
+.markdown-alert-warning { border-left-color: var(--accent); background: #f7ecd6; }
+.markdown-alert-caution { border-left-color: #c2498a; background: #f9ecf3; }
+.markdown-alert-title { margin: 0 0 0.2rem !important; font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-ink); }
+.markdown-alert-body > :last-child { margin-bottom: 0; }
+.marq-source { border: 1px dashed var(--line-strong); padding: 0.7rem; white-space: pre-wrap; }
+
+/* Collections: the top-level pages (Guide, Tutorial, ...) as header links. */
+.top-nav { margin-left: 1rem; }
+.top-nav ul { display: flex; align-items: center; gap: 0.2rem; list-style: none; margin: 0; padding: 0; }
+.top-nav li { position: relative; }
+.top-nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.top-nav a:hover { color: var(--ink); background: var(--bg-subtle); }
+.top-nav a[aria-current] { color: var(--accent-ink); background: var(--accent-soft); font-weight: 500; }
+/* Header links: ordinary links after the version badge, e.g. kex.run. */
+.top-links .marq-menu { display: flex; align-items: center; gap: 0.9rem; list-style: none; margin: 0 0 0 0.75rem; padding: 0; }
+.top-links li { position: relative; }
+.top-links a { font-size: 13.5px; color: var(--muted); }
+.top-links a:hover { color: var(--accent-strong); }
+.top-links a[href^="http"]::after { content: " ↗"; }
+@media (max-width: 640px) { .brand-sub, .pkg-badge { display: none; } .top-nav { margin-left: 0.25rem; } }
+
+/* Authoring (marq dev only): keep the sticky header and toolbar below the Marqraft bar. */
+body:has(#marq-chrome) .top { top: 48px; }
+body:has(#marq-chrome) { --marq-toolbar-top: calc(48px + 3.5rem + 0.5rem); }
+body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
+
+/* Reference pages (reference.html.ket): generated API documentation with an
+   "On this page" rail beside the content. The producer (Tey docgen's
+   fragments output) renders the rail's list; the theme places it. */
+.layout.has-toc { grid-template-columns: 15rem minmax(0, 1fr) 12rem; }
+.toc { font-size: 12.5px; }
+.toc > * { position: sticky; top: 5rem; }
+.toc-heading {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+.toc ul { list-style: none; margin: 0; padding: 0; max-height: calc(100vh - 8rem); overflow-y: auto; }
+.toc li a { display: block; padding: 0.2rem 0.5rem; border-left: 2px solid var(--line); color: var(--muted); }
+.toc li a:hover { color: var(--ink); border-left-color: var(--accent); }
+/* Where the reader is. */
+.toc li a.current { color: var(--ink); border-left-color: var(--accent); background: var(--bg-subtle); font-weight: 600; }
+.toc li.toc-nested a { padding-left: 1.1rem; }
+/* Members, under the declaration they belong to. */
+.toc li.toc-member a { padding: 0.1rem 0.5rem 0.1rem 1.1rem; font-family: var(--font-mono); font-size: 11.5px; }
+.reference .content { max-width: none; }
+@media (max-width: 1280px) { .layout.has-toc { grid-template-columns: 15rem minmax(0, 1fr); } .toc { display: none; } }
+@media (max-width: 1024px) { .layout.has-toc { grid-template-columns: 1fr; } }
+
+:root{--marq-accent:#8a4f0a;--marq-contentWidth:48rem;}</style>
+    <script src="/_theme/search.js" defer></script>
+    <script src="/_theme/reference.js" defer></script>
+  </head>
+  <body class="reference">
+    <header class="top">
+      <div class="wrap top-inner">
+        <a class="brand" href="/">kex</a>
+        <span class="brand-sub">docs</span>
+        <nav class="top-nav" aria-label="Collections"><ul><li><a href="/guide/0.4.0-alpha/">Guide</a></li><li><a href="/prelude/" aria-current="true">Standard Library</a></li><li><a href="/tey/">Tey</a></li></ul></nav>
+        <span class="spacer"></span>
+        <button class="search-trigger" id="search" type="button" aria-label="Search documentation" data-index="/search.json"><span>Search</span><kbd>/</kbd></button>
+        <span class="pkg-badge">Standard Library <select class="marq-versions" aria-label="Version" onchange="location.href=this.value"><option value="/prelude/0.3.0/">0.3.0</option><option value="/prelude/0.3.0-beta/">0.3.0-beta</option><option value="/prelude/0.3.1/">0.3.1</option><option value="/prelude/0.3.2/">0.3.2</option><option value="/prelude/0.3.3/">0.3.3</option><option value="/prelude/0.3.4/">0.3.4</option><option value="/prelude/0.4.0-alpha/mock/">0.4.0-alpha</option><option value="/prelude/0.4.0-alpha.2/mock/">0.4.0-alpha.2</option><option value="/prelude/0.4.0-beta/mock/">0.4.0-beta</option><option value="/prelude/0.4.0-beta.2/mock/">0.4.0-beta.2</option><option value="/prelude/0.4.0-beta.3/mock/">0.4.0-beta.3</option><option value="/prelude/0.4.0-beta.4-dev/mock/">0.4.0-beta.4-dev</option><option value="/prelude/0.4.0-beta.5-dev/mock/">0.4.0-beta.5-dev</option><option value="/prelude/0.4.0-rc.1-dev/mock/">0.4.0-rc.1-dev</option><option value="/prelude/0.4.0-rc.2-dev/mock/">0.4.0-rc.2-dev</option><option value="/prelude/0.4.0-rc.3-dev/mock/">0.4.0-rc.3-dev</option><option value="/prelude/0.4.0-rc.4-dev/mock/">0.4.0-rc.4-dev</option><option value="/prelude/0.4.0-rc.5-dev/mock/" selected>0.4.0-rc.5-dev</option></select></span>
+        <nav class="top-links" aria-label="Links"><ul class="marq-menu"><li><a href="https://kex.run/docs">kex.run</a></li></ul></nav>
+      </div>
+    </header>
+    <div class="wrap layout has-toc">
+      <aside class="side">
+        <nav aria-label="Standard Library">
+          <div class="side-tree"><ul><li><a href="/prelude/0.4.0-rc.5-dev/">Standard Library</a><ul><li><a href="/prelude/0.4.0-rc.5-dev/algebra/">Algebra</a></li><li><a href="/prelude/0.4.0-rc.5-dev/test/">Assert</a></li><li><a href="/prelude/0.4.0-rc.5-dev/atom/">Atom</a></li><li><a href="/prelude/0.4.0-rc.5-dev/binary/">Binary</a></li><li><a href="/prelude/0.4.0-rc.5-dev/bits/">Bits</a></li><li><a href="/prelude/0.4.0-rc.5-dev/blankable/">Blankable</a></li><li><a href="/prelude/0.4.0-rc.5-dev/comparable/">Comparable</a></li><li><a href="/prelude/0.4.0-rc.5-dev/complex/">Complex</a></li><li><a href="/prelude/0.4.0-rc.5-dev/console/">Console</a></li><li><a href="/prelude/0.4.0-rc.5-dev/control/retry/">Control.Retry</a></li><li><a href="/prelude/0.4.0-rc.5-dev/culture/">Culture</a></li><li><a href="/prelude/0.4.0-rc.5-dev/data/queue/">Data.Queue</a></li><li><a href="/prelude/0.4.0-rc.5-dev/data/set/">Data.Set</a></li><li><a href="/prelude/0.4.0-rc.5-dev/data/stack/">Data.Stack</a></li><li><a href="/prelude/0.4.0-rc.5-dev/date/">Date</a></li><li><a href="/prelude/0.4.0-rc.5-dev/date_format/">DateFormat</a></li><li><a href="/prelude/0.4.0-rc.5-dev/date_time/">DateTime</a></li><li><a href="/prelude/0.4.0-rc.5-dev/digest/">Digest</a></li><li><a href="/prelude/0.4.0-rc.5-dev/dimensions/">Dimensions</a></li><li><a href="/prelude/0.4.0-rc.5-dev/duration/">Duration</a></li><li><a href="/prelude/0.4.0-rc.5-dev/enumerable/">Enumerable</a></li><li><a href="/prelude/0.4.0-rc.5-dev/env/">ENV</a></li><li><a href="/prelude/0.4.0-rc.5-dev/errorable/">Errorable</a></li><li><a href="/prelude/0.4.0-rc.5-dev/evaluator/">Evaluator</a></li><li><a href="/prelude/0.4.0-rc.5-dev/feed/">Feed</a></li><li><a href="/prelude/0.4.0-rc.5-dev/file_handle/">FileHandle</a></li><li><a href="/prelude/0.4.0-rc.5-dev/fs/">FS</a></li><li><a href="/prelude/0.4.0-rc.5-dev/io/">IO</a></li><li><a href="/prelude/0.4.0-rc.5-dev/json/">JSON</a></li><li><a href="/prelude/0.4.0-rc.5-dev/kex/">Kex</a><ul><li><a href="/prelude/0.4.0-rc.5-dev/kex/ast/">Kex.AST</a></li></ul></li><li><a href="/prelude/0.4.0-rc.5-dev/list/">List</a></li><li><a href="/prelude/0.4.0-rc.5-dev/map/">Map</a></li><li><a href="/prelude/0.4.0-rc.5-dev/math/">Math</a></li><li><a href="/prelude/0.4.0-rc.5-dev/mock/" aria-current="page">Mock</a></li><li><a href="/prelude/0.4.0-rc.5-dev/net/">Net</a><ul><li><a href="/prelude/0.4.0-rc.5-dev/net/dns/">Net.DNS</a></li><li><a href="/prelude/0.4.0-rc.5-dev/net/http/">Net.HTTP</a><ul><li><a href="/prelude/0.4.0-rc.5-dev/net/http/web_socket/">Net.HTTP.WebSocket</a></li></ul></li><li><a href="/prelude/0.4.0-rc.5-dev/net/ip/">Net.IP</a></li><li><a href="/prelude/0.4.0-rc.5-dev/net/socket/">Net.Socket</a></li></ul></li><li><a href="/prelude/0.4.0-rc.5-dev/node/">Node</a></li><li><a href="/prelude/0.4.0-rc.5-dev/number/">NumberFormat</a></li><li><a href="/prelude/0.4.0-rc.5-dev/optional/">Optional</a></li><li><a href="/prelude/0.4.0-rc.5-dev/option_parser/">OptionParser</a></li><li><a href="/prelude/0.4.0-rc.5-dev/parsing/">Parsing</a></li><li><a href="/prelude/0.4.0-rc.5-dev/period/">Period</a></li><li><a href="/prelude/0.4.0-rc.5-dev/prelude/">Prelude</a></li><li><a href="/prelude/0.4.0-rc.5-dev/process/">Process</a></li><li><a href="/prelude/0.4.0-rc.5-dev/random/">Random</a></li><li><a href="/prelude/0.4.0-rc.5-dev/range/">Range</a></li><li><a href="/prelude/0.4.0-rc.5-dev/regex/">Regex</a></li><li><a href="/prelude/0.4.0-rc.5-dev/stream/">Stream</a></li><li><a href="/prelude/0.4.0-rc.5-dev/string/">String</a></li><li><a href="/prelude/0.4.0-rc.5-dev/system/">System</a></li><li><a href="/prelude/0.4.0-rc.5-dev/tagged_validation/">TaggedValidation</a></li><li><a href="/prelude/0.4.0-rc.5-dev/template/">Template</a></li><li><a href="/prelude/0.4.0-rc.5-dev/time/">Time</a></li><li><a href="/prelude/0.4.0-rc.5-dev/truthyable/">Truthyable</a></li><li><a href="/prelude/0.4.0-rc.5-dev/type/">Type</a></li><li><a href="/prelude/0.4.0-rc.5-dev/units/">Units</a><ul><li><a href="/prelude/0.4.0-rc.5-dev/units/data/">Units.Data</a></li><li><a href="/prelude/0.4.0-rc.5-dev/units/dynamic/">Units.Dynamic</a></li><li><a href="/prelude/0.4.0-rc.5-dev/units/si/">Units.SI</a></li></ul></li><li><a href="/prelude/0.4.0-rc.5-dev/uri/">URI</a></li></ul></li></ul></div>
+        </nav>
+      </aside>
+      <main class="content">
+        <nav class="crumbs"><a href="/prelude/">Standard Library</a> <span class="sep">/</span> <span>Mock</span></nav>
+        <article class="prose">
+          <h1>Mock</h1>
+          <div class="intro">
+<p>Test stand-ins for the filesystem, the environment, the clock and the console. Networking mocks are under <a class="xref" href="#module-mock-net"><code>Mock.Net</code></a>.</p>
+<p>There are two kinds. The <a class="xref" href="#module-mock-fs"><code>Mock.FS</code></a>, <a class="xref" href="#module-mock-env"><code>Mock.ENV</code></a> and <a class="xref" href="#module-mock-io"><code>Mock.IO</code></a> modules change global state: <code>Mock.FS.File(path, content)</code> puts a file in a store that the real <a class="xref" href="/prelude/0.4.0-rc.5-dev/fs/#module-fs-file"><code>FS.File</code></a> reads from, and it stays there until <code>clear()</code>. That lets a test write a file and read it back, but it also lets one test see what another left behind, so clear the state in an <code>after</code> hook.</p>
+<p>The records <a class="xref" href="#record-mock-files"><code>Mock.Files</code></a>, <a class="xref" href="#record-mock-env"><code>Mock.Env</code></a> and <a class="xref" href="#record-mock-clock"><code>Mock.Clock</code></a> replace a capability for one block, as in <code>with FS.File = Mock.Files { ... } do ... end</code>. They hold no global state and need no clearing.</p>
+<p>Everything here is for tests: it is allowed in spec files and the REPL, and needs <code>--allow-mocks</code> anywhere else.</p>
+</div>
+<section class="entity" id="type-reader">
+<h2><span class="kind kind-type">type</span> <code>Reader</code> <a class="permalink" href="#type-reader" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A read hook for <a class="xref" href="#record-mock-files"><code>Mock.Files</code></a>: returns a path's content, or <code>None</code> for no such file.</p>
+
+</section>
+<section class="entity" id="type-lookup">
+<h2><span class="kind kind-type">type</span> <code>Lookup</code> <a class="permalink" href="#type-lookup" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A lookup hook for <a class="xref" href="#record-mock-env"><code>Mock.Env</code></a>: returns a variable's value, or <code>None</code> for unset.</p>
+
+</section>
+<section class="entity" id="type-tick">
+<h2><span class="kind kind-type">type</span> <code>Tick</code> <a class="permalink" href="#type-tick" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A hook for <a class="xref" href="#record-mock-clock"><code>Mock.Clock</code></a> that returns the current instant.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>Block(DateTime)</code></li>
+</ul>
+
+</section>
+<section class="entity" id="type-writer">
+<h2><span class="kind kind-type">type</span> <code>Writer</code> <a class="permalink" href="#type-writer" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A write hook for <a class="xref" href="#record-mock-env"><code>Mock.Env</code></a>, called with the name and value a program set.</p>
+<p>Writes under a <a class="xref" href="#record-mock-env"><code>Mock.Env</code></a> never reach the real environment, and the record cannot change, so this hook is the only way to see them. An <code>unset</code> arrives as the name with an empty value. Without a hook, writes are dropped.</p>
+
+</section>
+<section class="entity" id="module-mock">
+<h2><span class="kind kind-module">module</span> <code>Mock</code> <a class="permalink" href="#module-mock" title="Copy link" aria-label="Copy link">#</a></h2>
+</section>
+<section class="entity" id="record-mock-files">
+<h2><span class="kind kind-record">record</span> <code>Files</code> <a class="permalink" href="#record-mock-files" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A read-only stand-in for the <a class="xref" href="/prelude/0.4.0-rc.5-dev/fs/#module-fs-file"><code>FS.File</code></a> capability, for <code>with FS.File = ...</code>.</p>
+<p>It holds no global state and ends with its block. Every write, delete, copy and open fails, so a test that writes a file and reads it back needs <a class="xref" href="#module-mock-fs"><code>Mock.FS</code></a>.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">with</span> <span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span> <span class="tok-op">=</span> <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Files</span> <span class="tok-punct">{</span> files<span class="tok-op">:</span> <span class="tok-punct">{</span><span class="tok-string">&quot;</span><span class="tok-string">kex.toml</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">name = \&quot;demo\&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">}</span> <span class="tok-punct">}</span> <span class="tok-keyword">do</span>
+  <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-fn">loadConfig</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">demo</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>Set <code>onRead</code> to compute the answer, for example from the path. When it is set, <code>files</code> is not consulted, and its <code>None</code> means no such file.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>files</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/map/#type-map">Map</a>&lt;<a class="xref" href="/prelude/0.4.0-rc.5-dev/fs/#type-fs-filepath">FS.FilePath</a>, <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a>&gt;</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>onRead</code></dt><dd><code><a class="xref" href="#type-reader">Reader</a>?</code> <span class="opt">optional</span></dd></div>
+</dl>
+<p class="implements">Implements <code>FS.File</code>.</p>
+<section class="summary">
+<h3><a href="#make-files">Functions</a></h3>
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#files-cannedread"><code>cannedRead</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Named apart from <code>read</code>: <code>this.read(path)</code> would bind to the capability's own <code>read : FilePath -&gt; String?</code>, not to this function.</dd></div>
+<div class="param"><dt><a class="xref" href="#files-read"><code>read</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#files-readbytes"><code>readBytes</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#files-readlines"><code>readLines</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#files-feed"><code>feed</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#files-size"><code>size</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#files-exists?"><code>exists?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#files-file?"><code>file?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#files-directory?"><code>directory?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#files-absolute"><code>absolute</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#files-canonical"><code>canonical</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#files-symlink?"><code>symlink?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#files-info"><code>info</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#files-open"><code>open</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>A fake is a value, so there is nowhere for a write to go.</dd></div>
+<div class="param"><dt><a class="xref" href="#files-write"><code>write</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#files-writebytes"><code>writeBytes</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#files-append"><code>append</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#files-delete"><code>delete</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#files-copy"><code>copy</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#files-rename"><code>rename</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#files-changepermission"><code>changePermission</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#files-changemode"><code>changeMode</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+</dl>
+</section>
+<section class="members" id="make-files">
+<h3>Functions</h3>
+
+<div class="functions">
+<div class="fn" id="files-cannedread">
+<div class="fn-head">
+<h4><a class="self" href="#files-cannedread"><code>cannedRead</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-cannedread" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">cannedRead</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/fs/#module-fs"><span class="tok-type">FS</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/fs/#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></span></code></pre>
+</div>
+<p>Named apart from <code>read</code>: <code>this.read(path)</code> would bind to the capability's own <code>read : FilePath -&gt; String?</code>, not to this function.</p>
+
+</div>
+<div class="fn" id="files-read">
+<div class="fn-head">
+<h4><a class="self" href="#files-read"><code>read</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-read" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">read</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="files-readbytes">
+<div class="fn-head">
+<h4><a class="self" href="#files-readbytes"><code>readBytes</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-readbytes" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">readBytes</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="files-readlines">
+<div class="fn-head">
+<h4><a class="self" href="#files-readlines"><code>readLines</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-readlines" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">readLines</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="files-feed">
+<div class="fn-head">
+<h4><a class="self" href="#files-feed"><code>feed</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-feed" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">feed</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="files-size">
+<div class="fn-head">
+<h4><a class="self" href="#files-size"><code>size</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-size" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">size</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="files-exists?">
+<div class="fn-head">
+<h4><a class="self" href="#files-exists?"><code>exists?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-exists?" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">exists?</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="files-file?">
+<div class="fn-head">
+<h4><a class="self" href="#files-file?"><code>file?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-file?" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">file?</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="files-directory?">
+<div class="fn-head">
+<h4><a class="self" href="#files-directory?"><code>directory?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-directory?" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">directory?</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="files-absolute">
+<div class="fn-head">
+<h4><a class="self" href="#files-absolute"><code>absolute</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-absolute" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">absolute</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="files-canonical">
+<div class="fn-head">
+<h4><a class="self" href="#files-canonical"><code>canonical</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-canonical" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">canonical</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="files-symlink?">
+<div class="fn-head">
+<h4><a class="self" href="#files-symlink?"><code>symlink?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-symlink?" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">symlink?</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="files-info">
+<div class="fn-head">
+<h4><a class="self" href="#files-info"><code>info</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-info" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">info</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="files-open">
+<div class="fn-head">
+<h4><a class="self" href="#files-open"><code>open</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-open" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">open</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> mode<span class="tok-punct">,</span> block<span class="tok-punct">)</span></span></code></pre>
+</div>
+<p>A fake is a value, so there is nowhere for a write to go. Failing lets a test that did not expect a write notice it.</p>
+
+</div>
+<div class="fn" id="files-write">
+<div class="fn-head">
+<h4><a class="self" href="#files-write"><code>write</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-write" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">write</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> content<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="files-writebytes">
+<div class="fn-head">
+<h4><a class="self" href="#files-writebytes"><code>writeBytes</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-writebytes" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">writeBytes</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> content<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="files-append">
+<div class="fn-head">
+<h4><a class="self" href="#files-append"><code>append</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-append" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">append</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> content<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="files-delete">
+<div class="fn-head">
+<h4><a class="self" href="#files-delete"><code>delete</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-delete" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">delete</span><span class="tok-punct">(</span>path<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="files-copy">
+<div class="fn-head">
+<h4><a class="self" href="#files-copy"><code>copy</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-copy" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">copy</span><span class="tok-punct">(</span>src<span class="tok-punct">,</span> dst<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="files-rename">
+<div class="fn-head">
+<h4><a class="self" href="#files-rename"><code>rename</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-rename" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">rename</span><span class="tok-punct">(</span>src<span class="tok-punct">,</span> dst<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="files-changepermission">
+<div class="fn-head">
+<h4><a class="self" href="#files-changepermission"><code>changePermission</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-changepermission" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">changePermission</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> permissions<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="files-changemode">
+<div class="fn-head">
+<h4><a class="self" href="#files-changemode"><code>changeMode</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#files-changemode" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">changeMode</span><span class="tok-punct">(</span>path<span class="tok-punct">,</span> mode<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="record-mock-env">
+<h2><span class="kind kind-record">record</span> <code>Env</code> <a class="permalink" href="#record-mock-env" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A stand-in for the <a class="xref" href="/prelude/0.4.0-rc.5-dev/env/#module-env"><code>ENV</code></a> capability, for <code>with ENV = ...</code>.</p>
+<p>A name not in <code>vars</code> reads as unset. Set <code>onGet</code> to compute values instead, and <code>onSet</code> to see what the program writes.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">with</span> <span class="tok-type">ENV</span> <span class="tok-op">=</span> <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Env</span> <span class="tok-punct">{</span> vars<span class="tok-op">:</span> <span class="tok-punct">{</span><span class="tok-string">&quot;</span><span class="tok-string">HOME</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">/fake</span><span class="tok-string">&quot;</span><span class="tok-punct">}</span> <span class="tok-punct">}</span> <span class="tok-keyword">do</span>
+  <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-fn">configHome</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">/fake/.config</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>vars</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/map/#type-map">Map</a>&lt;<a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a>, <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a>&gt;</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>onGet</code></dt><dd><code><a class="xref" href="#type-lookup">Lookup</a>?</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>onSet</code></dt><dd><code><a class="xref" href="#type-writer">Writer</a>?</code> <span class="opt">optional</span></dd></div>
+</dl>
+<p class="implements">Implements <code>ENV</code>.</p>
+<section class="summary">
+<h3><a href="#make-env">Functions</a></h3>
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#env-lookup"><code>lookup</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Named apart from <code>get</code>: <code>this.get(key)</code> would bind to the capability's own <code>get</code>, not to this function.</dd></div>
+<div class="param"><dt><a class="xref" href="#env-get"><code>get</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#env-has?"><code>has?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#env-keys"><code>keys</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#env-values"><code>values</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#env-count"><code>count</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#env-each"><code>each</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#env-entries"><code>entries</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#env-set"><code>set</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>A write goes to <code>onSet</code> or is dropped.</dd></div>
+<div class="param"><dt><a class="xref" href="#env-unset"><code>unset</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+</dl>
+</section>
+<section class="members" id="make-env">
+<h3>Functions</h3>
+
+<div class="functions">
+<div class="fn" id="env-lookup">
+<div class="fn-head">
+<h4><a class="self" href="#env-lookup"><code>lookup</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#env-lookup" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">lookup</span><span class="tok-punct">(</span>key<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></span></code></pre>
+</div>
+<p>Named apart from <code>get</code>: <code>this.get(key)</code> would bind to the capability's own <code>get</code>, not to this function.</p>
+
+</div>
+<div class="fn" id="env-get">
+<div class="fn-head">
+<h4><a class="self" href="#env-get"><code>get</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#env-get" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">get</span><span class="tok-punct">(</span>key<span class="tok-punct">,</span> default<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="env-has?">
+<div class="fn-head">
+<h4><a class="self" href="#env-has?"><code>has?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#env-has?" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">has?</span><span class="tok-punct">(</span>key<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="env-keys">
+<div class="fn-head">
+<h4><a class="self" href="#env-keys"><code>keys</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#env-keys" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line">keys</span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="env-values">
+<div class="fn-head">
+<h4><a class="self" href="#env-values"><code>values</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#env-values" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line">values</span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="env-count">
+<div class="fn-head">
+<h4><a class="self" href="#env-count"><code>count</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#env-count" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line">count</span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="env-each">
+<div class="fn-head">
+<h4><a class="self" href="#env-each"><code>each</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#env-each" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">each</span><span class="tok-punct">(</span>f<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="env-entries">
+<div class="fn-head">
+<h4><a class="self" href="#env-entries"><code>entries</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#env-entries" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line">entries</span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="env-set">
+<div class="fn-head">
+<h4><a class="self" href="#env-set"><code>set</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#env-set" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">set</span><span class="tok-punct">(</span>name<span class="tok-punct">,</span> value<span class="tok-punct">)</span></span></code></pre>
+</div>
+<p>A write goes to <code>onSet</code> or is dropped. It must not reach the real environment, where it would leak into later tests and into every process the suite starts, and <code>vars</code> cannot change.</p>
+
+</div>
+<div class="fn" id="env-unset">
+<div class="fn-head">
+<h4><a class="self" href="#env-unset"><code>unset</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#env-unset" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">unset</span><span class="tok-punct">(</span>name<span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="record-mock-clock">
+<h2><span class="kind kind-record">record</span> <code>Clock</code> <a class="permalink" href="#record-mock-clock" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A stand-in for the <a class="xref" href="/prelude/0.4.0-rc.5-dev/time/#module-time-clock"><code>Time.Clock</code></a> capability, for <code>with Time.Clock = ...</code>. Inside the block, <code>Time.now</code>, <code>Date.today</code> and <code>DateTime.utcNow</code> read from it.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">with</span> <span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-type">Clock</span> <span class="tok-op">=</span> <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Clock</span> <span class="tok-punct">{</span> at<span class="tok-op">:</span> <span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">2026-07-30T14:03:00Z</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span> <span class="tok-punct">}</span> <span class="tok-keyword">do</span>
+  <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-type">Date</span><span class="tok-op">.</span><span class="tok-method">today</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">iso</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">2026-07-30</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>The clock is frozen at <code>at</code>, zone included, so <code>Date.today()</code> is the date in the zone you wrote, not the zone of the machine running the test.</p>
+<p>A frozen clock makes every measured interval zero. For a clock that runs, set <code>onNow</code>: a block uses the clock of the place it was written, so one written outside the <code>with</code> reads the real clock.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">with</span> <span class="tok-type">Time</span><span class="tok-op">.</span><span class="tok-type">Clock</span> <span class="tok-op">=</span> <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">Clock</span> <span class="tok-punct">{</span> onNow<span class="tok-op">:</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-punct">{</span> <span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">now</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">+</span> <span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-method">day</span> <span class="tok-punct">}</span><span class="tok-punct">)</span> <span class="tok-punct">}</span> <span class="tok-keyword">do</span>
+  <span class="tok-keyword">let</span> started <span class="tok-op">=</span> <span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">epochNanos</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+  <span class="tok-fn">runTheThing</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+  <span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-type">DateTime</span><span class="tok-op">.</span><span class="tok-method">epochNanos</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">&gt;</span> started<span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>at</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/date_time/#record-datetime">DateTime</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>onNow</code></dt><dd><code><a class="xref" href="#type-tick">Tick</a>?</code> <span class="opt">optional</span></dd></div>
+</dl>
+<p class="implements">Implements <code>Time.Clock</code>.</p>
+<section class="members" id="make-clock">
+<h3>Functions</h3>
+
+<div class="functions">
+<div class="fn" id="clock-now">
+<div class="fn-head">
+<h4><a class="self" href="#clock-now"><code>now</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#clock-now" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line">now</span></code></pre>
+</div>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="module-mock-fs">
+<h2><span class="kind kind-module">module</span> <code>Mock.FS</code> <a class="permalink" href="#module-mock-fs" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A global stand-in for the filesystem: files a test declares here are what the real <a class="xref" href="/prelude/0.4.0-rc.5-dev/fs/#module-fs-file"><code>FS.File</code></a> reads.</p>
+<p>The store lasts until <code>clear</code>, so clear it in an <code>after</code> hook or the next test sees the same files.</p>
+<div class="code-block"><pre class="code"><code>describe <span class="tok-string">&quot;</span><span class="tok-string">the config loader</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+  before <span class="tok-keyword">do</span>
+    <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">files</span><span class="tok-punct">(</span><span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">app.conf</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">port = 8080\n</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+
+  <span class="tok-keyword">after</span> <span class="tok-keyword">do</span>
+    <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+
+  it <span class="tok-string">&quot;</span><span class="tok-string">reads the port</span><span class="tok-string">&quot;</span> <span class="tok-keyword">do</span>
+    <span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-fn">loadPort</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-number">8080</span><span class="tok-punct">)</span>
+  <span class="tok-keyword">end</span>
+<span class="tok-keyword">end</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<div class="functions">
+<div class="fn" id="function-mock-fs-file">
+<div class="fn-head">
+<h3><a class="self" href="#function-mock-fs-file"><code>File</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-mock-fs-file" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-type">File</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/fs/#module-fs"><span class="tok-type">FS</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/fs/#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> content<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></span></code></pre>
+</div>
+<p>Declares one file and its content.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the path the file appears at</dd></div>
+<div class="param"><dt><code>content</code></dt><dd>its contents</dd></div>
+</dl>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">app.conf</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">port = 8080\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-mock-fs-directory">
+<div class="fn-head">
+<h3><a class="self" href="#function-mock-fs-directory"><code>Directory</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-mock-fs-directory" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-type">Directory</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/fs/#module-fs"><span class="tok-type">FS</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/fs/#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></span></code></pre>
+</div>
+<p>Declares a directory at <code>path</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>path</code></dt><dd>the directory to declare</dd></div>
+</dl>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">Directory</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">src</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-mock-fs-clear">
+<div class="fn-head">
+<h3><a class="self" href="#function-mock-fs-clear"><code>clear</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-mock-fs-clear" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">clear</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></span></code></pre>
+</div>
+<p>Empties the store, removing every file and directory declared so far.</p>
+<p>Call it in an <code>after</code> hook, since the store is shared by every test.</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">after</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-mock-fs-files">
+<div class="fn-head">
+<h3><a class="self" href="#function-mock-fs-files"><code>files</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-mock-fs-files" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">files</span><span class="tok-punct">(</span>entries<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/map/#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/fs/#module-fs"><span class="tok-type">FS</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/fs/#type-fs-filepath"><span class="tok-type">FilePath</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></span></code></pre>
+</div>
+<p>Declares several files at once, from a map of paths to contents (the shape <a class="xref" href="#record-mock-files"><code>Mock.Files</code></a> takes).</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>entries</code></dt><dd>paths to their contents</dd></div>
+</dl>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">files</span><span class="tok-punct">(</span><span class="tok-punct">{</span>
+  <span class="tok-string">&quot;</span><span class="tok-string">app.conf</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">port = 8080\n</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span>
+  <span class="tok-string">&quot;</span><span class="tok-string">hosts</span><span class="tok-string">&quot;</span><span class="tok-op">:</span>    <span class="tok-string">&quot;</span><span class="tok-string">localhost\n</span><span class="tok-string">&quot;</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-mock-fs-onread">
+<div class="fn-head">
+<h3><a class="self" href="#function-mock-fs-onread"><code>onRead</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-mock-fs-onread" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">onRead</span><span class="tok-punct">(</span>reader<span class="tok-op">:</span> <a class="xref" href="#type-reader"><span class="tok-type">Reader</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></span></code></pre>
+</div>
+<p>Serves reads from <code>reader</code> in place of the declared files.</p>
+<p>Use it when the content depends on the path. While it is set, files declared with <code>File</code> or <code>files</code> are not read, and <code>None</code> from <code>reader</code> means no such file.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>reader</code></dt><dd>returns a path's content, or <code>None</code></dd></div>
+</dl>
+<h5>Examples</h5>
+<p class="caption"><em>Every .txt path has content, nothing else exists</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-method">onRead</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>path<span class="tok-op">|</span>
+  path<span class="tok-op">.</span><span class="tok-method">endsWith?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">.txt</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">then</span> <span class="tok-bool">Just</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">stub</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-keyword">else</span> <span class="tok-bool">None</span>
+<span class="tok-keyword">end</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-mock-env">
+<h2><span class="kind kind-module">module</span> <code>Mock.ENV</code> <a class="permalink" href="#module-mock-env" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A global overlay on the process environment, so a test decides what <a class="xref" href="/prelude/0.4.0-rc.5-dev/env/#module-env"><code>ENV</code></a> holds.</p>
+<p>The overlay lasts until <code>clear</code>, so clear it in an <code>after</code> hook.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">vars</span><span class="tok-punct">(</span><span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">HOME</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">/fake</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">LOG_LEVEL</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">debug</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-fn">assert</span><span class="tok-punct">(</span><span class="tok-fn">configPath</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">==</span> <span class="tok-string">&quot;</span><span class="tok-string">/fake/.config</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<div class="functions">
+<div class="fn" id="function-mock-env-set">
+<div class="fn-head">
+<h3><a class="self" href="#function-mock-env-set"><code>set</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-mock-env-set" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">set</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></span></code></pre>
+</div>
+<p>Sets one variable in the overlay.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code></dt><dd>the variable name</dd></div>
+<div class="param"><dt><code>value</code></dt><dd>its value</dd></div>
+</dl>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">set</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">LOG_LEVEL</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">debug</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-mock-env-unset">
+<div class="fn-head">
+<h3><a class="self" href="#function-mock-env-unset"><code>unset</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-mock-env-unset" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">unset</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></span></code></pre>
+</div>
+<p>Makes a variable read as unset, whatever the real environment holds.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code></dt><dd>the variable to remove</dd></div>
+</dl>
+<h5>Examples</h5>
+<p class="caption"><em>Testing the unset path</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">unset</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">HOME</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-fn">configPath</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">.</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-mock-env-clear">
+<div class="fn-head">
+<h3><a class="self" href="#function-mock-env-clear"><code>clear</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-mock-env-clear" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">clear</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></span></code></pre>
+</div>
+<p>Removes the whole overlay, restoring the real environment.</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">after</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-mock-env-vars">
+<div class="fn-head">
+<h3><a class="self" href="#function-mock-env-vars"><code>vars</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-mock-env-vars" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">vars</span><span class="tok-punct">(</span>entries<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/map/#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></span></code></pre>
+</div>
+<p>Declares the whole overlay in one call.</p>
+<p>To compute values per lookup, use <code>with ENV = Mock.Env { onGet: ... }</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>entries</code></dt><dd>variable names to their values</dd></div>
+</dl>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">vars</span><span class="tok-punct">(</span><span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">HOME</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">/fake</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">LOG_LEVEL</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">debug</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-mock-io">
+<h2><span class="kind kind-module">module</span> <code>Mock.IO</code> <a class="permalink" href="#module-mock-io" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A global stand-in for the console: it captures what a program prints and feeds it lines as if they had been typed.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">input</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Ada</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">42</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-fn">greet</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">output</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">hello, Ada\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<div class="functions">
+<div class="fn" id="function-mock-io-start">
+<div class="fn-head">
+<h3><a class="self" href="#function-mock-io-start"><code>start</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-mock-io-start" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">start</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></span></code></pre>
+</div>
+<p>Starts capturing output and serving queued input.</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code>before <span class="tok-keyword">do</span>
+  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-mock-io-stop">
+<div class="fn-head">
+<h3><a class="self" href="#function-mock-io-stop"><code>stop</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-mock-io-stop" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">stop</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></span></code></pre>
+</div>
+<p>Stops capturing, and restores the real console.</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">after</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-mock-io-output">
+<div class="fn-head">
+<h3><a class="self" href="#function-mock-io-output"><code>output</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-mock-io-output" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">output</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Returns everything the program has printed since capturing started.</p>
+<p>Newlines are included, so a single <code>IO.printLine(&quot;hi&quot;)</code> gives <code>&quot;hi\n&quot;</code>.</p>
+<p class="returns"><strong>Returns</strong> the captured output</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">start</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">output</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">hello\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-mock-io-clear">
+<div class="fn-head">
+<h3><a class="self" href="#function-mock-io-clear"><code>clear</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-mock-io-clear" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">clear</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></span></code></pre>
+</div>
+<p>Discards the output captured so far and keeps capturing.</p>
+<p>Use it between phases of a test when only the later output matters.</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-fn">setUpNoisily</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">clear</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-fn">theThingUnderTest</span><span class="tok-punct">(</span><span class="tok-punct">)</span>
+<span class="tok-type">Assert</span><span class="tok-op">.</span><span class="tok-method">equal</span><span class="tok-punct">(</span><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">output</span><span class="tok-punct">(</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">done\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-mock-io-input">
+<div class="fn-head">
+<h3><a class="self" href="#function-mock-io-input"><code>input</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-mock-io-input" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">input</span><span class="tok-punct">(</span>first<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> second<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> third<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> fourth<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></span></code></pre>
+</div>
+<p>Queues the lines <code>IO.getLine</code> will return, in order.</p>
+<p>Takes a list, or up to four lines as separate arguments. Calls add to the queue. Once it is empty, <code>IO.getLine</code> returns <code>None</code> and <code>IO.readLine</code> returns <code>Ok(None)</code>, as at the end of real input.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>lines</code></dt><dd>the lines to serve, in order (one line, or a list of them)</dd></div>
+</dl>
+<h5>Examples</h5>
+<p class="caption"><em>A list of lines</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">input</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">Ada</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">42</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>The same, as separate arguments</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Mock</span><span class="tok-op">.</span><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">input</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Ada</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">42</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-mock-net">
+<h2><span class="kind kind-module">module</span> <code>Mock.Net</code> <a class="permalink" href="#module-mock-net" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Scripted inputs for testing HTTP, DNS, sockets and WebSockets.</p>
+</section>
+<section class="entity" id="module-mock-net-http">
+<h2><span class="kind kind-module">module</span> <code>Mock.Net.HTTP</code> <a class="permalink" href="#module-mock-net-http" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Scripted HTTP responses.</p>
+</section>
+<section class="entity" id="record-mock-net-http-transport">
+<h2><span class="kind kind-record">record</span> <code>Transport</code> <a class="permalink" href="#record-mock-net-http-transport" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Responses a scripted transport returns, in order.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>responses</code></dt><dd><code>[Any]</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="module-mock-net-dns">
+<h2><span class="kind kind-module">module</span> <code>Mock.Net.DNS</code> <a class="permalink" href="#module-mock-net-dns" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Scripted DNS answers.</p>
+</section>
+<section class="entity" id="record-mock-net-dns-resolverscript">
+<h2><span class="kind kind-record">record</span> <code>ResolverScript</code> <a class="permalink" href="#record-mock-net-dns-resolverscript" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>The addresses each hostname resolves to.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>answers</code></dt><dd><code>{<a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a>: [<a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a>]}</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="module-mock-net-socket">
+<h2><span class="kind kind-module">module</span> <code>Mock.Net.Socket</code> <a class="permalink" href="#module-mock-net-socket" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Scripted socket data.</p>
+</section>
+<section class="entity" id="record-mock-net-socket-script">
+<h2><span class="kind kind-record">record</span> <code>Script</code> <a class="permalink" href="#record-mock-net-socket-script" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Chunks delivered in order as incoming socket data.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>incoming</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary">Binary</a>]</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="module-mock-net-websocket">
+<h2><span class="kind kind-module">module</span> <code>Mock.Net.WebSocket</code> <a class="permalink" href="#module-mock-net-websocket" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Scripted WebSocket messages.</p>
+</section>
+<section class="entity" id="record-mock-net-websocket-script">
+<h2><span class="kind kind-record">record</span> <code>Script</code> <a class="permalink" href="#record-mock-net-websocket-script" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Messages a scripted connection delivers, in order.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>incoming</code></dt><dd><code>[Any]</code></dd></div>
+</dl>
+
+</section>
+
+        </article>
+      </main>
+      <aside class="toc" aria-label="On this page">
+        <nav><p class="toc-heading">On this page</p><ul><li><a href="#type-reader">Reader</a></li><li><a href="#type-lookup">Lookup</a></li><li><a href="#type-tick">Tick</a></li><li><a href="#type-writer">Writer</a></li><li><a href="#module-mock">Mock</a></li><li class="toc-nested"><a href="#record-mock-files">Files</a></li><li class="toc-member"><a href="#files-cannedread">cannedRead</a></li><li class="toc-member"><a href="#files-read">read</a></li><li class="toc-member"><a href="#files-readbytes">readBytes</a></li><li class="toc-member"><a href="#files-readlines">readLines</a></li><li class="toc-member"><a href="#files-feed">feed</a></li><li class="toc-member"><a href="#files-size">size</a></li><li class="toc-member"><a href="#files-exists?">exists?</a></li><li class="toc-member"><a href="#files-file?">file?</a></li><li class="toc-member"><a href="#files-directory?">directory?</a></li><li class="toc-member"><a href="#files-absolute">absolute</a></li><li class="toc-member"><a href="#files-canonical">canonical</a></li><li class="toc-member"><a href="#files-symlink?">symlink?</a></li><li class="toc-member"><a href="#files-info">info</a></li><li class="toc-member"><a href="#files-open">open</a></li><li class="toc-member"><a href="#files-write">write</a></li><li class="toc-member"><a href="#files-writebytes">writeBytes</a></li><li class="toc-member"><a href="#files-append">append</a></li><li class="toc-member"><a href="#files-delete">delete</a></li><li class="toc-member"><a href="#files-copy">copy</a></li><li class="toc-member"><a href="#files-rename">rename</a></li><li class="toc-member"><a href="#files-changepermission">changePermission</a></li><li class="toc-member"><a href="#files-changemode">changeMode</a></li><li class="toc-nested"><a href="#record-mock-env">Env</a></li><li class="toc-member"><a href="#env-lookup">lookup</a></li><li class="toc-member"><a href="#env-get">get</a></li><li class="toc-member"><a href="#env-has?">has?</a></li><li class="toc-member"><a href="#env-keys">keys</a></li><li class="toc-member"><a href="#env-values">values</a></li><li class="toc-member"><a href="#env-count">count</a></li><li class="toc-member"><a href="#env-each">each</a></li><li class="toc-member"><a href="#env-entries">entries</a></li><li class="toc-member"><a href="#env-set">set</a></li><li class="toc-member"><a href="#env-unset">unset</a></li><li class="toc-nested"><a href="#record-mock-clock">Clock</a></li><li class="toc-member"><a href="#clock-now">now</a></li><li class="toc-nested"><a href="#module-mock-fs">Mock.FS</a></li><li class="toc-member"><a href="#function-mock-fs-file">File</a></li><li class="toc-member"><a href="#function-mock-fs-directory">Directory</a></li><li class="toc-member"><a href="#function-mock-fs-clear">clear</a></li><li class="toc-member"><a href="#function-mock-fs-files">files</a></li><li class="toc-member"><a href="#function-mock-fs-onread">onRead</a></li><li class="toc-nested"><a href="#module-mock-env">Mock.ENV</a></li><li class="toc-member"><a href="#function-mock-env-set">set</a></li><li class="toc-member"><a href="#function-mock-env-unset">unset</a></li><li class="toc-member"><a href="#function-mock-env-clear">clear</a></li><li class="toc-member"><a href="#function-mock-env-vars">vars</a></li><li class="toc-nested"><a href="#module-mock-io">Mock.IO</a></li><li class="toc-member"><a href="#function-mock-io-start">start</a></li><li class="toc-member"><a href="#function-mock-io-stop">stop</a></li><li class="toc-member"><a href="#function-mock-io-output">output</a></li><li class="toc-member"><a href="#function-mock-io-clear">clear</a></li><li class="toc-member"><a href="#function-mock-io-input">input</a></li><li class="toc-nested"><a href="#module-mock-net">Mock.Net</a></li><li class="toc-nested"><a href="#module-mock-net-http">Mock.Net.HTTP</a></li><li class="toc-nested"><a href="#record-mock-net-http-transport">Transport</a></li><li class="toc-nested"><a href="#module-mock-net-dns">Mock.Net.DNS</a></li><li class="toc-nested"><a href="#record-mock-net-dns-resolverscript">ResolverScript</a></li><li class="toc-nested"><a href="#module-mock-net-socket">Mock.Net.Socket</a></li><li class="toc-nested"><a href="#record-mock-net-socket-script">Script</a></li><li class="toc-nested"><a href="#module-mock-net-websocket">Mock.Net.WebSocket</a></li><li class="toc-nested"><a href="#record-mock-net-websocket-script">Script</a></li></ul></nav>
+      </aside>
+    </div>
+    <footer class="foot">
+      <div class="wrap">Generated from source (<code>mock.kex</code>) · Built with Marqraft · <a href="/prelude/0.4.0-rc.5-dev/search.json">search.json</a> · <a href="/prelude/0.4.0-rc.5-dev/mock.md">Markdown</a> · <a href="https://www.kex.run">kex.run</a><nav class="foot-links" aria-label="More"><ul class="marq-menu"><li><a href="https://oops.kex.run">Errors &amp; warnings</a></li><li><a href="https://github.com/kexhq/kex/issues/new">Report a bug</a></li></ul></nav></div>
+    </footer>
+  </body>
+</html>

@@ -41,7 +41,9 @@ localOverride(name: String, path: String, remove?: Bool, list?: Bool) -> Integer
 install(without: String, packageName: String = …) -> Integer
 ```
 
-`--without dev` leaves a group's dependencies out of this install. The LOCKFILE still lists them — what is omitted is the fetching, so switching the flag off later needs no re-resolve.
+`tey install` in a package: installs its dependencies, then its targets.
+
+`--without dev` skips fetching a group's dependencies. The lockfile still lists them, so dropping the flag later needs no new resolve.
 
 ### `installWorkspace` (foul)
 
@@ -49,7 +51,7 @@ install(without: String, packageName: String = …) -> Integer
 installWorkspace(without: String, packageName: String, force?: Bool, approveAll?: Bool) -> Integer
 ```
 
-`install`, where `force?` lets targets replace programs Tey does not own (see Tey.Programs.refusal).
+Does what `install` does. `force?` lets targets replace programs Tey does not own (see `Tey.Programs.refusal`), and `approveAll?` approves every plugin without asking.
 
 ### `installDependencies` (foul)
 
@@ -57,7 +59,7 @@ installWorkspace(without: String, packageName: String, force?: Bool, approveAll?
 installDependencies(context: Context, without: String, approveAll?: Bool) -> Result<Void, String>
 ```
 
-Resolves (or reuses) the workspace's lock, fetches and verifies what it names, approves plugins, and writes the lock back — everything `tey install` does before building.
+Does everything `tey install` does before building: resolves the workspace's lock or reuses it, fetches and verifies what it names, approves plugins, and writes the lock.
 
 ### `fetchAll` (foul)
 
@@ -71,7 +73,7 @@ fetchAll(dependencies: [Tey.Lockfile.Dependency]) -> Result<Void, String>
 installPrograms(arguments: [String], options: InstallOptions) -> Integer
 ```
 
-`tey install <argument>...`: a program from a path or a Git URL, or installed programs updated by name. Several arguments must all be names — a source is one program, with its own options.
+`tey install <argument>...`: installs a program from a path or a Git URL, or updates installed programs by name. Several arguments must all be names, since a source is one program with its own options.
 
 ### `installProgram` (foul)
 
@@ -85,7 +87,9 @@ installProgram(argument: String, options: InstallOptions) -> Integer
 reinstallProgram(name: String, options: InstallOptions) -> Integer
 ```
 
-`tey install <name>`: installs an installed program again from where its receipt says it came from — which is what updating it means. A tag or an exact commit stays pinned unless a new `--tag`/`--branch`/`--ref` is given; a branch (or HEAD) and a path are rebuilt only when their commit or content moved, unless `--rebuild` says to anyway (a new Erlang, a compiler fix).
+`tey install <name>`: updates an installed program by installing it again from the source its receipt records.
+
+A tag or an exact commit stays pinned unless a new `--tag`, `--branch` or `--ref` is given. A branch, HEAD or path is rebuilt only when its commit or content changed, unless `--rebuild` asks for it, say after an Erlang upgrade or a compiler fix.
 
 ### `uninstallPrograms` (foul)
 
@@ -93,7 +97,7 @@ reinstallProgram(name: String, options: InstallOptions) -> Integer
 uninstallPrograms(names: [String]) -> Integer
 ```
 
-`tey uninstall <name>...`: removes the programs each receipt owns, then the receipt and the build tree it came from. A program that has since been replaced by a file Tey did not write is left where it is, and said so.
+`tey uninstall <name>...`: removes the programs each receipt owns, then the receipt and its build tree. A program since replaced by a file Tey did not write is left in place, with a message.
 
 ### `uninstallProgram` (foul)
 
@@ -107,7 +111,7 @@ uninstallProgram(name: String) -> Integer
 installFromPath(path: String, options: InstallOptions) -> Integer
 ```
 
-Installs the program at `path` without touching it: the workspace around it is copied into a staging directory, which gets its own lock, dependencies and build, and only replaces the program's previous build tree once its programs are in place. The user's checkout gains no `ebin/`, no `tey.lock`, nothing.
+Installs the program at `path` without writing to it. The workspace around it is copied to a staging directory, which gets its own lock, dependencies and build, and replaces the program's previous build tree only once its programs are installed. The checkout gains no `ebin/` and no `tey.lock`.
 
 ### `installFromGit` (foul)
 
@@ -115,7 +119,7 @@ Installs the program at `path` without touching it: the workspace around it is c
 installFromGit(url: String, options: InstallOptions) -> Integer
 ```
 
-Installs a program from a Git repository at the commit `--tag`, `--branch` or `--ref` names (the default branch's HEAD otherwise). The commit is fetched into the cache the way a dependency is, and installed from there as a path is — the cache checkout itself is never built in.
+Installs a program from a Git repository, at the commit `--tag`, `--branch` or `--ref` names, or at the default branch's HEAD. The commit is fetched into the cache like a dependency and installed from there like a path, so nothing is built inside the cache.
 
 ### `previousApprovals` (foul)
 
@@ -123,7 +127,7 @@ Installs a program from a Git repository at the commit `--tag`, `--branch` or `-
 previousApprovals(name: String) -> {String: String}
 ```
 
-The plugin approvals the previous install of program `name` was built with: its build tree's lock. None for a first install.
+Returns the plugin approvals recorded in the lock of program `name`'s previous install, or none for a first install.
 
 ### `programMember` (foul)
 
@@ -131,7 +135,7 @@ The plugin approvals the previous install of program `name` was built with: its 
 programMember(context: Context, packageName: String) -> Result<Member, String>
 ```
 
-The member of `context` a program install means: the one `--package` names, else the one the path is inside of.
+Returns the workspace member a program install is for: the one `--package` names, or else the one the path is inside.
 
 ### `installProgramMember` (foul)
 
@@ -139,7 +143,7 @@ The member of `context` a program install means: the one `--package` names, else
 installProgramMember(context: Context, member: Member, options: InstallOptions, origin: Receipt) -> Integer
 ```
 
-The shared half of a path and a Git install, once the member is known: refuse a library, check `--target`, stage, build, publish.
+Finishes a path or Git install once the member is known: refuses a library, checks `--target`, then stages, builds and installs the programs.
 
 ### `installStaged` (foul)
 
@@ -159,7 +163,7 @@ updateDependencies(name: String = …) -> Integer
 dependencyClosure(state: LockState, roots: [String]) -> [String]
 ```
 
-Names affected by a member-local or named update, including transitive dependency edges recorded in the newly resolved graph.
+Returns `roots` and every package they depend on, directly or not, in the newly resolved graph: the names an update affects.
 
 ### `mergeUpdate`
 
@@ -167,7 +171,7 @@ Names affected by a member-local or named update, including transitive dependenc
 mergeUpdate(previous: LockState, fresh: LockState, roots: [String], wholeWorkspace?: Bool) -> LockState
 ```
 
-Publishes fresh workspace metadata and selected resolutions while retaining unrelated external pins. Existing approvals are carried forward here and subsequently filtered against the visible declarations by approvePlugins.
+Returns the lock after an update: the fresh workspace data and the fresh resolutions for `roots` and what they depend on, with every other external pin kept as it was. With `wholeWorkspace?` everything is fresh. Existing approvals are carried over; `approvePlugins` later drops those that no longer match a declaration.
 
 ### `lockReusable?`
 
@@ -199,13 +203,9 @@ installTargetsSelected(context: Context, packageName: String, force?: Bool = …
 installMemberTargets(member: Member, force?: Bool = …) -> Integer
 ```
 
-Puts this package's `target(...)` executables where they can be run by name, and records them in the package's receipt (see Tey.Programs).
+Installs the package's `target(...)` executables into `${TEY_HOME}/bin`, beside the `kex` shim, and records them in the package's receipt (see `Tey.Programs`). That directory is already on PATH for anyone who set up Tey.
 
-`${TEY_HOME}/bin` is a directory Tey already owns and already asks people to put on PATH — it is how the `kex` shim gets there — so a package's programs land beside it rather than needing a second directory and a second instruction.
-
-Only packages that DECLARE a target are affected. A library has none, so `tey install` in one still means exactly what it meant before: fetch the dependencies.
-
-Every name is checked before anything is built, so a refused install costs nothing and changes nothing.
+A package without targets, such as a library, is left alone. Every name is checked before anything is built, so a refused install changes nothing.
 
 ### `installMemberTargetsFrom` (foul)
 
@@ -213,7 +213,7 @@ Every name is checked before anything is built, so a refused install costs nothi
 installMemberTargetsFrom(member: Member, force?: Bool, origin: Receipt, selected: [String]) -> Integer
 ```
 
-`installMemberTargets`, recording `origin`'s source fields in the receipt — a program built in a staging copy came from somewhere else.
+Does what `installMemberTargets` does, but records `origin`'s source in the receipt, since a program built in a staging copy came from somewhere else.
 
 `selected` limits the targets installed (`--target`); empty means all.
 
@@ -223,7 +223,7 @@ installMemberTargetsFrom(member: Member, force?: Bool, origin: Receipt, selected
 releaseTarget(owner: String, name: String) -> Result<Void, String>
 ```
 
-Drops `name` from `owner`'s receipt after another package took it over with `--force`; a receipt left owning nothing is removed.
+Removes `name` from `owner`'s receipt after another package took it over with `--force`. A receipt left owning nothing is deleted.
 
 ### `recordInstall` (foul)
 
@@ -231,7 +231,7 @@ Drops `name` from `owner`'s receipt after another package took it over with `--f
 recordInstall(package: ManifestPackage, origin: Receipt, installed: [String], receipts: [Receipt], claims: [(String, Claim)]) -> Result<Void, String>
 ```
 
-Writes the package's receipt and settles ownership around it: names taken over with `--force` leave the other package's receipt, and targets the previous receipt owned that this install no longer declares are removed from the bin directory rather than left behind unowned.
+Writes the package's receipt. Names taken over with `--force` are removed from the other package's receipt, and targets the previous receipt owned but this install no longer declares are deleted from the bin directory.
 
 ### `dependencyRoots` (foul)
 
@@ -239,7 +239,7 @@ Writes the package's receipt and settles ownership around it: names taken over w
 dependencyRoots -> [String]
 ```
 
-`--source-root` for every fetched dependency. Without these a dependency is just bytes in the cache: `using Greet` cannot find it, and the package that declared it does not compile. A dependency the lockfile names but the cache does not have is reported rather than quietly dropped — the answer is `tey install`, and silence would look like a broken `using`.
+Returns a `--source-root` for every fetched dependency of the workspace around the working directory, so `using Greet` can find it. A dependency the lockfile names but the cache lacks is reported, with `tey install` as the fix.
 
 ### `dependencyRootsAt` (foul)
 
@@ -247,7 +247,7 @@ dependencyRoots -> [String]
 dependencyRootsAt(start: String) -> [String]
 ```
 
-`dependencyRoots` for the workspace around `start` rather than around the working directory. A program being installed from a path is built in a staged copy while the user stands somewhere else entirely — possibly in another project, whose lockfile would otherwise supply the dependencies.
+Does what `dependencyRoots` does for the workspace around `start`. A program installed from a path is built in a staged copy, while the working directory may be another project with its own lockfile.
 
 ### `sourceDirectoryAt` (foul)
 
@@ -255,7 +255,7 @@ dependencyRootsAt(start: String) -> [String]
 sourceDirectoryAt(packageRoot: String) -> String
 ```
 
-The directory a package's module names are resolved against, relative to it: `src`, or the package itself when its package.kex names the folders at its top that hold modules (`sources(["app", "config", "db"])` — then `App.Models.User` is `./app/models/user.kex`). A manifest that cannot be read means `src`; every caller reports that in its own way soon enough.
+Returns the directory, relative to the package, that its module names are resolved against. That is `src`, or `.` when package.kex lists top-level source folders with `sources(["app", "config", "db"])`, so that `App.Models.User` is `./app/models/user.kex`. An unreadable manifest gives `src`; callers report the manifest problem themselves.
 
 ### `sourceUnit`
 
@@ -263,7 +263,7 @@ The directory a package's module names are resolved against, relative to it: `sr
 sourceUnit(directory: String, path: String) -> String
 ```
 
-A file of a package's source directory, as the compiler is to be given it: relative to the package. A root of "." adds nothing in front.
+Returns a file in the source directory as a path relative to the package, the form the compiler is given. A directory of `.` adds nothing in front.
 
 ### `sourceUnit?`
 
@@ -271,7 +271,7 @@ A file of a package's source directory, as the compiler is to be given it: relat
 sourceUnit?(path: String) -> Bool
 ```
 
-Whether a file directly under the source directory is a module to compile. With the package itself as the root, its manifests sit there too, and are not modules.
+Returns `true` when a file directly under the source directory is a module to compile. When the package itself is the source directory, its manifests are there too and are skipped.
 
 ### `sourceRoots` (foul)
 
@@ -279,7 +279,7 @@ Whether a file directly under the source directory is a module to compile. With 
 sourceRoots -> [String]
 ```
 
-Every `--source-root` a compile of THIS package needs: its own source directory first (`src/`, or the package itself when it declares `sources`), then each dependency's. Own-first is deliberate — a package that shadows a dependency's module name means its own, the same way `--source-root` order already decides that for dependencies among themselves.
+Returns every `--source-root` a compile of this package needs: its own source directory first, then each dependency's. The order means a module name defined both in the package and in a dependency refers to the package's own module.
 
 ### `sourceRootsAt` (foul)
 
@@ -293,7 +293,7 @@ sourceRootsAt(packageRoot: String) -> [String]
 librarySources -> [String]
 ```
 
-A library's compilable units: every `.kex` directly under its source directory (`src/`, or the package's top when it declares `sources`). Not a recursive walk — a nested module is reached by the file that declares it, and compiling it twice by name is how you get a duplicate-module error out of a perfectly good package.
+Returns a library's compilable units: every `.kex` file directly under its source directory. Subdirectories are not searched, since a nested module is reached through the file that uses it, and naming it as well would compile it twice and report a duplicate module.
 
 ### `librarySourcesAt` (foul)
 
@@ -301,7 +301,9 @@ A library's compilable units: every `.kex` directly under its source directory (
 librarySourcesAt(packageRoot: String) -> [String]
 ```
 
-Returns units relative to `packageRoot`, not absolute: the compiler double-registers a module's declarations when the entry file it is asked to compile is an absolute path that also falls under an explicit `--source-root` (kexhq/kex#?, surfaced by `tey build`ing Rodolfo — a `private do` function building a record literal of a type carrying earlier `make` methods reported that type's method "defined twice"). A relative unit, resolved through the working directory `streamAt`/`runAt` `cd` into, does not collide with the source-root the same way. Callers must invoke the compiler with `packageRoot` as the working directory.
+Does what `librarySources` does for the package at `packageRoot`, with the units relative to it. Run the compiler with `packageRoot` as the working directory.
+
+The paths are relative because the compiler registers a module's declarations twice when an entry file is given as an absolute path that is also under a `--source-root`, and then reports a function as "defined twice".
 
 ### `backendFlags`
 
@@ -309,9 +311,9 @@ Returns units relative to `packageRoot`, not absolute: the compiler double-regis
 backendFlags(interpret?: Bool) -> [String]
 ```
 
-What `tey build` produces is what ships, so what `tey run` and `tey test` exercise has to be the same thing — which is what `kex` does with no backend flag at all: it compiles and runs on the BEAM. `-R` tree-walks the source instead, and processes, `BEAM.*` interop and the String/Char representation differ enough between the two that a green interpreter run says nothing about the built package.
+Returns the backend flags for `tey run` and `tey test`: none, so they compile and run on the BEAM like the build that ships, or `-R` for the interpreter when `--interpret` is given.
 
-`--interpret` is the way back, for a backend gap or a debugging session.
+Processes, `BEAM.*` interop and the String and Char representation differ between the two backends, so a passing interpreter run says little about the built package. `--interpret` is for working around a backend gap or for debugging.
 
 ### `runPackage` (foul)
 
@@ -327,9 +329,7 @@ runCommand(command: Command, extra: [String], interpret?: Bool) -> Integer
 
 `tey <name>` for a `command(...)` the manifest declares.
 
-A `.kex` script is run through the SELECTED toolchain with this package's source roots already in place — the same environment `tey run` gives, so a release script can `using` the package it is releasing. Anything else is a shell line: `sh -c` is what makes `command("fmt", run: "kex --format src")` behave the way the same line behaves in a terminal, pipes and `&&` included. Trailing arguments are passed as "$@" rather than pasted into the string, so `tey fmt --check` cannot be re-split by the shell.
-
-The `--` before the arguments plays the same role as in runPackage.
+A `.kex` script runs on the selected toolchain with this package's source roots, as `tey run` would, so a release script can `using` the package it releases. Anything else runs as a shell line with `sh -c`, so `command("fmt", run: "kex --format src")` behaves as it would in a terminal, pipes and `&&` included. Extra arguments are passed as `"$@"`, so the shell does not split them again.
 
 ### `generate` (foul)
 
@@ -337,9 +337,9 @@ The `--` before the arguments plays the same role as in runPackage.
 generate(arguments: [String]) -> Integer
 ```
 
-The locked dependencies, then the programs Tey has installed. Outside a project there are no dependencies to show, so it is the programs alone rather than an error about a missing package.kex. `tey generate <namespace>:<generator> [--option value ...] [--force]`
+`tey generate <namespace>:<generator> [--option value ...] [--force]`
 
-Runs a generator a direct dependency declares in its `plugin` block. The plugin is a child process: it is handed the invocation as one line of JSON on stdin and answers with the files it wants written, which Tey — not the plugin — then writes, inside the workspace and asking before it replaces anything (`--force` answers yes). The child itself runs in the operating system's sandbox: it cannot write outside scratch space or use the network (`--unconfined` lifts that, with a warning).
+Runs a generator that a direct dependency declares in its `plugin` block. The plugin runs as a child process. It gets the invocation as one line of JSON on stdin and replies with the files it wants written. Tey writes them, only inside the workspace, and asks before replacing a file (`--force` answers yes). The child runs in the operating system's sandbox, with no network and no writing outside scratch space; `--unconfined` lifts that, with a warning.
 
 ### `pluginCommand` (foul)
 
@@ -349,13 +349,15 @@ pluginCommand(arguments: [String]) -> Integer
 
 `tey plugin <namespace>:<command> [--option value ...]`
 
-Runs a command a direct dependency declares in its `plugin` block, confined to what the plugin declared and the user approved.
+Runs a command that a direct dependency declares in its `plugin` block, limited to what the plugin declared and the user approved.
 
 ### `list` (foul)
 
 ```kex
 list -> Integer
 ```
+
+`tey list`: prints the locked dependencies, then the programs Tey has installed. Outside a project it prints only the programs.
 
 ### `listPrograms` (foul)
 
@@ -387,11 +389,11 @@ buildMember(member: Member) -> Integer
 testReportingFlags(json?: Bool, list?: Bool, only: String) -> [String]
 ```
 
-How `tey test` should REPORT, as compiler flags (kexhq/kex#199).
+Returns the compiler flags for how `tey test` reports (kexhq/kex#199).
 
-`--json` and `--list` are for a tool reading the run rather than a person watching it: one JSON record per case, carrying the file and line of the `it` and of the failure, and — with `--list` — the cases discovered without any of them being run. `--only <name>` narrows the run to one case or one group.
+`--json` prints one JSON record per case, with the file and line of the `it` and of any failure. `--list` prints the cases found without running them, and wins over `--json`. `--only <name>` runs one case or one group.
 
-Tey does not interpret any of it: the flags are the compiler's, the records are the compiler's, and this is the mapping from what a person typed to what the compiler is asked. Which is the point — an editor drives `tey test` because Tey knows the package's source roots, not because it wants Tey to reformat the answer (docs/testing.md).
+The flags and the records are the compiler's; Tey only passes them on. Editors run `tey test` because Tey knows the package's source roots (see docs/testing.md).
 
 ### `testSpecs` (foul)
 
@@ -399,7 +401,7 @@ Tey does not interpret any of it: the flags are the compiler's, the records are 
 testSpecs(requested: [String]) -> [String]
 ```
 
-The spec files to run: the ones named on the line, or every `spec/*.spec.kex` when none were. Naming one is what an editor's per-file ▶ needs — and what anyone debugging a single suite in a package with thirty of them wants.
+Returns the spec files to run: the ones named on the command line, or every `spec/*.spec.kex` when none are named. Naming one runs a single suite, as an editor's per-file run button does.
 
 ### `test` (foul)
 
@@ -437,7 +439,7 @@ setupMergeDriver(remove?: Bool) -> Integer
 new(directory: String, library: Bool, agentFiles: Bool) -> Integer
 ```
 
-`tey new <name>` — a package in a directory of its own, which the command creates. The pair with `init` below follows what `git init` and `cargo new` already taught everyone: `new` makes the directory, `init` adopts the one you are standing in.
+`tey new <directory>`: creates the directory and a package in it, named after the directory's last component, so `tey new /tmp/ooo` makes `ooo`. Like `cargo new`, it makes the directory; `init` uses the current one.
 
 ### `init` (foul)
 
@@ -445,15 +447,15 @@ new(directory: String, library: Bool, agentFiles: Bool) -> Integer
 init(name: String, library: Bool, agentFiles: Bool) -> Integer
 ```
 
-`tey init` — a package in the CURRENT directory, named after it. This is the half that was missing: a repository someone had already made and cloned had no way to become a package except `tey new` in a temp directory and moving the files over by hand.
+`tey init [name]`: makes the current directory a package, such as an existing repository. Files already there are kept.
 
-The name is overridable because a directory name is not always the package name — `kexhq/greet` checked out as `greet-main` is still `greet`.
+The package is named after the directory unless `name` is given, for a checkout such as `greet-main` whose package is `greet`.
 
 ## record `WorkspaceRunState`
 
 **Fields**
 
-  - `runStatus` : [Integer](../../../prelude/0.4.0-rc.4-dev/number.md#make-integer) (optional)
-  - `failedMembers` : [[String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)] (optional)
+  - `runStatus` : [Integer](../../../prelude/0.4.0-rc.5-dev/number.md#make-integer) (optional)
+  - `failedMembers` : [[String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)] (optional)
 
 

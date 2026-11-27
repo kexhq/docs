@@ -29,7 +29,7 @@ pinRef(url: String, selector: String, requested: String) -> Result<(String, Stri
 tags(url: String) -> Result<[String], String>
 ```
 
-Every version-shaped tag a repository publishes, newest first. Used to answer a range requirement, and to list installable Kex toolchains.
+Returns the tags a repository publishes, newest version first. Tags that are not versions sort last. Used to resolve a range requirement and to list the Kex toolchains that can be installed.
 
 ### `commitId?`
 
@@ -37,4 +37,4 @@ Every version-shaped tag a repository publishes, newest first. Used to answer a 
 commitId?(text: String) -> Bool
 ```
 
-A full hexadecimal commit id. A short one is left to `ls-remote`: it could as well be a ref name.
+Returns whether `text` is a full commit id: 40 lowercase hexadecimal digits. A short id is not accepted, since it could also be a ref name.

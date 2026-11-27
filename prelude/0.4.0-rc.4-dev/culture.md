@@ -11,15 +11,15 @@ entities:
 
 ## module `Culture`
 
-Explicit cultures for parsing and printing numbers: decimal separators, digit grouping and group sizes, plus date/time layout data.
+Cultures for parsing and printing numbers and dates: decimal separators, digit grouping, date layout and month and weekday names.
 
-A culture is always passed explicitly — parsing and printing never consult the ambient locale, so the same call answers the same everywhere. Defaults stay dot-only; reach for a culture exactly when the text follows human conventions instead of literal syntax:
+A culture is always passed as an argument. Parsing and printing never read the machine's locale on their own, so a call gives the same result everywhere. Without a culture, numbers use a `.` decimal point and no grouping; pass one for text written for people in a particular place.
 
 ```kex
 using Culture
 let hu = Culture.of("HU_HU").or(Culture.DEFAULT)
 Float.parse("1,44", culture: hu)   # => Ok(1.44)
-Float.parse("1,44")                 # => Error(...)
+Float.parse("1,44")                # => Error(Trailing(1.0, ",44"))
 ```
 
 ### `ENGLISH_TIME_NAMES` (constant)
@@ -28,7 +28,7 @@ Float.parse("1,44")                 # => Error(...)
 ENGLISH_TIME_NAMES : TimeNames
 ```
 
-The names English writes dates with, and the names used for any culture that carries none of its own.
+The English month, weekday and day-period names, also used for any culture that has none of its own.
 
 
 
@@ -38,7 +38,7 @@ The names English writes dates with, and the names used for any culture that car
 timeNames(culture: Culture) -> TimeNames
 ```
 
-The names `culture` writes dates with: its own when it carries them, and English otherwise. Today the presets carry names for English, Hungarian, German, French, Spanish, Italian, Portuguese and Dutch.
+Returns the names `culture` writes dates with: its own if it has them, English otherwise. The presets have names for English, Hungarian, German, French, Spanish, Italian, Portuguese and Dutch.
 
 **Parameters**
 
@@ -49,8 +49,8 @@ The names `culture` writes dates with: its own when it carries them, and English
 **Examples**
 
 ```kex
-Culture.timeNames(Culture.of("HU_HU").or(Culture.DEFAULT)).month.first   # => Just("január")
-Culture.timeNames(Culture.DEFAULT).month.first                          # => Just("January")
+Culture.timeNames(Culture.of("HU_HU").or(Culture.DEFAULT)).months.first   # => Just("január")
+Culture.timeNames(Culture.DEFAULT).months.first                          # => Just("January")
 ```
 
 ### `DEFAULT` (constant)
@@ -59,7 +59,7 @@ Culture.timeNames(Culture.DEFAULT).month.first                          # => Jus
 DEFAULT : Culture
 ```
 
-The technical default: dot decimals, no grouping, no time section. This is what no-culture parsing accepts, so `parse(s)` and `parse(s, culture: Culture.DEFAULT)` always agree. Reach for it when the text is machine-written: protocols, data files, logs.
+The culture used when none is given: a `.` decimal point, no grouping and no time settings. `parse(s)` and `parse(s, culture: Culture.DEFAULT)` give the same result. It suits text written by programs, such as protocols, data files and logs.
 
 
 
@@ -69,9 +69,9 @@ The technical default: dot decimals, no grouping, no time section. This is what 
 of(code: String) -> Culture?
 ```
 
-Answers the culture registered under `code`, or `None` for an unknown tag. This is the only way to reach a preset: there are no per-culture constants.
+Returns the preset culture for `code`, or `None` for an unknown tag.
 
-The code is normalized before lookup — upper-cased with `-` read as `_` — so `"hu-HU"` and `"HU_HU"` find the same culture.
+Case does not matter and `-` reads as `_`, so `"hu-HU"` and `"HU_HU"` find the same culture.
 
 **Parameters**
 
@@ -93,9 +93,9 @@ Culture.of("XX_YY")                            # => None
 valid?(culture: Culture) -> Bool
 ```
 
-Answers `true` when the culture's number settings are usable: grouped cultures need a group separator that differs from the decimal separator and a non-empty list of positive group sizes.
+Returns `true` when the culture's number settings are usable. With grouping, the group separator must differ from the decimal separator and the group sizes must be a non-empty list of positive integers.
 
-Parsing and printing check this for you — an invalid culture fails loudly at use — so call `valid?` only to fail earlier with your own message.
+Parsing and printing check this themselves: parsing with an invalid culture returns `Error(BadCulture)` and printing returns `None`. Call `valid?` to report the problem earlier.
 
 **Parameters**
 
@@ -110,56 +110,34 @@ let hu = Culture.of("HU_HU").or(Culture.DEFAULT)
 Culture.valid?(hu)              # => true
 ```
 
-### `validateInteger`
+### `readNumber`
 
 ```kex
-validateInteger(text: String, culture: Culture) -> Result<String, ParseError>
+readNumber(text: String, culture: Culture, radix: Integer, fractional: Bool, convert: (String -> String -> T?)) -> Result<T, ParseError<T>>
 ```
 
-Validates `text` as an integer in `culture`, answering the normalized dot-form text a strict parse delegates to.
+Reads the number in `text` with the grammar `Integer.parse`, `Float.parse` and `Number.parse` share. Most callers want one of those.
 
-The grammar is strict: an optional sign, digits with validated grouping, nothing else. Group separators must match the culture and land on group boundaries; anything else fails at its exact position with `value: None`.
+The grammar is an optional sign, then digits in `radix` (letters above 9 in either case). Group separators must follow `culture`'s grouping; digits with no separator read in every culture. When `fractional` is true, a decimal part after the culture's decimal separator and an exponent (`e3`, `E-2`) may follow.
 
-This is plumbing shared by the typed parses — most callers want `Integer.parse(s, culture:)` instead.
+`convert` gets the sign and digits without separators (`"-1500"`), and the fraction and exponent in canonical form (`".5e3"`, `".0e3"` for an exponent alone, `""` for neither). When it returns `None` the result is `OutOfRange`. A number followed by more text is `Trailing`.
 
 **Parameters**
 
-  - `text` — the text to validate
-  - `culture` — the culture to validate against
+  - `text` — the text to read
+  - `culture` — whose separators to accept
+  - `radix` — the base of the digits, 2 to 36
+  - `fractional` — whether a fraction and an exponent may follow
+  - `convert` — the value of the digits read
 
-**Returns**: the normalized text, or the failure
+**Returns**: the value, or why not
 
 **Examples**
 
 ```kex
 let hu = Culture.of("HU_HU").or(Culture.DEFAULT)
-Culture.validateInteger("1 500", hu)              # => Ok("1500")
-```
-
-### `validateFloat`
-
-```kex
-validateFloat(text: String, culture: Culture) -> Result<String, ParseError>
-```
-
-Validates `text` as a float in `culture`, answering the normalized dot-form text a strict parse delegates to.
-
-The grammar is strict: an optional sign, grouped integer digits, an optional decimal separator with required fraction digits, and an optional exponent. The decimal separator and exponent marker follow the culture only in shape — the normalized text always uses `.` and `e`.
-
-This is plumbing shared by the typed parses — most callers want `Float.parse(s, culture:)` instead.
-
-**Parameters**
-
-  - `text` — the text to validate
-  - `culture` — the culture to validate against
-
-**Returns**: the normalized text, or the failure
-
-**Examples**
-
-```kex
-let hu = Culture.of("HU_HU").or(Culture.DEFAULT)
-Culture.validateFloat("1,44", hu)              # => Ok("1.44")
+Culture.readNumber("1 500 Ft", hu, 10, false) { |digits, _| digits.to(Integer) }
+# => Error(Trailing(1500, " Ft"))
 ```
 
 ### `renderNumber`
@@ -168,9 +146,9 @@ Culture.validateFloat("1,44", hu)              # => Ok("1.44")
 renderNumber(text: String, culture: Culture) -> String?
 ```
 
-Renders plain dot-form `text` with the culture's separators: the decimal separator is substituted and digit groups are inserted per the culture's group sizes. An exponent, if any, passes through unchanged. Answers `None` for an invalid culture (see `valid?`).
+Rewrites a number written with a `.` decimal point, such as `"1500.5"`, with the culture's decimal separator and digit grouping. An exponent passes through unchanged. Returns `None` for an invalid culture (see `valid?`).
 
-This is plumbing shared by the typed prints — most callers want `(1500.5).to(String, culture: culture)` instead.
+Most callers want `(1500.5).to(String, culture: culture)`, which uses it.
 
 **Parameters**
 
@@ -192,9 +170,9 @@ Culture.renderNumber("1500.5", hu)              # => Just("1\u{A0}500,5")
 local -> Culture
 ```
 
-Answers the machine's culture as an ordinary value: numbers follow the `LC_ALL`, `LC_NUMERIC` or `LANG` environment variable, falling back to `DEFAULT` when none names a known culture.
+Returns the machine's culture, named by the first of `LC_ALL`, `LC_NUMERIC` and `LANG` that is set. Falls back to `DEFAULT` when none is set or the first one set names no known culture.
 
-The query is explicit and `foul` — ambient locale never leaks into parsing or printing on its own. Bind the answer once and pass it like any other culture:
+Parsing and printing never read the locale themselves, so read it once and pass it on:
 
 ```kex
 let culture = Culture.local
@@ -205,7 +183,7 @@ Float.parse(input, culture: culture)
 
 ## record `NumberSettings`
 
-Number settings: which character marks the decimal point and how digit groups are separated and sized.
+How a culture writes numbers: its decimal separator and its digit grouping.
 
 **Fields**
 
@@ -216,7 +194,7 @@ Number settings: which character marks the decimal point and how digit groups ar
 
 ## record `TimeSettings`
 
-Date and time layout data: how `to(String, culture:)` on a `Date`, `Time` or `DateTime` lays the value out, and the names a `Date.format` pattern uses.
+How a culture writes dates and times: the layout `to(String, culture:)` uses on a `Date`, `Time` or `DateTime`, and the names a `Date.format` pattern uses.
 
 **Fields**
 
@@ -230,7 +208,7 @@ Date and time layout data: how `to(String, culture:)` on a `Date`, `Time` or `Da
 
 ## record `TimeNames`
 
-The words a culture writes dates and times with: what `MMMM`, `MMM`, `EEEE`, `EEE` and `a` in a `Date.format` pattern turn into.
+The words a culture writes dates and times with, which `MMMM`, `MMM`, `EEEE`, `EEE` and `a` in a `Date.format` pattern produce.
 
 **Fields**
 
@@ -244,9 +222,9 @@ The words a culture writes dates and times with: what `MMMM`, `MMM`, `EEEE`, `EE
 
 ## record `Culture`
 
-A culture: named settings for parsing and printing.
+A named set of settings for parsing and printing numbers and dates.
 
-The value carries its own settings — `parse` and `to` read them from the culture they are handed, never from globals or by-name lookup. Assemble one from a preset, from `of`, from `local`, or literally; fields you omit take neutral defaults, so a numbers-only custom culture never mentions time.
+Get a preset with `of`, the machine's culture with `local`, or write the record yourself. A custom culture only needs `numbers`; `time` defaults to `None`.
 
 **Fields**
 

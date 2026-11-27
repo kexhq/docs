@@ -83,7 +83,7 @@ Complex.fromPolar(2, Math.PI / 2).im   # approximately 2.0
 
 Complex numbers: one value, readable in rectangular or polar terms.
 
-A `Complex` is a point in the plane. Its rectangular view is the real and imaginary parts, `re` and `im`; its polar view is the distance from the origin and the angle, `abs` and `arg`. They are two ways of reading the same number, not two kinds of number, so either view is available on every value and either can build one. Components accept `Number` values; angles are in radians.
+A `Complex` is a point in the plane. In rectangular terms it has a real part `re` and an imaginary part `im`; in polar terms, a distance from the origin `abs` and an angle `arg`. Both views work on every value, and either can build one. Parts may be any `Number`, and angles are in radians.
 
 ```kex
 using Complex
@@ -129,7 +129,7 @@ Complex.from(3, -4).showValue   # => "3-4i"
 rectangular -> (Number, Number)
 ```
 
-The rectangular view: the real and imaginary parts.
+Returns the real and imaginary parts as a pair.
 
 **Returns**: `(re, im)`
 
@@ -145,7 +145,7 @@ Complex.from(3, 4).rectangular   # => (3, 4)
 polar -> (Float, Float)
 ```
 
-The polar view: the distance from the origin and the angle in radians.
+Returns the distance from the origin and the angle in radians as a pair.
 
 **Returns**: `(abs, arg)`
 
@@ -161,7 +161,7 @@ Complex.from(3, 4).polar   # => (5.0, 0.9272952180016122)
 abs -> Float
 ```
 
-The magnitude: the distance from the origin, the polar radius.
+Returns the magnitude, the distance from the origin.
 
 **Returns**: the distance from the origin
 
@@ -177,7 +177,7 @@ Complex.from(3, 4).abs   # => 5.0
 absSquared -> Number
 ```
 
-The square of the magnitude, which needs no square root and so stays an `Integer` for integer parts.
+Returns the square of the magnitude. It needs no square root, so it stays an `Integer` when both parts are integers.
 
 **Returns**: +re² + im²+
 
@@ -193,7 +193,7 @@ Complex.from(3, 4).absSquared   # => 25
 arg -> Float
 ```
 
-The argument: the angle from the positive real axis, the polar angle, in the range `Math.atan2` answers.
+Returns the argument, the angle from the positive real axis, in the range of `Math.atan2` (-pi to pi).
 
 **Returns**: the angle in radians
 
@@ -209,7 +209,13 @@ Complex.I.arg   # => 1.5707963267948966
 +(other: Complex) -> Complex
 ```
 
-Adds two complex numbers component by component.
+Adds two complex numbers part by part.
+
+**Parameters**
+
+  - `other` — the number to add
+
+**Returns**: the sum
 
 **Examples**
 
@@ -225,6 +231,12 @@ Adds two complex numbers component by component.
 
 Subtracts `other` from this complex number.
 
+**Parameters**
+
+  - `other` — the number to subtract
+
+**Returns**: the difference
+
 **Examples**
 
 ```kex
@@ -239,6 +251,12 @@ Subtracts `other` from this complex number.
 
 Multiplies two complex numbers.
 
+**Parameters**
+
+  - `other` — the number to multiply by
+
+**Returns**: the product
+
 **Examples**
 
 ```kex
@@ -251,7 +269,13 @@ Multiplies two complex numbers.
 /(other: Complex) -> Complex
 ```
 
-Divides by `other` using the complex conjugate formula. The divisor must be non-zero.
+Divides by `other`, which must not be zero.
+
+**Parameters**
+
+  - `other` — the divisor
+
+**Returns**: the quotient, with `Float` parts
 
 **Examples**
 
@@ -265,7 +289,9 @@ Divides by `other` using the complex conjugate formula. The divisor must be non-
 conjugate -> Complex
 ```
 
-Returns the complex conjugate, negating the imaginary part.
+Returns the complex conjugate: the same number with the imaginary part negated.
+
+**Returns**: the conjugate
 
 **Examples**
 
@@ -279,7 +305,9 @@ Complex.I.conjugate.im   # => -1
 sqrt -> Complex
 ```
 
-Returns the principal square root. The result's argument lies in the right half-plane.
+Returns the principal square root, whose real part is never negative.
+
+**Returns**: the square root
 
 **Examples**
 
@@ -295,6 +323,8 @@ exp -> Complex
 
 Returns e raised to this complex number.
 
+**Returns**: the exponential
+
 **Examples**
 
 ```kex
@@ -307,7 +337,9 @@ Complex.ZERO.exp.re   # => 1.0
 log -> Complex
 ```
 
-Returns the principal natural logarithm. Zero has no logarithm.
+Returns the principal natural logarithm. Raises an error for zero.
+
+**Returns**: the logarithm
 
 **Examples**
 
@@ -323,6 +355,8 @@ sin -> Complex
 
 Returns the complex sine.
 
+**Returns**: the sine
+
 **Examples**
 
 ```kex
@@ -336,6 +370,8 @@ cos -> Complex
 ```
 
 Returns the complex cosine.
+
+**Returns**: the cosine
 
 **Examples**
 
@@ -351,6 +387,8 @@ tan -> Complex
 
 Returns the complex tangent.
 
+**Returns**: the tangent
+
 **Examples**
 
 ```kex
@@ -363,7 +401,13 @@ Complex.ZERO.tan.re   # => 0.0
 ^(exponent: Number) -> Complex
 ```
 
-Raises this number to a real power using the principal argument.
+Raises this number to a real power, using the principal argument.
+
+**Parameters**
+
+  - `exponent` — the power
+
+**Returns**: the result
 
 **Examples**
 

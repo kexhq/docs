@@ -11,11 +11,11 @@ entities:
 
 ## module `Tey.Programs`
 
-What Tey has put in `${TEY_HOME}/bin`, and who owns each file there.
+Records what Tey has installed in `${TEY_HOME}/bin`, and which package owns each file there.
 
-Every package whose targets Tey installs gets a receipt at `${TEY_HOME}/programs/<name>/receipt.json`. The receipt is the only authority for ownership: a file in the bin directory that no receipt lists is not Tey's to overwrite or delete. Without one, a second package declaring the same target name silently replaced the first package's program, and nothing could say what a file in there was or where it had come from.
+Every package whose targets Tey installs gets a receipt at `${TEY_HOME}/programs/<name>/receipt.json`. Ownership is decided by the receipts alone: a file in the bin directory that no receipt lists is not Tey's to overwrite or delete, and a second package declaring a target name that another package installed is refused unless `--force` is given.
 
-Keyed by PACKAGE, not by binary: one package may install several targets, and reinstalling or removing it acts on all of them together.
+Receipts are kept per package, not per program: one package can install several targets, and reinstalling or removing it acts on all of them.
 
 ### `pinnedReason`
 
@@ -23,7 +23,9 @@ Keyed by PACKAGE, not by binary: one package may install several targets, and re
 pinnedReason(receipt: Receipt, options: InstallOptions) -> String?
 ```
 
-Why reinstalling `receipt` by name has nothing to do, or None when it must be rebuilt. A tag or an exact commit is a pin the user chose: it stays, with a pointer at moving it. Pure, so the whole rule is testable.
+Returns the message explaining why reinstalling `receipt` by name has nothing to do, or `None` when it has to be rebuilt.
+
+A program pinned to a tag or an exact commit stays where the user put it, and the message says how to move it. A branch, or `HEAD`, is rebuilt.
 
 ### `reservedNames` (constant)
 
@@ -31,7 +33,7 @@ Why reinstalling `receipt` by name has nothing to do, or None when it must be re
 reservedNames : [String]
 ```
 
-Names that are Tey's own and never a package's to take: the `kex` shim lives in this directory, and replacing it would change which compiler every shell runs.
+Returns the target names no package may take. The `kex` shim lives in the bin directory, and replacing it would change which compiler every shell runs.
 
 
 
@@ -47,7 +49,7 @@ directory -> String
 classify(argument: String) -> ProgramSource
 ```
 
-A path when it starts like one (`.`, `/`, `~`), a Git URL when it has a scheme or is scp-like (`git@host:owner/repo`), and otherwise the name of an installed program.
+Decides what `argument` names: a path when it starts with `.`, `/` or `~`, a Git URL when it has a scheme or looks like `git@host:owner/repo`, and otherwise the name of an installed program.
 
 ### `buildDirectory` (foul)
 
@@ -55,7 +57,7 @@ A path when it starts like one (`.`, `/`, `~`), a Git URL when it has a scheme o
 buildDirectory(name: String) -> String
 ```
 
-Where a program's staged build tree ends up once it is installed.
+Returns the directory that holds a program's build tree once it is installed.
 
 ### `stagingDirectory` (foul)
 
@@ -63,7 +65,9 @@ Where a program's staged build tree ends up once it is installed.
 stagingDirectory -> Result<String, String>
 ```
 
-A fresh directory to build a program in before it is installed. Beside `programs/` rather than in it, so a half-built tree is never listed as a program, and on the same filesystem, so publishing it is a rename.
+Creates a new, empty directory to build a program in before it is installed.
+
+It sits beside `programs/`, so a half-built tree is never listed as a program, and on the same filesystem, so installing it is a rename.
 
 ### `stage` (foul)
 
@@ -71,7 +75,7 @@ A fresh directory to build a program in before it is installed. Beside `programs
 stage(root: String, destination: String) -> Result<Void, String>
 ```
 
-Copies the tree at `root` into `destination`: what a snapshot would hold, plus a committed `tey.lock` — the dependency versions the program's author tested, which a snapshot leaves out.
+Copies the tree at `root` into `destination`: the files a snapshot would hold, plus a committed `tey.lock`, which a snapshot leaves out. The lock holds the dependency versions the program's author tested.
 
 ### `copyInto` (foul)
 
@@ -85,7 +89,9 @@ copyInto(root: String, relative: String, destination: String) -> Result<Void, St
 publishBuild(name: String, staged: String) -> Result<Void, String>
 ```
 
-Replaces a program's build tree with the one it was just installed from. The old tree is moved aside first and removed last, so a failure part way leaves one of the two in place.
+Replaces a program's build tree with the staged one it was just built in.
+
+The old tree is moved aside first and deleted last, so if a step fails, one of the two trees is still in place.
 
 ### `receiptPath` (foul)
 
@@ -111,9 +117,9 @@ decode(text: String) -> Result<Receipt, String>
 claim(target: String, packageName: String, receipts: [Receipt], exists?: Bool, teyBuilt?: Bool) -> Claim
 ```
 
-The decision for one target name, given every receipt and what is on disk. Pure, so the whole rule is testable without a bin directory.
+Decides what installing `target` for `packageName` would do, given every receipt and whether a file of that name already exists.
 
-`teyBuilt?` covers the programs a project-local `tey install` put here before receipts existed: they are escripts Tey itself wrote, so taking them into a receipt loses nothing, where refusing would make every existing installation demand `--force` on its next reinstall.
+`teyBuilt?` covers programs that a project's own `tey install` put in the bin directory before receipts existed. Tey wrote those itself, so they are adopted into the receipt; refusing them would make every such installation need `--force` on its next reinstall.
 
 ### `refusal`
 
@@ -121,7 +127,9 @@ The decision for one target name, given every receipt and what is on disk. Pure,
 refusal(target: String, claim: Claim, path: String, force?: Bool) -> String?
 ```
 
-Why a claim stops the install, or None when it may go ahead. `--force` takes a name over from another package or from an unowned file, but never from Tey itself.
+Returns the message explaining why `claim` stops the install, or `None` when it can go ahead.
+
+`--force` takes a name over from another package or from a file Tey did not install, but never a name reserved for Tey.
 
 ### `load` (foul)
 
@@ -135,7 +143,9 @@ load(name: String) -> Receipt?
 all -> [Receipt]
 ```
 
-Every receipt, by package name. An unreadable one is reported rather than skipped silently: skipping it would make the files it owns look unowned.
+Returns every receipt, sorted by package name.
+
+A receipt that cannot be parsed is skipped with a warning on stderr, since skipping it quietly would make the files it owns look unowned. A receipt file that cannot be read at all is skipped without one.
 
 ### `save` (foul)
 
@@ -143,7 +153,9 @@ Every receipt, by package name. An unreadable one is reported rather than skippe
 save(receipt: Receipt) -> Result<Void, String>
 ```
 
-Written beside the final file and renamed into place, so a reader never sees half a receipt and a failed write leaves the previous one intact.
+Writes `receipt` to its file.
+
+The receipt is written to a file beside it and renamed into place, so a reader never sees half a receipt and a failed write leaves the old one intact.
 
 ### `remove` (foul)
 
@@ -157,7 +169,7 @@ remove(name: String) -> Result<Void, String>
 teyBuilt?(path: String) -> Bool
 ```
 
-Whether `path` is an escript Tey's own target build wrote: its emulator line starts Kex's escript launcher, or names `kex_main` directly as an escript built before the launcher did.
+Returns whether `path` is an escript that Tey's target build wrote: its emulator line starts Kex's escript launcher, or names `kex_main` directly, as escripts built before the launcher existed do.
 
 ### `listLine`
 
@@ -165,7 +177,7 @@ Whether `path` is an escript Tey's own target build wrote: its emulator line sta
 listLine(receipt: Receipt) -> String
 ```
 
-The line `tey list` prints for one installed program.
+Returns the line `tey list` prints for one installed program.
 
 ### `pinText`
 
@@ -173,51 +185,51 @@ The line `tey list` prints for one installed program.
 pinText(receipt: Receipt) -> String
 ```
 
-`v0.4.0`, `main (3f9c1a2)`, or a short commit — what a Git install is pinned to, as `tey list` shows it.
+Returns what a Git install is pinned to, as `tey list` shows it: a tag such as `v0.4.0`, a branch or ref with its commit such as `main (3f9c1a2)`, or a short commit id when an exact commit was asked for.
 
 ## record `Receipt`
 
 **Fields**
 
-  - `name` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `version` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `sourceKind` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `sourcePath` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `sourceDigest` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `sourceSelector` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `sourceRequested` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `sourceCommit` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `selectedTargets` : [[String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)] (optional)
-  - `targets` : [[String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)] (optional)
-  - `kex` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `otp` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `installedAt` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
+  - `name` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `version` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `sourceKind` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `sourcePath` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `sourceDigest` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `sourceSelector` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `sourceRequested` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `sourceCommit` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `selectedTargets` : [[String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)] (optional)
+  - `targets` : [[String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)] (optional)
+  - `kex` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `otp` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `installedAt` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
 
 
 
 ## record `InstallOptions`
 
-How `tey install <argument>` was asked to install a program: the workspace member (`--package`), the Git pin (`--tag`/`--branch`/`--ref`, "ref" of "HEAD" when none), which targets (`--target`, all when empty), whether to take over others' programs (`--force`), and whether to re-resolve rather than use the program's committed lock (`--fresh`).
+The options `tey install <argument>` was given: the workspace member (`--package`), the Git pin (`--tag`, `--branch` or `--ref`; a `ref` of `HEAD` when none is given), the targets (`--target`; all of them when empty), whether to take over names other packages own (`--force`), and whether to resolve dependencies again instead of using the program's committed lock (`--fresh`).
 
-`pinned?` says a pin was given at all — reinstalling by name keeps the receipt's unless one is. `rebuild?` rebuilds even when nothing moved.
+`pinned?` is true when any pin was given; reinstalling by name keeps the receipt's pin otherwise. `rebuild?` forces a rebuild even when nothing has changed.
 
 **Fields**
 
-  - `packageName` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `force?` : [Bool](../../../prelude/0.4.0-rc.4-dev/truthyable.md#make-bool) (optional)
-  - `selector` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `requested` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `pinned?` : [Bool](../../../prelude/0.4.0-rc.4-dev/truthyable.md#make-bool) (optional)
-  - `targets` : [[String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)] (optional)
-  - `fresh?` : [Bool](../../../prelude/0.4.0-rc.4-dev/truthyable.md#make-bool) (optional)
-  - `rebuild?` : [Bool](../../../prelude/0.4.0-rc.4-dev/truthyable.md#make-bool) (optional)
-  - `approvePlugins?` : [Bool](../../../prelude/0.4.0-rc.4-dev/truthyable.md#make-bool) (optional)
+  - `packageName` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `force?` : [Bool](../../../prelude/0.4.0-rc.5-dev/truthyable.md#make-bool) (optional)
+  - `selector` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `requested` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `pinned?` : [Bool](../../../prelude/0.4.0-rc.5-dev/truthyable.md#make-bool) (optional)
+  - `targets` : [[String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)] (optional)
+  - `fresh?` : [Bool](../../../prelude/0.4.0-rc.5-dev/truthyable.md#make-bool) (optional)
+  - `rebuild?` : [Bool](../../../prelude/0.4.0-rc.5-dev/truthyable.md#make-bool) (optional)
+  - `approvePlugins?` : [Bool](../../../prelude/0.4.0-rc.5-dev/truthyable.md#make-bool) (optional)
 
 
 
 ## type `ProgramSource`
 
-What `tey install <argument>` names. `tey add` is how a dependency is added, so an argument to `tey install` always means a program.
+What the argument to `tey install` names: a path, a Git URL or the name of an installed program. It always names a program; dependencies are added with `tey add`.
 
 **Variants**
 
@@ -229,7 +241,7 @@ What `tey install <argument>` names. `tey add` is how a dependency is added, so 
 
 ## type `Claim`
 
-What installing one target name would do to the bin directory.
+What installing one target name would do to the bin directory: the name is free, already this package's, an old Tey-built file to adopt, reserved for Tey, owned by another package, or a file Tey did not install.
 
 **Variants**
 

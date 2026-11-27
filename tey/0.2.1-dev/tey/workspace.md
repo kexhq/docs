@@ -17,7 +17,9 @@ entities:
 discover(start: String) -> Result<Context, String>
 ```
 
-Discovers the outermost workspace containing `start`. Without a workspace, the nearest package is a one-member context. Paths are lexical and absolute; discovery never changes the process working directory.
+Returns the outermost workspace containing `start`, with its members.
+
+When no `package.kex` above `start` declares a workspace, the nearest package is the only member. Paths are made absolute without resolving symlinks, and the working directory is not changed. It fails when there is no `package.kex` at or above `start`, or when two members share a name. Dependency cycles among members are reported in `warnings`.
 
 ### `select`
 
@@ -25,7 +27,9 @@ Discovers the outermost workspace containing `start`. Without a workspace, the n
 select(context: Context, packageName: String, workspace?: Bool) -> Result<[Member], String>
 ```
 
-Selects the members a workspace-aware command should operate on. An explicit package always wins; otherwise commands at a member stay local, while commands at the workspace root (or another non-member directory) use every member. `--workspace` broadens the implicit member selection.
+Returns the members a workspace-aware command should act on.
+
+A non-empty `packageName` selects that member, and is an error when none has that name. Otherwise `workspace?` (the `--workspace` flag) selects every member. Without either, a command run inside a member acts on that member, and one run at the workspace root or outside any member acts on all of them.
 
 ### `dependencyLayers`
 
@@ -33,7 +37,9 @@ Selects the members a workspace-aware command should operate on. An explicit pac
 dependencyLayers(members: [Member]) -> [[Member]]
 ```
 
-Dependency-ready layers for workspace-wide commands. Cyclic leftovers form one final layer so callers can continue, while discovery reports the cycle.
+Returns the members in layers, each depending only on members in earlier layers.
+
+Members caught in a dependency cycle go together in a final layer, so a command can still run them; `discover` reports the cycle as a warning.
 
 ### `memberName`
 
@@ -51,7 +57,7 @@ memberDependencies(member: Member) -> [String]
 
 **Fields**
 
-  - `memberRoot` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `memberRoot` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
   - `memberManifest` : [ManifestPackage](../tey/manifest.md#record-tey-manifest-manifestpackage)
 
 
@@ -60,9 +66,9 @@ memberDependencies(member: Member) -> [String]
 
 **Fields**
 
-  - `workspaceRoot` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `workspaceRoot` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
   - `members` : [[Member](#record-tey-workspace-member)] (optional)
   - `currentMember` : [Member](#record-tey-workspace-member)? (optional)
-  - `warnings` : [[String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)] (optional)
+  - `warnings` : [[String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)] (optional)
 
 

@@ -13,29 +13,29 @@ entities:
 
 # Mock
 
-Mock: deterministic stand-ins for the world outside the program: the filesystem, environment, and console. Networking mocks live under Mock.Net.
+Test stand-ins for the filesystem, the environment, the clock and the console. Networking mocks are under `Mock.Net`.
 
-These are STATEFUL: `Mock.FS.File(path, content)` writes into a store the real `FS.File` then reads back, so a test can write and read again, and `clear()` undoes it. That state is global and lives until cleared, which is what makes hook ordering and write/read round trips testable, and also what makes two tests able to interfere.
+There are two kinds. The `Mock.FS`, `Mock.ENV` and `Mock.IO` modules change global state: `Mock.FS.File(path, content)` puts a file in a store that the real `FS.File` reads from, and it stays there until `clear()`. That lets a test write a file and read it back, but it also lets one test see what another left behind, so clear the state in an `after` hook.
 
-Use `with FS.File = MyFake { ... } do ... end` for a replacement limited to one block. Use mocks when a test needs state shared across several calls, and clear that state between tests.
+The records `Mock.Files`, `Mock.Env` and `Mock.Clock` replace a capability for one block, as in `with FS.File = Mock.Files { ... } do ... end`. They hold no global state and need no clearing.
 
-Import with `using Mock`. Everything here is test-only: the mock operations and the stand-in records (`Mock.Files`, `Mock.Env`, `Mock.Clock`) alike are allowed in spec files and the REPL, and need `--allow-mocks` anywhere else.
+Everything here is for tests: it is allowed in spec files and the REPL, and needs `--allow-mocks` anywhere else.
 
 ## type `Reader`
 
-A stand-in's read hook: a path in, its content or `None` out.
+A read hook for `Mock.Files`: returns a path's content, or `None` for no such file.
 
 
 
 ## type `Lookup`
 
-An environment stand-in's lookup hook: a name in, its value or `None` out.
+A lookup hook for `Mock.Env`: returns a variable's value, or `None` for unset.
 
 
 
 ## type `Tick`
 
-A clock stand-in's reading hook: nothing in, the instant out.
+A hook for `Mock.Clock` that returns the current instant.
 
 **Variants**
 
@@ -45,7 +45,9 @@ A clock stand-in's reading hook: nothing in, the instant out.
 
 ## type `Writer`
 
-An environment stand-in's WRITE hook: the name and the value a program set. A `Mock.Env` is an immutable record, so a write cannot land in its `vars`, and it must not reach the real environment, or a test would leak a variable into the next one and into anything the suite starts. The hook is how a test observes the write instead: record it, assert on it, or ignore it, which is what `None` does.
+A write hook for `Mock.Env`, called with the name and value a program set.
+
+Writes under a `Mock.Env` never reach the real environment, and the record cannot change, so this hook is the only way to see them. An `unset` arrives as the name with an empty value. Without a hook, writes are dropped.
 
 
 
@@ -55,7 +57,9 @@ An environment stand-in's WRITE hook: the name and the value a program set. A `M
 
 ## record `Files`
 
-A stand-in for the `FS.File` capability, for `with FS.File = ...`. Unlike the `Mock.*` functions below it holds no global state, needs no `clear()`, and cannot leak past its block. What it cannot do is change: `write` then `read` back is not something a value does, so a test needing that round trip uses `Mock.FS`.
+A read-only stand-in for the `FS.File` capability, for `with FS.File = ...`.
+
+It holds no global state and ends with its block. Every write, delete, copy and open fails, so a test that writes a file and reads it back needs `Mock.FS`.
 
 ```kex
 with FS.File = Mock.Files { files: {"kex.toml": "name = \"demo\""} } do
@@ -63,7 +67,7 @@ with FS.File = Mock.Files { files: {"kex.toml": "name = \"demo\""} } do
 end
 ```
 
-`onRead` takes over when a test needs an ANSWER rather than a fixture: content derived from the path, a failure on the third call, a record of what was asked for. It is consulted first and its `None` means "no such file", so a callback can model absence too.
+Set `onRead` to compute the answer, for example from the path. When it is set, `files` is not consulted, and its `None` means no such file.
 
 **Fields**
 
@@ -77,7 +81,7 @@ Implements `FS.File`.
 #### `cannedRead` (foul)
 
 ```kex
-cannedRead(path)
+cannedRead(path: FS.FilePath) -> String?
 ```
 
 Named apart from `read`: `this.read(path)` would bind to the capability's own `read : FilePath -> String?`, not to this function.
@@ -157,10 +161,10 @@ info(path)
 #### `open` (foul)
 
 ```kex
-open(path, mode)
+open(path, mode, block)
 ```
 
-A fake is a value, so there is nowhere for a write to go. Refusing is the honest answer and the useful one: a test that did not expect a write sees it fail rather than silently succeed.
+A fake is a value, so there is nowhere for a write to go. Failing lets a test that did not expect a write notice it.
 
 #### `write` (foul)
 
@@ -212,7 +216,9 @@ changeMode(path, mode)
 
 ## record `Env`
 
-A stand-in for the `ENV` capability. A name simply left out of `vars` reads as unset, which is the whole reason `Mock.ENV.unset` exists: absence is an answer programs act on. `onGet` answers instead of the map when a test wants a rule rather than a fixture.
+A stand-in for the `ENV` capability, for `with ENV = ...`.
+
+A name not in `vars` reads as unset. Set `onGet` to compute values instead, and `onSet` to see what the program writes.
 
 ```kex
 with ENV = Mock.Env { vars: {"HOME": "/fake"} } do
@@ -233,7 +239,7 @@ Implements `ENV`.
 #### `lookup` (foul)
 
 ```kex
-lookup(key)
+lookup(key: String) -> String?
 ```
 
 Named apart from `get`: `this.get(key)` would bind to the capability's own `get`, not to this function.
@@ -286,7 +292,7 @@ entries
 set(name, value)
 ```
 
-A write goes to `onSet` or nowhere. It must NOT reach the real environment: a substituted ENV is the whole point of the mock, and a test that set a variable would otherwise leak it into the next one and into every process the suite starts. `vars` cannot take it either: a record is immutable, so a test that cares about writes supplies the hook, and one that does not gets a write that goes quietly nowhere.
+A write goes to `onSet` or is dropped. It must not reach the real environment, where it would leak into later tests and into every process the suite starts, and `vars` cannot change.
 
 #### `unset` (foul)
 
@@ -296,7 +302,7 @@ unset(name)
 
 ## record `Clock`
 
-A stand-in for the `Time.Clock` capability. Every reading in the region (`Time.now`, `Date.today`, `DateTime.utcNow`) answers from it.
+A stand-in for the `Time.Clock` capability, for `with Time.Clock = ...`. Inside the block, `Time.now`, `Date.today` and `DateTime.utcNow` read from it.
 
 ```kex
 with Time.Clock = Mock.Clock { at: DateTime.parse("2026-07-30T14:03:00Z").try } do
@@ -304,9 +310,9 @@ with Time.Clock = Mock.Clock { at: DateTime.parse("2026-07-30T14:03:00Z").try } 
 end
 ```
 
-The clock is frozen: every reading is `at`, zone included, so `Date.today()` is the date in the zone you wrote and not in the zone of the machine running the test.
+The clock is frozen at `at`, zone included, so `Date.today()` is the date in the zone you wrote, not the zone of the machine running the test.
 
-`onNow` answers instead when a test wants a rule rather than a fixture. A block keeps the clock of the region it was written in, so a rule written outside the `with` reads the real one. That is how to get a clock that still runs, which code measuring elapsed time needs: a frozen clock makes every interval zero.
+A frozen clock makes every measured interval zero. For a clock that runs, set `onNow`: a block uses the clock of the place it was written, so one written outside the `with` reads the real clock.
 
 ```kex
 with Time.Clock = Mock.Clock { onNow: Just({ DateTime.now() + 3.day }) } do
@@ -333,9 +339,9 @@ now
 
 ## module `Mock.FS`
 
-A stateful stand-in for the filesystem: files a test declares, that the real `FS.File` then reads back.
+A global stand-in for the filesystem: files a test declares here are what the real `FS.File` reads.
 
-The store is global and lives until `clear`, which is what makes a write followed by a read testable, and what makes two tests able to interfere. Clear it in an `after` hook.
+The store lasts until `clear`, so clear it in an `after` hook or the next test sees the same files.
 
 ```kex
 describe "the config loader" do
@@ -396,9 +402,9 @@ Mock.FS.Directory("src")
 clear -> Void
 ```
 
-Empties the store, so nothing declared so far is visible any more.
+Empties the store, removing every file and directory declared so far.
 
-Call it in an `after` hook: the store is global, and what one test leaves behind the next one sees.
+Call it in an `after` hook, since the store is shared by every test.
 
 **Examples**
 
@@ -414,9 +420,7 @@ end
 files(entries: Map<FS.FilePath, String>) -> Void
 ```
 
-Declares the whole fixture in one call.
-
-The same shape `Mock.Files { files: ... }` takes: one line instead of one per file.
+Declares several files at once, from a map of paths to contents (the shape `Mock.Files` takes).
 
 **Parameters**
 
@@ -437,13 +441,13 @@ Mock.FS.files({
 onRead(reader: Reader) -> Void
 ```
 
-Answers reads by RULE rather than from a fixture.
+Serves reads from `reader` in place of the declared files.
 
-Content derived from the path, a failure on the third call, a record of what was asked for. Consulted before the map, and returning `None` means "no such file", so absence is expressible too.
+Use it when the content depends on the path. While it is set, files declared with `File` or `files` are not read, and `None` from `reader` means no such file.
 
 **Parameters**
 
-  - `reader` — the rule to answer reads with
+  - `reader` — returns a path's content, or `None`
 
 **Examples**
 
@@ -457,9 +461,9 @@ end
 
 ## module `Mock.ENV`
 
-Overlays the process environment, so a test can say what `ENV` holds instead of depending on how it was launched.
+A global overlay on the process environment, so a test decides what `ENV` holds.
 
-The overlay is global and lives until `clear`: clear it in an `after` hook.
+The overlay lasts until `clear`, so clear it in an `after` hook.
 
 ```kex
 Mock.ENV.vars({ "HOME": "/fake", "LOG_LEVEL": "debug" })
@@ -492,9 +496,7 @@ Mock.ENV.set("LOG_LEVEL", "debug")
 unset(name: String) -> Void
 ```
 
-Removes one variable from the overlay, so it reads as unset.
-
-Separate from `set` because a variable being ABSENT is an answer programs act on, and there is no value that means it.
+Makes a variable read as unset, whatever the real environment holds.
 
 **Parameters**
 
@@ -533,7 +535,7 @@ vars(entries: Map<String, String>) -> Void
 
 Declares the whole overlay in one call.
 
-Supply a map of variable names to their values. Use `with ENV = Mock.Env { onGet: ... }` when a callback should decide the value for each lookup instead.
+To compute values per lookup, use `with ENV = Mock.Env { onGet: ... }`.
 
 **Parameters**
 
@@ -547,9 +549,7 @@ Mock.ENV.vars({ "HOME": "/fake", "LOG_LEVEL": "debug" })
 
 ## module `Mock.IO`
 
-A stateful stand-in for the console: captures what a program prints, and feeds it lines as if they had been typed.
-
-The way to test a program that talks to a person without one being there.
+A global stand-in for the console: it captures what a program prints and feeds it lines as if they had been typed.
 
 ```kex
 Mock.IO.start()
@@ -597,7 +597,7 @@ end
 output -> String
 ```
 
-Everything the program has printed since capturing started.
+Returns everything the program has printed since capturing started.
 
 Newlines are included, so a single `IO.printLine("hi")` gives `"hi\n"`.
 
@@ -617,9 +617,9 @@ Assert.equal(Mock.IO.output(), "hello\n")
 clear -> Void
 ```
 
-Discards the captured output, while continuing to capture.
+Discards the output captured so far and keeps capturing.
 
-Useful between phases of one test, when only the later output matters.
+Use it between phases of a test when only the later output matters.
 
 **Examples**
 
@@ -633,16 +633,16 @@ Assert.equal(Mock.IO.output(), "done\n")
 ### `input` (foul)
 
 ```kex
-input(first, second, third, fourth) -> Void
+input(first: String, second: String, third: String, fourth: String) -> Void
 ```
 
 Queues the lines `IO.getLine` will return, in order.
 
-Takes a list, or up to four lines as separate arguments. Once they run out, `IO.readLine` answers `Ok(None)`: end of input, exactly as a closed stdin would.
+Takes a list, or up to four lines as separate arguments. Calls add to the queue. Once it is empty, `IO.getLine` returns `None` and `IO.readLine` returns `Ok(None)`, as at the end of real input.
 
 **Parameters**
 
-  - `lines` — the lines to serve, in order
+  - `lines` — the lines to serve, in order (one line, or a list of them)
 
 **Examples**
 
@@ -660,19 +660,19 @@ Mock.IO.input("Ada", "42")
 
 ## module `Mock.Net`
 
-Scriptable networking values for testing HTTP, DNS, sockets and WebSockets.
+Scripted inputs for testing HTTP, DNS, sockets and WebSockets.
 
 
 
 ## module `Mock.Net.HTTP`
 
-Canned HTTP transport state for networking specifications.
+Scripted HTTP responses.
 
 
 
 ## record `Transport`
 
-Responses returned in order by a scripted transport.
+Responses a scripted transport returns, in order.
 
 **Fields**
 
@@ -682,13 +682,13 @@ Responses returned in order by a scripted transport.
 
 ## module `Mock.Net.DNS`
 
-Canned DNS resolver state for networking specifications.
+Scripted DNS answers.
 
 
 
 ## record `ResolverScript`
 
-Hostname-to-address answers supplied without touching the network.
+The addresses each hostname resolves to.
 
 **Fields**
 
@@ -698,13 +698,13 @@ Hostname-to-address answers supplied without touching the network.
 
 ## module `Mock.Net.Socket`
 
-Canned byte-stream state for socket specifications.
+Scripted socket data.
 
 
 
 ## record `Script`
 
-Binary chunks delivered in order as incoming socket data.
+Chunks delivered in order as incoming socket data.
 
 **Fields**
 
@@ -714,13 +714,13 @@ Binary chunks delivered in order as incoming socket data.
 
 ## module `Mock.Net.WebSocket`
 
-Canned message state for WebSocket specifications.
+Scripted WebSocket messages.
 
 
 
 ## record `Script`
 
-High-level messages delivered in order by a scripted connection.
+Messages a scripted connection delivers, in order.
 
 **Fields**
 

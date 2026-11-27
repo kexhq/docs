@@ -11,11 +11,11 @@ entities:
 
 ## module `Console`
 
-ANSI terminal styling: colors, text attributes, and cursor control.
+ANSI terminal styling: colors, text attributes and cursor control.
 
-Every constant here becomes an empty string when Kex is started with `--no-colors`, or when output is not going to a terminal. You can splice them into a string unconditionally.
+Every constant here is the empty string when styling is off: when stdout is not a terminal, when `NO_COLOR` is set, or when Kex runs with `--no-colors`. `--colors` or `FORCE_COLOR` turns it back on. So the constants can go into a string without a check.
 
-`colorize` is usually what you want, since it applies the reset for you.
+`colorize` is usually the better choice, since it adds the reset for you.
 
 **Examples**
 
@@ -26,7 +26,11 @@ IO.printLine(Console.colorize("failed", Console.RED))
 
 ### `RESET` (constant)
 
-Clears every active style. Ends a styled run started with a color or attribute constant; `colorize` appends it for you.
+```kex
+RESET : String
+```
+
+Clears every active style, ending a run started by one of the color or attribute constants. `colorize` appends it for you.
 
 **Examples**
 
@@ -38,7 +42,11 @@ Clears every active style. Ends a styled run started with a color or attribute c
 
 ### `BOLD` (constant)
 
-Renders following text in bold.
+```kex
+BOLD : String
+```
+
+Renders the text that follows in bold.
 
 **Examples**
 
@@ -50,7 +58,11 @@ IO.printLine("${Console.BOLD}Summary${Console.RESET}")
 
 ### `DIM` (constant)
 
-Renders following text dimmed. Useful for secondary detail that should not compete with the main output.
+```kex
+DIM : String
+```
+
+Renders the text that follows dimmed, for detail that should stay in the background.
 
 **Examples**
 
@@ -62,11 +74,15 @@ IO.printLine("done ${Console.DIM}(0.4s)${Console.RESET}")
 
 ### `ITALIC` (constant)
 
-Renders following text in italics, where the terminal supports it.
+```kex
+ITALIC : String
+```
+
+Renders the text that follows in italics, on terminals that support it.
 
 **Examples**
 
-_Setting apart a book or command name_
+_Setting apart a command name_
 
 ```kex
 IO.printLine("run ${Console.colorize("kex check", Console.ITALIC)} next")
@@ -76,7 +92,11 @@ IO.printLine("run ${Console.colorize("kex check", Console.ITALIC)} next")
 
 ### `UNDERLINE` (constant)
 
-Underlines following text.
+```kex
+UNDERLINE : String
+```
+
+Underlines the text that follows.
 
 **Examples**
 
@@ -88,11 +108,15 @@ Console.colorize("https://kex.run", Console.UNDERLINE)
 
 ### `BLINK` (constant)
 
-Makes following text blink, where the terminal supports it. Most do not, and most users would rather they did not.
+```kex
+BLINK : String
+```
+
+Makes the text that follows blink, on the few terminals that support it.
 
 **Examples**
 
-_A deliberately attention-grabbing emergency indicator_
+_An alarm that must not be missed_
 
 ```kex
 IO.printError(Console.colorize("DATABASE OFFLINE", Console.BLINK))
@@ -102,7 +126,11 @@ IO.printError(Console.colorize("DATABASE OFFLINE", Console.BLINK))
 
 ### `REVERSE` (constant)
 
-Swaps the foreground and background colors of following text.
+```kex
+REVERSE : String
+```
+
+Swaps the foreground and background colors of the text that follows.
 
 **Examples**
 
@@ -116,11 +144,15 @@ Console.colorize(row, Console.REVERSE)
 
 ### `HIDDEN` (constant)
 
-Hides following text: it occupies space but is not drawn.
+```kex
+HIDDEN : String
+```
+
+Hides the text that follows: it takes up space but is not drawn.
 
 **Examples**
 
-_Reserving space so changing status text does not shift a table_
+_Reserving space so a table does not shift when a status changes_
 
 ```kex
 let padding = Console.colorize("..........", Console.HIDDEN)
@@ -130,7 +162,11 @@ let padding = Console.colorize("..........", Console.HIDDEN)
 
 ### `STRIKETHROUGH` (constant)
 
-Strikes through following text.
+```kex
+STRIKETHROUGH : String
+```
+
+Strikes through the text that follows.
 
 **Examples**
 
@@ -144,7 +180,11 @@ Console.colorize(task, Console.STRIKETHROUGH)
 
 ### `RED` (constant)
 
-Red. Conventionally: errors and failures.
+```kex
+RED : String
+```
+
+Red, usually for errors and failures.
 
 **Examples**
 
@@ -156,7 +196,11 @@ IO.printError(Console.colorize("error: ${message}", Console.RED))
 
 ### `GREEN` (constant)
 
-Green. Conventionally: success.
+```kex
+GREEN : String
+```
+
+Green, usually for success.
 
 **Examples**
 
@@ -168,7 +212,11 @@ IO.printLine(Console.colorize("all tests passed", Console.GREEN))
 
 ### `YELLOW` (constant)
 
-Yellow. Conventionally: warnings.
+```kex
+YELLOW : String
+```
+
+Yellow, usually for warnings.
 
 **Examples**
 
@@ -180,7 +228,11 @@ IO.printError(Console.colorize("deprecated option", Console.YELLOW))
 
 ### `BLUE` (constant)
 
-Blue. Useful for informational labels and links.
+```kex
+BLUE : String
+```
+
+Blue, often used for informational labels and links.
 
 **Examples**
 
@@ -192,7 +244,11 @@ IO.printLine(Console.colorize("info:", Console.BLUE) + " cache refreshed")
 
 ### `MAGENTA` (constant)
 
-Magenta. Useful for highlighting a category distinct from status colors.
+```kex
+MAGENTA : String
+```
+
+Magenta, for marking a category apart from the status colors.
 
 **Examples**
 
@@ -204,7 +260,11 @@ IO.printLine(Console.colorize("migration", Console.MAGENTA) + " 20260830")
 
 ### `CYAN` (constant)
 
-Cyan. Useful for identifiers, paths, and other values inside prose.
+```kex
+CYAN : String
+```
+
+Cyan, often used for identifiers, paths and other values within text.
 
 **Examples**
 
@@ -216,7 +276,11 @@ IO.printLine("wrote ${Console.colorize(path, Console.CYAN)}")
 
 ### `WHITE` (constant)
 
-White. Useful for primary text on a dark terminal.
+```kex
+WHITE : String
+```
+
+White, for primary text on a dark terminal.
 
 **Examples**
 
@@ -228,7 +292,11 @@ IO.printLine(Console.colorize("Build summary", Console.WHITE))
 
 ### `GRAY` (constant)
 
-Gray. Conventionally: de-emphasised detail, like `DIM` but as a color.
+```kex
+GRAY : String
+```
+
+Gray, for detail that matters less; a color counterpart of `DIM`.
 
 **Examples**
 
@@ -240,7 +308,11 @@ IO.printLine(Console.colorize(timestamp, Console.GRAY))
 
 ### `PURPLE` (constant)
 
-Purple. An alternative accent when magenta is already in use.
+```kex
+PURPLE : String
+```
+
+Purple, a second accent color when magenta is already taken.
 
 **Examples**
 
@@ -252,9 +324,13 @@ IO.printLine(Console.colorize("plugin", Console.PURPLE) + ": formatter")
 
 ### `CLEAR` (constant)
 
+```kex
+CLEAR : String
+```
+
 Erases the screen and moves the cursor to the top-left corner.
 
-Use it to start a fresh frame. When you are redrawing repeatedly, `HOME` gives a smoother result: see below.
+To redraw the screen many times, `HOME` avoids the flicker.
 
 **Examples**
 
@@ -266,9 +342,13 @@ IO.print(Console.CLEAR)
 
 ### `HOME` (constant)
 
+```kex
+HOME : String
+```
+
 Moves the cursor to the top-left corner without erasing anything.
 
-A redraw that starts here paints over the previous frame, so there is no blank flash between frames the way `CLEAR` produces.
+A redraw that starts here paints over the previous frame, so the screen does not go blank between frames as it does with `CLEAR`.
 
 **Examples**
 
@@ -285,9 +365,11 @@ end
 
 ### `CLEARLINE` (constant)
 
-Erases the current line and returns the cursor to its start.
+```kex
+CLEARLINE : String
+```
 
-This is how to write a progress line in place rather than one line per update.
+Erases the current line and moves the cursor back to its start, so a progress line can be rewritten in place.
 
 **Examples**
 
@@ -310,7 +392,7 @@ colorize(text: String, color: String) -> String
 
 Wraps `text` in `color` and appends a reset, so the style ends where the text does.
 
-Preferred over splicing the constants by hand: it cannot leak a style into the rest of the line, and it still produces plain text when color is off.
+It cannot leak a style into the rest of the line, which hand-placed constants can. When styling is off it returns `text` unchanged.
 
 **Parameters**
 
@@ -340,7 +422,7 @@ enabled? : Bool
 
 Returns `true` when terminal styling is on for this process.
 
-It is `false` under `--no-colors` and when output is redirected. You rarely need to check it (the constants already collapse to `""`) but it is the right test when the alternative is a different layout rather than a different color.
+The constants already turn into `""` when it is off, so a check is only needed when the output should change in some other way, such as a different layout or different characters.
 
 **Examples**
 

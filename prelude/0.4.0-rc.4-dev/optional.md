@@ -12,6 +12,10 @@ entities:
   - { kind: trait, name: "Eitherable" }
   - { kind: make, name: "Optional<X>" }
   - { kind: make, name: "Result<X, E>" }
+  - { kind: make, name: "Result<_, E>" }
+  - { kind: type, name: "Validation" }
+  - { kind: make, name: "Validation<X, E>" }
+  - { kind: make, name: "Validation<_, E>" }
   - { kind: function, name: "to" }
   - { kind: make, name: "Either<L, R>" }
 ---
@@ -22,9 +26,9 @@ entities:
 
 An optional value: `Just(x)` carries a value, `None` says there is none.
 
-`X?` is shorthand for `Optional<X>`, and is the spelling you will normally write. Kex has no `null`: anything that might not produce a value returns an `Optional` instead, so the compiler makes you say what happens when it is empty. Most of the time that is a single `.or(default)` at the end of a chain.
+`X?` is shorthand for `Optional<X>` and is the usual spelling. Kex has no `null`; a function that may have nothing to return returns an `Optional`, and the caller has to decide what happens when it is empty. Usually that is an `.or(default)` at the end of a chain.
 
-Pattern matching handles the cases that need more than a default:
+When a default is not enough, match on the two cases:
 
 **Examples**
 
@@ -32,7 +36,7 @@ Pattern matching handles the cases that need more than a default:
 let names = ["ada", "grace"]
 names.first.or("nobody")        # => "ada"
 names.at(9).or("nobody")        # => "nobody"
-names.first.map(~upperCase)        # => Just("ADA")
+names.first.map(~upperCase)     # => Just("ADA")
 ```
 
 ```kex
@@ -47,7 +51,7 @@ end
   - `Just(X)`
   - `None`
 
-Implements [`Blankable`](blankable.md#trait-blankable), [`Showable`](kex.md#trait-showable), [`Optionable`](#trait-optionable), [`Truthyable`](truthyable.md#trait-truthyable).
+Implements [`Blankable`](blankable.md#trait-blankable), [`Showable`](kex.md#trait-showable), [`Optionable`](#trait-optionable), [`Functor`](algebra.md#trait-functor), [`Bindable`](algebra.md#trait-bindable), [`Monad`](algebra.md#trait-monad), [`Applicable`](algebra.md#trait-applicable), [`Truthyable`](truthyable.md#trait-truthyable).
 
 ### Functions
 
@@ -81,7 +85,7 @@ end
 none? -> Bool
 ```
 
-Returns `true` when there is no value. The opposite of `set?`.
+Returns `true` when there is no value; the opposite of `set?`.
 
 **Examples**
 
@@ -106,7 +110,7 @@ or(default: X) -> X
 
 Returns the wrapped value, or `default` when there is none.
 
-This is the usual way an optional leaves the optional world: put `.or` at the end of a chain and the rest of your code works with a plain value.
+This is the usual way to end a chain of optional steps: the code after `.or` works with a plain value.
 
 **Parameters**
 
@@ -129,13 +133,13 @@ _Closing a chain of lookups_
 "hello".indexOf('z').or(-1)         # => -1
 ```
 
-#### `map`
+#### `map` (from Functor)
 
 ```kex
 map(f: (X -> Y)) -> Y?
 ```
 
-Applies `f` to the wrapped value, keeping the result wrapped. `None` is returned unchanged, so `f` never sees a missing value.
+Applies `f` to the wrapped value and wraps the result. On `None`, `f` is not called and `None` is returned.
 
 **Parameters**
 
@@ -157,15 +161,15 @@ _Transforming before supplying a default_
 [].first.map(~upperCase).or("ANON")        # => "ANON"
 ```
 
-#### `flatMap`
+#### `into` (from Bindable, Monad)
 
 ```kex
-flatMap(f: (X -> Y?)) -> Y?
+into(f: (X -> Y?)) -> Y?
 ```
 
-Applies `f`, which itself returns an optional, and flattens the result.
+Applies `f`, which itself returns an optional, and returns its result.
 
-Use it instead of `map` when the step can also fail: `map` would give you a doubly wrapped `Just(Just(x))`, `flatMap` gives a single layer. A `None` anywhere in the chain short-circuits the rest.
+Use it for a step that can come up empty: `map` would give a nested `Just(Just(x))`. Once a step returns `None`, the later steps do not run.
 
 **Parameters**
 
@@ -176,18 +180,60 @@ Use it instead of `map` when the step can also fail: `map` would give you a doub
 **Examples**
 
 ```kex
-Just(4).flatMap { |x| x > 0 then Just(x * 2) else None }   # => Just(8)
-Just(-4).flatMap { |x| x > 0 then Just(x * 2) else None }  # => None
-None.flatMap { |x| Just(x * 2) }                           # => None
+Just(4).into { |x| x > 0 then Just(x * 2) else None }   # => Just(8)
+Just(-4).into { |x| x > 0 then Just(x * 2) else None }  # => None
+None.into { |x| Just(x * 2) }                           # => None
 ```
 
 _Chaining lookups that may each come up empty_
 
 ```kex
 users.get(id)
-  .flatMap { |user| user.address }
-  .flatMap { |address| address.postcode }
+  .into { |user| user.address }
+  .into { |address| address.postcode }
   .or("unknown")
+```
+
+#### `with` (from Applicable)
+
+```kex
+with(other: Y?, f: (X -> Y -> Z)) -> Z?
+```
+
+Applies `f` to this value and `other`'s when both are present, and returns `None` otherwise. This is `Applicable`'s `with`.
+
+**Parameters**
+
+  - `other` — the second optional
+  - `f` — combines the two values
+
+**Returns**: `Just` the combined value, or `None`
+
+**Examples**
+
+```kex
+Just(1).with(Just(2)) { |a, b| a + b }   # => Just(3)
+Just(1).with(None) { |a, b| a + b }      # => None
+```
+
+#### `wrap` (from Monad, Applicable)
+
+```kex
+wrap(value: Y) -> Y?
+```
+
+Returns `Just(value)`. This is `Monad`'s `wrap`.
+
+**Parameters**
+
+  - `value` — the value to wrap
+
+**Returns**: `Just(value)`
+
+**Examples**
+
+```kex
+Optional.wrap(1)   # => Just(1)
 ```
 
 #### `filter`
@@ -196,7 +242,13 @@ users.get(id)
 filter(pred: (X -> Bool)) -> X?
 ```
 
-Keeps the value only when `pred` accepts it.
+Keeps the value only when `pred` accepts it, and returns `None` otherwise.
+
+**Parameters**
+
+  - `pred` — the test the value must pass
+
+**Returns**: the value, or `None`
 
 **Examples**
 
@@ -219,7 +271,7 @@ Just(3).filter { |n| n.even? }   # => None
 
 The outcome of an operation that can fail: `Ok(x)` on success, `Error(e)` on failure with a reason.
 
-Use `Result` over `Optional` when the *reason* for failure matters to the caller. Parsing is the standard example: `"12x".to(Integer)` answers `None`, while `Integer.parse("12x")` answers an `Error` that says where it stopped.
+Use `Result` when the caller needs to know why something failed, and `Optional` when it only needs to know whether it did. `"12x".to(Integer)` returns `None`, while `Integer.parse("12x")` returns `Error(Trailing(12, "x"))`, which says where parsing stopped and on what.
 
 **Examples**
 
@@ -229,7 +281,7 @@ Integer.parse("4x").or(0)     # => 0
 
 match Integer.parse(input) do
   Ok(n)    => IO.printLine("got ${n}")
-  Error(e) => IO.printError("bad number: ${e}")
+  Error(e) => IO.printError("bad number: ${e.message}")
 end
 ```
 
@@ -238,7 +290,7 @@ end
   - `Ok(X)`
   - `Error(E)`
 
-Implements [`Showable`](kex.md#trait-showable), [`Resultable`](#trait-resultable).
+Implements [`Showable`](kex.md#trait-showable), [`Resultable`](#trait-resultable), [`Functor`](algebra.md#trait-functor), [`Bindable`](algebra.md#trait-bindable), [`Monad`](algebra.md#trait-monad), [`Applicable`](algebra.md#trait-applicable).
 
 ### Functions
 
@@ -269,7 +321,7 @@ inputs.map(~Integer.parse).count(~ok?)
 error? -> Bool
 ```
 
-Returns `true` when the result is `Error`. The opposite of `ok?`.
+Returns `true` when the result is `Error`; the opposite of `ok?`.
 
 **Examples**
 
@@ -286,7 +338,7 @@ or(default: X) -> X
 
 Returns the `Ok` value, or `default` when the result is an `Error`.
 
-The error payload is discarded. Match on the result instead when you need to report why it failed.
+The error is discarded. To report why it failed, match on the result.
 
 **Parameters**
 
@@ -313,7 +365,7 @@ Integer.parse(input).or(8080)
 map(f: (X -> Y)) -> Result<Y, E>
 ```
 
-Applies `f` to the `Ok` value. An `Error` passes through untouched, so a chain of `map` calls describes the success path only.
+Applies `f` to the `Ok` value. An `Error` is returned as it is, and `f` is not called.
 
 **Parameters**
 
@@ -334,15 +386,15 @@ _Converting a parsed value_
 Integer.parse("21").map { |n| n * 2 }   # => Ok(42)
 ```
 
-#### `flatMap`
+#### `into`
 
 ```kex
-flatMap(f: (X -> Result<Y, E>)) -> Result<Y, E>
+into(f: (X -> Result<Y, E>)) -> Result<Y, E>
 ```
 
-Applies `f`, which itself returns a `Result`, and flattens the result.
+Applies `f`, which itself returns a `Result`, and returns its result.
 
-The step-by-step form of `map` for stages that can fail on their own. The first `Error` ends the chain and is the answer.
+Use it to chain steps that can each fail. The first `Error` ends the chain and is what the chain returns.
 
 **Parameters**
 
@@ -353,16 +405,38 @@ The step-by-step form of `map` for stages that can fail on their own. The first 
 **Examples**
 
 ```kex
-Ok(4).flatMap { |x| x > 0 then Ok(x * 2) else Error("neg") }    # => Ok(8)
-Ok(-4).flatMap { |x| x > 0 then Ok(x * 2) else Error("neg") }   # => Error("neg")
+Ok(4).into { |x| x > 0 then Ok(x * 2) else Error("neg") }    # => Ok(8)
+Ok(-4).into { |x| x > 0 then Ok(x * 2) else Error("neg") }   # => Error("neg")
 ```
 
 _A pipeline where each stage may fail_
 
 ```kex
 Integer.parse(raw)
-  .flatMap { |n| n > 0 then Ok(n) else Error("must be positive") }
-  .flatMap { |n| n < 65536 then Ok(n) else Error("out of range") }
+  .into { |n| n > 0 then Ok(n) else Error("must be positive") }
+  .into { |n| n < 65536 then Ok(n) else Error("out of range") }
+```
+
+#### `with`
+
+```kex
+with(other: Result<Y, E>, f: (X -> Y -> Z)) -> Result<Z, E>
+```
+
+Applies `f` to this success and `other`'s, or returns the first error. This is `Applicable`'s `with`.
+
+**Parameters**
+
+  - `other` — the second result
+  - `f` — combines the two values
+
+**Returns**: `Ok` the combined value, or the first `Error`
+
+**Examples**
+
+```kex
+Ok(1).with(Ok(2)) { |a, b| a + b }           # => Ok(3)
+Ok(1).with(Error("no")) { |a, b| a + b }     # => Error("no")
 ```
 
 #### `optional`
@@ -371,9 +445,9 @@ Integer.parse(raw)
 optional -> X?
 ```
 
-Converts the result to an `Optional`, dropping the error payload.
+Converts the result to an `Optional`, dropping the error.
 
-Useful when a caller only needs to know whether there is a value, and everything downstream already speaks `Optional`.
+Use it when the caller only cares whether there is a value, or the code that follows works with optionals.
 
 **Returns**: `Just` of the `Ok` value, or `None`
 
@@ -399,7 +473,13 @@ _Keeping only the values that parsed_
 mapError(f: (E -> F)) -> Result<X, F>
 ```
 
-Applies `f` to the error, leaving a success alone: `map` for the other side.
+Applies `f` to the error and leaves a success alone; `map` for the error side.
+
+**Parameters**
+
+  - `f` — applied to the error
+
+**Returns**: the same `Ok`, or `Error(f(e))`
 
 **Examples**
 
@@ -414,13 +494,39 @@ Ok(1).mapError { |code| "HTTP ${code}" }        # => Ok(1)
 error -> E?
 ```
 
-The error, if this is one: the counterpart of `optional`.
+Returns the error wrapped in `Just`, or `None` for a success; the counterpart of `optional`.
+
+**Returns**: the error, or `None`
 
 **Examples**
 
 ```kex
 Error("bad").error   # => Just("bad")
 Ok(1).error          # => None
+```
+
+### On `Result<_, E>`
+
+Makes `Result` a `Functor`, `Bindable`, `Monad` and `Applicable` over its success value, with the error type `E` fixed. The `map` and `into` above are the ones these traits use.
+
+#### `wrap` (from Monad, Applicable)
+
+```kex
+wrap(value: Y) -> Result<Y, E>
+```
+
+Returns `Ok(value)`. This is `Monad`'s `wrap`.
+
+**Parameters**
+
+  - `value` — the success value
+
+**Returns**: `Ok(value)`
+
+**Examples**
+
+```kex
+Result.wrap(1)   # => Ok(1)
 ```
 
 ### From [`Showable`](kex.md#trait-showable)
@@ -435,7 +541,7 @@ Ok(1).error          # => None
 
 One of two values, of possibly different types: `Left(l)` or `Right(r)`.
 
-Unlike `Result`, neither side means failure: `Either` is for a value that is legitimately one of two shapes.
+Neither side means failure, as `Error` does in a `Result`. Use `Either` for a value that can take one of two shapes.
 
 **Examples**
 
@@ -465,9 +571,9 @@ Implements [`Eitherable`](#trait-eitherable).
 either(onLeft: (L -> A), onRight: (R -> A)) -> A
 ```
 
-Case analysis: applies `onLeft` to a `Left` and `onRight` to a `Right`.
+Applies `onLeft` to a `Left` or `onRight` to a `Right` and returns the result.
 
-The way an `Either` is consumed without a `match`, and the operation `Eitherable` requires. Both branches answer the same type, so the result is a plain value rather than another `Either`.
+Use it to turn an `Either` into one value without a `match`. Both functions return the same type `A`.
 
 **Parameters**
 
@@ -479,8 +585,8 @@ The way an `Either` is consumed without a `match`, and the operation `Eitherable
 **Examples**
 
 ```kex
-Left(2).either(~toString, ~upperCase)       # => "2"
-Right("ok").either(~toString, ~upperCase)   # => "OK"
+Left(2).either(~showValue, ~upperCase)       # => "2"
+Right("ok").either(~showValue, ~upperCase)   # => "OK"
 ```
 
 _Collapsing an id to text_
@@ -512,7 +618,7 @@ Right(1).left?   # => false
 right? -> Bool
 ```
 
-Returns `true` for a `Right`. The opposite of `left?`.
+Returns `true` for a `Right`; the opposite of `left?`.
 
 **Examples**
 
@@ -525,7 +631,7 @@ Left(1).right?    # => false
 
 A value that may be absent. Constrain a generic parameter with it when a function accepts any optional value.
 
-The two operations below are what make the constraint worth having: an empty trait would accept a value and then let you do nothing with it, since there would be no function to call. `map` is deliberately NOT required — its result type differs per implementer (`Y?` here, `Result<Y, E>` for `Resultable`), which needs a higher-kinded parameter Kex does not have.
+The trait requires only `set?` and `or`. It does not require `map`, because the result type of `map` differs between implementers (`Y?` for an `Optional`, `Result<Y, E>` for a `Result`), and expressing that would need a higher-kinded type parameter, which Kex does not have.
 
 Implemented by [`Optional<X>`](#make-optional).
 
@@ -537,9 +643,9 @@ Implemented by [`Optional<X>`](#make-optional).
 set? -> Bool
 ```
 
-Answers `true` when a value is present.
+Returns `true` when a value is present.
 
-The one operation an `Optionable` type must define; `none?` is its negation.
+Every `Optionable` type must define it; `none?` is its negation.
 
 **Returns**: `true` for a present value
 
@@ -557,8 +663,6 @@ or(default: X) -> X
 ```
 
 Returns the wrapped value, or `default` when there is none.
-
-The way out of the optional world, and the reason a constrained parameter is usable at all.
 
 **Parameters**
 
@@ -589,9 +693,9 @@ Implemented by [`Result<X, E>`](#make-result).
 ok? -> Bool
 ```
 
-Answers `true` for a success.
+Returns `true` for a success.
 
-The one operation a `Resultable` type must define; `error?` is its negation.
+Every `Resultable` type must define it; `error?` is its negation.
 
 **Returns**: `true` for `Ok`
 
@@ -639,9 +743,9 @@ Implemented by [`Either<L, R>`](#make-either).
 either(onLeft: (L -> A), onRight: (R -> A)) -> A
 ```
 
-Case analysis: applies `onLeft` to a `Left` and `onRight` to a `Right`.
+Applies `onLeft` to a `Left` or `onRight` to a `Right` and returns the result.
 
-The one operation an `Eitherable` type must define — `left?` and `right?` are both written in terms of it. A discriminator alone would let you ask which side a value is on without being able to reach it, which is why this is the requirement rather than those.
+Every `Eitherable` type must define it. The trait requires this, and not `left?` or `right?`, because those only say which side a value is on; `either` also hands over the value.
 
 **Parameters**
 
@@ -653,11 +757,117 @@ The one operation an `Eitherable` type must define — `left?` and `right?` are 
 **Examples**
 
 ```kex
-Left(2).either(~toString, ~upperCase)      # => "2"
-Right("ok").either(~toString, ~upperCase)  # => "OK"
+Left(2).either(~showValue, ~upperCase)      # => "2"
+Right("ok").either(~showValue, ~upperCase)  # => "OK"
 ```
 
 
+
+## type `Validation<T, E>`
+
+The outcome of several independent checks: `Valid` with the value, or `Invalid` with every failure. Combining +Result+s stops at the first error; combining +Validation+s with `with` collects all of them, so a form or a config file can report every problem at once:
+
+```kex
+let checkedName(name: String) -> Validation<String, String> do
+  return name.empty? then Invalid(["name is empty"]) else Valid(name)
+end
+
+checkedName("").with(checkedEmail("x")) do |n, e|
+  Signup { name: n, email: e }
+end
+# => Invalid(["name is empty", "email has no @"])
+```
+
+`Validation` is `Applicable` but not a `Monad`. A chained step needs the previous value, which a failure does not have, so chaining could only stop at the first failure.
+
+**Variants**
+
+  - `Valid(T)`
+  - `Invalid([E])`
+
+Implements [`Functor`](algebra.md#trait-functor), [`Applicable`](algebra.md#trait-applicable).
+
+### Functions
+
+#### `map`
+
+```kex
+map(f: (X -> Y)) -> Validation<Y, E>
+```
+
+Applies `f` to the value when valid, and leaves the failures of an `Invalid` as they are.
+
+**Parameters**
+
+  - `f` — applied to a valid value
+
+**Returns**: `Valid(f(x))`, or the same failures
+
+**Examples**
+
+```kex
+Valid(2).map { |n| n * 10 }   # => Valid(20)
+```
+
+#### `with`
+
+```kex
+with(other: Validation<Y, E>, f: (X -> Y -> Z)) -> Validation<Z, E>
+```
+
+Applies `f` to this value and `other`'s when both are valid. Otherwise it returns the failures of both, this one's first. This is `Applicable`'s `with`.
+
+**Parameters**
+
+  - `other` — the second validation
+  - `f` — combines the two values
+
+**Returns**: `Valid` the combined value, or every failure
+
+**Examples**
+
+```kex
+Valid(1).with(Valid(2)) { |a, b| a + b }                   # => Valid(3)
+Invalid(["a"]).with(Invalid(["b"])) { |a, b| a + b }       # => Invalid(["a", "b"])
+```
+
+#### `toResult`
+
+```kex
+toResult -> Result<X, [E]>
+```
+
+Converts to a `Result`: `Ok` with the value, or `Error` with the list of failures.
+
+**Returns**: the value, or every failure
+
+**Examples**
+
+```kex
+Invalid(["a", "b"]).toResult   # => Error(["a", "b"])
+```
+
+### On `Validation<_, E>`
+
+#### `wrap` (from Applicable)
+
+```kex
+wrap(value: Y) -> Validation<Y, E>
+```
+
+Returns `Valid(value)`. This is `Applicable`'s `wrap`.
+
+**Parameters**
+
+  - `value` — the value
+
+**Returns**: `Valid(value)`
+
+**Examples**
+
+```kex
+Validation.wrap(1)   # => Valid(1)
+```
 
 ## function `to`
 
@@ -668,9 +878,9 @@ to(value: A, t: Type<T>, radix: Integer) -> T?
 
 Converts `value` to the type `t`, or `None` if it cannot be represented.
 
-`t` is a runtime type value: write the type name itself: `String`, `Integer`, `Float`, `List`. Conversion to `String` goes through the `Showable` protocol, so it works for every value.
+Pass the type name itself as `t`: `String`, `Integer`, `Float`, `List`. Conversion to `String` uses `showValue`, so it works for every value.
 
-The result is an `Optional`, not a `Result`, and deliberately so: the reason a conversion failed is usually implied by the types alone. When the reason carries information (where a parse gave up and on what) reach for `Integer.parse` or `Float.parse`, which answer with `Result<_, ParseError>`. So: `to` for every day, `parse` when the failure needs handling.
+Most failed conversions need no explanation, so `to` returns an `Optional`. When you need to know where a parse gave up and on what, use `Integer.parse` or `Float.parse`, which return a `Result` with a `ParseError`.
 
 **Parameters**
 
@@ -692,5 +902,5 @@ _Numbers and strings_
 _Closing the conversion immediately_
 
 ```kex
-let port = env.get("PORT").flatMap { |s| s.to(Integer) }.or(8080)
+let port = env.get("PORT").into { |s| s.to(Integer) }.or(8080)
 ```

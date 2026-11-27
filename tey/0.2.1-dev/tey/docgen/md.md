@@ -9,13 +9,11 @@ entities:
 
 # Tey.Docgen.Md
 
-Markdown → typed blocks → HTML.
+A Markdown reader: parses a document into blocks and renders them as HTML, so hand-written pages get the same layout as the generated reference.
 
-Docgen already had a Markdown *emitter* (Tey.Docgen.Markdown, model → md for LLMs) and an RDoc parser for doc comments; neither reads a Markdown document. This does, so hand-written prose can go through the same chrome as the generated reference.
+(`Tey.Docgen.Markdown` goes the other way, writing Markdown from the model.)
 
-The subset is what the kex.run guide pages actually use: YAML-ish frontmatter, ATX headings, paragraphs, fenced code (```kex runs through the highlighter), blockquotes, ordered and unordered lists with nesting, GFM tables, thematic breaks, and inline code / bold / italics / links. It is deliberately not CommonMark — there is no HTML passthrough, no reference links, no setext headings — and anything it does not recognise stays a paragraph rather than becoming an error.
-
-Nothing here knows about guides, books, or the kexhq site.
+It reads the subset the kex.run guide pages use: simple `key: value` frontmatter, `#` headings, paragraphs, fenced code (`kex` code is highlighted), blockquotes, nested ordered and unordered lists, GFM tables, horizontal rules, and inline code, bold, italics and links. It is not CommonMark: there is no inline HTML, no reference links and no underlined headings. Anything it does not recognise is a paragraph, never an error.
 
 ## module `Tey.Docgen.Md`
 
@@ -25,7 +23,7 @@ Nothing here knows about guides, books, or the kexhq site.
 parseDocument(text: String) -> Document
 ```
 
-The whole job: text in, document out.
+Parses a Markdown document. Windows line endings are accepted.
 
 ### `toHtml`
 
@@ -33,7 +31,7 @@ The whole job: text in, document out.
 toHtml(text: String) -> String
 ```
 
-Text in, HTML out — `parse` then `render`, which is all a caller wanting a page body needs.
+Returns the HTML for a document's body, ignoring its frontmatter.
 
 ### `splitFrontmatter`
 
@@ -75,7 +73,7 @@ unquote(value: String) -> String
 trimEnds(value: String) -> String
 ```
 
-Drops the first and last character — the quotes `quoted?` just matched.
+Drops the first and last character, the quotes `quoted?` matched.
 
 ### `quoted?`
 
@@ -111,7 +109,7 @@ fence?(line: String) -> Bool
 rule?(line: String) -> Bool
 ```
 
-`---`, `***` or `___`, three or more, nothing else on the line. Checked after frontmatter is gone, so a stray `---` here really is a break.
+Returns `true` for a horizontal rule: three or more of `-`, `*` or `_` and nothing else on the line. Frontmatter is removed before this runs.
 
 ### `ruleOf?`
 
@@ -125,7 +123,7 @@ ruleOf?(text: String, mark: String) -> Bool
 headingLevel(line: String) -> Integer
 ```
 
-`##` → 2. Zero when the line is not a heading; `#hashtag` is not one.
+Returns a heading's level, so `##` gives 2, or 0 when the line is not a heading. `#hashtag` is not one.
 
 ### `countHashes`
 
@@ -141,7 +139,7 @@ takeCode(lines: [String]) -> (MdBlock, [String])
 
 --- fenced code -------------------------------------------------------
 
-The info string is the language. An unterminated fence runs to the end of the document rather than failing — a truncated page still renders.
+Takes a fenced code block. The word after the fence is the language. A fence that is never closed runs to the end of the document.
 
 ### `closingCodeFence`
 
@@ -157,7 +155,7 @@ takeQuote(lines: [String]) -> (MdBlock, [String])
 
 --- blockquotes -------------------------------------------------------
 
-`>` is stripped from each line and what remains is parsed as blocks, so a quote can hold anything a document can, nesting included.
+Takes a blockquote. The `>` is stripped from each line and the rest is parsed as blocks, so a quote can hold anything a document can.
 
 ### `quoteLine?`
 
@@ -179,7 +177,7 @@ takeList(lines: [String]) -> (MdBlock, [String])
 
 --- lists -------------------------------------------------------------
 
-Nesting is by indentation: a line indented past the first item's marker belongs to that item and is parsed as blocks in its own right, so a list can hold paragraphs, code and deeper lists.
+Takes a list. A line indented past the first item's marker belongs to the item above it and is parsed as blocks, so an item can hold paragraphs, code and nested lists.
 
 ### `listLine?`
 
@@ -187,7 +185,7 @@ Nesting is by indentation: a line indented past the first item's marker belongs 
 listLine?(line: String) -> Bool
 ```
 
-A list continues through its own items, indented continuation lines, and blank lines — but a blank line followed by unindented text ends it, which is why the run is cut at the first line that is neither.
+Returns `true` for a line that can continue a list: an item, an indented line or a blank line. The first other line ends the list.
 
 ### `listItems`
 
@@ -201,7 +199,7 @@ listItems(lines: [String], indent: Integer, current: [String], accum: [ListItem]
 flushItem(current: [String], accum: [ListItem]) -> [ListItem]
 ```
 
-The first line is the item's own text; anything below it is nested content, dedented so it parses as a document of its own.
+Adds the collected item to `accum`. The first line is the item's text; the lines below it are dedented and parsed as nested blocks.
 
 ### `dropTrailingBlanks`
 
@@ -241,7 +239,7 @@ bulletMarker(line: String) -> String
 numberMarker(line: String) -> String
 ```
 
-"12. " → "12." ; anything else → "".
+Returns a numbered-list marker, so `"12. "` gives `"12."`, or `""` when the line has none.
 
 ### `tableStart?`
 
@@ -251,7 +249,7 @@ tableStart?(lines: [String]) -> Bool
 
 --- tables ------------------------------------------------------------
 
-A GFM table is a header row and a delimiter row of dashes; without the delimiter the lines are ordinary paragraphs.
+Returns `true` when the lines start a GFM table: a header row followed by a row of dashes. Without that row the lines are a paragraph.
 
 ### `delimiterRow?`
 
@@ -277,7 +275,7 @@ takeTable(lines: [String]) -> (MdBlock, [String])
 cellsOf(line: String) -> [String]
 ```
 
-Leading and trailing pipes are optional, so the split is trimmed of the empty cells they produce.
+Returns the cells of a table row. Leading and trailing pipes are optional.
 
 ### `takeParagraph`
 
@@ -287,7 +285,7 @@ takeParagraph(lines: [String]) -> (MdBlock, [String])
 
 --- paragraphs --------------------------------------------------------
 
-Runs to a blank line or to the start of any other construct, so a list or fence directly under prose is not swallowed into it.
+Takes a paragraph, which ends at a blank line or where another block starts, so a list or code fence right under prose is not swallowed.
 
 ### `paragraphLine?`
 
@@ -315,7 +313,7 @@ renderBlock(block: MdBlock) -> String
 renderCode(language: String, body: String) -> String
 ```
 
-Kex code goes through the same highlighter the reference pages use, so a snippet in the guide looks like a signature in the reference. Everything else is escaped and left plain.
+Renders a code block. Kex code goes through the reference pages' highlighter; other languages are escaped and left plain.
 
 ### `renderItems`
 
@@ -347,7 +345,7 @@ renderRow(row: [String]) -> String
 anchor(text: String) -> String
 ```
 
-A heading's id: lowercase, non-alphanumerics folded to single dashes.
+Returns a heading's id: lower case, with each run of characters other than letters and digits turned into one dash.
 
 ### `trimDashes`
 
@@ -355,7 +353,7 @@ A heading's id: lowercase, non-alphanumerics folded to single dashes.
 trimDashes(text: String) -> String
 ```
 
-`String.trim` takes no argument, and the folding above can leave a dash at either end (`## \`try\`` → `-try-`).
+Removes dashes from both ends, which `anchor` can leave: `(try)` becomes `-try-` before this.
 
 ### `anchorChar`
 
@@ -375,7 +373,7 @@ squeezeDashes(text: String, accum: String) -> String
 stripInline(text: String) -> String
 ```
 
-Inline markers removed, for anchors and any other plain-text use.
+Returns the text with the inline markers (backticks, `*` and `_`) removed.
 
 ### `inline`
 
@@ -385,7 +383,7 @@ inline(text: String) -> String
 
 --- inline ------------------------------------------------------------
 
-Code spans first and separately: their content is escaped but never scanned for emphasis, so `a*b*c` inside backticks stays literal.
+Renders inline Markdown. Code spans are handled first: their content is escaped but not scanned for emphasis, so `a*b*c` in backticks stays as written.
 
 ### `inlineLoop`
 
@@ -399,7 +397,7 @@ inlineLoop(text: String, accum: String) -> String
 emphasis(text: String) -> String
 ```
 
-Links before emphasis, so a `*` inside a URL is not read as a marker.
+Renders links, then bold and italics, so a `*` inside a URL is not read as a marker.
 
 ### `links`
 
@@ -413,7 +411,7 @@ links(text: String, accum: String) -> String
 linkParts(rest: String) -> (String, String, String)?
 ```
 
-`label](href)` → (label, href, what follows). None when the shape is not a link after all, in which case the `[` is literal text.
+Splits `label](href)` and what follows it into `(label, href, rest)`, or returns `None` when it is not a link, and the `[` is plain text.
 
 ### `marks`
 
@@ -421,7 +419,7 @@ linkParts(rest: String) -> (String, String, String)?
 marks(text: String) -> String
 ```
 
-`**bold**` before `*italic*`, or the opening `**` would parse as an empty emphasis. Escaping happens here, on the text that is left.
+Renders bold before italics, or the opening `**` would be read as empty italics. The remaining text is escaped here.
 
 ### `wrap`
 
@@ -435,7 +433,7 @@ wrap(text: String, strongMark: String, strongTag: String, emMark: String, emTag:
 pairs(text: String, mark: String, tag: String, accum: String) -> String
 ```
 
-Replaces each surviving pair of markers with a tag. An unpaired marker is left as written rather than swallowing the rest of the line.
+Replaces each pair of markers with a tag. A marker without a partner is left as written.
 
 ### `indexOfText`
 
@@ -443,7 +441,7 @@ Replaces each surviving pair of markers with a tag. An unpaired marker is left a
 indexOfText(haystack: String, needle: String, at: Integer) -> Integer?
 ```
 
-Where `needle` first occurs in `haystack`, or None. String.indexOf takes a Char, and the markers here are two characters wide ("**"), so the search is spelled out.
+Returns where `needle` first occurs in `haystack` from `at` on, or `None`. `String.indexOf` only finds a `Char`, and `**` is two characters.
 
 ### `esc`
 
@@ -453,13 +451,13 @@ esc(s: String) -> String
 
 ## record `Frontmatter`
 
-A document's frontmatter: the keys the prose pipeline reads. Unknown keys are parsed and ignored rather than rejected, so a page can carry metadata a later renderer will use.
+The frontmatter keys this reader uses. Other keys are ignored, so a page may carry metadata for something else.
 
 **Fields**
 
-  - `title` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `description` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `order` : [Integer](../../../../prelude/0.4.0-rc.4-dev/number.md#make-integer) (optional)
+  - `title` : [String](../../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `description` : [String](../../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `order` : [Integer](../../../../prelude/0.4.0-rc.5-dev/number.md#make-integer) (optional)
 
 
 
@@ -469,12 +467,14 @@ One item of a list: its own inline text, plus any blocks nested under it.
 
 **Fields**
 
-  - `text` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `text` : [String](../../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
   - `children` : [[MdBlock](#type-tey-docgen-md-mdblock)]
 
 
 
 ## type `MdBlock`
+
+A block of a Markdown document.
 
 **Variants**
 
@@ -490,6 +490,8 @@ One item of a list: its own inline text, plus any blocks nested under it.
 
 
 ## record `Document`
+
+A parsed document: its frontmatter and its blocks.
 
 **Fields**
 

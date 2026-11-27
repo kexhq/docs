@@ -11,7 +11,7 @@ entities:
 
 ## module `Control.Retry`
 
-Retry an operation after it returns an error.
+Retries an operation that returns an error, with a delay between attempts.
 
 **Examples**
 
@@ -147,8 +147,8 @@ let outcome = Retry.run(schedule: schedule) do
   end
 end
 match outcome do
-  Done(result) => IO.printLine(result)
-  Again(last) => IO.printLine("retry budget exhausted: ${last}")
+  Retry.Done(result) => IO.printLine(result)
+  Retry.Again(last) => IO.printLine("retry budget exhausted: ${last}")
 end
 ```
 
@@ -156,9 +156,11 @@ end
 
 ## module `Control.Retry.Retry`
 
-`run` calls the block immediately. `Ok` stops; `Error` waits and retries. When the schedule runs out, it returns the last error unchanged. Use `again` and `done` when your application needs to choose what to retry.
+Running an operation until it succeeds or a `Schedule` runs out.
 
-HTTP 429 and 503 responses are `Ok(response)`, so retrying those statuses requires an explicit decision. For writes, make sure repeating the request is safe, for example by using an idempotency key. Set request timeouts separately: the schedule limits sleep, not time spent inside the operation.
+`run` calls the block at once. An `Ok` result is returned; an `Error` is retried after a wait, and when the schedule runs out the last error is returned as it is. To choose yourself what to retry, return `again` or `done` from the block.
+
+An HTTP 429 or 503 response is `Ok(response)`, so retrying on a status needs `again`. Only retry a write when repeating it is harmless, for example with an idempotency key. The schedule limits the time spent sleeping, not the time spent in the operation, so give requests their own timeouts.
 
 ### `again`
 
@@ -166,11 +168,11 @@ HTTP 429 and 503 responses are `Ok(response)`, so retrying those statuses requir
 again(value: X) -> Decision<X>
 ```
 
-Retry this operation if the schedule has room for another attempt.
+Returns `Again(value)`, asking `run` to try again if the schedule allows.
 
 **Parameters**
 
-  - `value` — the last outcome, retained if the schedule is exhausted
+  - `value` — the result, which `run` returns if the schedule runs out
 
 **Returns**: `Again(value)`
 
@@ -180,11 +182,11 @@ Retry this operation if the schedule has room for another attempt.
 done(value: X) -> Decision<X>
 ```
 
-Stop now. The supplied value may be a success or a permanent failure.
+Returns `Done(value)`, telling `run` to stop with `value`, whether that is a success or a failure not worth retrying.
 
 **Parameters**
 
-  - `value` — the final application outcome
+  - `value` — the final result
 
 **Returns**: `Done(value)`
 
@@ -194,50 +196,39 @@ Stop now. The supplied value may be a success or a permanent failure.
 run(operation: Block<X>, schedule: Schedule = …, attempts: Integer = …, delay: Duration = …, backoff: Float = …, maximumDelay: Duration = …, jitter: Float = …, maximumTotalDelay: Duration? = …, sleeper: (Duration -> Void) = …, random: Block<Float> = …, onRetry: (Info<X> -> Void) = …) -> X
 ```
 
-Call the block until it succeeds, returns `done`, or runs out of attempts or sleep time.
+Calls `operation` until it succeeds, returns `done`, or runs out of attempts or sleep time, and returns its last result.
 
-The first attempt is immediate. Every later attempt follows one sleep. There is no sleep after success or the final error. Named timing options override the corresponding schedule field for this execution only.
+The first call happens at once, and each later one after a wait. Named timing options override that field of `schedule` for this run only.
 
-Return a `Result` from the block for automatic retries: `Ok` stops and `Error` retries. If no more retries are allowed, `run` returns the last error.
+When the block returns a `Result`, `Ok` stops and `Error` is retried. When it returns `done(value)` or `again(value)`, it decides itself. Use one of the two forms throughout the block. An error raised inside the block is not caught or retried.
 
-Return `done(value)` or `again(value)` to make the decision yourself. The final `Done` means the block chose to stop; `Again` means it wanted another try but the schedule ran out. Use one return form throughout the block. Runtime faults propagate; they are not retried.
+Settings out of range are adjusted, not rejected: attempts below 1 become 1, negative durations zero, a backoff below 1 becomes 1, and jitter and the random samples are clamped to 0..1.
 
-Out-of-range settings are adjusted: attempts below one become one, negative durations become zero, backoff below one becomes one, jitter and random samples are clamped to 0..1. Non-finite Float settings are unsupported.
+`Done(Error(...))` means the block gave up on an error not worth retrying. `Again(Ok(response))` means a response the block rejected, such as a 503, kept coming until the schedule ran out. `run` knows nothing about HTTP: deciding which statuses to retry and honouring `Retry-After` are up to the block.
 
-`Done(Error(...))` means the application stopped on a permanent error. `Again(Ok(response))` means an unacceptable HTTP status persisted until exhaustion. HTTP status classification and Retry-After handling are the application's responsibility; `run` has no HTTP-specific behavior.
-
-The testing hooks are independent: replacing sleep keeps normal random sampling, and replacing randomness keeps real sleep. A random sample of 0 selects the lower jitter bound, 0.5 the base, and 1 the upper bound. With zero jitter no random sample is needed. lint:allow parameter-count — named options make each setting independent
+`sleeper` and `random` are for tests, and replacing one leaves the other real. A sample of 0 picks the shortest jittered wait, 0.5 the unjittered one, and 1 the longest. With zero jitter `random` is not called. lint:allow parameter-count — named options make each setting independent
 
 **Parameters**
 
-  - `operation` — called again for each attempt; returns Result or Decision
-  - `schedule` — reusable settings; defaults to `Schedule {}`
+  - `operation` — called once per attempt; returns a `Result` or a `Decision`
+  - `schedule` — the settings; defaults to `Schedule {}`
   - `attempts` — total attempts; defaults to the schedule field
   - `delay` — initial wait; defaults to the schedule field
   - `backoff` — delay multiplier; defaults to the schedule field
   - `maximumDelay` — sleep cap; defaults to the schedule field
   - `jitter` — variation fraction; defaults to the schedule field
   - `maximumTotalDelay` — sleep budget; defaults to the field
-  - `sleeper` — defaults to real `Task.sleep`
-  - `random` — defaults to secure backend sampling in 0..1
-  - `onRetry` — reports an allowed retry; defaults to no action
+  - `sleeper` — waits between attempts; defaults to `Task.sleep`
+  - `random` — returns a sample in 0..1 for jitter; defaults to a secure random source
+  - `onRetry` — called before each wait; defaults to doing nothing
 
-**Returns**: first Ok/Done, or last Error/Again when retries run out
+**Returns**: the first `Ok` or `Done`, or the last `Error` or `Again` when the schedule runs out
 
 ## record `Schedule`
 
-Timing and attempt limits for `run`.
+The attempt limit and the waits `run` uses between attempts.
 
-Defaults: three attempts, starting with a 100 ms wait, doubling up to 5 seconds, with 20% jitter. All fields are optional. A schedule holds settings. Reusing it starts each run from attempt one.
-
-* `attempts`: maximum executions, including the first; default 3.
-* `delay`: initial base wait; default 100 milliseconds.
-* `backoff`: base-delay multiplier; default 2.0, or 1.0 for fixed waits.
-* `maximumDelay`: cap on each actual wait, including jitter; default 5 seconds.
-* `jitter`: symmetric proportional variation; default 0.2, or 0.0 to disable.
-* `maximumTotalDelay`: cumulative sleep allowance; default `None`.
-  Operation execution time is excluded. A wait that exceeds the remaining
-  allowance ends the run without sleeping or calling the operation again.
+Every field has a default: three attempts, a first wait of 100 ms that doubles each time up to 5 seconds, and 20% jitter. A schedule only holds settings, so each `run` that uses it starts again from the first attempt.
 
 **Fields**
 
@@ -252,7 +243,9 @@ Defaults: three attempts, starting with a 100 ms wait, doubling up to 5 seconds,
 
 ## type `Decision<X>`
 
-Whether to retry, together with the last result. `Done(value)` means the block stopped deliberately. `Again(value)` returned by `run` means the schedule was exhausted before completion. The value inside can be any application result, including an `Error`.
+A block's decision whether to retry, carrying its result.
+
+From `run`, `Done(value)` means the block chose to stop, and `Again(value)` means it still wanted to retry when the schedule ran out. The value can be anything, including an `Error`.
 
 **Variants**
 
@@ -263,17 +256,9 @@ Whether to retry, together with the last result. `Done(value)` means the block s
 
 ## record `Info<X>`
 
-Progress passed to `onRetry` before the next wait.
+What `run` passes to `onRetry` just before it waits for the next attempt.
 
-The callback runs only when another attempt is allowed. It does not run for the first call, a successful result, `done`, or exhaustion. Durations count scheduled sleep; they exclude time spent in the operation.
-
-* `attempt`: the just-completed attempt, starting at 1.
-* `nextAttempt`: the attempt that follows the upcoming wait.
-* `maximumAttempts`: total permitted executions, including the first.
-* `remainingAttempts`: executions remaining, including the upcoming one.
-* `delay`: actual upcoming wait, after jitter and the delay cap.
-* `totalDelay`: sleep already performed, excluding the upcoming wait.
-* `result`: the last `Error` or `Again`, including its application payload.
+`onRetry` is called only when another attempt will follow, never after a success, a `done`, or the last attempt. The durations count sleep only, not time spent in the operation.
 
 **Fields**
 

@@ -1210,17 +1210,19 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <div class="fn" id="function-tey-workspace-discover">
 <div class="fn-head">
 <h3><a class="self" href="#function-tey-workspace-discover"><code>discover</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-workspace-discover" title="Copy link" aria-label="Copy link">#</a></h3>
-<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">discover</span><span class="tok-punct">(</span>start<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-tey-workspace-context"><span class="tok-type">Context</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></span></code></pre>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">discover</span><span class="tok-punct">(</span>start<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-tey-workspace-context"><span class="tok-type">Context</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></span></code></pre>
 </div>
-<p>Discovers the outermost workspace containing <code>start</code>. Without a workspace, the nearest package is a one-member context. Paths are lexical and absolute; discovery never changes the process working directory.</p>
+<p>Returns the outermost workspace containing <code>start</code>, with its members.</p>
+<p>When no <code>package.kex</code> above <code>start</code> declares a workspace, the nearest package is the only member. Paths are made absolute without resolving symlinks, and the working directory is not changed. It fails when there is no <code>package.kex</code> at or above <code>start</code>, or when two members share a name. Dependency cycles among members are reported in <code>warnings</code>.</p>
 
 </div>
 <div class="fn" id="function-tey-workspace-select">
 <div class="fn-head">
 <h3><a class="self" href="#function-tey-workspace-select"><code>select</code></a> <a class="permalink" href="#function-tey-workspace-select" title="Copy link" aria-label="Copy link">#</a></h3>
-<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">select</span><span class="tok-punct">(</span>context<span class="tok-op">:</span> <a class="xref" href="#record-tey-workspace-context"><span class="tok-type">Context</span></a><span class="tok-punct">,</span> packageName<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> workspace?<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-punct">[</span><a class="xref" href="#record-tey-workspace-member"><span class="tok-type">Member</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></span></code></pre>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">select</span><span class="tok-punct">(</span>context<span class="tok-op">:</span> <a class="xref" href="#record-tey-workspace-context"><span class="tok-type">Context</span></a><span class="tok-punct">,</span> packageName<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> workspace?<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-punct">[</span><a class="xref" href="#record-tey-workspace-member"><span class="tok-type">Member</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></span></code></pre>
 </div>
-<p>Selects the members a workspace-aware command should operate on. An explicit package always wins; otherwise commands at a member stay local, while commands at the workspace root (or another non-member directory) use every member. <code>--workspace</code> broadens the implicit member selection.</p>
+<p>Returns the members a workspace-aware command should act on.</p>
+<p>A non-empty <code>packageName</code> selects that member, and is an error when none has that name. Otherwise <code>workspace?</code> (the <code>--workspace</code> flag) selects every member. Without either, a command run inside a member acts on that member, and one run at the workspace root or outside any member acts on all of them.</p>
 
 </div>
 <div class="fn" id="function-tey-workspace-dependencylayers">
@@ -1228,20 +1230,21 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <h3><a class="self" href="#function-tey-workspace-dependencylayers"><code>dependencyLayers</code></a> <a class="permalink" href="#function-tey-workspace-dependencylayers" title="Copy link" aria-label="Copy link">#</a></h3>
 <pre class="code sig"><code><span class="sig-line"><span class="tok-fn">dependencyLayers</span><span class="tok-punct">(</span>members<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-workspace-member"><span class="tok-type">Member</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><a class="xref" href="#record-tey-workspace-member"><span class="tok-type">Member</span></a><span class="tok-punct">]</span><span class="tok-punct">]</span></span></code></pre>
 </div>
-<p>Dependency-ready layers for workspace-wide commands. Cyclic leftovers form one final layer so callers can continue, while discovery reports the cycle.</p>
+<p>Returns the members in layers, each depending only on members in earlier layers.</p>
+<p>Members caught in a dependency cycle go together in a final layer, so a command can still run them; <code>discover</code> reports the cycle as a warning.</p>
 
 </div>
 <div class="fn" id="function-tey-workspace-membername">
 <div class="fn-head">
 <h3><a class="self" href="#function-tey-workspace-membername"><code>memberName</code></a> <a class="permalink" href="#function-tey-workspace-membername" title="Copy link" aria-label="Copy link">#</a></h3>
-<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">memberName</span><span class="tok-punct">(</span>member<span class="tok-op">:</span> <a class="xref" href="#record-tey-workspace-member"><span class="tok-type">Member</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">memberName</span><span class="tok-punct">(</span>member<span class="tok-op">:</span> <a class="xref" href="#record-tey-workspace-member"><span class="tok-type">Member</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
 </div>
 
 </div>
 <div class="fn" id="function-tey-workspace-memberdependencies">
 <div class="fn-head">
 <h3><a class="self" href="#function-tey-workspace-memberdependencies"><code>memberDependencies</code></a> <a class="permalink" href="#function-tey-workspace-memberdependencies" title="Copy link" aria-label="Copy link">#</a></h3>
-<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">memberDependencies</span><span class="tok-punct">(</span>member<span class="tok-op">:</span> <a class="xref" href="#record-tey-workspace-member"><span class="tok-type">Member</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></span></code></pre>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">memberDependencies</span><span class="tok-punct">(</span>member<span class="tok-op">:</span> <a class="xref" href="#record-tey-workspace-member"><span class="tok-type">Member</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></span></code></pre>
 </div>
 
 </div>
@@ -1251,7 +1254,7 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <h2><span class="kind kind-record">record</span> <code>Member</code> <a class="permalink" href="#record-tey-workspace-member" title="Copy link" aria-label="Copy link">#</a></h2>
 <h3>Fields</h3>
 <dl class="fields">
-<div class="field"><dt><code>memberRoot</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>memberRoot</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a></code></dd></div>
 <div class="field"><dt><code>memberManifest</code></dt><dd><code><a class="xref" href="/tey/0.2.1-dev/tey/manifest/#record-tey-manifest-manifestpackage">ManifestPackage</a></code></dd></div>
 </dl>
 
@@ -1260,10 +1263,10 @@ body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
 <h2><span class="kind kind-record">record</span> <code>Context</code> <a class="permalink" href="#record-tey-workspace-context" title="Copy link" aria-label="Copy link">#</a></h2>
 <h3>Fields</h3>
 <dl class="fields">
-<div class="field"><dt><code>workspaceRoot</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>workspaceRoot</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a></code></dd></div>
 <div class="field"><dt><code>members</code></dt><dd><code>[<a class="xref" href="#record-tey-workspace-member">Member</a>]</code> <span class="opt">optional</span></dd></div>
 <div class="field"><dt><code>currentMember</code></dt><dd><code><a class="xref" href="#record-tey-workspace-member">Member</a>?</code> <span class="opt">optional</span></dd></div>
-<div class="field"><dt><code>warnings</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string">String</a>]</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>warnings</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a>]</code> <span class="opt">optional</span></dd></div>
 </dl>
 
 </section>

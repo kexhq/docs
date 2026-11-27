@@ -11,7 +11,7 @@ entities:
 
 ## module `Net.IP`
 
-Validated, canonical IP addresses and CIDR networks.
+IP addresses and CIDR networks, checked and stored in canonical form.
 
 ```kex
 using Net.IP
@@ -25,9 +25,9 @@ network.contains?(address)   # => true
 
 ## record `Address`
 
-A canonical IPv4 or IPv6 address.
+An IPv4 or IPv6 address.
 
-The stored spelling is normalized, so addresses that arrived in different forms compare and print consistently. Zone identifiers such as `%en0` are properties of socket endpoints and do not belong here.
+The text is stored in canonical form, so two spellings of the same address compare equal and print the same. `Address.parse` rejects zone identifiers such as `%en0`.
 
 **Fields**
 
@@ -77,9 +77,7 @@ let family = address.version == 6 then :ipv6 else :ipv4
 loopback? -> Bool
 ```
 
-Returns `true` for an address that routes back to this host.
-
-This covers the IPv4 `127.0.0.0/8` block as well as IPv6 `::1`; it is not limited to the familiar `127.0.0.1` spelling.
+Returns `true` for a loopback address: anything in `127.0.0.0/8`, or `::1`.
 
 **Returns**: whether this is a loopback address
 
@@ -99,16 +97,16 @@ private? -> Bool
 
 Returns `true` for an address reserved for private networks.
 
-Use this as one signal in a network policy, not as proof that a peer is trusted: private addresses can still belong to another machine.
+A private address can still belong to another machine, so it does not prove that a peer is trusted.
 
 **Returns**: whether this is a private-use address
 
 **Examples**
 
-_Rejecting a public target in an internal-only configuration_
+_Requiring an internal target_
 
 ```kex
-Error("target must be private") if !target.private?
+die("target must be a private address") if !target.private?
 ```
 
 #### `unspecified?`
@@ -119,7 +117,7 @@ unspecified? -> Bool
 
 Returns `true` for the all-zero address: `0.0.0.0` or `::`.
 
-On a listening endpoint this usually means "all local interfaces". It is not a usable remote destination.
+On a listening endpoint it usually means all local interfaces. It cannot be used as a remote destination.
 
 **Returns**: whether every address bit is zero
 
@@ -151,9 +149,9 @@ let mode = destination.multicast? then :group else :unicast
 
 ## record `Network`
 
-A canonical CIDR network with host bits cleared.
+A CIDR network, stored with its host bits cleared.
 
-Parsing `192.0.2.9/24` therefore produces `192.0.2.0/24`. This makes a `Network` suitable for access-control rules and routing tables: its identity is the range, not whichever host address happened to describe it.
+Parsing `192.0.2.9/24` gives `192.0.2.0/24`, so two spellings of the same range are equal.
 
 **Fields**
 
@@ -167,7 +165,7 @@ Parsing `192.0.2.9/24` therefore produces `192.0.2.0/24`. This makes a `Network`
 string -> String
 ```
 
-Returns canonical CIDR text, including the prefix length.
+Returns the canonical CIDR text, including the prefix length.
 
 **Returns**: canonical CIDR text
 
@@ -185,7 +183,7 @@ contains?(address: Address) -> Bool
 
 Returns `true` when `address` falls within this network.
 
-An address from the other family is simply outside the network; callers do not need to compare `version` first.
+An address of the other IP version is never inside, so there is no need to compare `version` first.
 
 **Parameters**
 
@@ -224,7 +222,7 @@ Network.parse("10.0.0.0/8").try.prefix   # => 8
 first -> Address
 ```
 
-Returns the first address in the range: the address with all host bits cleared.
+Returns the first address in the range, with all host bits cleared.
 
 **Returns**: the first address in the range
 
@@ -240,9 +238,7 @@ Network.parse("192.0.2.9/24").try.first.string   # => "192.0.2.0"
 last -> Address
 ```
 
-Returns the last address in the range: the address with all host bits set.
-
-This is the IPv4 broadcast-shaped endpoint of the mathematical range; the API does not decide whether a protocol permits assigning it to a host.
+Returns the last address in the range, with all host bits set. For IPv4 this is the broadcast address, which is usually not assignable to a host.
 
 **Returns**: the last address in the range
 
@@ -254,7 +250,7 @@ Network.parse("192.0.2.9/24").try.last.string   # => "192.0.2.255"
 
 ## module `Net.IP.Address`
 
-Strict parsing and canonicalization of individual IP addresses.
+Parsing IP addresses.
 
 ### `parse`
 
@@ -262,7 +258,7 @@ Strict parsing and canonicalization of individual IP addresses.
 parse(text: String) -> Result<Address, NetError>
 ```
 
-Parses IPv4 or IPv6 text and canonicalizes its spelling.
+Parses an IPv4 or IPv6 address. Invalid text is a `NetError` of kind `Parse`.
 
 **Parameters**
 
@@ -272,15 +268,13 @@ Parses IPv4 or IPv6 text and canonicalizes its spelling.
 
 **Examples**
 
-_Canonicalize an IPv6 address_
-
 ```kex
-Address.parse("2001:db8::42").try.string   # => "2001:db8::42"
+Address.parse("2001:0db8::0042").try.string   # => "2001:db8::42"
 ```
 
 ## module `Net.IP.Network`
 
-Strict parsing and canonicalization of CIDR networks.
+Parsing CIDR networks.
 
 ### `parse`
 
@@ -288,7 +282,7 @@ Strict parsing and canonicalization of CIDR networks.
 parse(text: String) -> Result<Network, NetError>
 ```
 
-Parses a CIDR and clears host bits.
+Parses an address and prefix length such as `192.0.2.0/24`, clearing the host bits. Invalid text is a `NetError` of kind `Parse`.
 
 **Parameters**
 
@@ -297,8 +291,6 @@ Parses a CIDR and clears host bits.
 **Returns**: the network, or `Parse`
 
 **Examples**
-
-_Normalize a host address to its network_
 
 ```kex
 Network.parse("192.0.2.9/24").try.string   # => "192.0.2.0/24"

@@ -11,9 +11,9 @@ entities:
 
 ## module `TaggedValidation`
 
-Diagnostics returned by compile-time validators for tagged literals.
+Diagnostics that compile-time validators return for tagged literals.
 
-A tagged literal (`` re`\d+` ``, `` sql`SELECT ...` ``) can be checked while your program is compiled rather than when it runs. The compiler finds the checker by name: a tag `foo` is validated by a function named `validateFoo` taking the literal's text and returning a list of `Issue` values. An empty list means the literal is fine.
+A tagged literal (`` re`\d+` ``, `` sql`SELECT ...` ``) can be checked when the program is compiled. The compiler looks the checker up by name: tag `foo` is checked by a function `validateFoo` that takes the literal's text and returns a list of `Issue` values. An empty list means the literal is fine.
 
 ```kex
 let validateHex(source: String) -> [TaggedValidation.Issue] do
@@ -24,9 +24,9 @@ let validateHex(source: String) -> [TaggedValidation.Issue] do
 end
 ```
 
-A `Fatal` issue stops the build with the message, pointing the caret at the offset; a `Warn` reports without stopping.
+A `Fatal` issue fails the build with its message and puts the caret at its offset. A `Warn` issue is reported and the build goes on.
 
-Byte offsets are zero-based and relative to the cooked literal body.
+Offsets count bytes from zero, from the start of the literal body after escapes are processed.
 
 ### `fatal`
 
@@ -34,7 +34,7 @@ Byte offsets are zero-based and relative to the cooked literal body.
 fatal(message: String) -> Issue
 ```
 
-A fatal issue about the literal as a whole, with no particular position.
+Returns a fatal issue about the whole literal, with no position.
 
 **Parameters**
 
@@ -54,9 +54,9 @@ TaggedValidation.fatal("an empty pattern matches nothing")
 fatalAt(offset: Integer, message: String) -> Issue
 ```
 
-A fatal issue at one offset in the literal.
+Returns a fatal issue at one offset in the literal.
 
-The offset is where the caret points in the compiler's error, so use the position the underlying checker reported.
+The compiler's error puts its caret at `offset`, so pass the position your checker reported.
 
 **Parameters**
 
@@ -74,7 +74,7 @@ TaggedValidation.fatalAt(3, "missing closing parenthesis")
 _Reporting what a checker found_
 
 ```kex
-match Kex.Intrinsic.Regex.validate(source) do
+match checkPattern(source) do
   Just((offset, message)) => [TaggedValidation.fatalAt(offset, message)]
   None                    => []
 end
@@ -86,7 +86,7 @@ end
 fatalBetween(start: Integer, finish: Integer, message: String) -> Issue
 ```
 
-A fatal issue spanning a range of the literal.
+Returns a fatal issue covering a range of the literal.
 
 **Parameters**
 
@@ -108,7 +108,7 @@ TaggedValidation.fatalBetween(0, 4, "this group can never match")
 warn(message: String) -> Issue
 ```
 
-A warning about the literal as a whole. Reported, but the build continues.
+Returns a warning about the whole literal. The build goes on.
 
 **Parameters**
 
@@ -128,7 +128,7 @@ TaggedValidation.warn("this pattern is very slow on long inputs")
 warnAt(offset: Integer, message: String) -> Issue
 ```
 
-A warning at one offset in the literal.
+Returns a warning at one offset in the literal.
 
 **Parameters**
 
@@ -149,7 +149,7 @@ TaggedValidation.warnAt(7, "redundant escape")
 warnBetween(start: Integer, finish: Integer, message: String) -> Issue
 ```
 
-A warning spanning a range of the literal.
+Returns a warning covering a range of the literal.
 
 **Parameters**
 
@@ -167,9 +167,9 @@ TaggedValidation.warnBetween(2, 6, "this alternation is always taken")
 
 ## type `ByteSpan`
 
-Where in the literal an issue applies: a single offset, or a range.
+Where in the literal an issue applies: one offset, or a range.
 
-Both are byte offsets into the literal body, counted from zero.
+Both count bytes into the literal body from zero.
 
 **Variants**
 
@@ -182,7 +182,7 @@ Both are byte offsets into the literal body, counted from zero.
 
 One diagnostic about a tagged literal.
 
-`Fatal` stops the build; `Warn` reports and lets it continue. The span is optional: an issue about the literal as a whole carries `None`.
+`Fatal` fails the build and `Warn` is reported while the build goes on. An issue about the whole literal has `None` for its span.
 
 **Variants**
 

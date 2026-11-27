@@ -20,7 +20,7 @@ regex(parts: [String], values: [Any]) -> Regex
 
 Compiles `source` into a `Regex`.
 
-Answers a `Result` because an arbitrary string may not be a valid pattern. Use this form when the pattern is built at run time: from a config file, from user input. For a pattern you write yourself, the tag form `` regex`\d+` `` is checked at compile time and hands back a bare `Regex`.
+Use it for a pattern built at run time, such as one read from a config file or typed by a user. For a pattern written in the source, the tag form `` regex`\d+` `` is checked at compile time and returns a `Regex` directly.
 
 **Parameters**
 
@@ -31,8 +31,8 @@ Answers a `Result` because an arbitrary string may not be a valid pattern. Use t
 **Examples**
 
 ```kex
-regex("\\d+")   # => Ok(Regex { source: "\\d+" })
-regex("(")      # => Error(RegexError { message: "missing closing parenthesis", ... })
+regex("\\d+")   # => Ok(Regex.Regex { source: "\d+" })
+regex("(")      # => Error(Regex.RegexError { message: "missing closing parenthesis", position: 1, source: "(" })
 ```
 
 _Compiling a user-supplied filter_
@@ -53,9 +53,11 @@ end
 withOptions(source: String, options: {Atom: Bool}) -> Result<Regex, RegexError>
 ```
 
-Compiles `source` with matching options, as Ruby's `Regexp.new(source, options)` does: `ignoreCase` (`/i`), `multiline` (`^` and `$` at every line), `dotAll` (`.` matches a newline too) and `extended` (whitespace and `#` comments in the pattern are ignored). An option set to `false` is the same as leaving it out; an unknown one is a `RegexError` at position 0.
+Compiles `source` with matching options, like Ruby's `Regexp.new(source, options)`.
 
-The options become an inline `(?imsx)` prefix, so the regex's `source` carries them and prints them. Positions in a compile error still count from the start of `source`.
+The options are `ignoreCase` (`/i`), `multiline` (`^` and `$` match at every line), `dotAll` (`.` also matches a newline) and `extended` (whitespace and `#` comments in the pattern are ignored). An option set to `false` is the same as leaving it out, and an unknown one is a `RegexError` at position 0.
+
+The options are added to the pattern as an inline `(?imsx)` prefix, so the resulting `source` shows them. Positions in a compile error still count from the start of `source` as you passed it.
 
 **Parameters**
 
@@ -70,7 +72,7 @@ The options become an inline `(?imsx)` prefix, so the regex's `source` carries t
 Regex.withOptions("hello", { ignoreCase: true }).map { |re| "HeLLo".matches?(re) }
 # => Ok(true)
 Regex.withOptions("x", { verbose: true })
-# => Error(RegexError { source: "x", position: 0, message: "unknown regex option :verbose" })
+# => Error(Regex.RegexError { message: "unknown regex option :verbose", position: 0, source: "x" })
 ```
 
 ### `validateRegex`
@@ -79,11 +81,9 @@ Regex.withOptions("x", { verbose: true })
 validateRegex(source: String) -> [TaggedValidation.Issue]
 ```
 
-Validates a `regex` tagged literal at compile time.
+Checks a `regex` tagged literal at compile time.
 
-Found by the compiler through the standard `validate<Tag>` naming convention (nothing about regex is special-cased). A raw `` regex`(` `` is a compile error, with the caret pointing at the byte offset PCRE2 reported inside the literal.
-
-Must stay pure: the compiler evaluates it on the tree-walk interpreter at compile time, so marking it `foul` would break builds, not just calls.
+The compiler finds it by the `validate<Tag>` naming convention described in `TaggedValidation`. An invalid literal such as `` regex`(` `` is a compile error, with the caret at the offset where the pattern went wrong.
 
 **Parameters**
 
@@ -98,9 +98,9 @@ re(source: String) -> Result<Regex, RegexError>
 re(parts: [String], values: [Any]) -> Regex
 ```
 
-A short alias for `regex`, in both its forms.
+A short name for `regex`, in both its call and tag forms.
 
-A second name bound to the same two functions, not a lexer synonym, so every property of `regex` (escaping, backend mapping, error shape) applies to it unchanged. Most code uses the tag form, where the shorter name reads better.
+It behaves exactly like `regex`. Most code uses it as a tag, where the shorter name reads better.
 
 **Parameters**
 
@@ -121,7 +121,7 @@ re("\\d+")         # call form -> Result<Regex, RegexError>
 validateRe(source: String) -> [TaggedValidation.Issue]
 ```
 
-Validates an `re` tagged literal at compile time, delegating to `validateRegex`. The compiler finds it by the same `validate<Tag>` convention.
+Checks an `re` tagged literal at compile time, as `validateRegex` does.
 
 **Parameters**
 
@@ -135,9 +135,9 @@ Validates an `re` tagged literal at compile time, delegating to `validateRegex`.
 quote(s: String) -> String
 ```
 
-Escapes every regex metacharacter in `s`, so the result matches `s` literally.
+Returns `s` with every regex metacharacter escaped, as a pattern that matches `s` literally.
 
-This is how to search for text that may itself contain pattern syntax: a search term typed by a user, a filename, a version string. It escapes per character rather than wrapping in `\Q...\E`, which a value containing `\E` would break out of.
+Use it to search for text that may contain pattern syntax, such as a search term typed by a user or a file name. Each character is escaped on its own, so a `\E` in `s` cannot end the quoting early as it would inside `\Q...\E`.
 
 **Parameters**
 
@@ -148,7 +148,7 @@ This is how to search for text that may itself contain pattern syntax: a search 
 **Examples**
 
 ```kex
-Regex.quote("a.b")   # => "a\\.b"
+Regex.quote("a.b")   # => "a\.b"
 ```
 
 _Searching for a literal term supplied by a user_
@@ -168,7 +168,7 @@ matches(s: String, re: Regex) -> Match?
 
 Finds the first occurrence of `re` in `s` and returns what it matched.
 
-Unanchored: the pattern may match anywhere in the string. Anchor it with `^...$` when a whole-string match is what you mean. Answers `None` when the pattern does not occur.
+The pattern may match anywhere in the string; anchor it with `^...$` to match the whole string. Returns `None` when the pattern does not occur.
 
 **Parameters**
 
@@ -180,7 +180,7 @@ Unanchored: the pattern may match anywhere in the string. Anchor it with `^...$`
 **Examples**
 
 ```kex
-"order #4271".matches(re`#(\d+)`).flatMap { |m| m.get(1) }   # => Just("4271")
+"order #4271".matches(re`#(\d+)`).into { |m| m.get(1) }   # => Just("4271")
 "no number here".matches(re`#(\d+)`)                          # => None
 ```
 
@@ -196,9 +196,9 @@ line.matches(re`v(\d+)\.(\d+)`).map { |m| (m.get(1, "0"), m.get(2, "0")) }
 matches?(s: String, re: Regex) -> Bool
 ```
 
-Returns `true` when `re` occurs anywhere in `s`.
+Returns whether `re` occurs anywhere in `s`.
 
-The boolean form of `matches`, and unanchored for the same reason. Use it when you only need to know whether the pattern is there.
+Like `matches`, the pattern is not anchored.
 
 **Parameters**
 
@@ -228,7 +228,7 @@ scan(s: String, re: Regex) -> [Match]
 
 Returns every match of `re` in `s`, left to right.
 
-Always answers `[Match]`, whether or not the pattern has capture groups: adding a group to a pattern must not change the type flowing out of `scan`. An empty list means nothing matched.
+The result is a list of `Match` whether or not the pattern has groups, so adding a group does not change its type. An empty list means nothing matched.
 
 **Parameters**
 
@@ -247,7 +247,7 @@ Always answers `[Match]`, whether or not the pattern has capture groups: adding 
 _Building a map out of key=value pairs_
 
 ```kex
-Kex.Intrinsic.Map.fromEntries(
+Map.from(
   text.scan(re`(\w+)=(\w+)`).map { |m| (m.get(1, ""), m.get(2, "")) }
 )
 ```
@@ -258,9 +258,9 @@ Kex.Intrinsic.Map.fromEntries(
 replace(s: String, re: Regex, replacement: (String | (Match) -> String)) -> String
 ```
 
-Replaces EVERY match of `re` in `s`: this is `gsub`, not `sub`.
+Returns `s` with every match of `re` replaced, like Ruby's `gsub`.
 
-The replacement is either a literal `String`, inserted verbatim with no `$1` / `\1` backreference syntax, or a block receiving the `Match`, which is how a replacement built from what was captured is written.
+The replacement is a `String`, inserted as it is (`$1` and `\1` have no special meaning), or a block that gets the `Match` and returns the text. Use the block to build the replacement from the captured groups.
 
 **Parameters**
 
@@ -299,7 +299,9 @@ line.replace(re`\d`, "x")
 replaceFirst(s: String, re: Regex, replacement: (String | (Match) -> String)) -> String
 ```
 
-Replaces only the first match of `re` in `s`: Ruby's `sub`, where `replace` is its `gsub`. The replacement is a literal string or a function of the `Match`, as for `replace`.
+Returns `s` with only the first match of `re` replaced, like Ruby's `sub`.
+
+The replacement works as for `replace`.
 
 **Parameters**
 
@@ -322,13 +324,11 @@ Replaces only the first match of `re` in `s`: Ruby's `sub`, where `replace` is i
 splitLimit(s: String, re: Regex, limit: Integer) -> [String]
 ```
 
-Splits `s` on `re`, capping the number of fields.
+Splits `s` on `re`, with a limit on the fields.
 
-A positive `limit` caps the field count, leaving the remainder unsplit in the last field; a negative `limit` keeps trailing empty fields instead of dropping them.
+A positive `limit` is the most fields to return, and the last one holds the rest of the string unsplit. A negative `limit` keeps trailing empty fields, which are dropped otherwise.
 
-Plain `s.split(re)` needs no function here at all: it resolves to `String.split`, which dispatches to this engine when handed a Regex (in both backends), and follows Ruby's semantics: trailing empty fields are dropped, leading ones are kept, and capture groups are interleaved into the result.
-
-Use `Regex.splitLimit` to control the number of fields.
+Without a limit, use `s.split(re)`. It follows Ruby: trailing empty fields are dropped, leading ones kept, and the text of capture groups is included between the fields.
 
 **Parameters**
 
@@ -360,11 +360,9 @@ Regex.splitLimit("a,b,,", re`,`, -1)   # => ["a", "b", "", ""]
 
 ## record `Regex`
 
-Regular expressions, backed by PCRE2 in the interpreter and Erlang's `re` on BEAM: the same PCRE pattern language on both.
+Regular expressions in PCRE syntax. Bring them into scope with `using Regex`.
 
-Opt-in, not prelude: nothing here is in scope until `using Regex`.
-
-There are two ways to write a pattern. The tagged literal is the everyday one: it is checked when your program is compiled, so it cannot fail at run time and gives you a bare `Regex`.
+There are two ways to write a pattern. The usual one is the tagged literal `` re`...` ``, which is checked when the program is compiled and gives a `Regex` directly.
 
 ```kex
 using Regex
@@ -372,11 +370,11 @@ using Regex
 main do
   let line = "order #4271 shipped"
   IO.printLine(line.matches?(re`#\d+`))                     # => true
-  IO.printLine(line.matches(re`#(\d+)`).flatMap { |m| m.get(1) }.or(""))  # => 4271
+  IO.printLine(line.matches(re`#(\d+)`).into { |m| m.get(1) }.or(""))  # => 4271
 end
 ```
 
-The call form takes a pattern built at run time and answers a `Result`, because an arbitrary string may not be a valid pattern:
+The call form `regex(source)` takes a pattern built at run time and returns a `Result`, since the string may not be a valid pattern:
 
 ```kex
 match regex(userSupplied) do
@@ -385,7 +383,7 @@ match regex(userSupplied) do
 end
 ```
 
-The operations are `matches?` (is it there), `matches` (find the first), `scan` (find them all), `replace`, and `split`.
+The operations are `matches?` (is it there), `matches` (the first match), `scan` (every match), `replace`, `replaceFirst`, `split` and `splitLimit`.
 
 A compiled regular expression.
 
@@ -393,7 +391,7 @@ Create one with a `re` tagged literal or `regex(source)`.
 
 ```kex
 let digits = re`[0-9]+`
-"item 42".matches(digits).flatMap { |m| m.get(0) }   # => Just("42")
+"item 42".matches(digits).into { |m| m.get(0) }   # => Just("42")
 ```
 
 **Fields**
@@ -410,7 +408,7 @@ Implements [`Showable`](kex.md#trait-showable).
 showValue -> String
 ```
 
-Renders the regex as the literal that builds it, so interpolating one shows its pattern rather than its record layout.
+Returns the regex written as a `re` literal, which is what interpolation shows.
 
 **Returns**: the pattern as a `re` literal
 
@@ -428,12 +426,12 @@ Renders the regex as the literal that builds it, so interpolating one shows its 
 
 A pattern that failed to compile.
 
-Mirrors `ParseError`: the `position` is a *character* offset into the pattern, not a byte offset, so it agrees across backends on patterns containing non-ASCII.
+`position` counts characters, not bytes, from the start of the pattern.
 
 ```kex
 regex("(")
-# => Error(RegexError { source: "(", position: 1,
-#                       message: "missing closing parenthesis" })
+# => Error(Regex.RegexError { message: "missing closing parenthesis",
+#                             position: 1, source: "(" })
 ```
 
 **Fields**
@@ -448,9 +446,9 @@ regex("(")
 
 A successful match, and the groups it captured.
 
-It behaves like a map keyed by both group number (`0` is the whole match) and group name (`:year`), but is a named type so it can grow spans and surrounding context later without breaking existing `get` call sites.
+Read groups with `get`, by number (`0` is the whole match) or by name (`:year`).
 
-A group that did not participate is an absent key, so `get` answers `None`. This differs from a group that matched the empty string, which answers `Just("")`.
+A group that took no part in the match is missing, so `get` returns `None`. A group that matched the empty string returns `Just("")`.
 
 **Fields**
 
@@ -468,7 +466,7 @@ get(key: Atom | Integer, default: String) -> String
 
 Returns the text captured by a group, by number or by name.
 
-Group `0` is the whole match; `1` is the first parenthesised group. A named group `(?<year>...)` is reached with the atom `:year`. A group that did not participate answers `None`.
+Group `0` is the whole match; `1` is the first parenthesised group. A named group `(?<year>...)` is read with the atom `:year`. A group that took no part in the match returns `None`.
 
 **Parameters**
 
@@ -480,14 +478,14 @@ Group `0` is the whole match; `1` is the first parenthesised group. A named grou
 
 ```kex
 let found = "order #4271".matches(re`#(\d+)`)
-found.flatMap { |m| m.get(0) }   # => Just("#4271")
-found.flatMap { |m| m.get(1) }   # => Just("4271")
+found.into { |m| m.get(0) }   # => Just("#4271")
+found.into { |m| m.get(1) }   # => Just("4271")
 ```
 
 _Named groups_
 
 ```kex
 "2026-07-04".matches(re`(?<year>\d{4})-(?<month>\d{2})`)
-  .flatMap { |m| m.get(:year) }
+  .into { |m| m.get(:year) }
 # => Just("2026")
 ```

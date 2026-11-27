@@ -11,15 +11,17 @@ entities:
 
 ## module `Random`
 
-Random values for simulations, sampling, games, and reproducible tests.
+Random numbers, choices and shuffles, for simulations, games and reproducible tests.
 
-Import with `using Random`. Ordinary calls return a value directly; a `Random.Generator` returns `(value, nextGenerator)`. Reusing the same generator replays the same draw. Pass its returned state to continue.
+Nothing here is in scope until `using Random`. The module functions, such as `Random.integer`, draw from fresh entropy and return the value. For a sequence that can be replayed, start a `Random.Generator` with `Random.seeded`: each of its functions returns `(value, nextGenerator)`, and the next draw is made from `nextGenerator`. Drawing twice from the same generator gives the same value twice.
 
-These generators are not cryptographic; do not use their output for secrets. `Random.secureBytes` and `Random.token` are, and are what secrets come from.
+Invalid arguments, such as a descending range or a probability above 1, end the program with `die`.
+
+None of this is suitable for secrets such as keys or tokens. Use `Random.secureBytes` or `Random.token` for those.
 
 **Examples**
 
-_Roll a die or initialize a weight_
+_Rolling a die and picking a weight_
 
 ```kex
 using Random
@@ -27,12 +29,12 @@ let roll = Random.integer(1..6)
 let weight = Random.float(-1.0..1.0)
 ```
 
-_Reproduce a sequence_
+_Replaying a sequence_
 
 ```kex
 let generator = Random.seeded(42)
-let (first, afterFirst) = generator.integer(1..6)
-let (second, afterSecond) = afterFirst.integer(1..6)
+let (first, afterFirst) = generator.integer(1..6)      # first is 2
+let (second, afterSecond) = afterFirst.integer(1..6)   # second is 2
 ```
 
 ### `seeded`
@@ -41,13 +43,21 @@ let (second, afterSecond) = afterFirst.integer(1..6)
 seeded(seed: Integer) -> Generator
 ```
 
-Starts a deterministic sequence. Any Integer seed is reduced modulo 2^64.
+Starts a reproducible sequence from `seed`.
+
+Any Integer works, negative or large; it is reduced modulo 2^64.
 
 **Parameters**
 
-  - `seed` — reproducible seed, including negative or large values
+  - `seed` — the seed
 
-**Returns**: initial state; no draw has been consumed
+**Returns**: a generator from which nothing has been drawn yet
+
+**Examples**
+
+```kex
+let (roll, advanced) = Random.seeded(42).integer(1..6)   # roll is 2, every time
+```
 
 ### `fresh` (foul)
 
@@ -55,9 +65,9 @@ Starts a deterministic sequence. Any Integer seed is reduced modulo 2^64.
 fresh -> Generator
 ```
 
-Starts a generator using fresh host entropy.
+Starts a generator from fresh entropy, so the sequence differs between runs.
 
-**Returns**: initial state for a sequence that varies between runs
+**Returns**: a generator from which nothing has been drawn yet
 
 ### `integer` (foul)
 
@@ -65,13 +75,21 @@ Starts a generator using fresh host entropy.
 integer(range: Range<Integer>) -> Integer
 ```
 
-Draws an integer from an inclusive range using fresh entropy.
+Draws an integer from `range`, both ends included.
+
+The range must be ascending and hold at most 2^64 integers.
 
 **Parameters**
 
-  - `range` — ascending inclusive bounds, span at most 2^64
+  - `range` — the bounds, both included
 
-**Returns**: drawn value
+**Returns**: the integer
+
+**Examples**
+
+```kex
+let roll = Random.integer(1..6)
+```
 
 ### `float` (foul)
 
@@ -79,13 +97,15 @@ Draws an integer from an inclusive range using fresh entropy.
 float(range: Range<Float> = …) -> Float
 ```
 
-Draws a float; defaults to [0.0, 1.0). The upper bound is excluded.
+Draws a float from `range`, which includes its lower bound and excludes its upper one.
+
+The range defaults to `0.0..1.0`. The bounds must be finite and strictly ascending.
 
 **Parameters**
 
-  - `range` — finite, strictly ascending bounds
+  - `range` — the bounds, upper one excluded
 
-**Returns**: drawn value
+**Returns**: the float
 
 ### `boolean` (foul)
 
@@ -93,9 +113,9 @@ Draws a float; defaults to [0.0, 1.0). The upper bound is excluded.
 boolean -> Bool
 ```
 
-Draws a fair coin flip using fresh entropy.
+Returns `true` or `false` with equal probability.
 
-**Returns**: true or false with equal probability
+**Returns**: the result
 
 ### `chance?` (foul)
 
@@ -103,13 +123,19 @@ Draws a fair coin flip using fresh entropy.
 chance?(probability: Float) -> Bool
 ```
 
-Returns true with the supplied probability using fresh entropy.
+Returns `true` with the given probability.
 
 **Parameters**
 
-  - `probability` — probability from 0.0 through 1.0
+  - `probability` — the probability, from 0.0 to 1.0
 
-**Returns**: sampled outcome
+**Returns**: the result
+
+**Examples**
+
+```kex
+let critical = Random.chance?(0.05)
+```
 
 ### `choice` (foul)
 
@@ -117,13 +143,13 @@ Returns true with the supplied probability using fresh entropy.
 choice(items: [X]) -> X?
 ```
 
-Chooses a position uniformly, returning None for an empty input.
+Picks one element of `items`, each position equally likely, or returns `None` for an empty list.
 
 **Parameters**
 
-  - `items` — values to choose from
+  - `items` — the values to choose from
 
-**Returns**: chosen value, if any
+**Returns**: the chosen value, or `None`
 
 ### `sample` (foul)
 
@@ -131,14 +157,16 @@ Chooses a position uniformly, returning None for an empty input.
 sample(items: [X], count: Integer) -> [X]
 ```
 
-Samples positions without replacement; duplicate values remain possible.
+Picks `count` elements of `items` without replacement, in random order.
+
+Each position is picked at most once, but a repeated value can be picked more than once. A `count` larger than the list returns every element.
 
 **Parameters**
 
-  - `items` — population
-  - `count` — nonnegative count; capped at the input size
+  - `items` — the values to pick from
+  - `count` — how many to pick, at least 0
 
-**Returns**: values selected in random order
+**Returns**: the picked values
 
 ### `shuffle` (foul)
 
@@ -146,13 +174,13 @@ Samples positions without replacement; duplicate values remain possible.
 shuffle(items: [X]) -> [X]
 ```
 
-Returns a random permutation using fresh entropy.
+Returns `items` in random order.
 
 **Parameters**
 
-  - `items` — values to shuffle
+  - `items` — the values to shuffle
 
-**Returns**: shuffled copy
+**Returns**: the shuffled list
 
 ### `secureBytes` (foul)
 
@@ -160,13 +188,13 @@ Returns a random permutation using fresh entropy.
 secureBytes(count: Integer) -> Binary
 ```
 
-Returns `count` bytes from the operating system's cryptographically secure generator: the source for keys, session tokens and unguessable identifiers, which the generators above must never be used for.
+Returns `count` bytes from the operating system's cryptographically secure generator.
 
-Nothing about it is reproducible, and there is no `Generator` form.
+Use it for keys, session tokens and identifiers that must not be guessable; the other functions in this module are not fit for that. The bytes cannot be reproduced, and there is no `Generator` version.
 
 **Parameters**
 
-  - `count` — how many bytes; zero or less gives an empty binary
+  - `count` — how many bytes; 0 or less gives an empty binary
 
 **Returns**: the random bytes
 
@@ -184,11 +212,11 @@ let key = Random.secureBytes(32)
 token(bytes: Integer = …) -> String
 ```
 
-Returns an unguessable token: `bytes` secure random bytes, as lowercase hex, so the text is twice as long as `bytes`.
+Returns `bytes` secure random bytes as lowercase hex, a string twice as long as `bytes`.
 
 **Parameters**
 
-  - `bytes` — how many random bytes the token carries
+  - `bytes` — how many random bytes; 32 if omitted
 
 **Returns**: the token
 
@@ -197,14 +225,14 @@ Returns an unguessable token: `bytes` secure random bytes, as lowercase hex, so 
 _A session identifier_
 
 ```kex
-let session = Random.token(32)   # => "9f86d081884c7d65..." (64 characters)
+Random.token(32)   # => "9f86d081884c7d65..." (64 characters)
 ```
 
 ## record `Generator`
 
-Immutable state of a deterministic random sequence.
+The state of a reproducible random sequence.
 
-Construct with `Random.seeded` or `Random.fresh`. Each draw returns its value first and the advanced generator second. Equal seeds reproduce equal sequences for the same operations on both backends.
+Start one with `Random.seeded` or `Random.fresh`. Each draw returns the value and the advanced generator. The same seed gives the same sequence for the same calls, on the walker and on BEAM.
 
 **Fields**
 
@@ -224,20 +252,22 @@ Construct with `Random.seeded` or `Random.fresh`. Each draw returns its value fi
 integer(range: Range<Integer>) -> (Integer, Generator)
 ```
 
-Draws an integer between both endpoints, with the advanced generator. The range must be ascending and contain at most 2^64 integers. A singleton range is valid and still consumes a draw.
+Draws an integer from `range`, both ends included.
+
+The range must be ascending and hold at most 2^64 integers. A range of one integer is allowed and still advances the generator.
 
 **Parameters**
 
-  - `range` — inclusive integer bounds
+  - `range` — the bounds, both included
 
-**Returns**: drawn integer and advanced state
+**Returns**: the integer and the advanced generator
 
 **Examples**
 
 _A reproducible die roll_
 
 ```kex
-let (roll, advanced) = Random.seeded(42).integer(1..6)
+let (roll, advanced) = Random.seeded(42).integer(1..6)   # roll is 2
 ```
 
 ### `float`
@@ -246,17 +276,19 @@ let (roll, advanced) = Random.seeded(42).integer(1..6)
 float(range: Range<Float>) -> (Float, Generator)
 ```
 
-Draws a float from the lower bound inclusive to the upper bound exclusive. Defaults to `0.0..1.0`. Bounds must be finite and strictly ascending.
+Draws a float from `range`, which includes its lower bound and excludes its upper one.
+
+Without an argument the range is `0.0..1.0`. The bounds must be finite and strictly ascending.
 
 **Parameters**
 
-  - `range` — half-open floating-point bounds
+  - `range` — the bounds, upper one excluded
 
-**Returns**: drawn float and advanced state
+**Returns**: the float and the advanced generator
 
 **Examples**
 
-_Initialize a model weight_
+_Initializing a model weight_
 
 ```kex
 let (weight, advanced) = Random.seeded(42).float(-1.0..1.0)
@@ -268,9 +300,9 @@ let (weight, advanced) = Random.seeded(42).float(-1.0..1.0)
 boolean -> (Bool, Generator)
 ```
 
-Draws a fair Boolean and returns the advanced generator.
+Draws `true` or `false` with equal probability.
 
-**Returns**: coin flip and advanced state
+**Returns**: the result and the advanced generator
 
 ### `chance?`
 
@@ -278,13 +310,15 @@ Draws a fair Boolean and returns the advanced generator.
 chance?(probability: Float) -> (Bool, Generator)
 ```
 
-Draws true with the supplied probability. Consumes one draw even at 0 or 1.
+Draws `true` with the given probability.
+
+Even a probability of 0 or 1 advances the generator.
 
 **Parameters**
 
-  - `probability` — probability from 0.0 through 1.0
+  - `probability` — the probability, from 0.0 to 1.0
 
-**Returns**: outcome and advanced state
+**Returns**: the result and the advanced generator
 
 ### `choice`
 
@@ -292,13 +326,15 @@ Draws true with the supplied probability. Consumes one draw even at 0 or 1.
 choice(items: [X]) -> (X?, Generator)
 ```
 
-Chooses an input position uniformly. Empty input returns None without a draw.
+Picks one element of `items`, each position equally likely.
+
+For an empty list it returns `None` and the generator unchanged.
 
 **Parameters**
 
-  - `items` — values to choose from
+  - `items` — the values to choose from
 
-**Returns**: optional value and advanced state
+**Returns**: the chosen value, and the advanced generator
 
 ### `sample`
 
@@ -306,18 +342,20 @@ Chooses an input position uniformly. Empty input returns None without a draw.
 sample(items: [X], count: Integer) -> ([X], Generator)
 ```
 
-Selects input positions without replacement, in random order. Duplicate input values may appear more than once in the result. A count larger than the input selects every position; zero consumes no draws.
+Picks `count` elements of `items` without replacement, in random order.
+
+Each position is picked at most once, but a value that occurs several times in `items` can occur several times in the result. A `count` larger than the list returns every element, shuffled. A `count` of 0 returns `[]` and leaves the generator unchanged; a negative one ends the program.
 
 **Parameters**
 
-  - `items` — population; unchanged by sampling
-  - `count` — nonnegative number of positions to select
+  - `items` — the values to pick from
+  - `count` — how many to pick, at least 0
 
-**Returns**: selected values and advanced state
+**Returns**: the picked values and the advanced generator
 
 **Examples**
 
-_Deal five cards reproducibly_
+_Dealing five cards reproducibly_
 
 ```kex
 let (hand, advanced) = Random.seeded(42).sample(cards, count: 5)
@@ -329,12 +367,20 @@ let (hand, advanced) = Random.seeded(42).sample(cards, count: 5)
 shuffle(items: [X]) -> ([X], Generator)
 ```
 
-Returns a random permutation, preserving duplicates and the input itself. Empty input consumes no draws.
+Returns `items` in random order.
+
+An empty list leaves the generator unchanged.
 
 **Parameters**
 
-  - `items` — values to shuffle
+  - `items` — the values to shuffle
 
-**Returns**: permutation and advanced state
+**Returns**: the shuffled list and the advanced generator
+
+**Examples**
+
+```kex
+let (deck, advanced) = Random.seeded(42).shuffle([1, 2, 3, 4])   # deck is [2, 3, 1, 4]
+```
 
 

@@ -9,9 +9,9 @@ entities:
 
 # Tey.Docgen.Cli
 
-Command-line interface for docgen: option declarations, dispatch, usage.
+The `tey docs` command line: its options, subcommands and help.
 
-Inside a package (a directory with a package.kex), most of the line is already implied — `tey docs build --out <site>` is the whole command:
+Inside a package (a directory with a package.kex), the package name, release and source directory come from package.kex, so `tey docs build --out <site>` is the whole command:
 
 ```kex
 cd tey && tey docs build --out ../kdocs
@@ -22,7 +22,7 @@ tey docs build --source src/stdlib --out <dir> \
 tey docs serve --out <dir> --port 4322
 ```
 
-A built-in Tey command. Everything after the command word is docgen's own vocabulary — OptionParser passes a command's options through — so no `--` is needed, though `tey docs -- build ...` works too (the `--` is stripped).
+Tey passes everything after `docs` through to these options, so no `--` is needed, though `tey docs -- build ...` also works.
 
 ## module `Tey.Docgen.Cli`
 
@@ -32,9 +32,7 @@ A built-in Tey command. Everything after the command word is docgen's own vocabu
 options -> OptionConfig
 ```
 
-A function rather than a module-level constant: on BEAM, calling a make-method (`.parse`, `.help`) on a module-level constant fails with "Undefined function" — the dispatcher doesn't resolve the constant.
-
-The three subcommands are declared here, the way Tey declares its own, so `tey docs` help is generated from the same definitions that parse the line and reads like `tey help` does.
+Returns the options and the `build`, `prose` and `serve` subcommands of `tey docs`, from which its help is generated too.
 
 ### `dispatch` (foul)
 
@@ -48,7 +46,9 @@ dispatch(args: [String]) -> Integer
 strict?(parsed: ParsedOptions) -> Bool
 ```
 
-After a command word, OptionParser hands an option it does not know on to the command as an argument, for commands with a vocabulary of their own. These three have none beyond the options above, so one left over is a typo — and `--sorce src` silently documenting the wrong directory is worse than an error.
+Returns `false`, after printing an error and the help, when an unknown option such as `--sorce` was left among the arguments.
+
+OptionParser passes options it does not know on to the command, but these subcommands take none of their own, so a leftover one is a typo.
 
 ### `printUsage` (foul)
 
@@ -56,7 +56,7 @@ After a command word, OptionParser hands an option it does not know on to the co
 printUsage -> Integer
 ```
 
-The generated help, then what a build leaves behind — the one part of this command's story that no option or subcommand declares.
+Prints the generated help followed by the list of files a build writes, and returns 0.
 
 ### `outputsHelp`
 
@@ -64,4 +64,4 @@ The generated help, then what a build leaves behind — the one part of this com
 outputsHelp -> String
 ```
 
-Styled like OptionParser's own blocks: a bold heading, then one aligned row per entry, padded on the unstyled name.
+Returns the "Outputs:" help section, styled like OptionParser's own sections: a bold heading, then one aligned row per file.

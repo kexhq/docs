@@ -14,9 +14,9 @@ entities:
 
 # Assert
 
-The built-in testing DSL: `describe`, `it`, `before`, `after`, and assertion helpers.
+The built-in test functions: `describe`, `it`, `before`, `after` and the assertions.
 
-Everything here is always in scope: no import, and no separate test runner. Write a test file and run it with `kex`:
+They are always in scope and need no separate runner. Write a test file and run it with `kex`:
 
 ```kex
 describe "arithmetic" do
@@ -33,11 +33,13 @@ $ kex my_test.kex
 arithmetic
   ✓ adds numbers
   ✓ multiplies numbers
+
+2 passed, 0 failed
 ```
 
-Output uses ✓ / ✗ markers and nests by `describe` depth. A failing `assert` marks its test failed and moves on; the rest of the suite still runs.
+Output is indented by `describe` depth. The first failing assertion ends its test and marks it failed; the other tests still run.
 
-A file named `<name>.spec.kex` automatically loads the declarations of `<name>.kex` beside it, so a spec needs no import and no `main` wrapper.
+A file named `<name>.spec.kex` loads the declarations of `<name>.kex` beside it, so a spec needs no import.
 
 ## function `describe`
 
@@ -45,9 +47,9 @@ A file named `<name>.spec.kex` automatically loads the declarations of `<name>.k
 describe(label: String, block: Block<Result<Void, Any>>) -> Void
 ```
 
-Groups related test cases under a label, and runs them.
+Groups related test cases under a label and runs them.
 
-The block is called immediately. `describe` blocks nest, and the output is indented to match. This is a foul function: it prints.
+The block runs at once. `describe` blocks nest, and the output is indented to match.
 
 **Parameters**
 
@@ -72,9 +74,9 @@ end
 it(label: String, block: Block<Result<Void, Any>>) -> Void
 ```
 
-Defines a single test case, and runs it.
+Defines a single test case and runs it.
 
-The block runs, and anything thrown inside it: typically a failed `assert`: marks the test failed without aborting the rest of the suite. A failing `.try` in the block is its result, and fails the test the same way: the body needs no `Ok` or `rescue` of its own. This is a foul function: it prints.
+A failed assertion, or anything else that fails inside the block, marks the test failed and the rest of the suite carries on. A `.try` that fails in the block fails the test too, so the body needs no `Ok` or `rescue`.
 
 **Parameters**
 
@@ -90,7 +92,7 @@ it "returns true for even numbers" do
 end
 ```
 
-_One behaviour per case reads better than one big case_
+_One behaviour per case_
 
 ```kex
 it "trims leading whitespace" do
@@ -122,7 +124,7 @@ Registers setup to run before the current group's tests.
 ```kex
 describe "the parser" do
   before do
-    Mock.FS.file("input.txt", "one\ntwo\n")
+    Mock.FS.File("input.txt", "one\ntwo\n")
   end
 
   it "reads two lines" do
@@ -140,7 +142,7 @@ after(block: Atom) -> Block<Result<Void, Any>> -> Void
 
 Registers cleanup to run after the current group's tests.
 
-Defaults to `:each`. Cleanup is unconditional: it runs whether the test passed or failed, and inner per-test hooks run before outer hooks.
+Runs after every test, whether it passed or failed. Inner groups' hooks run before outer ones.
 
 **Parameters**
 
@@ -161,9 +163,9 @@ assert(value: Bool) -> Bool
 assert(value: Bool) -> String -> Bool
 ```
 
-Fails the enclosing `it` when `value` is falsy.
+Fails the enclosing `it` when `value` is `false`.
 
-The primitive every other assertion is built on. Prefer the `Assert` helpers where one fits: they report what was expected and what arrived, which a bare `assert` cannot.
+The `Assert` functions are built on it. Prefer them where one fits, since their failure message shows the values involved.
 
 **Parameters**
 
@@ -180,9 +182,7 @@ assert("hello".count == 5)
 
 ## module `Assert`
 
-Focused assertions, each reporting what was expected and what arrived.
-
-These are ordinary Kex stdlib functions layered on the primitive `assert`, so adding another helper does not require compiler or runtime work.
+Assertions whose failure message shows what was expected and what arrived. They are written in Kex on top of `assert`.
 
 ```kex
 Assert.equal("hi".upperCase, "HI")
@@ -198,7 +198,7 @@ equal(actual: A, expected: A) -> Bool
 
 Fails unless `actual` equals `expected`, reporting both.
 
-The assertion to reach for by default: a failure tells you what arrived, which `assert(a == b)` does not.
+Use it by default for comparisons: unlike `assert(a == b)`, a failure shows both values.
 
 **Parameters**
 
@@ -239,10 +239,10 @@ Assert.notEqual(newId, oldId)
 ### `truthy`
 
 ```kex
-truthy(value: A) -> Bool
+truthy(value: Truthyable) -> Bool
 ```
 
-Fails unless `value` is truthy: anything except `false`, `None` and `()`.
+Fails unless `value` is truthy: anything except `false` and `None`.
 
 **Parameters**
 
@@ -259,7 +259,7 @@ Assert.truthy("hello".contains?("ell"))
 ### `falsy`
 
 ```kex
-falsy(value: A) -> Bool
+falsy(value: Truthyable) -> Bool
 ```
 
 Fails unless `value` is falsy: `false`, `None` or `()`.

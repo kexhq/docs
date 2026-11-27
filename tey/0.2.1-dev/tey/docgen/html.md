@@ -9,9 +9,9 @@ entities:
 
 # Tey.Docgen.Html
 
-Model records → static HTML pages, styled after kex.run's docs section (warm honey/cream palette, Fraunces/Plus Jakarta Sans/JetBrains Mono, dark code surface with tok-* syntax classes). The stylesheet lives in Tey.Docgen.Css and is written to assets/style.css by the build driver.
+Renders the documentation model as static HTML pages, styled after the docs on kex.run. The stylesheet is in `Tey.Docgen.Css`, and the build writes it to assets/style.css.
 
-HTML is a sibling renderer of the Markdown one: both walk the typed PackageModel, so nothing here parses Markdown or JSON.
+Like `Tey.Docgen.Markdown`, it walks the typed `PackageModel`, so nothing here parses Markdown or JSON.
 
 ## module `Tey.Docgen.Html`
 
@@ -27,7 +27,7 @@ pageHtml(page: SourcePage, model: PackageModel) -> String
 pageBodyHtml(page: SourcePage, model: PackageModel, heading: Bool) -> String
 ```
 
-A page's content without the chrome — what `pageHtml` wraps in the layout, and what a host site (the fragments output) wraps in its own. `heading` is false when the host renders the title itself.
+Returns a page's content without the surrounding layout. `pageHtml` wraps it in the layout, and a host site using the fragments output wraps it in its own. `heading` is `false` when the host renders the title itself.
 
 ### `submodulesHtml`
 
@@ -35,7 +35,9 @@ A page's content without the chrome — what `pageHtml` wraps in the layout, and
 submodulesHtml(page: SourcePage, model: PackageModel) -> String
 ```
 
-A module family spread over several files ("Net" + net/dns.kex, net/http.kex, ...) gets one page per file, and the parent page says nothing about the rest — a reader on "Net" has no reason to believe Net.DNS or Net.Socket are documented at all. This section is the signpost: every descendant page, with the summary its module declares.
+Lists the pages nested under this one, each with its module's summary.
+
+A module family spread over several files (net.kex, net/dns.kex, net/http.kex, ...) gets one page per file, and without this list the "Net" page would not show that Net.DNS or Net.Socket exist.
 
 ### `submoduleItem`
 
@@ -55,7 +57,7 @@ preludePage?(page: SourcePage, model: PackageModel) -> Bool
 preludeBodyHtml(page: SourcePage, model: PackageModel, heading: Bool) -> String
 ```
 
-The prelude declares nothing, so the generic page renderer leaves it blank. What it HAS is a list of imports and a comment explaining them — which is exactly the page a reader wants: what am I given for free, and where does each of those live.
+Renders the prelude's page: its comment and the list of files it imports, each linked to its page. The prelude declares nothing, so the usual page renderer would leave it blank.
 
 ### `preludeItem`
 
@@ -69,9 +71,9 @@ preludeItem(model: PackageModel, fromPath: String, name: String) -> String
 preludeLink(model: PackageModel, fromPath: String, name: String) -> String
 ```
 
-A `using X` in prelude.kex names a sibling SOURCE FILE, so the page for that file is the exact target. Going through the link index instead would lose half the list: `Map`, `Set` and `Range` are ambiguous as bare names — a module and a type both claim them — and resolve to nothing.
+Links a `using X` line of prelude.kex to the page of the file it names.
 
-The file is what matches, not the title: `using Test` is test.kex, whose page is titled "Assert", and `using Env` is env.kex, titled "ENV".
+It matches the file, not the link index or the page title: in the index, `Map`, `Set` and `Range` are each claimed by a module and a type, so they would not link, and `using Test` is test.kex, whose page is titled "Assert".
 
 ### `pageNamed`
 
@@ -97,7 +99,7 @@ moduleSummary(model: PackageModel, name: String) -> String
 versionIndexHtml(model: PackageModel) -> String
 ```
 
-Landing page for <pkg>/<version>/index.html: every module as a card. When the package has a prelude, the cards are split by how a reader REACHES them — visible everywhere, or one `using` away — because that is the first question anyone has about a standard library.
+Renders <pkg>/<version>/index.html, with a card for every module. When the package has a prelude, the cards are split into the modules it makes visible and those that need a `using`.
 
 ### `versionIndexBodyHtml`
 
@@ -111,7 +113,7 @@ versionIndexBodyHtml(model: PackageModel, heading: Bool) -> String
 cardModules(model: PackageModel) -> [Tey.Docgen.Model.ModuleIndexEntry]
 ```
 
-The modules worth a card. `Int8`, `Float32` and friends are modules holding two constants each, declared in number.kex beside Integer and Float: listing them beside `Net` and `FS` made the index read as if the stdlib had a dozen integer libraries. They are on their file's page.
+Returns the modules that get a card. Modules holding only constants are left out (`Int8`, `Float32` and the like, which are on number.kex's page), as are modules declared in more than one place.
 
 ### `constantsOnly?`
 
@@ -131,7 +133,9 @@ indexSections(model: PackageModel, top: [String]) -> String
 preludePaths(model: PackageModel) -> [String]
 ```
 
-The prelude imports FILES, and everything a listed file declares comes with it: `using Time` is what puts `Date`, `Duration` and `Time.Period` in scope, none of which prelude.kex names. So the split is by page, not by module name.
+Returns the pages of the files the prelude imports.
+
+The prelude imports files, and everything in a file comes with it: `using Time` is what brings `Date`, `Duration` and `Time.Period` into scope, though prelude.kex names none of them. So the split is by page, not by module name.
 
 ### `preludePath`
 
@@ -151,7 +155,9 @@ cardGrid(modules: [Tey.Docgen.Model.ModuleIndexEntry], top: [String]) -> String
 latestVersion(packageName: String, versions: [VersionEntry]) -> VersionEntry?
 ```
 
-The version a reader gets by default: the highest release by semantic version, never an unreleased `-dev` build while a release exists. versions.json is in BUILD order, newest build first, and tools/build-docs.sh builds the working tree last, so its first entry is usually the -dev build rather than the latest release.
+Returns the version a reader gets by default: the highest release by semantic version, and a `-dev` build only when there is no release.
+
+versions.json is in build order, newest first, and tools/build-docs.sh builds the working tree last, so its first entry is usually the `-dev` build.
 
 ### `versionsNewestFirst`
 
@@ -159,7 +165,7 @@ The version a reader gets by default: the highest release by semantic version, n
 versionsNewestFirst(packageName: String, versions: [VersionEntry]) -> [VersionEntry]
 ```
 
-One package's versions, highest first by semantic version.
+Returns one package's versions, highest semantic version first.
 
 ### `packageRedirectHtml`
 
@@ -167,7 +173,7 @@ One package's versions, highest first by semantic version.
 packageRedirectHtml(packageName: String, versions: [VersionEntry]) -> String
 ```
 
-<pkg>/index.html: straight on to the latest version, so a link to a package lands on its reference rather than on a list of builds. Every other version stays one click away, at versions.html.
+Renders <pkg>/index.html, which redirects to the latest version, or lists the versions when there is no release to pick. The other versions are listed at versions.html.
 
 ### `packageVersionsHtml`
 
@@ -175,7 +181,7 @@ packageRedirectHtml(packageName: String, versions: [VersionEntry]) -> String
 packageVersionsHtml(packageName: String, versions: [VersionEntry]) -> String
 ```
 
-<pkg>/versions.html: the versions of one package, newest first — the page a reader lands on when they want a different release of what they are reading. What the ids MEAN is the package's own story: a library's own releases, the stdlib's Kex releases. The page does not need to know.
+Renders <pkg>/versions.html, listing one package's versions, newest first. A version id is whatever the package uses: a library's own releases, or the Kex release for the stdlib.
 
 ### `versionCard`
 
@@ -189,7 +195,7 @@ versionCard(v: VersionEntry) -> String
 searchPageHtml(model: PackageModel) -> String
 ```
 
-<pkg>/<version>/search.html: the shareable full-page search. The modal on every page links here with ?q=<term>, so a results page is a URL rather than a state — the page reads the term back from the query string.
+Renders <pkg>/<version>/search.html, the full-page search. The search box on every page links here with `?q=<term>`, so a page of results has a URL that can be shared.
 
 ### `rootIndexHtml`
 
@@ -197,7 +203,7 @@ searchPageHtml(model: PackageModel) -> String
 rootIndexHtml(versions: [VersionEntry]) -> String
 ```
 
-Site root index.html: one card per PACKAGE (its newest build), not per build — a reader arrives at "the docs" for a thing, and the thing is a package; its versions are one click down. Built from the accumulated versions.json entries, not just this build's model.
+Renders the site's root index.html, with one card per package for its newest build. It is built from every entry in versions.json, so it lists packages from earlier builds too.
 
 ### `packageNames`
 
@@ -205,7 +211,7 @@ Site root index.html: one card per PACKAGE (its newest build), not per build —
 packageNames(versions: [VersionEntry]) -> [String]
 ```
 
-Package names in first-seen order of their newest entry: versions arrive newest-first from accumulateVersions, so the first entry of each package is that package's newest build.
+Returns the package names in the order they first appear. Versions come newest first from `accumulateVersions`, so that is the order of each package's newest build.
 
 ### `packageCard`
 
@@ -219,7 +225,7 @@ packageCard(name: String, versions: [VersionEntry]) -> String
 chrome(title: String, root: String, script: Bool, nav: String, content: String) -> String
 ```
 
-What every full page shares: the <head>, and the top bar with the brand on the left and `nav` on the right. `root` is the relative path back to the site root, and `script` says whether the page loads assets/site.js.
+Wraps `content` in what every full page shares: the `<head>` and the top bar, with the brand on the left and `nav` on the right. `root` is the relative path to the site root, and `script` says whether the page loads assets/site.js.
 
 ### `backLink`
 
@@ -239,7 +245,9 @@ layout(title: String, current: String, bodyContent: String, model: PackageModel)
 sidebar(model: PackageModel, current: String) -> String
 ```
 
-The sidebar lists one entry per source FILE, nested by module family: a page whose title is a dotted child of another page's title nests under it ("Net.DNS" under "Net", "Net.HTTP.WebSocket" under "Net.HTTP"), so a multi-file module reads as one branch instead of trailing the list in directory-walk order. The active file expands to its top-level declarations so a reader can jump straight to one. The label is the page's title (the module it declares), not the raw file name. The heading is a link: it is the package's name, and the obvious thing to want from it is the list of what the package contains — which is the version index, where the prelude split lives.
+Renders the sidebar: one entry per source file, labelled with the page's title and nested by module family.
+
+A page whose title extends another page's title nests under it ("Net.DNS" under "Net", "Net.HTTP.WebSocket" under "Net.HTTP"), so a module spread over several files reads as one branch. The current page expands to its top-level declarations. The heading is the package name and links to the version index.
 
 ### `sidebarEntry`
 
@@ -253,7 +261,7 @@ sidebarEntry(page: SourcePage, current: String, vpre: String, pages: [SourcePage
 preludeTag(inPrelude: Bool) -> String
 ```
 
-The page's own heading carries it — the sidebar is a list to scan, and a chip on 32 of 41 rows is noise rather than an answer.
+Returns the "prelude" tag for a page's heading. The sidebar does not show it, since most rows would carry it.
 
 ### `firstModulesOfPages`
 
@@ -261,7 +269,7 @@ The page's own heading carries it — the sidebar is a list to scan, and a chip 
 firstModulesOfPages(pages: [SourcePage]) -> [String]
 ```
 
-The modules that OPEN a page — their section sits at the very top, so a card for one links to the page itself rather than to an anchor that lands where the page already starts. A page whose first declaration is a type or record has no such module.
+Returns the modules that open a page. A card for one links to the page itself rather than to an anchor at its top. A page whose first declaration is a type or record has none.
 
 ### `moduleCard`
 
@@ -275,7 +283,7 @@ moduleCard(m: Tey.Docgen.Model.ModuleIndexEntry, top: Bool) -> String
 entitiesHtml(entities: [Entity], page: SourcePage, model: PackageModel) -> String
 ```
 
-A page's declarations in source order — except that a type's `make` blocks on the same page are pulled into the type's own section, so `List` reads as one thing (the type, then its functions, grouped by the receiver they need) rather than a type followed by three loose "make" sections.
+Renders a page's declarations in source order, except that make blocks for a type on the same page go into the type's section. `List` then reads as the type followed by its functions, grouped by receiver.
 
 ### `sectionEntities`
 
@@ -283,7 +291,7 @@ A page's declarations in source order — except that a type's `make` blocks on 
 sectionEntities(entities: [Entity]) -> [Entity]
 ```
 
-The declarations that get a section of their own: everything except the make blocks folded into a type or trait on the same page.
+Returns the declarations that get a section of their own: all but the make blocks folded into a type or trait on the same page.
 
 ### `declaredTypeNames`
 
@@ -297,7 +305,7 @@ declaredTypeNames(entities: [Entity]) -> [String]
 declaredTraitNames(entities: [Entity]) -> [String]
 ```
 
-A `make <Trait>` beside its trait is the trait's defaults, rendered in the trait's own section (Relations.traitMethods).
+Returns the names of the traits declared among `entities`. A `make <Trait>` beside its trait holds the trait's defaults and is rendered in the trait's section (`Relations.traitMethods`).
 
 ### `makesFor`
 
@@ -317,7 +325,7 @@ entitySection(e: Entity, page: SourcePage, model: PackageModel) -> String
 linker(page: SourcePage, model: PackageModel) -> String -> String
 ```
 
-A reference resolver scoped to one page: links resolve against the whole package index, but the href is relative to the page doing the referring.
+Returns a function that links a name from this page. Names resolve against the whole package, and hrefs are relative to this page.
 
 ### `hrefer`
 
@@ -325,7 +333,7 @@ A reference resolver scoped to one page: links resolve against the whole package
 hrefer(page: SourcePage, model: PackageModel) -> String -> String
 ```
 
-The bare href for a name, or "" — what linked highlighting and linked prose both need.
+Returns a function giving the href for a name from this page, or `""` when it does not resolve. Linked highlighting and linked prose use it.
 
 ### `typeSection`
 
@@ -339,7 +347,7 @@ typeSection(e: TypeEntry, makes: [MakeEntry], page: SourcePage, model: PackageMo
 variantsHtml(variants: [VariantEntry]?) -> String
 ```
 
-Only real constructors: an abstract type (`type List<X>`) has none, and a "Variants: (abstract)" heading told the reader nothing.
+Renders a type's constructors. An abstract type (`type List<X>`) has none and gets no section.
 
 ### `variantItem`
 
@@ -359,7 +367,7 @@ recordSection(e: RecordEntry, makes: [MakeEntry], page: SourcePage, model: Packa
 typeBodyHtml(name: String, makes: [MakeEntry], page: SourcePage, model: PackageModel) -> String
 ```
 
-Everything about a type beyond its declaration: the traits it implements (from every file), its functions grouped by receiver, the functions it gets from those traits for free, and the other modules that add functions to it.
+Renders everything about a type beyond its declaration: the traits it implements (from every file), its functions grouped by receiver, the functions those traits provide, and the other modules that add functions to it.
 
 ### `companionIndexHtml`
 
@@ -367,7 +375,7 @@ Everything about a type beyond its declaration: the traits it implements (from e
 companionIndexHtml(name: String, page: SourcePage) -> String
 ```
 
-`Set.from` and `Set.empty` belong to the module that shares the type's name, which is a section of its own further down the page — after every function of every type the file declares. They are how a reader gets a `Set` in the first place, so the type's summary lists them first.
+Lists the functions of the module named like the type, such as `Set.from` and `Set.empty`, at the top of the type's summary. That module's own section comes much further down the page, and its functions are how a reader gets a `Set` in the first place.
 
 ### `modulesIn`
 
@@ -393,7 +401,7 @@ receiverOrder(makes: [MakeEntry], name: String) -> [MakeEntry]
 makeGroupTitle(m: MakeEntry, base: String) -> String
 ```
 
-"Functions" for the plain receiver, "On `[Number]`" for a specialised one.
+Returns a make group's title: "Functions" for the plain receiver, "On `[Number]`" for a specialised one.
 
 ### `makeGroupHtml`
 
@@ -407,7 +415,7 @@ makeGroupHtml(m: MakeEntry, base: String, page: SourcePage, model: PackageModel)
 indexed?(functions: [FunctionEntry]) -> Bool
 ```
 
-A long member list is read twice: first to find out what there is, then to learn one function. Fifty full entries answer only the second, a screen at a time, so a group this long opens with its index — every name with the first sentence of its doc, linked to the entry below. A short group is its own index.
+Returns `true` when a group has six or more function names and so opens with an index: each name with the first sentence of its doc, linked to its entry. A shorter group needs no index.
 
 ### `indexRowsOf`
 
@@ -421,7 +429,7 @@ indexRowsOf(functions: [FunctionEntry], owner: String) -> [IndexRow]
 indexRowOf(overloads: [FunctionEntry], href: String, name: String) -> IndexRow
 ```
 
-Overloads share a row; the first of them with something to say says it.
+Builds one index row for a name's overloads, using the first doc summary among them.
 
 ### `indexHtml`
 
@@ -441,7 +449,7 @@ makeIndexHtml(m: MakeEntry, base: String) -> String
 summaryHtml(lists: String) -> String
 ```
 
-Everything a declaration offers before any of it in full: its own members, what its traits give it, what other modules add.
+Wraps the index lists that come before a declaration's full entries: its own members, what its traits provide, and what other modules add.
 
 ### `genericReceiver?`
 
@@ -449,7 +457,7 @@ Everything a declaration offers before any of it in full: its own members, what 
 genericReceiver?(target: String, base: String) -> Bool
 ```
 
-`[X]` and `FileHandle<R, W>` are the type itself; `[Number]` is not.
+Returns `true` when `target` is the type itself with type parameters, such as `[X]` or `FileHandle<R, W>`, and not a specialisation such as `[Number]`.
 
 ### `implementsHtml`
 
@@ -457,7 +465,7 @@ genericReceiver?(target: String, base: String) -> Bool
 implementsHtml(name: String, page: SourcePage, model: PackageModel) -> String
 ```
 
-Every trait the type implements, wherever the implementing make block lives — algebra.kex is what makes Integer a Monoid, and number.kex's reader should still learn that.
+Renders every trait the type implements, wherever the make block is: algebra.kex makes `Integer` a `Monoid`, and number.kex's page says so.
 
 ### `traitLinks`
 
@@ -471,7 +479,7 @@ traitLinks(traits: [String], page: SourcePage, model: PackageModel) -> String
 providedHtml(name: String, page: SourcePage, model: PackageModel) -> String
 ```
 
-The trait functions a type gets without writing them: a trait's provided functions, minus any the type defines itself somewhere. This is the answer to "where does `List.eachIndexed` come from?".
+Renders the trait functions a type gets without defining them: each trait's provided functions, minus any the type defines itself. This is where a reader finds where `List.eachIndexed` comes from.
 
 ### `providedFromHtml`
 
@@ -485,7 +493,7 @@ providedFromHtml(written: String, own: [String], page: SourcePage, model: Packag
 elsewhereHtml(name: String, page: SourcePage, model: PackageModel) -> String
 ```
 
-Other modules that add functions to this type: `make Integer` in period.kex is where `1.month` comes from.
+Renders the other modules that add functions to this type, such as `make Integer` in period.kex, which provides `1.month`.
 
 ### `fieldRow`
 
@@ -499,7 +507,7 @@ fieldRow(f: Tey.Docgen.Model.FieldEntry, link: (String -> String)) -> String
 linkTypeText(link: (String -> String), text: String) -> String
 ```
 
-A type text is code with links inside it: split into identifier and punctuation segments, link the identifiers that resolve, escape the rest.
+Renders type text as code, linking each identifier that resolves and escaping the rest.
 
 ### `linkType`
 
@@ -507,7 +515,7 @@ A type text is code with links inside it: split into identifier and punctuation 
 linkType(links: [LinkEntry], fromPath: String, name: String) -> String
 ```
 
-The whole-package resolution one segment goes through: an exact name hit links (display text escaped); anything else is plain escaped code.
+Links one type segment when it names something in the package, and otherwise escapes it as plain code.
 
 ### `traitSection`
 
@@ -515,7 +523,7 @@ The whole-package resolution one segment goes through: an exact name hit links (
 traitSection(e: TraitEntry, page: SourcePage, model: PackageModel) -> String
 ```
 
-A trait: what an implementor must write, what it then gets for free, and who implements it.
+Renders a trait: the functions an implementor must write, the ones it then gets, and the types that implement it.
 
 ### `traitIndexHtml`
 
@@ -535,7 +543,7 @@ implementedByHtml(e: TraitEntry, page: SourcePage, model: PackageModel) -> Strin
 makeSection(e: MakeEntry, page: SourcePage, model: PackageModel) -> String
 ```
 
-A make block with no type declaration on its page. On the type's home page (string.kex for String) it carries everything the type section would; elsewhere it points home.
+Renders a make block with no type declaration on its page. On the type's home page (string.kex for `String`) it shows everything a type section would; elsewhere it links to the home page.
 
 ### `firstMakeOnPage?`
 
@@ -555,7 +563,7 @@ homeNote(base: String, facts: Tey.Docgen.Model.TypeFacts?, page: SourcePage, mod
 moduleSection(e: ModuleEntry, page: SourcePage, model: PackageModel) -> String
 ```
 
-A module's own functions and constants are its API, listed under it (h3) like a type's functions. Types, traits and nested modules it declares stand as sections of their own after that.
+Renders a module: its functions and constants under it, like a type's functions, then the types, traits and nested modules it declares as sections of their own.
 
 ### `namespaceOnly?`
 
@@ -563,7 +571,7 @@ A module's own functions and constants are its API, listed under it (h3) like a 
 namespaceOnly?(e: ModuleEntry, page: SourcePage) -> Bool
 ```
 
-A file that opens with a bare `module Data` and declares `Set` inside it is the page "Data.Set": the outer module is only the namespace the file lives in. Its comment is the page's introduction, and a "module Data" heading over it names something the page is not about.
+Returns `true` when the module only names the page's namespace. A file that wraps `Set` in a bare `module Data` is the page "Data.Set"; the outer module's comment is the page's introduction, and it gets no "module Data" heading.
 
 ### `memberIndexRows`
 
@@ -571,7 +579,7 @@ A file that opens with a bare `module Data` and declares `Set` inside it is the 
 memberIndexRows(members: [Entity], prefix: String) -> [IndexRow]
 ```
 
-One row per member name, shown with `prefix` in front of it.
+Builds one index row per member name, shown with `prefix` in front.
 
 ### `memberIndexRow`
 
@@ -591,7 +599,7 @@ foulEntity?(e: Entity) -> Bool
 foulTag(isFoul: Bool) -> String
 ```
 
-Purity is half of what a Kex signature says: a foul function may touch the outside world, and only foul code may call it. The chip says so wherever the function is named.
+Returns the "foul" chip shown wherever a foul function is named. A foul function may touch the outside world, and only foul code may call it.
 
 ### `summaryOf`
 
@@ -629,7 +637,7 @@ constantSection(e: ConstantEntry, page: SourcePage, model: PackageModel) -> Stri
 functionsHtml(functions: [FunctionEntry], owner: String, level: Integer, implements: [String], page: SourcePage, model: PackageModel) -> String
 ```
 
-Members of a trait or make block, one heading per NAME: overloads (`count` and `count(pred)`) are one function with several signatures, not two unrelated entries. `owner` scopes the anchors; `implements` lets a member that fulfils a trait function say which trait.
+Renders the functions of a trait or make block, one heading per name, so overloads such as `count` and `count(pred)` appear as one function with several signatures. `owner` scopes the anchors, and `implements` lets a function that fulfils a trait say which trait.
 
 ### `functionGroupHtml`
 
@@ -643,7 +651,7 @@ functionGroupHtml(fs: [FunctionEntry], name: String, owner: String, level: Integ
 memberHeadHtml(heading: String, signature: String, name: String) -> String
 ```
 
-The head of a member's card: its signature, with the heading's chips beside it. They share a row rather than one lying over the other, so a long signature scrolls in the room it has instead of running under them. (The permalink is the exception a stylesheet may make: shown only under the pointer, it can sit in the corner and take no room.) A member the source gives no type — an untyped constant, a function nobody annotated — is headed the same way by its name alone, so every card on a page has the same shape.
+Renders the head of a member's card: its signature with the heading's chips beside it, in one row, so a long signature scrolls in its own space without running under them. A stylesheet may still float the permalink, which appears only on hover. A member with no type is headed by its name in the same way, so every card has the same shape.
 
 ### `traitTag`
 
@@ -651,7 +659,7 @@ The head of a member's card: its signature, with the heading's chips beside it. 
 traitTag(name: String, implements: [String], page: SourcePage, model: PackageModel) -> String
 ```
 
-"from Enumerable": this member is the type's own version of a function the trait declares, linked to the trait's description of it.
+Returns the "from Enumerable" tag for a member that is the type's own version of a trait function, linked to the trait's entry for it.
 
 ### `overloadHtml`
 
@@ -659,7 +667,7 @@ traitTag(name: String, implements: [String], page: SourcePage, model: PackageMod
 overloadHtml(f: FunctionEntry, page: SourcePage, model: PackageModel) -> String
 ```
 
-One overload: its signature first (what you call), then the prose.
+Renders one overload: its signature, then its prose.
 
 ### `overloadBodyHtml`
 
@@ -679,7 +687,7 @@ signaturesHtml(f: FunctionEntry, page: SourcePage, model: PackageModel) -> Strin
 signatureLine(html: String) -> String
 ```
 
-Each signature is an element of its own, one per line, so a stylesheet can treat an overload as a unit.
+Wraps one signature in an element of its own, so a stylesheet can treat each overload as a unit.
 
 ### `namedFirst`
 
@@ -687,7 +695,7 @@ Each signature is an element of its own, one per line, so a stylesheet can treat
 namedFirst(html: String, name: String) -> String
 ```
 
-A signature opens with the name of what it declares, and the highlighter does not know that: it marks the name as a function only where a parameter list follows (`count : Integer` came out plain beside `count(pred)`), and a function called `from` or `in` as the keyword it is spelled like. Here the opening name is always marked as the name.
+Marks the name that opens a signature as a name. The highlighter alone marks it as a function only when a parameter list follows, so `count : Integer` would come out plain beside `count(pred)`, and a function called `from` or `in` would be coloured as a keyword.
 
 ### `permalinkHtml`
 
@@ -695,7 +703,7 @@ A signature opens with the name of what it declares, and the highlighter does no
 permalinkHtml(anchor: String) -> String
 ```
 
-The address of a declaration or member, as a control beside its heading: a plain link to its own anchor, which the page script turns into "copy this address".
+Renders the permalink beside a heading: a link to its own anchor, which the page script turns into a "copy this address" control.
 
 ### `docHtml`
 
@@ -709,7 +717,7 @@ docHtml(doc: Doc, page: SourcePage, model: PackageModel) -> String
 entityDocHtml(doc: Doc, page: SourcePage, model: PackageModel) -> String
 ```
 
-A declaration's doc: prose, then its examples and any deprecation — a type's @example is as much a part of it as a function's.
+Renders a declaration's doc: prose, then examples, then any deprecation notice. Types get their examples rendered as functions do.
 
 ### `plainDocHtml`
 
@@ -717,7 +725,7 @@ A declaration's doc: prose, then its examples and any deprecation — a type's @
 plainDocHtml(doc: Doc) -> String
 ```
 
-Unlinked: for prose with no page to resolve against (the prelude comment, card summaries).
+Renders a doc's prose without links, for text with no page to resolve names against, such as the prelude comment and card summaries.
 
 ### `summaryParagraphs`
 
@@ -725,7 +733,7 @@ Unlinked: for prose with no page to resolve against (the prelude comment, card s
 summaryParagraphs(summary: String) -> [String]
 ```
 
-Paragraphs break on blank lines — except inside a fenced block, where a blank line is part of the code rather than the end of a paragraph.
+Splits a summary into paragraphs at blank lines, except inside a fenced block, where a blank line belongs to the code.
 
 ### `groupParagraphs`
 
@@ -739,7 +747,7 @@ groupParagraphs(lines: [String], current: [String], accum: [String], fenced: Boo
 paragraphHtml(p: String, hrefOf: (String -> String)) -> String
 ```
 
-A summary paragraph is prose, a fenced block that Rdoc produced from an indented (verbatim) block, or a bullet list — each rendered as what it is rather than reflowed into one paragraph.
+Renders one summary paragraph as what it is: prose, a fenced block that Rdoc made from an indented block, or a bullet list.
 
 ### `bulletLine?`
 
@@ -753,7 +761,7 @@ bulletLine?(line: String) -> Bool
 bulletListHtml(lines: [String], hrefOf: (String -> String)) -> String
 ```
 
-`- item` lines, with indented continuation lines folded into the item above them.
+Renders `- item` lines as a list, folding indented continuation lines into the item above.
 
 ### `inlineCode`
 
@@ -761,7 +769,7 @@ bulletListHtml(lines: [String], hrefOf: (String -> String)) -> String
 inlineCode(text: String) -> String
 ```
 
-Minimal inline Markdown for doc prose: `code` spans. Splitting on the backtick alternates plain/code segments; an unmatched trailing backtick degrades to literal text rather than swallowing the rest of the page.
+Renders backtick code spans in doc prose, the only inline Markdown it supports. An unmatched backtick stays literal text.
 
 ### `linkedInline`
 
@@ -769,7 +777,7 @@ Minimal inline Markdown for doc prose: `code` spans. Splitting on the backtick a
 linkedInline(text: String, hrefOf: (String -> String)) -> String
 ```
 
-The same, with a code span that names something documented — a type, a trait, `List.map` — linked to it.
+Renders code spans as `inlineCode` does, linking each one that names something documented, such as a type, a trait or `List.map`.
 
 ### `linkableCode?`
 
@@ -777,7 +785,7 @@ The same, with a code span that names something documented — a type, a trait, 
 linkableCode?(code: String) -> Bool
 ```
 
-Only a bare name is a reference: `List`, `FS.Path`, `List.map`. A code span with spaces or parentheses is an expression, not a name.
+Returns `true` when a code span is a bare name such as `List`, `FS.Path` or `List.map`. A span with spaces or parentheses is an expression and is not linked.
 
 ### `firstSentence`
 
@@ -791,7 +799,7 @@ firstSentence(text: String) -> String
 paramsHtml(f: FunctionEntry, link: (String -> String), page: SourcePage, model: PackageModel) -> String
 ```
 
-Each parameter's meaning. Its type is in the signature right above, so it is repeated here only when there is no signature to read it from.
+Renders each parameter's description. Its type is shown only when there is no signature above that already gives it.
 
 ### `returnsHtml`
 
@@ -799,7 +807,7 @@ Each parameter's meaning. Its type is in the signature right above, so it is rep
 returnsHtml(f: FunctionEntry, link: (String -> String), page: SourcePage, model: PackageModel) -> String
 ```
 
-The signature already states the result type, so when there is one "Returns" says only what the value MEANS. A @return tag whose type disagrees would otherwise put two answers side by side (`min : X?` above "Returns: Number?").
+Renders the "Returns" line. When there is a signature, which already gives the result type, only the `@return` description is shown, so a tag whose type disagrees cannot contradict it (`min : X?` above "Returns: Number?").
 
 ### `examplesHtml`
 
@@ -813,7 +821,7 @@ examplesHtml(doc: Doc) -> String
 codeBlockHtml(source: String) -> String
 ```
 
-Kex source as a highlighted block, with the control that copies it. The control is inert markup until the page script enables it, so it stays hidden where there is no script to act on it.
+Renders Kex source as a highlighted block with a copy control. The control stays hidden until the page script enables it.
 
 ### `deprecatedHtml`
 
@@ -827,7 +835,7 @@ deprecatedHtml(doc: Doc) -> String
 esc(s: String) -> String
 ```
 
-Escape text for HTML (content and double-quoted attributes).
+Escapes text for HTML content and double-quoted attributes.
 
 ### `labelOf`
 
@@ -841,7 +849,7 @@ labelOf(model: PackageModel) -> String
 pageTarget(current: String) -> String
 ```
 
-The page the version switcher tries first in the target version.
+Returns the page the version switcher tries first in the target version.
 
 ### `markdownLink`
 
@@ -849,7 +857,7 @@ The page the version switcher tries first in the target version.
 markdownLink(current: String) -> String
 ```
 
-Every page's raw Markdown, next to its HTML: the footer link humans see, and the address llms.txt tells models about. Index pages have none. The target is a bare sibling filename — the page already stands in the directory its `.md` was written to, so no prefix climbing is wanted.
+Returns the footer link to a page's Markdown version, the same file llms.txt points models to. Index pages have none. The `.md` file sits beside the page, so the link is a bare file name.
 
 ### `slug`
 
@@ -869,7 +877,7 @@ typeParamSuffix(typeParams: [String]) -> String
 versionPrefix(urlPath: String) -> String
 ```
 
-Relative path from a page's urlPath back to the version directory: "string" → "" (sibling), "kex/ast" → "../".
+Returns the relative path from a page back to the version directory: "" for "string", "../" for "kex/ast".
 
 ### `rootPrefix`
 
@@ -877,7 +885,7 @@ Relative path from a page's urlPath back to the version directory: "string" → 
 rootPrefix(urlPath: String) -> String
 ```
 
-From the page to the site root: version dir is <pkg>/<version>/.
+Returns the relative path from a page to the site root, two levels above the version directory (<pkg>/<version>/).
 
 ### `ups`
 
@@ -889,9 +897,9 @@ ups(n: Integer) -> String
 
 **Fields**
 
-  - `name` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `href` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `summary` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `foul?` : [Bool](../../../../prelude/0.4.0-rc.4-dev/truthyable.md#make-bool) (optional)
+  - `name` : [String](../../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `href` : [String](../../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `summary` : [String](../../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `foul?` : [Bool](../../../../prelude/0.4.0-rc.5-dev/truthyable.md#make-bool) (optional)
 
 

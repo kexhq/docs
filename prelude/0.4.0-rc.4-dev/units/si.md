@@ -11,9 +11,9 @@ entities:
 
 ## module `Units.SI`
 
-SI units: metres, grams, watts, volts and the rest, with prefixes and dimensional arithmetic.
+SI units such as metres, grams, watts and volts, with prefixes and dimensional arithmetic.
 
-Opt-in: nothing here is in scope until `using Units.SI`.
+Nothing here is in scope until `using Units.SI`.
 
 ```kex
 using Units.SI
@@ -25,7 +25,7 @@ main do
 end
 ```
 
-Every value is a `Measure` from the prelude, so the arithmetic, conversion and comparison described there apply unchanged. What this module adds is the SI vocabulary (including fused spellings such as `kilometer`), the prefixes as units of their own (`Kilo(Meter)`, for `convertTo` and `to(String, in:)`), and a table of which dimension results from multiplying or dividing two others, so `2.newton * 3.meter` answers in joules and `100.meter / 10.second` in metres per second.
+Every value is a prelude `Measure`, with its arithmetic, conversion and comparison. This module adds the SI unit names, including prefixed ones such as `kilometer`; the prefixes as units (`Kilo(Meter)`) for `convertTo` and `to(String, in:)`; and the dimension of each product and quotient, so `2.newton * 3.meter` is in joules and `100.meter / 10.second` in metres per second.
 
 ### `meter`
 
@@ -33,7 +33,7 @@ Every value is a `Measure` from the prelude, so the arithmetic, conversion and c
 meter(value: Number) -> Measure<Quantity.Length>
 ```
 
-`value` metres, as a `Measure`.
+Returns `value` metres as a `Measure`.
 
 **Parameters**
 
@@ -54,7 +54,7 @@ meter(value: Number) -> Measure<Quantity.Length>
 gram(value: Number) -> Measure<Quantity.Mass>
 ```
 
-`value` grams, as a `Measure`.
+Returns `value` grams as a `Measure`.
 
 **Parameters**
 
@@ -74,7 +74,7 @@ gram(value: Number) -> Measure<Quantity.Mass>
 kelvin(value: Number) -> Measure<Quantity.Temperature>
 ```
 
-`value` kelvin, as a `Measure`.
+Returns `value` kelvin as a `Measure`.
 
 **Parameters**
 
@@ -94,7 +94,7 @@ kelvin(value: Number) -> Measure<Quantity.Temperature>
 liter(value: Number) -> Measure<Quantity.Volume>
 ```
 
-`value` litres, as a `Measure`.
+Returns `value` litres as a `Measure`.
 
 **Parameters**
 
@@ -114,7 +114,7 @@ liter(value: Number) -> Measure<Quantity.Volume>
 newton(value: Number) -> Measure<Quantity.Force>
 ```
 
-`value` newtons, as a `Measure`.
+Returns `value` newtons as a `Measure`.
 
 **Parameters**
 
@@ -136,7 +136,7 @@ _Force times distance is energy_
 joule(value: Number) -> Measure<Quantity.Energy>
 ```
 
-`value` joules, as a `Measure`.
+Returns `value` joules as a `Measure`.
 
 **Parameters**
 
@@ -156,7 +156,7 @@ joule(value: Number) -> Measure<Quantity.Energy>
 watt(value: Number) -> Measure<Quantity.Power>
 ```
 
-`value` watts, as a `Measure`.
+Returns `value` watts as a `Measure`.
 
 **Parameters**
 
@@ -183,7 +183,7 @@ _Power times time is energy_
 volt(value: Number) -> Measure<Quantity.Voltage>
 ```
 
-`value` volts, as a `Measure`.
+Returns `value` volts as a `Measure`.
 
 **Parameters**
 
@@ -203,7 +203,7 @@ volt(value: Number) -> Measure<Quantity.Voltage>
 ampere(value: Number) -> Measure<Quantity.Current>
 ```
 
-`value` amperes, as a `Measure`.
+Returns `value` amperes as a `Measure`.
 
 **Parameters**
 
@@ -225,7 +225,7 @@ _Voltage times current is power_
 ohm(value: Number) -> Measure<Quantity.Resistance>
 ```
 
-`value` ohms, as a `Measure`.
+Returns `value` ohms as a `Measure`.
 
 **Parameters**
 
@@ -245,7 +245,7 @@ ohm(value: Number) -> Measure<Quantity.Resistance>
 coulomb(value: Number) -> Measure<Quantity.Charge>
 ```
 
-`value` coulombs, as a `Measure`.
+Returns `value` coulombs as a `Measure`.
 
 **Parameters**
 
@@ -259,58 +259,11 @@ coulomb(value: Number) -> Measure<Quantity.Charge>
 3.coulomb.to(String)   # => Just("3.0 C")
 ```
 
-### `per`
-
-```kex
-per(measure: Measure, other: Measure) -> Measure
-```
-
-Divides one measure by another, naming the resulting dimension.
-
-The spelled-out form of `/`: `100.meter.per(10.second)` and `100.meter / 10.second` are the same call. Metres over seconds is speed, energy over time is power, force over area is pressure: the dimension table decides, and the symbol follows it.
-
-**Parameters**
-
-  - `measure` — the numerator
-  - `other` — the denominator
-
-**Returns**: the quotient, in its derived unit
-
-**Examples**
-
-```kex
-100.meter.per(10.second).to(String)   # => Just("10.0 m/s")
-```
-
-### `times`
-
-```kex
-times(measure: Measure, other: Measure) -> Measure
-```
-
-Multiplies one measure by another, naming the resulting dimension.
-
-The spelled-out form of `*`. Force times distance is energy, voltage times current is power, power times time is energy.
-
-**Parameters**
-
-  - `measure` — the first factor
-  - `other` — the second factor
-
-**Returns**: the product, in its derived unit
-
-**Examples**
-
-```kex
-2.newton.times(3.meter).to(String)   # => Just("6.0 J")
-(12.volt * 2.ampere).to(String)      # => Just("24.0 W")
-```
-
 ## type `SIUnit`
 
 The SI units this module names.
 
-Each carries its dimension (`:length`, `:mass`, `:power`, …) and its symbol, which is what a `Measure` built from it displays with.
+Each has a dimension (`:length`, `:mass`, `:power`, ...) and the symbol a `Measure` in it displays with.
 
 **Variants**
 
@@ -356,12 +309,12 @@ symbol -> String
 
 ## type `SIPrefix`
 
-A decimal prefix applied to a unit, which is a unit itself.
+A decimal prefix applied to a unit, which makes another unit.
 
-`Kilo(Meter)` is the kilometre and `Kilo(Watt * Hour)` the kilowatt-hour. Like any other `Unit`, one can be converted to with `convertTo` or displayed in with `to(String, in:)`. Writing a measure in one is spelled out instead: `5.kilometer`.
+`Kilo(Meter)` is the kilometre and `Kilo(Watt * Hour)` the kilowatt-hour. Use one as the target of `convertTo` or `to(String, in:)`. To write a measure in a prefixed unit, use the prefixed name: `5.kilometer`.
 
 ```kex
-5000.meter.convertTo(Kilo(Meter))       # => Ok(5.0 km)
+5000.meter.convertTo(Kilo(Meter)).map(&.showValue)   # => Ok("5.0 km")
 1500.watt.to(String, in: Kilo(Watt))    # => Just("1.5 kW")
 ```
 
@@ -424,7 +377,7 @@ symbol -> String
 
 More functions for [`Measure`](../units.md#record-measure), added by this module.
 
-Displaying a measure in a prefixed unit: the prelude's `to(String, in:)`, for this module's units.
+Displays a measure in a prefixed unit, as the prelude's `to(String, in:)` does for other units.
 
 ### `factor`
 
@@ -452,7 +405,7 @@ to(String: Type, in: SIPrefix, format: NumberFormat) -> String?
 
 Renders the measure in a prefixed unit.
 
-Answers `None` when the measure and the target unit are of different dimensions: you cannot express watts in metres, and this says so rather than producing a wrong number.
+Returns `None` when the unit has a different dimension from the measure, such as watts shown in metres.
 
 **Parameters**
 
@@ -468,7 +421,7 @@ Answers `None` when the measure and the target unit are of different dimensions:
 1500.watt.to(String, in: Kilo(Watt))     # => Just("1.5 kW")
 ```
 
-_A mismatched dimension answers None_
+_A mismatched dimension gives None_
 
 ```kex
 1500.watt.to(String, in: Kilo(Meter))   # => None
@@ -477,7 +430,7 @@ _A mismatched dimension answers None_
 ### `rescaled`
 
 ```kex
-rescaled(factor: Float, kind: Atom, symbol: String) -> Measure?
+rescaled(factor: Float, kind: Atom, symbol: String) -> This?
 ```
 
 The measure in a unit of `factor`, or None across dimensions.
@@ -485,55 +438,250 @@ The measure in a unit of `factor`, or None across dimensions.
 ### `prefixScaled`
 
 ```kex
-prefixScaled(factor: Float) -> Number
+prefixScaled(factor: Float) -> Float
 ```
 
-Divides the canonical value by a prefix factor. The conversion is exact in principle (0.000005 W is 5 μW) but neither the measured value nor the prefix factor is exactly representable in binary, so the quotient lands an ulp or two off (5.000000000000001). Round back to 15 significant digits, comfortably inside a double's ~15.95, so prefixed measures read the way they were written. The result is always a Float; the annotation says Number because `Integer / Float` infers Integer.
+Divides the canonical value by a prefix factor. The conversion is exact in principle (0.000005 W is 5 μW) but neither the measured value nor the prefix factor is exactly representable in binary, so the quotient lands an ulp or two off (5.000000000000001). Round back to 15 significant digits, comfortably inside a double's ~15.95, so prefixed measures read the way they were written.
+
+## extends `Measure<Quantity.Mass>`
+
+More functions for [`Measure`](../units.md#record-measure), added by this module.
+
+Products and quotients of measures, by dimension.
+
+Each is declared with the dimension of its result, so the checker knows that `2.newton * 3.meter` is a `Measure<Quantity.Energy>`. A product with no dimension declared here, such as `2.meter * 3.second`, is a type error. `times` and `per` are the named forms of `*` and `/`. A dimension of your own declares its products the same way, in its own module.
+
+**Examples**
+
+```kex
+(2.newton * 3.meter).to(String)         # => Just("6.0 J")
+(100.meter / 10.second).to(String)      # => Just("10.0 m/s")
+100.meter.per(10.second).to(String)     # => Just("10.0 m/s")
+(12.volt * 2.ampere).to(String)         # => Just("24.0 W")
+(40.meter * 51.meter).to(String)        # => Just("2040.0 m^2")
+(2.meter * (3.meter * 4.meter)).to(String)   # => Just("24.0 m^3")
+```
 
 ### `*`
 
 ```kex
-*(other: Measure) -> Measure
+*(other: Measure<Quantity.Acceleration>) -> Measure<Quantity.Force>
+```
+
+### `times`
+
+```kex
+times(other: Measure<Quantity.Acceleration>) -> Measure<Quantity.Force>
+```
+
+## extends `Measure<Quantity.Acceleration>`
+
+More functions for [`Measure`](../units.md#record-measure), added by this module.
+
+### `*`
+
+```kex
+*(other: Measure<Quantity.Mass>) -> Measure<Quantity.Force>
+```
+
+### `times`
+
+```kex
+times(other: Measure<Quantity.Mass>) -> Measure<Quantity.Force>
+```
+
+## extends `Measure<Quantity.Force>`
+
+More functions for [`Measure`](../units.md#record-measure), added by this module.
+
+### `*`
+
+```kex
+*(other: Measure<Quantity.Length>) -> Measure<Quantity.Energy>
+```
+
+### `times`
+
+```kex
+times(other: Measure<Quantity.Length>) -> Measure<Quantity.Energy>
 ```
 
 ### `/`
 
 ```kex
-/(other: Measure) -> Measure
+/(other: Measure<Quantity.Length>) -> Measure<Quantity.Pressure>
 ```
 
-### `product`
+### `per`
 
 ```kex
-product(other) -> Measure
+per(other: Measure<Quantity.Length>) -> Measure<Quantity.Pressure>
 ```
 
-### `quotient`
+## extends `Measure<Quantity.Length>`
+
+More functions for [`Measure`](../units.md#record-measure), added by this module.
+
+### `*`
 
 ```kex
-quotient(other) -> Measure
+*(other: Measure<Quantity.Force>) -> Measure<Quantity.Energy>
 ```
 
-### `productKind`
+### `times`
 
 ```kex
-productKind(left, _)
+times(other: Measure<Quantity.Force>) -> Measure<Quantity.Energy>
 ```
 
-### `quotientKind`
+### `/`
 
 ```kex
-quotientKind(left, _)
+/(other: Measure<Quantity.Time>) -> Measure<Quantity.Speed>
 ```
 
-### `productSymbol`
+### `per`
 
 ```kex
-productSymbol(_, left, right)
+per(other: Measure<Quantity.Time>) -> Measure<Quantity.Speed>
 ```
 
-### `quotientSymbol`
+## extends `Measure<Quantity.Area>`
+
+More functions for [`Measure`](../units.md#record-measure), added by this module.
+
+### `*`
 
 ```kex
-quotientSymbol(_, left, right)
+*(other: Measure<Quantity.Length>) -> Measure<Quantity.Volume>
+```
+
+### `times`
+
+```kex
+times(other: Measure<Quantity.Length>) -> Measure<Quantity.Volume>
+```
+
+## extends `Measure<Quantity.Speed>`
+
+More functions for [`Measure`](../units.md#record-measure), added by this module.
+
+### `/`
+
+```kex
+/(other: Measure<Quantity.Time>) -> Measure<Quantity.Acceleration>
+```
+
+### `per`
+
+```kex
+per(other: Measure<Quantity.Time>) -> Measure<Quantity.Acceleration>
+```
+
+## extends `Measure<Quantity.Voltage>`
+
+More functions for [`Measure`](../units.md#record-measure), added by this module.
+
+### `*`
+
+```kex
+*(other: Measure<Quantity.Current>) -> Measure<Quantity.Power>
+```
+
+### `times`
+
+```kex
+times(other: Measure<Quantity.Current>) -> Measure<Quantity.Power>
+```
+
+### `/`
+
+```kex
+/(other: Measure<Quantity.Current>) -> Measure<Quantity.Resistance>
+```
+
+### `per`
+
+```kex
+per(other: Measure<Quantity.Current>) -> Measure<Quantity.Resistance>
+```
+
+## extends `Measure<Quantity.Current>`
+
+More functions for [`Measure`](../units.md#record-measure), added by this module.
+
+### `*`
+
+```kex
+*(other: Measure<Quantity.Voltage>) -> Measure<Quantity.Power>
+```
+
+### `times`
+
+```kex
+times(other: Measure<Quantity.Voltage>) -> Measure<Quantity.Power>
+```
+
+## extends `Measure<Quantity.Resistance>`
+
+More functions for [`Measure`](../units.md#record-measure), added by this module.
+
+### `*`
+
+```kex
+*(other: Measure<Quantity.Current>) -> Measure<Quantity.Voltage>
+```
+
+### `times`
+
+```kex
+times(other: Measure<Quantity.Current>) -> Measure<Quantity.Voltage>
+```
+
+## extends `Measure<Quantity.Power>`
+
+More functions for [`Measure`](../units.md#record-measure), added by this module.
+
+### `*`
+
+```kex
+*(other: Measure<Quantity.Time>) -> Measure<Quantity.Energy>
+```
+
+### `times`
+
+```kex
+times(other: Measure<Quantity.Time>) -> Measure<Quantity.Energy>
+```
+
+## extends `Measure<Quantity.Time>`
+
+More functions for [`Measure`](../units.md#record-measure), added by this module.
+
+### `*`
+
+```kex
+*(other: Measure<Quantity.Power>) -> Measure<Quantity.Energy>
+```
+
+### `times`
+
+```kex
+times(other: Measure<Quantity.Power>) -> Measure<Quantity.Energy>
+```
+
+## extends `Measure<Quantity.Energy>`
+
+More functions for [`Measure`](../units.md#record-measure), added by this module.
+
+### `/`
+
+```kex
+/(other: Measure<Quantity.Time>) -> Measure<Quantity.Power>
+```
+
+### `per`
+
+```kex
+per(other: Measure<Quantity.Time>) -> Measure<Quantity.Power>
 ```

@@ -14,9 +14,9 @@ entities:
 
 ## type `List<X>`
 
-An ordered, immutable sequence, written [1, 2, 3].
+An ordered, immutable sequence, written `[1, 2, 3]`.
 
-Lists are the default collection in Kex. Every operation answers with a new list rather than changing the receiver, so a chain of transformations is safe to read from either end.
+Lists are the default collection in Kex. Every operation returns a new list and leaves the original unchanged.
 
 ```kex
 let scores = [7, 2, 9, 4]
@@ -25,14 +25,14 @@ scores.sort                      # => [2, 4, 7, 9]
 scores.map { |n| n * 10 }.sum    # => 220
 ```
 
-Anything that might not be there: the first element, an element at an index, a search result: answers with an `Optional`, so an empty list is an ordinary case rather than a crash:
+Lookups that can come up empty, such as `first`, `at` and `find`, return an `Optional`:
 
 ```kex
 [].first.or(0)        # => 0
 [1, 2].at(9).or(0)    # => 0
 ```
 
-A list is `Enumerable` and `Foldable`, which is where `map`, `filter`, `find`, `all?` and `reduce` come from.
+Lists implement `Enumerable` and `Foldable`, which supply `map`, `filter`, `find`, `all?` and `reduce`.
 
 **Examples**
 
@@ -45,7 +45,7 @@ users
   .join("\n")
 ```
 
-Implements [`Monoid`](algebra.md#trait-monoid), [`Blankable`](blankable.md#trait-blankable), [`Enumerable`](enumerable.md#trait-enumerable), [`Foldable`](enumerable.md#trait-foldable), [`Truthyable`](truthyable.md#trait-truthyable).
+Implements [`Monoid`](algebra.md#trait-monoid), [`Blankable`](blankable.md#trait-blankable), [`Enumerable<X>`](enumerable.md#trait-enumerable), [`Foldable<X>`](enumerable.md#trait-foldable), [`Functor`](algebra.md#trait-functor), [`Bindable`](algebra.md#trait-bindable), [`Monad`](algebra.md#trait-monad), [`Applicable`](algebra.md#trait-applicable), [`Truthyable`](truthyable.md#trait-truthyable).
 
 ### Functions
 
@@ -131,7 +131,7 @@ Returns the last element wrapped in `Just`, or `None` if the list is empty.
 count -> Integer
 ```
 
-Returns the number of elements. When given a predicate, returns the count of elements for which it holds.
+Returns the number of elements. With a predicate, `count` counts only the elements that satisfy it.
 
 **Examples**
 
@@ -145,8 +145,6 @@ count(pred: (X -> Bool)) -> Integer
 ```
 
 Returns how many elements satisfy `pred`.
-
-count(pred) is provided by the Enumerable trait.
 
 **Parameters**
 
@@ -167,7 +165,7 @@ count(pred) is provided by the Enumerable trait.
 length -> Integer
 ```
 
-Returns the number of elements. The same as `count`, under the name `String` uses.
+Returns the number of elements; the same as `count`, under the name `String` uses.
 
 **Returns**: the number of elements
 
@@ -199,8 +197,6 @@ find(pred: (X -> Bool)) -> X?
 ```
 
 Returns the first element satisfying the predicate wrapped in `Just`, or `None` if no element matches.
-
-find/any?/all? are provided by the Enumerable trait.
 
 **Examples**
 
@@ -239,15 +235,13 @@ Returns `true` if every element satisfies the predicate.
 [1, 2, 3].all? { |x| x > 1 }   # => false
 ```
 
-#### `map` (from Enumerable)
+#### `map` (from Enumerable, Functor)
 
 ```kex
 map(f: (X -> Y)) -> [Y]
 ```
 
-Transforms each element by applying `f`.
-
-map/filter/each are provided by the Enumerable trait (in terms of reduce).
+Returns the list of `f` applied to each element.
 
 **Examples**
 
@@ -261,7 +255,7 @@ map/filter/each are provided by the Enumerable trait (in terms of reduce).
 filter(pred: (X -> Bool)) -> [X]
 ```
 
-Returns a new list containing only the elements for which `pred` is `true`.
+Returns the elements for which `pred` is `true`.
 
 **Examples**
 
@@ -275,7 +269,7 @@ Returns a new list containing only the elements for which `pred` is `true`.
 reject(pred: (X -> Bool)) -> [X]
 ```
 
-Returns a new list with all elements for which `pred` is `true` removed. The inverse of `filter`.
+Returns the elements for which `pred` is `false`, the opposite of `filter`.
 
 **Examples**
 
@@ -289,7 +283,7 @@ Returns a new list with all elements for which `pred` is `true` removed. The inv
 each(f: (X -> Void)) -> Void
 ```
 
-Calls `f` with each element for its side effects. Returns unit.
+Calls `f` with each element, in order, for its side effects.
 
 **Examples**
 
@@ -303,7 +297,7 @@ Calls `f` with each element for its side effects. Returns unit.
 reduce(acc: A, f: (A -> X -> A)) -> A
 ```
 
-Folds the list from the left, starting with `acc` and combining each element via `f`.
+Folds the list from the left: starts with `acc` and combines it with each element in turn through `f`.
 
 **Parameters**
 
@@ -316,10 +310,10 @@ Folds the list from the left, starting with `acc` and combining each element via
 [1, 2, 3].reduce(1) { |acc, x| acc * x }   # => 6
 ```
 
-#### `flatMap` (from Enumerable)
+#### `into` (from Enumerable, Bindable, Monad)
 
 ```kex
-flatMap(f: (X -> [Y])) -> [Y]
+into(f: (X -> [Y])) -> [Y]
 ```
 
 Maps each element to a list and concatenates the results.
@@ -327,7 +321,48 @@ Maps each element to a list and concatenates the results.
 **Examples**
 
 ```kex
-[1, 2, 3].flatMap { |n| [n, n * 10] }   # => [1, 10, 2, 20, 3, 30]
+[1, 2, 3].into { |n| [n, n * 10] }   # => [1, 10, 2, 20, 3, 30]
+```
+
+#### `wrap` (from Monad, Applicable)
+
+```kex
+wrap(value: Y) -> [Y]
+```
+
+Returns the one-element list `[value]`. This is `Monad`'s `wrap`.
+
+**Parameters**
+
+  - `value` — the element
+
+**Returns**: a list holding only `value`
+
+**Examples**
+
+```kex
+List.wrap(1)   # => [1]
+```
+
+#### `with` (from Applicable)
+
+```kex
+with(other: [Y], f: (X -> Y -> Z)) -> [Z]
+```
+
+Applies `f` to every pairing of an element of this list with an element of `other`, walking `other` fully for each element of this list. This is `Applicable`'s `with`.
+
+**Parameters**
+
+  - `other` — the second list
+  - `f` — combines one element from each list
+
+**Returns**: one result per pairing
+
+**Examples**
+
+```kex
+[1, 2].with([10, 20]) { |a, b| a + b }   # => [11, 21, 12, 22]
 ```
 
 #### `at`
@@ -336,12 +371,12 @@ Maps each element to a list and concatenates the results.
 at(i: Integer) -> X?
 ```
 
-Returns the element at position `i` (0-based) wrapped in `Just`, or `None` if the index is out of range.
+Returns the element at position `i` (0-based) wrapped in `Just`, or `None` if the index is out of range. A negative `i` counts back from the end.
 
 **Examples**
 
 ```kex
-[10, 20, 30].at(1)   # => Just(20)
+[10, 20, 30].at(1)    # => Just(20)
 [10, 20, 30].at(9)    # => None
 [10, 20, 30].at(-1)   # => Just(30)
 ```
@@ -354,7 +389,7 @@ get(i: Integer, default: X) -> X
 get(i: Range<Integer>) -> [X]
 ```
 
-Returns the element at position `i` (0-based), or `None` when the index is out of range. The same as `at` (`get` also accepts a `Range`, which answers a sublist instead).
+Returns the element at position `i` (0-based), or `None` when the index is out of range; the same as `at`. Given a `Range`, `get` returns a sublist.
 
 **Parameters**
 
@@ -365,7 +400,7 @@ Returns the element at position `i` (0-based), or `None` when the index is out o
 **Examples**
 
 ```kex
-[10, 20, 30].get(1)   # => Just(20)
+[10, 20, 30].get(1)    # => Just(20)
 [10, 20, 30].get(9)    # => None
 [10, 20, 30].get(-1)   # => Just(30)
 ```
@@ -406,7 +441,7 @@ Returns the first index at which `elem` appears, wrapped in `Just`, or `None` if
 findIndex(pred: (X -> Bool)) -> Integer?
 ```
 
-Returns the index of the first element satisfying `pred`, wrapped in `Just`, or `None` if none does. The predicate counterpart of `indexOf`, which searches by value.
+Returns the index of the first element satisfying `pred`, wrapped in `Just`, or `None` if none does. To search by value, use `indexOf`.
 
 **Examples**
 
@@ -421,7 +456,7 @@ Returns the index of the first element satisfying `pred`, wrapped in `Just`, or 
 takeWhile(pred: (X -> Bool)) -> [X]
 ```
 
-Returns the longest leading run of elements satisfying `pred`. Stops at the first element that does not, so it is not `filter`: later matches are dropped with everything after the first failure.
+Returns the longest leading run of elements satisfying `pred`. Unlike `filter`, it stops at the first element that fails, so matches after that point are left out.
 
 **Examples**
 
@@ -435,7 +470,7 @@ Returns the longest leading run of elements satisfying `pred`. Stops at the firs
 dropWhile(pred: (X -> Bool)) -> [X]
 ```
 
-Returns what is left after `takeWhile`: everything from the first element that does not satisfy `pred` onwards.
+Returns everything from the first element that fails `pred` onwards: the part `takeWhile` leaves.
 
 **Examples**
 
@@ -449,7 +484,7 @@ Returns what is left after `takeWhile`: everything from the first element that d
 uniq -> [X]
 ```
 
-Returns a new list with duplicate elements removed, preserving the first occurrence of each element.
+Returns the list with duplicates removed, keeping the first occurrence of each element.
 
 **Examples**
 
@@ -477,7 +512,7 @@ Splits the list into two lists: those for which `pred` is `true` (first) and tho
 collect(f: (X -> Y?)) -> [Y]
 ```
 
-Maps each element through `f` (which returns an `Optional`), keeping and unwrapping the `Just(y)` results and dropping `None`. Filter + map fused.
+Maps each element through `f` and keeps the unwrapped `Just` results, dropping each `None`. It filters and maps in one pass.
 
 **Examples**
 
@@ -505,7 +540,7 @@ Returns the first `n` elements.
 drop(n: Integer) -> [X]
 ```
 
-Drops the first `n` elements.
+Returns the list without its first `n` elements.
 
 **Examples**
 
@@ -522,7 +557,7 @@ slice(range: Range<Integer>) -> [X]
 
 Returns the sublist of `length` elements starting at index `start`, counting from 0.
 
-The window is clamped rather than refused, the way `take` and `drop` already behave: a start past the end answers `[]`, a length running past the end stops at the end, and a negative length answers `[]`. A negative start counts back from the end, as in Ruby: `-1` is the last element, and a start still before the beginning answers `[]`.
+Out-of-range windows are clamped, as with `take` and `drop`. A start past the end gives `[]`, a length running past the end stops there, and a negative length gives `[]`. A negative start counts back from the end, as in Ruby, so `-1` is the last element; a start that is still before the beginning gives `[]`.
 
 **Parameters**
 
@@ -552,7 +587,7 @@ rows.slice(page * 10, 10)
 push(x: X) -> [X]
 ```
 
-Returns a new list with `x` appended at the end.
+Returns the list with `x` appended at the end.
 
 **Examples**
 
@@ -606,7 +641,7 @@ Returns the elements sorted in ascending natural order.
 sort(comp: (X -> X -> Bool)) -> [X]
 ```
 
-Returns the elements sorted using a custom comparator. `comp` should return `true` when its first argument should come before its second.
+Returns the elements sorted by a comparator, which returns `true` when its first argument belongs before its second.
 
 **Examples**
 
@@ -804,7 +839,7 @@ cells.slices(3).map { |row| row.join(" | ") }
 windows(n: Integer) -> [[X]]
 ```
 
-Every run of `n` consecutive elements, each overlapping the next by all but one element. Ruby calls this `each_cons`.
+Returns every run of `n` consecutive elements, each overlapping the next by all but one element. Ruby calls this `each_cons`.
 
 **Parameters**
 
@@ -830,7 +865,7 @@ readings.windows(2).map { |w| w.get(1, 0) - w.get(0, 0) }
 difference(other: [X]) -> [X]
 ```
 
-The elements of this list that are not in `other`, in this list's order. Duplicates in this list are kept unless `other` removes them.
+Returns the elements of this list that are not in `other`, in order. Duplicates in this list are kept unless `other` removes them.
 
 **Parameters**
 
@@ -850,7 +885,7 @@ The elements of this list that are not in `other`, in this list's order. Duplica
 intersect(other: [X]) -> [X]
 ```
 
-The distinct elements present in both lists, in this list's order.
+Returns the distinct elements present in both lists, in this list's order.
 
 **Parameters**
 
@@ -870,7 +905,7 @@ The distinct elements present in both lists, in this list's order.
 union(other: [X]) -> [X]
 ```
 
-The distinct elements of both lists: this list's first, then the new ones from `other`.
+Returns the distinct elements of both lists, this list's first and then the new ones from `other`.
 
 **Parameters**
 
@@ -905,9 +940,9 @@ join(sep: String) -> String
 join -> String
 ```
 
-Renders and concatenates the elements, placing `sep` between adjacent values. With no separator, the rendered values are joined directly.
+Renders the elements and concatenates them with `sep` between neighbours, or with nothing between them when no separator is given.
 
-Elements do not have to be strings: each is rendered using the same user-facing conversion used by interpolation and printing.
+Elements need not be strings. Each is rendered the way string interpolation renders it.
 
 **Parameters**
 
@@ -977,12 +1012,12 @@ Flattens exactly one level of nesting.
 
 ### From [`Enumerable`](enumerable.md#trait-enumerable)
 
-  - [`mapIndexed`](enumerable.md#enumerable-mapindexed) — Applies `f` to each item and its 0-based position, and collects the results into a list.
+  - [`mapIndexed`](enumerable.md#enumerable-mapindexed) — Applies `f` to each item and its 0-based position, and returns the results as a list.
 
 ### From [`Foldable`](enumerable.md#trait-foldable)
 
   - [`eachIndexed`](enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
-  - [`none?`](enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`none?`](enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`, the opposite of `any?`.
   - [`one?`](enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
 
 ### Defined in other modules

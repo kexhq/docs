@@ -18,6 +18,7 @@ entities:
   - { kind: make, name: "Integer" }
   - { kind: make, name: "Float" }
   - { kind: make, name: "Measure<D>" }
+  - { kind: make, name: "Measure<Quantity.Length>" }
   - { kind: module, name: "Units" }
 ---
 
@@ -25,22 +26,22 @@ entities:
 
 Numbers that carry a unit.
 
-Writing `5.second` or `90.minute` gives you a `Measure`: a number, the unit it was written in, and the same quantity in that dimension's base unit. Adding, subtracting and converting all go through the canonical value, so the arithmetic is right regardless of which units the operands were written in. The dimension is part of the type (`Measure<Quantity.Time>`), so mixing dimensions does not type-check rather than giving a silently wrong number.
+`5.second` and `90.minute` are +Measure+s: a number, the unit it was written in, and the same quantity in the base unit of its dimension. Arithmetic and conversion use the base-unit value, so operands can be in different units. The dimension is part of the type, as in `Measure<Quantity.Time>`, so adding a time to a length does not type-check.
 
 ```kex
-5.second.to(String)                     # => Just("5.0 s")
-1.5.hour.to(String)                  # => Just("1.5 h")
-(1.hour + 30.minute).to(String)        # => Just("1.5 h")
-90.minute.convert(Hour)              # => Ok(1.5 h)
+5.second.to(String)                       # => Just("5.0 s")
+1.5.hour.to(String)                       # => Just("1.5 h")
+(1.hour + 30.minute).to(String)           # => Just("1.5 h")
+90.minute.to(String, in: Hour)            # => Just("1.5 h")
 ```
 
-The time units (`nanosecond` through `week`) are in the prelude. Other dimensions live in opt-in modules under `Units`, and every one of them measures against the same machinery here.
+The time units, `nanosecond` through `week`, are in the prelude. Units for other dimensions are in opt-in modules under `Units`, such as `Units.SI` and `Units.Data`, and use the same `Measure`.
 
-A `Measure` is a measurement, not an elapsed span: `5.second` describes a quantity, while `Duration` is what `Time` and `Date` use for a span between two moments.
+A time measure is a `Duration`, the span type that `Time`, `Date` and `DateTime` take: +Date.today() + 3.day+.
 
 ## trait `Unit`
 
-The trait a unit implements: how it converts to its dimension's base unit, which dimension that is, and how it is written.
+The trait every unit implements: its conversion factor to the base unit of its dimension, the dimension, and its symbol.
 
 Implemented by [`UnitDefinition`](#make-unitdefinition), [`TimeUnit`](#make-timeunit), [`DataUnit`](units/data.md#make-dataunit), [`UnitDefinition`](units/data.md#make-unitdefinition), [`SIPrefix`](units/si.md#make-siprefix), [`SIUnit`](units/si.md#make-siunit), [`UnitDefinition`](units/si.md#make-unitdefinition).
 
@@ -52,7 +53,7 @@ Implemented by [`UnitDefinition`](#make-unitdefinition), [`TimeUnit`](#make-time
 factor -> Float
 ```
 
-How many base units one of this unit is: `60.0` for a minute, whose base unit is the second.
+Returns how many base units one of this unit is: `60.0` for a minute, since the base unit of time is the second.
 
 **Returns**: the conversion factor
 
@@ -68,7 +69,7 @@ Minute.factor   # => 60.0
 kind -> Atom
 ```
 
-Which dimension this unit measures, as an atom. Only measures of the same kind can be added or converted between.
+Returns the dimension this unit measures, as an atom. Only measures of the same dimension can be added or converted into each other.
 
 **Returns**: the dimension tag
 
@@ -84,7 +85,7 @@ Second.kind   # => :time
 symbol -> String
 ```
 
-How this unit is written when a measure is displayed.
+Returns the symbol a measure in this unit is shown with.
 
 **Returns**: the unit's symbol
 
@@ -99,10 +100,10 @@ Minute.symbol   # => "min"
 ## function `measureKind`
 
 ```kex
-measureKind(measure: Measure) -> Atom
+measureKind(measure: Measure<D>) -> Atom
 ```
 
-The dimension a measure belongs to.
+Returns the dimension of a measure, as an atom.
 
 **Parameters**
 
@@ -119,10 +120,10 @@ measureKind(5.second)   # => :time
 ## function `measureSymbol`
 
 ```kex
-measureSymbol(measure: Measure) -> String
+measureSymbol(measure: Measure<D>) -> String
 ```
 
-The symbol a measure displays with.
+Returns the symbol of a measure's unit.
 
 **Parameters**
 
@@ -139,10 +140,10 @@ measureSymbol(5.minute)   # => "min"
 ## function `measureFactor`
 
 ```kex
-measureFactor(measure: Measure) -> Float
+measureFactor(measure: Measure<D>) -> Float
 ```
 
-The conversion factor of a measure's unit.
+Returns the conversion factor of a measure's unit to its base unit.
 
 **Parameters**
 
@@ -158,9 +159,9 @@ measureFactor(5.minute)   # => 60.0
 
 ## record `UnitDefinition`
 
-A unit described at run time rather than by a constructor.
+A unit described by its fields instead of a constructor.
 
-Runtime-defined units are used for prefixes and units derived by arithmetic: `s^2` from squaring a duration, a kilo- prefix applied to a base unit.
+Every `Measure` stores its unit this way. Prefixed units and units made by arithmetic, such as `m^2` from squaring a length or a kilo- prefix on a base unit, exist only in this form.
 
 **Fields**
 
@@ -209,7 +210,9 @@ How the unit is written.
 
 ## module `Quantity`
 
-What a measure measures, as a type: the `D` of `Measure<D>`. Every unit's constructor says its dimension (`1.second` is a `Measure<Quantity.Time>`, `1.meter` a `Measure<Quantity.Length>`), so adding, comparing or ordering measures of different dimensions is a type error. These types have no values; they only tell measures apart. A measure made by unit arithmetic (`1.watt * 1.hour`) is a plain `Measure`: its dimension is known only when it runs.
+The dimensions a measure can have, as types: the `D` of `Measure<D>`.
+
+Each unit fixes its dimension: `1.second` is a `Measure<Quantity.Time>` and `1.meter` a `Measure<Quantity.Length>`, so adding, comparing or ordering measures of different dimensions is a type error. These types have no values. Unit arithmetic gives a dimension too: `1.watt * 1.hour` is a `Measure<Quantity.Energy>`, from the products `Units.SI` declares, and a product it does not declare is a type error.
 
 
 
@@ -270,11 +273,29 @@ Implements [`Inspectable`](kex.md#trait-inspectable), [`Showable`](kex.md#trait-
 
 
 
+## record `Area`
+
+Dimensions derived from others by the products and quotients in `Units.SI`: length over time is speed, speed over time acceleration, force over length pressure, and length squared area.
+
+
+
+## record `Speed`
+
+
+
+## record `Acceleration`
+
+
+
+## record `Pressure`
+
+
+
 ## record `Measure<D>`
 
-A quantity with a unit, of dimension `D` (a `Quantity` type).
+A quantity with a unit, of dimension `D`, one of the `Quantity` types.
 
-A Measure is shared by every unit module. `canonical` stores the value in that dimension's base unit; its Unit controls its display. That split is what makes +1.hour + 30.minute+ correct and still print in hours.
+Every unit module uses this record. `canonical` holds the value in the dimension's base unit and `unit` decides how it is shown, which is how +1.hour + 30.minute+ comes out right and still prints in hours.
 
 **Fields**
 
@@ -286,7 +307,9 @@ Implements [`Showable`](kex.md#trait-showable), [`Comparable`](comparable.md#tra
 
 ### Functions
 
-A measure is its quantity: `1.minute == 60.second`, `1.kilometer == 1000.meter`. Equality and ordering compare the canonical value, in the dimension's base unit, whatever unit each was written in. Measures of different dimensions are never equal, and ordering them is a type error (`1.second < 1.meter`). A measure whose dimension is known only at run time (one made by unit arithmetic) is compared by its canonical value alone.
+Equality and ordering of measures by quantity: `1.minute == 60.second` and `1.kilometer == 1000.meter`, whatever units each was written in.
+
+Measures of different dimensions are never equal, and ordering them, as in `1.second < 1.meter`, is a type error. A measure whose dimension is only known at run time, made by unit arithmetic, is compared by its base-unit value alone.
 
 #### `factor`
 
@@ -329,10 +352,12 @@ Renders the measure in its own unit.
 #### `scaled`
 
 ```kex
-scaled -> Measure
+scaled -> This
 ```
 
-Chooses the largest unit whose absolute value is at least one. Time uses nanoseconds through weeks; data uses bytes through terabytes (`binary: true` selects KiB through TiB). SI dimensions use decimal prefixes. Zero uses the family's base unit; smaller values use its smallest unit. Other dimensions keep their current unit.
+Returns the measure in the largest unit in which its size is at least 1.
+
+Time picks from nanoseconds through weeks, data from bytes through terabytes, and SI dimensions from the decimal prefixes nano through giga. Zero is shown in the base unit, and a value smaller than the smallest unit in that unit. Measures of other dimensions keep their unit.
 
 **Examples**
 
@@ -341,10 +366,16 @@ Chooses the largest unit whose absolute value is at least one. Time uses nanosec
 ```
 
 ```kex
-scaled(binary: Bool) -> Measure
+scaled(binary: Bool) -> This
 ```
 
-As `scaled`, using binary scales for data when `binary` is true.
+Returns the measure in the largest unit in which its size is at least 1, as `scaled` does. With `binary` true, data uses KiB through TiB.
+
+**Parameters**
+
+  - `binary` — whether data uses powers of 1024
+
+**Returns**: the measure in the chosen unit
 
 #### `showValue` (from Showable)
 
@@ -352,7 +383,7 @@ As `scaled`, using binary scales for data when `binary` is true.
 showValue -> String
 ```
 
-Renders the measure as its value and unit, so `IO.printLine` and interpolation show `5.0 W` rather than the record's fields. Inspecting it (the REPL's echo, `inspected`) still shows the record itself.
+Renders the measure as its number and unit symbol, which is what `IO.printLine` and interpolation show. `inspected` and the REPL show the record's fields instead.
 
 **Returns**: the value and the unit's symbol
 
@@ -365,12 +396,12 @@ Renders the measure as its value and unit, so `IO.printLine` and interpolation s
 #### `scale`
 
 ```kex
-scale(multiplier: Number) -> Measure
+scale(multiplier: Number) -> This
 ```
 
 Multiplies the measure by a plain number, keeping its unit.
 
-The unit is unchanged, so this scales a quantity rather than converting it: three of a two-second interval is six seconds.
+Three times a two-second interval is six seconds, shown in seconds.
 
 **Parameters**
 
@@ -385,39 +416,30 @@ The unit is unchanged, so this scales a quantity rather than converting it: thre
 1.hour.scale(0.5).to(String)  # => Just("0.5 h")
 ```
 
-#### `^`
+#### `raisedUnit`
 
 ```kex
-^(exponent: Number) -> Measure
+raisedUnit(exponent: Integer, dimension: Atom) -> UnitDefinition
 ```
 
-Raises the measure to a power, recording the derived unit in its notation.
-
-Raising a measure preserves its display unit while applying the power to its canonical value, display value, and conversion factor. The current Unit trait represents a dimension as one Atom, so the dimension remains the base kind; the notation records the derived unit (for example `s^2`).
+Returns this measure's unit raised to `exponent`, for `squared` and `cubed`: the factor raised to that power, a notation such as `m^2`, and the given dimension.
 
 **Parameters**
 
-  - `exponent` — the power to raise to
+  - `exponent` — the power
+  - `dimension` — the resulting dimension (`:area`, `:volume`)
 
-**Returns**: the raised measure
-
-**Examples**
-
-```kex
-(2.second ^ 2).to(String)   # => Just("4.0 s^2")
-```
+**Returns**: the raised unit
 
 #### `convertTo`
 
 ```kex
-convertTo(unit: Unit) -> Result<Measure, String>
+convertTo(unit: Unit) -> Result<This, String>
 ```
 
 Converts the measure to another unit of the same dimension.
 
-Answers `Error` when the dimensions differ: you cannot express seconds in bytes, and this says so rather than producing a wrong number.
-
-Units from opt-in modules such as `Units.SI` and `Units.Data` can be used here too, provided their dimension matches.
+Units from opt-in modules such as `Units.SI` and `Units.Data` work too. Converting to a unit of another dimension, such as seconds to meters, is an `Error`.
 
 **Parameters**
 
@@ -435,10 +457,10 @@ Units from opt-in modules such as `Units.SI` and `Units.Data` can be used here t
 #### `convert`
 
 ```kex
-convert(unit: TimeUnit) -> Result<Measure, String>
+convert(unit: TimeUnit) -> Result<This, String>
 ```
 
-Converts the measure to another time unit. The short spelling of `convertTo`, kept for prelude time measures.
+Converts the measure to another time unit; `convertTo` for time units only.
 
 **Parameters**
 
@@ -460,7 +482,7 @@ Converts the measure to another time unit. The short spelling of `convertTo`, ke
 
 Adds two measures of the same dimension.
 
-The units need not match: the sum goes through the canonical values, and comes back displayed in the LEFT operand's unit. The dimension is the type's (`Measure<D>`), so adding measures of different dimensions does not type-check.
+The units can differ. The sum is shown in the left operand's unit. Adding measures of different dimensions does not type-check.
 
 **Parameters**
 
@@ -483,7 +505,7 @@ The units need not match: the sum goes through the canonical values, and comes b
 
 Subtracts a measure of the same dimension.
 
-Like +++, the result is displayed in the left operand's unit.
+As with +++, the result is shown in the left operand's unit.
 
 **Parameters**
 
@@ -500,18 +522,18 @@ Like +++, the result is displayed in the left operand's unit.
 #### `inOwnUnit`
 
 ```kex
-inOwnUnit(total: Float) -> Measure<D>
+inOwnUnit(total: Float) -> This
 ```
 
-The canonical quantity `total`, displayed in this measure's unit.
+Returns a measure of `total` base units, shown in this measure's unit.
 
 #### `scaledValue`
 
 ```kex
-scaledValue(canonical: Float, factor: Float) -> Number
+scaledValue(canonical: Float, factor: Float) -> Float
 ```
 
-Divides a canonical value by a unit factor. The conversion is exact in principle (0.000005 W is 5 μW), but neither number is exactly representable in binary, so the quotient can land an ulp or two off (5.000000000000001). Round back to 15 significant digits, comfortably inside a double's ~15.95, so converted measures read the way they were written. The annotation says Number because `Integer / Float` infers Integer; the result is always a Float.
+Divides a canonical value by a unit factor. The conversion is exact in principle (0.000005 W is 5 μW), but neither number is exactly representable in binary, so the quotient can land an ulp or two off (5.000000000000001). Round back to 15 significant digits, comfortably inside a double's ~15.95, so converted measures read the way they were written.
 
 #### `scaledMeasureBase`
 
@@ -531,13 +553,13 @@ scaledMeasureFamily(base: UnitDefinition, binary: Bool) -> [UnitDefinition]
 ==(other: Measure<D>) -> Bool
 ```
 
-Whether `other` is the same quantity of the same dimension.
+Returns `true` when `other` is the same quantity of the same dimension.
 
 **Parameters**
 
   - `other` — the measure to compare with
 
-**Returns**: true when both measure the same amount of the same thing
+**Returns**: `true` when both measure the same amount of the same thing
 
 **Examples**
 
@@ -552,7 +574,7 @@ Whether `other` is the same quantity of the same dimension.
 compare(other: Measure<D>) -> Ordering
 ```
 
-How this quantity orders against `other`, of the same dimension.
+Compares this quantity with `other`, a measure of the same dimension.
 
 **Parameters**
 
@@ -573,7 +595,7 @@ How this quantity orders against `other`, of the same dimension.
 <(other: Measure<D>) -> Bool
 ```
 
-Ordering, as `Comparable` defines it, for measures of one dimension: the trait's own operators take any value, so these say `Measure<D>`.
+The ordering operators of `Comparable`, typed to take only a measure of the same dimension.
 
 #### `>` (from Comparable)
 
@@ -593,21 +615,85 @@ Ordering, as `Comparable` defines it, for measures of one dimension: the trait's
 >=(other: Measure<D>) -> Bool
 ```
 
+### On `Measure<Quantity.Length>`
+
+Powers of a length that have a dimension: `3.meter ^ 2` is an area and `2.meter ^ 3` a volume, the exponent literal choosing which. Other powers go through `pow` in `Units.Dynamic`, which checks them at run time.
+
+#### `^`
+
+```kex
+^(_) -> Measure<Quantity.Area>
+```
+
+Returns the length squared, the same as `squared`.
+
+**Examples**
+
+```kex
+(3.meter ^ 2).to(String)   # => Just("9.0 m^2")
+```
+
+#### `squared`
+
+```kex
+squared -> Measure<Quantity.Area>
+```
+
+Returns the length squared, which is an area.
+
+**Returns**: the area, displayed as the unit squared
+
+**Examples**
+
+```kex
+3.meter.squared.to(String)   # => Just("9.0 m^2")
+```
+
+#### `cubed`
+
+```kex
+cubed -> Measure<Quantity.Volume>
+```
+
+Returns the length cubed, which is a volume and converts to litres.
+
+**Returns**: the volume, displayed as the unit cubed
+
+**Examples**
+
+```kex
+2.meter.cubed.canonical   # => 8.0
+```
+
 ### From [`Comparable`](comparable.md#trait-comparable)
 
-  - [`max`](comparable.md#comparable-max) — What every ordered type gets from `compare` alone.
-  - [`min`](comparable.md#comparable-min) — Returns the smaller of this value and `other`; this value when they are equal.
-  - [`clamp`](comparable.md#comparable-clamp) — Returns this value limited to the range `low` to `high`: `low` when it is below, `high` when it is above, and itself otherwise.
+  - [`max`](comparable.md#comparable-max) — Returns the larger of this value and `other`, or this value when they are equal.
+  - [`min`](comparable.md#comparable-min) — Returns the smaller of this value and `other`, or this value when they are equal.
+  - [`clamp`](comparable.md#comparable-clamp) — Returns this value limited to `low`..`high`: `low` when it is below, `high` when it is above, and the value itself otherwise.
 
 ### Defined in other modules
 
   - [Duration](duration.md#make-measure-quantity-time): [`wholeNanoseconds`](duration.md#measure-quantity-time-wholenanoseconds), [`wholeMicroseconds`](duration.md#measure-quantity-time-wholemicroseconds), [`negated`](duration.md#measure-quantity-time-negated), [`*`](duration.md#measure-quantity-time-op-times), [`/`](duration.md#measure-quantity-time-op-div), [`abs`](duration.md#measure-quantity-time-abs), [`zero?`](duration.md#measure-quantity-time-zero?), [`negative?`](duration.md#measure-quantity-time-negative?), [`positive?`](duration.md#measure-quantity-time-positive?), [`shorterThan?`](duration.md#measure-quantity-time-shorterthan?), [`longerThan?`](duration.md#measure-quantity-time-longerthan?), [`seconds`](duration.md#measure-quantity-time-seconds), [`wholeMilliseconds`](duration.md#measure-quantity-time-wholemilliseconds), [`wholeSeconds`](duration.md#measure-quantity-time-wholeseconds), [`wholeMinutes`](duration.md#measure-quantity-time-wholeminutes), [`wholeHours`](duration.md#measure-quantity-time-wholehours), [`wholeDays`](duration.md#measure-quantity-time-wholedays), [`wholeWeeks`](duration.md#measure-quantity-time-wholeweeks), [`compareTo`](duration.md#measure-quantity-time-compareto), [`iso`](duration.md#measure-quantity-time-iso)
   - [Units.Data](units/data.md#make-measure): [`factor`](units/data.md#measure-factor), [`kind`](units/data.md#measure-kind), [`symbol`](units/data.md#measure-symbol), [`to`](units/data.md#measure-to), [`<`](units/data.md#measure-op-lt), [`>`](units/data.md#measure-op-gt), [`<=`](units/data.md#measure-op-lt-eq), [`>=`](units/data.md#measure-op-gt-eq)
-  - [Units.SI](units/si.md#make-measure): [`factor`](units/si.md#measure-factor), [`kind`](units/si.md#measure-kind), [`symbol`](units/si.md#measure-symbol), [`to`](units/si.md#measure-to), [`rescaled`](units/si.md#measure-rescaled), [`prefixScaled`](units/si.md#measure-prefixscaled), [`*`](units/si.md#measure-op-times), [`/`](units/si.md#measure-op-div), [`product`](units/si.md#measure-product), [`quotient`](units/si.md#measure-quotient), [`productKind`](units/si.md#measure-productkind), [`quotientKind`](units/si.md#measure-quotientkind), [`productSymbol`](units/si.md#measure-productsymbol), [`quotientSymbol`](units/si.md#measure-quotientsymbol)
+  - [Units.SI](units/si.md#make-measure): [`factor`](units/si.md#measure-factor), [`kind`](units/si.md#measure-kind), [`symbol`](units/si.md#measure-symbol), [`to`](units/si.md#measure-to), [`rescaled`](units/si.md#measure-rescaled), [`prefixScaled`](units/si.md#measure-prefixscaled)
+  - [Units.SI](units/si.md#make-measure-quantity-mass): [`*`](units/si.md#measure-quantity-mass-op-times), [`times`](units/si.md#measure-quantity-mass-times)
+  - [Units.SI](units/si.md#make-measure-quantity-acceleration): [`*`](units/si.md#measure-quantity-acceleration-op-times), [`times`](units/si.md#measure-quantity-acceleration-times)
+  - [Units.SI](units/si.md#make-measure-quantity-force): [`*`](units/si.md#measure-quantity-force-op-times), [`times`](units/si.md#measure-quantity-force-times), [`/`](units/si.md#measure-quantity-force-op-div), [`per`](units/si.md#measure-quantity-force-per)
+  - [Units.SI](units/si.md#make-measure-quantity-length): [`*`](units/si.md#measure-quantity-length-op-times), [`times`](units/si.md#measure-quantity-length-times), [`/`](units/si.md#measure-quantity-length-op-div), [`per`](units/si.md#measure-quantity-length-per)
+  - [Units.SI](units/si.md#make-measure-quantity-area): [`*`](units/si.md#measure-quantity-area-op-times), [`times`](units/si.md#measure-quantity-area-times)
+  - [Units.SI](units/si.md#make-measure-quantity-speed): [`/`](units/si.md#measure-quantity-speed-op-div), [`per`](units/si.md#measure-quantity-speed-per)
+  - [Units.SI](units/si.md#make-measure-quantity-voltage): [`*`](units/si.md#measure-quantity-voltage-op-times), [`times`](units/si.md#measure-quantity-voltage-times), [`/`](units/si.md#measure-quantity-voltage-op-div), [`per`](units/si.md#measure-quantity-voltage-per)
+  - [Units.SI](units/si.md#make-measure-quantity-current): [`*`](units/si.md#measure-quantity-current-op-times), [`times`](units/si.md#measure-quantity-current-times)
+  - [Units.SI](units/si.md#make-measure-quantity-resistance): [`*`](units/si.md#measure-quantity-resistance-op-times), [`times`](units/si.md#measure-quantity-resistance-times)
+  - [Units.SI](units/si.md#make-measure-quantity-power): [`*`](units/si.md#measure-quantity-power-op-times), [`times`](units/si.md#measure-quantity-power-times)
+  - [Units.SI](units/si.md#make-measure-quantity-time): [`*`](units/si.md#measure-quantity-time-op-times), [`times`](units/si.md#measure-quantity-time-times)
+  - [Units.SI](units/si.md#make-measure-quantity-energy): [`/`](units/si.md#measure-quantity-energy-op-div), [`per`](units/si.md#measure-quantity-energy-per)
 
 ## type `Duration`
 
-An elapsed span of time: a measure of time. `5.second` is a Duration, and Time, Date and DateTime take one: +Date.today + 3.day+.
+A span of time, which is any measure of time.
+
+`Time`, `Date` and `DateTime` take one: +Date.today() + 3.day+.
 
 **Variants**
 
@@ -617,7 +703,7 @@ An elapsed span of time: a measure of time. `5.second` is a Duration, and Time, 
 
 ## type `TimeUnit`
 
-The time units, from nanoseconds to weeks. The base unit is the second.
+The units of time, from nanoseconds to weeks. The base unit is the second.
 
 **Variants**
 
@@ -656,9 +742,9 @@ symbol -> String
 
 More functions for [`Integer`](number.md#make-integer), added by this module.
 
-Time-unit constructors on `Integer`: `5.second`, `90.minute`, `2.week`.
+Time measures from an `Integer`: `5.second`, `90.minute`, `2.week`.
 
-Each answers a `Measure` whose display unit is the one you named, so `90.minute` prints as minutes even though it is stored as 5400 seconds.
+The measure is shown in the unit you named, so `90.minute` prints as minutes, though it holds 5400 seconds as its base value.
 
 ### `nanosecond`
 
@@ -714,7 +800,7 @@ This many milliseconds, as a `Measure`.
 second -> Measure<Quantity.Time>
 ```
 
-This many seconds, as a `Measure`. Seconds are the base unit of time, so this is the one everything else converts through.
+Returns this many seconds, as a `Measure`. The second is the base unit of time.
 
 **Returns**: the quantity, displayed in seconds
 
@@ -737,7 +823,7 @@ This many minutes, as a `Measure`.
 **Examples**
 
 ```kex
-90.minute.convert(Hour)   # => Ok(1.5 h)
+90.minute.to(String, in: Hour)   # => Just("1.5 h")
 ```
 
 ### `hour`
@@ -798,7 +884,7 @@ timeMeasure(unit: TimeUnit) -> Measure<Quantity.Time>
 
 More functions for [`Float`](number.md#make-float), added by this module.
 
-The same time-unit constructors on `Float`, for fractional quantities: `1.5.hour`, `0.25.second`.
+Time measures from a `Float`, for fractional amounts: `1.5.hour`, `0.25.second`.
 
 ### `nanosecond`
 
@@ -906,12 +992,12 @@ timeMeasure(unit: TimeUnit) -> Measure<Quantity.Time>
 
 ## module `Units`
 
-Time-unit constructors, also available directly from the prelude.
+The time units under the `Units` name. They are also in the prelude.
 
-`Units.Hour` and `Hour` name the same constructor: they match the same patterns and compare equal. Use the qualified spelling to make the unit family explicit.
+`Units.Hour` and `Hour` are the same constructor: they match the same patterns and compare equal. The qualified name makes the unit family explicit.
 
 ```kex
-90.minute.convert(Units.Hour)   # => Ok(1.5 h)
+90.minute.to(String, in: Units.Hour)   # => Just("1.5 h")
 ```
 
 ### `Nanosecond` (constant)

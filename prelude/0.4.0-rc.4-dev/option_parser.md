@@ -18,9 +18,9 @@ entities:
 
 # OptionParser
 
-Declarative command-line parsing, shared by Kex tools and applications.
+Command-line parsing for Kex tools and programs.
 
-You describe the options and commands a tool accepts, and the parser turns an argument list into typed values, dispatches to the right command, and renders the help text.
+Declare the options and commands a tool accepts. The parser checks an argument list against them, runs the command it names, and writes the help text.
 
 ```kex
 foul greet(options: ParsedOptions) -> Integer do
@@ -40,13 +40,15 @@ $ demo greet --name Ada
 hello, Ada
 ```
 
-Note that `--help` is not automatic: `run` shows the help when a flag named `help` is set, so declare that flag if you want it.
+`--help` is not built in: `run` prints the help when a flag named `help` is set, so declare that flag to get it.
 
-Start at `OptionParser.define`, chain the `string` / `integer` / `flag` / `command` builders, and finish with `run` (dispatch and exit code) or `parse` (the parsed values, and nothing else).
+Start with `OptionParser.define`, chain `string`, `integer`, `flag` and `command` onto it, and finish with `run`, which runs the command and returns an exit code, or `parse`, which only returns the parsed values.
 
 ## type `OptionKind`
 
-What kind of value an option carries: `StringValue` takes any text, `IntegerValue` must parse as a number, and `FlagValue` takes none at all and reads as `"true"` when present.
+The kind of value an option takes.
+
+`StringValue` takes any text, `IntegerValue` takes a whole number, and `FlagValue` takes no value and reads as `"true"` when given.
 
 **Variants**
 
@@ -58,7 +60,7 @@ What kind of value an option carries: `StringValue` takes any text, `IntegerValu
 
 ## record `OptionSpec`
 
-One declared option. Built for you by the `OptionConfig` builders: you rarely construct one by hand.
+One declared option. The `OptionConfig` builders make these, so you rarely write one yourself.
 
 **Fields**
 
@@ -73,13 +75,13 @@ One declared option. Built for you by the `OptionConfig` builders: you rarely co
 
 ## type `CommandHandler`
 
-What a command does once the line has been parsed. It receives the parsed options with the command's own words already removed, so `tey add greet` hands its handler `["greet"]`, and returns the process exit code.
+The function that runs a command. It gets the parsed options with the command's own words removed from `arguments`, so `tey add greet` passes `["greet"]`, and returns the process exit code.
 
 
 
 ## record `CommandSpec`
 
-One declared command. Built for you by the `OptionConfig.command` builders.
+One declared command. The `OptionConfig.command` builders make these.
 
 **Fields**
 
@@ -96,7 +98,7 @@ One declared command. Built for you by the `OptionConfig.command` builders.
 
 A tool's whole command-line interface: its name, its options, and its commands.
 
-Build one with `OptionParser.define` and add to it with the chainable `string`, `integer`, `flag` and `command` functions. Each returns a new `OptionConfig`, so the chain reads as one declaration.
+Start one with `OptionParser.define` and chain `string`, `integer`, `flag` and `command` onto it. Each returns a new `OptionConfig`.
 
 **Fields**
 
@@ -146,7 +148,7 @@ integer(long: String, short: Char?, description: String, default: String?, requi
 
 Declares an option that takes a whole number.
 
-A value that does not parse is rejected at parse time with `InvalidInteger`, so a handler never sees a malformed number. Read it back with `ParsedOptions.integerValue`.
+A value that is not a whole number fails the parse with `InvalidInteger`, so a handler never sees one. Read the value with `ParsedOptions.integerValue`.
 
 **Parameters**
 
@@ -170,11 +172,11 @@ config.integer("port", Just('p'), "port to listen on", Just("8080"), false)
 flag(long: String, short: Char?, description: String) -> OptionConfig
 ```
 
-Declares an option that takes no value and is either present or not.
+Declares an option that takes no value.
 
-It defaults to `"false"` and reads as `"true"` when given. Read it back with `ParsedOptions.flagEnabled?`. Giving it a value is an error (`UnexpectedValue`).
+It is `"false"` unless given, then `"true"`; read it with `ParsedOptions.flagEnabled?`. Giving it a value, as in `--verbose=yes`, is an `UnexpectedValue` error.
 
-Declare a flag named `help` if you want `--help` to print the help text: `run` looks for exactly that name, and adds nothing on its own.
+`run` prints the help text when a flag named `help` is set, and declares no such flag itself.
 
 **Parameters**
 
@@ -200,9 +202,7 @@ command(name: String, usage: String, description: String, section: String, handl
 
 Declares a command and the function that runs it.
 
-A command name may be several words (`"docs build"`) and the longest match wins, so a group and its subcommands can both be declared. The handler receives the parsed options with the command's own words already removed, and returns the process exit code.
-
-Declares a command. `usage` is what the help line shows after the name (`<name>`, `[args...]`); leave it empty for a command that takes none.
+A command name may be several words (`"docs build"`); the longest match wins, so a group and its subcommands can both be declared. The handler gets the parsed options without the command's own words, and returns the process exit code.
 
 **Parameters**
 
@@ -231,7 +231,7 @@ passthroughCommand(name: String, usage: String, description: String, handler: Co
 
 Declares a command that parses its own options.
 
-Everything after the command's name is handed to the handler in `arguments` untouched, including options this tool also declares. Use it for a subcommand backed by its own `OptionConfig`: without it, an option the outer tool happens to declare too is consumed here and never reaches the subcommand, with no error to say so.
+Everything after the command's name reaches the handler unchanged in `arguments`, including options this tool also declares. Use it for a subcommand with its own `OptionConfig`. With a plain `command`, an option that both declare is taken by the outer tool and the subcommand never sees it, without any error.
 
 **Parameters**
 
@@ -257,7 +257,7 @@ parse(args: [String]) -> Result<ParsedOptions, OptionParseError>
 
 Parses `args` into option values and leftover words, without dispatching to a command.
 
-Use it when the tool has no commands, or when you want to inspect the parse before deciding what to do. `run` is the one-call alternative.
+Use it when the tool has no commands, or to look at the result before deciding what to do. `run` parses and dispatches in one call.
 
 **Parameters**
 
@@ -282,9 +282,9 @@ run(args: [String]) -> Integer
 
 Parses `args`, runs the command they name, and returns its exit code.
 
-This is the whole of a tool's `main`: hand it the argument list and pass the result to `System.exit`.
+Pass the result to `System.exit`.
 
-A parse failure, an unknown command, or a line with no command at all reports the problem along with the help text and returns 1: the one place that policy has to live for every tool to behave the same way. A set `help` flag prints the help and returns 0.
+A parse error or an unknown command prints the error and the help text to stderr and returns 1. A set `help` flag, or no arguments at all, prints the help and returns 0.
 
 **Parameters**
 
@@ -311,7 +311,7 @@ printHelp -> Integer
 
 Prints the help text and returns 0, the exit code for a successful run.
 
-`run` calls this for you when the `help` flag is set; call it directly when a tool decides on its own that help is the right answer.
+`run` calls it when the `help` flag is set. Call it yourself when the tool should show its help for some other reason.
 
 **Returns**: always 0
 
@@ -331,13 +331,9 @@ help -> String
 
 Returns the tool's help text: its name and description, its options, and its commands grouped by section.
 
-`run` and `printHelp` print this for you; reach for it directly when the text has to go somewhere other than stdout.
+`run` and `printHelp` print it to stdout; use this to send it elsewhere. It is coloured with `Console` escapes, which are empty under `--no-colors` and `KEX_COLORS=0`.
 
-The help text, styled. Every escape comes from `Console`, which the runtime blanks under `--no-colors` and `KEX_COLORS=0`, so the same code produces plain text down a pipe and this needs no second rendering path.
-
-Widths are measured on the UNSTYLED label throughout: an escape sequence has a length that a terminal does not draw, so padding computed from a coloured string lines the columns up on paper and nowhere else.
-
-**Returns**: the rendered help text
+**Returns**: the help text
 
 **Examples**
 
@@ -407,7 +403,7 @@ integerValue(name: String) -> Integer?
 
 Returns the value of an integer option as an `Integer`, or `None` when it is absent or does not parse.
 
-An option declared with `integer` has already been checked at parse time, so `None` here means absent rather than malformed.
+An option declared with `integer` is checked during parsing, so for one of those `None` means the option was absent.
 
 **Parameters**
 
@@ -425,7 +421,7 @@ let times = options.integerValue("times").or(1)
 
 Why a command line could not be parsed.
 
-`OptionParser.errorMessage` turns one into a sentence for the user; `OptionConfig.run` does that for you.
+`OptionParser.errorMessage` turns one into a message for the user, and `OptionConfig.run` prints that message for you.
 
 **Variants**
 
@@ -445,16 +441,16 @@ Why a command line could not be parsed.
 define(name: String, description: String) -> OptionConfig
 ```
 
-Starts an immutable command-line interface definition.
+Returns an empty `OptionConfig` for a tool, to chain options and commands onto.
 
-Chain options and commands onto the returned `OptionConfig`, then call `parse` with the process arguments. `name` appears in usage text and `description` introduces the generated help page.
+`name` and `description` head the help text.
 
 **Parameters**
 
-  - `name` — the executable name shown in usage
-  - `description` — the one-line purpose of the command
+  - `name` — the tool's name
+  - `description` — a one-line summary of the tool
 
-**Returns**: an empty parser configuration
+**Returns**: a configuration with no options or commands
 
 **Examples**
 
@@ -494,7 +490,7 @@ commandFor(commands: [CommandSpec], arguments: [String]) -> (CommandSpec, [Strin
 
 Finds the declared command whose words open `arguments`, and returns it with whatever is left after them.
 
-Longest match first, so `"kex install"` is preferred over a `"kex"` that also exists. Answers `None` when no command matches.
+The command with the most words wins, so `"docs build"` is chosen over a `"docs"` that also exists. Returns `None` when no command matches.
 
 **Parameters**
 
@@ -516,9 +512,9 @@ OptionParser.commandFor(commands, ["docs", "build", "src"])
 passthrough?(commands: [CommandSpec], arguments: [String]) -> Bool
 ```
 
-Whether the command `arguments` names parses its own options.
+Returns whether the command that `arguments` names is a passthrough command.
 
-`false` when no command matches yet, so options before any command word are still this parser's to claim.
+Returns `false` while no command matches, so options before the command word still belong to this parser.
 
 **Parameters**
 
@@ -542,7 +538,7 @@ opensWith?(arguments: [String], name: String) -> Bool
 
 Returns `true` when `arguments` begins with the words of `name`.
 
-The word-wise prefix test `commandFor` matches with: `"docs build"` opens `["docs", "build", "src"]` but not `["docs"]`.
+This is the test `commandFor` uses: `"docs build"` opens `["docs", "build", "src"]` but not `["docs"]`.
 
 **Parameters**
 
@@ -564,9 +560,9 @@ OptionParser.opensWith?(["docs"], "docs build")      # => false
 errorMessage(error: OptionParseError) -> String
 ```
 
-Renders a parse error as a sentence for the user.
+Returns a parse error as a message for the user.
 
-`OptionConfig.run` does this for you; call it directly when handling a `parse` result yourself.
+`OptionConfig.run` uses it. Call it when you handle a `parse` result yourself.
 
 **Parameters**
 
@@ -591,7 +587,7 @@ parse(options: [OptionSpec], commands: [CommandSpec], args: [String]) -> Result<
 
 Parses `args` against a list of option and command specs.
 
-The engine behind `OptionConfig.parse`, which is the form to call from ordinary code.
+`OptionConfig.parse` calls this; use that instead.
 
 **Parameters**
 

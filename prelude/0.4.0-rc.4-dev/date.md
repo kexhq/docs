@@ -12,11 +12,9 @@ entities:
 
 # Date
 
-Calendar days. A `Date` is a year, a month and a day, with no time and no zone; `Weekday` names its day of the week. The time of day is in time.kex, the instant in date_time.kex, and calendar spans in period.kex.
-
 ## type `Weekday`
 
-Weekday names in ISO order (Monday is day 1).
+The days of the week, in ISO order: Monday is day 1.
 
 **Variants**
 
@@ -40,10 +38,12 @@ A calendar day: a year, a month and a day, with no time and no zone.
 let due = Date.of(2026, 7, 30).try
 due.iso              # => "2026-07-30"
 due.weekday.name     # => "Thursday"
-(due + 10.day).iso  # => "2026-08-09"
+(due + 10.day).iso   # => "2026-08-09"
 ```
 
-Build one with `Date.of`, which validates, rather than with the record literal, which does not.
+Build one with `Date.of`, which checks that the day exists. The record literal does not check.
+
+See `Time` for the time of day, `DateTime` for an instant and `Period` for calendar spans.
 
 **Fields**
 
@@ -61,7 +61,7 @@ Implements [`Inspectable`](kex.md#trait-inspectable), [`Showable`](kex.md#trait-
 inspectValue(colors: Bool) -> String
 ```
 
-Renders the date structurally, for debugging output.
+Writes the date as a record, for debugging output.
 
 **Parameters**
 
@@ -75,7 +75,7 @@ Renders the date structurally, for debugging output.
 showValue -> String
 ```
 
-Renders the date in ISO form, so interpolation and `IO.printLine` show `2026-07-30`.
+Writes the date in ISO form, which is what interpolation and `IO.printLine` show.
 
 **Returns**: the ISO 8601 date
 
@@ -91,9 +91,7 @@ Renders the date in ISO form, so interpolation and `IO.printLine` show `2026-07-
 epochDay -> Integer
 ```
 
-Days since 1970-01-01, negative before it.
-
-The date's identity as a number: comparison and day arithmetic go through it.
+Returns the number of days since 1970-01-01, negative before it.
 
 **Returns**: days since the Unix epoch
 
@@ -110,7 +108,7 @@ Date.of(2026, 7, 30).try.epochDay   # => 20664
 weekday -> Weekday
 ```
 
-The day of the week this date falls on.
+Returns the day of the week this date falls on.
 
 **Returns**: the day of the week
 
@@ -127,7 +125,7 @@ Date.of(2026, 7, 30).try.weekday.name   # => "Thursday"
 dayOfYear -> Integer
 ```
 
-The day's position in its year, counting from 1 on January 1st.
+Returns the day's position in its year, counting January 1st as 1.
 
 **Returns**: the day of the year
 
@@ -161,9 +159,9 @@ Date.of(2026, 1, 1).try.leapYear?   # => false
 daysInMonth -> Integer
 ```
 
-The number of days in THIS date's month.
+Returns the number of days in this date's month.
 
-No Result: a Date's month is in range by construction, unlike `Time.daysInMonth`'s two loose integers.
+Unlike `Time.daysInMonth`, which takes any two integers, it needs no `Result`.
 
 **Returns**: the length of this month
 
@@ -180,9 +178,9 @@ Date.of(2026, 7, 1).try.daysInMonth   # => 31
 +(span: Duration) -> Date
 ```
 
-Advances the date by a fixed span, whole days only.
+Adds the whole days of a `Duration` to the date.
 
-A Duration with a sub-day remainder truncates toward zero, so +date + 36.hour+ advances exactly one day. Use a `Period` when the calendar should get a say.
+Any part of a day is dropped, so +date + 36.hour+ moves one day. Add a `Period` to move by calendar months or years.
 
 **Parameters**
 
@@ -203,7 +201,7 @@ A Duration with a sub-day remainder truncates toward zero, so +date + 36.hour+ a
 -(span: Duration) -> Date
 ```
 
-Moves the date back by a fixed span, whole days only.
+Subtracts the whole days of a `Duration` from the date.
 
 **Parameters**
 
@@ -223,7 +221,7 @@ Moves the date back by a fixed span, whole days only.
 addDays(count: Integer) -> Date
 ```
 
-The date `count` days later. A negative count moves backwards.
+Returns the date `count` days later. A negative count moves backwards.
 
 **Parameters**
 
@@ -244,7 +242,7 @@ Date.of(2026, 7, 30).try.addDays(-1).iso   # => "2026-07-29"
 addWeeks(count: Integer) -> Date
 ```
 
-The date `count` weeks later. A negative count moves backwards.
+Returns the date `count` weeks later. A negative count moves backwards.
 
 **Parameters**
 
@@ -264,11 +262,9 @@ Date.of(2026, 7, 30).try.addWeeks(2).iso   # => "2026-08-13"
 addMonths(count: Integer) -> Date
 ```
 
-No `date.tomorrow`/`date.yesterday` functions: on BEAM a make-block function flattens onto the same name as the `Date.tomorrow()`/`Date.yesterday()` module functions above and one of the two has to win. The module functions win: `Date.tomorrow()` is the spelling people reach for, and `date.addDays(1)` already says the rest.
+Returns the date `count` calendar months later, with the day clamped to the length of that month.
 
-The date `count` calendar months later, with the day clamped into the target month.
-
-One month after January 31st is the last day of February, not March 3rd. A negative count moves backwards.
+One month after January 31st is the last day of February. A negative count moves backwards.
 
 **Parameters**
 
@@ -289,7 +285,7 @@ Date.of(2026, 7, 30).try.addMonths(-1).iso   # => "2026-06-30"
 addYears(count: Integer) -> Date
 ```
 
-The date `count` calendar years later, with the day clamped: February 29th plus one year is February 28th.
+Returns the date `count` calendar years later. February 29th plus one year is February 28th.
 
 **Parameters**
 
@@ -309,7 +305,7 @@ Date.of(2024, 2, 29).try.addYears(1).iso   # => "2025-02-28"
 startOfMonth -> Date
 ```
 
-The first day of this date's month.
+Returns the first day of this date's month.
 
 **Returns**: the first of the month
 
@@ -325,7 +321,7 @@ Date.of(2026, 7, 30).try.startOfMonth.iso   # => "2026-07-01"
 endOfMonth -> Date
 ```
 
-The last day of this date's month, whatever its length.
+Returns the last day of this date's month.
 
 **Returns**: the last of the month
 
@@ -342,7 +338,7 @@ Date.of(2024, 2, 1).try.endOfMonth.iso    # => "2024-02-29"
 startOfYear -> Date
 ```
 
-January 1st of this date's year.
+Returns January 1st of this date's year.
 
 **Returns**: the first of the year
 
@@ -358,7 +354,7 @@ Date.of(2026, 7, 30).try.startOfYear.iso   # => "2026-01-01"
 endOfYear -> Date
 ```
 
-December 31st of this date's year.
+Returns December 31st of this date's year.
 
 **Returns**: the last of the year
 
@@ -374,9 +370,7 @@ Date.of(2026, 7, 30).try.endOfYear.iso   # => "2026-12-31"
 startOfWeek -> Date
 ```
 
-The Monday of this date's week.
-
-The week runs Monday to Sunday, matching the ISO weekday numbering `weekday.number` reports.
+Returns the Monday of this date's week. Weeks run Monday to Sunday, as in ISO 8601.
 
 **Returns**: the Monday of this week
 
@@ -392,7 +386,7 @@ Date.of(2026, 7, 30).try.startOfWeek.iso   # => "2026-07-27"
 endOfWeek -> Date
 ```
 
-The Sunday of this date's week.
+Returns the Sunday of this date's week.
 
 **Returns**: the Sunday of this week
 
@@ -408,7 +402,7 @@ Date.of(2026, 7, 30).try.endOfWeek.iso   # => "2026-08-02"
 daysUntil(other: Date) -> Integer
 ```
 
-Whole days from this date to `other`, negative when `other` is earlier.
+Returns the number of days from this date to `other`, negative when `other` is earlier.
 
 **Parameters**
 
@@ -429,7 +423,7 @@ Date.of(2026, 8, 9).try.daysUntil(Date.of(2026, 7, 30).try)   # => -10
 until(other: Date) -> Duration
 ```
 
-The span from this date to `other`, as a `Duration` of whole days.
+Returns the span from this date to `other` as a `Duration` of whole days.
 
 **Parameters**
 
@@ -449,11 +443,9 @@ Date.of(2026, 7, 30).try.until(Date.of(2026, 8, 9).try).wholeDays   # => 10
 monthsUntil(other: Date) -> Integer
 ```
 
-Whole calendar months from this date to `other`, negative when `other` is earlier.
+Returns the number of whole calendar months from this date to `other`, negative when `other` is earlier.
 
-Truncated, not rounded: a partial month does not count, so January 15th to February 14th is 0 months.
-
-The count is the exact inverse of `addMonths`, which is why the correction below asks `addMonths` rather than comparing day-of-month fields: January 31st plus one month IS February 28th, so January 31st to February 28th is one month, even though 28 < 31. Comparing the day fields answers 0 there and contradicts the addition this same file performs.
+A partial month does not count, so January 15th to February 14th is 0. The count agrees with `addMonths`: January 31st plus one month is February 28th, so January 31st to February 28th is one month.
 
 **Parameters**
 
@@ -474,9 +466,7 @@ Date.of(2026, 1, 31).try.monthsUntil(Date.of(2026, 2, 28).try)   # => 1
 yearsUntil(other: Date) -> Integer
 ```
 
-Whole calendar years from this date to `other`, negative when `other` is earlier. Truncated, like `monthsUntil`.
-
-This is how to compute an age.
+Returns the number of whole calendar years from this date to `other`, negative when `other` is earlier. A partial year does not count, so this gives a person's age.
 
 **Parameters**
 
@@ -542,7 +532,7 @@ Date.of(2026, 8, 1).try.after?(Date.of(2026, 7, 30).try)   # => true
 compareTo(other: Date) -> Ordering
 ```
 
-Orders this date against another.
+Compares this date with `other`.
 
 **Parameters**
 
@@ -568,7 +558,7 @@ dates.sort { |a, b| a.compareTo(b) == Less }
 iso -> String
 ```
 
-The date as ISO 8601 text, `2026-07-30`.
+Returns the date as ISO 8601 text, such as `2026-07-30`.
 
 **Returns**: the ISO 8601 date
 
@@ -584,7 +574,7 @@ Date.of(2026, 7, 30).try.iso   # => "2026-07-30"
 at(time: Time, offset: Duration) -> DateTime
 ```
 
-This date at a given time of day and offset, as a `DateTime`.
+Returns the `DateTime` for this date at a time of day and UTC offset.
 
 **Parameters**
 
@@ -616,7 +606,9 @@ format(parts: [String], values: [Any]) -> DateFormat
 
 Builds a `DateFormat` from a CLDR pattern, for `to(String, format)` on a `Date`, a `Time` or a `DateTime`.
 
-A pattern that does not fit makes `to(String, format)` answer `None`; `DateFormat.parse` says where it goes wrong, and `validateFormat` is the companion check for the tagged literal. Letters are fields, repeated for width; quote literal letters, as in `'at'`, and write `''` for a quote itself. Anything else is written as it stands.
+The pattern is checked during compilation. For a pattern known only at run time, `DateFormat.parse` says where it goes wrong, and `to(String, format)` returns `None` for a bad one.
+
+Letters are fields, repeated for width. Quote letters meant literally, as in `'at'`, and write `''` for a quote itself. Anything else is written as it stands.
 
 - `yyyy` the year, `yy` its last two digits
 - `M` / `MM` the month number, `MMM` / `MMMM` its short / full name
@@ -653,7 +645,7 @@ d.to(String, Date.format`d MMMM yyyy`, culture: Culture.of("HU_HU").or(Culture.D
 validateFormat(source: String) -> [TaggedValidation.Issue]
 ```
 
-Checks a `Date.format` pattern during compilation, pointing at the first character that does not fit.
+Checks a `Date.format` pattern during compilation and reports the first character that does not fit.
 
 **Parameters**
 
@@ -667,9 +659,9 @@ Checks a `Date.format` pattern during compilation, pointing at the first charact
 of(year: Integer, month: Integer, day: Integer) -> Result<Date, TimeError>
 ```
 
-Builds a validated calendar date.
+Builds a calendar date, checking that the day exists.
 
-The month and the day are both range-checked, and the day is checked against that month's actual length, so February 30th is an `Error`, and a `Date` you hold is always a real day. The record literal `Date { ... }` bypasses this, so prefer it for anything derived from input.
+The month must be 1 to 12 and the day must fit that month, so February 30th is an `InvalidDate` error. The record literal `Date { ... }` skips these checks; use `Date.of` for anything that comes from input.
 
 **Parameters**
 
@@ -699,7 +691,7 @@ let due = Date.of(year, month, day).try
 fromEpochDay(day: Integer) -> Date
 ```
 
-The calendar date a count of days since 1970-01-01 lands on, negative before it.
+Returns the date a number of days after 1970-01-01. A negative count gives a date before it.
 
 **Parameters**
 
@@ -720,9 +712,9 @@ Date.fromEpochDay(20664).iso   # => "2026-07-30"
 parse(text: String) -> Result<Date, TimeError>
 ```
 
-Parses an ISO 8601 calendar date, `2026-07-30`.
+Parses an ISO 8601 calendar date such as `2026-07-30`.
 
-The result is validated as well as parsed, so a well-formed but impossible date is `InvalidDate` rather than `InvalidFormat`.
+The year needs at least four digits, the month and day exactly two. Text of the wrong shape is `InvalidFormat`; a well-formed day that does not exist is `InvalidDate`.
 
 **Parameters**
 
@@ -744,9 +736,9 @@ Date.parse("2026-02-30")                     # => Error(InvalidDate(2026, 2, 30)
 now -> Date
 ```
 
-Today's date, in this machine's zone. The same as `Date.today()`.
+Returns today's date in this machine's zone, the same as `Date.today()`.
 
-`Date.today()` reads better in most code; `now` exists so every type in this file answers the same question the same way: `Date.now()`, `Time.now()` and `DateTime.now()`.
+It matches `Time.now()` and `DateTime.now()`; `Date.today()` usually reads better.
 
 **Returns**: today's date
 
@@ -762,9 +754,9 @@ Date.now().iso   # => "2026-07-30"
 today -> Date
 ```
 
-Today's date, in this machine's zone.
+Returns today's date in this machine's zone.
 
-Pinned by replacing `Time.Clock` in a test, like everything else that reads the clock.
+A test can fix the date by replacing `Time.Clock`.
 
 **Returns**: today's date
 
@@ -788,7 +780,7 @@ end
 tomorrow -> Date
 ```
 
-The day after today, in this machine's zone.
+Returns the day after today, in this machine's zone.
 
 **Returns**: tomorrow's date
 
@@ -804,7 +796,7 @@ Date.tomorrow().iso   # => "2026-07-31"
 yesterday -> Date
 ```
 
-The day before today, in this machine's zone.
+Returns the day before today, in this machine's zone.
 
 **Returns**: yesterday's date
 
@@ -820,7 +812,7 @@ Date.yesterday().iso   # => "2026-07-29"
 utcNow -> Date
 ```
 
-Today's date in UTC, whatever this machine's zone is. The same as `Date.utcToday()`, under the name every type in this file shares.
+Returns today's date in UTC, the same as `Date.utcToday()`.
 
 **Returns**: today's UTC date
 
@@ -836,7 +828,7 @@ Date.utcNow().iso   # => "2026-07-30"
 utcToday -> Date
 ```
 
-Today's date in UTC, whatever this machine's zone is.
+Returns today's date in UTC, whatever this machine's zone is.
 
 **Returns**: today's UTC date
 

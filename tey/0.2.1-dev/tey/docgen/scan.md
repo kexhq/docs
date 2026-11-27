@@ -9,9 +9,9 @@ entities:
 
 # Tey.Docgen.Scan
 
-Source discovery: walk a tree and collect the files a build reads.
+Finds the files a docs build reads by walking a source tree.
 
-`spec/` directories are skipped: specs document the same declarations as their base file, so a second page for them would duplicate every entry.
+Paths come back relative to the root, sorted within each directory. `spec/` directories and `.spec.kex` files are skipped: specs cover the same declarations as the file they test, so pages for them would repeat every entry.
 
 ## module `Tey.Docgen.Scan`
 
@@ -27,7 +27,7 @@ sourceFiles(sourceDir: String) -> [String]
 proseFiles(sourceDir: String) -> [String]
 ```
 
-The prose half of the same walk: `tey docs prose` reads .md rather than .kex, and wants the same recursion, the same sorting and the same skip.
+Returns the `.md` files under `sourceDir` that `tey docs prose` reads, found by the same walk as the `.kex` sources.
 
 ### `filesWithSuffix` (foul)
 

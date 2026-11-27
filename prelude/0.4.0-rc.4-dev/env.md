@@ -11,9 +11,9 @@ entities:
 
 ## module `ENV`
 
-The process environment, as an immutable `Map<String, String>` snapshot taken at startup.
+The process environment.
 
-`ENV` supports the whole `Map` API: `get`, `has?`, `keys`, `values`, `count`, `each`, `entries`, so reading a variable looks like any other map lookup:
+`ENV` has the reading functions of a `Map<String, String>` (`get`, `has?`, `keys`, `values`, `count`, `each`, `entries`), plus `set` and `unset`:
 
 ```kex
 ENV.get("HOME")                  # => Just("/home/ada")
@@ -21,9 +21,9 @@ ENV.get("LOG_LEVEL", "info")     # => "info" when unset
 ENV.has?("PATH")                 # => true
 ```
 
-The snapshot itself is immutable, but the global `ENV` namespace is an ambient input: the same call can answer differently between runs without anything appearing in a function's arguments. That is why reading it is `foul`.
+Reading `ENV` is `foul`, because the same call can return something different on another run although nothing in the function's arguments changed.
 
-When you would rather the dependency be visible, take it as a parameter: `main` receives the same snapshot as its second argument, and reading a parameter is pure:
+To make the dependency visible, pass the environment as a parameter. `main` receives it as its second argument, and reading a parameter is pure:
 
 ```kex
 main(args, env) do
@@ -35,7 +35,7 @@ end
 ### `get` (foul)
 
 ```kex
-get(key: String, default) -> String?
+get(key: String, default: String) -> String?
 ```
 
 Returns the value of the environment variable `key`, or `None` when it is not set.
@@ -70,7 +70,7 @@ has?(key: String) -> Bool
 
 Returns `true` when `key` is set, whatever its value.
 
-Distinguishes an unset variable from one set to the empty string, which a `get` with a default cannot.
+This tells an unset variable from one set to the empty string, which `get` with a default cannot.
 
 **Parameters**
 
@@ -148,7 +148,7 @@ IO.printLine("environment has ${ENV.count} variables")
 ### `each` (foul)
 
 ```kex
-each(f: (String -> String -> Void)) -> Void
+each(f: Block<String, String, Void>) -> Void
 ```
 
 Calls `f` with each variable's name and value.
@@ -173,7 +173,7 @@ entries -> [(String, String)]
 
 Returns the environment as a list of `(name, value)` pairs.
 
-The bridge to the `List` operations, sorting, grouping, taking a slice.
+The order is unspecified; sort the list when it matters.
 
 **Returns**: the variables
 
@@ -182,7 +182,7 @@ The bridge to the `List` operations, sorting, grouping, taking a slice.
 _Printing the environment in name order_
 
 ```kex
-ENV.entries.each { |name, value| IO.printLine("${name}=${value}") }
+ENV.entries.sort.each { |name, value| IO.printLine("${name}=${value}") }
 ```
 
 ### `set` (foul)
@@ -193,9 +193,7 @@ set(name: String, value: String) -> Void
 
 Sets an environment variable for this process and every child it starts.
 
-`ENV` is a snapshot, and the write rebuilds it: a later `ENV.get` answers what was set, not what the process started with.
-
-This is how a program decides what a child sees. `Kex.AST`, for instance, shells out to the compiler named by `$KEX`, so a tool that knows which compiler it means says so here rather than hoping `PATH` agrees.
+A later `ENV.get` returns the new value, and a program started with `Process.run` afterwards sees it. For instance, `Kex.AST` runs the compiler named by `$KEX`, so a tool can choose that compiler by setting `KEX`.
 
 **Parameters**
 

@@ -17,13 +17,15 @@ entities:
 parseVersion(text: String) -> SemanticVersion?
 ```
 
+Parses a version such as `0.4.0`, `v0.4.0-rc.1` or `1.2`, or returns `None`. A leading `v` and build metadata after a plus sign are ignored, and a missing minor or patch number counts as 0.
+
 ### `release`
 
 ```kex
 release(text: String) -> String
 ```
 
-The release a version belongs to: `0.4.0-rc.1` → `0.4.0`. Used where a pre-release should count as its eventual release.
+Returns the release a version belongs to, so `0.4.0-rc.1` gives `0.4.0`. Text that is not a version is returned unchanged.
 
 ### `stable?`
 
@@ -31,7 +33,7 @@ The release a version belongs to: `0.4.0-rc.1` → `0.4.0`. Used where a pre-rel
 stable?(text: String) -> Bool
 ```
 
-Whether a version is a full release rather than a pre-release. This is the question a download page asks: "what is the current stable Kex?".
+Returns `true` when the text is a version without a pre-release part.
 
 ### `satisfies?`
 
@@ -39,17 +41,21 @@ Whether a version is a full release rather than a pre-release. This is the quest
 satisfies?(versionText: String, requirement: String) -> Bool
 ```
 
+Returns `true` when the version meets every space- or comma-separated clause of `requirement` (`>=`, `<=`, `>`, `<`, `=`, `^`, `~>` or a bare version). An empty requirement or `*` accepts any version.
+
+`~> 0.3` accepts `0.3.x` and `^0.3` accepts `0.x` from `0.3` on. A pre-release meets a requirement only when some clause names a pre-release, so `~> 0.4` does not accept `0.4.0-rc.1`.
+
 ### `intersect`
 
 ```kex
 intersect(a: String, b: String) -> String
 ```
 
-The requirement satisfied only by versions satisfying BOTH, for when two packages in one graph each ask for the same dependency.
+Returns a requirement met only by versions that meet both `a` and `b`, for when two packages in one graph depend on the same package.
 
-Concatenation, because `satisfies?` already reads a requirement as a list of space-separated clauses that must ALL hold: `~> 0.1` and `>= 0.1.5` intersect to `~> 0.1 >= 0.1.5`, which is exactly the question "satisfies both". No interval arithmetic, no second implementation of the operators to keep in step with the first.
+The result joins the two with a space, since `satisfies?` requires every clause to hold: `~> 0.1` and `>= 0.1.5` give `~> 0.1 >= 0.1.5`. An empty or `*` side is dropped.
 
-An empty intersection is not detected here, and deliberately: `~> 0.1 ~> 0.2` is perfectly well formed and simply matches nothing. Emptiness is a fact about the versions a repository actually publishes, so it is discovered where the tags are (`highest`), where the error can also say what WAS available.
+A requirement that nothing can meet, such as `~> 0.1 ~> 0.2`, is not detected here. `highest` finds it, by returning `None`.
 
 ### `intersectAll`
 
@@ -57,7 +63,7 @@ An empty intersection is not detected here, and deliberately: `~> 0.1 ~> 0.2` is
 intersectAll(requirements: [String]) -> String
 ```
 
-Every constraint at once. `[]` and `[""]` both mean "no opinion", which is what a package with no version requirement expresses.
+Returns the intersection of all the requirements, as `intersect` does for two. `[]` and `[""]` both give `""`, which accepts any version.
 
 ### `versionOf`
 
@@ -65,7 +71,9 @@ Every constraint at once. `[]` and `[""]` both mean "no opinion", which is what 
 versionOf(ref: String) -> String
 ```
 
-The version inside a resolved ref: `refs/tags/v0.1.1` and `v0.1.1` both give `0.1.1`. A ref that carries no version (a branch name, a bare commit) gives "", which satisfies nothing and so never claims to meet a range.
+Returns the version tag inside a resolved ref: `refs/tags/v0.1.1`, `v0.1.1` and `pkg-v0.1.1` all give `v0.1.1`.
+
+A ref without a version, such as a branch name or a commit, gives `""`, which meets no requirement.
 
 ### `channelRank`
 
@@ -73,7 +81,9 @@ The version inside a resolved ref: `refs/tags/v0.1.1` and `v0.1.1` both give `0.
 channelRank(_: String) -> Integer
 ```
 
-Channel precedence, lowest first: prealpha < alpha < beta < rc < release. Plain semver would order these alphabetically — putting `beta` BEFORE `prealpha` — which is not what the words mean, so the ranking is explicit.
+Returns the rank of a pre-release channel: `prealpha` 1, `alpha` 2, `beta` 3, `rc` 4, and 0 for any other name.
+
+Plain semver would order the channels alphabetically, putting `beta` before `prealpha`.
 
 ### `range?`
 
@@ -81,7 +91,7 @@ Channel precedence, lowest first: prealpha < alpha < beta < rc < release. Plain 
 range?(requested: String) -> Bool
 ```
 
-Whether a requested tag is a RANGE rather than one exact tag. `v1.2.0` is a name to look up; `~> 1.2` is a question to answer against everything the repository has.
+Returns `true` when a requested tag is a version range, such as `~> 1.2`, and `false` for an exact tag such as `v1.2.0`.
 
 ### `newer?`
 
@@ -89,7 +99,7 @@ Whether a requested tag is a RANGE rather than one exact tag. `v1.2.0` is a name
 newer?(a: String, b: String) -> Bool
 ```
 
-Descending semantic order, for picking the newest of anything. A tag that is not a version sorts after every tag that is, so a stray `nightly` can never displace a release.
+Returns `true` when `a` is a newer version than `b`. A tag that is not a version counts as older than any that is, so a stray `nightly` never wins.
 
 ### `newestFirst`
 
@@ -97,28 +107,32 @@ Descending semantic order, for picking the newest of anything. A tag that is not
 newestFirst(versions: [String]) -> [String]
 ```
 
+Returns the versions without duplicates, newest first, with tags that are not versions at the end.
+
 ### `highest`
 
 ```kex
 highest(tags: [String], requirement: String) -> String?
 ```
 
-The highest tag that satisfies the requirement — the whole point of writing a range instead of a version. None when nothing does.
+Returns the newest tag that meets the requirement, or `None` when none does.
 
 ## record `SemanticVersion`
 
+A parsed version number: `major.minor.patch` and an optional pre-release.
+
 **Fields**
 
-  - `major` : [Integer](../../../prelude/0.4.0-rc.4-dev/number.md#make-integer)
-  - `minor` : [Integer](../../../prelude/0.4.0-rc.4-dev/number.md#make-integer)
-  - `patch` : [Integer](../../../prelude/0.4.0-rc.4-dev/number.md#make-integer)
-  - `preRelease` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
+  - `major` : [Integer](../../../prelude/0.4.0-rc.5-dev/number.md#make-integer)
+  - `minor` : [Integer](../../../prelude/0.4.0-rc.5-dev/number.md#make-integer)
+  - `patch` : [Integer](../../../prelude/0.4.0-rc.5-dev/number.md#make-integer)
+  - `preRelease` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
 
 Implements `Comparable`.
 
 ### Functions
 
-SemanticVersion is Comparable, so `a.compare(b)` answers Less/Equal/Greater like every other ordered type in the stdlib, and ordering reads as an ordering rather than as sign arithmetic on -1/0/1.
+Orders versions by number, then by pre-release: a release ranks above its pre-releases, and pre-releases are ordered by channel (`prealpha`, `alpha`, `beta`, `rc`) and then by number.
 
 #### `compare`
 

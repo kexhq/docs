@@ -10,13 +10,13 @@ entities:
 
 # Duration
 
-Elapsed time: a `Duration` is a `Measure<Quantity.Time>` (units.kex), a count of seconds. These are the operations it has beyond every measure's, its ISO 8601 form, and the `Duration` module that builds spans and UTC offsets.
+Elapsed time. A `Duration` is a `Measure<Quantity.Time>` (see units.kex) holding a number of seconds. This file adds the functions a span of time has beyond those of every measure, its ISO 8601 form, and the `Duration` module for zero spans and UTC offsets.
 
 ## extends `Measure<Quantity.Time>`
 
 More functions for [`Measure`](units.md#record-measure), added by this module.
 
-The operations a span of time has beyond every measure's: a `Duration` is `Measure<Quantity.Time>`, so these are its own.
+Functions on a `Duration` beyond those every measure has.
 
 ### `wholeNanoseconds`
 
@@ -36,7 +36,7 @@ wholeMicroseconds -> Integer
 negated -> Duration
 ```
 
-The same span with its sign flipped.
+Returns the same span with its sign flipped.
 
 **Returns**: the negated span
 
@@ -54,7 +54,7 @@ The same span with its sign flipped.
 
 Multiplies the span by a plain number.
 
-`3 * 1.day` is not the same call because the receiver has to be the Duration, so it is spelled `1.day * 3`.
+The span must come first: write `1.day * 3`, not `3 * 1.day`.
 
 **Parameters**
 
@@ -94,7 +94,7 @@ Divides the span by a plain number.
 abs -> Duration
 ```
 
-The span's magnitude, discarding its direction.
+Returns the span's length without its sign.
 
 **Returns**: the absolute span
 
@@ -128,7 +128,7 @@ negative? -> Bool
 
 Returns `true` when the span points backwards.
 
-A negative span is what `until` gives you when the other moment is earlier, so this is how to ask which came first.
+`until` returns a negative span when the other moment is earlier, so this tells you which came first.
 
 **Returns**: `true` for a negative span
 
@@ -161,8 +161,6 @@ shorterThan?(other: Duration) -> Bool
 ```
 
 Returns `true` when this span is shorter than `other`.
-
-Named for length rather than for order: `before?`/`after?` are about when something happened, and a Duration is not a point in time.
 
 **Parameters**
 
@@ -210,7 +208,7 @@ Returns `true` when this span is longer than `other`.
 seconds -> Float
 ```
 
-The span's length in seconds, fraction included. `wholeSeconds` is the Integer form.
+Returns the span's length in seconds, fraction included. `wholeSeconds` gives an Integer.
 
 **Returns**: the seconds
 
@@ -227,7 +225,7 @@ The span's length in seconds, fraction included. `wholeSeconds` is the Integer f
 wholeMilliseconds -> Integer
 ```
 
-The whole milliseconds in the span, truncated toward zero.
+Returns the whole milliseconds in the span, truncated toward zero.
 
 **Returns**: the milliseconds
 
@@ -243,7 +241,7 @@ The whole milliseconds in the span, truncated toward zero.
 wholeSeconds -> Integer
 ```
 
-The whole seconds in the span, truncated toward zero.
+Returns the whole seconds in the span, truncated toward zero.
 
 **Returns**: the seconds
 
@@ -259,7 +257,7 @@ The whole seconds in the span, truncated toward zero.
 wholeMinutes -> Integer
 ```
 
-The whole minutes in the span, truncated toward zero.
+Returns the whole minutes in the span, truncated toward zero.
 
 **Returns**: the minutes
 
@@ -276,7 +274,7 @@ The whole minutes in the span, truncated toward zero.
 wholeHours -> Integer
 ```
 
-The whole hours in the span, truncated toward zero. A partial hour does not count.
+Returns the whole hours in the span, truncated toward zero, so a partial hour does not count.
 
 **Returns**: the hours
 
@@ -292,9 +290,9 @@ The whole hours in the span, truncated toward zero. A partial hour does not coun
 wholeDays -> Integer
 ```
 
-The whole days in the span, truncated toward zero.
+Returns the whole days in the span, truncated toward zero.
 
-This is what +date + span+ uses, which is why +date + 36.hour+ advances exactly one day.
+Adding a span to a `Date` uses this, so +date + 36.hour+ moves one day forward.
 
 **Returns**: the days
 
@@ -311,7 +309,7 @@ This is what +date + span+ uses, which is why +date + 36.hour+ advances exactly 
 wholeWeeks -> Integer
 ```
 
-The whole weeks in the span, truncated toward zero.
+Returns the whole weeks in the span, truncated toward zero.
 
 **Returns**: the weeks
 
@@ -328,8 +326,6 @@ compareTo(other: Duration) -> Ordering
 ```
 
 Orders this span against another by length.
-
-Delegates to `Number.compare` (algebra.kex), which orders the two Float second counts.
 
 **Parameters**
 
@@ -355,7 +351,9 @@ spans.sort { |a, b| a.compareTo(b) == Less }
 iso -> String
 ```
 
-The span in ISO 8601 form: hours, minutes and seconds, with the fraction of a second written as `iso` on a `Time` writes it. A zero span is `PT0S`, and a negative one carries a leading `-`.
+Returns the span in ISO 8601 form, in hours, minutes and seconds.
+
+Fractions of a second are written as a `Time`'s `iso` writes them. A zero span is `PT0S`, and a negative one starts with `-`.
 
 **Returns**: the ISO 8601 duration
 
@@ -378,7 +376,7 @@ Building elapsed spans, and UTC offsets.
 zero -> Duration
 ```
 
-A span of no time at all. Also the UTC offset.
+Returns a span of zero length, which is also the UTC offset.
 
 **Returns**: the zero span
 
@@ -395,9 +393,9 @@ date.at(time, Duration.zero()).iso   # => "...T09:00:00Z"
 utcOffset(hours: Integer, minutes: Integer) -> Duration
 ```
 
-A whole-minute UTC offset, the only kind ISO 8601 can spell.
+Returns a UTC offset of `hours` and `minutes`.
 
-A negative hour or minute puts the whole offset west of UTC, so `utcOffset(-5, 30)` is five and a half hours behind UTC, not four and a half.
+If either part is negative the whole offset is west of UTC, so `utcOffset(-5, 30)` is five and a half hours behind UTC.
 
 **Parameters**
 

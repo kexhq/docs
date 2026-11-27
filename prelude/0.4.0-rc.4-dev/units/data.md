@@ -13,7 +13,7 @@ entities:
 
 Data sizes: bytes, kilobytes, and their binary counterparts.
 
-Opt-in: nothing here is in scope until `using Units.Data`.
+Nothing here is in scope until `using Units.Data`.
 
 ```kex
 using Units.Data
@@ -24,11 +24,11 @@ main do
 end
 ```
 
-Both families are here and they are not the same: `KB` is 1000 bytes, `KiB` is 1024. Values built from either convert freely, because both are counted in bytes underneath, so `1.gibibyte.convertTo(MiB)` answers 1024 MiB.
+There are two families of units: `KB` is 1000 bytes and `KiB` is 1024. Every size is counted in bytes, so the two convert into each other: `1.gibibyte.convertTo(MiB)` gives 1024 MiB.
 
-Numeric constructors use singular names, as in `Units.SI`: `5.megabyte` and `2.mebibyte`. `byteSize` is an alias for `byte`.
+The constructors have singular names, as in `Units.SI`: `5.megabyte`, `2.mebibyte`. `byteSize` is another name for `byte`.
 
-File and payload APIs return integer byte counts. Wrap those counts with `byte` to convert or display them as measurements:
+File and payload functions return plain integer byte counts. Wrap a count with `byte` to convert or display it:
 
 ```kex
 FS.File.size("report.pdf").map { |n| n.byte.showValue }
@@ -36,7 +36,7 @@ Binary.fromBytes([104, 105]).length.byte.to(String)  # => Just("2.0 B")
 "é".bytes.count.byte.to(String)                    # => Just("2.0 B")
 ```
 
-To display a size in another unit, decimal or binary, name the unit:
+To display a size in a particular unit, name the unit:
 
 ```kex
 1048576.byte.to(String, in: MiB)                           # => Just("1.0 MiB")
@@ -44,16 +44,16 @@ To display a size in another unit, decimal or binary, name the unit:
 1048576.byte.convertTo(MiB).map { |m| m.showValue }        # => Ok("1.0 MiB")
 ```
 
-Compare an integer byte count directly with a data-size threshold:
+An integer byte count compares directly with a data size:
 
 ```kex
 30000001 > 30.megabyte   # => true
 1048576 <= 1.mebibyte    # => true
 ```
 
-`<`, `>`, `<=`, and `>=` work with the count on either side. A time or SI measure is not a byte threshold and raises an error.
+`<`, `>`, `<=` and `>=` work with the count on either side. Comparing a count with a measure that is not a data size, such as a time, fails an assertion.
 
-Every value is a `Measure` from the prelude, so its arithmetic and `to(String)` apply unchanged.
+Every size is a prelude `Measure`, so measure arithmetic and `to(String)` work on it.
 
 ### `size`
 
@@ -61,9 +61,9 @@ Every value is a `Measure` from the prelude, so its arithmetic and `to(String)` 
 size(value: Number, unit: DataUnit) -> Measure<Quantity.Data>
 ```
 
-`value` of the given data unit, as a `Measure`.
+Returns a size of `value` in the given data unit.
 
-The general constructor the named ones below are written on. Reach for `megabyte`, `kibibyte` and friends when the unit is known at the call site.
+Use it when the unit is chosen at run time. When it is known in the code, `megabyte`, `kibibyte` and the other named constructors read better.
 
 **Parameters**
 
@@ -82,19 +82,19 @@ size(1.5, MB).to(String)     # => Just("1.5 MB")
 ### `convertTo`
 
 ```kex
-convertTo(measure: Measure, unit: DataUnit) -> Result<Measure, String>
+convertTo(measure: Measure<D>, unit: DataUnit) -> Result<Measure<D>, String>
 ```
 
 Converts a size to another data unit.
 
-Decimal and binary units convert freely, because both are counted in bytes underneath. A measure of some other dimension is an `Error`.
+Decimal and binary units convert into each other. A measure that is not a data size, such as a time, gives an `Error`.
 
 **Parameters**
 
   - `measure` — the size to convert
   - `unit` — the unit to convert to
 
-**Returns**: the converted size, or why it could not be
+**Returns**: the converted size, or why it could not be converted
 
 **Examples**
 
@@ -109,9 +109,9 @@ Decimal and binary units convert freely, because both are counted in bytes under
 byteSize(value: Number) -> Measure<Quantity.Data>
 ```
 
-`value` bytes.
+Returns a size of `value` bytes; the same as `byte`.
 
-Named `byteSize` rather than `bytes`, which `String` already uses for its UTF-8 encoding.
+It is not called `bytes` because `String.bytes` already gives a string's UTF-8 encoding.
 
 **Parameters**
 
@@ -137,9 +137,9 @@ FS.File.size("report.pdf").map { |n| n.byte.showValue }
 byte(value: Number) -> Measure<Quantity.Data>
 ```
 
-`value` bytes, as a `Measure`.
+Returns a size of `value` bytes.
 
-Use this with byte counts from `FS.File.size` or `Binary.length`.
+Use it to wrap byte counts from `FS.File.size` or `Binary.length`.
 
 **Parameters**
 
@@ -162,7 +162,7 @@ payload.length.byte.to(String)   # => Just("2.0 B")
 kilobyte(value: Number) -> Measure<Quantity.Data>
 ```
 
-`value` kilobytes, 1000 bytes each.
+Returns a size of `value` kilobytes, 1000 bytes each.
 
 **Parameters**
 
@@ -182,7 +182,7 @@ kilobyte(value: Number) -> Measure<Quantity.Data>
 megabyte(value: Number) -> Measure<Quantity.Data>
 ```
 
-`value` megabytes, 1000000 bytes each.
+Returns a size of `value` megabytes, 1000000 bytes each.
 
 **Parameters**
 
@@ -202,7 +202,7 @@ megabyte(value: Number) -> Measure<Quantity.Data>
 gigabyte(value: Number) -> Measure<Quantity.Data>
 ```
 
-`value` gigabytes, 10^9 bytes each.
+Returns a size of `value` gigabytes, 10^9 bytes each.
 
 **Parameters**
 
@@ -222,7 +222,7 @@ gigabyte(value: Number) -> Measure<Quantity.Data>
 terabyte(value: Number) -> Measure<Quantity.Data>
 ```
 
-`value` terabytes, 10^12 bytes each.
+Returns a size of `value` terabytes, 10^12 bytes each.
 
 **Parameters**
 
@@ -242,7 +242,7 @@ terabyte(value: Number) -> Measure<Quantity.Data>
 kibibyte(value: Number) -> Measure<Quantity.Data>
 ```
 
-`value` kibibytes, 1024 bytes each.
+Returns a size of `value` kibibytes, 1024 bytes each.
 
 **Parameters**
 
@@ -262,7 +262,7 @@ kibibyte(value: Number) -> Measure<Quantity.Data>
 mebibyte(value: Number) -> Measure<Quantity.Data>
 ```
 
-`value` mebibytes, 1024^2 bytes each.
+Returns a size of `value` mebibytes, 1024^2 bytes each.
 
 **Parameters**
 
@@ -282,7 +282,7 @@ mebibyte(value: Number) -> Measure<Quantity.Data>
 gibibyte(value: Number) -> Measure<Quantity.Data>
 ```
 
-`value` gibibytes, 1024^3 bytes each.
+Returns a size of `value` gibibytes, 1024^3 bytes each.
 
 **Parameters**
 
@@ -302,7 +302,7 @@ gibibyte(value: Number) -> Measure<Quantity.Data>
 tebibyte(value: Number) -> Measure<Quantity.Data>
 ```
 
-`value` tebibytes, 1024^4 bytes each.
+Returns a size of `value` tebibytes, 1024^4 bytes each.
 
 **Parameters**
 
@@ -318,11 +318,11 @@ tebibyte(value: Number) -> Measure<Quantity.Data>
 
 ## type `DataUnit`
 
-The data units this module names: decimal (`KB`, `MB`, `GB`, `TB`) and binary (`KiB`, `MiB`, `GiB`, `TiB`), plus the plain byte `B`.
+The data units: decimal (`KB`, `MB`, `GB`, `TB`), binary (`KiB`, `MiB`, `GiB`, `TiB`), and the byte `B`. A size's `canonical` value is in bytes.
 
 ```kex
-size(1, KB).canonical    # => 1000.0 bytes
-size(1, KiB).canonical   # => 1024.0 bytes
+size(1, KB).canonical    # => 1000.0
+size(1, KiB).canonical   # => 1024.0
 ```
 
 **Variants**
@@ -387,7 +387,7 @@ symbol -> String
 
 More functions for [`Measure`](../units.md#record-measure), added by this module.
 
-Displaying a size in another data unit: the prelude's `to(String, in:)`, for this module's units.
+Adds `to(String, in:)` for this module's units, to display a size in a chosen data unit.
 
 ### `factor`
 
@@ -413,9 +413,9 @@ symbol -> String
 to(String: Type, in: DataUnit, format: NumberFormat) -> String?
 ```
 
-Renders a size in another data unit, decimal or binary.
+Renders a size in the given data unit, decimal or binary.
 
-A measure that is not a data size answers `None`.
+A measure that is not a data size gives `None`.
 
 **Parameters**
 
@@ -460,9 +460,9 @@ A measure that is not a data size answers `None`.
 
 More functions for [`Integer`](../number.md#make-integer), added by this module.
 
-Compares an integer byte count with a data-size threshold.
+Lets an integer byte count be compared with a data size.
 
-File and binary sizes stay integers. Import this module to use data units directly in comparisons; only data measures are accepted as thresholds.
+File and binary sizes are plain integers; with this module imported they compare directly against sizes such as `30.megabyte`. A measure that is not a data size fails an assertion.
 
 **Examples**
 
@@ -481,23 +481,23 @@ Binary.fromBytes([104, 105]).length < 1.kibibyte  # => true
 ### `<`
 
 ```kex
-<(other: Measure) -> Bool
+<(other: Measure<D>) -> Bool
 ```
 
 ### `>`
 
 ```kex
->(other: Measure) -> Bool
+>(other: Measure<D>) -> Bool
 ```
 
 ### `<=`
 
 ```kex
-<=(other: Measure) -> Bool
+<=(other: Measure<D>) -> Bool
 ```
 
 ### `>=`
 
 ```kex
->=(other: Measure) -> Bool
+>=(other: Measure<D>) -> Bool
 ```

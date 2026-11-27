@@ -13,9 +13,9 @@ entities:
 
 Mathematical constants and functions.
 
-All trigonometric functions work in radians. Every function here accepts a `Number` (an `Integer` or a `Float`) and the transcendental ones answer with a `Float`.
+Angles are in radians. Every function takes a `Number`, an `Integer` or a `Float`, and all but `abs`, `floor` and `ceil` return a `Float`.
 
-A Kex `Float` is always finite, so a domain error (`Math.sqrt(-1.0)`) or an overflow (`Math.exp(1000.0)`) raises rather than producing `NaN` or `Infinity`: the same rule the BEAM enforces, where those two values cannot exist at all. There is no non-finite float to test for afterwards.
+A Kex `Float` is always finite. A result with no real value (`Math.sqrt(-1.0)`) or one too large for a float (`Math.exp(1000.0)`) raises an error; there is no `NaN` or `Infinity` to check for.
 
 ```kex
 Math.sqrt(2.0)              # => 1.4142135623730951
@@ -23,7 +23,7 @@ Math.hypot(3.0, 4.0)        # => 5.0
 Math.sin(Math.PI / 2.0)     # => 1.0
 ```
 
-The everyday operations on a single number: `abs`, `floor`, `ceil`, `round`, `sqrt`: can also be called with `Integer` and `Float` receivers, which usually reads better in a chain: `x.abs` over `Math.abs(x)`.
+`abs`, `floor`, `ceil` and `sqrt` can also be called on the number, which reads better in a chain: `x.abs` rather than `Math.abs(x)`. `round` exists only in that form.
 
 ### `PI` (constant)
 
@@ -62,7 +62,7 @@ Math.log(Math.E)   # => 1.0
 sqrt(x: Number) -> Float
 ```
 
-Returns the square root of `x`. Raises for a negative `x`, which has no real root.
+Returns the square root of `x`. Raises an error for a negative `x`.
 
 **Parameters**
 
@@ -75,7 +75,7 @@ Returns the square root of `x`. Raises for a negative `x`, which has no real roo
 ```kex
 Math.sqrt(9.0)    # => 3.0
 Math.sqrt(2.0)    # => 1.4142135623730951
-Math.sqrt(-1.0)   # raises: Math.sqrt: undefined result (NaN)
+Math.sqrt(-1.0)   # raises an error
 ```
 
 _Distance between two points_
@@ -90,7 +90,7 @@ Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1))
 cbrt(x: Number) -> Float
 ```
 
-Returns the cube root of `x`. Unlike `sqrt`, negative input is fine: a negative number has a real cube root.
+Returns the cube root of `x`, which may be negative.
 
 **Parameters**
 
@@ -171,7 +171,7 @@ Returns the tangent of `x`, given in radians.
 
 ```kex
 Math.tan(0.0)             # => 0.0
-Math.tan(Math.PI / 4.0)   # => 1.0
+Math.tan(Math.PI / 4.0)   # => 0.9999999999999999
 ```
 
 ### `asin`
@@ -224,7 +224,7 @@ atan(x: Number) -> Float
 
 Returns the arc tangent of `x` in radians, in the range -π/2 to π/2.
 
-Use `atan2` when you have both coordinates of a vector: it can tell the quadrant apart, and this cannot.
+To turn a vector into an angle, use `atan2`, which also finds the right quadrant.
 
 **Parameters**
 
@@ -247,7 +247,7 @@ atan2(y: Number, x: Number) -> Float
 
 Returns the angle of the vector `(x, y)` in radians, from -π to π.
 
-Both signs are taken into account, so the result lands in the correct quadrant, which is why this, not `atan`, is what you want for converting a vector to an angle. Note the argument order: `y` first.
+The signs of both components decide the quadrant, which `atan` cannot do. `y` comes first.
 
 **Parameters**
 
@@ -275,7 +275,7 @@ Math.rad2Deg(Math.atan2(y2 - y1, x2 - x1))
 deg2Rad(degrees: Number) -> Float
 ```
 
-Converts an angle from degrees to radians, the unit every trigonometric function here expects.
+Converts an angle from degrees to radians, the unit the trigonometric functions take.
 
 **Parameters**
 
@@ -302,7 +302,7 @@ Math.sin(Math.deg2Rad(30.0))
 rad2Deg(radians: Number) -> Float
 ```
 
-Converts an angle from radians to degrees: the inverse of `deg2Rad`.
+Converts an angle from radians to degrees, the inverse of `deg2Rad`.
 
 **Parameters**
 
@@ -393,9 +393,9 @@ log(x: Number) -> Float
 log(x: Number, base: Number) -> Float
 ```
 
-Returns the natural logarithm of `x`: its logarithm to base `e`. With a second argument, returns the logarithm to that base instead.
+Returns the natural logarithm of `x`, or with `base` the logarithm to that base.
 
-Raises for `x` of zero or less, which has no real logarithm.
+Raises an error when `x` is zero or negative.
 
 **Parameters**
 
@@ -423,7 +423,7 @@ Math.log10(n.to(Float).or(1.0)).floor + 1
 log2(x: Number) -> Float
 ```
 
-Returns the base-2 logarithm of `x`. The same as `Math.log(x, 2.0)`, and more direct.
+Returns the base-2 logarithm of `x`, like `Math.log(x, 2.0)`.
 
 **Parameters**
 
@@ -471,9 +471,9 @@ Math.log10(1.0)      # => 0.0
 exp(x: Number) -> Float
 ```
 
-Returns `e` raised to the power `x`: the inverse of `Math.log`.
+Returns `e` raised to the power `x`, the inverse of `Math.log`.
 
-Raises on overflow, which for a double happens a little past `x` of 709.
+Raises an error when the result is too large for a float, which happens just past `x` of 709.
 
 **Parameters**
 
@@ -502,7 +502,7 @@ pow(x: Number, y: Number) -> Float
 
 Returns `x` raised to the power `y`.
 
-The result is always a `Float`, even for whole arguments. For an exact integer power use `Integer.pow`: `2.pow(100)` keeps every digit, where rounding `Math.pow(2, 100)` cannot.
+The result is a `Float` even for whole numbers. For an exact integer power use `Integer.pow`: `2.pow(100)` keeps every digit, and `Math.pow(2, 100)` does not.
 
 **Parameters**
 
@@ -531,9 +531,9 @@ principal * Math.pow(1.0 + rate, years)
 abs(x: Number) -> Number
 ```
 
-Returns the magnitude of `x`, discarding its sign. The type is preserved: an `Integer` in gives an `Integer` out.
+Returns `x` without its sign, as the same type: an `Integer` stays an `Integer`.
 
-You can also write `x.abs` using UFCS.
+`x.abs` does the same.
 
 **Parameters**
 
@@ -554,7 +554,7 @@ Math.abs(-2.5)    # => 2.5
 floor(x: Number) -> Integer
 ```
 
-Returns the largest integer that is not greater than `x`: rounding toward negative infinity.
+Returns `x` rounded down to an integer, toward negative infinity.
 
 **Parameters**
 
@@ -575,7 +575,7 @@ Math.floor(-3.2)   # => -4
 ceil(x: Number) -> Integer
 ```
 
-Returns the smallest integer that is not less than `x`: rounding toward positive infinity.
+Returns `x` rounded up to an integer, toward positive infinity.
 
 **Parameters**
 
@@ -596,7 +596,7 @@ Math.ceil(-3.7)    # => -3
 hypot(x: Number, y: Number) -> Float
 ```
 
-Returns the Euclidean distance +sqrt(x*x + y*y)+, computed so that large values do not overflow on the way.
+Returns +sqrt(x*x + y*y)+, without overflowing for large `x` or `y`.
 
 **Parameters**
 

@@ -13,13 +13,13 @@ entities:
 
 Immutable collections of distinct elements.
 
-Opt-in: nothing here is in scope until `using Data.Set`, which brings both flavours below into scope at once.
+Nothing here is in scope until `using Data.Set`, which brings in both kinds of set:
 
 ```kex
 using Data.Set
 ```
 
-Membership is decided by structural equality: the same equality `==` and map keys use, so records and tuples are compared by value, not identity. Updates return a new set; the `!` forms (`add!`, `delete!`) build a new set and rebind the receiver variable rather than modifying anything in place.
+Membership uses the same structural equality as `==` and map keys, so records and tuples are compared by value. Updates return a new set. The `!` forms (`add!`, `delete!`) rebind the variable they are called on to the new set.
 
 ```kex
 let tags = Set.from(["kex", "beam", "kex"])
@@ -28,27 +28,27 @@ tags.contains?("beam")         # => true
 tags.add("erlang").items       # => ["beam", "erlang", "kex"]
 ```
 
-There are two flavours, differing only in how they store their elements:
+The two kinds differ in how they store their elements:
 
 ```kex
-Set           sorted, so iteration is in ascending element order and the
+Set           kept sorted, so iteration is in ascending order and the
               elements must be +Comparable+.
-UnorderedSet  hash-backed, so membership does not pay for ordering and
-              the elements need only support equality. Iteration order
-              is unspecified: never write a test against it.
+UnorderedSet  hash-based, so +contains?+ is a map lookup and the elements
+              need only support equality. Iteration order is unspecified,
+              so don't write a test that depends on it.
 ```
 
-Reach for `Set` when you will read the elements back out, and for `UnorderedSet` when the set exists to answer `contains?` quickly.
+Use `Set` when you will read the elements back out, and `UnorderedSet` when the set is mostly asked `contains?`.
 
-Sets compare by their elements. Use `items` to obtain a list; `UnorderedSet.items` has no guaranteed order.
+Two sets are equal when they have the same elements. `items` returns the elements as a list, in no particular order for an `UnorderedSet`.
 
 
 
 ## record `Set<A>`
 
-A set whose elements are kept sorted and duplicate free.
+A set whose elements are kept sorted and free of duplicates.
 
-Build one with `Set.from` rather than by hand: the record literal does no deduplication and no sorting, and every function here relies on both. Reading `items` back is the field itself, so handing a set's elements to list code costs nothing.
+Build one with `Set.from`. A `Set { items: ... }` literal neither sorts nor removes duplicates, and every function here assumes both. `items` is the stored list, so reading it costs nothing.
 
 ```kex
 Set.from([3, 1, 2]).items   # => [1, 2, 3]
@@ -58,7 +58,7 @@ Set.from([3, 1, 2]).items   # => [1, 2, 3]
 
   - `items` : [A] (optional)
 
-Implements [`Enumerable`](../enumerable.md#trait-enumerable), [`Foldable`](../enumerable.md#trait-foldable), [`Monoid`](../algebra.md#trait-monoid), [`Showable`](../kex.md#trait-showable), [`Blankable`](../blankable.md#trait-blankable).
+Implements [`Enumerable<A>`](../enumerable.md#trait-enumerable), [`Foldable<A>`](../enumerable.md#trait-foldable), [`Monoid`](../algebra.md#trait-monoid), [`Showable`](../kex.md#trait-showable), [`Blankable`](../blankable.md#trait-blankable).
 
 ### Functions
 
@@ -70,7 +70,7 @@ reduce(acc: B, f: (B -> A -> B)) -> B
 
 Folds over the elements in ascending order.
 
-This is `Set`'s `Enumerable` primitive; `each`, `find`, `any?` and the rest are built on it. The collection-returning operations are overridden below, because `Enumerable`'s defaults answer with a list.
+`each`, `find`, `any?` and the rest of `Enumerable` are built on it. `map`, `filter` and `reject` are defined below to return a `Set`; the other `Enumerable` functions that build a collection return a list.
 
 **Parameters**
 
@@ -91,7 +91,7 @@ Set.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
 identity -> Set<A>
 ```
 
-The empty set: the `Monoid` identity, since union with nothing changes nothing.
+Returns the empty set, the `Monoid` identity for union.
 
 **Returns**: the empty set
 
@@ -101,7 +101,7 @@ The empty set: the `Monoid` identity, since union with nothing changes nothing.
 combine(other: Set<A>) -> Set<A>
 ```
 
-Combines two sets by union. The `Monoid` operation.
+Returns the union of the two sets. This is the `Monoid` operation.
 
 **Parameters**
 
@@ -144,7 +144,7 @@ _Filtering a list against an allow-list_
 
 ```kex
 let allowed = Set.from(["get", "post"])
-methods.filter { |m| allowed.contains?(m.lowerCase) }
+verbs.filter { |v| allowed.contains?(v.lowerCase) }
 ```
 
 #### `count` (from Foldable)
@@ -153,7 +153,7 @@ methods.filter { |m| allowed.contains?(m.lowerCase) }
 count -> Integer
 ```
 
-Returns the number of distinct elements. Duplicates in the source list were already discarded, so this is the size of the set, not of what it was built from.
+Returns the number of elements. Duplicates in the list the set was built from are not counted.
 
 **Returns**: the number of elements
 
@@ -192,9 +192,9 @@ Set.from([1]).empty?       # => false
 add(value: A) -> Set<A>
 ```
 
-Returns a new set with `value` added. Adding an element that is already a member changes nothing: that is what makes a set a set.
+Returns a new set with `value` added. Adding an existing member changes nothing.
 
-Use `add!` to rebind the receiver variable.
+`add!` rebinds the variable instead.
 
 **Parameters**
 
@@ -222,9 +222,9 @@ ids.each { |id| seen.add!(id) }
 delete(value: A) -> Set<A>
 ```
 
-Returns a new set without `value`. Removing something that is not a member changes nothing.
+Returns a new set without `value`. Removing a non-member changes nothing.
 
-Use `delete!` to rebind the receiver variable.
+`delete!` rebinds the variable instead.
 
 **Parameters**
 
@@ -300,7 +300,7 @@ difference(other: Set<A>) -> Set<A>
 
 Returns the elements of this set that `other` does not have.
 
-Order matters: `a.difference(b)` and `b.difference(a)` are different questions. Use `symmetricDifference` when you want both answers.
+`a.difference(b)` and `b.difference(a)` differ. `symmetricDifference` gives the elements in either one.
 
 **Parameters**
 
@@ -326,7 +326,7 @@ required.difference(Set.from(form.keys))
 symmetricDifference(other: Set<A>) -> Set<A>
 ```
 
-Returns the elements in exactly one of the two sets: everything they do not agree on.
+Returns the elements that are in exactly one of the two sets.
 
 **Parameters**
 
@@ -379,7 +379,7 @@ required.subset?(granted)
 superset?(other: Set<A>) -> Bool
 ```
 
-Returns `true` when this set has every element of `other`. The mirror image of `subset?`.
+Returns `true` when this set has every element of `other`; the reverse of `subset?`.
 
 **Parameters**
 
@@ -428,9 +428,9 @@ allowList.disjoint?(denyList)
 +(other: [A]) -> Set<A>
 ```
 
-Unions with another set, or with a plain list.
+Returns the union with another set or with a list.
 
-The list form is the everyday way to add one element without naming a function: +s + [x]+.
+The list form is a short way to add elements: +s + [x]+.
 
 **Parameters**
 
@@ -452,7 +452,7 @@ Set.from([1]) + Set.from([2])    # => Set(1, 2)
 -(other: [A]) -> Set<A>
 ```
 
-Removes another set's elements, or a plain list's.
+Returns this set without the elements of another set or of a list.
 
 **Parameters**
 
@@ -475,7 +475,7 @@ map(f: (A -> B)) -> Set<B>
 
 Applies `f` to every element and returns a set of the results.
 
-Mapping a set may collapse elements: if `f` sends two members to the same value, the result has one. That is not a loss of information so much as the point of a set: `Set.from([1, -1]).map(~abs)` has one member.
+If `f` sends two elements to the same value, the result has it once, so the result can be smaller than the set.
 
 **Parameters**
 
@@ -522,7 +522,7 @@ Set.from([1, 2, 3]).filter { |x| x > 1 }   # => Set(2, 3)
 reject(pred: (A -> Bool)) -> Set<A>
 ```
 
-Returns a new set without the elements `pred` accepts. The complement of `filter`.
+Returns a new set without the elements `pred` accepts.
 
 **Parameters**
 
@@ -542,7 +542,7 @@ Set.from([1, 2, 3]).reject { |x| x > 1 }   # => Set(1)
 showValue -> String
 ```
 
-Renders the set as `Set(...)` in element order, rather than exposing the record layout behind it.
+Renders the set as `Set(...)`, with the elements in order.
 
 **Returns**: the rendered set
 
@@ -558,7 +558,7 @@ Set.from([2, 1]).showValue   # => "Set(1, 2)"
 blank? -> Bool
 ```
 
-Returns `true` when the set has no elements. The `Blankable` view of `empty?`, so generic code can test a set the same way it tests a string.
+Returns `true` when the set has no elements, as `empty?` does. This makes a set `Blankable`, so code that tests strings with `blank?` can test sets.
 
 **Returns**: `true` for the empty set
 
@@ -571,17 +571,17 @@ Set.from([1]).blank?     # => false
 
 ### From [`Enumerable`](../enumerable.md#trait-enumerable)
 
-  - [`mapIndexed`](../enumerable.md#enumerable-mapindexed) — Applies `f` to each item and its 0-based position, and collects the results into a list.
-  - [`flatMap`](../enumerable.md#enumerable-flatmap) — Applies `f` to each item, expecting a list back, and concatenates the results into one flat list.
-  - [`collect`](../enumerable.md#enumerable-collect) — Applies `f` to each item, expecting an `Optional` back, and returns the values that were present: unwrapped.
+  - [`mapIndexed`](../enumerable.md#enumerable-mapindexed) — Applies `f` to each item and its 0-based position, and returns the results as a list.
+  - [`into`](../enumerable.md#enumerable-into) — Applies `f`, which returns a list, to each item and concatenates the results.
+  - [`collect`](../enumerable.md#enumerable-collect) — Applies `f`, which returns an `Optional`, to each item and returns the present values, unwrapped.
 
 ### From [`Foldable`](../enumerable.md#trait-foldable)
 
   - [`each`](../enumerable.md#foldable-each) — Calls `f` with each item, for its side effects.
   - [`eachIndexed`](../enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
-  - [`all?`](../enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`.
-  - [`any?`](../enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`.
-  - [`none?`](../enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`all?`](../enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`, and `true` for an empty collection.
+  - [`any?`](../enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`, and `false` for an empty collection.
+  - [`none?`](../enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`, the opposite of `any?`.
   - [`one?`](../enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
   - [`find`](../enumerable.md#foldable-find) — Returns the first item satisfying `pred`, or `None` when nothing does.
 
@@ -595,9 +595,9 @@ Set.from([1]).blank?     # => false
 
 ## record `UnorderedSet<A>`
 
-A set backed by a map from each member to `true`; its keys ARE the elements.
+A set stored as a map from each element to `true`.
 
-Build one with `UnorderedSet.from`. Iteration order is whatever the map hands back, so use `items.sort` when you need a stable order.
+Build one with `UnorderedSet.from`. Iteration follows the map's internal order, so use `items.sort` when you need a stable order.
 
 ```kex
 UnorderedSet.from([3, 1, 2]).contains?(2)   # => true
@@ -607,7 +607,7 @@ UnorderedSet.from([3, 1, 2]).contains?(2)   # => true
 
   - `slots` : {A: [Bool](../truthyable.md#make-bool)} (optional)
 
-Implements [`Enumerable`](../enumerable.md#trait-enumerable), [`Foldable`](../enumerable.md#trait-foldable), [`Monoid`](../algebra.md#trait-monoid), [`Showable`](../kex.md#trait-showable), [`Blankable`](../blankable.md#trait-blankable).
+Implements [`Enumerable<A>`](../enumerable.md#trait-enumerable), [`Foldable<A>`](../enumerable.md#trait-foldable), [`Monoid`](../algebra.md#trait-monoid), [`Showable`](../kex.md#trait-showable), [`Blankable`](../blankable.md#trait-blankable).
 
 ### Functions
 
@@ -617,9 +617,9 @@ Implements [`Enumerable`](../enumerable.md#trait-enumerable), [`Foldable`](../en
 reduce(acc: B, f: (B -> A -> B)) -> B
 ```
 
-Folds over the elements.
+Folds over the elements in unspecified order.
 
-The order is whatever the underlying map hands back: unspecified, and not to be relied on. Use a `Set` when the order of the fold matters.
+Use a `Set` when the order of the fold matters.
 
 **Parameters**
 
@@ -640,7 +640,7 @@ UnorderedSet.from([1, 2, 3]).reduce(0) { |sum, x| sum + x }   # => 6
 identity -> UnorderedSet<A>
 ```
 
-The empty unordered set: the `Monoid` identity.
+Returns the empty unordered set, the `Monoid` identity for union.
 
 **Returns**: the empty set
 
@@ -650,7 +650,7 @@ The empty unordered set: the `Monoid` identity.
 combine(other: UnorderedSet<A>) -> UnorderedSet<A>
 ```
 
-Combines two sets by union. The `Monoid` operation.
+Returns the union of the two sets. This is the `Monoid` operation.
 
 **Parameters**
 
@@ -666,7 +666,7 @@ contains?(value: A) -> Bool
 
 Returns `true` when `value` is a member.
 
-This is the operation the flavour exists for: a map lookup, with no ordering to maintain.
+This is a map lookup.
 
 **Parameters**
 
@@ -721,7 +721,7 @@ items -> [A]
 
 Returns the elements as a list, in unspecified order.
 
-Sort the result when the order has to be stable: a test, a rendering, a comparison.
+Sort the result when you need a stable order, as in a test.
 
 **Returns**: the elements
 
@@ -926,7 +926,7 @@ UnorderedSet.from([1, 2]).disjoint?(UnorderedSet.from([3]))   # => true
 +(other: [A]) -> UnorderedSet<A>
 ```
 
-Unions with another unordered set, or with a plain list.
+Returns the union with another unordered set or with a list.
 
 **Parameters**
 
@@ -947,7 +947,7 @@ Unions with another unordered set, or with a plain list.
 -(other: [A]) -> UnorderedSet<A>
 ```
 
-Removes another unordered set's elements, or a plain list's.
+Returns this set without the elements of another unordered set or of a list.
 
 **Parameters**
 
@@ -1029,7 +1029,7 @@ showValue -> String
 
 Renders the set as `UnorderedSet(...)`.
 
-The elements are printed in sorted order where they allow it, so the rendering of a value is not at the mercy of map internals.
+The elements are printed sorted, so the same set always prints the same.
 
 **Returns**: the rendered set
 
@@ -1046,7 +1046,7 @@ UnorderedSet.from([10, 2]).showValue   # => "UnorderedSet(2, 10)"
 blank? -> Bool
 ```
 
-Returns `true` when the set has no elements. The `Blankable` view of `empty?`.
+Returns `true` when the set has no elements, as `empty?` does.
 
 **Returns**: `true` for the empty set
 
@@ -1058,17 +1058,17 @@ UnorderedSet.empty.blank?   # => true
 
 ### From [`Enumerable`](../enumerable.md#trait-enumerable)
 
-  - [`mapIndexed`](../enumerable.md#enumerable-mapindexed) — Applies `f` to each item and its 0-based position, and collects the results into a list.
-  - [`flatMap`](../enumerable.md#enumerable-flatmap) — Applies `f` to each item, expecting a list back, and concatenates the results into one flat list.
-  - [`collect`](../enumerable.md#enumerable-collect) — Applies `f` to each item, expecting an `Optional` back, and returns the values that were present: unwrapped.
+  - [`mapIndexed`](../enumerable.md#enumerable-mapindexed) — Applies `f` to each item and its 0-based position, and returns the results as a list.
+  - [`into`](../enumerable.md#enumerable-into) — Applies `f`, which returns a list, to each item and concatenates the results.
+  - [`collect`](../enumerable.md#enumerable-collect) — Applies `f`, which returns an `Optional`, to each item and returns the present values, unwrapped.
 
 ### From [`Foldable`](../enumerable.md#trait-foldable)
 
   - [`each`](../enumerable.md#foldable-each) — Calls `f` with each item, for its side effects.
   - [`eachIndexed`](../enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
-  - [`all?`](../enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`.
-  - [`any?`](../enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`.
-  - [`none?`](../enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`all?`](../enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`, and `true` for an empty collection.
+  - [`any?`](../enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`, and `false` for an empty collection.
+  - [`none?`](../enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`, the opposite of `any?`.
   - [`one?`](../enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
   - [`find`](../enumerable.md#foldable-find) — Returns the first item satisfying `pred`, or `None` when nothing does.
 
@@ -1091,8 +1091,6 @@ from(items: [A]) -> Set<A>
 ```
 
 Builds a sorted set from a list, discarding duplicates.
-
-This is the normal way to make a `Set`. Deduplication goes through a map rather than `List.uniq`: map keys are unique under exactly the structural equality a set wants, and each element costs one insertion instead of a scan of everything kept so far.
 
 **Parameters**
 
@@ -1119,7 +1117,7 @@ Set.from(["b", "a", "b"]).items   # => ["a", "b"]
 empty : Set<A>
 ```
 
-The set with no elements. Also the `Monoid` identity, so `s.combine(Set.empty)` is `s`.
+Returns the empty set, the `Monoid` identity: `s.combine(Set.empty)` is `s`.
 
 **Examples**
 
@@ -1142,7 +1140,7 @@ from(items: [A]) -> UnorderedSet<A>
 
 Builds an unordered set from a list, discarding duplicates.
 
-Nothing is sorted, so unlike `Set.from` this does not require the elements to be `Comparable`.
+Unlike `Set.from`, this does not need the elements to be `Comparable`.
 
 **Parameters**
 
@@ -1169,7 +1167,7 @@ words.reject { |w| stopWords.contains?(w) }
 empty : UnorderedSet<A>
 ```
 
-The unordered set with no elements. Also the `Monoid` identity.
+Returns the empty unordered set, the `Monoid` identity.
 
 **Examples**
 

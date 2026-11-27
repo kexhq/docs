@@ -17,15 +17,15 @@ entities:
 parse(text: String) -> Result<URI, URIError>
 ```
 
-Strictly parses an ASCII RFC 3986 URI reference.
+Parses an RFC 3986 URI reference, which may be relative.
 
-Relative references are valid here. Use `URL.parse` when the input must be a complete hierarchical URL with a scheme and authority.
+The text must be ASCII, with anything else already percent-encoded; use `URI.fromIRI` for text a person typed. Use `URL.parse` when the input must be a complete URL with a scheme and host.
 
 **Parameters**
 
-  - `text` — an absolute URI or relative reference
+  - `text` — an absolute URI or a relative reference
 
-**Returns**: the reference or a precise syntax error
+**Returns**: the reference, or what is wrong with it
 
 **Examples**
 
@@ -42,38 +42,40 @@ let absolute = base.resolve(reference).try
 fromIRI(text: String) -> Result<URI, URIError>
 ```
 
-Converts a Unicode IRI to an ASCII URI using IDNA and UTF-8 percent encoding.
+Converts an internationalized address (an IRI) to an ASCII URI.
 
-Use this for human-entered international addresses. `parse` is intentionally stricter and accepts only an already encoded ASCII URI.
+The host is converted with IDNA, and the rest of the non-ASCII text is percent-encoded as UTF-8. Use it for addresses people type or paste; `parse` rejects non-ASCII text.
 
 **Parameters**
 
-  - `text` — a Unicode internationalized resource identifier
+  - `text` — the internationalized address
 
-**Returns**: the converted URI or a conversion error
+**Returns**: the converted URI, or why it cannot be converted
 
 **Examples**
 
-_Turning a pasted international address into a request URI_
-
 ```kex
-let target = URI.fromIRI("https://münich.example/straße").try
-HTTP.get(target.string)
+URI.fromIRI("https://münich.example/straße").try.string
+# => "https://xn--mnich-kva.example/stra%C3%9Fe"
 ```
 
 ## record `URI`
 
-Strict RFC 3986 URI values, hierarchical URLs, query strings, and HTML form encoding. Parsing preserves caller spelling; normalization is always explicit.
+Parses, builds and resolves URIs and URLs, and encodes query strings and HTML forms.
+
+Parsing follows RFC 3986 strictly and keeps the text as it was written: `string` gives back the exact input. Normalizing is a separate step, done by `normalize` and `equivalent?`.
 
 ```kex
 using URI
 
 let base = URL.parse("https://example.test/a/").try
 let reference = URI.parse("../items?limit=10").try
-base.resolve(reference).try.string
+base.resolve(reference).try.string   # => "https://example.test/items?limit=10"
 ```
 
-A parsed RFC 3986 URI reference. Construction is strict; use `parse` rather than building this representation directly. `string` preserves the spelling supplied by the caller, while `normalize` is explicit.
+A parsed RFC 3986 URI reference: an absolute URI or a relative one.
+
+Make one with `URI.parse` or `URI.fromIRI`, which check the syntax.
 
 **Fields**
 
@@ -89,9 +91,9 @@ Implements [`Showable`](kex.md#trait-showable), [`Inspectable`](kex.md#trait-ins
 string -> String
 ```
 
-Returns the caller-supplied URI spelling unchanged.
+Returns the URI exactly as it was parsed.
 
-**Returns**: the original URI text
+**Returns**: the URI text
 
 #### `normalize`
 
@@ -99,11 +101,18 @@ Returns the caller-supplied URI spelling unchanged.
 normalize -> URI
 ```
 
-Returns an explicitly normalized RFC 3986 representation.
+Returns the URI in RFC 3986 normal form.
 
-Parsing never normalizes implicitly: signatures, cache keys, and logs may depend on the exact text received. Ask for normalization where semantic comparison is what you mean.
+The scheme and host are lowercased, needless percent escapes are decoded, and `.` and `..` path segments are resolved. Parsing never does this by itself, because signatures, cache keys and logs may depend on the exact text.
 
 **Returns**: the normalized URI
+
+**Examples**
+
+```kex
+URI.parse("HTTP://example.com/%7Eada").try.normalize.string
+# => "http://example.com/~ada"
+```
 
 #### `equivalent?`
 
@@ -111,21 +120,24 @@ Parsing never normalizes implicitly: signatures, cache keys, and logs may depend
 equivalent?(other: URI) -> Bool
 ```
 
-Compares normalized representations rather than original spellings.
+Returns `true` when the two URIs are the same after normalizing.
+
+`==` compares the text as written.
 
 **Parameters**
 
   - `other` — the URI to compare
 
-**Returns**: whether the URIs identify the same normalized reference
+**Returns**: `true` when both normalize to the same URI
 
 **Examples**
 
-_Deduplicating differently spelled links_
+_Spotting the same link spelled two ways_
 
 ```kex
 URI.parse("HTTP://example.com/%7Eada").try
   .equivalent?(URI.parse("http://example.com/~ada").try)
+# => true
 ```
 
 #### `resolve`
@@ -134,13 +146,13 @@ URI.parse("HTTP://example.com/%7Eada").try
 resolve(reference: URI) -> Result<URI, URIError>
 ```
 
-Resolves a URI reference against this absolute base.
+Resolves `reference` against this URI, as a browser resolves a link against the page it is on.
 
 **Parameters**
 
   - `reference` — the relative or absolute reference
 
-**Returns**: the resolved URI, or `NotAbsolute` when this receiver cannot serve as a base
+**Returns**: the resolved URI, or a `NotAbsolute` error when this URI is relative and cannot serve as a base
 
 **Examples**
 
@@ -158,9 +170,9 @@ base.resolve(URI.parse("../api").try).try.string
 scheme -> String?
 ```
 
-Returns the normalized lowercase scheme, when one is present.
+Returns the scheme in lowercase, or `None` for a relative reference.
 
-**Returns**: the scheme, or `None` for a relative reference
+**Returns**: the scheme, or `None`
 
 #### `host`
 
@@ -168,9 +180,9 @@ Returns the normalized lowercase scheme, when one is present.
 host -> Host?
 ```
 
-Returns the parsed authority host, when one is present.
+Returns the host, or `None` when the URI has none.
 
-**Returns**: the host, or `None` for references without an authority
+**Returns**: the host, or `None`
 
 #### `query`
 
@@ -178,11 +190,11 @@ Returns the parsed authority host, when one is present.
 query -> Query?
 ```
 
-Returns the parsed query when the reference contains `?`.
+Returns the query, or `None` when the URI has no `?`.
 
-`Just(Query { entries: [] })` represents an explicitly empty query; `None` means no question mark was present at all.
+A URI ending in a bare `?` has a query with no entries, which is not the same as `None`.
 
-**Returns**: the query, including an explicitly empty one
+**Returns**: the query, or `None`
 
 #### `showValue` (from Showable)
 
@@ -190,7 +202,7 @@ Returns the parsed query when the reference contains `?`.
 showValue -> String
 ```
 
-Renders with any authority password replaced by `***`.
+Renders the URI with any password in it replaced by `***`.
 
 #### `inspectValue` (from Inspectable)
 
@@ -198,7 +210,7 @@ Renders with any authority password replaced by `***`.
 inspectValue(colors: Bool) -> String
 ```
 
-Structural inspection is also credential-safe.
+Renders the URI with any password in it replaced by `***`, as `showValue` does.
 
 ### From [`Showable`](kex.md#trait-showable)
 
@@ -206,7 +218,9 @@ Structural inspection is also credential-safe.
 
 ## record `URL`
 
-An absolute hierarchical URI with an authority component, such as an HTTP URL. Unlike a general `URI`, a `URL` always has a scheme and host, which makes accessors such as `scheme` and `host` total.
+An absolute URI with a host, such as an HTTP URL.
+
+Every `URL` has a scheme and a host, so `scheme` and `host` return them directly, where the `URI` versions return optionals. Make one with `URL.parse` or `URL.build`.
 
 **Fields**
 
@@ -222,9 +236,9 @@ Implements [`Showable`](kex.md#trait-showable), [`Inspectable`](kex.md#trait-ins
 string -> String
 ```
 
-Returns the caller-supplied URL spelling unchanged.
+Returns the URL exactly as it was parsed.
 
-**Returns**: the original URL text
+**Returns**: the URL text
 
 #### `normalize`
 
@@ -232,9 +246,16 @@ Returns the caller-supplied URL spelling unchanged.
 normalize -> URL
 ```
 
-Returns an explicitly normalized URL without changing this value.
+Returns the URL in RFC 3986 normal form.
 
 **Returns**: the normalized URL
+
+**Examples**
+
+```kex
+URL.parse("HTTPS://Example.COM/a/../b").try.normalize.string
+# => "https://example.com/b"
+```
 
 #### `equivalent?`
 
@@ -242,13 +263,13 @@ Returns an explicitly normalized URL without changing this value.
 equivalent?(other: URL) -> Bool
 ```
 
-Compares normalized representations rather than original spellings.
+Returns `true` when the two URLs are the same after normalizing.
 
 **Parameters**
 
   - `other` — the URL to compare
 
-**Returns**: whether the URLs normalize to the same value
+**Returns**: `true` when both normalize to the same URL
 
 #### `resolve`
 
@@ -256,22 +277,25 @@ Compares normalized representations rather than original spellings.
 resolve(reference: URI) -> Result<URL, URIError>
 ```
 
-Resolves a URI reference while preserving the URL invariant.
+Resolves `reference` against this URL.
+
+The result must still be a URL, so a reference without a host, such as `mailto:ada@example.com`, is a `MissingAuthority` error.
 
 **Parameters**
 
   - `reference` — the relative or absolute reference
 
-**Returns**: the resolved absolute URL
+**Returns**: the resolved URL
 
 **Examples**
 
-_Resolving an API pagination link_
+_Following an API's pagination link_
 
 ```kex
-let next = URL.parse("https://api.example.com/v1/items").try
+URL.parse("https://api.example.com/v1/items").try
   .resolve(URI.parse("?page=2").try)
-  .try
+  .try.string
+# => "https://api.example.com/v1/items?page=2"
 ```
 
 #### `scheme`
@@ -280,7 +304,7 @@ let next = URL.parse("https://api.example.com/v1/items").try
 scheme -> String
 ```
 
-Returns the normalized lowercase scheme.
+Returns the scheme in lowercase.
 
 **Returns**: the scheme
 
@@ -290,7 +314,7 @@ Returns the normalized lowercase scheme.
 host -> Host
 ```
 
-Returns the authority host in display and normalized ASCII forms.
+Returns the host.
 
 **Returns**: the host
 
@@ -300,9 +324,9 @@ Returns the authority host in display and normalized ASCII forms.
 query -> Query?
 ```
 
-Returns the parsed query when the URL contains `?`.
+Returns the query, or `None` when the URL has no `?`.
 
-**Returns**: the query, or `None` when absent
+**Returns**: the query, or `None`
 
 #### `showValue` (from Showable)
 
@@ -310,7 +334,7 @@ Returns the parsed query when the URL contains `?`.
 showValue -> String
 ```
 
-Renders with any authority password replaced by `***`.
+Renders the URL with any password in it replaced by `***`.
 
 #### `inspectValue` (from Inspectable)
 
@@ -318,7 +342,7 @@ Renders with any authority password replaced by `***`.
 inspectValue(colors: Bool) -> String
 ```
 
-Structural inspection is also credential-safe.
+Renders the URL with any password in it replaced by `***`, as `showValue` does.
 
 ### From [`Showable`](kex.md#trait-showable)
 
@@ -326,7 +350,7 @@ Structural inspection is also credential-safe.
 
 ## record `Host`
 
-A host's display spelling and normalized ASCII/IDNA spelling.
+A URI's host as written, in `display`, and in lowercase ASCII (IDNA) form, in `ascii`.
 
 **Fields**
 
@@ -337,9 +361,9 @@ A host's display spelling and normalized ASCII/IDNA spelling.
 
 ## record `Query`
 
-Ordered URI query entries. `None` distinguishes a bare key from `key=`.
+The entries of a URI query string, in order.
 
-Order and duplicates matter in real APIs: `tag=kex&tag=beam` must not become a map with one value silently discarded.
+Order and repeated keys are kept, since APIs rely on them: `tag=kex&tag=beam` has two entries. A value of `None` is a bare key, as in `?debug`; `Just("")` is a key with an empty value, as in `?debug=`.
 
 **Fields**
 
@@ -353,9 +377,9 @@ Order and duplicates matter in real APIs: `tag=kex&tag=beam` must not become a m
 encode -> String
 ```
 
-Encodes according to generic RFC 3986 query rules.
+Encodes the query by RFC 3986 rules, percent-encoding a +++ in a value.
 
-**Returns**: encoded query text without a leading question mark
+**Returns**: the encoded query, without a leading `?`
 
 **Examples**
 
@@ -365,9 +389,9 @@ Query.from([("q", Just("a+b"))]).encode   # => "q=a%2Bb"
 
 ## record `Form`
 
-Ordered `application/x-www-form-urlencoded` entries.
+The fields of an `application/x-www-form-urlencoded` body, in order.
 
-This is deliberately separate from `Query`: HTML forms encode spaces as plus signs, while a generic URI query treats a plus as an ordinary +++.
+Forms encode a space as +++. In a `Query`, +++ is a literal plus sign.
 
 **Fields**
 
@@ -381,7 +405,7 @@ This is deliberately separate from `Query`: HTML forms encode spaces as plus sig
 encode -> String
 ```
 
-Encodes according to HTML form rules, including space as ++.
+Encodes the form by HTML form rules, which write a space as +++.
 
 **Returns**: the `application/x-www-form-urlencoded` body
 
@@ -394,7 +418,7 @@ Form.from([("query", "hello world")]).encode
 
 ## record `URIError`
 
-A typed URI parsing, conversion, or resolution failure.
+The error returned when a URI cannot be parsed, converted or resolved: its `kind`, and a message for a person to read.
 
 **Fields**
 
@@ -406,7 +430,7 @@ A typed URI parsing, conversion, or resolution failure.
 
 ## type `URIErrorKind`
 
-Stable URI failure categories.
+What kind of problem a `URIError` reports.
 
 **Variants**
 
@@ -430,19 +454,19 @@ Stable URI failure categories.
 parse(text: String) -> Result<URL, URIError>
 ```
 
-Parses an absolute hierarchical URL with an authority.
+Parses an absolute URL with a scheme and host.
 
-Rejects relative references, opaque URIs, and values without a host, so a caller can use `scheme` and `host` without handling absence.
+A relative reference is a `NotAbsolute` error, and a URI without a host, such as `mailto:ada@example.com`, is `MissingAuthority`.
 
 **Parameters**
 
   - `text` — the complete URL
 
-**Returns**: the URL or a precise syntax error
+**Returns**: the URL, or what is wrong with it
 
 **Examples**
 
-_Validating a webhook target at configuration time_
+_Checking a webhook URL from the configuration_
 
 ```kex
 let webhook = URL.parse(ENV.get("WEBHOOK_URL").or("")).try
@@ -454,30 +478,27 @@ let webhook = URL.parse(ENV.get("WEBHOOK_URL").or("")).try
 build(scheme: String, host: String, path: [String], query: Query) -> Result<URL, URIError>
 ```
 
-Builds and validates a URL from decoded path segments and a query value.
+Builds a URL from a scheme, a host, path segments and a query.
 
-Pass decoded values, not pre-escaped text. The builder escapes each path segment independently, so a slash inside one value cannot accidentally become another level of the path.
+Pass the path segments and query values unencoded. Each segment is encoded on its own, so a `/` inside a value stays part of that segment. The scheme and host are lowercased. The host must be ASCII: an international name has to be given in its `xn--` form.
 
 **Parameters**
 
   - `scheme` — the URL scheme, such as `https`
-  - `host` — the Unicode or ASCII hostname
-  - `path` — decoded path segments
-  - `query` — ordered decoded query entries
+  - `host` — the host name, in ASCII
+  - `path` — the path segments, unencoded
+  - `query` — the query entries, unencoded
 
-**Returns**: the encoded, validated URL
+**Returns**: the URL, or why it is invalid
 
 **Examples**
 
-_Building an API URL from an identifier supplied by a user_
+_Building an API URL from a name a user supplied_
 
 ```kex
-URL.build(
-  "https",
-  "api.example.com",
-  ["users", userName],
-  Query.from([("include", Just("profile"))])
-).try
+URL.build("https", "api.example.com", ["users", "a/b c"],
+  Query.from([("include", Just("profile"))])).try.string
+# => "https://api.example.com/users/a%2Fb%20c?include=profile"
 ```
 
 ## module `URI.Query`
@@ -489,26 +510,27 @@ from(entries: [(String, String?)]) -> Query
 from(entries: Map<String, String?>) -> Query
 ```
 
-Builds a query while preserving order, duplicates, and bare keys.
+Builds a query from a list of entries, keeping their order, repeated keys and bare keys.
 
-A `None` value encodes as a bare key; `Just("")` encodes with an equals sign. This preserves the difference between `?debug` and `?debug=`.
+A `None` value is encoded as a bare key, and `Just("")` as a key with an equals sign, so `?debug` and `?debug=` stay different.
 
 **Parameters**
 
-  - `entries` — decoded key/value pairs
+  - `entries` — the keys and values, unencoded
 
-**Returns**: the ordered query
+**Returns**: the query
 
 **Examples**
 
-_Adding repeated filters and a bare feature flag_
+_Repeated filters and a bare flag_
 
 ```kex
 Query.from([
   ("tag", Just("kex")),
   ("tag", Just("beam")),
   ("debug", None)
-])
+]).encode
+# => "tag=kex&tag=beam&debug"
 ```
 
 ### `parse`
@@ -517,20 +539,21 @@ Query.from([
 parse(text: String) -> Result<Query, URIError>
 ```
 
-Parses generic URI query encoding; ++ remains a literal plus.
+Parses a query string, decoding percent escapes.
+
+A +++ stays a plus sign; use `Form.parse` for form bodies, where it means a space.
 
 **Parameters**
 
-  - `text` — encoded query text without the leading question mark
+  - `text` — the query, without the leading `?`
 
-**Returns**: decoded entries or an invalid escape
+**Returns**: the entries, or an `InvalidEscape` error
 
 **Examples**
 
-_Reading repeated filters without losing their order_
-
 ```kex
-let filters = Query.parse("tag=kex&tag=beam&debug").try.entries
+Query.parse("tag=kex&tag=beam&debug").try.entries
+# => [("tag", Just("kex")), ("tag", Just("beam")), ("debug", None)]
 ```
 
 ## module `URI.Form`
@@ -542,13 +565,13 @@ from(entries: [(String, String)]) -> Form
 from(entries: Map<String, String>) -> Form
 ```
 
-Builds a form value while preserving order and duplicates.
+Builds a form from a list of fields, keeping their order and repeated names.
 
 **Parameters**
 
-  - `entries` — decoded form fields
+  - `entries` — the field names and values, unencoded
 
-**Returns**: the ordered form
+**Returns**: the form
 
 **Examples**
 
@@ -564,18 +587,19 @@ Form.from([("email", email), ("password", password)]).encode
 parse(text: String) -> Result<Form, URIError>
 ```
 
-Parses form encoding where ++ represents a space.
+Parses an `application/x-www-form-urlencoded` body, where +++ means a space.
 
 **Parameters**
 
-  - `text` — an `application/x-www-form-urlencoded` body
+  - `text` — the encoded body
 
-**Returns**: decoded fields or an invalid escape
+**Returns**: the fields, or an `InvalidEscape` error
 
 **Examples**
 
-_Reading a search field submitted by a browser_
+_Reading a search field a browser submitted_
 
 ```kex
 Form.parse("query=hello+world").try.entries
+# => [("query", Just("hello world"))]
 ```

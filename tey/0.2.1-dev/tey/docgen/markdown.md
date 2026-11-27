@@ -9,7 +9,7 @@ entities:
 
 # Tey.Docgen.Markdown
 
-Model records → Markdown pages (LLM-friendly: stable headings, fenced kex signatures, frontmatter with the entity index).
+Renders documentation pages as Markdown for language models to read: stable headings, fenced Kex signatures, and frontmatter listing the page's entities.
 
 ## module `Tey.Docgen.Markdown`
 
@@ -43,7 +43,7 @@ pageBody(page: SourcePage, model: PackageModel) -> String
 entitiesMd(entities: [Entity], page: SourcePage, model: PackageModel) -> String
 ```
 
-The same layout as the HTML: a type's make blocks on its own page are folded into the type's section.
+Lays out the page as the HTML does: a type's make blocks on the same page go into the type's section.
 
 ### `entitySection`
 
@@ -57,7 +57,7 @@ entitySection(e: Entity, page: SourcePage, model: PackageModel) -> String
 linkMd(model: PackageModel, fromPath: String, name: String) -> String
 ```
 
-Cross-links in Markdown resolve against the same package index the HTML renderer uses — one resolution rule, two renderings. Targets are the .md siblings of this page.
+Links `name` to its documentation, resolved against the same package index as the HTML pages but pointing at the `.md` pages. A name that does not resolve stays plain text.
 
 ### `hrefMd`
 
@@ -155,7 +155,7 @@ constantSection(e: ConstantEntry) -> String
 functionsMd(functions: [FunctionEntry], owner: String, level: Integer, implements: [String], page: SourcePage, model: PackageModel) -> String
 ```
 
-One heading per name; overloads listed under it.
+Renders one heading per function name, with its overloads under it.
 
 ### `foulMd`
 
@@ -163,7 +163,7 @@ One heading per name; overloads listed under it.
 foulMd(isFoul: Bool) -> String
 ```
 
-Beside the name, as the HTML chip is: purity is part of what a caller has to know before calling.
+Returns the " (foul)" tag shown beside a function's name, as the HTML page shows a chip.
 
 ### `traitTagsMd`
 

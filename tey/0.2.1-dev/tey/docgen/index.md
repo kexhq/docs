@@ -9,7 +9,7 @@ entities:
 
 # Tey.Docgen.Index
 
-The build driver: scan → extract → PackageModel, then emit everything derived from it — model.json, search.json, Markdown pages, manifest, versions, llms.txt/llms-full.txt, robots.txt and sitemap.xml.
+The `tey docs build` driver. It scans and extracts the sources into a `PackageModel`, then writes everything derived from it: model.json, search.json, the Markdown pages, and either the HTML site (with its manifests, versions.json, llms.txt, llms-full.txt, robots.txt and sitemap.xml) or, with `--format fragments`, HTML fragments for a host site.
 
 ## module `Tey.Docgen.Index`
 
@@ -25,7 +25,9 @@ buildCommand(parsed: ParsedOptions) -> Integer
 externalLinks(paths: String) -> [LinkEntry]
 ```
 
-Names another unit documents, so this one's signatures and prose can link to them: the Tey reference links `String` and `FS.Path` into the standard library's. Each model.json says which unit it is; its pages sit at ../../<package>/<version>/ from this unit's version directory. A file that cannot be read is reported and skipped — links are an extra.
+Returns the names documented by other units, read from the comma-separated model.json files in `paths`, so this unit's signatures and prose can link to them.
+
+The Tey reference uses this to link `String` and `FS.Path` to the standard library. Each model.json names its package and version, and its pages are linked at ../../<package>/<version>/ from this unit's version directory. A file that cannot be read or is not JSON is reported as a warning and skipped.
 
 ### `writeUnitIndexFiles` (foul)
 
@@ -33,7 +35,7 @@ Names another unit documents, so this one's signatures and prose can link to the
 writeUnitIndexFiles(pages: [SourcePage], model: PackageModel, out: String) -> ()
 ```
 
-The unit's own index files — its manifest and the shared versions.json — without the site-level ones (landing pages, llms.txt, sitemap), which a host site that frames fragments owns.
+Writes this unit's version manifest and the shared versions.json, but none of the site-wide files (landing pages, llms.txt, sitemap), which belong to the host site that embeds the fragments.
 
 ### `reportDocDrift` (foul)
 
@@ -41,7 +43,9 @@ The unit's own index files — its manifest and the shared versions.json — wit
 reportDocDrift(pages: [SourcePage]) -> ()
 ```
 
-A @return tag that names a different type than the signature declares is a doc comment that has drifted from its code (`min : X?` documented as returning `Number?`). The page shows the signature's type; this says where the tag disagrees so the comment can be fixed.
+Prints a note for each `@return` tag whose type differs from the signature's, such as `min : X?` documented as returning `Number?`.
+
+The page shows the signature's type either way; the note says which comment has fallen behind its code.
 
 ### `normalizeType`
 
@@ -61,9 +65,9 @@ optString(value: String?) -> String
 preludeInfo(source: String) -> (String, [String], String)
 ```
 
-A source tree with a `prelude.kex` has a subset that is visible without an import, and the reader wants to know which. The file is declarative by convention — an opening comment, then one bare `using <Module>` per line — so reading it is enough. A package without one gets empties, and nothing in the output mentions a prelude at all.
+Returns the prelude of the source tree at `source`: the file name, the modules it makes visible, and its opening comment.
 
-Returns (the file, the modules it makes visible, its opening comment).
+A `prelude.kex` is an opening comment followed by one bare `using <Module>` per line, so reading the lines is enough. Without one the result is `("", [], "")` and the output never mentions a prelude.
 
 ### `leadingComment`
 
@@ -71,7 +75,7 @@ Returns (the file, the modules it makes visible, its opening comment).
 leadingComment(lines: [String]) -> String
 ```
 
-The file's opening comment block, `#` markers stripped, ready for the same Rdoc parse every other doc comment goes through.
+Returns the comment lines at the top of `lines` with their `#` markers removed, ready for the same parse as any other doc comment.
 
 ### `commentBody`
 
@@ -85,7 +89,9 @@ commentBody(line: String) -> String
 fileHeader(lines: [String]) -> String
 ```
 
-The file's opening comment, when it is its own block: a blank line after it, not a declaration. A comment that runs straight into a declaration is that declaration's doc, and the page gets no intro.
+Returns the file's opening comment when a blank line follows it, and `""` otherwise.
+
+A comment that runs straight into a declaration is that declaration's doc, and the page gets no introduction. A `#!` line does not count as a comment.
 
 ### `usingName`
 
@@ -93,7 +99,7 @@ The file's opening comment, when it is its own block: a blank line after it, not
 usingName(line: String) -> String
 ```
 
-"using List" -> "List"; anything else (a comment, a blank line, an `only:` list) -> "".
+Returns the module a `using` line names (`"using List"` gives `"List"`), or `""` for any other line.
 
 ### `defaultSource` (foul)
 
@@ -101,7 +107,7 @@ usingName(line: String) -> String
 defaultSource(given: String) -> String
 ```
 
-`src/` when it is standing there, else the flag as given (an empty one is reported by the scan: "no .kex files found in").
+Returns `given` when it is not empty, else `"src"` when the current directory has one, else `""`, which the scan reports as having no .kex files.
 
 ### `defaultPackage` (foul)
 
@@ -109,7 +115,9 @@ defaultSource(given: String) -> String
 defaultPackage(given: String) -> String
 ```
 
-The manifest's name when the CWD is a package — the identity docgen should not have to be told. Outside one, "": the caller has to say, and buildCommand refuses rather than inventing a name. Docgen used to answer "prelude" here, which meant a build with a swallowed or forgotten --package filed its pages under whatever the CWD's package.kex said (the stdlib was published as "kex" for exactly that reason, kexhq/kex#287).
+Returns `given` when it is not empty, else the name in the current directory's package.kex, else `""`.
+
+With `""`, `buildCommand` stops with an error and asks for `--package`; it does not invent a name (kexhq/kex#287).
 
 ### `defaultVersion` (foul)
 
@@ -117,7 +125,9 @@ The manifest's name when the CWD is a package — the identity docgen should not
 defaultVersion(given: String) -> String
 ```
 
-The version of the thing being documented: a package's own release when standing in one. What a package's versions ARE differs per package — a library's own releases, the stdlib's Kex releases — so outside a package this is the caller's to state (--release) rather than docgen's to guess.
+Returns `given` when it is not empty, else the version in the current directory's package.kex, else `""`.
+
+Outside a package the caller must pass `--release`: what a version means differs between units, such as a library's releases and the standard library's Kex releases.
 
 ### `manifestVersion` (foul)
 
@@ -125,7 +135,7 @@ The version of the thing being documented: a package's own release when standing
 manifestVersion -> (String, String)?
 ```
 
-(name, version) of the package.kex in the CWD, if there is a readable one. Both defaults read it; one read, one parse.
+Returns the name and version from the current directory's package.kex, or `None` when there is none or it does not parse.
 
 ### `buildPages` (foul)
 
@@ -151,7 +161,7 @@ writePages(pages: [SourcePage], versionDir: String, model: PackageModel) -> Inte
 writeHtml(pages: [SourcePage], versionDir: String, out: String, model: PackageModel) -> ()
 ```
 
-HTML mirrors the Markdown layout: one page per source file, plus the version landing page, the site-root redirect and the shared stylesheet.
+Writes the HTML site for one version: a page per source file, the version's index.html and search.html, and the shared assets/style.css and assets/site.js.
 
 ### `dirNameOf`
 
@@ -159,7 +169,7 @@ HTML mirrors the Markdown layout: one page per source file, plus the version lan
 dirNameOf(urlPath: String) -> String
 ```
 
-"kex/ast" → "kex"; "fs" → "" (already inside versionDir).
+Returns the directory part of a page's URL path: `"kex/ast"` gives `"kex"`, and `"fs"` gives `""`.
 
 ### `ensureDirectory` (foul)
 
@@ -179,7 +189,9 @@ writeIndexFiles(pages: [SourcePage], model: PackageModel, out: String) -> ()
 versionManifestJson(pages: [SourcePage], model: PackageModel) -> String
 ```
 
-One version's pages, with the package and version they belong to, so a reader of the file needs nothing but the file. Page paths stay relative to the version directory — the URL prefix is `<package>/<version>/`, and whoever assembles the site is the one that knows the site root.
+Returns the manifest.json for one version: its package, version, label, build time and pages.
+
+Page paths are relative to the version directory, `<package>/<version>/`; whoever assembles the site adds the site root.
 
 ### `manifestJson`
 
@@ -193,7 +205,9 @@ manifestJson(pages: [SourcePage]) -> String
 accumulateVersions(out: String, model: PackageModel) -> [VersionEntry]
 ```
 
-The output directory is the published site, so a build must not clobber the versions other builds published: read what is there, upsert this (package, version), write the union back, newest first.
+Returns the versions.json entries with this build's added.
+
+The output directory is the published site, so other builds' versions are kept: the existing entries are read, this package and version replaces any earlier entry for it, and this build comes first.
 
 ### `upsertVersion`
 
@@ -201,7 +215,7 @@ The output directory is the published site, so a build must not clobber the vers
 upsertVersion(current: VersionEntry, existing: [VersionEntry]) -> [VersionEntry]
 ```
 
-This build's entry first, the other packages' and versions' kept: the pure half of accumulate, so the upsert rule itself can be spec'd.
+Returns `existing` with any entry for the same package and version removed and `current` put first.
 
 ### `readVersionEntries` (foul)
 
@@ -212,7 +226,7 @@ readVersionEntries(out: String) -> [VersionEntry]
 ### `parseVersionEntry`
 
 ```kex
-parseVersionEntry(v: Any) -> VersionEntry
+parseVersionEntry(value: Any) -> VersionEntry
 ```
 
 ### `jsonText`

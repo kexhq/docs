@@ -11,9 +11,9 @@ entities:
 
 ## module `Node`
 
-Distributed Kex: this BEAM node, and the other nodes it is connected to.
+Distributed Kex: this BEAM node and the nodes it is connected to.
 
-A node is one running BEAM VM with a name. Once two nodes share a cookie and are connected, a `Process` from one works on the other: `send`, `link` and `monitor` cross the network unchanged, and so do `Server` handles.
+A node is a running BEAM VM with a name. Once two nodes with the same cookie are connected, a `Process` from one works on the other: `send`, `link`, `monitor` and `Server` handles all work across the network.
 
 Name a node when starting it (`kex --sname a --cookie secret app.kex`), or from inside the program with `Node.start`:
 
@@ -26,11 +26,11 @@ main do
 end
 ```
 
-Node names are atoms: `:b@myhost` for a short name, the quoted `:"b@host.example.com"` for one with dots, or `Atom.from(text)` for one built at runtime.
+Node names are atoms: `:b@myhost` for a short name, a quoted `:"b@host.example.com"` for one with dots, or `Atom.from(text)` for one built at run time.
 
-Both nodes need the same compiled code for anything that carries a function, like a lambda or a record used as an argument to functions on the remote node; `Node.spawn` sends its block's code along. Plain data — numbers, strings, lists, tuples, records — needs nothing.
+Plain data (numbers, strings, lists, tuples, records) can be sent anywhere. A message that carries a function, such as a lambda, needs the same compiled code on both nodes; `Node.spawn` sends its block's code along.
 
-Backed by Kex.Intrinsic.Node on the BEAM. The tree-walk interpreter is always a single, unnamed node.
+Under the tree-walk interpreter (`kex -R`) the program is always a single node with no name.
 
 ### `self` (foul)
 
@@ -38,7 +38,7 @@ Backed by Kex.Intrinsic.Node on the BEAM. The tree-walk interpreter is always a 
 self -> Atom
 ```
 
-This node's name, or `:nonode@nohost` when it is not distributed.
+Returns this node's name, or `:nonode@nohost` when it is not distributed.
 
 **Returns**: the node name
 
@@ -54,9 +54,9 @@ Node.self   # => :a@myhost
 alive? -> Bool
 ```
 
-Whether this node is distributed — started with a name, so other nodes can connect to it.
+Returns `true` when this node has a name, so other nodes can connect to it.
 
-**Returns**: true once the node has a name
+**Returns**: `true` once the node has a name
 
 **Examples**
 
@@ -70,7 +70,7 @@ Node.alive?   # => false, unless started with --sname or Node.start
 list -> [Atom]
 ```
 
-The nodes this one is currently connected to, not including itself.
+Returns the nodes this one is connected to, not including itself.
 
 **Returns**: the connected node names
 
@@ -86,7 +86,7 @@ Node.list   # => [:b@myhost]
 start(name: Atom) -> Result<Atom, String>
 ```
 
-Makes this node distributed under `name`, as `--sname`/`--name` would at startup. A `name` whose host has a dot (`:"app@host.example.com"`) uses long names; anything else uses short names.
+Makes this node distributed under `name`, as `--sname` or `--name` would at startup. A name whose host has a dot (`:"app@host.example.com"`) uses long names; any other uses short names.
 
 **Parameters**
 
@@ -108,7 +108,7 @@ stop -> Result<Void, String>
 
 Stops distribution: the node drops its name and every connection.
 
-**Returns**: `Ok` once stopped; an `Error` when the node was not distributed
+**Returns**: `Ok` once stopped, or an `Error` when the node was not distributed
 
 ### `connect` (foul)
 
@@ -142,7 +142,7 @@ Drops the connection to `node`.
 
   - `node` — the node to disconnect from
 
-**Returns**: `Ok` once dropped; an `Error` when there was no connection to drop
+**Returns**: `Ok` once dropped, or an `Error` when there was no connection
 
 ### `setCookie` (foul)
 
@@ -162,7 +162,9 @@ Sets the cookie this node presents when connecting. Nodes connect only when thei
 send(node: Atom, name: Atom, message: X) -> Void
 ```
 
-Sends `message` to the process registered as `name` on `node`, unchanged. Like `Process.send`, it never blocks and never fails.
+Sends `message` to the process registered as `name` on `node`.
+
+Like `Process.send`, it does not block and does not fail, even when no such process exists.
 
 **Parameters**
 
@@ -182,7 +184,7 @@ Node.send(:b@myhost, :logger, (:info, "started"))
 whereIs(node: Atom, name: Atom) -> Process<A>?
 ```
 
-The process registered as `name` on `node`, or `None`.
+Returns the process registered as `name` on `node`, or `None`.
 
 **Parameters**
 
@@ -205,7 +207,7 @@ spawn(node: Atom, block: Block<X>) -> Process<A>
 
 Runs `block` in a new process on `node` and returns it.
 
-The block is a function of THIS program. When `node` has not loaded the module it belongs to, that module's compiled code is sent over and loaded first. A module `node` already has is left as it is.
+When `node` has not loaded the module the block belongs to, that module's compiled code is sent and loaded first. A module `node` already has is not replaced.
 
 **Parameters**
 

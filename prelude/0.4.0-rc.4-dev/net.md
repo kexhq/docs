@@ -11,7 +11,7 @@ entities:
 
 ## module `Net`
 
-Shared networking values, capability discovery, and typed failures.
+Networking values shared by the network modules: ports, a report of which transports this build supports, and the error type they all return.
 
 ```kex
 using Net
@@ -24,9 +24,9 @@ if Support.current.tls.usable? then https.string else "TLS unavailable" end
 
 ## record `Port`
 
-A validated TCP or UDP port number in `0..65535`.
+A TCP or UDP port number, checked to be in `0..65535`.
 
-Use `Port.from` at input boundaries. Port zero requests an ephemeral port where a listening API permits it; after binding, ask the server or socket for the concrete port the operating system chose.
+Build one with `Port.from`. Port zero asks the operating system for a free port where a listening API allows it; after binding, ask the server or socket which port it got.
 
 **Fields**
 
@@ -40,9 +40,9 @@ Use `Port.from` at input boundaries. Port zero requests an ephemeral port where 
 string -> String
 ```
 
-Renders the decimal port without a host or scheme.
+Returns the port number as decimal text, with no host or scheme.
 
-**Returns**: decimal port text
+**Returns**: the port number, such as `"443"`
 
 **Examples**
 
@@ -54,9 +54,9 @@ IO.printLine("listening on 127.0.0.1:${port.string}")
 
 ## record `SupportValue`
 
-Whether a feature was compiled into this backend and is usable now.
+Whether a networking feature is built in, and whether it can be used here.
 
-`compiled?` describes the build; `usable?` also accounts for the environment it is running in. A browser build may contain an HTTP client, for example, while browser policy still prevents a particular lower-level capability.
+`compiled?` describes the build. `usable?` also takes the running environment into account: a browser build can contain an HTTP client while browser policy still blocks a lower-level transport.
 
 **Fields**
 
@@ -67,9 +67,9 @@ Whether a feature was compiled into this backend and is usable now.
 
 ## record `SupportReport`
 
-Granular networking capabilities for the current backend and environment.
+The networking features of the running build, one `SupportValue` each.
 
-Read this before choosing a transport dynamically. Applications that require one capability can instead check that single field during startup and fail with a useful message.
+Consult it to pick a transport at run time. A program that needs one feature can check that field at startup and stop with a clear message. The tree-walk interpreter (`kex -R`) reports every feature as unavailable.
 
 **Fields**
 
@@ -87,7 +87,7 @@ Read this before choosing a transport dynamically. Applications that require one
 
 ## module `Net.Port`
 
-Validated `Port` construction.
+Construction of `Port` values.
 
 ### `from`
 
@@ -95,26 +95,26 @@ Validated `Port` construction.
 from(value: Integer) -> Result<Port, NetError>
 ```
 
-Validates a port number.
+Returns `value` as a `Port`, or a `Parse` error when it is outside `0..65535`.
 
 **Parameters**
 
   - `value` — a number in `0..65535`
 
-**Returns**: the validated port, or `Parse`
+**Returns**: the port, or a `NetError` of kind `Parse`
 
 **Examples**
 
 _Reading a listen port from the environment_
 
 ```kex
-let number = ENV.get("PORT").flatMap { |text| text.to(Integer) }.or(8080)
+let number = ENV.get("PORT").into { |text| text.to(Integer) }.or(8080)
 let port = Port.from(number).try
 ```
 
 ## module `Net.Support`
 
-Runtime discovery for optional network transports and protocols.
+Run-time discovery of the optional network transports and protocols.
 
 ### `current` (constant)
 
@@ -122,7 +122,7 @@ Runtime discovery for optional network transports and protocols.
 current : SupportReport
 ```
 
-Reports compiled and currently usable networking features.
+Returns which networking features this build contains and which are usable now.
 
 **Examples**
 
@@ -156,7 +156,7 @@ The subsystem or operation that produced a networking error.
 
 ## type `NetErrorKind`
 
-Stable, backend-independent networking failure categories.
+The category of a networking failure, the same on every backend.
 
 **Variants**
 
@@ -180,9 +180,9 @@ Stable, backend-independent networking failure categories.
 
 ## record `NetError`
 
-A typed networking failure shared by every network module.
+The error every network module returns.
 
-`kind` is the stable category to branch on. `message` is for a person, while `phase` adds protocol context such as a TLS handshake and `progress` records bytes transferred before a partial-operation failure. Keeping those roles separate lets programs recover without matching backend-specific prose.
+Branch on `kind`; it does not change between backends. `message` is text for a person and may differ by backend. `phase` names the protocol step that failed, such as a TLS handshake, and `progress` counts the bytes transferred before an operation failed partway.
 
 **Fields**
 

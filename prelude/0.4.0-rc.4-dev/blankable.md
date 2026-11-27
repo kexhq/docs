@@ -17,9 +17,9 @@ entities:
 
 ## trait `Blankable`
 
-`Blankable`: types that can be asked whether they hold anything meaningful.
+Types that can say whether a value holds anything meaningful.
 
-A value is blank when it has no meaningful content: `None`, an empty or all-whitespace string, an empty collection, or `false`. The semantics are Rails's, and the point is the same: one question that works across types, so a validation does not need a different test per field.
+A value is blank when it has no meaningful content: `None`, an empty or all-whitespace string, an empty collection, or `false`. The meaning follows Rails. One test works across types, so a validation can check every field the same way.
 
 ```kex
 "".blank?        # => true
@@ -29,7 +29,7 @@ None.blank?      # => true
 "hi".present?    # => true
 ```
 
-`present?` is the negation, and is often what reads better:
+`present?` is the negation, and often reads better:
 
 ```kex
 fields.all? { |name, value| value.present? }
@@ -47,7 +47,7 @@ blank? -> Bool
 
 Returns `true` when the value holds nothing meaningful.
 
-What that means is up to each type: whitespace-only for a string, no elements for a collection, `None` for an optional, `false` for a boolean.
+Each type decides what that means: empty or whitespace-only for a string, no elements for a collection, `None` for an optional, `false` for a boolean.
 
 **Returns**: `true` when the value is blank
 
@@ -73,7 +73,7 @@ Implements [`Blankable`](#trait-blankable).
 blank? -> Bool
 ```
 
-Returns `true` for `false`: the only blank boolean.
+Returns `true` for `false`, the only blank boolean.
 
 **Returns**: `true` when the value is `false`
 
@@ -96,7 +96,7 @@ Implements [`Blankable`](#trait-blankable).
 blank? -> Bool
 ```
 
-Always `false`: every integer is a value, including zero.
+Returns `false` for every integer, including zero.
 
 **Returns**: always `false`
 
@@ -119,7 +119,7 @@ Implements [`Blankable`](#trait-blankable).
 blank? -> Bool
 ```
 
-Always `false`: every float is a value, including zero.
+Returns `false` for every float, including zero.
 
 **Returns**: always `false`
 
@@ -143,7 +143,7 @@ blank? -> Bool
 
 Returns `true` when the string is empty or contains only whitespace.
 
-This is what separates it from `empty?`: a string of spaces is not empty, but it is blank, and for user input that is usually the question being asked.
+A string of spaces is blank but not `empty?`. For user input, `blank?` is usually the test you want.
 
 **Returns**: `true` for an empty or whitespace-only string
 
@@ -177,9 +177,9 @@ Implements [`Blankable`](#trait-blankable).
 blank? -> Bool
 ```
 
-Returns `true` for `None` and `false` for a `Just`: whatever it wraps.
+Returns `true` for `None` and `false` for any `Just`.
 
-Note that `Just("")` is present, not blank: the optional holds a value, even though that value is itself blank.
+`Just("")` is not blank: the optional holds a value, even though that value is itself blank.
 
 **Returns**: `true` for `None`
 

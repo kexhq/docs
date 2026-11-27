@@ -9,9 +9,9 @@ entities:
 
 # Tey.Docgen.Relations
 
-Cross-file relations: which make blocks extend which type, which traits a type implements, and who implements each trait.
+Relations across files: which make blocks extend which type, which traits a type implements, and which types implement each trait.
 
-Extraction documents one file at a time, but a reader thinks in types. The methods of `Integer` live in number.kex, period.kex, units.kex and algebra.kex; the fact that a `List` is `Enumerable` — and so has `map`, `filter` and `find` — is written on a make block, not on the type. These indexes are what let the List page say where its methods come from, and the Enumerable page say who implements it.
+Extraction works one file at a time, but readers look things up by type. The functions on `Integer` are spread over number.kex, period.kex, units.kex and algebra.kex, and that a `List` is `Enumerable`, and so has `map`, `filter` and `find`, is written on a make block rather than on the type. These indexes let the List page say where its functions come from, and the Enumerable page list its implementors.
 
 ## module `Tey.Docgen.Relations`
 
@@ -27,7 +27,9 @@ build(pages: [SourcePage]) -> ([TypeFacts], [TraitFacts])
 withTraitSignatures(pages: [SourcePage]) -> [SourcePage]
 ```
 
-A member that fulfils a trait function and declares no type of its own (`let identity = 0` under `make Integer, implement: Monoid`) is typed by the trait: the signature the trait declares, with `This` read as the implementing type. Done on the pages, before anything renders them, so every output states the same signature.
+Returns `pages` with each untyped make member that implements a trait function given the trait's signature.
+
+For `let identity = 0` under `make Integer, implement: Monoid`, that is the signature `Monoid` declares, with `This` read as `Integer`. It runs on the pages before anything renders them, so every output shows the same signature.
 
 ### `typedByTraits`
 
@@ -71,7 +73,9 @@ typeFacts(base: String, extensions: [Extension], pages: [SourcePage]) -> TypeFac
 homePathOf(base: String, mine: [Extension], pages: [SourcePage]) -> String
 ```
 
-Where a reader should land for a type: the page declaring it; else the page titled after it (string.kex for the builtin String); else the page whose make block adds the most methods — number.kex for Integer, not algebra.kex, which only makes it a Monoid.
+Returns the page a type's links should go to.
+
+That is the page declaring the type; failing that, the page titled after it (string.kex for the built-in String); then a page with both the type's companion module and a make block for it; and last the page whose make block adds the most functions, so number.kex for Integer rather than algebra.kex, which only makes it a Monoid.
 
 ### `homeAnchorOf`
 
@@ -109,7 +113,7 @@ pageTraits(page: SourcePage, entities: [Entity], extensions: [Extension]) -> [Tr
 namesTrait?(written: String, name: String, qualifiedName: String) -> Bool
 ```
 
-`implement: Enumerable` and `implement: Kex.Enumerable` both name the trait declared as `Enumerable` inside `module Kex`.
+Returns whether `written`, as it appears in an `implement:` list, names the trait `name`. `implement: Enumerable` and `implement: Kex.Enumerable` both name the trait declared as `Enumerable` inside `module Kex`.
 
 ### `typeFactsFor`
 
@@ -117,7 +121,7 @@ namesTrait?(written: String, name: String, qualifiedName: String) -> Bool
 typeFactsFor(model: PackageModel, base: String) -> TypeFacts?
 ```
 
-The facts for the type a make target extends, if any make extends it.
+Returns the facts for the type that make target `base` extends, or `None` when no make block extends it.
 
 ### `traitFactsFor`
 
@@ -131,7 +135,7 @@ traitFactsFor(model: PackageModel, written: String) -> TraitFacts?
 traitEntryFor(model: PackageModel, facts: TraitFacts) -> TraitEntry?
 ```
 
-The declaration of a trait, for its method list.
+Returns the declaration of a trait, for its list of functions.
 
 ### `traitEntries`
 
@@ -145,7 +149,9 @@ traitEntries(entities: [Entity]) -> [TraitEntry]
 traitMethods(model: PackageModel, entry: TraitEntry) -> ([FunctionEntry], [FunctionEntry])
 ```
 
-A trait's methods as an implementor sees them. Required: declared with no body and given no default anywhere. Provided: a body in the trait, or a default from a `make <Trait>` block in any file — plus methods such a block adds that the trait never declared.
+Returns a trait's functions as an implementor sees them: the required ones and the provided ones.
+
+A function is required when the trait gives it no body and no `make <Trait>` block in any file gives it a default. The provided ones are the rest, plus any functions such a block adds that the trait does not declare.
 
 ### `traitDefaults`
 
@@ -159,7 +165,7 @@ traitDefaults(entities: [Entity], entry: TraitEntry) -> [FunctionEntry]
 traitTarget?(model: PackageModel, target: String) -> Bool
 ```
 
-Whether a make target names a trait of this package.
+Returns whether a make target names a trait of this package.
 
 ### `allFunctions`
 
@@ -167,7 +173,7 @@ Whether a make target names a trait of this package.
 allFunctions(entities: [Entity]) -> [FunctionEntry]
 ```
 
-Every function documented anywhere in these entities: top-level and module functions, trait methods, make members.
+Returns every function documented in `entities`: top-level and module functions, trait functions and make members.
 
 ### `required?`
 
@@ -175,4 +181,4 @@ Every function documented anywhere in these entities: top-level and module funct
 required?(f: FunctionEntry) -> Bool
 ```
 
-A trait method with no clause is one an implementor must write; one with a body comes for free.
+Returns whether a trait function has no body, so an implementor must write it.

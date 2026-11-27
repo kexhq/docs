@@ -11,8 +11,6 @@ entities:
 
 # DateTime
 
-Instants: a calendar date, a time of day, and a fixed offset from UTC. Built from date.kex's `Date` and time.kex's `Time`.
-
 ## record `DateTime`
 
 An instant: a calendar date, a time of day, and a fixed offset from UTC.
@@ -23,7 +21,7 @@ m.iso        # => "2026-07-30T14:03:00+02:00"
 m.utc.iso    # => "2026-07-30T12:03:00Z"
 ```
 
-Two `DateTime` values that name the same instant order `Equal` under `compareTo` whatever offsets they are written at: ordering goes through `epochSeconds`. `==` is structural, so the same instant written at two offsets is not `==`; compare `epochSeconds` (or `utc`) for that.
+`compareTo`, `before?` and `after?` compare instants, so 12:00Z and 14:00+02:00 compare `Equal`. `==` compares the fields, so those two are not `==`; compare their `epochSeconds` or `utc` forms instead.
 
 **Fields**
 
@@ -41,7 +39,7 @@ Implements [`Inspectable`](kex.md#trait-inspectable), [`Showable`](kex.md#trait-
 inspectValue(colors: Bool) -> String
 ```
 
-Renders the instant structurally, for debugging output.
+Writes the instant as a record, for debugging output.
 
 **Parameters**
 
@@ -55,7 +53,7 @@ Renders the instant structurally, for debugging output.
 showValue -> String
 ```
 
-Renders the instant in ISO form, so interpolation and `IO.printLine` show +2026-07-30T14:03:00+02:00+.
+Writes the instant in ISO form, which is what interpolation and `IO.printLine` show.
 
 **Returns**: the ISO 8601 instant
 
@@ -71,9 +69,7 @@ Renders the instant in ISO form, so interpolation and `IO.printLine` show +2026-
 epochSeconds -> Integer
 ```
 
-Seconds since the Unix epoch.
-
-This is the value to compare and subtract: it identifies the instant, independent of the offset rendering it, so 12:00Z and 14:00+02:00 have the same one.
+Returns the whole seconds since the Unix epoch. It does not depend on the offset: 12:00Z and 14:00+02:00 give the same number.
 
 **Returns**: seconds since the Unix epoch
 
@@ -95,9 +91,7 @@ FS.File.write("stamp", "${DateTime.utcNow().epochSeconds}")
 weekday -> Weekday
 ```
 
-The day of the week this instant falls on, at its own offset.
-
-No `year`/`hour`/... shorthands here: a function named after a record field makes `value.year` inside a module function dispatch to it on BEAM and fail with function_clause. Reach through `.date` and `.time`.
+Returns the day of the week at the instant's own offset. For the year, the hour and the other fields, go through `date` and `time`.
 
 **Returns**: the day of the week
 
@@ -113,9 +107,7 @@ DateTime.parse("2026-07-30T14:03:00Z").try.weekday.name   # => "Thursday"
 at(offset: Duration) -> DateTime
 ```
 
-The same instant, rendered at another offset.
-
-Nothing moves: the wall clock changes because the offset does, and `epochSeconds` is unchanged.
+Returns the same instant at another offset. The date and time change to match; `epochSeconds` does not.
 
 **Parameters**
 
@@ -137,9 +129,7 @@ DateTime.parse("2026-07-30T14:03:00+02:00").try
 utc -> DateTime
 ```
 
-The same instant, rendered at UTC.
-
-The form to store, compare and transmit: there is no offset to disagree about.
+Returns the same instant at UTC.
 
 **Returns**: the same instant, at UTC
 
@@ -156,7 +146,7 @@ DateTime.parse("2026-07-30T14:03:00+02:00").try.utc.iso
 +(span: Duration) -> DateTime
 ```
 
-Advances the instant by a fixed span, keeping its offset.
+Adds an elapsed span to the instant, keeping its offset.
 
 **Parameters**
 
@@ -177,7 +167,7 @@ Advances the instant by a fixed span, keeping its offset.
 -(span: Duration) -> DateTime
 ```
 
-Moves the instant back by a fixed span, keeping its offset.
+Subtracts an elapsed span from the instant, keeping its offset.
 
 **Parameters**
 
@@ -197,7 +187,7 @@ Moves the instant back by a fixed span, keeping its offset.
 addDays(count: Integer) -> DateTime
 ```
 
-The instant `count` days later, keeping the wall clock and the offset.
+Returns the instant `count` days later, at the same time of day and offset.
 
 **Parameters**
 
@@ -218,7 +208,7 @@ DateTime.parse("2026-07-30T14:03:00Z").try.addDays(1).iso
 addWeeks(count: Integer) -> DateTime
 ```
 
-The instant `count` weeks later, keeping the wall clock and the offset.
+Returns the instant `count` weeks later, at the same time of day and offset.
 
 **Parameters**
 
@@ -239,7 +229,7 @@ DateTime.parse("2026-07-30T14:03:00Z").try.addWeeks(1).iso
 addMonths(count: Integer) -> DateTime
 ```
 
-The instant `count` calendar months later, with the day clamped into the target month.
+Returns the instant `count` calendar months later, with the day clamped to the length of that month.
 
 **Parameters**
 
@@ -260,7 +250,7 @@ DateTime.parse("2026-01-31T09:00:00Z").try.addMonths(1).iso
 addYears(count: Integer) -> DateTime
 ```
 
-The instant `count` calendar years later, with the day clamped.
+Returns the instant `count` calendar years later. February 29th becomes February 28th in a year without one.
 
 **Parameters**
 
@@ -281,7 +271,7 @@ DateTime.parse("2024-02-29T09:00:00Z").try.addYears(1).iso
 until(other: DateTime) -> Duration
 ```
 
-Elapsed time from this instant to `other`, negative when `other` is earlier. Sub-second precision is kept.
+Returns the time elapsed from this instant to `other`, negative when `other` is earlier. Fractions of a second are kept.
 
 **Parameters**
 
@@ -351,7 +341,7 @@ DateTime.utcNow().after?(started)   # => true
 iso -> String
 ```
 
-The instant as ISO 8601 text, +2026-07-30T14:03:00+02:00+.
+Returns the instant as ISO 8601 text, such as +2026-07-30T14:03:00+02:00+.
 
 **Returns**: the ISO 8601 instant
 
@@ -368,9 +358,7 @@ DateTime.parse("2026-07-30T14:03:00+02:00").try.iso
 compareTo(other: DateTime) -> Ordering
 ```
 
-Orders this instant against another, by instant rather than by wall clock, so 12:00Z and 14:00+02:00 compare `Equal`.
-
-Named `compareTo` rather than `compare`: a make-block `compare` is shadowed by the builtin comparison dispatch and fails at runtime on both backends.
+Compares two instants by when they happen, so 12:00Z and 14:00+02:00 compare `Equal`.
 
 **Parameters**
 
@@ -398,7 +386,7 @@ events.sort { |a, b| a.at.compareTo(b.at) == Less }
 
 ## module `DateTime`
 
-Building instants, and asking what time it is now.
+Building instants and reading the current time.
 
 ### `of`
 
@@ -437,14 +425,11 @@ DateTime.of(date, time, Duration.utcOffset(2, 0))
 fromEpochSeconds(count: Integer, offset: Duration) -> DateTime
 ```
 
-The instant a count of seconds since the Unix epoch names, rendered at UTC or at the offset you give.
-
-Declared before the two-argument form: the interpreter resolves an overloaded module function to its LAST definition regardless of arity, so a delegating overload has to come first or it recurses into itself.
+Returns the instant `count` seconds after the Unix epoch, at UTC.
 
 **Parameters**
 
   - `count` — seconds since the Unix epoch
-  - `offset` — the offset to render at; omitted for UTC
 
 **Returns**: the instant
 
@@ -452,13 +437,6 @@ Declared before the two-argument form: the interpreter resolves an overloaded mo
 
 ```kex
 DateTime.fromEpochSeconds(0).iso   # => "1970-01-01T00:00:00Z"
-```
-
-_Rendered at a local offset_
-
-```kex
-DateTime.fromEpochSeconds(0, Duration.utcOffset(2, 0)).iso
-# => "1970-01-01T02:00:00+02:00"
 ```
 
 ### `parse`
@@ -469,7 +447,7 @@ parse(text: String) -> Result<DateTime, TimeError>
 
 Parses an ISO 8601 instant.
 
-Accepts +2026-07-30T14:03:00+02:00+, the same with `Z`, or a bare civil datetime with no zone at all, which is read as UTC.
+Accepts +2026-07-30T14:03:00+02:00+, the same with `Z`, or a date and time with no offset, which is read as UTC.
 
 **Parameters**
 
@@ -497,9 +475,9 @@ DateTime.parse(line.take(20)).map { |m| m.epochSeconds }
 now -> DateTime
 ```
 
-The current instant, in this machine's zone as it stands right now.
+Returns the current instant at this machine's current UTC offset.
 
-The offset is the one in effect at this instant, so it is right today. Named IANA zones are not modeled, so it cannot say what the offset WILL be for some future local time.
+The offset is fixed. Kex does not model named time zones, so adding months to the result keeps today's offset even across a daylight-saving change.
 
 **Returns**: the current instant
 
@@ -515,9 +493,7 @@ DateTime.now().iso   # => "2026-07-30T14:03:00+02:00"
 utcNow -> DateTime
 ```
 
-The current instant, at UTC.
-
-The form to prefer when the value is stored, compared or transmitted: there is no zone to disagree about.
+Returns the current instant at UTC. Use it for values that are stored or sent elsewhere.
 
 **Returns**: the current instant, at UTC
 
@@ -533,9 +509,7 @@ DateTime.utcNow().iso   # => "2026-07-30T12:03:00Z"
 epochNanos -> Integer
 ```
 
-Nanoseconds since the Unix epoch, straight from the clock.
-
-The right reading for measuring a short interval: a plain integer, with no zone to disagree about.
+Returns the clock's reading in nanoseconds since the Unix epoch. It is the simplest way to time a short piece of work.
 
 **Returns**: nanoseconds since the Unix epoch
 

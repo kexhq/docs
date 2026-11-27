@@ -17,11 +17,15 @@ entities:
 fingerprint(context: Context) -> String
 ```
 
+Returns a fingerprint of the workspace members' manifests and `.teyignore` files. It changes whenever the lockfile may need resolving again.
+
 ### `resolveWorkspace` (foul)
 
 ```kex
 resolveWorkspace(context: Context) -> Result<LockState, String>
 ```
+
+Resolves the dependencies of every workspace member into one lock state, using the active toolchain.
 
 ### `resolveWorkspaceWithInfo` (foul)
 
@@ -29,7 +33,7 @@ resolveWorkspace(context: Context) -> Result<LockState, String>
 resolveWorkspaceWithInfo(context: Context, toolchain: Tey.Toolchain.ToolchainInfo) -> Result<LockState, String>
 ```
 
-The caller may already have inspected the selected compiler while deciding whether an existing lock is reusable. Passing that result through keeps the `--info` contract to one invocation per install/resolve decision.
+Resolves the workspace like `resolveWorkspace`, with toolchain information the caller already has. The compiler's `--info` is then queried only once per install or resolve.
 
 ### `resolvePackage` (foul)
 
@@ -37,13 +41,17 @@ The caller may already have inspected the selected compiler while deciding wheth
 resolvePackage(manifest: ManifestPackage) -> Result<LockState, String>
 ```
 
+Resolves one package's dependencies into a lock state. Fails when the active Kex or the running Erlang/OTP is older than the package or the toolchain requires.
+
 ### `chooseFromTags`
 
 ```kex
 chooseFromTags(name: String, tags: [String], requested: String) -> Result<String, String>
 ```
 
-A monorepo can release its members independently as `parser-v1.2.3`. Prefer that package's namespace when it exists; a repository with no package-prefixed tags retains the ordinary `v1.2.3` convention.
+Returns the tag of the newest version of `name` that satisfies `requested`.
+
+A monorepo can tag each member separately, as `parser-v1.2.3`. When tags with the package's prefix exist, only those are considered; otherwise plain tags such as `v1.2.3` are.
 
 ### `externalizeWorkspaceDependencies`
 
@@ -51,4 +59,6 @@ A monorepo can release its members independently as `parser-v1.2.3`. Prefer that
 externalizeWorkspaceDependencies(dependencies: [Tey.Manifest.Dependency], parent: Tey.Lockfile.Dependency) -> [Tey.Manifest.Dependency]
 ```
 
-`workspace: true` inside a fetched package refers to a sibling in that package's repository, at exactly the same commit. Once outside the source workspace it is therefore a Git source with an implicit discoverable subdirectory, not a reference to the consumer's local workspace.
+Rewrites the `workspace: true` dependencies of a fetched package as Git dependencies on the same repository and commit as `parent`.
+
+In a fetched package, `workspace: true` names a sibling in that package's repository, not a member of the consumer's workspace. The sibling's subdirectory is found later.

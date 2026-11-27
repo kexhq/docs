@@ -19,9 +19,9 @@ Bits.shiftLeft(1, 8)      # => 256
 Bits.test?(0b1010, 1)     # => true
 ```
 
-Useful for packing flags into one number, reading a binary format, or working with a protocol that describes its fields in bits.
+Reach for these to pack flags into one number or to read a binary format or protocol that defines its fields in bits.
 
-Integers are arbitrary precision, and a negative one behaves as if it were written in infinite-precision two's complement, so `Bits.not(0)` is `-1` and `Bits.and(-1, 255)` is `255`, with no word size to overflow. Shifts and bit indices count from bit 0 (the least significant bit).
+Integers have no fixed width. A negative one acts as an infinitely long two's complement number, so `Bits.not(0)` is `-1` and `Bits.and(-1, 255)` is `255`, and nothing overflows. Bit positions count from 0, the least significant bit, and a negative position raises an error.
 
 ### `and`
 
@@ -29,19 +29,19 @@ Integers are arbitrary precision, and a negative one behaves as if it were writt
 and(a: Integer, b: Integer) -> Integer
 ```
 
-Bitwise AND of `a` and `b`.
+Returns the bitwise AND of `a` and `b`.
 
 **Parameters**
 
   - `a` — the first operand
   - `b` — the second operand
 
-**Returns**: the result
+**Returns**: the bits set in both
 
 **Examples**
 
 ```kex
-Bits.and(0b1100, 0b1010)   # => 0b1000
+Bits.and(0b1100, 0b1010)   # => 8
 Bits.and(0xff, 0x0f)       # => 15
 ```
 
@@ -63,19 +63,19 @@ Bits.and(flags, READONLY) != 0
 or(a: Integer, b: Integer) -> Integer
 ```
 
-Bitwise OR of `a` and `b`.
+Returns the bitwise OR of `a` and `b`.
 
 **Parameters**
 
   - `a` — the first operand
   - `b` — the second operand
 
-**Returns**: the result
+**Returns**: the bits set in either
 
 **Examples**
 
 ```kex
-Bits.or(0b1100, 0b1010)   # => 0b1110
+Bits.or(0b1100, 0b1010)   # => 14
 ```
 
 _Combining flags into one value_
@@ -90,19 +90,19 @@ Bits.or(Bits.or(READ, WRITE), APPEND)
 xor(a: Integer, b: Integer) -> Integer
 ```
 
-Bitwise exclusive OR of `a` and `b`.
+Returns the bitwise exclusive OR of `a` and `b`.
 
 **Parameters**
 
   - `a` — the first operand
   - `b` — the second operand
 
-**Returns**: the result
+**Returns**: the bits set in exactly one of them
 
 **Examples**
 
 ```kex
-Bits.xor(0b1100, 0b1010)   # => 0b0110
+Bits.xor(0b1100, 0b1010)   # => 6
 ```
 
 _Toggling a set of flags_
@@ -117,7 +117,9 @@ Bits.xor(flags, VERBOSE)
 not(a: Integer) -> Integer
 ```
 
-Bitwise complement of `a`. Every integer is signed and unbounded, so this is always +-(a + 1)+ rather than a width-dependent mask.
+Returns the bitwise complement of `a`, which is always +-(a + 1)+.
+
+Integers have no fixed width, so there is no mask of 8, 32 or 64 bits; use `Bits.xor(a, 0xff)` to flip only the low byte.
 
 **Parameters**
 
@@ -138,7 +140,7 @@ Bits.not(5)   # => -6
 shiftLeft(n: Integer, by: Integer) -> Integer
 ```
 
-Shifts `n` left by `by` bits. Raises if `by` is negative.
+Returns `n` shifted left by `by` bits. Raises an error if `by` is negative.
 
 **Parameters**
 
@@ -166,7 +168,9 @@ Bits.shiftLeft(1, n)
 shiftRight(n: Integer, by: Integer) -> Integer
 ```
 
-Shifts `n` right by `by` bits, propagating the sign: the result of shifting a negative number stays negative. Raises if `by` is negative.
+Returns `n` shifted right by `by` bits, keeping its sign.
+
+A negative number stays negative, so `Bits.shiftRight(-1, 5)` is `-1`. Raises an error if `by` is negative.
 
 **Parameters**
 
@@ -188,7 +192,7 @@ Bits.shiftRight(-8, 1)    # => -4
 test?(n: Integer, index: Integer) -> Bool
 ```
 
-True when the bit at `index` of `n` is set. Raises if `index` is negative.
+Returns whether the bit at `index` of `n` is set. Raises an error if `index` is negative.
 
 **Parameters**
 
@@ -210,7 +214,7 @@ Bits.test?(0b1000, 0)   # => false
 set(n: Integer, index: Integer) -> Integer
 ```
 
-`n` with the bit at `index` set. Raises if `index` is negative.
+Returns `n` with the bit at `index` set. Raises an error if `index` is negative.
 
 **Parameters**
 
@@ -231,7 +235,7 @@ Bits.set(0, 3)   # => 8
 clear(n: Integer, index: Integer) -> Integer
 ```
 
-`n` with the bit at `index` cleared. Raises if `index` is negative.
+Returns `n` with the bit at `index` cleared. Raises an error if `index` is negative.
 
 **Parameters**
 
@@ -252,7 +256,7 @@ Bits.clear(0b1111, 0)   # => 14
 toggle(n: Integer, index: Integer) -> Integer
 ```
 
-`n` with the bit at `index` flipped. Raises if `index` is negative.
+Returns `n` with the bit at `index` flipped. Raises an error if `index` is negative.
 
 **Parameters**
 
@@ -273,7 +277,9 @@ Bits.toggle(0b1010, 0)   # => 11
 count(n: Integer) -> Integer
 ```
 
-Number of set bits in `n` (population count). A negative value has infinitely many under two's complement, so this raises for one.
+Returns the number of set bits in `n`, its population count.
+
+A negative number has infinitely many set bits, so it raises an error.
 
 **Parameters**
 
@@ -300,7 +306,9 @@ Bits.count(flags)
 width(n: Integer) -> Integer
 ```
 
-Number of bits needed to represent `n`, i.e. the position of its highest set bit plus one. Zero needs none. Raises for a negative value.
+Returns the number of bits needed to write `n`: the position of its highest set bit plus one.
+
+`Bits.width(0)` is `0`. A negative number raises an error.
 
 **Parameters**
 

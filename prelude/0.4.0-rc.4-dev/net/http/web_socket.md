@@ -11,9 +11,9 @@ entities:
 
 ## module `Net.HTTP.WebSocket`
 
-High-level RFC 6455 client messages. The runtime handles fragmentation and ping/pong frames; reconnect and heartbeat policies remain application-owned.
+WebSocket (RFC 6455) connections that send and receive whole messages.
 
-A `Connection` delivers complete messages rather than wire frames. Your code never has to assemble fragments or answer a protocol ping, but it does decide what a dropped connection means: reconnecting may require resubscribing or replaying an application cursor, so the library cannot do that safely for you.
+A `Connection` reassembles fragmented messages and answers pings itself. It does not reconnect or send heartbeats: what a dropped connection means, such as having to subscribe again or resume from a cursor, is up to your program.
 
 ```kex
 using Net.HTTP.WebSocket
@@ -28,9 +28,9 @@ socket.close
 
 ## type `Message`
 
-A complete high-level WebSocket message. Fragmentation and ping/pong control frames are handled by the connection runtime.
+One complete WebSocket message.
 
-`CloseMessage` carries the peer's status code and reason. Treat it as the end of the message stream even when the code describes a normal shutdown.
+`CloseMessage` carries the peer's status code and reason. It ends the message stream, whatever the code, and later reads fail with `Closed`.
 
 **Variants**
 
@@ -42,9 +42,9 @@ A complete high-level WebSocket message. Fragmentation and ping/pong control fra
 
 ## record `ClientOptions`
 
-Client handshake policy and the maximum reassembled message size.
+Options for a client connection: the subprotocols to offer and the largest message to accept.
 
-Subprotocols are offered in preference order. The byte limit applies after fragments are reassembled, preventing a peer from bypassing the bound with many individually small frames.
+List `subprotocols` in order of preference. `maximumMessageBytes` (16 MiB by default) applies to a whole reassembled message, so many small fragments cannot get around it; a larger incoming message is a `Limit` error. It also caps what `send` accepts.
 
 **Fields**
 
@@ -55,7 +55,7 @@ Subprotocols are offered in preference order. The byte limit applies after fragm
 
 ## record `Session`
 
-Negotiated handshake information. The subprotocol is `None` when the server selected none.
+What the handshake settled. `subprotocol` is `None` when none was chosen.
 
 **Fields**
 
@@ -65,7 +65,7 @@ Negotiated handshake information. The subprotocol is `None` when the server sele
 
 ## type `Connection`
 
-An opaque RFC 6455 connection, client- or server-side. It does not reconnect automatically.
+An open WebSocket connection, on the client or the server side. It does not reconnect on its own.
 
 ### Functions
 
@@ -75,9 +75,15 @@ An opaque RFC 6455 connection, client- or server-side. It does not reconnect aut
 send(message: Message) -> Result<Void, NetError>
 ```
 
-Sends one masked text, binary, or close message.
+Sends one text, binary or close message.
 
-**Returns**: success or `Protocol`/`Limit`/`Closed`
+Text that is not valid UTF-8, a message over the size limit and an invalid close code are `Protocol` errors. Sending on a closed connection is a `Closed` error. On a client connection any failed send also closes the connection.
+
+**Parameters**
+
+  - `message` — the message to send
+
+**Returns**: nothing, or why the message was not sent
 
 **Examples**
 
@@ -93,9 +99,9 @@ connection.send(Text(JSON.stringify({ action: "subscribe", topic: topic }))).try
 receiveMessage(timeout: Duration?) -> Result<Message, NetError>
 ```
 
-`receive` is a Kex process keyword, so the public function spells out the operation, with the same high-level message semantics. Reassembles fragments, validates UTF-8, and automatically answers pings.
+Waits for the next message and returns it, for as long as the peer stays connected.
 
-A `CloseMessage` is returned once so the application can inspect the peer's reason. Subsequent reads fail with `Closed`.
+Fragments are joined and pings answered along the way. Text that is not valid UTF-8 is a `Protocol` error, and a message over the size limit a `Limit` error. The peer's `CloseMessage` is returned once; reads after it fail with `Closed`, as do reads after the connection drops.
 
 **Returns**: the next data or close message
 
@@ -119,13 +125,13 @@ end
 session -> Session
 ```
 
-Returns handshake details negotiated with the server.
+Returns what the handshake settled, such as the chosen subprotocol.
 
-**Returns**: the selected subprotocol, if any
+**Returns**: the handshake's outcome
 
 **Examples**
 
-_Verifying which compatible event format was selected_
+_Checking which event format the server chose_
 
 ```kex
 let protocol = connection.session.subprotocol.or("default")
@@ -137,9 +143,9 @@ let protocol = connection.session.subprotocol.or("default")
 close -> Void
 ```
 
-Sends a normal close frame and idempotently releases the transport.
+Sends a normal close frame (code 1000) and closes the connection.
 
-Use an explicit `CloseMessage` with `send` first when the peer needs an application-specific code or reason.
+Closing an already closed connection does nothing. To give the peer a different code or a reason, `send` a `CloseMessage` first.
 
 #### `closed?` (foul)
 
@@ -147,13 +153,15 @@ Use an explicit `CloseMessage` with `send` first when the peer needs an applicat
 closed? -> Bool
 ```
 
-Whether the connection is closed. A server's connection is closed as soon as either side closes it or the transport fails; a client's once its connection process has stopped.
+Returns whether the connection is closed.
+
+A server connection counts as closed as soon as either side closes it or the transport fails. A client connection counts as closed once it has finished shutting down.
 
 **Returns**: whether the connection is closed
 
 ## record `Handshake`
 
-Subprotocols offered by an incoming upgrade request, in the order the peer listed them.
+The subprotocols an incoming upgrade request offers, in the order the client listed them.
 
 **Fields**
 
@@ -163,11 +171,11 @@ Subprotocols offered by an incoming upgrade request, in the order the peer liste
 
 ## type `Upgrade`
 
-A server's decision after inspecting a `Handshake`.
+A server's answer to a `Handshake`.
 
-`Accept` takes over the connection once the 101 response is sent: `handler` runs with the negotiated server `Connection`, and its return value is discarded. `headers` are added to the 101 response; a name that manages the handshake itself (`Upgrade`, `Connection`, `Sec-WebSocket-Accept`, `Sec-WebSocket-Protocol`) is dropped rather than overridden. `subprotocol` must be one `handshake.subprotocols` actually offered, or `None`.
+`Accept(handler, headers, subprotocol)` sends the 101 response and then runs `handler` with the server `Connection`; its return value is ignored. The `headers` are added to the 101 response, except `Upgrade`, `Connection`, `Sec-WebSocket-Accept`, `Sec-WebSocket-Protocol` and `Content-Length`, which are dropped. `subprotocol` must be one the client offered, or `None`; choosing any other makes the server answer 500.
 
-`Reject` answers with an ordinary buffered response instead, leaving the connection as plain HTTP — a client requesting an unsupported subprotocol might get `Response.text(426, "chat.v2 required")`, for instance.
+`Reject(response)` sends `response` as a plain HTTP response, such as `Response.text(426, "chat.v2 required")` for a client that lacks a subprotocol you need.
 
 **Variants**
 
@@ -178,7 +186,7 @@ A server's decision after inspecting a `Handshake`.
 
 ## module `Net.HTTP.WebSocket.WebSocket`
 
-Constructors for high-level WebSocket connections, client- and server-side.
+Opening client connections and accepting server ones.
 
 ### `connect` (foul)
 
@@ -186,13 +194,15 @@ Constructors for high-level WebSocket connections, client- and server-side.
 connect(url: String, options: ClientOptions) -> Result<Connection, NetError>
 ```
 
-Opens a `ws:` or verified `wss:` connection with default options.
+Opens a client connection to a `ws:` or `wss:` URL with default options.
+
+A `wss:` connection verifies the server's certificate. The handshake gives up with a `Timeout` error after about 11 seconds.
 
 **Parameters**
 
   - `url` — an absolute WebSocket URL
 
-**Returns**: a connection or typed handshake error
+**Returns**: the connection, or why it could not be opened
 
 **Examples**
 
@@ -212,16 +222,16 @@ end
 upgrade(request: Request<Binary>, decide: (Handshake -> Upgrade)) -> Response<Binary>
 ```
 
-Decides whether to accept an incoming `Net.HTTP.Server` upgrade request.
+Answers a WebSocket upgrade request in a `Net.HTTP.Server` route handler.
 
-Call from a route handler and return the result directly — it types as an ordinary `Response<Binary>`, and `Net.HTTP.Server` recognizes what it actually is: a request that isn't a syntactically valid WebSocket handshake at all (wrong method, missing `Sec-WebSocket-Key`, unsupported `Sec-WebSocket-Version`) is answered automatically without calling `decide`; a valid one reaches `decide` for an application decision.
+Return the result from the handler as it is. `decide` is called only for a valid handshake. A request that is not one gets 400 Bad Request (wrong method, a missing or malformed `Sec-WebSocket-Key`), or 426 Upgrade Required when the `Sec-WebSocket-Version` is not 13.
 
 **Parameters**
 
-  - `request` — the route handler's own request
-  - `decide` — the accept/reject decision
+  - `request` — the request the route handler received
+  - `decide` — chooses to accept or reject
 
-**Returns**: the handler's response — an upgrade in disguise on `Accept`, sent as given on `Reject`
+**Returns**: the response to return from the handler; the server recognises an accepted upgrade in it
 
 **Examples**
 

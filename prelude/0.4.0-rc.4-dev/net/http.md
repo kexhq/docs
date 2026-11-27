@@ -11,7 +11,7 @@ entities:
 
 ## module `Net.HTTP`
 
-Buffered HTTP clients, responses, and a small declaration-ordered server router. Requests never follow redirects or perform generic retries implicitly.
+Buffered HTTP clients and responses, and a small server whose router tries routes in the order they were declared. Requests never follow redirects or retry on their own.
 
 ```kex
 using Net.HTTP
@@ -20,7 +20,7 @@ let response = HTTP.get("https://example.test/").try
 response.status.success?   # => true
 ```
 
-For connection reuse and statistics, own a client explicitly:
+To reuse connections and read statistics, open a client:
 
 ```kex
 let client = Client.open.try
@@ -32,11 +32,9 @@ client.close.try
 
 ## record `Headers`
 
-An insertion-ordered HTTP field collection. Names compare case-insensitively and duplicate fields are preserved.
+HTTP header fields in insertion order. Names compare case-insensitively, and a name may appear more than once.
 
-A list of pairs rather than a `{String: String}` map, and deliberately so. A map cannot hold the same name twice, and `Set-Cookie` needs exactly that: RFC 6265 does not define it as a comma-separated list, so two cookies must travel as two fields and cannot be joined into one. A map interface would read as the obvious one right up to the first response that sets two cookies, then silently keep one — the same class of quiet data loss this module's `Result`-returning builders exist to avoid.
-
-Order is kept for the same reason. RFC 9110 makes order insignificant BETWEEN different names but significant between fields sharing a name, and a map has no order to keep.
+Headers are a list of pairs, not a map, because some fields must repeat: two cookies are two `Set-Cookie` fields and cannot be joined into one (RFC 6265). The order of fields sharing a name is significant (RFC 9110), so it is kept too.
 
 **Fields**
 
@@ -54,9 +52,14 @@ add(name: String, value: String) -> Result<Headers, NetError>
 
 Appends a field, keeping existing fields of the same name.
 
-Repeats are how `Set-Cookie` works: it is not a comma-separated list, so two cookies must be two fields. For replace-semantics, `remove` first.
+Adding a name that is already there gives a second field, which is how two `Set-Cookie` fields are sent. To replace a field, `remove` it first.
 
-An invalid name or value is an `Error`, not a silent drop. Rejecting `"a\r\nX: y"` is what stops response splitting, but dropping it quietly left the caller holding a valid `Headers` that simply lacked the field it asked for, and a response with no `Content-Type` invites MIME sniffing. `from` and `parse` already answer with a `Result` for this same input.
+An invalid name, or a value with a line break such as `"a\r\nX: y"`, is a `Parse` error, which stops header injection.
+
+**Parameters**
+
+  - `name` — the field name
+  - `value` — the field value
 
 **Returns**: the extended fields, or `Parse`
 
@@ -82,7 +85,11 @@ headers.remove("Content-Type").add("Content-Type", "application/json").try
 remove(name: String) -> Headers
 ```
 
-Removes every field matching `name` case-insensitively.
+Removes every field named `name`, ignoring case.
+
+**Parameters**
+
+  - `name` — the field name
 
 **Examples**
 
@@ -98,7 +105,11 @@ let forwarded = incoming.remove("Connection")
 get(name: String) -> String?
 ```
 
-Returns the first matching field value.
+Returns the value of the first field named `name`, ignoring case, or `None`.
+
+**Parameters**
+
+  - `name` — the field name
 
 **Examples**
 
@@ -114,7 +125,11 @@ let contentType = response.headers.get("Content-Type").or("application/octet-str
 getAll(name: String) -> [String]
 ```
 
-Returns every matching value in insertion order.
+Returns the values of every field named `name`, in insertion order.
+
+**Parameters**
+
+  - `name` — the field name
 
 **Examples**
 
@@ -130,7 +145,7 @@ let cookies = response.headers.getAll("Set-Cookie")
 showValue -> String
 ```
 
-Renders fields while replacing authorization and cookie values with `***`.
+Renders the fields, with authorization and cookie values shown as `***`.
 
 #### `inspectValue` (from Inspectable)
 
@@ -138,7 +153,7 @@ Renders fields while replacing authorization and cookie values with `***`.
 inspectValue(colors: Bool) -> String
 ```
 
-Structural inspection uses the same credential-safe rendering.
+Renders the fields as `showValue` does, with credentials hidden.
 
 ### From [`Showable`](../kex.md#trait-showable)
 
@@ -160,6 +175,8 @@ A validated HTTP status code in `100..599`.
 informational? -> Bool
 ```
 
+Returns `true` for a `1xx` status.
+
 **Returns**: whether the status is in `100..199`
 
 #### `success?`
@@ -167,6 +184,8 @@ informational? -> Bool
 ```kex
 success? -> Bool
 ```
+
+Returns `true` for a `2xx` status.
 
 **Returns**: whether the status is in `200..299`
 
@@ -176,6 +195,8 @@ success? -> Bool
 redirect? -> Bool
 ```
 
+Returns `true` for a `3xx` status.
+
 **Returns**: whether the status is in `300..399`
 
 #### `clientError?`
@@ -183,6 +204,8 @@ redirect? -> Bool
 ```kex
 clientError? -> Bool
 ```
+
+Returns `true` for a `4xx` status.
 
 **Returns**: whether the status is in `400..499`
 
@@ -192,11 +215,13 @@ clientError? -> Bool
 serverError? -> Bool
 ```
 
+Returns `true` for a `5xx` status.
+
 **Returns**: whether the status is in `500..599`
 
 ## record `Response<B>`
 
-A typed HTTP response envelope whose body representation is explicit.
+An HTTP response: status, headers and a body of type `B`.
 
 **Fields**
 
@@ -208,7 +233,7 @@ A typed HTTP response envelope whose body representation is explicit.
 
 ## record `Request<B>`
 
-A typed HTTP request envelope whose body representation is explicit.
+An HTTP request: method, target, headers and a body of type `B`.
 
 **Fields**
 
@@ -221,7 +246,7 @@ A typed HTTP request envelope whose body representation is explicit.
 
 ## record `RouteContext`
 
-Route captures decoded after path segmentation.
+The named and wildcard captures of the matched route, already decoded.
 
 **Fields**
 
@@ -235,7 +260,7 @@ Route captures decoded after path segmentation.
 parameter(name: String) -> Result<String, NetError>
 ```
 
-Returns one decoded named or wildcard route capture.
+Returns the decoded value of a named or wildcard route capture.
 
 **Parameters**
 
@@ -263,13 +288,13 @@ Per-request server context.
 
 ## type `Handler`
 
-A buffered HTTP route handler. Handling a request is effectful: routes may read files, query a database, send messages, or perform other application IO.
+A route handler: a `foul` function from a `Request<Binary>` and its `Context` to a `Response<Binary>`. Being `foul`, it may read files, query a database or send messages.
 
 
 
 ## record `Route`
 
-One declared route; routers preserve declaration order.
+One declared route.
 
 **Fields**
 
@@ -282,7 +307,7 @@ One declared route; routers preserve declaration order.
 
 ## record `Router`
 
-An immutable, declaration-ordered HTTP router.
+An HTTP router. The first declared route that matches a request handles it.
 
 **Fields**
 
@@ -296,9 +321,9 @@ An immutable, declaration-ordered HTTP router.
 route(method: String, path: String, handler: Handler, maximumBodyBytes: Integer) -> Router
 ```
 
-Appends a route; earlier matching declarations win.
+Adds a route for any HTTP method. Routes declared earlier win.
 
-Use this for a method without a convenience function. Paths may include named or wildcard captures, which the handler reads from `RouteContext`.
+Use it for a method that has no function of its own. Paths may include named or wildcard captures, which the handler reads from `RouteContext`.
 
 **Examples**
 
@@ -314,7 +339,7 @@ router.route("PURGE", "/cache/:key", ~purge)
 get(path: String, handler: Handler, maximumBodyBytes: Integer) -> Router
 ```
 
-Appends a GET route. GET also supplies automatic HEAD fallback.
+Adds a GET route, which also answers HEAD requests unless a HEAD route is declared.
 
 #### `head`
 
@@ -322,7 +347,7 @@ Appends a GET route. GET also supplies automatic HEAD fallback.
 head(path: String, handler: Handler) -> Router
 ```
 
-Appends an explicit HEAD route, overriding automatic GET fallback.
+Adds a HEAD route, used in place of the GET route's automatic HEAD answer.
 
 #### `options`
 
@@ -330,7 +355,7 @@ Appends an explicit HEAD route, overriding automatic GET fallback.
 options(path: String, handler: Handler) -> Router
 ```
 
-Appends an explicit OPTIONS route, overriding generated OPTIONS.
+Adds an OPTIONS route, used in place of the generated OPTIONS answer.
 
 #### `post`
 
@@ -338,7 +363,7 @@ Appends an explicit OPTIONS route, overriding generated OPTIONS.
 post(path: String, handler: Handler, maximumBodyBytes: Integer) -> Router
 ```
 
-Appends a POST route.
+Adds a POST route.
 
 #### `put`
 
@@ -346,7 +371,7 @@ Appends a POST route.
 put(path: String, handler: Handler, maximumBodyBytes: Integer) -> Router
 ```
 
-Appends a PUT route.
+Adds a PUT route.
 
 #### `patch`
 
@@ -354,7 +379,7 @@ Appends a PUT route.
 patch(path: String, handler: Handler, maximumBodyBytes: Integer) -> Router
 ```
 
-Appends a PATCH route.
+Adds a PATCH route.
 
 #### `delete`
 
@@ -362,7 +387,7 @@ Appends a PATCH route.
 delete(path: String, handler: Handler) -> Router
 ```
 
-Appends a DELETE route.
+Adds a DELETE route.
 
 #### `limited`
 
@@ -372,7 +397,7 @@ limited(method: String, path: String, handler: Handler, maximumBodyBytes: Intege
 
 ## record `ShutdownReport`
 
-Counts and elapsed time from graceful server shutdown.
+What a graceful server shutdown did: requests completed, failed and forced down, and how long it took.
 
 **Fields**
 
@@ -385,7 +410,7 @@ Counts and elapsed time from graceful server shutdown.
 
 ## record `ServerOptions`
 
-Bounded HTTP server resources, default graceful-shutdown duration and request body limit.
+Server limits: concurrent handlers, the accept backlog, the default grace period on shutdown, and the request body limit.
 
 **Fields**
 
@@ -398,7 +423,7 @@ Bounded HTTP server resources, default graceful-shutdown duration and request bo
 
 ## record `RequestOptions`
 
-How long one client request may take, and how large an answer it accepts.
+How long one client request may take, and how large a response it accepts.
 
 A request over a size limit is a `Limit` error, and one over a time limit a `Timeout`.
 
@@ -445,7 +470,7 @@ Options owned by an explicit HTTP client.
 
 ## record `ClientStatistics`
 
-Lifetime request/reuse counters plus current pooled connections.
+A client's open pooled connections, and how many requests it has made and how many reused a connection.
 
 **Fields**
 
@@ -467,7 +492,7 @@ Resources released by `Client.close`.
 
 ## type `Client`
 
-The pooled HTTP client. An opaque handle over the connection pool that owns it; `Client.open` makes one and `client.close` releases it.
+An HTTP client with its own connection pool. `Client.open` makes one and `close` releases it.
 
 ### Functions
 
@@ -477,9 +502,9 @@ The pooled HTTP client. An opaque handle over the connection pool that owns it; 
 request(method: String, url: String, headers: Headers, body: Binary, options: RequestOptions) -> Result<Response<Binary>, NetError>
 ```
 
-Sends a buffered request. Redirects and generic retries are not implicit.
+Sends a request and reads the whole response.
 
-This keeps policy with the caller: inspect a redirect before following it, and retry only methods and failures your application knows are safe.
+Redirects are not followed and failures are not retried; a redirect comes back as a `3xx` response for you to act on.
 
 **Examples**
 
@@ -498,7 +523,7 @@ client.request("POST", url, headers, JSON.stringify(order).to(Binary).try)
 get(url: String) -> Result<Response<Binary>, NetError>
 ```
 
-Sends a buffered GET request.
+Sends a GET request.
 
 #### `post` (foul)
 
@@ -506,7 +531,7 @@ Sends a buffered GET request.
 post(url: String, body: Binary) -> Result<Response<Binary>, NetError>
 ```
 
-Sends a buffered binary POST request.
+Sends a POST request with a binary body.
 
 #### `put` (foul)
 
@@ -514,7 +539,7 @@ Sends a buffered binary POST request.
 put(url: String, body: Binary) -> Result<Response<Binary>, NetError>
 ```
 
-Sends a buffered binary PUT request.
+Sends a PUT request with a binary body.
 
 #### `patch` (foul)
 
@@ -522,7 +547,7 @@ Sends a buffered binary PUT request.
 patch(url: String, body: Binary) -> Result<Response<Binary>, NetError>
 ```
 
-Sends a buffered binary PATCH request.
+Sends a PATCH request with a binary body.
 
 #### `delete` (foul)
 
@@ -554,7 +579,7 @@ Sends an OPTIONS request.
 statistics -> ClientStatistics
 ```
 
-Reports current pool occupancy and lifetime request counters.
+Returns the client's open connections and request counts.
 
 **Returns**: current pool and lifetime request counters
 
@@ -573,13 +598,13 @@ IO.printLine("HTTP reuse: ${stats.reusedConnections}/${stats.requests}")
 close -> Result<ClientCloseReport, NetError>
 ```
 
-Idempotently closes the client and every idle pooled connection.
+Closes the client and its idle pooled connections.
 
-Further requests fail with `Closed`; a second close is harmless.
+Later requests fail with `Closed`. Closing twice is not an error.
 
 ## module `Net.HTTP.Headers`
 
-Construction and parsing of validated HTTP header collections.
+Builds and parses validated `Headers`.
 
 ### `empty` (constant)
 
@@ -591,7 +616,7 @@ Returns a field collection with no entries.
 
 **Examples**
 
-_Building request headers immutably_
+_Building request headers_
 
 ```kex
 Headers.empty
@@ -608,9 +633,13 @@ from(entries: [(String, String)]) -> Result<Headers, NetError>
 from(entries: Map<String, String>) -> Result<Headers, NetError>
 ```
 
-Validates header names and values without folding duplicates.
+Builds headers from name-value pairs, validating each one.
 
-Duplicate fields stay in their original order. Invalid names and values containing line breaks are rejected instead of creating a malformed or injectable HTTP message.
+Repeated names stay as separate fields, in order. An invalid name, or a value containing a line break, is a `Parse` error, so a value cannot inject extra header lines.
+
+**Parameters**
+
+  - `entries` — the fields, in order
 
 **Returns**: validated fields, or `Parse`
 
@@ -633,7 +662,11 @@ parse(text: String) -> Result<Headers, NetError>
 
 Parses CRLF- or LF-separated header fields.
 
-Use this at a protocol boundary when headers arrive as text. Application code normally builds them with `from`, `add`, and `set`.
+Use it when headers arrive as text. To build headers in code, use `from` and `add`.
+
+**Parameters**
+
+  - `text` — the header block
 
 **Returns**: fields in source order, or `Parse`
 
@@ -647,7 +680,7 @@ Headers.parse("Content-Type: text/plain\r\nX-Trace: abc\r\n").try
 
 ## module `Net.HTTP.Status`
 
-Validation for numeric HTTP status codes.
+Builds a validated `Status` from a number.
 
 ### `from`
 
@@ -655,7 +688,7 @@ Validation for numeric HTTP status codes.
 from(code: Integer) -> Result<Status, NetError>
 ```
 
-Validates an HTTP status code.
+Returns the status for `code`, or a `Parse` error outside `100..599`.
 
 **Parameters**
 
@@ -668,13 +701,13 @@ Validates an HTTP status code.
 _Validating a configurable health-check success code_
 
 ```kex
-let code = ENV.get("HEALTH_STATUS").flatMap { |text| text.to(Integer) }.or(204)
+let code = ENV.get("HEALTH_STATUS").into { |text| text.to(Integer) }.or(204)
 let expected = Status.from(code).try
 ```
 
 ## module `Net.HTTP.Response`
 
-Buffered response constructors for route handlers.
+Builds the responses a route handler returns.
 
 ### `binary` (foul)
 
@@ -682,7 +715,7 @@ Buffered response constructors for route handlers.
 binary(status: Integer, body: Binary, headers: Headers) -> Response<Binary>
 ```
 
-Builds a buffered binary response with validated headers.
+Builds a response with a binary body and the given headers.
 
 **Examples**
 
@@ -698,7 +731,7 @@ Response.binary(200, archive, Headers.empty.add("Content-Type", "application/zip
 text(status: Integer, body: String) -> Response<Binary>
 ```
 
-Builds a UTF-8 text response with an explicit text/plain content type.
+Builds a UTF-8 text response with a `text/plain` content type.
 
 **Examples**
 
@@ -726,7 +759,7 @@ Response.empty(204)
 
 ## module `Net.HTTP.Router`
 
-The empty starting point for an immutable route declaration chain.
+Starts a route declaration chain.
 
 ### `build` (constant)
 
@@ -734,11 +767,23 @@ The empty starting point for an immutable route declaration chain.
 build : Router
 ```
 
+Returns a router with no routes, to declare routes on.
+
+**Examples**
+
+_Build a health endpoint_
+
+```kex
+Router.build.get("/health", do |request, context|
+  Response.text(200, "ok")
+end)
+```
+
 
 
 ## module `Net.HTTP.Server`
 
-Starting, observing, and gracefully stopping HTTP servers.
+Starts, watches and stops HTTP servers.
 
 ### `start` (foul)
 
@@ -746,9 +791,9 @@ Starting, observing, and gracefully stopping HTTP servers.
 start(endpoint: Net.Socket.TCP.Endpoint, router: Router, options: ServerOptions) -> Result<Running, NetError>
 ```
 
-Starts a server with conservative defaults and returns immediately.
+Starts a server with the default `ServerOptions` and returns at once.
 
-The returned handle owns the listener and active handlers. Use `start` when the process has other work to do; use `serve` for a foreground server whose main job is handling HTTP.
+The handle owns the listener and the running handlers. Use `start` when the process has other work to do, and `serve` when serving HTTP is all it does.
 
 **Examples**
 
@@ -767,7 +812,7 @@ Server.stop(server).try
 serve(endpoint: Net.Socket.TCP.Endpoint, router: Router, options: ServerOptions) -> Result<Void, NetError>
 ```
 
-Starts with defaults and blocks until the server stops.
+Starts a server with the default options and blocks until it stops.
 
 ### `stop` (foul)
 
@@ -775,9 +820,9 @@ Starts with defaults and blocks until the server stops.
 stop(server: Running, grace: Duration) -> Result<ShutdownReport, NetError>
 ```
 
-Gracefully stops using the duration captured at start.
+Stops the server gracefully, with the grace period from its `ServerOptions`.
 
-New requests stop being accepted while in-flight handlers get their grace period to finish. The report says how much work completed or was forced down during shutdown.
+The server stops accepting requests, and handlers already running get the grace period to finish. The report counts what completed and what was forced down.
 
 **Examples**
 
@@ -794,7 +839,7 @@ IO.printLine("closed after ${report.completed} requests")
 join(server: Running) -> Result<Void, NetError>
 ```
 
-Waits until the server owner exits.
+Waits until the server stops.
 
 ### `running?` (foul)
 
@@ -802,7 +847,9 @@ Waits until the server owner exits.
 running?(server: Running) -> Bool
 ```
 
-**Returns**: whether the server owner is alive
+Returns `true` while the server is running.
+
+**Returns**: whether the server is still running
 
 ### `localAddress` (foul)
 
@@ -810,7 +857,7 @@ running?(server: Running) -> Bool
 localAddress(server: Running) -> Net.Socket.TCP.Endpoint
 ```
 
-Returns the bound address, including an operating-system-assigned port.
+Returns the address the server is bound to, with the actual port when the operating system picked it.
 
 **Returns**: the bound address
 
@@ -825,13 +872,13 @@ IO.printLine("test server: http://${endpoint.host}:${endpoint.port.string}")
 
 ## type `Running`
 
-An opaque asynchronous HTTP server handle.
+A handle to a server running in the background.
 
 
 
 ## module `Net.HTTP.Client`
 
-Constructors for explicitly owned, connection-pooling HTTP clients.
+Opens HTTP clients.
 
 ### `open` (foul)
 
@@ -840,9 +887,9 @@ open -> Result<Client, NetError>
 open(options: ClientOptions) -> Result<Client, NetError>
 ```
 
-Opens an explicit pooled client with conservative defaults.
+Opens a client with the default `ClientOptions`.
 
-Reuse one client for related requests so keep-alive connections and DNS work can be reused. Close it when the owning service shuts down.
+Send related requests through one client so they reuse its connections, and close it when the service shuts down.
 
 **Examples**
 
@@ -857,7 +904,7 @@ client.close.try
 
 ## module `Net.HTTP.HTTP`
 
-Stateless HTTP convenience calls for scripts and occasional requests.
+One-off HTTP requests, each through its own short-lived client. Use `Client` for a service that makes repeated calls.
 
 ### `request`
 
@@ -866,9 +913,16 @@ request(method: String, url: String, headers: Headers = …, body: Binary = …)
 request(method: String, url: String, headers: Headers, body: Binary, options: RequestOptions) -> Result<Response<Binary>, NetError>
 ```
 
-Sends one stateless buffered request with no redirect or hidden retry.
+Sends a request and reads the whole response, without following redirects or retrying.
 
-Each call owns a short-lived client. This is convenient for scripts and occasional requests; use `Client` for a service making repeated calls.
+Each call opens and closes its own client, which suits scripts and occasional requests. A service making repeated calls should use `Client`.
+
+**Parameters**
+
+  - `method` — the HTTP method, such as `"GET"`
+  - `url` — the URL to request
+  - `headers` — the request headers, empty by default
+  - `body` — the request body, empty by default
 
 **Examples**
 
@@ -885,7 +939,7 @@ HTTP.request("GET", url, headers).try
 get(url: String) -> Result<Response<Binary>, NetError>
 ```
 
-Sends one stateless buffered GET.
+Sends a one-off GET request.
 
 **Examples**
 
@@ -899,7 +953,7 @@ HTTP.get("https://example.test/").try
 delete(url: String) -> Result<Response<Binary>, NetError>
 ```
 
-Sends one stateless DELETE with an empty body.
+Sends a one-off DELETE request with an empty body.
 
 ### `head`
 
@@ -907,7 +961,7 @@ Sends one stateless DELETE with an empty body.
 head(url: String) -> Result<Response<Binary>, NetError>
 ```
 
-Sends one stateless HEAD and returns an empty response body.
+Sends a one-off HEAD request; the response body is empty.
 
 ### `options`
 
@@ -915,7 +969,7 @@ Sends one stateless HEAD and returns an empty response body.
 options(url: String) -> Result<Response<Binary>, NetError>
 ```
 
-Sends one stateless OPTIONS request.
+Sends a one-off OPTIONS request.
 
 ### `post`
 
@@ -923,7 +977,7 @@ Sends one stateless OPTIONS request.
 post(url: String, body: Binary) -> Result<Response<Binary>, NetError>
 ```
 
-Sends one stateless buffered binary POST.
+Sends a one-off POST request with a binary body.
 
 ### `put`
 
@@ -931,7 +985,7 @@ Sends one stateless buffered binary POST.
 put(url: String, body: Binary) -> Result<Response<Binary>, NetError>
 ```
 
-Sends one stateless buffered binary PUT.
+Sends a one-off PUT request with a binary body.
 
 ### `patch`
 
@@ -939,4 +993,4 @@ Sends one stateless buffered binary PUT.
 patch(url: String, body: Binary) -> Result<Response<Binary>, NetError>
 ```
 
-Sends one stateless buffered binary PATCH.
+Sends a one-off PATCH request with a binary body.

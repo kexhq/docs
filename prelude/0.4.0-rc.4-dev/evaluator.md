@@ -11,16 +11,18 @@ entities:
 
 ## module `Evaluator`
 
-Running Kex source code at run time, in a sandbox.
+Runs Kex source code at run time, in a sandbox.
 
-Each call builds a fresh, isolated evaluator: the caller's environment is never shared, and the evaluated code sees only what `EvaluatorOptions` allows. Step and depth limits make a runaway program stop rather than hang.
+Use it for code your program is given, such as a formula in a config file or a filter a user typed. Each call gets a fresh evaluator that cannot see the caller's variables, and the code can reach only what `EvaluatorOptions` allows. Step and depth limits stop a runaway program.
 
 ```kex
+using Evaluator
+
 Evaluator.runExpression("1 + 2")           # => Ok(3)
 Evaluator.runExpression("[3,1,2].sort")    # => Ok([1, 2, 3])
 ```
 
-This is for evaluating expressions your program was given: a formula in a config file, a filter typed by a user. Every result is a `Result`, so a syntax error or a rejected call is a value you handle.
+Nothing here is in scope until `using Evaluator`. It works only under the tree-walk interpreter (`kex -R`).
 
 ### `run`
 
@@ -31,7 +33,7 @@ run(source: String, opts: EvaluatorOptions) -> Result<Any, String>
 
 Evaluates a whole Kex program and returns its result.
 
-The source may declare functions, records and a `main`, exactly as a file would. Anything that goes wrong: a parse error, a call the sandbox does not allow, running past the step limit: comes back as `Error` with a message.
+The source may declare functions, records and a `main`, as a file would, and the result is what `main` returns. A runtime error, a call the sandbox does not allow, or running past a limit comes back as an `Error` with a message. Source that does not parse currently returns `Ok(None)`.
 
 **Parameters**
 
@@ -64,7 +66,7 @@ runExpression(source: String, opts: EvaluatorOptions) -> Result<Any, String>
 
 Evaluates a single Kex expression and returns its value.
 
-The form to reach for when the input is a formula rather than a program: there is no `main` to write and no declarations to skip past.
+Use it when the input is a formula: there is no `main` to write. Source that does not parse currently returns `Ok(None)`.
 
 **Parameters**
 
@@ -79,7 +81,7 @@ The form to reach for when the input is a formula rather than a program: there i
 Evaluator.runExpression("1 + 2")          # => Ok(3)
 Evaluator.runExpression("[3,1,2].sort")   # => Ok([1, 2, 3])
 Evaluator.runExpression("nope()")
-# => Error("Runtime error: ... Undefined function: nope")
+# => Error("Runtime error: <eval>:2:1: runtime error: undefined function: nope")
 ```
 
 _Evaluating a formula from a config file_
@@ -90,9 +92,9 @@ Evaluator.runExpression(formula).or(0)
 
 ## record `EvaluatorOptions`
 
-What an evaluated program is allowed to reach, and how long it may run.
+What evaluated code may call, and how long it may run.
 
-The defaults are already conservative: pure computation over the common data types, no filesystem, no network, no processes. Narrow `allow` further, or lower the limits, when the source is less trusted still.
+By default it gets pure computation over the common data types, with no filesystem, network or processes. Narrow `allow` or lower the limits for less trusted source.
 
 **Fields**
 

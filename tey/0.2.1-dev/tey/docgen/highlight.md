@@ -9,9 +9,9 @@ entities:
 
 # Tey.Docgen.Highlight
 
-A small syntax highlighter for Kex source, ported from kex-run-site's src/lib/highlight.ts: a "good enough" tokenizer rather than a full grammar. Emits <span class="tok-*"> HTML at docgen build time, so the docs carry no client-side JavaScript. Runs over [Char] lists; pure recursion, no state.
+A small syntax highlighter for Kex source, ported from the kex.run site's highlighter. It is an approximate tokenizer, not the full grammar, and emits `<span class="tok-*">` HTML when the docs are built, so the pages need no JavaScript.
 
-Fidelity note: backtick raw strings are not tracked inside interpolation braces, and `and`/`or` are colored as keywords even where the compiler treats them as identifiers — same trade-offs as the site version.
+Known gaps, shared with the site: backtick raw strings are not recognised inside interpolation braces, and `and` and `or` are coloured as keywords even where the compiler reads them as identifiers.
 
 ## module `Tey.Docgen.Highlight`
 
@@ -135,7 +135,7 @@ twoCharOp(cs: [Char]) -> String
 keywords -> [String]
 ```
 
-Functions rather than module constants: on BEAM, method calls on a module-level constant fail to dispatch.
+Functions rather than module constants: on BEAM, calling a function on a module-level constant fails to dispatch.
 
 ### `constants`
 
@@ -161,7 +161,7 @@ renderTokens(toks: [Tok]) -> String
 highlightLinked(source: String, hrefOf: (String -> String)) -> String
 ```
 
-The same highlighting, with every type name that `hrefOf` can place wrapped in a link to it — signatures read as code and navigate as a reference. `hrefOf` answers "" for a name it cannot place.
+Highlights `source` as `highlight` does, and links each type name to the page `hrefOf` returns for it. `hrefOf` returns `""` for a name it cannot place, which is then left unlinked.
 
 ### `renderLinkedTok`
 
@@ -181,7 +181,7 @@ renderTok(t: Tok) -> String
 esc(s: String) -> String
 ```
 
-Local copy of Tey.Docgen.Html.esc — duplicating four replaces keeps the modules acyclic (Html calls Highlight for code blocks).
+Escapes `&`, `<`, `>` and `"` for HTML. A copy of `Tey.Docgen.Html.esc`, kept here because Html imports this module.
 
 ### `textOf`
 
@@ -199,7 +199,7 @@ startsWithChars?(cs: [Char], s: String) -> Bool
 
 **Fields**
 
-  - `cls` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `text` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `cls` : [String](../../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `text` : [String](../../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
 
 

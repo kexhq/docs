@@ -9,7 +9,9 @@ entities:
 
 # Tey.Docgen.Json
 
-Model records → JSON artifacts. This is the single boundary where typed records become plain maps (atom keys, JSON-ready values) so JSON.stringify can serialise them: model.json (the full model) and search.json (a flat index for dynamic name/kind/type search on the docs site).
+Renders the documentation model as JSON: `model.json`, the full model, and `search.json`, a flat index for searching the docs site by name, kind and type.
+
+This is the only place where the typed model records are turned into plain maps with atom keys, ready for `JSON.stringify`.
 
 ## module `Tey.Docgen.Json`
 
@@ -117,7 +119,7 @@ entitySearchEntries(e: Entity, page: SourcePage) -> [SearchEntry]
 entityTypes(e: Entity) -> [String]
 ```
 
-The type names an entity is "about" — the search-by-type dimension. For a function that is its signature's types; for a record its field types; for a type its parents and variant fields; for a trait/make the types its methods mention; for a module the union of its children.
+Returns the type names an entity is about, for search by type: a function's signature types, a record's field types, a type's parents and variant fields, the types a trait's or make block's functions mention, and for a module the union of its children's.
 
 ### `variantFieldTypes`
 

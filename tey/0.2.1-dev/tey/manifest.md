@@ -17,13 +17,17 @@ entities:
 sourceFolder?(name: String) -> Bool
 ```
 
-The command names Tey answers itself. A `command(...)` may not take one of them: `tey test` must mean the same thing in every checkout, so a manifest that tries to redefine it is an error at read time rather than a silent shadow. Kept here because the READER is what enforces it, and Tey.Cli cannot be asked: it is built on this module, so reading the list off its declared commands would be a cycle. The two have to be kept in step by hand — one `.command(...)` in Tey.Cli, one name here (the first word is enough: `kex` covers every `kex ...` subcommand). Whether a name can be a source folder: one directory at the package's top, by its plain name. Not a path — its name is the first part of every module in it — and nothing hidden.
+Returns `true` when `name` can be a source folder: a plain, non-hidden directory name at the package's top, not a path, since the name becomes the first part of every module in it.
 
 ### `reservedCommands` (constant)
 
 ```kex
 reservedCommands : [String]
 ```
+
+The command names Tey handles itself, which a `command(...)` may not take. `tey test` must mean the same in every checkout, so a manifest that redefines one fails to read.
+
+The list lives here because the reader enforces it; `Tey.Cli` is built on this module, so taking the list from its commands would be a cycle. Keep the two in step by hand: one `.command(...)` in `Tey.Cli`, one name here. The first word is enough, so `kex` covers every `kex ...` subcommand.
 
 
 
@@ -33,9 +37,9 @@ reservedCommands : [String]
 read(text: String) -> Result<ManifestPackage, String>
 ```
 
-Reads a `package.kex`.
+Reads the text of a `package.kex` into a `ManifestPackage`, or returns the first problem found.
 
-The compiler parses the manifest. Tey only interprets the resulting Kex AST, so comments, multiline calls, strings, and future grammar fixes cannot drift from the language that actually compiles package.kex.
+The text is parsed with `Kex.AST`, so the manifest follows the same grammar as any Kex file, comments and multi-line calls included.
 
 ### `readWorkspace`
 
@@ -43,13 +47,15 @@ The compiler parses the manifest. Tey only interprets the resulting Kex AST, so 
 readWorkspace(text: String) -> Result<ManifestWorkspace, String>
 ```
 
-Reads a virtual-workspace manifest: a package.kex whose root is `workspace` rather than a publishable package. Package-root workspaces are returned on ManifestPackage.manifestWorkspace by `read` above.
+Reads a virtual-workspace manifest: a `package.kex` whose root is `workspace`, with no package of its own. For a package that is also a workspace root, `read` returns the workspace in `manifestWorkspace`.
 
 ### `readLocal`
 
 ```kex
 readLocal(text: String) -> Result<[LocalOverride], String>
 ```
+
+Reads the text of a `package.local.kex`: the `local("name", path: "...")` overrides that point a dependency at a local checkout. Returns an error for anything else in the file, or for a package overridden twice.
 
 ## type `DependencySource`
 
@@ -65,9 +71,9 @@ readLocal(text: String) -> Result<[LocalOverride], String>
 
 **Fields**
 
-  - `manifestName` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `manifestName` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
   - `manifestSource` : [DependencySource](#type-tey-manifest-dependencysource)
-  - `manifestGroups` : [[String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)] (optional)
+  - `manifestGroups` : [[String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)] (optional)
 
 
 
@@ -75,7 +81,7 @@ readLocal(text: String) -> Result<[LocalOverride], String>
 
 **Fields**
 
-  - `memberPatterns` : [[String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)] (optional)
+  - `memberPatterns` : [[String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)] (optional)
 
 
 
@@ -83,8 +89,8 @@ readLocal(text: String) -> Result<[LocalOverride], String>
 
 **Fields**
 
-  - `localName` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `localPath` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `localName` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `localPath` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
 
 
 
@@ -92,8 +98,8 @@ readLocal(text: String) -> Result<[LocalOverride], String>
 
 **Fields**
 
-  - `name` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `entrypoint` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `name` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `entrypoint` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
 
 
 
@@ -101,8 +107,8 @@ readLocal(text: String) -> Result<[LocalOverride], String>
 
 **Fields**
 
-  - `capabilityKind` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `capabilityValues` : [[String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)] (optional)
+  - `capabilityKind` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `capabilityValues` : [[String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)] (optional)
 
 
 
@@ -110,8 +116,8 @@ readLocal(text: String) -> Result<[LocalOverride], String>
 
 **Fields**
 
-  - `optionName` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `optionType` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `optionName` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `optionType` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
 
 
 
@@ -119,8 +125,8 @@ readLocal(text: String) -> Result<[LocalOverride], String>
 
 **Fields**
 
-  - `operationName` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `operationEntrypoint` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `operationName` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `operationEntrypoint` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
   - `operationOptions` : [[PluginOption](#record-tey-manifest-pluginoption)] (optional)
 
 
@@ -129,8 +135,8 @@ readLocal(text: String) -> Result<[LocalOverride], String>
 
 **Fields**
 
-  - `pluginNamespace` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `pluginTeyRequirement` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `pluginNamespace` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `pluginTeyRequirement` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
   - `pluginCapabilities` : [[PluginCapability](#record-tey-manifest-plugincapability)] (optional)
   - `pluginCommands` : [[PluginOperation](#record-tey-manifest-pluginoperation)] (optional)
   - `pluginGenerators` : [[PluginOperation](#record-tey-manifest-pluginoperation)] (optional)
@@ -139,30 +145,30 @@ readLocal(text: String) -> Result<[LocalOverride], String>
 
 ## record `Command`
 
-A project-specific command, run as `tey <name>`. Without these every package grows a Makefile or a bin/ script beside package.kex for "the way you run the linter", which the manifest — the one file a newcomer reads — says nothing about.
+A project-specific command, run as `tey <name>`. It puts tasks such as running the linter in the manifest, where a newcomer looks, instead of a Makefile or a `bin/` script.
 
-A name is one word, grouped with a colon: `db:migrate`, `assets:build`.
+A name is one word, optionally grouped with a colon: `db:migrate`, `assets:build`.
 
 **Fields**
 
-  - `commandName` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `commandRun` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `commandDescription` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
+  - `commandName` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `commandRun` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `commandDescription` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
 
 
 
 ## record `Toolchain`
 
-A toolchain package: the compiler executable plus the runtime and standard library it was built with, installed together so the three can never drift apart. Kex's own `package.kex` is the one that declares it — and a reader that did not know the declaration could not run any tey command from the compiler's own checkout, which is where it is most used.
+A toolchain package: the compiler executable with the runtime and standard library it was built with, installed together so they always match. Kex's own `package.kex` declares one, so the reader must understand it for any tey command to work in the compiler's checkout.
 
-Fields are prefixed like Command's: a bare `compiler` would be read as a method on an unpinned receiver before it is read as a field here.
+Fields are prefixed, as in `Command`, because a bare `compiler` would be read as a function call on a receiver of unknown type before it is read as a field here.
 
 **Fields**
 
-  - `toolchainName` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `toolchainCompiler` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `toolchainRuntime` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `toolchainStdlib` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
+  - `toolchainName` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `toolchainCompiler` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `toolchainRuntime` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `toolchainStdlib` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
 
 
 
@@ -170,14 +176,14 @@ Fields are prefixed like Command's: a bare `compiler` would be read as a method 
 
 **Fields**
 
-  - `name` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `version` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `description` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `license` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `packageKexRequirement` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `packageOtpRequirement` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `entrypoint` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string) (optional)
-  - `sourceFolders` : [[String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)] (optional)
+  - `name` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `version` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `description` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `license` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `packageKexRequirement` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `packageOtpRequirement` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `entrypoint` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string) (optional)
+  - `sourceFolders` : [[String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)] (optional)
   - `manifestDependencies` : [Dependency] (optional)
   - `targets` : [[Target](#record-tey-manifest-target)] (optional)
   - `commands` : [[Command](#record-tey-manifest-command)] (optional)

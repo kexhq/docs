@@ -9,7 +9,7 @@ entities:
 
 # Tey.Docgen.Serve
 
-Serves a generated output directory over HTTP. Tey runs on the BEAM, so Net.HTTP.Server is available wherever `tey docs -- serve` runs.
+`tey docs serve`: serves a generated site from its output directory over HTTP on localhost.
 
 ## module `Tey.Docgen.Serve`
 
@@ -25,7 +25,7 @@ serveCommand(parsed: ParsedOptions) -> Integer
 routesFor(prefix: String, name: String) -> [String]
 ```
 
-The URL paths a browser would type for this file: an index.html is reached by its directory ("/", "/prelude/0.4.0-alpha/") as much as by its name, and the router matches exactly — so it answers the bare, the slash-terminated, and the named spelling. Every other file answers its own path only.
+Returns the URL paths that serve a file. The router matches paths exactly, so an index.html gets three: its own path, its directory, and its directory with a trailing slash. Any other file gets only its own path.
 
 ### `collectServeFiles` (foul)
 
@@ -39,7 +39,7 @@ collectServeFiles(dir: String, prefix: String) -> [ServedFile]
 serveFile(filePath: String, _request: Request<Binary>, _context: Context) -> Response<Binary>
 ```
 
-A route handler once `filePath` is applied: `~serveFile(path)`. Reads the file as bytes, not text: the site ships images and fonts beside its HTML, and decoding those as UTF-8 would turn them into a 404.
+Serves the file at `filePath`; `~serveFile(path)` is a route handler. The file is read as bytes, so images and fonts are served intact, and the response says `no-cache` because the site is rebuilt in place.
 
 ### `contentTypeFor`
 
@@ -51,7 +51,7 @@ contentTypeFor(path: String) -> String
 
 **Fields**
 
-  - `route` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `path` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `route` : [String](../../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `path` : [String](../../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
 
 

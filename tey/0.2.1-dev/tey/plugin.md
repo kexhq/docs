@@ -17,7 +17,9 @@ entities:
 fingerprint(plugin: Plugin) -> String
 ```
 
-Fingerprints only the declared interface and requested resources. Provider implementation changes do not silently revoke approval; a capability, command schema, generator schema, or supported-Tey change does.
+Returns a fingerprint of a plugin's declared interface and requested resources, which an approval is tied to.
+
+Changing the plugin's implementation keeps the approval; changing a capability, a command or generator schema, or the supported Tey versions needs a new one.
 
 ### `fingerprints`
 
@@ -43,7 +45,9 @@ missingApprovals(plugins: [Plugin], approvals: {String: String}) -> [Plugin]
 validApprovals(plugins: [Plugin], approvals: {String: String}) -> {String: String}
 ```
 
-Keeps only approvals still backed by an identical visible declaration. This is used when a lock is refreshed: removed plugins and interfaces whose resources changed cannot inherit an old authorization.
+Returns the approvals whose plugin is still declared with the same fingerprint.
+
+Used when the lock file is refreshed, so a removed plugin, or one whose interface changed, loses its approval.
 
 ### `bindingApproved?`
 
@@ -85,8 +89,8 @@ generator(binding: Binding, name: String) -> Result<PluginOperation, String>
 
 **Fields**
 
-  - `approvalKey` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `scopeName` : [String](../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `approvalKey` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `scopeName` : [String](../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
   - `declaration` : [Plugin](../tey/manifest.md#record-tey-manifest-plugin)
 
 

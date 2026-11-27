@@ -1,0 +1,2152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Net.HTTP | Standard Library 0.4.0-rc.5-dev | kex docs</title>
+    <meta name="description" content="Buffered HTTP clients and responses, and a small server whose router tries routes in the order they were declared.">
+    <link rel="canonical" href="https://docs.kex.run/prelude/0.4.0-rc.5-dev/net/http/">
+    <meta property="og:url" content="https://docs.kex.run/prelude/0.4.0-rc.5-dev/net/http/">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="kex docs">
+    <meta property="og:title" content="Net.HTTP">
+    <meta name="twitter:title" content="Net.HTTP">
+    <meta property="og:description" content="Buffered HTTP clients and responses, and a small server whose router tries routes in the order they were declared.">
+    <meta name="twitter:description" content="Buffered HTTP clients and responses, and a small server whose router tries routes in the order they were declared.">
+    <meta property="og:image" content="https://docs.kex.run/social.png">
+    <meta name="twitter:image" content="https://docs.kex.run/social.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="theme-color" content="#fcf5e2">
+    <link rel="icon" href="/_theme/icon.png" type="image/png" sizes="403x403">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>/* Krix: the Kex documentation stylesheet, from Tey docgen (tey/src/tey/docgen/css.kex, MIT).
+   Marqraft additions follow the original rules. */
+/* kex docs — design tokens ported from kex.run (see module comment) */
+
+:root {
+  --bg: #fcf5e2;
+  --bg-subtle: #f6ecd0;
+  --bg-muted: #f0e2bc;
+  --bg-sunken: #ead9a8;
+  --ink: #2a1c0a;
+  --ink-soft: #54380f;
+  --muted: #7a5a25;
+  --faint: #9c7a3c;
+  --line: #ecdcb4;
+  --line-strong: #dbc78c;
+  --accent: #b06a14;
+  --accent-strong: #8a4f0a;
+  --accent-soft: #f4e2b8;
+  --accent-ink: #5a3408;
+  --code-bg: #1b140a;
+  --code-bg-soft: #221a0e;
+  --code-border: #382a16;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+/* JetBrains Mono ships programming ligatures (-> to a single arrow, =>,
+   !=, ...) on by default. They read well in code blocks, so they stay
+   there — but in the search box the reader is TYPING, and -> must
+   appear exactly as entered. Disable ligatures there only. */
+.search-modal-panel input, .search-page-box input {
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0, "dlig" 0;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse 90% 50% at 50% -10%, rgba(236, 178, 94, 0.28), transparent 70%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+::selection { background: var(--accent-soft); color: var(--accent-ink); }
+
+a { color: inherit; text-decoration: none; }
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.wrap { width: 100%; max-width: 76rem; margin-inline: auto; padding-inline: 1.5rem; }
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(252, 245, 226, 0.85);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+
+.top-inner { display: flex; align-items: center; gap: 0.75rem; height: 3.5rem; }
+
+/* ── Search ─────────────────────────────────────────────────────────── */
+
+.search-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  height: 2.1rem;
+  min-width: 14rem;
+  padding: 0 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-soft);
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.search-trigger:hover { border-color: var(--accent); color: var(--ink); }
+.search-trigger kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  padding: 0.2rem 0.35rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  color: var(--faint);
+}
+
+/* The modal is frosted glass: a translucent warm panel over a blurred
+   backdrop, in the same voice as the sticky header. */
+/* Above everything the page draws, including Marqraft's formatting toolbar
+   while authoring (z-index 2147481000); below its top bar and dialogs. */
+.search-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2147482000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+  background: rgba(42, 28, 10, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.search-modal[hidden] { display: none; }
+
+.search-modal-panel {
+  width: min(44rem, 92vw);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 253, 248, 0.82);
+  backdrop-filter: blur(28px) saturate(140%);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
+  border: 1px solid rgba(236, 220, 180, 0.9);
+  box-shadow: 0 24px 72px rgba(42, 28, 10, 0.35);
+}
+
+.search-modal-panel input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1.05rem 1.3rem;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(236, 220, 180, 0.9);
+  outline: none;
+}
+.search-modal-panel input::placeholder { color: var(--faint); }
+
+.search-modal-results { max-height: 55vh; overflow-y: auto; padding: 0.5rem; }
+
+.search-hit {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.1rem;
+  border-radius: 10px;
+  text-decoration: none;
+}
+.search-hit:hover { background: rgba(246, 236, 208, 0.6); }
+.search-hit.selected { background: rgba(244, 226, 184, 0.9); }
+
+.search-head { display: flex; align-items: baseline; gap: 0.6rem; }
+
+.search-kind {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-strong);
+}
+/* Each kind has its own hue, so a scan down the list separates
+   functions from types from modules at a glance. */
+.search-kind-module { color: #6b5bd2; }
+.search-kind-function { color: #2f855a; }
+.search-kind-make { color: #b06a14; }
+.search-kind-trait { color: #c2498a; }
+.search-kind-record { color: #2b6cb0; }
+.search-kind-type { color: #0f8a8a; }
+.search-kind-constant { color: #9a5a13; }
+/* The site's own pages and their sections (Marqraft's search index). */
+.search-kind-page { color: var(--accent-strong); }
+.search-kind-section { color: var(--muted); }
+.search-name { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--ink); }
+.search-qual { margin-left: auto; font-family: var(--font-mono); font-size: 12px; color: var(--muted); text-align: right; }
+.search-sig {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 12.5px;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-empty { padding: 0.8rem 0.9rem; font-size: 13px; color: var(--faint); }
+
+.search-modal-footer {
+  border-top: 1px solid rgba(236, 220, 180, 0.9);
+  padding: 0.55rem 0.9rem;
+  font-size: 12.5px;
+}
+.search-modal-footer a { color: var(--accent-strong); text-decoration: none; }
+.search-modal-footer a:hover { text-decoration: underline; }
+
+/* The empty state: an explainer, example chips, and this page's items. */
+.search-hint, .search-local { padding: 0.8rem 1rem 0.6rem; }
+
+.search-hint-title { margin: 0 0 0.25rem; font-size: 13px; font-weight: 600; color: var(--ink); }
+.search-hint-body { margin: 0 0 0.6rem; font-size: 12.5px; color: var(--muted); }
+
+.search-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
+.search-chip {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 0.25rem 0.6rem;
+  color: var(--ink-soft);
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.search-chip:hover { border-color: var(--accent); color: var(--ink); }
+
+.search-local { border-top: 1px solid rgba(236, 220, 180, 0.7); }
+
+/* ── Full search page ──────────────────────────────────────────────── */
+
+.search-page { max-width: 52rem; }
+
+.search-page-box input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.85rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--ink);
+  background: rgba(246, 236, 208, 0.6);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  outline: none;
+}
+.search-page-box input:focus { border-color: var(--accent); }
+
+.search-page-results { margin-top: 1.25rem; }
+
+.search-page-hit {
+  display: block;
+  padding: 0.8rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+}
+.search-page-hit:hover { background: var(--bg-subtle); }
+
+.search-summary {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.brand-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  padding-top: 0.2rem;
+}
+
+.spacer { flex: 1; }
+
+.pkg-badge {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+}
+
+/* The version in the badge; with sibling versions Marqraft renders it as a
+   select that opens the same page in the chosen version. */
+.pkg-badge .marq-versions {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.back { font-size: 13.5px; color: var(--muted); }
+.back:hover { color: var(--accent-strong); }
+
+/* ── Layout ─────────────────────────────────────────────────────────── */
+
+.layout {
+  display: grid;
+  gap: 3rem;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  padding-block: 2.5rem;
+}
+
+/* The home page belongs to no collection, so it has no sidebar. */
+.layout.home { grid-template-columns: minmax(0, 1fr); }
+
+/* The module list is longer than the viewport, and it is stuck to it —
+   so it needs its own scrollbar, or everything past the fold is
+   unreachable. The height is what is left below the sticky header. */
+.side nav {
+  position: sticky;
+  top: 5rem;
+  max-height: calc(100vh - 6.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.35rem;
+}
+
+.side-heading {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+
+.side-list { list-style: none; margin: 0; padding: 0; }
+
+.side-list > li > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.side-list > li > a:hover { background: var(--bg-subtle); color: var(--ink); }
+
+.side-list > li > a.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+.side-sub { list-style: none; margin: 0.15rem 0 0.4rem; padding: 0 0 0 1.1rem; }
+
+.side-sub a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.15rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--faint);
+}
+
+.side-sub a:hover { color: var(--accent-strong); background: var(--bg-subtle); }
+
+/* Nested modules ("FS" → "FS.Path"): same voice as the top list, one
+   step quieter and indented under their parent. */
+.side-nest { list-style: none; margin: 0; padding: 0 0 0.25rem 0.75rem; }
+.side-nest > li > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.18rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--faint);
+}
+.side-nest > li > a:hover { background: var(--bg-subtle); color: var(--ink); }
+.side-nest > li > a.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+/* Cross-reference links inside code spans: the code face stays, the
+   colour signals "this goes somewhere". */
+a.xref { color: var(--accent-strong); text-decoration: none; border-bottom: 1px solid color-mix(in oklab, var(--accent) 45%, transparent); }
+a.xref:hover { border-bottom-color: var(--accent-strong); }
+
+.content { min-width: 0; max-width: 48rem; }
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--faint);
+  margin-bottom: 1rem;
+}
+
+.crumbs a:hover { color: var(--accent-strong); }
+.crumbs .sep { opacity: 0.6; }
+
+/* ── Prose ──────────────────────────────────────────────────────────── */
+
+.prose { color: var(--ink-soft); font-size: 1.0125rem; line-height: 1.75; }
+
+.prose h1 { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 1rem; line-height: 1.15; }
+
+/* The standalone index pages (site root, package versions) carry their
+   h1 directly in .content.prose — unlike the entity pages, which get
+   top breathing room from .layout's padding. Give those a little air
+   under the header. */
+.content.prose > h1 { margin-top: 2rem; }
+
+.prose h1 .ver {
+  font-family: var(--font-mono);
+  font-size: 0.45em;
+  font-weight: 500;
+  color: var(--muted);
+  vertical-align: middle;
+  letter-spacing: 0;
+}
+
+.prose h2 {
+  font-size: 1.35rem;
+  font-weight: 650;
+  margin: 2.6rem 0 0.9rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+
+.prose h3 { font-size: 1.05rem; font-weight: 600; margin: 1.6rem 0 0.5rem; }
+
+.prose h5 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  margin: 1.4rem 0 0.4rem;
+}
+
+.prose p { margin: 0 0 1.1rem; }
+
+.prose a { color: var(--accent-strong); text-decoration: underline; text-decoration-color: var(--accent-soft); text-underline-offset: 3px; }
+.prose a:hover { text-decoration-color: currentColor; }
+
+.prose code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  background: var(--bg-muted);
+  border: 1px solid var(--line);
+  padding: 0.12rem 0.4rem;
+  border-radius: 6px;
+  color: var(--muted);
+}
+
+.prose strong { color: var(--ink); font-weight: 600; }
+
+.lede { font-size: 1.05rem; color: var(--muted); }
+
+/* ── Entities ───────────────────────────────────────────────────────── */
+
+/* Anchor navigation lands a heading below the sticky header, not under
+   it: reserve the header's height (3.5rem) plus breathing room. */
+.entity, .fn { scroll-margin-top: 4.75rem; }
+
+.entity h2 code { font-size: 0.95em; }
+
+.kind {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  padding: 0.1rem 0.45rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+/* Each declaration kind has its own hue — the same palette as the
+   search results — so a module, a trait and a make are told apart at
+   a glance rather than all reading as one amber badge. */
+.kind-module { color: #6b5bd2; border-color: #d6cdf3; background: #efeafc; }
+.kind-function { color: #2f855a; border-color: #c6e6d4; background: #e8f4ec; }
+.kind-make { color: #b06a14; border-color: #ecd6ac; background: #f7ecd6; }
+.kind-trait { color: #c2498a; border-color: #efcfe0; background: #f9ecf3; }
+.kind-record { color: #2b6cb0; border-color: #c8dcf0; background: #e9f1fa; }
+.kind-type { color: #0f8a8a; border-color: #c0e4e2; background: #e4f4f3; }
+.kind-constant { color: #9a5a13; border-color: #e6d2b4; background: #f6ecdd; }
+
+.fields, .params { margin: 0 0 1.1rem; }
+
+.field, .param {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.field dt, .param dt { flex-shrink: 0; }
+.field dd, .param dd { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+.opt {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--faint);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 0.5rem;
+  margin-left: 0.4rem;
+}
+
+.variants { margin: 0 0 1.1rem; padding-left: 1.3rem; list-style: disc; }
+.variants li { margin: 0.3rem 0; }
+.variants .abstract { color: var(--faint); }
+
+.fn {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 0.9rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.fn h4 { margin: 0 0 0.4rem; font-size: 1rem; }
+.fn p:last-child, .fn pre:last-child { margin-bottom: 0; }
+
+.fn h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+
+/* The heading of a member links to itself, so a reader can copy a
+   deep link without hunting for a pilcrow. */
+a.self { color: inherit; text-decoration: none; }
+a.self:hover code { border-color: var(--accent); }
+
+/* A method's signature leads its box: the call shape first, prose after. */
+pre.code.sig { margin-bottom: 0.8rem; padding: 0.6rem 0.9rem; }
+pre.code a.xref { color: inherit; border-bottom: 1px dotted color-mix(in oklab, #e6a960 60%, transparent); }
+
+/* "Implements Monoid, Enumerable." / "Implemented by ...": where a
+   type's methods come from, said right under its heading. */
+.implements, .home-note {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin: 0 0 1.1rem;
+}
+
+/* A member group inside a type: "Methods", "On [Number]". */
+.members { margin-top: 1.8rem; }
+.members > h3, .entity > h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.3rem;
+}
+
+/* Which trait a member fulfils: a small link chip beside its name. */
+.tag-trait, .tag-kind, .tag-foul {
+  margin-left: 0.5rem;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid #efcfe0;
+  border-radius: 999px;
+  background: #f9ecf3;
+  color: #c2498a;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  text-decoration: none;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.tag-kind { border-color: #e6d2b4; background: #f6ecdd; color: #9a5a13; }
+/* Foul: may touch the outside world. The one chip that is a warning. */
+.tag-foul { border-color: #efcdc3; background: #fbece7; color: #b4432b; font-weight: 600; }
+.index .tag-foul { font-size: 11px; padding: 0.1rem 0.45rem; }
+.tag-trait:hover { border-color: #c2498a; }
+
+/* Methods a type gets from a trait without writing them. */
+.inherited dt, .elsewhere dt { min-width: 9rem; }
+
+/* ── Reference: finding a member ────────────────────────────────────── */
+
+/* What a declaration offers, ahead of the full entries: one line per
+   member, so a long type is read as a list before it is read as a page. */
+.summary { margin: 1.4rem 0 2.4rem; }
+.summary > h3 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  margin: 1.5rem 0 0.3rem;
+}
+.summary > h3:first-child { margin-top: 0; }
+.summary > h3 a, .summary > h3 a.xref { color: inherit; text-decoration: none; border-bottom: 0; }
+.summary > h3 code:not(pre code) { font-size: 1em; letter-spacing: 0; text-transform: none; }
+.summary .params { margin-bottom: 0; }
+.summary .param { padding: 0.28rem 0; }
+.summary dd { font-size: 0.9rem; }
+/* One name column for the whole list, as wide as its longest name and
+   its chip, so every summary starts on the same edge. */
+.summary .params { display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 1.2rem; }
+.summary .param { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; }
+
+/* A member's entry is a card headed by its signature: a band across the
+   top, flush with the card's edges, rather than a box inside a box. The
+   band is light, so the dark surface is left to the examples and the two
+   are told apart at a glance. What the signature does not say shares the
+   band with it, at the right: whether the member is foul, the traits it
+   fulfils, its permalink. */
+.fn {
+  --fn-band: #faf7e4;
+  overflow: hidden;
+  padding: 0.95rem 1.2rem 1rem;
+  border-radius: 12px;
+}
+.fn:has(> .fn-head) { padding-top: 0; }
+.fn-head, .fn > pre.code.sig {
+  margin: 0 -1.2rem 0.95rem;
+  padding: 0.75rem 1.2rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--fn-band);
+}
+.fn-head { display: flex; align-items: flex-start; gap: 0.9rem; }
+.fn pre.code.sig {
+  border: 0;
+  border-radius: 0;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+/* A signature keeps its line: one longer than its room scrolls there,
+   beside the chips, never under them. */
+.sig-line { display: block; }
+.fn-head > pre.code.sig { flex: 1; min-width: 0; margin: 0; padding: 0; background: none; }
+/* A further overload: its own band, part-way down the card. */
+.fn > pre.code.sig { margin-top: 1.2rem; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+/* The token colours are made for the dark code surface. On the band every
+   token starts from the band's own ink, and only what helps read a
+   signature is picked out: the name, the types, the default values. */
+.fn pre.code.sig span { color: inherit; }
+.fn pre.code.sig .tok-fn { color: var(--ink); font-weight: 700; }
+.fn pre.code.sig .tok-type { color: var(--accent-strong); }
+.fn pre.code.sig .tok-op, .fn pre.code.sig .tok-punct { color: var(--faint); }
+.fn pre.code.sig :is(.tok-string, .tok-number, .tok-bool, .tok-atom) { color: var(--accent); }
+.fn pre.code.sig a.xref { border-bottom-color: color-mix(in oklab, var(--accent) 45%, transparent); }
+
+/* The heading beside a signature repeats its name, so only its chips show. */
+.fn-head > :is(h3, h4) {
+  order: 2;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  line-height: 1;
+}
+.fn-head > :is(h3, h4) a.self { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.fn :is(h3, h4) :is(.tag-trait, .tag-kind, .tag-foul) { margin-left: 0; }
+.fn > :is(h3, h4) a.self + :is(.tag-trait, .tag-kind, .tag-foul, .permalink) { margin-left: 0.5rem; }
+.fn h5 { margin: 0.9rem 0 0.35rem; }
+
+/* Parameters as two aligned columns, and what comes back labelled the
+   same way: inside a card the rules between rows are one frame too many. */
+.fn .params { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.35rem 1rem; margin-bottom: 0.9rem; }
+.fn .param { display: contents; }
+.fn .returns { color: var(--muted); font-size: 0.95rem; }
+.fn .returns strong {
+  margin-right: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+
+/* A block of example code, and the control that copies it: in the block's
+   corner, waiting for the pointer like a card's permalink. */
+.code-block { position: relative; margin: 0 0 1.1rem; }
+.code-block > pre.code { margin: 0; }
+.fn .code-block:last-child { margin-bottom: 0; }
+.copy-code {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  height: 1.6rem;
+  padding: 0 0.55rem;
+  border: 1px solid var(--code-border);
+  border-radius: 6px;
+  background: var(--code-bg-soft);
+  box-shadow: 0 0 0 0.35rem var(--code-bg);
+  color: #c9bfa9;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, opacity 0.15s;
+}
+.copy-code:hover { color: #fff; border-color: #e6a960; }
+.copy-code.copied { color: #8fd3a8; border-color: #3d6b4c; }
+@media (hover: hover) {
+  .copy-code { opacity: 0; }
+  .code-block:hover .copy-code, .copy-code:focus-visible, .copy-code.copied { opacity: 1; }
+}
+
+/* The address of a declaration or member: a link to its own anchor that
+   the page script also copies to the clipboard. */
+.prose a.permalink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  vertical-align: middle;
+  transition: color 0.15s, border-color 0.15s, opacity 0.15s;
+}
+.prose a.permalink:hover { color: var(--accent-strong); border-color: var(--accent); }
+.prose a.permalink.copied { color: #2f855a; border-color: #c6e6d4; background: #e8f4ec; }
+.entity > h2 a.permalink { margin-left: 0.4rem; }
+/* With a pointer, a permalink waits for it: beside a declaration's heading,
+   and in the corner of a member's card, where it takes no room from the
+   signature until the card is under the pointer. Without one it is always
+   there, in the row. */
+@media (hover: hover) {
+  .entity > h2 a.permalink { opacity: 0; }
+  .entity > h2:hover a.permalink, .entity > h2 a.permalink:focus-visible, .entity > h2 a.permalink.copied { opacity: 1; }
+  .fn { position: relative; }
+  .fn-head a.permalink {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.9rem;
+    opacity: 0;
+    background: var(--bg);
+    box-shadow: 0 0 0 0.4rem var(--fn-band);
+  }
+  .fn:hover .fn-head a.permalink, .fn-head a.permalink:focus-visible, .fn-head a.permalink.copied { opacity: 1; }
+  /* The chips step aside for it rather than sit under it. */
+  .fn-head :is(.tag-trait, .tag-kind, .tag-foul) { transition: transform 0.15s; }
+  .fn:hover .fn-head :is(.tag-trait, .tag-kind, .tag-foul) { transform: translateX(-2.1rem); }
+}
+
+.prose ul { margin: 0 0 1.1rem; padding-left: 1.3rem; }
+.prose li { margin: 0.25rem 0; }
+
+/* A file's opening comment: what the page is about, before any one
+   declaration. */
+.intro { font-size: 1.02rem; margin-bottom: 1.6rem; }
+
+.caption { margin: 0 0 0.3rem; color: var(--muted); font-size: 0.95rem; }
+
+.returns { color: var(--muted); }
+.returns strong { color: var(--ink-soft); }
+
+.deprecated {
+  border-left: 3px solid var(--accent);
+  background: var(--bg-subtle);
+  padding: 0.7rem 1rem;
+  margin: 1.2rem 0;
+  border-radius: 0 8px 8px 0;
+}
+
+/* ── Code surface ───────────────────────────────────────────────────── */
+
+pre.code {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 1.1rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #e9e0cf;
+}
+
+pre.code code { font-family: inherit; }
+
+.tok-comment { color: #94876a; font-style: italic; }
+.tok-keyword { color: #f0c987; }
+.tok-type    { color: #e6a960; }
+.tok-string  { color: #c9e0a0; }
+.tok-interp  { color: #e9e0cf; }
+.tok-number  { color: #ffc18a; }
+.tok-fn      { color: #ffe0a0; }
+.tok-method  { color: #ffe0a0; }
+.tok-op      { color: #d8b878; }
+.tok-punct   { color: #a89a78; }
+.tok-const   { color: #e6a960; }
+.tok-field   { color: #f0e8d4; }
+.tok-bool    { color: #ffc18a; }
+
+/* ── Cards (version index) ──────────────────────────────────────────── */
+
+.cards {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  margin-top: 1.6rem;
+}
+
+/* Section headings on the index and the prelude page: what separates
+   "given to you" from "one using away". */
+.group {
+  margin: 2.6rem 0 0.2rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.group-note { margin: 0; color: var(--muted); font-size: 0.92rem; }
+
+/* "prelude": this page needs no import. It sits on the page heading,
+   beside the module name it qualifies. */
+.tag-prelude {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+h1 .tag-prelude { font-size: 11px; vertical-align: 0.45em; }
+
+.prelude-list {
+  list-style: none;
+  margin: 1.2rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+}
+
+.prelude-list li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.prelude-note {
+  color: var(--faint);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.card:hover { border-color: var(--line-strong); background: var(--bg-subtle); }
+
+.card-title { display: block; font-family: var(--font-mono); font-weight: 600; color: var(--ink); }
+.card:hover .card-title { color: var(--accent-strong); }
+.card-meta { display: block; margin-top: 0.25rem; font-size: 12.5px; color: var(--faint); }
+
+/* ── Footer ─────────────────────────────────────────────────────────── */
+
+.foot {
+  border-top: 1px solid var(--line);
+  margin-top: 3rem;
+  padding: 1.4rem 0 2rem;
+  font-size: 13px;
+  color: var(--faint);
+}
+
+.foot a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.foot a:hover { color: var(--accent-strong); }
+.foot-links, .foot-links .marq-menu, .foot-links li { display: inline; margin: 0; padding: 0; }
+.foot-links li::before { content: " · "; }
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .layout { grid-template-columns: 1fr; }
+  .side { display: none; }
+}
+
+/* ── Marqraft additions ───────────────────────────────────────────────── */
+
+/* Settings: links follow the accent, the column follows the content width. */
+.prose a, a.xref { color: var(--marq-accent, var(--accent-strong)); }
+.content { max-width: var(--marq-contentWidth, 48rem); }
+.site-logo { height: 1.4rem; margin-right: 0.4rem; vertical-align: -0.2rem; }
+
+/* The navigation binding renders nested ul/li/a; style it as the docgen sidebar. */
+.side-tree ul { list-style: none; margin: 0; padding: 0; }
+.side-tree li > a,
+.side-tree li > .marq-nav-row > a {
+  display: block;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.side-tree li > a:hover,
+.side-tree li > .marq-nav-row > a:hover { background: var(--bg-subtle); color: var(--ink); }
+.side-tree a[aria-current=page] { background: var(--accent-soft); color: var(--accent-ink); font-weight: 500; }
+.side-tree ul ul { padding: 0 0 0.25rem 0.75rem; }
+.side-tree ul ul a { padding-block: 0.18rem; font-size: 12.5px; color: var(--faint); }
+.marq-draft {
+  margin-left: 0.4rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+/* Chapter list on the index page. */
+.chapters ul { list-style: none; margin: 0.8rem 0 0; padding: 0; counter-reset: chapter; }
+.chapters ul ul { padding-left: 1.4rem; margin: 0; }
+.chapters li > a, .chapters li > .marq-nav-row > a {
+  display: block;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+.chapters a:hover { color: var(--accent-strong); }
+
+/* Reading order: the docgen "prevnext" footer. */
+.marq-pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2.6rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+.marq-pager a { text-decoration: none; display: flex; flex-direction: column; }
+.marq-pager small { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--faint); }
+.marq-pager span { color: var(--accent-strong); }
+.marq-pager-previous span::before { content: "← "; }
+.marq-pager-next { margin-left: auto; text-align: right; }
+.marq-pager-next span::after { content: " →"; }
+
+/* Prose elements docgen leaves to the browser. */
+.prose ul, .prose ol { margin: 0 0 1.1rem; padding-left: 1.4rem; }
+.prose li { margin: 0.2rem 0; }
+.prose li > ul, .prose li > ol { margin: 0.2rem 0; }
+.prose blockquote {
+  margin: 0 0 1.1rem;
+  padding: 0.7rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--bg-subtle);
+  border-radius: 0 8px 8px 0;
+  color: var(--muted);
+}
+.prose blockquote p:last-child { margin-bottom: 0; }
+.prose hr { border: 0; border-top: 1px solid var(--line); margin: 2rem 0; }
+.prose img { max-width: 100%; border-radius: 10px; border: 1px solid var(--line); }
+.table-scroll { overflow-x: auto; margin: 0 0 1.1rem; }
+/* A framed grid: an outline rounded like code blocks and callouts, lines
+   between cells, a shaded header and light banding. Borders sit on the
+   cells' right and bottom sides (separate, not collapsed, so the outline
+   can be rounded), and the last column and row drop theirs. */
+.prose table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  margin: 0 0 1.1rem;
+  font-size: 0.93rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.table-scroll > table { margin: 0; }
+.prose th, .prose td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.5rem 0.8rem;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.prose :is(th, td):last-child { border-right: 0; }
+.prose tr:last-child > :is(th, td) { border-bottom: 0; }
+.prose th { font-weight: 600; color: var(--ink); background: var(--bg-subtle); border-bottom-color: var(--line-strong); }
+.prose tbody tr:nth-child(even) > td { background: color-mix(in srgb, var(--bg-subtle) 45%, transparent); }
+.prose pre:not(.code) {
+  background: var(--code-bg); color: #e9e0cf; border: 1px solid var(--code-border);
+  border-radius: 10px; padding: 0.9rem 1.1rem; overflow-x: auto; font-family: var(--font-mono); font-size: 0.85rem;
+}
+
+/* Blocks. */
+/* A Code block is a window, as on kex.run: a bar with three dots, the
+   filename (or the language) and a Copy button, over the code, with an
+   optional caption under the window. */
+.marq-code { margin: 0 0 1.1rem; }
+.marq-code > .marq-code-bar + pre.code,
+.marq-code > .marq-code-bar + pre { margin: 0; border-top: 0; border-radius: 0 0 10px 10px; }
+.marq-code-bar {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.5rem 0.9rem;
+  background: var(--code-bg-soft);
+  border: 1px solid var(--code-border); border-bottom-color: color-mix(in srgb, var(--code-border) 70%, transparent);
+  border-radius: 10px 10px 0 0;
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.4;
+}
+.marq-code-dots { display: flex; gap: 6px; flex-shrink: 0; }
+.marq-code-dots i { width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; }
+.marq-code-dots i:nth-child(2) { background: #febc2e; }
+.marq-code-dots i:nth-child(3) { background: #28c840; }
+.marq-code-file { color: #b8ab8e; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.marq-code-language { color: #7d7159; text-transform: lowercase; }
+.marq-code-copy {
+  margin-left: auto; padding: 0.15rem 0.5rem; border: 0; border-radius: 6px;
+  background: transparent; color: #94876a; font: inherit; font-size: 11px; cursor: pointer;
+}
+.marq-code-copy:hover { background: rgba(255, 255, 255, 0.06); color: #e9e0cf; }
+/* Output uses the supported literal code block with its own plain transcript style. */
+.marq-code[data-language="output"] {
+  border-left: 3px solid var(--accent);
+  border-radius: 0;
+  background: var(--code-bg);
+}
+.marq-code[data-language="output"] .marq-code-bar {
+  padding: 0.65rem 1rem 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.marq-code[data-language="output"] .marq-code-dots,
+.marq-code[data-language="output"] .marq-code-copy,
+.marq-code[data-language="output"] .marq-code-language,
+.marq-code[data-language="output"] figcaption { display: none; }
+.marq-code[data-language="output"] .marq-code-file {
+  color: #b8ab8e;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  overflow: visible;
+  text-overflow: clip;
+  text-transform: uppercase;
+}
+.marq-code[data-language="output"] pre.code,
+.marq-code[data-language="output"] > .marq-code-bar + pre.code {
+  margin: 0;
+  padding: 0.45rem 1rem 0.85rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.marq-code figcaption { margin-top: 0.45rem; font-size: 12.5px; color: var(--muted); text-align: center; }
+.marq-tabs { border: 1px solid var(--line); border-radius: 10px; padding: 0.4rem 1.1rem; margin: 0 0 1.1rem; background: rgba(255, 255, 255, 0.35); }
+.marq-area + .marq-area { border-top: 1px solid var(--line); }
+.marq-area h3 { margin: 0.8rem 0 0.4rem; font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--faint); }
+/* GitHub alerts: > [!NOTE], [!TIP], [!IMPORTANT], [!WARNING], [!CAUTION]. */
+.markdown-alert { margin: 0 0 1.1rem; padding: 0.7rem 1rem; border-left: 3px solid var(--accent); background: var(--bg-subtle); border-radius: 0 8px 8px 0; }
+.markdown-alert-note { border-left-color: #2b6cb0; background: #e9f1fa; }
+.markdown-alert-tip { border-left-color: #2f855a; background: #e8f4ec; }
+.markdown-alert-important { border-left-color: #6b5bd2; background: #efeafc; }
+.markdown-alert-warning { border-left-color: var(--accent); background: #f7ecd6; }
+.markdown-alert-caution { border-left-color: #c2498a; background: #f9ecf3; }
+.markdown-alert-title { margin: 0 0 0.2rem !important; font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-ink); }
+.markdown-alert-body > :last-child { margin-bottom: 0; }
+.marq-source { border: 1px dashed var(--line-strong); padding: 0.7rem; white-space: pre-wrap; }
+
+/* Collections: the top-level pages (Guide, Tutorial, ...) as header links. */
+.top-nav { margin-left: 1rem; }
+.top-nav ul { display: flex; align-items: center; gap: 0.2rem; list-style: none; margin: 0; padding: 0; }
+.top-nav li { position: relative; }
+.top-nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.top-nav a:hover { color: var(--ink); background: var(--bg-subtle); }
+.top-nav a[aria-current] { color: var(--accent-ink); background: var(--accent-soft); font-weight: 500; }
+/* Header links: ordinary links after the version badge, e.g. kex.run. */
+.top-links .marq-menu { display: flex; align-items: center; gap: 0.9rem; list-style: none; margin: 0 0 0 0.75rem; padding: 0; }
+.top-links li { position: relative; }
+.top-links a { font-size: 13.5px; color: var(--muted); }
+.top-links a:hover { color: var(--accent-strong); }
+.top-links a[href^="http"]::after { content: " ↗"; }
+@media (max-width: 640px) { .brand-sub, .pkg-badge { display: none; } .top-nav { margin-left: 0.25rem; } }
+
+/* Authoring (marq dev only): keep the sticky header and toolbar below the Marqraft bar. */
+body:has(#marq-chrome) .top { top: 48px; }
+body:has(#marq-chrome) { --marq-toolbar-top: calc(48px + 3.5rem + 0.5rem); }
+body:has(#marq-chrome) .side nav { top: calc(48px + 5rem); }
+
+/* Reference pages (reference.html.ket): generated API documentation with an
+   "On this page" rail beside the content. The producer (Tey docgen's
+   fragments output) renders the rail's list; the theme places it. */
+.layout.has-toc { grid-template-columns: 15rem minmax(0, 1fr) 12rem; }
+.toc { font-size: 12.5px; }
+.toc > * { position: sticky; top: 5rem; }
+.toc-heading {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+.toc ul { list-style: none; margin: 0; padding: 0; max-height: calc(100vh - 8rem); overflow-y: auto; }
+.toc li a { display: block; padding: 0.2rem 0.5rem; border-left: 2px solid var(--line); color: var(--muted); }
+.toc li a:hover { color: var(--ink); border-left-color: var(--accent); }
+/* Where the reader is. */
+.toc li a.current { color: var(--ink); border-left-color: var(--accent); background: var(--bg-subtle); font-weight: 600; }
+.toc li.toc-nested a { padding-left: 1.1rem; }
+/* Members, under the declaration they belong to. */
+.toc li.toc-member a { padding: 0.1rem 0.5rem 0.1rem 1.1rem; font-family: var(--font-mono); font-size: 11.5px; }
+.reference .content { max-width: none; }
+@media (max-width: 1280px) { .layout.has-toc { grid-template-columns: 15rem minmax(0, 1fr); } .toc { display: none; } }
+@media (max-width: 1024px) { .layout.has-toc { grid-template-columns: 1fr; } }
+
+:root{--marq-accent:#8a4f0a;--marq-contentWidth:48rem;}</style>
+    <script src="/_theme/search.js" defer></script>
+    <script src="/_theme/reference.js" defer></script>
+  </head>
+  <body class="reference">
+    <header class="top">
+      <div class="wrap top-inner">
+        <a class="brand" href="/">kex</a>
+        <span class="brand-sub">docs</span>
+        <nav class="top-nav" aria-label="Collections"><ul><li><a href="/guide/0.4.0-alpha/">Guide</a></li><li><a href="/prelude/" aria-current="true">Standard Library</a></li><li><a href="/tey/">Tey</a></li></ul></nav>
+        <span class="spacer"></span>
+        <button class="search-trigger" id="search" type="button" aria-label="Search documentation" data-index="/search.json"><span>Search</span><kbd>/</kbd></button>
+        <span class="pkg-badge">Standard Library <select class="marq-versions" aria-label="Version" onchange="location.href=this.value"><option value="/prelude/0.3.0/">0.3.0</option><option value="/prelude/0.3.0-beta/">0.3.0-beta</option><option value="/prelude/0.3.1/">0.3.1</option><option value="/prelude/0.3.2/">0.3.2</option><option value="/prelude/0.3.3/">0.3.3</option><option value="/prelude/0.3.4/">0.3.4</option><option value="/prelude/0.4.0-alpha/">0.4.0-alpha</option><option value="/prelude/0.4.0-alpha.2/net/http/">0.4.0-alpha.2</option><option value="/prelude/0.4.0-beta/net/http/">0.4.0-beta</option><option value="/prelude/0.4.0-beta.2/net/http/">0.4.0-beta.2</option><option value="/prelude/0.4.0-beta.3/net/http/">0.4.0-beta.3</option><option value="/prelude/0.4.0-beta.4-dev/net/http/">0.4.0-beta.4-dev</option><option value="/prelude/0.4.0-beta.5-dev/net/http/">0.4.0-beta.5-dev</option><option value="/prelude/0.4.0-rc.1-dev/net/http/">0.4.0-rc.1-dev</option><option value="/prelude/0.4.0-rc.2-dev/net/http/">0.4.0-rc.2-dev</option><option value="/prelude/0.4.0-rc.3-dev/net/http/">0.4.0-rc.3-dev</option><option value="/prelude/0.4.0-rc.4-dev/net/http/">0.4.0-rc.4-dev</option><option value="/prelude/0.4.0-rc.5-dev/net/http/" selected>0.4.0-rc.5-dev</option></select></span>
+        <nav class="top-links" aria-label="Links"><ul class="marq-menu"><li><a href="https://kex.run/docs">kex.run</a></li></ul></nav>
+      </div>
+    </header>
+    <div class="wrap layout has-toc">
+      <aside class="side">
+        <nav aria-label="Standard Library">
+          <div class="side-tree"><ul><li><a href="/prelude/0.4.0-rc.5-dev/">Standard Library</a><ul><li><a href="/prelude/0.4.0-rc.5-dev/algebra/">Algebra</a></li><li><a href="/prelude/0.4.0-rc.5-dev/test/">Assert</a></li><li><a href="/prelude/0.4.0-rc.5-dev/atom/">Atom</a></li><li><a href="/prelude/0.4.0-rc.5-dev/binary/">Binary</a></li><li><a href="/prelude/0.4.0-rc.5-dev/bits/">Bits</a></li><li><a href="/prelude/0.4.0-rc.5-dev/blankable/">Blankable</a></li><li><a href="/prelude/0.4.0-rc.5-dev/comparable/">Comparable</a></li><li><a href="/prelude/0.4.0-rc.5-dev/complex/">Complex</a></li><li><a href="/prelude/0.4.0-rc.5-dev/console/">Console</a></li><li><a href="/prelude/0.4.0-rc.5-dev/control/retry/">Control.Retry</a></li><li><a href="/prelude/0.4.0-rc.5-dev/culture/">Culture</a></li><li><a href="/prelude/0.4.0-rc.5-dev/data/queue/">Data.Queue</a></li><li><a href="/prelude/0.4.0-rc.5-dev/data/set/">Data.Set</a></li><li><a href="/prelude/0.4.0-rc.5-dev/data/stack/">Data.Stack</a></li><li><a href="/prelude/0.4.0-rc.5-dev/date/">Date</a></li><li><a href="/prelude/0.4.0-rc.5-dev/date_format/">DateFormat</a></li><li><a href="/prelude/0.4.0-rc.5-dev/date_time/">DateTime</a></li><li><a href="/prelude/0.4.0-rc.5-dev/digest/">Digest</a></li><li><a href="/prelude/0.4.0-rc.5-dev/dimensions/">Dimensions</a></li><li><a href="/prelude/0.4.0-rc.5-dev/duration/">Duration</a></li><li><a href="/prelude/0.4.0-rc.5-dev/enumerable/">Enumerable</a></li><li><a href="/prelude/0.4.0-rc.5-dev/env/">ENV</a></li><li><a href="/prelude/0.4.0-rc.5-dev/errorable/">Errorable</a></li><li><a href="/prelude/0.4.0-rc.5-dev/evaluator/">Evaluator</a></li><li><a href="/prelude/0.4.0-rc.5-dev/feed/">Feed</a></li><li><a href="/prelude/0.4.0-rc.5-dev/file_handle/">FileHandle</a></li><li><a href="/prelude/0.4.0-rc.5-dev/fs/">FS</a></li><li><a href="/prelude/0.4.0-rc.5-dev/io/">IO</a></li><li><a href="/prelude/0.4.0-rc.5-dev/json/">JSON</a></li><li><a href="/prelude/0.4.0-rc.5-dev/kex/">Kex</a><ul><li><a href="/prelude/0.4.0-rc.5-dev/kex/ast/">Kex.AST</a></li></ul></li><li><a href="/prelude/0.4.0-rc.5-dev/list/">List</a></li><li><a href="/prelude/0.4.0-rc.5-dev/map/">Map</a></li><li><a href="/prelude/0.4.0-rc.5-dev/math/">Math</a></li><li><a href="/prelude/0.4.0-rc.5-dev/mock/">Mock</a></li><li><a href="/prelude/0.4.0-rc.5-dev/net/">Net</a><ul><li><a href="/prelude/0.4.0-rc.5-dev/net/dns/">Net.DNS</a></li><li><a href="/prelude/0.4.0-rc.5-dev/net/http/" aria-current="page">Net.HTTP</a><ul><li><a href="/prelude/0.4.0-rc.5-dev/net/http/web_socket/">Net.HTTP.WebSocket</a></li></ul></li><li><a href="/prelude/0.4.0-rc.5-dev/net/ip/">Net.IP</a></li><li><a href="/prelude/0.4.0-rc.5-dev/net/socket/">Net.Socket</a></li></ul></li><li><a href="/prelude/0.4.0-rc.5-dev/node/">Node</a></li><li><a href="/prelude/0.4.0-rc.5-dev/number/">NumberFormat</a></li><li><a href="/prelude/0.4.0-rc.5-dev/optional/">Optional</a></li><li><a href="/prelude/0.4.0-rc.5-dev/option_parser/">OptionParser</a></li><li><a href="/prelude/0.4.0-rc.5-dev/parsing/">Parsing</a></li><li><a href="/prelude/0.4.0-rc.5-dev/period/">Period</a></li><li><a href="/prelude/0.4.0-rc.5-dev/prelude/">Prelude</a></li><li><a href="/prelude/0.4.0-rc.5-dev/process/">Process</a></li><li><a href="/prelude/0.4.0-rc.5-dev/random/">Random</a></li><li><a href="/prelude/0.4.0-rc.5-dev/range/">Range</a></li><li><a href="/prelude/0.4.0-rc.5-dev/regex/">Regex</a></li><li><a href="/prelude/0.4.0-rc.5-dev/stream/">Stream</a></li><li><a href="/prelude/0.4.0-rc.5-dev/string/">String</a></li><li><a href="/prelude/0.4.0-rc.5-dev/system/">System</a></li><li><a href="/prelude/0.4.0-rc.5-dev/tagged_validation/">TaggedValidation</a></li><li><a href="/prelude/0.4.0-rc.5-dev/template/">Template</a></li><li><a href="/prelude/0.4.0-rc.5-dev/time/">Time</a></li><li><a href="/prelude/0.4.0-rc.5-dev/truthyable/">Truthyable</a></li><li><a href="/prelude/0.4.0-rc.5-dev/type/">Type</a></li><li><a href="/prelude/0.4.0-rc.5-dev/units/">Units</a><ul><li><a href="/prelude/0.4.0-rc.5-dev/units/data/">Units.Data</a></li><li><a href="/prelude/0.4.0-rc.5-dev/units/dynamic/">Units.Dynamic</a></li><li><a href="/prelude/0.4.0-rc.5-dev/units/si/">Units.SI</a></li></ul></li><li><a href="/prelude/0.4.0-rc.5-dev/uri/">URI</a></li></ul></li></ul></div>
+        </nav>
+      </aside>
+      <main class="content">
+        <nav class="crumbs"><a href="/prelude/">Standard Library</a> <span class="sep">/</span> <span>Net.HTTP</span></nav>
+        <article class="prose">
+          <h1>Net.HTTP</h1>
+          <section class="entity" id="module-net-http">
+<h2><span class="kind kind-module">module</span> <code>Net.HTTP</code> <a class="permalink" href="#module-net-http" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Buffered HTTP clients and responses, and a small server whose router tries routes in the order they were declared. Requests never follow redirects or retry on their own.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Net</span><span class="tok-op">.</span><span class="tok-type">HTTP</span>
+
+<span class="tok-keyword">let</span> response <span class="tok-op">=</span> <span class="tok-type">HTTP</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://example.test/</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+response<span class="tok-op">.</span><span class="tok-method">status</span><span class="tok-op">.</span><span class="tok-method">success?</span>   <span class="tok-comment"># =&gt; true</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>To reuse connections and read statistics, open a client:</p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> client <span class="tok-op">=</span> <span class="tok-type">Client</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+<span class="tok-keyword">let</span> response <span class="tok-op">=</span> client<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://example.test/</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+client<span class="tok-op">.</span><span class="tok-method">close</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+</section>
+<section class="entity" id="record-net-http-headers">
+<h2><span class="kind kind-record">record</span> <code>Headers</code> <a class="permalink" href="#record-net-http-headers" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>HTTP header fields in insertion order. Names compare case-insensitively, and a name may appear more than once.</p>
+<p>Headers are a list of pairs, not a map, because some fields must repeat: two cookies are two <code>Set-Cookie</code> fields and cannot be joined into one (RFC 6265). The order of fields sharing a name is significant (RFC 9110), so it is kept too.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>entries</code></dt><dd><code>[(<a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a>, <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a>)]</code></dd></div>
+</dl>
+<p class="implements">Implements <a class="xref" href="/prelude/0.4.0-rc.5-dev/kex/#trait-showable"><code>Showable</code></a>, <a class="xref" href="/prelude/0.4.0-rc.5-dev/kex/#trait-inspectable"><code>Inspectable</code></a>.</p>
+<section class="summary">
+<h3><a href="#module-net-http-headers">On the <code>Headers</code> module</a></h3>
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#constant-net-http-headers-empty"><code>Headers.empty</code></a></dt><dd>Returns a field collection with no entries.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-net-http-headers-from"><code>Headers.from</code></a></dt><dd>Builds headers from name-value pairs, validating each one.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-net-http-headers-parse"><code>Headers.parse</code></a></dt><dd>Parses CRLF- or LF-separated header fields.</dd></div>
+</dl>
+<h3><a href="#make-headers">Functions</a></h3>
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#headers-add"><code>add</code></a></dt><dd>Appends a field, keeping existing fields of the same name.</dd></div>
+<div class="param"><dt><a class="xref" href="#headers-remove"><code>remove</code></a></dt><dd>Removes every field named <code>name</code>, ignoring case.</dd></div>
+<div class="param"><dt><a class="xref" href="#headers-get"><code>get</code></a></dt><dd>Returns the value of the first field named <code>name</code>, ignoring case, or <code>None</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#headers-getall"><code>getAll</code></a></dt><dd>Returns the values of every field named <code>name</code>, in insertion order.</dd></div>
+<div class="param"><dt><a class="xref" href="#headers-showvalue"><code>showValue</code></a></dt><dd>Renders the fields, with authorization and cookie values shown as <code>***</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#headers-inspectvalue"><code>inspectValue</code></a></dt><dd>Renders the fields as <code>showValue</code> does, with credentials hidden.</dd></div>
+</dl>
+<h3>From <a class="xref" href="/prelude/0.4.0-rc.5-dev/kex/#trait-showable"><code>Showable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-rc.5-dev/kex/#showable-to"><code>to</code></a></dt><dd></dd></div>
+</dl>
+</section>
+<section class="members" id="make-headers">
+<h3>Functions</h3>
+
+<div class="functions">
+<div class="fn" id="headers-add">
+<div class="fn-head">
+<h4><a class="self" href="#headers-add"><code>add</code></a> <a class="permalink" href="#headers-add" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">add</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-headers"><span class="tok-type">Headers</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Appends a field, keeping existing fields of the same name.</p>
+<p>Adding a name that is already there gives a second field, which is how two <code>Set-Cookie</code> fields are sent. To replace a field, <code>remove</code> it first.</p>
+<p>An invalid name, or a value with a line break such as <code>&quot;a\r\nX: y&quot;</code>, is a <code>Parse</code> error, which stops header injection.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code></dt><dd>the field name</dd></div>
+<div class="param"><dt><code>value</code></dt><dd>the field value</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the extended fields, or <code>Parse</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Two cookies on one response</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span>
+  <span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Set-Cookie</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">session=abc; HttpOnly</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+  <span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Set-Cookie</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">theme=dark</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>Replacing a field</em></p>
+<div class="code-block"><pre class="code"><code>headers<span class="tok-op">.</span><span class="tok-method">remove</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="headers-remove">
+<div class="fn-head">
+<h4><a class="self" href="#headers-remove"><code>remove</code></a> <a class="permalink" href="#headers-remove" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">remove</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-headers"><span class="tok-type">Headers</span></a></span></code></pre>
+</div>
+<p>Removes every field named <code>name</code>, ignoring case.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code></dt><dd>the field name</dd></div>
+</dl>
+<h5>Examples</h5>
+<p class="caption"><em>Stripping hop-by-hop state before forwarding</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> forwarded <span class="tok-op">=</span> incoming<span class="tok-op">.</span><span class="tok-method">remove</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Connection</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="headers-get">
+<div class="fn-head">
+<h4><a class="self" href="#headers-get"><code>get</code></a> <a class="permalink" href="#headers-get" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">get</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></span></code></pre>
+</div>
+<p>Returns the value of the first field named <code>name</code>, ignoring case, or <code>None</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code></dt><dd>the field name</dd></div>
+</dl>
+<h5>Examples</h5>
+<p class="caption"><em>Selecting a response decoder</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> contentType <span class="tok-op">=</span> response<span class="tok-op">.</span><span class="tok-method">headers</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">application/octet-stream</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="headers-getall">
+<div class="fn-head">
+<h4><a class="self" href="#headers-getall"><code>getAll</code></a> <a class="permalink" href="#headers-getall" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">getAll</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns the values of every field named <code>name</code>, in insertion order.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code></dt><dd>the field name</dd></div>
+</dl>
+<h5>Examples</h5>
+<p class="caption"><em>Preserving every Set-Cookie field</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> cookies <span class="tok-op">=</span> response<span class="tok-op">.</span><span class="tok-method">headers</span><span class="tok-op">.</span><span class="tok-method">getAll</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Set-Cookie</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="headers-showvalue">
+<div class="fn-head">
+<h4><a class="self" href="#headers-showvalue"><code>showValue</code></a> <a class="tag-trait" href="/prelude/0.4.0-rc.5-dev/kex/#showable-showvalue" title="Implements Showable.showValue">Showable</a> <a class="permalink" href="#headers-showvalue" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">showValue</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Renders the fields, with authorization and cookie values shown as <code>***</code>.</p>
+
+</div>
+<div class="fn" id="headers-inspectvalue">
+<div class="fn-head">
+<h4><a class="self" href="#headers-inspectvalue"><code>inspectValue</code></a> <a class="tag-trait" href="/prelude/0.4.0-rc.5-dev/kex/#inspectable-inspectvalue" title="Implements Inspectable.inspectValue">Inspectable</a> <a class="permalink" href="#headers-inspectvalue" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">inspectValue</span><span class="tok-punct">(</span>colors<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Renders the fields as <code>showValue</code> does, with credentials hidden.</p>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="record-net-http-status">
+<h2><span class="kind kind-record">record</span> <code>Status</code> <a class="permalink" href="#record-net-http-status" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A validated HTTP status code in <code>100..599</code>.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>code</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a></code></dd></div>
+</dl>
+<section class="members" id="make-status">
+<h3>Functions</h3>
+
+<div class="functions">
+<div class="fn" id="status-informational?">
+<div class="fn-head">
+<h4><a class="self" href="#status-informational?"><code>informational?</code></a> <a class="permalink" href="#status-informational?" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">informational?</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> for a <code>1xx</code> status.</p>
+<p class="returns"><strong>Returns</strong> whether the status is in <code>100..199</code></p>
+
+</div>
+<div class="fn" id="status-success?">
+<div class="fn-head">
+<h4><a class="self" href="#status-success?"><code>success?</code></a> <a class="permalink" href="#status-success?" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">success?</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> for a <code>2xx</code> status.</p>
+<p class="returns"><strong>Returns</strong> whether the status is in <code>200..299</code></p>
+
+</div>
+<div class="fn" id="status-redirect?">
+<div class="fn-head">
+<h4><a class="self" href="#status-redirect?"><code>redirect?</code></a> <a class="permalink" href="#status-redirect?" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">redirect?</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> for a <code>3xx</code> status.</p>
+<p class="returns"><strong>Returns</strong> whether the status is in <code>300..399</code></p>
+
+</div>
+<div class="fn" id="status-clienterror?">
+<div class="fn-head">
+<h4><a class="self" href="#status-clienterror?"><code>clientError?</code></a> <a class="permalink" href="#status-clienterror?" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">clientError?</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> for a <code>4xx</code> status.</p>
+<p class="returns"><strong>Returns</strong> whether the status is in <code>400..499</code></p>
+
+</div>
+<div class="fn" id="status-servererror?">
+<div class="fn-head">
+<h4><a class="self" href="#status-servererror?"><code>serverError?</code></a> <a class="permalink" href="#status-servererror?" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">serverError?</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> for a <code>5xx</code> status.</p>
+<p class="returns"><strong>Returns</strong> whether the status is in <code>500..599</code></p>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="record-net-http-response">
+<h2><span class="kind kind-record">record</span> <code>Response&lt;B&gt;</code> <a class="permalink" href="#record-net-http-response" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>An HTTP response: status, headers and a body of type <code>B</code>.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>status</code></dt><dd><code><a class="xref" href="#record-net-http-status">Status</a></code></dd></div>
+<div class="field"><dt><code>headers</code></dt><dd><code><a class="xref" href="#record-net-http-headers">Headers</a></code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code>B</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-http-request">
+<h2><span class="kind kind-record">record</span> <code>Request&lt;B&gt;</code> <a class="permalink" href="#record-net-http-request" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>An HTTP request: method, target, headers and a body of type <code>B</code>.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>method</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>target</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/uri/#record-uri-uri">URI</a></code></dd></div>
+<div class="field"><dt><code>headers</code></dt><dd><code><a class="xref" href="#record-net-http-headers">Headers</a></code></dd></div>
+<div class="field"><dt><code>body</code></dt><dd><code>B</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-http-routecontext">
+<h2><span class="kind kind-record">record</span> <code>RouteContext</code> <a class="permalink" href="#record-net-http-routecontext" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>The named and wildcard captures of the matched route, already decoded.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>parameters</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/map/#type-map">Map</a>&lt;<a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a>, <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a>&gt;</code> <span class="opt">optional</span></dd></div>
+</dl>
+<section class="members" id="make-routecontext">
+<h3>Functions</h3>
+
+<div class="functions">
+<div class="fn" id="routecontext-parameter">
+<div class="fn-head">
+<h4><a class="self" href="#routecontext-parameter"><code>parameter</code></a> <a class="permalink" href="#routecontext-parameter" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parameter</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Returns the decoded value of a named or wildcard route capture.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code></dt><dd>the capture name declared in the route</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the capture, or <code>Parse</code> when absent</p>
+<h5>Examples</h5>
+<p class="caption"><em>Reading +:id+ from a +/users/:id+ route</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> id <span class="tok-op">=</span> context<span class="tok-op">.</span><span class="tok-method">parameter</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">id</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="record-net-http-context">
+<h2><span class="kind kind-record">record</span> <code>Context</code> <a class="permalink" href="#record-net-http-context" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Per-request server context.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>route</code></dt><dd><code><a class="xref" href="#record-net-http-routecontext">RouteContext</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="type-net-http-handler">
+<h2><span class="kind kind-type">type</span> <code>Handler</code> <a class="permalink" href="#type-net-http-handler" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A route handler: a <code>foul</code> function from a <code>Request&lt;Binary&gt;</code> and its <a class="xref" href="#record-net-http-context"><code>Context</code></a> to a <code>Response&lt;Binary&gt;</code>. Being <code>foul</code>, it may read files, query a database or send messages.</p>
+
+</section>
+<section class="entity" id="record-net-http-route">
+<h2><span class="kind kind-record">record</span> <code>Route</code> <a class="permalink" href="#record-net-http-route" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>One declared route.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>method</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>path</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>handler</code></dt><dd><code><a class="xref" href="#type-net-http-handler">Handler</a></code></dd></div>
+<div class="field"><dt><code>maximumBodyBytes</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a>?</code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-http-router">
+<h2><span class="kind kind-record">record</span> <code>Router</code> <a class="permalink" href="#record-net-http-router" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>An HTTP router. The first declared route that matches a request handles it.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>routes</code></dt><dd><code>[<a class="xref" href="#record-net-http-route">Route</a>]</code> <span class="opt">optional</span></dd></div>
+</dl>
+<section class="summary">
+<h3><a href="#module-net-http-router">On the <code>Router</code> module</a></h3>
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#constant-net-http-router-build"><code>Router.build</code></a></dt><dd>Returns a router with no routes, to declare routes on.</dd></div>
+</dl>
+<h3><a href="#make-router">Functions</a></h3>
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#router-route"><code>route</code></a></dt><dd>Adds a route for any HTTP method.</dd></div>
+<div class="param"><dt><a class="xref" href="#router-get"><code>get</code></a></dt><dd>Adds a GET route, which also answers HEAD requests unless a HEAD route is declared.</dd></div>
+<div class="param"><dt><a class="xref" href="#router-head"><code>head</code></a></dt><dd>Adds a HEAD route, used in place of the GET route's automatic HEAD answer.</dd></div>
+<div class="param"><dt><a class="xref" href="#router-options"><code>options</code></a></dt><dd>Adds an OPTIONS route, used in place of the generated OPTIONS answer.</dd></div>
+<div class="param"><dt><a class="xref" href="#router-post"><code>post</code></a></dt><dd>Adds a POST route.</dd></div>
+<div class="param"><dt><a class="xref" href="#router-put"><code>put</code></a></dt><dd>Adds a PUT route.</dd></div>
+<div class="param"><dt><a class="xref" href="#router-patch"><code>patch</code></a></dt><dd>Adds a PATCH route.</dd></div>
+<div class="param"><dt><a class="xref" href="#router-delete"><code>delete</code></a></dt><dd>Adds a DELETE route.</dd></div>
+<div class="param"><dt><a class="xref" href="#router-limited"><code>limited</code></a></dt><dd></dd></div>
+</dl>
+</section>
+<section class="members" id="make-router">
+<h3>Functions</h3>
+
+<div class="functions">
+<div class="fn" id="router-route">
+<div class="fn-head">
+<h4><a class="self" href="#router-route"><code>route</code></a> <a class="permalink" href="#router-route" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">route</span><span class="tok-punct">(</span>method<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> handler<span class="tok-op">:</span> <a class="xref" href="#type-net-http-handler"><span class="tok-type">Handler</span></a><span class="tok-punct">,</span> maximumBodyBytes<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a></span></code></pre>
+</div>
+<p>Adds a route for any HTTP method. Routes declared earlier win.</p>
+<p>Use it for a method that has no function of its own. Paths may include named or wildcard captures, which the handler reads from <a class="xref" href="#record-net-http-routecontext"><code>RouteContext</code></a>.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Adding a custom method</em></p>
+<div class="code-block"><pre class="code"><code>router<span class="tok-op">.</span><span class="tok-method">route</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">PURGE</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">/cache/:key</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-op">~</span>purge<span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="router-get">
+<div class="fn-head">
+<h4><a class="self" href="#router-get"><code>get</code></a> <a class="permalink" href="#router-get" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">get</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> handler<span class="tok-op">:</span> <a class="xref" href="#type-net-http-handler"><span class="tok-type">Handler</span></a><span class="tok-punct">,</span> maximumBodyBytes<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a></span></code></pre>
+</div>
+<p>Adds a GET route, which also answers HEAD requests unless a HEAD route is declared.</p>
+
+</div>
+<div class="fn" id="router-head">
+<div class="fn-head">
+<h4><a class="self" href="#router-head"><code>head</code></a> <a class="permalink" href="#router-head" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">head</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> handler<span class="tok-op">:</span> <a class="xref" href="#type-net-http-handler"><span class="tok-type">Handler</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a></span></code></pre>
+</div>
+<p>Adds a HEAD route, used in place of the GET route's automatic HEAD answer.</p>
+
+</div>
+<div class="fn" id="router-options">
+<div class="fn-head">
+<h4><a class="self" href="#router-options"><code>options</code></a> <a class="permalink" href="#router-options" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">options</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> handler<span class="tok-op">:</span> <a class="xref" href="#type-net-http-handler"><span class="tok-type">Handler</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a></span></code></pre>
+</div>
+<p>Adds an OPTIONS route, used in place of the generated OPTIONS answer.</p>
+
+</div>
+<div class="fn" id="router-post">
+<div class="fn-head">
+<h4><a class="self" href="#router-post"><code>post</code></a> <a class="permalink" href="#router-post" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">post</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> handler<span class="tok-op">:</span> <a class="xref" href="#type-net-http-handler"><span class="tok-type">Handler</span></a><span class="tok-punct">,</span> maximumBodyBytes<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a></span></code></pre>
+</div>
+<p>Adds a POST route.</p>
+
+</div>
+<div class="fn" id="router-put">
+<div class="fn-head">
+<h4><a class="self" href="#router-put"><code>put</code></a> <a class="permalink" href="#router-put" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">put</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> handler<span class="tok-op">:</span> <a class="xref" href="#type-net-http-handler"><span class="tok-type">Handler</span></a><span class="tok-punct">,</span> maximumBodyBytes<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a></span></code></pre>
+</div>
+<p>Adds a PUT route.</p>
+
+</div>
+<div class="fn" id="router-patch">
+<div class="fn-head">
+<h4><a class="self" href="#router-patch"><code>patch</code></a> <a class="permalink" href="#router-patch" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">patch</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> handler<span class="tok-op">:</span> <a class="xref" href="#type-net-http-handler"><span class="tok-type">Handler</span></a><span class="tok-punct">,</span> maximumBodyBytes<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a></span></code></pre>
+</div>
+<p>Adds a PATCH route.</p>
+
+</div>
+<div class="fn" id="router-delete">
+<div class="fn-head">
+<h4><a class="self" href="#router-delete"><code>delete</code></a> <a class="permalink" href="#router-delete" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">delete</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> handler<span class="tok-op">:</span> <a class="xref" href="#type-net-http-handler"><span class="tok-type">Handler</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a></span></code></pre>
+</div>
+<p>Adds a DELETE route.</p>
+
+</div>
+<div class="fn" id="router-limited">
+<div class="fn-head">
+<h4><a class="self" href="#router-limited"><code>limited</code></a> <a class="permalink" href="#router-limited" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">limited</span><span class="tok-punct">(</span>method<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> handler<span class="tok-op">:</span> <a class="xref" href="#type-net-http-handler"><span class="tok-type">Handler</span></a><span class="tok-punct">,</span> maximumBodyBytes<span class="tok-op">:</span> <span class="tok-type">Integer?</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a></span></code></pre>
+</div>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="record-net-http-shutdownreport">
+<h2><span class="kind kind-record">record</span> <code>ShutdownReport</code> <a class="permalink" href="#record-net-http-shutdownreport" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>What a graceful server shutdown did: requests completed, failed and forced down, and how long it took.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>completed</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>failed</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>forced</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>elapsedMilliseconds</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-http-serveroptions">
+<h2><span class="kind kind-record">record</span> <code>ServerOptions</code> <a class="permalink" href="#record-net-http-serveroptions" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Server limits: concurrent handlers, the accept backlog, the default grace period on shutdown, and the request body limit.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>maximumHandlers</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>backlog</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>gracefulShutdown</code></dt><dd><code>Duration</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>maximumBodyBytes</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-http-requestoptions">
+<h2><span class="kind kind-record">record</span> <code>RequestOptions</code> <a class="permalink" href="#record-net-http-requestoptions" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>How long one client request may take, and how large a response it accepts.</p>
+<p>A request over a size limit is a <code>Limit</code> error, and one over a time limit a <code>Timeout</code>.</p>
+<h5>Examples</h5>
+<p class="caption"><em>A link preview: a short deadline and a small answer</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">RequestOptions</span> <span class="tok-punct">{</span> <span class="tok-keyword">timeout</span><span class="tok-op">:</span> <span class="tok-number">2</span><span class="tok-op">.</span><span class="tok-method">second</span><span class="tok-punct">,</span> maximumBodyBytes<span class="tok-op">:</span> <span class="tok-number">262144</span> <span class="tok-punct">}</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>connectTimeout</code></dt><dd><code>Duration</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>timeout</code></dt><dd><code>Duration</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>maximumBodyBytes</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>maximumHeaderBytes</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-http-pooloptions">
+<h2><span class="kind kind-record">record</span> <code>PoolOptions</code> <a class="permalink" href="#record-net-http-pooloptions" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>HTTP connection-pool bounds and idle lifetime.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>perOrigin</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>total</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>queuedRequests</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>idleExpiryMilliseconds</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-http-clientoptions">
+<h2><span class="kind kind-record">record</span> <code>ClientOptions</code> <a class="permalink" href="#record-net-http-clientoptions" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Options owned by an explicit HTTP client.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>pool</code></dt><dd><code><a class="xref" href="#record-net-http-pooloptions">PoolOptions</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>request</code></dt><dd><code><a class="xref" href="#record-net-http-requestoptions">RequestOptions</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-http-clientstatistics">
+<h2><span class="kind kind-record">record</span> <code>ClientStatistics</code> <a class="permalink" href="#record-net-http-clientstatistics" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A client's open pooled connections, and how many requests it has made and how many reused a connection.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>openConnections</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>requests</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>reusedConnections</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-http-clientclosereport">
+<h2><span class="kind kind-record">record</span> <code>ClientCloseReport</code> <a class="permalink" href="#record-net-http-clientclosereport" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Resources released by <a class="xref" href="#client-close"><code>Client.close</code></a>.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>closedConnections</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="type-net-http-client">
+<h2><span class="kind kind-type">type</span> <code>Client</code> <a class="permalink" href="#type-net-http-client" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>An HTTP client with its own connection pool. <code>Client.open</code> makes one and <code>close</code> releases it.</p>
+<section class="summary">
+<h3><a href="#module-net-http-client">On the <code>Client</code> module</a></h3>
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#function-net-http-client-open"><code>Client.open</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Opens a client with the default <code>ClientOptions</code>.</dd></div>
+</dl>
+<h3><a href="#make-client">Functions</a></h3>
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#client-request"><code>request</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Sends a request and reads the whole response.</dd></div>
+<div class="param"><dt><a class="xref" href="#client-get"><code>get</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Sends a GET request.</dd></div>
+<div class="param"><dt><a class="xref" href="#client-post"><code>post</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Sends a POST request with a binary body.</dd></div>
+<div class="param"><dt><a class="xref" href="#client-put"><code>put</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Sends a PUT request with a binary body.</dd></div>
+<div class="param"><dt><a class="xref" href="#client-patch"><code>patch</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Sends a PATCH request with a binary body.</dd></div>
+<div class="param"><dt><a class="xref" href="#client-delete"><code>delete</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Sends a DELETE request with an empty body.</dd></div>
+<div class="param"><dt><a class="xref" href="#client-head"><code>head</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Sends a HEAD request; the returned body is empty.</dd></div>
+<div class="param"><dt><a class="xref" href="#client-options"><code>options</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Sends an OPTIONS request.</dd></div>
+<div class="param"><dt><a class="xref" href="#client-statistics"><code>statistics</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Returns the client's open connections and request counts.</dd></div>
+<div class="param"><dt><a class="xref" href="#client-close"><code>close</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Closes the client and its idle pooled connections.</dd></div>
+</dl>
+</section>
+<section class="members" id="make-client">
+<h3>Functions</h3>
+
+<div class="functions">
+<div class="fn" id="client-request">
+<div class="fn-head">
+<h4><a class="self" href="#client-request"><code>request</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#client-request" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">request</span><span class="tok-punct">(</span>method<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> headers<span class="tok-op">:</span> <a class="xref" href="#record-net-http-headers"><span class="tok-type">Headers</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">,</span> options<span class="tok-op">:</span> <a class="xref" href="#record-net-http-requestoptions"><span class="tok-type">RequestOptions</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Sends a request and reads the whole response.</p>
+<p>Redirects are not followed and failures are not retried; a redirect comes back as a <code>3xx</code> response for you to act on.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Sending JSON with an idempotency key</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> headers <span class="tok-op">=</span> <span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span>
+  <span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+  <span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Idempotency-Key</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> requestId<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+client<span class="tok-op">.</span><span class="tok-method">request</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">POST</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> url<span class="tok-punct">,</span> headers<span class="tok-punct">,</span> <span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span>order<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Binary</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="client-get">
+<div class="fn-head">
+<h4><a class="self" href="#client-get"><code>get</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#client-get" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">get</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Sends a GET request.</p>
+
+</div>
+<div class="fn" id="client-post">
+<div class="fn-head">
+<h4><a class="self" href="#client-post"><code>post</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#client-post" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">post</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Sends a POST request with a binary body.</p>
+
+</div>
+<div class="fn" id="client-put">
+<div class="fn-head">
+<h4><a class="self" href="#client-put"><code>put</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#client-put" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">put</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Sends a PUT request with a binary body.</p>
+
+</div>
+<div class="fn" id="client-patch">
+<div class="fn-head">
+<h4><a class="self" href="#client-patch"><code>patch</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#client-patch" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">patch</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Sends a PATCH request with a binary body.</p>
+
+</div>
+<div class="fn" id="client-delete">
+<div class="fn-head">
+<h4><a class="self" href="#client-delete"><code>delete</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#client-delete" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">delete</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Sends a DELETE request with an empty body.</p>
+
+</div>
+<div class="fn" id="client-head">
+<div class="fn-head">
+<h4><a class="self" href="#client-head"><code>head</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#client-head" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">head</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Sends a HEAD request; the returned body is empty.</p>
+
+</div>
+<div class="fn" id="client-options">
+<div class="fn-head">
+<h4><a class="self" href="#client-options"><code>options</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#client-options" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">options</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Sends an OPTIONS request.</p>
+
+</div>
+<div class="fn" id="client-statistics">
+<div class="fn-head">
+<h4><a class="self" href="#client-statistics"><code>statistics</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#client-statistics" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">statistics</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-clientstatistics"><span class="tok-type">ClientStatistics</span></a></span></code></pre>
+</div>
+<p>Returns the client's open connections and request counts.</p>
+<p class="returns"><strong>Returns</strong> current pool and lifetime request counters</p>
+<h5>Examples</h5>
+<p class="caption"><em>Emitting client-pool diagnostics</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> stats <span class="tok-op">=</span> client<span class="tok-op">.</span><span class="tok-method">statistics</span>
+<span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">HTTP reuse: </span><span class="tok-string">${</span>stats<span class="tok-op">.</span><span class="tok-method">reusedConnections</span><span class="tok-string">}</span><span class="tok-string">/</span><span class="tok-string">${</span>stats<span class="tok-op">.</span><span class="tok-method">requests</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="client-close">
+<div class="fn-head">
+<h4><a class="self" href="#client-close"><code>close</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#client-close" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">close</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-clientclosereport"><span class="tok-type">ClientCloseReport</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Closes the client and its idle pooled connections.</p>
+<p>Later requests fail with <code>Closed</code>. Closing twice is not an error.</p>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="module-net-http-headers">
+<h2><span class="kind kind-module">module</span> <code>Net.HTTP.Headers</code> <a class="permalink" href="#module-net-http-headers" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Builds and parses validated <a class="xref" href="#record-net-http-headers"><code>Headers</code></a>.</p>
+<div class="functions">
+<div class="fn" id="constant-net-http-headers-empty">
+<div class="fn-head">
+<h3><a class="self" href="#constant-net-http-headers-empty"><code>empty</code></a> <span class="tag-kind">constant</span> <a class="permalink" href="#constant-net-http-headers-empty" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">empty</span> <span class="tok-op">:</span> <a class="xref" href="#record-net-http-headers"><span class="tok-type">Headers</span></a></span></code></pre>
+</div>
+<p>Returns a field collection with no entries.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Building request headers</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span>
+  <span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Accept</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+  <span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">User-Agent</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">inventory-sync/1.0</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-net-http-headers-from">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-headers-from"><code>from</code></a> <a class="permalink" href="#function-net-http-headers-from" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">from</span><span class="tok-punct">(</span>entries<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-headers"><span class="tok-type">Headers</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span><span class="sig-line"><span class="tok-fn">from</span><span class="tok-punct">(</span>entries<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/map/#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-headers"><span class="tok-type">Headers</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Builds headers from name-value pairs, validating each one.</p>
+<p>Repeated names stay as separate fields, in order. An invalid name, or a value containing a line break, is a <code>Parse</code> error, so a value cannot inject extra header lines.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>entries</code></dt><dd>the fields, in order</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> validated fields, or <code>Parse</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Forwarding an explicitly selected set of request headers</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span>
+  <span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Accept</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">application/json</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">,</span>
+  <span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">X-Request-ID</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> requestId<span class="tok-punct">)</span>
+<span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-net-http-headers-parse">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-headers-parse"><code>parse</code></a> <a class="permalink" href="#function-net-http-headers-parse" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-headers"><span class="tok-type">Headers</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Parses CRLF- or LF-separated header fields.</p>
+<p>Use it when headers arrive as text. To build headers in code, use <code>from</code> and <code>add</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code></dt><dd>the header block</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> fields in source order, or <code>Parse</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Parsing headers captured from a diagnostic fixture</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type: text/plain\r\nX-Trace: abc\r\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-net-http-status">
+<h2><span class="kind kind-module">module</span> <code>Net.HTTP.Status</code> <a class="permalink" href="#module-net-http-status" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Builds a validated <a class="xref" href="#record-net-http-status"><code>Status</code></a> from a number.</p>
+<div class="functions">
+<div class="fn" id="function-net-http-status-from">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-status-from"><code>from</code></a> <a class="permalink" href="#function-net-http-status-from" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">from</span><span class="tok-punct">(</span>code<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-status"><span class="tok-type">Status</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Returns the status for <code>code</code>, or a <code>Parse</code> error outside <code>100..599</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>code</code></dt><dd>a status in <code>100..599</code></dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the status, or <code>Parse</code></p>
+<h5>Examples</h5>
+<p class="caption"><em>Validating a configurable health-check success code</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> code <span class="tok-op">=</span> <span class="tok-type">ENV</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">HEALTH_STATUS</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">into</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>text<span class="tok-op">|</span> text<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Integer</span><span class="tok-punct">)</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">204</span><span class="tok-punct">)</span>
+<span class="tok-keyword">let</span> expected <span class="tok-op">=</span> <span class="tok-type">Status</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span>code<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-net-http-response">
+<h2><span class="kind kind-module">module</span> <code>Net.HTTP.Response</code> <a class="permalink" href="#module-net-http-response" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Builds the responses a route handler returns.</p>
+<div class="functions">
+<div class="fn" id="function-net-http-response-binary">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-response-binary"><code>binary</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-net-http-response-binary" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">binary</span><span class="tok-punct">(</span>status<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">,</span> headers<span class="tok-op">:</span> <a class="xref" href="#record-net-http-headers"><span class="tok-type">Headers</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Builds a response with a binary body and the given headers.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Returning a downloaded file without decoding it as text</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Response</span><span class="tok-op">.</span><span class="tok-method">binary</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">,</span> archive<span class="tok-punct">,</span> <span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Content-Type</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">application/zip</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-net-http-response-text">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-response-text"><code>text</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-net-http-response-text" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">text</span><span class="tok-punct">(</span>status<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Builds a UTF-8 text response with a <code>text/plain</code> content type.</p>
+<h5>Examples</h5>
+<p class="caption"><em>A small health endpoint</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Response</span><span class="tok-op">.</span><span class="tok-method">text</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">ok</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-net-http-response-empty">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-response-empty"><code>empty</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-net-http-response-empty" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">empty</span><span class="tok-punct">(</span>status<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Builds a response with an empty body.</p>
+<h5>Examples</h5>
+<p class="caption"><em>A successful DELETE endpoint</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Response</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-punct">(</span><span class="tok-number">204</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-net-http-router">
+<h2><span class="kind kind-module">module</span> <code>Net.HTTP.Router</code> <a class="permalink" href="#module-net-http-router" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Starts a route declaration chain.</p>
+<div class="functions">
+<div class="fn" id="constant-net-http-router-build">
+<div class="fn-head">
+<h3><a class="self" href="#constant-net-http-router-build"><code>build</code></a> <span class="tag-kind">constant</span> <a class="permalink" href="#constant-net-http-router-build" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">build</span> <span class="tok-op">:</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a></span></code></pre>
+</div>
+<p>Returns a router with no routes, to declare routes on.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Build a health endpoint</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Router</span><span class="tok-op">.</span><span class="tok-method">build</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/health</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>request<span class="tok-punct">,</span> context<span class="tok-op">|</span>
+  <span class="tok-type">Response</span><span class="tok-op">.</span><span class="tok-method">text</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">ok</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-net-http-server">
+<h2><span class="kind kind-module">module</span> <code>Net.HTTP.Server</code> <a class="permalink" href="#module-net-http-server" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Starts, watches and stops HTTP servers.</p>
+<section class="summary">
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#function-net-http-server-start"><code>start</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Starts a server with the default <code>ServerOptions</code> and returns at once.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-net-http-server-serve"><code>serve</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Starts a server with the default options and blocks until it stops.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-net-http-server-stop"><code>stop</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Stops the server gracefully, with the grace period from its <code>ServerOptions</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-net-http-server-join"><code>join</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Waits until the server stops.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-net-http-server-running?"><code>running?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Returns <code>true</code> while the server is running.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-net-http-server-localaddress"><code>localAddress</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Returns the address the server is bound to, with the actual port when the operating system picked it.</dd></div>
+</dl>
+</section>
+<div class="functions">
+<div class="fn" id="function-net-http-server-start">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-server-start"><code>start</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-net-http-server-start" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">start</span><span class="tok-punct">(</span>endpoint<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#module-net"><span class="tok-type">Net</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/net/socket/#type-net-socket-udp-socket"><span class="tok-type">Socket</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/net/socket/#record-net-socket-mock-tcp"><span class="tok-type">TCP</span></a><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-punct">,</span> router<span class="tok-op">:</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a><span class="tok-punct">,</span> options<span class="tok-op">:</span> <a class="xref" href="#record-net-http-serveroptions"><span class="tok-type">ServerOptions</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-http-server-running"><span class="tok-type">Running</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Starts a server with the default <a class="xref" href="#record-net-http-serveroptions"><code>ServerOptions</code></a> and returns at once.</p>
+<p>The handle owns the listener and the running handlers. Use <code>start</code> when the process has other work to do, and <code>serve</code> when serving HTTP is all it does.</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> router <span class="tok-op">=</span> <span class="tok-type">Router</span><span class="tok-op">.</span><span class="tok-method">build</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">/health</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>request<span class="tok-punct">,</span> context<span class="tok-op">|</span>
+  <span class="tok-type">Response</span><span class="tok-op">.</span><span class="tok-method">text</span><span class="tok-punct">(</span><span class="tok-number">200</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">ok</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span><span class="tok-punct">)</span>
+<span class="tok-keyword">let</span> endpoint <span class="tok-op">=</span> <span class="tok-type">Net</span><span class="tok-op">.</span><span class="tok-type">Socket</span><span class="tok-op">.</span><span class="tok-type">TCP</span><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-op">.</span><span class="tok-method">loopback</span><span class="tok-punct">(</span><span class="tok-type">Net</span><span class="tok-op">.</span><span class="tok-type">Port</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span>
+<span class="tok-keyword">let</span> server <span class="tok-op">=</span> <span class="tok-type">Server</span><span class="tok-op">.</span><span class="tok-method">start</span><span class="tok-punct">(</span>endpoint<span class="tok-punct">,</span> router<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+<span class="tok-type">Server</span><span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span>server<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-net-http-server-serve">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-server-serve"><code>serve</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-net-http-server-serve" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">serve</span><span class="tok-punct">(</span>endpoint<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#module-net"><span class="tok-type">Net</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/net/socket/#type-net-socket-udp-socket"><span class="tok-type">Socket</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/net/socket/#record-net-socket-mock-tcp"><span class="tok-type">TCP</span></a><span class="tok-op">.</span><span class="tok-type">Endpoint</span><span class="tok-punct">,</span> router<span class="tok-op">:</span> <a class="xref" href="#record-net-http-router"><span class="tok-type">Router</span></a><span class="tok-punct">,</span> options<span class="tok-op">:</span> <a class="xref" href="#record-net-http-serveroptions"><span class="tok-type">ServerOptions</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Starts a server with the default options and blocks until it stops.</p>
+
+</div>
+<div class="fn" id="function-net-http-server-stop">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-server-stop"><code>stop</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-net-http-server-stop" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">stop</span><span class="tok-punct">(</span>server<span class="tok-op">:</span> <a class="xref" href="#type-net-http-server-running"><span class="tok-type">Running</span></a><span class="tok-punct">,</span> grace<span class="tok-op">:</span> <span class="tok-type">Duration</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-shutdownreport"><span class="tok-type">ShutdownReport</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Stops the server gracefully, with the grace period from its <a class="xref" href="#record-net-http-serveroptions"><code>ServerOptions</code></a>.</p>
+<p>The server stops accepting requests, and handlers already running get the grace period to finish. The report counts what completed and what was forced down.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Shutting down from an application lifecycle hook</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> report <span class="tok-op">=</span> <span class="tok-type">Server</span><span class="tok-op">.</span><span class="tok-method">stop</span><span class="tok-punct">(</span>server<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+<span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">closed after </span><span class="tok-string">${</span>report<span class="tok-op">.</span><span class="tok-method">completed</span><span class="tok-string">}</span><span class="tok-string"> requests</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-net-http-server-join">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-server-join"><code>join</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-net-http-server-join" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">join</span><span class="tok-punct">(</span>server<span class="tok-op">:</span> <a class="xref" href="#type-net-http-server-running"><span class="tok-type">Running</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Void</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Waits until the server stops.</p>
+
+</div>
+<div class="fn" id="function-net-http-server-running?">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-server-running?"><code>running?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-net-http-server-running?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">running?</span><span class="tok-punct">(</span>server<span class="tok-op">:</span> <a class="xref" href="#type-net-http-server-running"><span class="tok-type">Running</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> while the server is running.</p>
+<p class="returns"><strong>Returns</strong> whether the server is still running</p>
+
+</div>
+<div class="fn" id="function-net-http-server-localaddress">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-server-localaddress"><code>localAddress</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-net-http-server-localaddress" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">localAddress</span><span class="tok-punct">(</span>server<span class="tok-op">:</span> <a class="xref" href="#type-net-http-server-running"><span class="tok-type">Running</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#module-net"><span class="tok-type">Net</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/net/socket/#type-net-socket-udp-socket"><span class="tok-type">Socket</span></a><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/net/socket/#record-net-socket-mock-tcp"><span class="tok-type">TCP</span></a><span class="tok-op">.</span><span class="tok-type">Endpoint</span></span></code></pre>
+</div>
+<p>Returns the address the server is bound to, with the actual port when the operating system picked it.</p>
+<p class="returns"><strong>Returns</strong> the bound address</p>
+<h5>Examples</h5>
+<p class="caption"><em>Publishing the actual address of a test server</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> endpoint <span class="tok-op">=</span> <span class="tok-type">Server</span><span class="tok-op">.</span><span class="tok-method">localAddress</span><span class="tok-punct">(</span>server<span class="tok-punct">)</span>
+<span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">test server: http://</span><span class="tok-string">${</span>endpoint<span class="tok-op">.</span><span class="tok-method">host</span><span class="tok-string">}</span><span class="tok-string">:</span><span class="tok-string">${</span>endpoint<span class="tok-op">.</span><span class="tok-method">port</span><span class="tok-op">.</span><span class="tok-method">string</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+<section class="entity" id="type-net-http-server-running">
+<h2><span class="kind kind-type">type</span> <code>Running</code> <a class="permalink" href="#type-net-http-server-running" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A handle to a server running in the background.</p>
+
+</section>
+<section class="entity" id="module-net-http-client">
+<h2><span class="kind kind-module">module</span> <code>Net.HTTP.Client</code> <a class="permalink" href="#module-net-http-client" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Opens HTTP clients.</p>
+<div class="functions">
+<div class="fn" id="function-net-http-client-open">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-client-open"><code>open</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-net-http-client-open" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">open</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-http-client"><span class="tok-type">Client</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span><span class="sig-line"><span class="tok-fn">open</span><span class="tok-punct">(</span>options<span class="tok-op">:</span> <span class="tok-type">ClientOptions</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-http-client"><span class="tok-type">Client</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Opens a client with the default <code>ClientOptions</code>.</p>
+<p>Send related requests through one client so they reuse its connections, and close it when the service shuts down.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Fetching several pages through one connection pool</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> client <span class="tok-op">=</span> <span class="tok-type">Client</span><span class="tok-op">.</span><span class="tok-method">open</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+<span class="tok-keyword">let</span> first <span class="tok-op">=</span> client<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://api.example.com/items?page=1</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+<span class="tok-keyword">let</span> second <span class="tok-op">=</span> client<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://api.example.com/items?page=2</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+client<span class="tok-op">.</span><span class="tok-method">close</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-net-http-http">
+<h2><span class="kind kind-module">module</span> <code>Net.HTTP.HTTP</code> <a class="permalink" href="#module-net-http-http" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>One-off HTTP requests, each through its own short-lived client. Use <a class="xref" href="#type-net-http-client"><code>Client</code></a> for a service that makes repeated calls.</p>
+<section class="summary">
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#function-net-http-http-request"><code>request</code></a></dt><dd>Sends a request and reads the whole response, without following redirects or retrying.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-net-http-http-get"><code>get</code></a></dt><dd>Sends a one-off GET request.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-net-http-http-delete"><code>delete</code></a></dt><dd>Sends a one-off DELETE request with an empty body.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-net-http-http-head"><code>head</code></a></dt><dd>Sends a one-off HEAD request; the response body is empty.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-net-http-http-options"><code>options</code></a></dt><dd>Sends a one-off OPTIONS request.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-net-http-http-post"><code>post</code></a></dt><dd>Sends a one-off POST request with a binary body.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-net-http-http-put"><code>put</code></a></dt><dd>Sends a one-off PUT request with a binary body.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-net-http-http-patch"><code>patch</code></a></dt><dd>Sends a one-off PATCH request with a binary body.</dd></div>
+</dl>
+</section>
+<div class="functions">
+<div class="fn" id="function-net-http-http-request">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-http-request"><code>request</code></a> <a class="permalink" href="#function-net-http-http-request" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">request</span><span class="tok-punct">(</span>method<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> headers<span class="tok-op">:</span> <a class="xref" href="#record-net-http-headers"><span class="tok-type">Headers</span></a> <span class="tok-op">=</span> …<span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a> <span class="tok-op">=</span> …<span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span><span class="sig-line"><span class="tok-fn">request</span><span class="tok-punct">(</span>method<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> headers<span class="tok-op">:</span> <a class="xref" href="#record-net-http-headers"><span class="tok-type">Headers</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">,</span> options<span class="tok-op">:</span> <a class="xref" href="#record-net-http-requestoptions"><span class="tok-type">RequestOptions</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Sends a request and reads the whole response, without following redirects or retrying.</p>
+<p>Each call opens and closes its own client, which suits scripts and occasional requests. A service making repeated calls should use <a class="xref" href="#type-net-http-client"><code>Client</code></a>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>method</code></dt><dd>the HTTP method, such as <code>&quot;GET&quot;</code></dd></div>
+<div class="param"><dt><code>url</code></dt><dd>the URL to request</dd></div>
+<div class="param"><dt><code>headers</code></dt><dd>the request headers, empty by default</dd></div>
+<div class="param"><dt><code>body</code></dt><dd>the request body, empty by default</dd></div>
+</dl>
+<h5>Examples</h5>
+<p class="caption"><em>A one-off authenticated request in a command-line tool</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> headers <span class="tok-op">=</span> <span class="tok-type">Headers</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Authorization</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">Bearer </span><span class="tok-string">${</span>token<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+<span class="tok-type">HTTP</span><span class="tok-op">.</span><span class="tok-method">request</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">GET</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> url<span class="tok-punct">,</span> headers<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-net-http-http-get">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-http-get"><code>get</code></a> <a class="permalink" href="#function-net-http-http-get" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">get</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Sends a one-off GET request.</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">HTTP</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">https://example.test/</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-net-http-http-delete">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-http-delete"><code>delete</code></a> <a class="permalink" href="#function-net-http-http-delete" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">delete</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Sends a one-off DELETE request with an empty body.</p>
+
+</div>
+<div class="fn" id="function-net-http-http-head">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-http-head"><code>head</code></a> <a class="permalink" href="#function-net-http-http-head" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">head</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Sends a one-off HEAD request; the response body is empty.</p>
+
+</div>
+<div class="fn" id="function-net-http-http-options">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-http-options"><code>options</code></a> <a class="permalink" href="#function-net-http-http-options" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">options</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Sends a one-off OPTIONS request.</p>
+
+</div>
+<div class="fn" id="function-net-http-http-post">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-http-post"><code>post</code></a> <a class="permalink" href="#function-net-http-http-post" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">post</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Sends a one-off POST request with a binary body.</p>
+
+</div>
+<div class="fn" id="function-net-http-http-put">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-http-put"><code>put</code></a> <a class="permalink" href="#function-net-http-http-put" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">put</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Sends a one-off PUT request with a binary body.</p>
+
+</div>
+<div class="fn" id="function-net-http-http-patch">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-http-http-patch"><code>patch</code></a> <a class="permalink" href="#function-net-http-http-patch" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">patch</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-http-response"><span class="tok-type">Response</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/binary/#type-binary"><span class="tok-type">Binary</span></a><span class="tok-op">&gt;</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Sends a one-off PATCH request with a binary body.</p>
+
+</div>
+</div>
+</section>
+
+<h2 class="group">Submodules</h2>
+<ul class="prelude-list">
+<li><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/net/http/web_socket/">Net.HTTP.WebSocket</a></code> <span class="prelude-note">WebSocket (RFC 6455) connections that send and receive whole messages.</span></li>
+</ul>
+
+        </article>
+      </main>
+      <aside class="toc" aria-label="On this page">
+        <nav><p class="toc-heading">On this page</p><ul><li><a href="#module-net-http">Net.HTTP</a></li><li class="toc-nested"><a href="#record-net-http-headers">Headers</a></li><li class="toc-member"><a href="#headers-add">add</a></li><li class="toc-member"><a href="#headers-remove">remove</a></li><li class="toc-member"><a href="#headers-get">get</a></li><li class="toc-member"><a href="#headers-getall">getAll</a></li><li class="toc-member"><a href="#headers-showvalue">showValue</a></li><li class="toc-member"><a href="#headers-inspectvalue">inspectValue</a></li><li class="toc-nested"><a href="#record-net-http-status">Status</a></li><li class="toc-member"><a href="#status-informational?">informational?</a></li><li class="toc-member"><a href="#status-success?">success?</a></li><li class="toc-member"><a href="#status-redirect?">redirect?</a></li><li class="toc-member"><a href="#status-clienterror?">clientError?</a></li><li class="toc-member"><a href="#status-servererror?">serverError?</a></li><li class="toc-nested"><a href="#record-net-http-response">Response</a></li><li class="toc-nested"><a href="#record-net-http-request">Request</a></li><li class="toc-nested"><a href="#record-net-http-routecontext">RouteContext</a></li><li class="toc-member"><a href="#routecontext-parameter">parameter</a></li><li class="toc-nested"><a href="#record-net-http-context">Context</a></li><li class="toc-nested"><a href="#type-net-http-handler">Handler</a></li><li class="toc-nested"><a href="#record-net-http-route">Route</a></li><li class="toc-nested"><a href="#record-net-http-router">Router</a></li><li class="toc-member"><a href="#router-route">route</a></li><li class="toc-member"><a href="#router-get">get</a></li><li class="toc-member"><a href="#router-head">head</a></li><li class="toc-member"><a href="#router-options">options</a></li><li class="toc-member"><a href="#router-post">post</a></li><li class="toc-member"><a href="#router-put">put</a></li><li class="toc-member"><a href="#router-patch">patch</a></li><li class="toc-member"><a href="#router-delete">delete</a></li><li class="toc-member"><a href="#router-limited">limited</a></li><li class="toc-nested"><a href="#record-net-http-shutdownreport">ShutdownReport</a></li><li class="toc-nested"><a href="#record-net-http-serveroptions">ServerOptions</a></li><li class="toc-nested"><a href="#record-net-http-requestoptions">RequestOptions</a></li><li class="toc-nested"><a href="#record-net-http-pooloptions">PoolOptions</a></li><li class="toc-nested"><a href="#record-net-http-clientoptions">ClientOptions</a></li><li class="toc-nested"><a href="#record-net-http-clientstatistics">ClientStatistics</a></li><li class="toc-nested"><a href="#record-net-http-clientclosereport">ClientCloseReport</a></li><li class="toc-nested"><a href="#type-net-http-client">Client</a></li><li class="toc-member"><a href="#client-request">request</a></li><li class="toc-member"><a href="#client-get">get</a></li><li class="toc-member"><a href="#client-post">post</a></li><li class="toc-member"><a href="#client-put">put</a></li><li class="toc-member"><a href="#client-patch">patch</a></li><li class="toc-member"><a href="#client-delete">delete</a></li><li class="toc-member"><a href="#client-head">head</a></li><li class="toc-member"><a href="#client-options">options</a></li><li class="toc-member"><a href="#client-statistics">statistics</a></li><li class="toc-member"><a href="#client-close">close</a></li><li class="toc-nested"><a href="#module-net-http-headers">Net.HTTP.Headers</a></li><li class="toc-member"><a href="#constant-net-http-headers-empty">empty</a></li><li class="toc-member"><a href="#function-net-http-headers-from">from</a></li><li class="toc-member"><a href="#function-net-http-headers-parse">parse</a></li><li class="toc-nested"><a href="#module-net-http-status">Net.HTTP.Status</a></li><li class="toc-member"><a href="#function-net-http-status-from">from</a></li><li class="toc-nested"><a href="#module-net-http-response">Net.HTTP.Response</a></li><li class="toc-member"><a href="#function-net-http-response-binary">binary</a></li><li class="toc-member"><a href="#function-net-http-response-text">text</a></li><li class="toc-member"><a href="#function-net-http-response-empty">empty</a></li><li class="toc-nested"><a href="#module-net-http-router">Net.HTTP.Router</a></li><li class="toc-member"><a href="#constant-net-http-router-build">build</a></li><li class="toc-nested"><a href="#module-net-http-server">Net.HTTP.Server</a></li><li class="toc-member"><a href="#function-net-http-server-start">start</a></li><li class="toc-member"><a href="#function-net-http-server-serve">serve</a></li><li class="toc-member"><a href="#function-net-http-server-stop">stop</a></li><li class="toc-member"><a href="#function-net-http-server-join">join</a></li><li class="toc-member"><a href="#function-net-http-server-running?">running?</a></li><li class="toc-member"><a href="#function-net-http-server-localaddress">localAddress</a></li><li class="toc-nested"><a href="#type-net-http-server-running">Running</a></li><li class="toc-nested"><a href="#module-net-http-client">Net.HTTP.Client</a></li><li class="toc-member"><a href="#function-net-http-client-open">open</a></li><li class="toc-nested"><a href="#module-net-http-http">Net.HTTP.HTTP</a></li><li class="toc-member"><a href="#function-net-http-http-request">request</a></li><li class="toc-member"><a href="#function-net-http-http-get">get</a></li><li class="toc-member"><a href="#function-net-http-http-delete">delete</a></li><li class="toc-member"><a href="#function-net-http-http-head">head</a></li><li class="toc-member"><a href="#function-net-http-http-options">options</a></li><li class="toc-member"><a href="#function-net-http-http-post">post</a></li><li class="toc-member"><a href="#function-net-http-http-put">put</a></li><li class="toc-member"><a href="#function-net-http-http-patch">patch</a></li></ul></nav>
+      </aside>
+    </div>
+    <footer class="foot">
+      <div class="wrap">Generated from source (<code>net/http.kex</code>) · Built with Marqraft · <a href="/prelude/0.4.0-rc.5-dev/search.json">search.json</a> · <a href="/prelude/0.4.0-rc.5-dev/net/http.md">Markdown</a> · <a href="https://www.kex.run">kex.run</a><nav class="foot-links" aria-label="More"><ul class="marq-menu"><li><a href="https://oops.kex.run">Errors &amp; warnings</a></li><li><a href="https://github.com/kexhq/kex/issues/new">Report a bug</a></li></ul></nav></div>
+    </footer>
+  </body>
+</html>

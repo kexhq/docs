@@ -9,14 +9,14 @@ entities:
 
 # Tey.Docgen.Nav
 
-Navigation and cross-linking: the two indexes every renderer resolves against, derived once from the extracted pages.
+Navigation and cross-linking: the two indexes every renderer uses, built once from the extracted pages.
 
 ```kex
-modules — one ModuleIndexEntry per module (the sidebar's structure)
-links   — one LinkEntry per linkable name (the interlink universe)
+modules: one ModuleIndexEntry per module, for the sidebar
+links:   one LinkEntry per linkable name
 ```
 
-Both are computed here rather than in each renderer so HTML, Markdown and model.json cannot disagree about where a name lands — the same reasoning that keeps the typed model the single source: resolve once, render often.
+Building them in one place means the HTML, the Markdown and model.json always agree on where a name links to.
 
 ## module `Tey.Docgen.Nav`
 
@@ -26,7 +26,7 @@ Both are computed here rather than in each renderer so HTML, Markdown and model.
 buildModules(pages: [SourcePage]) -> [ModuleIndexEntry]
 ```
 
-Every module in the package, in declaration order, pointing at the page it lives on. Nested modules are entries of their own (the sidebar nests them by name).
+Returns an entry for every module in the package, in declaration order, with the page it is on. Nested modules get entries of their own.
 
 ### `modulesOnPage`
 
@@ -52,7 +52,9 @@ firstLine(summary: String) -> String
 parentTitleOf(pages: [SourcePage], page: SourcePage) -> String?
 ```
 
-The file tree a module family grows into, rebuilt from titles: a page nests under the page whose title is its dotted prefix, so "Net.DNS" (net/dns.kex) is a child of "Net" (net.kex), and "Net.HTTP.WebSocket" of "Net.HTTP". The longest existing prefix wins; a prefix with no page of its own ("Control" for "Control.Retry") leaves the page at the top level. Titles, not paths, carry the relation — the module names are what a reader scans for.
+Returns the title of the page that `page` nests under, or `None` for a top-level page.
+
+The parent is found from titles, not paths: "Net.DNS" nests under "Net", and "Net.HTTP.WebSocket" under "Net.HTTP". The longest prefix that has a page wins. When no prefix has a page ("Control" for "Control.Retry"), the page is top-level.
 
 ### `parentLoop`
 
@@ -72,7 +74,7 @@ claimedByAnother?(pages: [SourcePage], page: SourcePage, title: String) -> Bool
 topLevelPages(pages: [SourcePage]) -> [SourcePage]
 ```
 
-The sidebar's top level: pages nothing parents, alphabetically by title — a reader scans by name, not by directory-walk order.
+Returns the pages with no parent, sorted by title, for the sidebar's top level.
 
 ### `childPages`
 
@@ -80,7 +82,7 @@ The sidebar's top level: pages nothing parents, alphabetically by title — a re
 childPages(pages: [SourcePage], title: String) -> [SourcePage]
 ```
 
-The pages nested directly under `title`, alphabetically.
+Returns the pages nested directly under `title`, sorted by title.
 
 ### `descendantPages`
 
@@ -88,7 +90,7 @@ The pages nested directly under `title`, alphabetically.
 descendantPages(pages: [SourcePage], page: SourcePage) -> [SourcePage]
 ```
 
-Every page in `page`'s family at any depth, alphabetically — what a module page lists as its submodules.
+Returns every page nested under `page` at any depth, sorted by title. A module page lists these as its submodules.
 
 ### `sortedByTitle`
 
@@ -102,7 +104,9 @@ sortedByTitle(pages: [SourcePage]) -> [SourcePage]
 buildLinks(pages: [SourcePage]) -> [LinkEntry]
 ```
 
-Linkable names, unique-target-wins: a name links while exactly one (page, anchor) answers it. A qualified name ("FS.Path") is its own name; a simple one ("Path") survives only while nothing else claims it — once two different entities answer "Request", the simple spelling stops linking and only the spelled-out names do.
+Returns the names that can be linked, each with its page and anchor.
+
+A name links only while exactly one place answers to it. A qualified name ("FS.Path") is usually unique; a simple one ("Path") stops linking as soon as two different entities share it, and then only the qualified names link.
 
 ### `withTypeHomes`
 
@@ -110,7 +114,9 @@ Linkable names, unique-target-wins: a name links while exactly one (page, anchor
 withTypeHomes(links: [LinkEntry], types: [Tey.Docgen.Model.TypeFacts]) -> [LinkEntry]
 ```
 
-The links, plus a home for every type that make blocks extend. A bare `Integer` is claimed by a module (number parsing) AND by five make blocks, so the uniqueness rule drops it — yet a type name in a signature means the type, and the type has a home page (Relations.homePathOf). Those homes fill in what uniqueness left out; a name that already links keeps its link.
+Returns `links` plus a link to the home page of each type that make blocks extend and that does not link yet.
+
+A name such as `Integer` is claimed by a module and by several make blocks, so `buildLinks` drops it. In a signature it means the type, which has a home page (`Relations.homePathOf`), so this adds that link. A name that already links keeps its link.
 
 ### `linkEntriesOnPage`
 
@@ -124,7 +130,7 @@ linkEntriesOnPage(entities: [Entity], urlPath: String) -> [LinkEntry]
 memberLinks(ownerName: String, owner: String, functions: [Tey.Docgen.Model.FunctionEntry], urlPath: String) -> [LinkEntry]
 ```
 
-`List.map`, `Enumerable.filter`: members are linkable under their owner's name, so prose that writes `List.map` lands on the method.
+Returns links for the functions of a trait or make block under their owner's name, so prose that writes `List.map` links to that function.
 
 ### `linkableNames`
 
@@ -132,7 +138,7 @@ memberLinks(ownerName: String, owner: String, functions: [Tey.Docgen.Model.Funct
 linkableNames(e: Entity) -> [String]
 ```
 
-A type/reference name links under its qualified name; entities whose qualified name is the bare name (top-level declarations) offer that spelling too. A make's target with type parameters ("[X]", "Map<K, V>") links under the base name before the "<" — the anchor is still the full-target one, matching the section id.
+Returns the names an entity can be linked under: its qualified name and its simple name. Functions have none of their own. A make block links under its target's base name, so "Map<K, V>" links as "Map"; a list target such as "[X]" does not link.
 
 ### `uniqueTarget?`
 
@@ -140,7 +146,7 @@ A type/reference name links under its qualified name; entities whose qualified n
 uniqueTarget?(entries: [LinkEntry], candidate: LinkEntry) -> Bool
 ```
 
-Whether `candidate`'s name answers to exactly one target: every other entry under the same name must land on the same (page, anchor).
+Returns `true` when every entry with `candidate`'s name points at the same page and anchor.
 
 ### `differentTarget?`
 
@@ -160,7 +166,7 @@ resolve(links: [LinkEntry], name: String) -> LinkEntry?
 segmentsOf(typeText: String) -> [String]
 ```
 
-Splits a type reference into identifier segments and separator runs, so a renderer can link the identifiers and leave the punctuation alone: "Map<String, FS.Path>" → ["Map", "<", "String", ", ", "FS.Path", ">"].
+Splits a type reference into identifiers and the separators between them, so a renderer can link the identifiers: "Map<String, FS.Path>" gives ["Map", "<", "String", ", ", "FS.Path", ">"].
 
 ### `splitLoop`
 
@@ -194,7 +200,7 @@ isIdentChar?(ch: String) -> Bool
 hrefFrom(fromPath: String, toPath: String, anchor: String) -> String
 ```
 
-The href from one page of this package to another, with anchor: same page → "#anchor"; else up to the version directory and back down.
+Returns the relative href from one page of the package to an anchor on another: "#anchor" on the same page, otherwise a path up to the version directory and down to the target.
 
 ### `upsToVersionDir`
 

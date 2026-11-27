@@ -12,7 +12,7 @@ entities:
 
 ## module `System`
 
-The running process and the machine under it: exiting, and asking what platform this is.
+Exiting the program, and finding out what platform it runs on.
 
 ```kex
 System.OS          # => :macos
@@ -26,11 +26,9 @@ System.exit(1)     # ends the program with status 1
 exit(code: Integer) -> Void
 ```
 
-Ends the process immediately with exit status `code`.
+Ends the process at once with exit status `code`.
 
-The invoking shell receives the code, so this is how a command-line tool reports success or failure to whatever ran it: 0 means success, anything else means failure.
-
-Nothing after the call runs, and no cleanup happens: close what needs closing first.
+The status goes to whatever started the program: 0 means success, and anything else means failure. Nothing after the call runs, and nothing is cleaned up, so close what needs closing first.
 
 **Parameters**
 
@@ -59,7 +57,7 @@ OS : OperatingSystem
 
 The operating system family this program is running on.
 
-Both backends answer with the same atom for the same machine. Prefer the `macOS?` / `linux?` / `windows?` / `posix?` predicates below when you are asking one yes-or-no question; use `OS` when you need to branch several ways.
+For a single yes-or-no question, `macOS?`, `linux?`, `windows?` and `posix?` read better. Use `OS` to branch several ways.
 
 **Examples**
 
@@ -85,9 +83,7 @@ end
 BITWIDTH : Integer
 ```
 
-The machine's pointer width in bits: 64 on anything current, 32 on a small target.
-
-Reported by the emulator on BEAM and by the pointer size in the tree walker, so both agree for one machine.
+The machine's pointer width in bits: 64 on current hardware, 32 on some small targets.
 
 **Examples**
 
@@ -153,9 +149,9 @@ let separator = System.windows? then "\\" else "/"
 posix? : Bool
 ```
 
-Returns `true` when the platform follows POSIX conventions for paths, separators and shell behaviour.
+Returns `true` when the platform follows POSIX conventions for paths and shells.
 
-Everything the toolchain runs on except Windows behaves POSIX-ly enough for paths, separators and shell conventions. An unknown system is NOT assumed to be POSIX.
+That is every supported platform except Windows and WebAssembly. An unknown platform is not assumed to be POSIX.
 
 **Examples**
 
@@ -176,9 +172,9 @@ end
 
 ## type `OperatingSystem`
 
-The operating system families a program may be running on.
+The operating system families a program can run on.
 
-A union of atoms rather than an ADT: these are plain tags, and a `match` over them is still exhaustive. Anything unmodelled is `:unknown`: the union is closed, so callers can cover it.
+A platform Kex does not recognise is `:unknown`. The set is closed, so a `match` over it can be exhaustive.
 
 **Examples**
 
@@ -203,11 +199,11 @@ die(message: String) -> Never
 
 Ends the program with a fatal error message.
 
-`message` goes to stderr behind a `"fatal: "` prefix and the exit status is 1. This is an abort, not an exception, so `trying` / `rescue` cannot catch it. Use it only where there is no recoverable answer. The prelude uses it for a negative `repeat` count, for instance.
+`message` goes to stderr after a `"fatal: "` prefix, and the exit status is 1. `die` aborts the program; `trying` and `rescue` cannot catch it. Use it where the program has no way to continue, such as a bad argument to `Random.sample`.
 
-Its result type is `Never`, the bottom type: `die` does not return, so a branch that dies takes the other branch's type, and `if b == 0 then die("divide by zero") else a end` is an `Integer`.
+Its result type is `Never`, so a branch that dies takes the type of the other branch: `if b == 0 then die("divide by zero") else a end` is an `Integer`.
 
-`die` is declared bare, like `assert`, so it is always in scope.
+`die` is declared at the top level, like `assert`, so it is always in scope.
 
 **Parameters**
 

@@ -13,11 +13,9 @@ entities:
 
 # DateFormat
 
-Writing dates, times of day and instants by a CLDR pattern: the `DateFormat` record and module, and `to(String, format)` on `Date`, `Time` and `DateTime`.
-
 ## record `DateFormat`
 
-How `to(String, format)` writes a date, a time of day or an instant: a CLDR pattern such as `"yyyy-MM-dd HH:mm"`, described at `Date.format`. Build one with the `Date.format` tagged literal, or with `DateFormat.parse`, which says where a pattern known only at run time goes wrong.
+A CLDR pattern such as `"yyyy-MM-dd HH:mm"` for `to(String, format)` on a date, a time of day or an instant. The patterns are described at `Date.format`. Build one with the `Date.format` tagged literal, or with `DateFormat.parse` for a pattern known only at run time.
 
 **Fields**
 
@@ -30,10 +28,10 @@ How `to(String, format)` writes a date, a time of day or an instant: a CLDR patt
 ### `parse`
 
 ```kex
-parse(pattern: String) -> Result<DateFormat, ParseError>
+parse(pattern: String) -> Result<DateFormat, PatternError>
 ```
 
-Checks a pattern known only at run time. `Date.format` describes the patterns.
+Checks a pattern known only at run time and returns it as a `DateFormat`. `Date.format` describes the patterns.
 
 **Parameters**
 
@@ -45,7 +43,7 @@ Checks a pattern known only at run time. `Date.format` describes the patterns.
 
 ```kex
 DateFormat.parse("yyyy-MM-dd")   # => Ok(DateFormat { pattern: "yyyy-MM-dd" })
-DateFormat.parse("yyyy-QQ")      # => Error(ParseError { position: 5, ... })
+DateFormat.parse("yyyy-QQ")      # => Error(PatternError { message: "...", position: 5 })
 ```
 
 ### `pieces`
@@ -54,7 +52,7 @@ DateFormat.parse("yyyy-QQ")      # => Error(ParseError { position: 5, ... })
 pieces(pattern: String) -> Result<[Piece], (Integer, String)>
 ```
 
-Splits a pattern into its fields and its literal text. Otherwise the index of its first problem, and what that problem is.
+Splits a pattern into its fields and its literal text. For a bad pattern it returns the index of the first problem and a message.
 
 **Parameters**
 
@@ -74,9 +72,9 @@ DateFormat.pieces("d MMM")   # => Ok([PatternField('d', 1), PatternText(" "), Pa
 renderParts(format: DateFormat, date: Date?, time: Time?, offset: Duration?, culture: Culture.Culture) -> String?
 ```
 
-Writes `date`, `time` and `offset` (whichever the value has) by the pieces of a pattern, with `culture`'s names. `None` when the pattern asks for a field the value does not have, such as an hour of a `Date`.
+Writes whichever of `date`, `time` and `offset` are given by a pattern, with `culture`'s names. Returns `None` for a bad pattern or when the pattern asks for a field that is missing, such as an hour of a `Date`.
 
-The `to(String, format)` functions on `Date`, `Time` and `DateTime` are the way to reach this.
+Callers normally use `to(String, format)` on `Date`, `Time` or `DateTime` instead.
 
 **Parameters**
 
@@ -94,7 +92,7 @@ The `to(String, format)` functions on `Date`, `Time` and `DateTime` are the way 
 dateLayout(culture: Culture.Culture) -> String
 ```
 
-The pattern a culture writes its dates in: year, month and day in its order, joined by its date separator. ISO order without a time section.
+Returns the pattern a culture writes dates in: year, month and day in its order, joined by its date separator. A culture without time settings gets `"yyyy-MM-dd"`.
 
 **Parameters**
 
@@ -114,7 +112,7 @@ DateFormat.dateLayout(Culture.of("DE_DE").or(Culture.DEFAULT))   # => "dd.MM.yyy
 timeLayout(culture: Culture.Culture) -> String
 ```
 
-The pattern a culture writes a time of day in: hours, minutes and seconds joined by its time separator, on a 12-hour clock with a day period where the culture reads time that way.
+Returns the pattern a culture writes a time of day in: hours, minutes and seconds joined by its time separator, with a 12-hour clock and AM/PM where the culture uses them. A culture without time settings gets `"HH:mm:ss"`.
 
 **Parameters**
 
@@ -202,7 +200,7 @@ More functions for [`DateTime`](date_time.md#record-datetime), added by this mod
 to(String: Type, format: DateFormat, culture: Culture) -> String?
 ```
 
-Writes the instant by a CLDR pattern, as read at its own offset. Patterns are described at `Date.format`.
+Writes the instant by a CLDR pattern, at its own offset. Patterns are described at `Date.format`.
 
 **Parameters**
 

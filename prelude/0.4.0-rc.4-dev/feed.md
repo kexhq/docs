@@ -15,14 +15,14 @@ entities:
 
 A one-shot sequence over a source that can only be read once.
 
-A feed is what `Stream` is not: reading it CONSUMES it. Where a stream remembers its elements so it can be walked again, a feed keeps nothing, and that is the point: it is how to walk a file, a socket or a device larger than memory, which a stream cannot do while anything still holds its start.
+Reading a feed consumes it. A `Stream` remembers its elements so it can be walked again; a feed keeps nothing, so it can walk a file, a socket or a device larger than memory.
 
 ```kex
-foul lines = FS.File.feed("huge.log").or(Feed.empty)
+let lines = FS.File.feed("huge.log").or(Feed.empty)
 lines.each { |line| IO.printLine(line) if line.contains?("ERROR") }
 ```
 
-`map`, `filter` and `drop` answer a feed over the SAME cursor rather than a second cursor over the same source, so a pipeline is one pass:
+`map`, `filter` and `drop` return a feed that reads from the same source as the original, so a pipeline makes one pass:
 
 ```kex
 FS.File.feed("app.log").or(Feed.empty)
@@ -30,11 +30,11 @@ FS.File.feed("app.log").or(Feed.empty)
   .take(10)
 ```
 
-Taking twice answers two different windows: the first ten, then the ten after them. That is the whole difference from `Stream`, where taking twice answers the same ten. When you want the stream behaviour on a small source, `toStream` asks for it explicitly, at the cost of holding what it reads.
+Calling `take(10)` twice returns the first ten elements and then the next ten. On a `Stream` it would return the same ten both times. To get that behaviour from a small source, call `toStream`, which keeps what it reads.
 
 ### Functions
 
-Reading a feed consumes its cursor. Obtain a new feed when you need to traverse the same data again. Opening a file-backed feed is `foul`; consuming an existing feed does not require another capability.
+Reading a feed consumes it; open a new one to read the same data again. Opening a file-backed feed is `foul`, and so is `pull`.
 
 #### `pull` (foul)
 
@@ -42,9 +42,7 @@ Reading a feed consumes its cursor. Obtain a new feed when you need to traverse 
 pull -> A?
 ```
 
-Answers the next element and consumes it, or `None` once the source is spent.
-
-NOT named `next`: that is the loop-continue keyword, and the lexer reads it as one even after a dot, so a call to it silently swallows the rest of the enclosing block.
+Returns the next element and consumes it, or `None` once the source is spent.
 
 **Returns**: the next element, or `None`
 
@@ -63,9 +61,9 @@ feed.pull   # => None
 spent? -> Bool
 ```
 
-Whether the source has run out.
+Returns `true` once a read has found the source empty.
 
-`false` does not promise another element: only that the feed has not been told otherwise yet. The source is asked, and may end, on the next read.
+`false` does not promise another element: the feed only learns that the source has ended when a read finds nothing.
 
 **Returns**: `true` once the feed is spent
 
@@ -77,7 +75,7 @@ _Draining a feed a piece at a time_
 let jobs = Feed.Elements(["resize", "index"])
 jobs.spent?   # => false
 jobs.take(2)  # => ["resize", "index"]
-jobs.spent?   # => false: nothing has read past the end yet
+jobs.spent?   # => false
 jobs.pull     # => None
 jobs.spent?   # => true
 ```
@@ -90,7 +88,7 @@ take(n: Integer) -> [A]
 
 Returns the next `n` elements as a list, consuming them.
 
-Answers fewer than `n` when the source ends first, and `[]` once it is spent. Unlike `Stream.take`, calling it twice walks forward.
+Returns fewer than `n` when the source ends first, and `[]` once it is spent. Unlike `Stream.take`, a second call returns the elements after the first.
 
 **Parameters**
 
@@ -114,9 +112,7 @@ feed.take(2)   # => [3, 4]
 drop(n: Integer) -> Feed<A>
 ```
 
-Discards the next `n` elements and answers the feed.
-
-There is only ever one cursor, so this hands back the same feed rather than a second one positioned differently.
+Discards the next `n` elements and returns the same feed.
 
 **Parameters**
 
@@ -138,7 +134,7 @@ map(f: (A -> B)) -> Feed<B>
 
 Returns a feed with `f` applied to each element.
 
-`f` runs as elements are read, and only for those that are. The result draws from the same cursor, so reading it consumes the receiver too.
+`f` runs on each element as it is read. The result reads from the same source, so reading it consumes the original feed too.
 
 **Parameters**
 
@@ -202,9 +198,9 @@ FS.File.feed("log.txt").or(Feed.empty).each { |line| IO.printLine(line) }
 collect -> [A]
 ```
 
-Drains the feed into a list.
+Reads the rest of the feed into a list.
 
-This is the operation that gives up constant space, which is why it is named rather than implicit: on a source too large to hold, use `each`.
+The whole rest of the source is held in memory. For a source too large to hold, use `each`.
 
 **Returns**: every remaining element
 
@@ -232,16 +228,16 @@ toStream -> Stream<A>
 
 Returns a `Stream` drawn from the feed.
 
-The stream remembers what it reads, so it can be walked again: at the cost of holding every element forced through it. Worth it for a source small enough to replay; the opposite of what a feed is for otherwise.
+The stream keeps every element it reads, so it can be walked again. Use it only for a source small enough to hold.
 
-**Returns**: a replayable view of the remaining elements
+**Returns**: the remaining elements, as a stream
 
 **Examples**
 
 ```kex
 let lines = FS.File.feed("small.txt").or(Feed.empty).toStream
 lines.take(2)   # => ["one", "two"]
-lines.take(2)   # => ["one", "two"] : a stream, so the same two
+lines.take(2)   # => ["one", "two"]
 ```
 
 ## module `Feed`
@@ -254,9 +250,9 @@ Constructors for `Feed`.
 empty : Feed<A>
 ```
 
-A feed with nothing in it: its first read answers `None`.
+Returns a feed with nothing in it, whose first `pull` returns `None`.
 
-Mostly the `or` half of a failed open: `FS.File.feed(path).or(Feed.empty)` reads nothing rather than stopping the program.
+It is mostly used as the fallback for a failed open: `FS.File.feed(path).or(Feed.empty)` then reads nothing.
 
 **Examples**
 
@@ -272,9 +268,9 @@ Feed.empty.take(3)   # => []
 Elements(xs: [A]) -> Feed<A>
 ```
 
-A feed over a list that is already in hand.
+Returns a feed over the elements of a list.
 
-The elements are there, so nothing is saved by feeding them: this is for standing in for a real source, in a test, with something that consumes the way the real one does.
+Use it in tests, to stand in for a real source with something that is consumed the same way.
 
 **Parameters**
 
@@ -287,5 +283,5 @@ The elements are there, so nothing is saved by feeding them: this is for standin
 ```kex
 let feed = Feed.Elements(["one", "two"])
 feed.take(1)   # => ["one"]
-feed.take(1)   # => ["two"] : the first one is gone
+feed.take(1)   # => ["two"]
 ```

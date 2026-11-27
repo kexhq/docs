@@ -5,22 +5,26 @@ source: errorable.kex
 title: Errorable
 entities:
   - { kind: trait, name: "Errorable" }
-  - { kind: record, name: "ParseError" }
+  - { kind: type, name: "ParseError" }
+  - { kind: make, name: "ParseError<T>" }
+  - { kind: record, name: "PatternError" }
 ---
 
 # Errorable
 
 ## trait `Errorable`
 
-`Errorable`: the trait for values that describe a failure.
+`Errorable`: the trait for error values that carry a message.
 
-Implemented by error types that carry a human-readable message, so a generic handler can display or log any error without knowing its concrete type or its structured fields.
+An error type implements it by supplying `message`. A handler that only needs to show or log the error can then take any `Errorable`.
 
 ```kex
 foul report(e: Errorable) -> Void do
   IO.printError("error: ${e.message}")
 end
 ```
+
+Implemented by [`ParseError<T>`](#make-parseerror).
 
 ### Required functions
 
@@ -30,9 +34,9 @@ end
 message -> String
 ```
 
-A human-readable description of what went wrong.
+Returns a description of what went wrong, written for a person to read.
 
-Written for a person reading output, not for a program to match on: branch on the error's own type or fields for that.
+To decide what to do about an error, match on its type or fields; the wording of the message may change.
 
 **Returns**: the failure message
 
@@ -44,27 +48,55 @@ IO.printError("error: ${e.message}")
 
 
 
-## record `ParseError`
+## type `ParseError<T>`
 
-A parse failure, with everything needed to report it or to carry on from it.
-
-Answered by `Integer.parse`, `Float.parse` and `Number.parse` when the input is not what they expected. Reach for those over `to(Integer)` exactly when this detail matters: `to` answers a plain `None`.
+The reason `Integer.parse`, `Float.parse` or `Number.parse` could not read a number, with one case per reason. Positions count characters from the start of the text.
 
 ```kex
-Integer.parse("12x")
-# => Error(ParseError { input: "12x", position: 2, value: 12,
-#                       message: "trailing characters after integer",
-#                       rest: "x" })
+match Integer.parse(text) do
+  Ok(n) => Money(n, Currency.DEFAULT)
+  Error(Trailing(n, unit)) => Money(n, unit.trim)
+  Error(NoDigits(_)) => die("no amount in ${text}")
+  Error(e) => die(e.message)
+end
 ```
 
-The `position` and `rest` are what make a hand-written scanner possible: the error says exactly where it stopped and what was left.
+Use `parse` when the reason matters. `to(Integer)` only returns `None`.
+
+**Variants**
+
+  - `NoDigits(Integer)`
+  - `Trailing(T, String)`
+  - `BadGrouping(Integer)`
+  - `OutOfRange`
+  - `BadRadix(Integer)`
+  - `BadCulture`
+
+Implements [`Errorable`](#trait-errorable).
+
+### Functions
+
+#### `message` (from Errorable)
+
+```kex
+message -> String
+```
+
+Returns the failure as a sentence for a person to read.
+
+**Examples**
+
+```kex
+Integer.parse("abc").mapError(~message)   # => Error("expected a digit at 0")
+```
+
+## record `PatternError`
+
+The error `NumberFormat.parse` and `DateFormat.parse` return for a pattern they cannot read. It says where the pattern goes wrong and why, for the pattern's author to fix.
 
 **Fields**
 
-  - `input` : [String](string.md#make-string)
   - `position` : [Integer](number.md#make-integer)
-  - `value` : Any
   - `message` : [String](string.md#make-string)
-  - `rest` : [String](string.md#make-string)
 
 

@@ -9,15 +9,21 @@ entities:
   - { kind: make, name: "Integer" }
   - { kind: make, name: "String" }
   - { kind: make, name: "[A]" }
+  - { kind: trait, name: "Functor" }
+  - { kind: trait, name: "Bindable" }
+  - { kind: trait, name: "Monad" }
+  - { kind: trait, name: "Applicable" }
+  - { kind: function, name: "traverse" }
+  - { kind: function, name: "sequence" }
 ---
 
 # Algebra
 
 Algebraic structures: combining values associatively.
 
-Kex traits do not inherit from one another, so concrete types explicitly implement every structure whose laws they satisfy.
+Kex traits do not inherit from one another, so a type lists every structure it implements.
 
-`Monoid` is "these two values combine, and there is a neutral one". Numbers, strings and lists all satisfy it, which is what lets `repeat` be written once:
+A `Monoid` has an associative `combine` and a neutral `identity`. Integers, strings and lists are all monoids, so one `repeat` serves all three:
 
 ```kex
 "ab".repeat(3)   # => "ababab"
@@ -25,13 +31,13 @@ Kex traits do not inherit from one another, so concrete types explicitly impleme
 5.repeat(3)      # => 15
 ```
 
-Ordering and comparison (`Ordering`, `Comparable`) live in `comparable.kex`.
+`Ordering` and `Comparable` are in `comparable.kex`.
 
 ## trait `Monoid`
 
 Types whose values combine associatively and have a neutral element.
 
-Implemented by `Integer` (addition), `String` and `List` (concatenation), `Map` and both `Set` flavours (union), and `Ordering` ("first decision wins" — declared beside `Ordering` in `comparable.kex`).
+Implemented by `Integer` (addition), `String` and `List` (concatenation), `Map` (merge), `Set` and `UnorderedSet` (union), `Stack`, `Queue`, and `Ordering`, where the first decision that is not `Equal` wins.
 
 Implemented by [`Integer`](#make-integer), [`String`](#make-string), [`[A]`](#make-list), [`Ordering`](comparable.md#make-ordering), [`Map<K, V>`](map.md#make-map), [`Queue<A>`](data/queue.md#make-queue), [`Set<A>`](data/set.md#make-set), [`UnorderedSet<A>`](data/set.md#make-unorderedset), [`Stack<A>`](data/stack.md#make-stack).
 
@@ -43,9 +49,7 @@ Implemented by [`Integer`](#make-integer), [`String`](#make-string), [`[A]`](#ma
 identity -> This
 ```
 
-The neutral element: combining it with any value gives that value back.
-
-`combine` must be associative and `identity` neutral on both sides.
+Returns the neutral element: combining it with any value, on either side, gives that value back.
 
 **Returns**: the identity
 
@@ -64,7 +68,7 @@ combine(other: This) -> This
 
 Combines this value with `other`.
 
-Must be associative: `a.combine(b).combine(c)` and `a.combine(b.combine(c))` have to agree.
+It must be associative: `a.combine(b).combine(c)` must equal `a.combine(b.combine(c))`.
 
 **Parameters**
 
@@ -96,7 +100,7 @@ repeat(n: Integer) -> This
 
 Combines this value with itself `n` times.
 
-Repeating zero times, or a negative number of times, gives the identity: `""` for a string, `0` for an integer, `[]` for a list. Ruby spells the string case `*`.
+Zero or a negative `n` gives the identity: `""` for a string, `0` for an integer, `[]` for a list. For strings, this is Ruby's `*`.
 
 **Parameters**
 
@@ -137,17 +141,21 @@ Implemented by [`Integer`](#make-integer).
 identity -> This
 ```
 
-The neutral element.
+Returns the neutral element.
 
 **Returns**: the identity
 
 #### `combine`
 
 ```kex
-combine(This) -> This
+combine(other: This) -> This
 ```
 
 Combines this value with `other`.
+
+**Parameters**
+
+  - `other` — the value to combine with
 
 **Returns**: the combined value
 
@@ -157,7 +165,7 @@ Combines this value with `other`.
 inverse -> This
 ```
 
-The value that combines with this one to give the identity.
+Returns the value that combines with this one to give the identity.
 
 **Returns**: the inverse
 
@@ -176,7 +184,7 @@ More functions for [`Integer`](number.md#make-integer), added by this module.
 
 Implements [`Monoid`](#trait-monoid), [`Group`](#trait-group).
 
-Implements `Monoid`, `Group` over `Integer` for addition.
+Makes `Integer` a `Monoid` and a `Group` under addition.
 
 ### `identity` (from Monoid, Group)
 
@@ -184,7 +192,7 @@ Implements `Monoid`, `Group` over `Integer` for addition.
 identity -> Integer
 ```
 
-`0`: the neutral element for addition.
+Returns `0`, the neutral element for addition.
 
 **Returns**: zero
 
@@ -200,7 +208,7 @@ Integer.identity   # => 0
 combine(other: This) -> This
 ```
 
-Adds `other` to this integer. Addition is the monoid operation for `Integer`.
+Returns the sum of this integer and `other`.
 
 **Parameters**
 
@@ -220,7 +228,7 @@ Adds `other` to this integer. Addition is the monoid operation for `Integer`.
 inverse -> This
 ```
 
-The additive inverse: this integer negated.
+Returns this integer negated, its additive inverse.
 
 **Returns**: the negation
 
@@ -237,7 +245,7 @@ More functions for [`String`](string.md#make-string), added by this module.
 
 Implements [`Monoid`](#trait-monoid).
 
-Implements `Monoid` over `String` for concatenation.
+Makes `String` a `Monoid` under concatenation.
 
 ### `identity` (from Monoid)
 
@@ -245,7 +253,7 @@ Implements `Monoid` over `String` for concatenation.
 identity -> String
 ```
 
-`""`: the neutral element for concatenation.
+Returns `""`, the neutral element for concatenation.
 
 **Returns**: the empty string
 
@@ -261,7 +269,7 @@ String.identity   # => ""
 combine(other: This) -> This
 ```
 
-Concatenates `other` onto this string. Concatenation is the monoid operation for `String`.
+Returns this string followed by `other`.
 
 **Parameters**
 
@@ -281,22 +289,22 @@ More functions for [`List`](list.md#type-list), added by this module.
 
 Implements [`Monoid`](#trait-monoid).
 
-Implements `Monoid` over `List<A>` for concatenation.
+Makes lists a `Monoid` under concatenation.
 
 ### `identity` (from Monoid)
 
 ```kex
-identity -> [A]
+identity -> This
 ```
 
-`[]`: the neutral element for concatenation.
+Returns `[]`, the neutral element for concatenation.
 
 **Returns**: the empty list
 
 **Examples**
 
 ```kex
-[1].combine(List.identity)   # => [1]
+[1, 2].identity   # => []
 ```
 
 ### `combine` (from Monoid)
@@ -305,7 +313,7 @@ identity -> [A]
 combine(other: This) -> This
 ```
 
-Concatenates `other` onto this list. Concatenation is the monoid operation for `List`.
+Returns this list followed by `other`.
 
 **Parameters**
 
@@ -323,4 +331,209 @@ _Flattening a list of lists_
 
 ```kex
 groups.reduce([]) { |acc, g| acc.combine(g) }
+```
+
+## trait `Functor<F>`
+
+Containers whose values can be transformed while the container keeps its shape: a list's elements, an optional's value, a result's success. The trait ranges over the container type, so a function written once works on any of them:
+
+```kex
+let bumped(F is Functor => xs: F<Integer>) -> F<Integer> = xs.map { |x| x + 1 }
+
+bumped([1, 2])     # => [2, 3]
+bumped(Just(1))    # => Just(2)
+bumped(Ok(1))      # => Ok(2)
+```
+
+Implemented by `List`, `Optional` and `Result`, where an error is left as it is.
+
+Implemented by [`[X]`](list.md#make-list), [`Optional<X>`](optional.md#make-optional), [`Result<_, E>`](optional.md#make-result-_), [`Validation<_, E>`](optional.md#make-validation-_).
+
+### Required functions
+
+#### `map`
+
+```kex
+map(f: F<A>) -> (A -> B) -> F<B>
+```
+
+Applies `f` to each value the container holds, keeping its shape.
+
+**Parameters**
+
+  - `f` — the transformation
+
+**Returns**: the container of results
+
+
+
+## trait `Bindable<F>`
+
+Containers whose values can each produce another container of the same kind, flattened into one. This is the chaining step of a list, an optional or a result.
+
+```kex
+let chained(F is Bindable => xs: F<Integer>, f: Integer -> F<Integer>) -> F<Integer> = xs.into(f)
+```
+
+Implemented by `List`, `Optional` and `Result`.
+
+Implemented by [`[X]`](list.md#make-list), [`Optional<X>`](optional.md#make-optional), [`Result<_, E>`](optional.md#make-result-_).
+
+### Required functions
+
+#### `into`
+
+```kex
+into(f: F<A>) -> (A -> F<B>) -> F<B>
+```
+
+Applies `f` to each value and joins the containers it returns.
+
+**Parameters**
+
+  - `f` — the step
+
+**Returns**: the joined result
+
+
+
+## trait `Monad<F>`
+
+A `Bindable` container that can also be made from one plain value with `wrap`. Generic code calls it through the type parameter, as `M.wrap(x)`; for a concrete type, `List.wrap(1)` is `[1]`, `Optional.wrap(1)` is `Just(1)` and `Result.wrap(1)` is `Ok(1)`.
+
+```kex
+let incremented(M is Monad => xs: M<Integer>) -> M<Integer> = xs.into { |x| M.wrap(x + 1) }
+
+incremented([1, 2])   # => [2, 3]
+incremented(Just(1))  # => Just(2)
+```
+
+Implemented by `List`, `Optional` and `Result`, where an error is left as it is.
+
+Implemented by [`[X]`](list.md#make-list), [`Optional<X>`](optional.md#make-optional), [`Result<_, E>`](optional.md#make-result-_).
+
+### Required functions
+
+#### `wrap`
+
+```kex
+wrap(value: A) -> F<A>
+```
+
+Returns the container holding only `value`.
+
+**Parameters**
+
+  - `value` — the value to hold
+
+**Returns**: the container
+
+#### `into`
+
+```kex
+into(f: F<A>) -> (A -> F<B>) -> F<B>
+```
+
+Applies `f` to each value and joins the containers it returns.
+
+**Parameters**
+
+  - `f` — the step
+
+**Returns**: the joined result
+
+
+
+## trait `Applicable<F>`
+
+Containers whose values can be combined with another container's when neither depends on the other. `with` applies a function to the values of both. A list combines every pair. An `Optional` or a `Result` combines the two values or returns the first failure. A `Validation` combines the values or collects every failure, which suits checking several independent inputs.
+
+```kex
+[1, 2].with([10, 20]) { |a, b| a + b }       # => [11, 21, 12, 22]
+Just(1).with(Just(2)) { |a, b| a + b }       # => Just(3)
+name.checked.with(email.checked) do |n, e|
+  Signup { name: n, email: e }               # every failed check, or a Signup
+end
+```
+
+`traverse` and `sequence` work with any of them.
+
+Implemented by `List`, `Optional`, `Result` and `Validation`.
+
+Implemented by [`[X]`](list.md#make-list), [`Optional<X>`](optional.md#make-optional), [`Result<_, E>`](optional.md#make-result-_), [`Validation<_, E>`](optional.md#make-validation-_).
+
+### Required functions
+
+#### `wrap`
+
+```kex
+wrap(value: A) -> F<A>
+```
+
+Returns the container holding only `value`.
+
+**Parameters**
+
+  - `value` — the value to hold
+
+**Returns**: the container
+
+#### `with`
+
+```kex
+with(other: F<A>, f: F<B>) -> (A -> B -> C) -> F<C>
+```
+
+Applies `f` to this container's values and `other`'s.
+
+**Parameters**
+
+  - `other` — the other container
+  - `f` — combines one value from each
+
+**Returns**: the results
+
+
+
+## function `traverse`
+
+```kex
+traverse(xs: [A], f: (A -> F<B>)) -> F<[B]>
+```
+
+Applies `f` to every element and gathers the results into one container. If any step fails, the result is a failure: the first one for an `Optional` or `Result`, all of them for a `Validation`.
+
+**Parameters**
+
+  - `xs` — the elements
+  - `f` — the step for one element
+
+**Returns**: the results, gathered
+
+**Examples**
+
+```kex
+traverse(["1", "2"]) { |s| s.to(Integer) }   # => Just([1, 2])
+traverse(["1", "x"]) { |s| s.to(Integer) }   # => None
+```
+
+## function `sequence`
+
+```kex
+sequence(xs: [F<A>]) -> F<[A]>
+```
+
+Turns a list of containers into one container of a list; `traverse` with nothing to apply.
+
+**Parameters**
+
+  - `xs` — the containers
+
+**Returns**: their values, gathered
+
+**Examples**
+
+```kex
+sequence([Ok(1), Ok(2)])           # => Ok([1, 2])
+sequence([Ok(1), Error("no")])     # => Error("no")
 ```

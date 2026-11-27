@@ -14,11 +14,11 @@ entities:
 
 ## type `String`
 
-Implements [`Monoid`](algebra.md#trait-monoid), [`Blankable`](blankable.md#trait-blankable), [`Comparable`](comparable.md#trait-comparable), [`Enumerable`](enumerable.md#trait-enumerable), [`Foldable`](enumerable.md#trait-foldable), [`Truthyable`](truthyable.md#trait-truthyable).
+Implements [`Monoid`](algebra.md#trait-monoid), [`Blankable`](blankable.md#trait-blankable), [`Comparable`](comparable.md#trait-comparable), [`Enumerable<Char>`](enumerable.md#trait-enumerable), [`Foldable<Char>`](enumerable.md#trait-foldable), [`Truthyable`](truthyable.md#trait-truthyable).
 
-Text. A `String` is a sequence of Unicode characters, immutable like every other Kex value. Operations that transform text return a new string rather than changing the receiver.
+Text. A `String` is an immutable sequence of Unicode characters; functions that transform text return a new string.
 
-A `String` is its own type, not a list of characters. It is `Enumerable`, so `each`, `reduce`, `find` and friends walk it one `Char` at a time, and the sequence operations that could reasonably answer in either currency pick the useful one: `take`, `drop` and `sort` hand back a `String`, while `first` and `last` hand back a `Char`. Use `chars` to cross over to a real list.
+A `String` is its own type, not a list of characters. It is `Enumerable`, so `each`, `reduce` and `find` walk it one `Char` at a time. Sequence functions return whichever type is more useful: `take`, `drop` and `sort` return a `String`, while `first` and `last` return a `Char`. Use `chars` to get a `[Char]`.
 
 ```kex
 let line = "  Hello, World  "
@@ -42,7 +42,7 @@ reduce(acc: A, f: (A -> Char -> A)) -> A
 
 Folds the string from the left, one `Char` at a time.
 
-This is `String`'s `Enumerable` primitive: `map`, `filter`, `find`, `any?` and the rest are defined in terms of it. Reach for it directly when you are accumulating something that is neither a string nor a list.
+`String`'s other `Enumerable` functions, such as `map`, `find` and `any?`, are built on this one. Use it directly to accumulate something that is neither a string nor a list.
 
 **Parameters**
 
@@ -65,7 +65,7 @@ _Building a character histogram_
 "banana".reduce({}) do |counts, c|
   counts.put(c.string, counts.get(c.string).or(0) + 1)
 end
-# => {"a": 3, "b": 1, "n": 2}
+# => { "a": 3, "b": 1, "n": 2 }
 ```
 
 ### `each` (from Foldable)
@@ -92,9 +92,9 @@ Calls `f` with each character, for its side effects.
 mapChars(f: (Char -> Char)) -> String
 ```
 
-Applies `f` to every character and joins the results back into a `String`.
+Applies `f` to every character and joins the results into a `String`.
 
-This is the string-preserving counterpart of `map`. `map` comes from `Enumerable` and collects into a list, because its type says `(Char -> B) -> [B]` and `B` need not be a `Char` at all. When you want a string out, name the operation that produces one.
+`map`, from `Enumerable`, returns a list, since its function may return something other than a `Char`. Use `mapChars` when you want a string back.
 
 **Parameters**
 
@@ -128,7 +128,7 @@ Returns the characters satisfying `pred`, as a `String`.
 
 **Parameters**
 
-  - `pred` — kept when it answers `true`
+  - `pred` — a character is kept when this returns `true`
 
 **Returns**: the matching characters, in order
 
@@ -169,7 +169,7 @@ Returns the string with repeated characters removed, keeping the first occurrenc
 first -> Char?
 ```
 
-A String is its OWN type, not a [Char]: `chars` converts between them. So the sequence operations below are declared here rather than inherited from List, and they answer in String's terms: `take`/`drop`/`sort` hand back a String, while `first`/`last` hand back a Char. The List intrinsics they delegate to already understand the String representation, so there is one implementation for both backends.
+A String is its own type, not a [Char], so the sequence functions below are declared here instead of coming from List: `take`/`drop`/`sort` return a String, `first`/`last` a Char. The List intrinsics they call understand the String representation.
 
 Returns the first character, or `None` when the string is empty.
 
@@ -182,7 +182,7 @@ Returns the first character, or `None` when the string is empty.
 "".first     # => None
 ```
 
-_Testing an initial without risking an empty string_
+_Testing the first character of a string that may be empty_
 
 ```kex
 "hello".first.map(~upper?).or(false)   # => false
@@ -215,7 +215,7 @@ get(i: Range<Integer>) -> String
 
 Returns the character at index `i`, counting from 0.
 
-Answers `None` for an index past either end rather than failing, so it is safe to index with a computed position.
+A negative index counts back from the end, so `-1` is the last character. An index past either end returns `None`.
 
 **Parameters**
 
@@ -237,7 +237,7 @@ Answers `None` for an index past either end rather than failing, so it is safe t
 take(n: Integer) -> String
 ```
 
-Returns the first `n` characters. A short string is returned whole, so `take` never fails on an `n` that is too large.
+Returns the first `n` characters, or the whole string when it is shorter than `n`.
 
 **Parameters**
 
@@ -265,7 +265,7 @@ let preview = title.take(30) + (title.count > 30 then "…" else "")
 drop(n: Integer) -> String
 ```
 
-Returns everything after the first `n` characters. The complement of `take`: +s.take(n) + s.drop(n)+ is `s`.
+Returns everything after the first `n` characters, so +s.take(n) + s.drop(n)+ is `s`.
 
 **Parameters**
 
@@ -296,7 +296,7 @@ slice(range: Range<Integer>) -> String
 
 Returns the substring of `length` characters starting at index `start`, counting from 0.
 
-Characters, not bytes: the indices count what `count` counts. The window is clamped rather than refused, the way `take` and `drop` already behave: a start past the end answers `""`, a length running past the end stops at the end, and a negative length answers `""`. A negative start counts back from the end, as in Ruby: `-1` is the last character, and a start still before the beginning answers `""`.
+Indices count characters, not bytes. Out-of-range values are clamped, as in `take` and `drop`: a start past the end or a negative length returns `""`, and a length running past the end stops there. A negative start counts back from the end, as in Ruby, so `-1` is the last character; a start that is still before the beginning returns `""`.
 
 **Parameters**
 
@@ -325,11 +325,11 @@ line.slice(0, 10).trim   # the date column of a log line
 reject(pred: (Char -> Bool)) -> String
 ```
 
-Returns the characters that do NOT satisfy `pred`: the complement of `filter`.
+Returns the characters that do not satisfy `pred`, as a `String`.
 
 **Parameters**
 
-  - `pred` — dropped when it answers `true`
+  - `pred` — a character is dropped when this returns `true`
 
 **Returns**: the characters that failed the predicate
 
@@ -403,9 +403,7 @@ pair.indexOf('=').map { |i| (pair.take(i), pair.drop(i + 1)) }
 findIndex(pred: (Char -> Bool)) -> Integer?
 ```
 
-Returns the index of the first character satisfying `pred`, or `None`.
-
-The predicate counterpart of `indexOf`, which searches for one known character.
+Returns the index of the first character satisfying `pred`, or `None`. Use `indexOf` to search for a known character.
 
 **Parameters**
 
@@ -499,7 +497,7 @@ _Numbering the characters_
 partition(pred: (Char -> Bool)) -> (String, String)
 ```
 
-Splits the string in two: the characters satisfying `pred`, then those that do not. One pass, both answers.
+Splits the string in two: the characters satisfying `pred`, then those that do not.
 
 **Parameters**
 
@@ -527,7 +525,7 @@ other    # => "ab"
 count -> Integer
 ```
 
-Returns the number of characters: characters, not bytes. See `bytes` for the storage-level length.
+Returns the number of characters (codepoints), not bytes. `byteSize` gives the encoded length, and `graphemeCount` the characters a reader sees.
 
 **Returns**: the character count
 
@@ -545,7 +543,7 @@ Returns the number of characters: characters, not bytes. See `bytes` for the sto
 occurrences(sub: String) -> Integer
 ```
 
-Returns how many times `sub` occurs, counting non-overlapping matches from the left. An empty `sub` occurs 0 times. (Ruby spells this `scan(sub).size`; `count` here counts characters by a predicate.)
+Returns how many times `sub` occurs, counting non-overlapping matches from the left. An empty `sub` occurs 0 times. Ruby writes this `scan(sub).size`; Kex's `count` with a predicate counts characters.
 
 **Parameters**
 
@@ -567,7 +565,7 @@ Returns how many times `sub` occurs, counting non-overlapping matches from the l
 length -> Integer
 ```
 
-Returns the number of characters. The same as `count`, under the name familiar from other languages.
+Returns the number of characters. The same as `count`.
 
 **Returns**: the character count
 
@@ -583,9 +581,9 @@ Returns the number of characters. The same as `count`, under the name familiar f
 graphemeCount -> Integer
 ```
 
-Returns the number of user-perceived characters: extended grapheme clusters (Unicode UAX #29), which is not always `count`.
+Returns the number of user-perceived characters, counted as extended grapheme clusters (Unicode UAX #29).
 
-`count` answers the codepoint count, and most text is one codepoint per grapheme cluster, so the two usually agree. They part ways for a base character combined with a following mark, an emoji built from more than one codepoint, and `"\r\n"`, which is one grapheme cluster over two codepoints: reach for `graphemeCount` over `count` wherever "how many characters does a person see" is the question, such as sizing text for display or truncating it at a boundary a reader would recognize.
+`count` counts codepoints. The two agree for most text, but differ for a letter followed by a combining mark, an emoji made of several codepoints, and `"\r\n"`, which is one cluster of two codepoints. Use `graphemeCount` when the question is how many characters a person sees, for example when sizing text for display.
 
 **Returns**: the grapheme cluster count
 
@@ -613,7 +611,7 @@ empty? -> Bool
 
 Returns `true` when the string has no characters.
 
-Note that a string of spaces is not empty: use `blank?` from the `Blankable` trait when whitespace should not count.
+A string of spaces is not empty; use `blank?` from `Blankable` when whitespace should not count.
 
 **Returns**: `true` for the empty string
 
@@ -650,7 +648,7 @@ Returns the string with `wrapper` added at both ends.
 _Quoting a value for output_
 
 ```kex
-value.enclose("\"")   # => "\"localhost\""
+"localhost".enclose("'")   # => "'localhost'"
 ```
 
 ### `at`
@@ -659,7 +657,7 @@ value.enclose("\"")   # => "\"localhost\""
 at(i: Integer) -> Char?
 ```
 
-Returns the character at index `i`, counting from 0, or `None` when the index is out of range. The same as the integer one-argument `get` (`get` also accepts a `Range`, which answers a substring instead).
+Returns the character at index `i`, counting from 0, or `None` when the index is out of range. A negative index counts from the end. The same as `get(i)`.
 
 **Parameters**
 
@@ -714,7 +712,7 @@ Returns the third character, or `None` when the string is shorter than three cha
 rest -> String
 ```
 
-Returns everything after the first character. The empty string has no rest, and answers with itself.
+Returns everything after the first character, or `""` for the empty string.
 
 **Returns**: the string without its first character
 
@@ -733,7 +731,7 @@ chars -> [Char]
 
 Returns the string's characters as a list.
 
-The bridge from `String` to the `List` functions that a string does not have of its own. Join back with `.join("")`.
+Use it to reach `List` functions that `String` lacks, and `join("")` to get back to a string.
 
 **Returns**: the characters, in order
 
@@ -757,9 +755,7 @@ bytes -> [Byte]
 
 Returns the string's UTF-8 encoding, one `Byte` per byte.
 
-`chars` is the TEXT view of a string and `bytes` is the STORAGE view, so they differ for anything outside ASCII: `"é"` is one `Char` and two +Byte+s. Use `bytes` when the length that matters is the encoded one: a network frame, a file offset, a size limit.
-
-`String.fromBytes` is the inverse.
+`chars` and `bytes` differ outside ASCII: `"é"` is one `Char` and two bytes. Use `bytes` when the encoded form matters, as in a network frame or a size limit. `String.fromBytes` is the inverse.
 
 **Returns**: the UTF-8 bytes
 
@@ -784,9 +780,9 @@ _Measuring the encoded size_
 byteSize -> Integer
 ```
 
-The storage size in bytes, without building the byte list.
+Returns the length of the string's UTF-8 encoding in bytes.
 
-`bytes.count` answers the same number by materialising every byte first, which on a megabyte payload means a million values to count them. This reads the encoded length directly.
+It gives the same number as `bytes.count` without building a list of every byte, which matters for large payloads.
 
 **Returns**: the length of the UTF-8 encoding
 
@@ -805,9 +801,9 @@ _Text length and storage length differ_
 byteAt(index: Integer) -> Byte?
 ```
 
-One byte of the storage view, or `None` when the index is out of range.
+Returns the byte at a UTF-8 offset, or `None` when the offset is out of range.
 
-This indexes the ENCODING, not the text: `byteAt` on a multi-byte character returns one of its bytes, never the character. Use `at` or `chars` for the text view.
+The offset indexes the encoding, so inside a multi-byte character it returns one of that character's bytes. Use `at` to index characters.
 
 **Parameters**
 
@@ -821,7 +817,7 @@ _The two views of the same string_
 
 ```kex
 "héllo".byteAt(1)   # => Just(195)
-"héllo".at(1)       # => Just("é")
+"héllo".at(1)       # => Just('é')
 "héllo".byteAt(99)  # => None
 ```
 
@@ -831,9 +827,9 @@ _The two views of the same string_
 bytePart(offset: Integer, count: Integer) -> String
 ```
 
-A slice of the storage view, by byte offset and byte count.
+Returns the bytes from `offset` to +offset + count+ of the UTF-8 encoding, as a `String`.
 
-The range is clamped rather than refused, the way `take` and `drop` already behave. Slicing mid-character yields a string holding partial UTF-8 — legal storage, but not text: decode it only at a boundary you know is a character boundary.
+Out-of-range values are clamped, as in `take` and `drop`. Cutting inside a character leaves partial UTF-8 in the result, so slice only at offsets you know are character boundaries.
 
 **Parameters**
 
@@ -858,7 +854,7 @@ split -> [String]
 
 Splits the string into its individual characters, as one-character strings.
 
-Use `chars` instead when you want `Char` values rather than strings.
+Use `chars` to get `Char` values.
 
 **Returns**: one string per character
 
@@ -874,7 +870,7 @@ split(sep: String | Regex) -> [String]
 
 Splits the string on every occurrence of `sep`, which may be a literal string or a `Regex`.
 
-Separators at the ends produce empty parts, so splitting `",a,"` on `","` gives three parts. Filter or trim afterwards when that is not wanted.
+Separators at the ends produce empty parts, so splitting `",a,"` on `","` gives three parts.
 
 **Parameters**
 
@@ -891,7 +887,7 @@ _Splitting a delimited line_
 "a, b, c".split(", ")  # => ["a", "b", "c"]
 ```
 
-_Splitting on a pattern (needs `using Regex`)_
+_Splitting on a pattern (needs +using Regex+)_
 
 ```kex
 "a1b22c".split(re`[0-9]+`)   # => ["a", "b", "c"]
@@ -911,7 +907,7 @@ lines -> [String]
 
 Splits the string into lines on `\n`.
 
-A single trailing newline is dropped, so a file that ends in one does not produce a final empty line. A Windows `\r\n` ending is one line ending, as Ruby's `chomp` reads it, so no line keeps a stray `\r`. Every line-reading function (`FS.File.readLines`, `FileHandle.getLine`, a file `Feed`) reads line endings the same way.
+A single trailing newline is dropped, so a file that ends in one gives no final empty line. A Windows `\r\n` counts as one line ending, so no line keeps a stray `\r`. `FS.File.readLines`, `FileHandle.getLine` and file feeds split lines the same way.
 
 **Returns**: the lines, without their newlines
 
@@ -941,7 +937,7 @@ indentRest(prefix: String) -> String
 
 Indents every line but the first by `prefix`.
 
-This is what splicing a multi-line value into an indented `${...}` hole needs: the hole's own indentation already covers line one, and the rest have to catch up. Blank lines stay blank, and (through `lines`) a single trailing newline is dropped, so a block does not push a stray empty line into its slot.
+Use it to splice a multi-line value into an indented `${...}` hole, where the text before the hole already indents the first line. Blank lines stay blank, and a single trailing newline is dropped, as `lines` does.
 
 **Parameters**
 
@@ -1024,13 +1020,9 @@ substitute(replacements: {String: String}) -> String
 
 Replaces every occurrence of each key of `replacements` with its value.
 
-The keys are the placeholders exactly as written: no syntax is imposed and nothing is reserved, so `$NAME$`, `__NAME__`, `{{name}}` and `%name%` are all equally valid, and a template needs no escaping to be a template. `$NAME$` is the convention to reach for when there is no reason to prefer another.
+Keys are matched literally, with no placeholder syntax, so `$NAME$`, `__NAME__` and `{{name}}` all work. `$NAME$` is the usual convention. A placeholder cannot be written `${name}` in a string literal, because that is interpolation and is filled in before `substitute` runs.
 
-Note that a placeholder is NOT `${name}`: that is interpolation, which the compiler resolves before this ever sees the string.
-
-This is what a template wants instead of a chain of `replace` calls: the chain reads as a pipeline when it is really a substitution table.
-
-Substitutions are applied in the map's canonical key order and each is applied to the result of the last, so a value that itself contains a key can still be rewritten by a later one. Keep values placeholder-free when that matters.
+Substitutions run in the map's key order, each on the result of the last, so a later key can rewrite text that an earlier value put in.
 
 **Parameters**
 
@@ -1059,7 +1051,7 @@ greeting.substitute({"$NAME$": "Ada", "$ID$": "A-1701"})
 trim -> String
 ```
 
-Removes leading and trailing whitespace. Whitespace inside the string is left alone.
+Removes leading and trailing whitespace, leaving whitespace inside the string alone.
 
 **Returns**: the trimmed string
 
@@ -1121,7 +1113,7 @@ line.trimEnd
 removePrefix(prefix: String) -> String
 ```
 
-Removes `prefix` from the start of the string when it is there, and otherwise returns the string unchanged. Ruby calls this `delete_prefix`.
+Removes `prefix` from the start of the string if it is there. Ruby calls this `delete_prefix`.
 
 **Parameters**
 
@@ -1142,7 +1134,7 @@ Removes `prefix` from the start of the string when it is there, and otherwise re
 removeSuffix(suffix: String) -> String
 ```
 
-Removes `suffix` from the end of the string when it is there, and otherwise returns the string unchanged. Ruby calls this `delete_suffix`.
+Removes `suffix` from the end of the string if it is there. Ruby calls this `delete_suffix`.
 
 **Parameters**
 
@@ -1273,9 +1265,7 @@ capitalize -> String
 
 Returns the string with its first character upper-cased and the rest LOWER-cased.
 
-This matches Ruby's `String#capitalize`, so `"hELLO"` becomes `"Hello"`, not `"HELLO"`. Use `upperCase` when the whole string should shout.
-
-It is also what building a type name from data needs: a generated `type %name = ...` inside a `compiled do` block requires an upper-case identifier, so a list of lower-case words has to be capitalized first.
+As in Ruby, `"hELLO"` becomes `"Hello"`. It is handy in a `compiled do` block for turning a lower-case word into the upper-case name that `type %name` requires.
 
 **Returns**: the capitalized string
 
@@ -1413,7 +1403,7 @@ contains?(sub: String) -> Bool
 
 Returns `true` when `sub` appears anywhere in the string.
 
-The search is literal and case-sensitive. Lower-case both sides to ignore case; use `Regex` when the needle is a pattern.
+The search is literal and case-sensitive. Lower-case both sides to ignore case, or use `Regex` to search for a pattern.
 
 **Parameters**
 
@@ -1495,27 +1485,27 @@ paths.filter { |p| p.endsWith?(".kex") }
 
 ### From [`Comparable`](comparable.md#trait-comparable)
 
-  - [`max`](comparable.md#comparable-max) — What every ordered type gets from `compare` alone.
-  - [`min`](comparable.md#comparable-min) — Returns the smaller of this value and `other`; this value when they are equal.
-  - [`clamp`](comparable.md#comparable-clamp) — Returns this value limited to the range `low` to `high`: `low` when it is below, `high` when it is above, and itself otherwise.
-  - [`<`](comparable.md#comparable-op-lt) — The ordering operators, from `compare` alone: whatever is `Comparable` can be written with `<` and `>`, a record as much as a number.
-  - [`>`](comparable.md#comparable-op-gt) — 
-  - [`<=`](comparable.md#comparable-op-lt-eq) — 
-  - [`>=`](comparable.md#comparable-op-gt-eq) — 
+  - [`max`](comparable.md#comparable-max) — Returns the larger of this value and `other`, or this value when they are equal.
+  - [`min`](comparable.md#comparable-min) — Returns the smaller of this value and `other`, or this value when they are equal.
+  - [`clamp`](comparable.md#comparable-clamp) — Returns this value limited to `low`..`high`: `low` when it is below, `high` when it is above, and the value itself otherwise.
+  - [`<`](comparable.md#comparable-op-lt) — Returns `true` when this value orders before `other`.
+  - [`>`](comparable.md#comparable-op-gt) — Returns `true` when this value orders after `other`.
+  - [`<=`](comparable.md#comparable-op-lt-eq) — Returns `true` when this value orders before `other` or equal to it.
+  - [`>=`](comparable.md#comparable-op-gt-eq) — Returns `true` when this value orders after `other` or equal to it.
 
 ### From [`Enumerable`](enumerable.md#trait-enumerable)
 
-  - [`map`](enumerable.md#enumerable-map) — Applies `f` to each item and collects the results into a list.
-  - [`mapIndexed`](enumerable.md#enumerable-mapindexed) — Applies `f` to each item and its 0-based position, and collects the results into a list.
-  - [`flatMap`](enumerable.md#enumerable-flatmap) — Applies `f` to each item, expecting a list back, and concatenates the results into one flat list.
-  - [`collect`](enumerable.md#enumerable-collect) — Applies `f` to each item, expecting an `Optional` back, and returns the values that were present: unwrapped.
+  - [`map`](enumerable.md#enumerable-map) — Applies `f` to each item and returns the results as a list.
+  - [`mapIndexed`](enumerable.md#enumerable-mapindexed) — Applies `f` to each item and its 0-based position, and returns the results as a list.
+  - [`into`](enumerable.md#enumerable-into) — Applies `f`, which returns a list, to each item and concatenates the results.
+  - [`collect`](enumerable.md#enumerable-collect) — Applies `f`, which returns an `Optional`, to each item and returns the present values, unwrapped.
 
 ### From [`Foldable`](enumerable.md#trait-foldable)
 
   - [`eachIndexed`](enumerable.md#foldable-eachindexed) — Calls `f` with each item and its 0-based position, for its side effects.
-  - [`all?`](enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`.
-  - [`any?`](enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`.
-  - [`none?`](enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`: the opposite of `any?`.
+  - [`all?`](enumerable.md#foldable-all?) — Returns `true` when every item satisfies `pred`, and `true` for an empty collection.
+  - [`any?`](enumerable.md#foldable-any?) — Returns `true` when at least one item satisfies `pred`, and `false` for an empty collection.
+  - [`none?`](enumerable.md#foldable-none?) — Returns `true` when no item satisfies `pred`, the opposite of `any?`.
   - [`one?`](enumerable.md#foldable-one?) — Returns `true` when exactly one item satisfies `pred`.
   - [`find`](enumerable.md#foldable-find) — Returns the first item satisfying `pred`, or `None` when nothing does.
 
@@ -1528,9 +1518,11 @@ paths.filter { |p| p.endsWith?(".kex") }
 
 ## type `Char`
 
+Implements [`Discrete`](range.md#trait-discrete).
+
 A single Unicode character.
 
-Character literals are written with single quotes (`'a'`) and are a different type from the one-character string `"a"`. The classification functions (`digit?`, `alpha?`, `space?` and the rest) are what most character code needs; `codepoint` and `String.fromCodepoint` are the escape hatch to raw Unicode values.
+Character literals use single quotes (`'a'`), and `'a'` is a different type from the one-character string `"a"`. The predicates `digit?`, `alpha?`, `space?` and the rest classify a character; `codepoint` and `String.fromCodepoint` convert to and from Unicode values.
 
 ```kex
 "hello world".chars.count(~alpha?)   # => 10
@@ -1546,7 +1538,7 @@ string -> String
 
 Returns this character as a one-character `String`.
 
-A `Char` and a `String` are distinct types, so converting between them is explicit. `to(String)` is the fallible conversion protocol and answers `String?` like every other conversion; `string` is the total one, because a character is always one character of text and has no failure case to report. It is the single-character counterpart of `String.chars` and `[Char].join("")`.
+`to(String)` also works but returns `String?`, like every `to` conversion; `string` cannot fail, so it returns the `String` directly.
 
 **Returns**: the character as text
 
@@ -1625,7 +1617,7 @@ _Validating that a field is all digits_
 alpha? -> Bool
 ```
 
-Returns `true` when the character is alphabetic.
+Returns `true` when the character is a Unicode letter.
 
 **Returns**: `true` for a letter
 
@@ -1649,7 +1641,7 @@ _Keeping only letters_
 letter? -> Bool
 ```
 
-Returns `true` when the character is a letter. The Unicode-letter spelling of `alpha?`.
+Returns `true` when the character is a Unicode letter. The same as `alpha?`.
 
 **Returns**: `true` for a letter
 
@@ -1668,7 +1660,7 @@ upper? -> Bool
 
 Returns `true` when the character is upper case.
 
-Characters without case (digits, punctuation) answer `false`.
+Characters without case, such as digits and punctuation, return `false`.
 
 **Returns**: `true` for an upper-case letter
 
@@ -1680,7 +1672,7 @@ Characters without case (digits, punctuation) answer `false`.
 '1'.upper?   # => false
 ```
 
-_Splitting a camelCase name_
+_Finding the first capital_
 
 ```kex
 "camelCaseName".findIndex(~upper?)   # => Just(5)
@@ -1709,7 +1701,7 @@ Returns `true` when the character is lower case.
 space? -> Bool
 ```
 
-Returns `true` when the character is whitespace: a space, tab, newline or carriage return.
+Returns `true` when the character is Unicode whitespace, such as a space, tab, newline or no-break space.
 
 **Returns**: `true` for whitespace
 
@@ -1721,10 +1713,10 @@ Returns `true` when the character is whitespace: a space, tab, newline or carria
 'a'.space?    # => false
 ```
 
-_Counting the words on a line_
+_Counting the spaces on a line_
 
 ```kex
-"one two  three".split(" ").reject(~empty?).count   # => 3
+"one two  three".chars.count(~space?)   # => 3
 ```
 
 ### `codepoint`
@@ -1783,7 +1775,7 @@ let hex?(c: Char) -> Bool = c.digit? || c.lowerCase.in?('a'..'f')
 
 ## module `String`
 
-Constructors for `String` values that are built from something other than text: a Unicode codepoint, or raw UTF-8 bytes.
+Builds `String` values from a Unicode codepoint or from UTF-8 bytes.
 
 ### `fromCodepoint`
 
@@ -1793,7 +1785,7 @@ fromCodepoint(value: Integer) -> String?
 
 Builds a one-character string from a Unicode codepoint.
 
-Answers `None` for a surrogate or a value outside the Unicode scalar range, so the result is always valid text. `Char.codepoint` is the inverse.
+Returns `None` for a surrogate or a value outside the Unicode range. `Char.codepoint` is the inverse.
 
 **Parameters**
 
@@ -1824,7 +1816,7 @@ fromBytes(values: [Byte]) -> String?
 
 Rebuilds a string from its UTF-8 bytes: the inverse of `bytes`.
 
-A `String` is TEXT, so bytes outside 0..255 or a malformed encoding answer `None` rather than a string that would decode to replacement characters. That makes it a decoding step you can check, not a lossy cast.
+Returns `None` for a value outside 0..255 or for malformed UTF-8; invalid bytes are never turned into replacement characters.
 
 **Parameters**
 
@@ -1848,7 +1840,7 @@ String.fromBytes("héllo".bytes)   # => Just("héllo")
 
 ## type `Tuple`
 
-A fixed-size group of values, written `(a, b)`. Unlike a list, a tuple's size and the type of each position are part of its type, so the `List` functions do not apply to it: destructure it, match on it, or convert it with `items`.
+A fixed-size group of values, written `(a, b)`. A tuple's size and the type of each position are part of its type, and `List` functions do not apply to it: destructure it, match on it, or convert it with `items`.
 
 ```kex
 let (name, age) = ("Ada", 36)
@@ -1863,9 +1855,7 @@ items -> [Any]
 
 Returns the tuple's elements as a list.
 
-A tuple is not a list (its arity is part of its type) so the `List` functions do not apply to it. This is the explicit conversion, and it loses the per-position typing in exchange.
-
-Destructuring is usually clearer when you know the shape: `let (a, b) = pair`.
+The list is typed `[Any]`, so the type of each position is lost. When you know the shape, destructuring (`let (a, b) = pair`) is usually clearer.
 
 **Returns**: the elements, in order
 

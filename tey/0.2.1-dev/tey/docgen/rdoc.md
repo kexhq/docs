@@ -9,9 +9,9 @@ entities:
 
 # Tey.Docgen.Rdoc
 
-RDoc-style doc-comment text → structured documentation (typed).
+Parses the text of an RDoc-style doc comment into a `Tey.Docgen.Model.Doc` record.
 
-A doc comment is free prose followed by directive paragraphs:
+A doc comment is prose followed by directive lines:
 
 ```kex
 # Sums all elements. Returns +0+ for an empty list.
@@ -22,7 +22,7 @@ A doc comment is free prose followed by directive paragraphs:
 #   [1, 2].sum   # => 3
 ```
 
-Inline ``code`` pairs are rewritten to `` `code` ``. The result is a Tey.Docgen.Model.Doc record.
+In prose, a word or phrase between two plus signs becomes Markdown inline code.
 
 ## module `Tey.Docgen.Rdoc`
 
@@ -32,11 +32,15 @@ Inline ``code`` pairs are rewritten to `` `code` ``. The result is a Tey.Docgen.
 parseDoc(text: String) -> Doc?
 ```
 
+Parses a doc comment's text, or returns `None` for empty text.
+
 ### `parseOrEmpty`
 
 ```kex
 parseOrEmpty(text: String) -> Doc
 ```
+
+Parses a doc comment's text, giving an empty `Doc` for empty text.
 
 ### `rewriteProseBlocks`
 
@@ -44,7 +48,9 @@ parseOrEmpty(text: String) -> Doc
 rewriteProseBlocks(blocks: [[String]]) -> [[String]]
 ```
 
-``code`` is prose markup, so it is rewritten per prose block — after the split, not before it. Rewriting the whole comment at once paired a `+` operator inside an indented code sample (say `1 + 1`) with the next prose pair (``describe``), turning the operator into a stray backtick and eating the markup. Verbatim blocks and `@example` code are Kex source and are left alone; `@param`/`@return` descriptions are prose and still rewrite. Pairing never crosses a block: each block is rewritten on its own.
+Rewrites plus-sign code markup in each prose block separately, leaving verbatim blocks and `@example` code alone. `@param` and `@return` descriptions are prose and are rewritten.
+
+A pair never spans two blocks. Rewriting the whole comment at once would pair the plus sign of an addition in a code sample with the next markup in the prose.
 
 ### `rewriteProseBlock`
 
@@ -64,7 +70,7 @@ rewritePlusPairs(s: String, accum: String) -> String
 plusPair?(head: String, inner: String, tail: String) -> Bool
 ```
 
-A ``...`` pair is markup only when it reads as one: content with no space against either delimiter (so `1 + 1` stays an addition), no backtick inside (so converted spans never nest), and a non-identifier character on both sides (so `a+b` stays put even if it ever reaches here).
+Returns `true` when a pair of plus signs around `inner` is markup. There must be no space just inside either sign, so an addition with spaces stays as written; no backtick inside, so spans never nest; and no letter or digit just outside, so an addition without spaces stays too.
 
 ### `boundaryBefore?`
 
@@ -84,7 +90,7 @@ boundaryAfter?(tail: String) -> Bool
 splitParagraphs(lines: [String], current: [String], accum: [[String]]) -> [[String]]
 ```
 
-Splits lines into paragraphs (blocks). Prose groups until a blank line; directives are LINE-based, so each `@param`/`@return`/`@example` line begins its own paragraph — consecutive `@param a` / `@param b` lines must not merge into one block, or only the first would be parsed. An `@example`'s indented code lines follow it and stay in its block (they do not open with `@`).
+Splits lines into blocks. Prose runs until a blank line. Every line that starts with `@` opens a block of its own, so consecutive `@param` lines stay separate, and the indented lines after a directive (an example's code) belong to it.
 
 ### `directiveBlock?`
 
@@ -104,9 +110,7 @@ indented?(line: String) -> Bool
 indentWidth(s: String) -> Integer
 ```
 
-RDoc's verbatim marker is indentation: a prose block whose every line is indented is code — or a hand-laid-out table — that the author positioned deliberately. Reflowing it into a paragraph loses both the line breaks and the highlighting, so it is carried through the summary as a fenced block instead, which both renderers turn back into a highlighted `<pre>`.
-
-Leading-space count of a line.
+Returns the number of leading spaces in a line.
 
 ### `verbatim?`
 
@@ -114,13 +118,15 @@ Leading-space count of a line.
 verbatim?(lines: [String]) -> Bool
 ```
 
+Returns `true` for a verbatim block: one whose every non-blank line is indented by at least two spaces, as RDoc marks code or a hand-laid-out table. Such a block keeps its line breaks and is carried into the summary as a fenced code block.
+
 ### `dedent`
 
 ```kex
 dedent(lines: [String]) -> [String]
 ```
 
-Strips the common indentation shared by every non-blank line, so a block written at two spaces (or nested deeper) renders flush left.
+Removes the indentation shared by every non-blank line, so a block renders flush left.
 
 ### `fenceVerbatim`
 
@@ -134,7 +140,7 @@ fenceVerbatim(lines: [String]) -> String
 mergeVerbatim(blocks: [[String]], accum: [[String]]) -> [[String]]
 ```
 
-A blank line inside a verbatim block ends a paragraph but not the block, so adjacent verbatim blocks are re-joined with the blank line between them.
+Joins adjacent verbatim blocks back together with a blank line between them, since a blank line inside a code sample does not end it.
 
 ### `classifyBlocks`
 
@@ -154,9 +160,7 @@ directiveBody(lines: [String], prefixLength: Integer) -> String
 parseParam(lines: [String]) -> Param
 ```
 
-**Parameters**
-
-  - `name` — description
+Reads a `@param name [Type] description` directive.
 
 ### `parseReturn`
 
@@ -178,7 +182,7 @@ parseExample(lines: [String]) -> Example
 parseBracketed(s: String) -> Bracketed?
 ```
 
-"[...]" prefix → Bracketed. None when the text does not open with a bracketed group.
+Splits text that opens with a bracketed group, such as `[Integer] the count`, into the group's content and the rest. Returns `None` when the text does not open with one.
 
 ### `findClosingBracket`
 
@@ -190,7 +194,7 @@ findClosingBracket(s: String, index: Integer, depth: Integer) -> Integer?
 
 **Fields**
 
-  - `content` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
-  - `rest` : [String](../../../../prelude/0.4.0-rc.4-dev/string.md#make-string)
+  - `content` : [String](../../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
+  - `rest` : [String](../../../../prelude/0.4.0-rc.5-dev/string.md#make-string)
 
 

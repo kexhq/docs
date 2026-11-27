@@ -14,17 +14,19 @@ entities:
   - { kind: module, name: "Kex.Interface" }
   - { kind: function, name: "inspected" }
   - { kind: function, name: "inspect" }
+  - { kind: function, name: "followedBy" }
+  - { kind: function, name: "atom?" }
 ---
 
 # Kex
 
 ## trait `Inspectable`
 
-Types that can be rendered structurally, for a person reading output.
+Types that can be written out structurally, for debugging.
 
-The rendering shows the value's STRUCTURE: quotes on strings, `Just(...)` around an optional, which is what makes it right for debugging and wrong for user-facing text. `Showable` is the other half of that pair.
+The output shows how the value is built: strings in quotes, `Just(...)` around an optional. Use `Showable` for text meant for users.
 
-Every type is inspectable through a structural fallback, so `inspected` and `IO.inspect` work on anything; a type that wants a different rendering overrides `inspectValue`.
+Every type is inspectable, so `inspected` and `IO.inspect` work on any value. A type that wants a different rendering overrides `inspectValue`.
 
 ```kex
 [1, 2].inspected       # => "[1, 2]"
@@ -41,9 +43,9 @@ Implemented by [`Binary`](binary.md#make-binary), [`Date`](date.md#make-date), [
 inspectValue(colors: Bool) -> String
 ```
 
-Renders the value structurally, with ANSI colors when `colors` is true.
+Writes the value structurally, with ANSI colors when `colors` is true.
 
-`inspected` and `IO.inspect` call this for you, passing the console's own color setting: call it directly only when you need to force one.
+`inspected` and `IO.inspect` call it with the console's color setting. Call it directly only to force colors on or off.
 
 **Parameters**
 
@@ -61,9 +63,9 @@ Renders the value structurally, with ANSI colors when `colors` is true.
 
 ## trait `Showable`
 
-Types that have a concise, user-facing text representation.
+Types with a short text form for users.
 
-`Showable` is used by interpolation, printing, and `to(String)`. Its output should describe the value itself rather than its implementation structure: a string is shown without quotes, `Just(x)` is shown as `x`, and `None` is shown as an empty string. Use `Inspectable` when debugging structure matters.
+Interpolation, printing and `to(String)` use `Showable`. A string shows without quotes, `Just(x)` shows as `x`, and `None` shows as an empty string. Use `Inspectable` to see a value's structure.
 
 ```kex
 "hello".showValue          # => "hello"
@@ -81,16 +83,16 @@ Implemented by [`Binary`](binary.md#make-binary), [`Complex`](complex.md#make-co
 showValue -> String
 ```
 
-Returns the value's user-facing text representation.
+Returns the value's text for users.
 
-Implement this for domain types whose useful presentation differs from their structural rendering. Keep the result free of ANSI styling so it is safe in files, logs, and interpolation as well as on a terminal.
+Implement it for a type whose useful text differs from its structure. Leave out ANSI styling: the text also goes to files and logs.
 
 **Returns**: the display text
 
 #### `to`
 
 ```kex
-to(String)
+to(String) -> String?
 ```
 
 
@@ -113,11 +115,9 @@ More functions for [`Result`](optional.md#type-result), added by this module.
 
 Implements [`Showable`](#trait-showable).
 
-The same for Result, with one deliberate asymmetry: SHOWING a result shows what it carries, so `Ok(42)` reads as `42` rather than leaking the wrapper into text, but an `Error` keeps its marker. Dropping it made a failure and a success print identically, and unlike `None` (which shows as "", visibly not a value) there would be nothing left to tell them apart.
+Showing a `Result` shows what it carries, so `Ok(42)` shows as `42`, but an `Error` keeps its marker: `Error(bad)`. Without it a failure and a success would print alike.
 
-The marker is spelled `Error(...)`, matching how the same value renders as an ELEMENT of a collection: `[1, Error(Bad(no))]`. Elements render structurally rather than through showValue (as in Ruby, where `nil.to_s` is "" but `[nil].to_s` is "[nil]"), so this is the one spelling that reads the same at both levels.
-
-What functions RETURN is unchanged: `Integer.parse` still answers with a Result, `IO.inspect` still shows `Ok(42)`, and both arms are still matchable.
+The marker matches how an error appears inside a collection, `[1, Error(Bad(no))]`, since elements are written structurally. Inspecting a result, or matching on it, is unaffected.
 
 ### `showValue` (from Showable)
 
@@ -127,7 +127,7 @@ showValue -> String
 
 ## module `Kex`
 
-The running toolchain, which backend, which version, which features.
+The running toolchain: its backend, version and optional features.
 
 ```kex
 Kex.BACKEND                  # => Interpreter
@@ -142,9 +142,7 @@ Kex.Feature.has?(Kex.FileSystem)   # => true
 BACKEND : Backend
 ```
 
-Which backend is executing this program.
-
-Its `interpreted?`, `compiled?` and `beam?` are the readable way to ask.
+The backend running this program. Ask it with `interpreted?`, `compiled?` or `beam?`.
 
 **Examples**
 
@@ -183,7 +181,7 @@ IO.printLine("built with Kex ${Kex.VERSION.number}")
 load(path: String) -> Result<LoadedModule, String>
 ```
 
-Loads the compiled module at `path`, replacing an older version of it that is already loaded. See `Kex.LoadedModule`.
+Loads the compiled module at `path`, replacing any older version of it already loaded. See `Kex.LoadedModule`.
 
 **Parameters**
 
@@ -203,7 +201,7 @@ let theme = Kex.load("build/kex_theme.beam").try
 loaded(name: Atom) -> LoadedModule?
 ```
 
-The module already loaded under `name`, or `None` when there is none.
+Returns the module already loaded under `name`, or `None`.
 
 **Parameters**
 
@@ -225,9 +223,9 @@ let theme = Kex.loaded(:kex_theme).or(Kex.load(path).try)
 hash(value: Any) -> Integer
 ```
 
-A non-cryptographic hash of any value: a non-negative `Integer` below 2^32, the same for equal values.
+Returns a non-cryptographic hash of any value, an `Integer` from 0 to 2^32 - 1 that is the same for equal values.
 
-Cheap to compute over a whole structure, with no string built along the way, which suits fingerprinting data to notice when it changed. It is stable only within one running program: the number differs between the interpreter and the BEAM, and may change between Kex versions, so never store it or send it anywhere. Use `Digest` for that, or for anything an adversary could choose collisions for.
+It is cheap to compute over a large structure, which suits noticing when data has changed. The number is stable only within one running program: it differs between the interpreter and the BEAM and may change between Kex versions, so do not store or send it. Use `Digest` for that, or where someone could choose inputs to collide.
 
 **Parameters**
 
@@ -245,7 +243,7 @@ let stamp = Kex.hash(paths.map { |path| (path, FS.File.info(path).try) })
 
 ## type `Backend`
 
-Which backend is executing the program: the tree-walking `Interpreter`, or the `Beam` virtual machine.
+The backend running the program: the tree-walking `Interpreter` or the `Beam` virtual machine.
 
 **Variants**
 
@@ -260,7 +258,7 @@ Which backend is executing the program: the tree-walking `Interpreter`, or the `
 interpreted? -> Bool
 ```
 
-Whether this is the tree-walking interpreter.
+Returns `true` for the tree-walking interpreter.
 
 **Returns**: `true` for `Interpreter`
 
@@ -276,7 +274,7 @@ Kex.BACKEND.interpreted?   # => true under `kex -R file.kex`
 compiled? -> Bool
 ```
 
-Whether this backend runs compiled code: today, the BEAM.
+Returns `true` for a backend that runs compiled code, which today is only the BEAM.
 
 **Returns**: `true` for every backend but the interpreter
 
@@ -292,7 +290,7 @@ Kex.BACKEND.compiled?   # => true under `kex file.kex`
 beam? -> Bool
 ```
 
-Whether this is the BEAM virtual machine. Processes, the web server and clustering need it.
+Returns `true` for the BEAM virtual machine, which the web server and clustering need.
 
 **Returns**: `true` for `Beam`
 
@@ -304,11 +302,11 @@ Kex.BACKEND.beam?   # => true under `kex file.kex`
 
 ## type `Feature`
 
-An optional capability a build may or may not include. Ask about one with `Kex.Feature.has?` before relying on it.
+A capability that some builds leave out. Check it with `Kex.Feature.has?` before relying on it.
 
-`FileSystem`: the program can read and write the host's files (`FS`). `ExternalPrograms`: it can run other programs (`Process.run`, `Process.stream`), which the browser build cannot.
+`FileSystem` means the program can read and write the host's files (`FS`). `ExternalPrograms` means it can run other programs (`Process.run`, `Process.stream`); the browser build cannot.
 
-Kex's own processes (`spawn`, `receive`) are not optional: every backend has them. Networking has its finer-grained report, `Net.Support.current`.
+Kex's own processes (`spawn`, `receive`) exist on every backend. Networking support is reported separately by `Net.Support.current`.
 
 **Variants**
 
@@ -319,18 +317,14 @@ Kex's own processes (`spawn`, `receive`) are not optional: every backend has the
 
 ## record `Version`
 
-Build identity for the compiler and runtime executing this program: `Version` and `VERSION` below.
-
-Useful in bug reports, generated artifacts, and compatibility checks where `Kex.BACKEND` alone is not enough to identify the toolchain. The toolchain a program is running on. `kex --version` and the REPL banner report the same numbers.
-
-`revision` is the git commit the compiler was built from: `None` when it was built from a source archive rather than a checkout, which is why it is an Optional rather than a String.
+The version of the Kex toolchain running a program, as `Kex.VERSION` holds it. `kex --version` and the REPL banner report the same numbers.
 
 **Examples**
 
 ```kex
-Kex.VERSION.major        # => 0
-Kex.VERSION.revision     # => Just("a1b2c3d")
-Kex.VERSION.to(String)   # => "0.3.0 (a1b2c3d)"
+Kex.VERSION.major      # => 0
+Kex.VERSION.revision   # => Just("a1b2c3d")
+Kex.VERSION.number     # => "0.4.0 (a1b2c3d)"
 ```
 
 **Fields**
@@ -341,7 +335,11 @@ Kex.VERSION.to(String)   # => "0.3.0 (a1b2c3d)"
   - `revision` : [String](string.md#make-string)?
   - `preRelease` : [String](string.md#make-string) (optional)
 
+Implements [`Comparable`](comparable.md#trait-comparable).
+
 ### Functions
+
+Versions order by release, the way semantic versioning orders them: major, minor and patch numerically, then a pre-release below its release (`0.4.0-rc.1 < 0.4.0`). The revision is build metadata and does not take part, so two builds of one release compare `Equal`.
 
 #### `tuple`
 
@@ -349,9 +347,7 @@ Kex.VERSION.to(String)   # => "0.3.0 (a1b2c3d)"
 tuple -> (Integer, Integer, Integer, String?)
 ```
 
-The version's four values as a tuple, for destructuring.
-
-A tuple cannot carry accessors of its own: there is no named type for a `make` block to target, so the record is the value and this is the view.
+Returns the major, minor and patch numbers and the revision as a tuple, for destructuring.
 
 **Returns**: major, minor, patch, revision
 
@@ -368,9 +364,7 @@ major   # => 0
 release -> String
 ```
 
-The three numbers, plus the pre-release channel when there is one.
-
-`0.4.0`, or `0.4.0-rc.1` on a pre-release build. What a version RANGE is matched against, so the channel has to be in it.
+Returns the version as `0.4.0`, or `0.4.0-rc.1` for a pre-release. Version ranges are matched against this string.
 
 **Returns**: the release string
 
@@ -386,9 +380,7 @@ Kex.VERSION.release   # => "0.4.0-alpha.2"
 number -> String
 ```
 
-The release string with the build revision after it, when there is one.
-
-This is what `kex --version` and the REPL banner print.
+Returns `release` followed by the build revision, if there is one. This is what `kex --version` and the REPL banner print.
 
 **Returns**: the full version string
 
@@ -404,15 +396,54 @@ _Reporting the toolchain in a tool's output_
 IO.printLine("built with Kex ${Kex.VERSION.number}")
 ```
 
+#### `compare` (from Comparable)
+
+```kex
+compare(other: Version) -> Ordering
+```
+
+Compares this version with `other` by release.
+
+Pre-release channels compare one dot-separated part at a time: numeric parts numerically, below any named part; named parts as strings; and a channel that runs out first is the lower (`rc < rc.1`).
+
+**Parameters**
+
+  - `other` — the version to compare against
+
+**Returns**: how this version orders against `other`
+
+**Examples**
+
+```kex
+Kex.VERSION.compare(Kex.VERSION)   # => Equal
+```
+
+_Requiring a minimum toolchain_
+
+```kex
+let floor = Kex.Version { major: 0, minor: 4, patch: 0, revision: None }
+Kex.VERSION >= floor   # => true
+```
+
+### From [`Comparable`](comparable.md#trait-comparable)
+
+  - [`max`](comparable.md#comparable-max) — Returns the larger of this value and `other`, or this value when they are equal.
+  - [`min`](comparable.md#comparable-min) — Returns the smaller of this value and `other`, or this value when they are equal.
+  - [`clamp`](comparable.md#comparable-clamp) — Returns this value limited to `low`..`high`: `low` when it is below, `high` when it is above, and the value itself otherwise.
+  - [`<`](comparable.md#comparable-op-lt) — Returns `true` when this value orders before `other`.
+  - [`>`](comparable.md#comparable-op-gt) — Returns `true` when this value orders after `other`.
+  - [`<=`](comparable.md#comparable-op-lt-eq) — Returns `true` when this value orders before `other` or equal to it.
+  - [`>=`](comparable.md#comparable-op-gt-eq) — Returns `true` when this value orders after `other` or equal to it.
+
 ## record `LoadedModule`
 
 A compiled module loaded into the running program by `Kex.load`.
 
-For a program that decides at run time what code it needs: a site generator rendering a theme's templates, a plugin host. Compile the source with `kex --compile -o <dir>` once, then load the `.beam` and call it as often as needed in the same running VM.
+It is for programs that pick their code at run time, such as a site generator rendering a theme's templates or a plugin host. Compile the source once with `kex --compile -o <dir>`, then load the `.beam` and call into it as often as needed.
 
-Every entry module is named after its file (`kex_<stem>.beam` for `<stem>.kex`), and so is everything declared at the top level of that file. A `let render = Template.html(Kex.embed(path))` written outside any `module` therefore lands in `kex_<stem>`, not in a module the file names; give each generated file a distinct name, or put the declaration inside a `module`, whose functions compile into `Kex.<Name>`.
+Top-level declarations of `<stem>.kex` compile into the module `kex_<stem>`, in `kex_<stem>.beam`. Give each generated file a distinct name, or put its declarations inside a `module`, whose functions compile into `Kex.<Name>`.
 
-The BEAM backend only: under the interpreter, `Kex.load` answers an error.
+Only the BEAM backend can load modules; under the interpreter `Kex.load` returns an `Error`.
 
 ```kex
 let theme = Kex.load("cache/kex_theme_3f2a.beam").try
@@ -433,7 +464,7 @@ call(function: Atom, arguments: [Any]) -> Result<Any, String>
 
 Calls the module's function `function` with `arguments`.
 
-A failure inside the call is an `Error` describing it, not a crash of the caller, and so is a function the module does not export with that many arguments. A `foul` function takes one argument more than it declares, its capabilities, so call pure functions this way.
+A failure inside the call returns an `Error` describing it, as does a function the module does not export with that many arguments. A `foul` function takes a hidden extra argument for its capabilities, so only pure functions can be called this way.
 
 **Parameters**
 
@@ -450,9 +481,7 @@ theme.call(:render, [context])   # => Ok("<html>...")
 
 ## module `Kex.Feature`
 
-Which optional capabilities this build includes.
-
-Optional non-network capabilities in this build. Networking has its own granular opt-in `Net.Support` report.
+Which optional capabilities this build includes. Networking is reported separately by `Net.Support`.
 
 ### `has?`
 
@@ -480,7 +509,7 @@ Kex.Feature.has?(Kex.ExternalPrograms)   # => true, except in a browser
 list : [Feature]
 ```
 
-Every optional capability this build includes.
+Returns every optional capability this build includes.
 
 **Examples**
 
@@ -500,9 +529,9 @@ Reading the typed public surface of a compiled Kex module.
 read(path: FS.FilePath) -> Any?
 ```
 
-Reads the KexI interface chunk of a compiled Kex module: its typed public surface, and answers the decoded term, or None when the file has no such chunk, does not exist, or is not a BEAM artifact.
+Reads the typed public interface stored in a compiled Kex module. Returns `None` when the file does not exist, is not a `.beam` file, or has no interface chunk.
 
-The term is an ordinary tree of tuples, lists, atoms, integers and strings, so it is walked with normal pattern matching and `Tuple.items`. This exists so that reading it needs no `BEAM.*` interop: it is the one intentional entry point rather than a general term decoder.
+The term is a tree of tuples, lists, atoms, integers and strings, read with pattern matching and `Tuple.items`.
 
 **Parameters**
 
@@ -522,9 +551,9 @@ Kex.Interface.read("build/runtime/beam/kex_prelude.beam")
 inspected(value: Inspectable) -> String
 ```
 
-Returns the pretty-printed representation of any value as a STRING: the same form the REPL echoes. Universal: reachable on every type through UFCS.
+Returns the structural text of any value, the form the REPL echoes.
 
-Use `inspected` to obtain text, and `IO.inspect` to print a value and return it unchanged in a pipeline.
+To print a value in the middle of a pipeline, use `inspect` instead.
 
 **Parameters**
 
@@ -553,7 +582,7 @@ IO.printError("unexpected value: ${value.inspected}")
 inspect(value: A) -> A
 ```
 
-Prints the pretty-printed form of `value` to stderr and returns `value` unchanged, so it can be dropped into any pipeline without changing what flows through it. The same operation as `IO.inspect`, reachable by UFCS.
+Prints `value` and its type to stderr and returns `value` unchanged, so it can go anywhere in a pipeline. The same as `IO.inspect`.
 
 **Parameters**
 
@@ -565,6 +594,61 @@ Prints the pretty-printed form of `value` to stderr and returns `value` unchange
 
 ```kex
 [1, 2, 3, 4].map { |n| n * 3 }.inspect.filter(~even?)
-# stderr: [3, 6, 9, 12] : [Int]
+# stderr: [3, 6, 9, 12] : [Integer]
 # => [6, 12]
+```
+
+## function `followedBy`
+
+```kex
+followedBy(f: (A -> B), g: (B -> C)) -> A -> C
+```
+
+Returns a function that applies `f`, then `g` to what `f` returned.
+
+**Parameters**
+
+  - `f` — the function applied first
+  - `g` — the function applied to what `f` returns
+
+**Returns**: the composed function
+
+**Examples**
+
+```kex
+let inc(n: Integer) -> Integer = n + 1
+let double(n: Integer) -> Integer = n * 2
+
+(~inc).followedBy(~double)(3)   # => 8
+(~double).followedBy(~inc)(3)   # => 7
+```
+
+_Building a step for +map+_
+
+```kex
+[1, 2].map((~double).followedBy { |n| "#${n}" })   # => ["#2", "#4"]
+```
+
+## function `atom?`
+
+```kex
+atom?(value: A) -> Bool
+```
+
+Returns `true` when `value` is an atom, such as `:ok`. Universal: reachable on every type through UFCS, so it answers where the static type is `Any`. A `Bool`, `None` and a constructor such as `Red` are values of their own types, not atoms.
+
+On the BEAM a constructor is spelled as an atom of its name, so an atom written like one of the program's constructors or type names (`:Red` next to `type Color = Red | Green`) answers as that constructor or type would, just as `Type.of` does. Lower-case atoms never collide.
+
+**Parameters**
+
+  - `value` — any value
+
+**Returns**: whether the value is an atom
+
+**Examples**
+
+```kex
+:ok.atom?      # => true
+"ok".atom?     # => false
+true.atom?     # => false
 ```

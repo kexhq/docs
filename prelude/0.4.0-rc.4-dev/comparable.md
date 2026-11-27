@@ -13,23 +13,19 @@ entities:
 
 # Comparable
 
-Ordering and comparison: what a comparison answers, and the types that have a total order.
+Comparison: the `Ordering` a comparison returns, and the `Comparable` trait for types with a total order.
 
-Kex traits do not inherit from one another, so concrete types explicitly implement every structure whose laws they satisfy.
-
-The two things you meet in everyday code here. `Ordering` is what a comparison answers, and it composes. This is how a multi-key sort is written without nested +if+s:
+Orderings chain, which is how to compare on several keys without nested +if+s:
 
 ```kex
 a.age.compare(b.age).thenBy { a.score.compare(b.score) }
 ```
 
-`Ordering` is also a `Monoid` under "first decision wins", which is what makes comparisons chain with `combine`; that conformance is declared here, beside the type it belongs to, rather than in `algebra.kex` with the `Monoid` trait.
+`Ordering` is also a `Monoid` in which the first decisive result wins, so orderings combine with `combine`.
 
 ## type `Ordering`
 
 The result of a comparison: `Less`, `Equal` or `Greater`.
-
-Declared here rather than only inside the interpreter so that `Ordering`, `Less`, `Equal` and `Greater` reach the semantic layer the same way every other stdlib type does (through the collected interfaces) instead of existing solely as native environment bindings the type checker and name resolver cannot see.
 
 **Variants**
 
@@ -41,13 +37,13 @@ Implements [`Monoid`](algebra.md#trait-monoid).
 
 ### Functions
 
-`Ordering` is a Monoid under "first decision wins", with Equal as identity. That is what makes multi-key comparison compose instead of nesting ifs:
+`Ordering` is a `Monoid` in which the first decisive result wins and `Equal` is the identity, so a comparison on several keys chains:
 
 ```kex
 a.name.compare(b.name).combine(a.age.compare(b.age))
 ```
 
-`combine` evaluates its argument eagerly, so the later comparison runs even when the earlier one already decided. Use `thenBy` when that matters.
+`combine` evaluates its argument even when the first comparison already decided; `thenBy` does not.
 
 #### `identity` (from Monoid)
 
@@ -55,7 +51,7 @@ a.name.compare(b.name).combine(a.age.compare(b.age))
 identity -> Ordering
 ```
 
-`Equal` is the neutral element, since an undecided comparison lets the next one decide.
+Returns `Equal`, the identity: an undecided comparison lets the next one decide.
 
 **Returns**: `Equal`
 
@@ -67,7 +63,7 @@ combine(other: Ordering) -> Ordering
 
 Returns the first decisive ordering: this one if it is not `Equal`, otherwise `other`.
 
-This is what makes multi-key comparison compose. Note that `other` is evaluated eagerly, so the later comparison runs even when the earlier one has already decided: use `thenBy` when that matters.
+`other` is always evaluated, even when this ordering already decides. Use `thenBy` when the tie-breaker is expensive.
 
 **Parameters**
 
@@ -96,7 +92,7 @@ reverse -> Ordering
 
 Returns the opposite ordering: `Less` becomes `Greater`, `Greater` becomes `Less`, and `Equal` stays `Equal`.
 
-The one-word way to turn an ascending comparison into a descending one.
+Use it to turn an ascending comparison into a descending one.
 
 **Returns**: the reversed ordering
 
@@ -122,7 +118,7 @@ thenBy(tieBreaker: Block<Ordering>) -> Ordering
 
 Returns this ordering if it is decisive, otherwise the result of calling `tieBreaker`.
 
-The short-circuiting form of `combine`: the block runs only when this comparison is `Equal`, so a tie-breaker costs nothing once the order is already decided. Prefer it whenever the tie-breaker is more than a field read.
+Unlike `combine`, it runs the block only when this ordering is `Equal`. Prefer it when the tie-breaker is more than a field read.
 
 **Parameters**
 
@@ -151,9 +147,9 @@ a.age.compare(b.age).thenBy { score(a).compare(score(b)) }
 
 Types that have a total order.
 
-Implemented by `Number`, which covers both `Integer` and `Float`, and by `String`.
+`Number` (both `Integer` and `Float`), `String` and `Measure` implement it. A type that implements `compare` gets `max`, `min`, `clamp` and the operators `<`, `>`, `<=` and `>=`.
 
-Implemented by [`Number`](#make-number), [`String`](#make-string), [`Measure<D>`](units.md#make-measure).
+Implemented by [`Number`](#make-number), [`String`](#make-string), [`Version`](kex.md#make-version), [`Measure<D>`](units.md#make-measure).
 
 ### Required functions
 
@@ -163,11 +159,9 @@ Implemented by [`Number`](#make-number), [`String`](#make-string), [`Measure<D>`
 compare(other: This) -> Ordering
 ```
 
-Compares this value with `other` and answers `Less`, `Equal` or `Greater`.
+Compares this value with `other`, returning `Less`, `Equal` or `Greater`.
 
-`==` stays independent of this: a type may be equatable without being ordered.
-
-A total order: `compare` answers Less, Equal or Greater. `==` stays independent: a type may be Equatable without being ordered.
+`==` does not use it, since a type can be equatable without being ordered.
 
 **Parameters**
 
@@ -197,9 +191,9 @@ people.sort { |a, b| a.age.compare(b.age) == Less }
 max(other: This) -> This
 ```
 
-What every ordered type gets from `compare` alone. Returns the larger of this value and `other`; this value when they are equal.
+Returns the larger of this value and `other`, or this value when they are equal.
 
-UFCS lets you put the first argument before the dot: `max(3, 7)` is `3.max(7)`.
+`max(3, 7)` and `3.max(7)` are the same call.
 
 **Parameters**
 
@@ -221,7 +215,7 @@ max(3, 7)             # => 7
 min(other: This) -> This
 ```
 
-Returns the smaller of this value and `other`; this value when they are equal.
+Returns the smaller of this value and `other`, or this value when they are equal.
 
 **Parameters**
 
@@ -242,7 +236,7 @@ min(3, 7)             # => 3
 clamp(low: This, high: This) -> This
 ```
 
-Returns this value limited to the range `low` to `high`: `low` when it is below, `high` when it is above, and itself otherwise.
+Returns this value limited to `low`..`high`: `low` when it is below, `high` when it is above, and the value itself otherwise.
 
 **Parameters**
 
@@ -265,7 +259,9 @@ Returns this value limited to the range `low` to `high`: `low` when it is below,
 <(other: This) -> Bool
 ```
 
-The ordering operators, from `compare` alone: whatever is `Comparable` can be written with `<` and `>`, a record as much as a number. The compiler knows them from here, not from a list of its own; numbers and strings still compare natively.
+Returns `true` when this value orders before `other`.
+
+Defined from `compare`, so a record that implements `Comparable` can use `<`, `>`, `<=` and `>=`.
 
 **Parameters**
 
@@ -275,8 +271,18 @@ The ordering operators, from `compare` alone: whatever is `Comparable` can be wr
 
 **Examples**
 
+_A record ordered by one field_
+
 ```kex
-Version { major: 1 } < Version { major: 2 }   # => true
+record Grade do
+  level : Integer
+end
+
+make Grade, implement: Comparable do
+  let compare(other: Grade) -> Ordering = @level.compare(other.level)
+end
+
+Grade { level: 1 } < Grade { level: 2 }   # => true
 ```
 
 #### `>`
@@ -284,6 +290,8 @@ Version { major: 1 } < Version { major: 2 }   # => true
 ```kex
 >(other: This) -> Bool
 ```
+
+Returns `true` when this value orders after `other`.
 
 **Parameters**
 
@@ -297,6 +305,8 @@ Version { major: 1 } < Version { major: 2 }   # => true
 <=(other: This) -> Bool
 ```
 
+Returns `true` when this value orders before `other` or equal to it.
+
 **Parameters**
 
   - `other` — the value to compare against
@@ -308,6 +318,8 @@ Version { major: 1 } < Version { major: 2 }   # => true
 ```kex
 >=(other: This) -> Bool
 ```
+
+Returns `true` when this value orders after `other` or equal to it.
 
 **Parameters**
 
@@ -323,7 +335,7 @@ More functions for [`Number`](number.md#make-number), added by this module.
 
 Implements [`Comparable`](#trait-comparable).
 
-Number carries the implementation, so Integer and Float both inherit it rather than repeating the same three comparisons. Mixed receivers work because `<` and `>` promote across the two (`1.compare(1.0)` is Equal).
+Numbers compare by value, `Integer` and `Float` alike.
 
 ### `compare` (from Comparable)
 
@@ -331,9 +343,7 @@ Number carries the implementation, so Integer and Float both inherit it rather t
 compare(other: Number) -> Ordering
 ```
 
-Compares two numbers, across the `Integer`/`Float` boundary.
-
-Mixed receivers work because `<` and `>` promote across the two, so `1.compare(1.0)` is `Equal`.
+Compares two numbers by value, also across `Integer` and `Float`, so `1.compare(1.0)` is `Equal`.
 
 **Parameters**
 
@@ -355,7 +365,7 @@ More functions for [`String`](string.md#make-string), added by this module.
 
 Implements [`Comparable`](#trait-comparable).
 
-Strings order lexicographically, character by character, by code point — the same order `<` and `>` already give them.
+Strings order character by character, by codepoint.
 
 ### `compare` (from Comparable)
 
@@ -363,7 +373,7 @@ Strings order lexicographically, character by character, by code point — the s
 compare(other: String) -> Ordering
 ```
 
-Compares this string with `other` lexicographically, the same order `<` and `>` give strings.
+Compares this string with `other` character by character, by codepoint, the order `<` and `>` use.
 
 **Parameters**
 
