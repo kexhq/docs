@@ -260,6 +260,8 @@ parse(text: String) -> Result<Address, NetError>
 
 Parses an IPv4 or IPv6 address. Invalid text is a `NetError` of kind `Parse`.
 
+IPv4 must be a dotted quad of exactly four decimal octets, each 0 to 255 with no leading zero. The shorthand and legacy spellings some resolvers accept, `127.1`, `1`, `0x7f.0.0.1` and the octal `010.0.0.1`, are rejected, so an address checked against an allow-list is the address used. IPv6 may end in such a dotted quad (`::ffff:192.0.2.1`); a zone identifier such as `%en0` is rejected. Surrounding spaces are rejected.
+
 **Parameters**
 
   - `text` — an IPv4 dotted quad or IPv6 address
@@ -283,6 +285,8 @@ parse(text: String) -> Result<Network, NetError>
 ```
 
 Parses an address and prefix length such as `192.0.2.0/24`, clearing the host bits. Invalid text is a `NetError` of kind `Parse`.
+
+The address takes the same syntax as `Address.parse`. The prefix length is plain decimal, at most 32 for IPv4 and 128 for IPv6; a sign, a space or a leading zero, as in `/024`, is rejected.
 
 **Parameters**
 
