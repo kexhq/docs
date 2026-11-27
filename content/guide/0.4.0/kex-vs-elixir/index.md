@@ -6,21 +6,21 @@ path: "/guide/0.4.0/kex-vs-elixir/"
 draft: false
 template: "page"
 ---
-Elixir and Kex share a useful foundation: immutable data, pattern matching, and isolated processes communicating through messages. Kex runs on BEAM by default, so an Elixir programmer already knows much of the runtime model. The main changes are Kex's type-oriented declarations, explicit effect boundary, UFCS, and typed `serving` interface.
+If you know Elixir, Kex's immutable data, pattern matching, and BEAM processes give you a useful starting point. The examples below translate pipelines and results first, then show Kex's typed server interface. Pay attention to `let`, `foul`, and the meaning of a dot call.
 
-This page targets **Kex 0.4.0**. It distinguishes longstanding Elixir syntax from current compiler capabilities rather than treating Elixir as a language whose tooling never changes.
+The examples use Kex 0.4.0. Elixir's compiler and typing tools continue to develop, so compare the behavior shown here with the Elixir version you use.
 
 ## At a glance
 
-| Idea | Elixir | Kex |
-| --- | --- | --- |
-| Function declaration | `def` or `defp` inside a module | Pure `let` or effectful `foul` |
-| Composition | \`value | \> function(args)\` |
-| Rebinding | A variable may be rebound; values remain immutable | `let` prevents rebinding; `var` permits it |
-| Structured data | Structs and maps | Records and maps |
-| Result convention | Often `{:ok, value}` / `{:error, reason}` | `Ok(value)` / `Error(reason)` |
-| Server behavior | `GenServer` callbacks and public wrapper functions | `serving` slots on record state |
-| Process interface | Pids and message conventions | `Process<Message>` and typed server handles |
+| Idea | Elixir | Kex |  |
+| --- | --- | --- | --- |
+| Function declaration | `def` or `defp` inside a module | Pure `let` or effectful `foul` |  |
+| Composition | \`value \\ | \> function(args)\` | `value.function(args)` |
+| Rebinding | A variable may be rebound; values remain immutable | `let` prevents rebinding; `var` permits it |  |
+| Structured data | Structs and maps | Records and maps |  |
+| Result convention | Often `{:ok, value}` / `{:error, reason}` | `Ok(value)` / `Error(reason)` |  |
+| Server behavior | `GenServer` callbacks and public wrapper functions | `serving` slots on record state |  |
+| Process interface | Pids and message conventions | `Process<Message>` and typed server handles |  |
 
 Elixir is incorporating gradual set-theoretic analysis into its compiler. Its current documentation describes inference and diagnostics from existing code, with user-provided signatures planned separately. Existing `@spec` declarations and Dialyzer also have their own role. Therefore, “Elixir has no type checking” is not a sound comparison. Kex's relevant distinction here is its checked annotations, declared alternatives, and typed receiver/message interfaces. [Elixir compiler types](https://elixir.hexdocs.pm/gradual-set-theoretic-types.html), [Elixir typespecs](https://elixir.hexdocs.pm/1.17/typespecs.html)
 
@@ -41,13 +41,19 @@ Kex:
 
 ```kex
 let result = [1, 2, 3, 4]
-  .filter { |n| n % 2 == 0 }
+  .filter { |n| n.even? }
   .map { |n| n * 10 }
 
 assert(result == [20, 40])
 ```
 
-The left-hand value supplies the first argument, but the syntax and lookup rules differ. Kex's dot can select receiver behavior; it does not mean an Elixir-style module qualifier in every position. Use `~function` for a named capture and `&.method` for a block that calls a method on its argument.
+Or as an even more compact solution:
+
+```kex
+let result = (1..4).filter(&.even?).map(~(*)(10))
+```
+
+Both examples produce `[20, 40]`: first keep the even numbers, then multiply them by ten. In Kex, the value before the dot supplies the first argument, but the syntax and lookup rules differ from Elixir's pipe. Use `~function` for a named capture and `&.method` for a block that calls a method on its argument.
 
 ## Matching a reported result
 
@@ -78,13 +84,13 @@ assert(describe(Ok(42)) == "value=42")
 assert(describe(Error("missing")) == "failed: missing")
 ```
 
-Kex arms use `=>`, while `->` appears in function types and return annotations. Interpolation uses `${...}`. A declared result type lets the checker reason about its payloads; do not translate every tagged tuple into an unstructured value and discard that information.
+Both versions turn a success containing `42` into `"value=42"`. The Kex version also shows the error case, which becomes `"failed: missing"`. Its `Result<Integer, String>` declaration gives the checker the two payload types. Kex match arms use `=>`, and interpolation uses `${...}`.
 
 ## A process is still a process
 
 Elixir processes have mailboxes, send and receive messages, and support links and monitors. This is the right starting model for Kex on BEAM as well. [Elixir processes](https://elixir.hexdocs.pm/processes.html)
 
-Kex can add `Process<Message>` to constrain sends through a handle. That checks the message shape; it does not prove the recipient is alive, that it will reply, or that an operation will finish before a timeout. Keep the failure and lifecycle reasoning you already use in Elixir.
+`Process<Message>` checks the shape of messages sent through a handle. You still need to account for a stopped recipient, a missing reply, and a timeout, just as you would when designing an Elixir process protocol.
 
 For process-owned state, a Kex protocol can be concise:
 
@@ -107,9 +113,9 @@ end
 demonstrateServer()
 ```
 
-In a conventional Elixir GenServer, you define callbacks such as `handle_call` and often expose wrapper functions around `GenServer.call`. Kex derives the request interface from `slot` declarations: `Reply<A>` is a call and `Void` is a cast. On BEAM it uses OTP GenServer conventions. [Elixir GenServer](https://elixir.hexdocs.pm/GenServer.html)
+`counter.add(2)` sends a request and gets `Ok(2)` back. In Elixir, a GenServer normally defines callbacks such as `handle_call` and public wrapper functions. Kex derives the request interface from its `slot` declarations: `Reply<A>` is a call, while `Void` is a cast. On BEAM, it uses OTP GenServer conventions. [Elixir GenServer](https://elixir.hexdocs.pm/GenServer.html)
 
-The interface does not remove distributed-systems concerns. A timed-out request may already have changed state; retries need an idempotency decision. Kex's guide does not promise Elixir's full supervision ergonomics merely because the runtime is BEAM.
+If a call times out, the server may already have changed its state. Decide whether repeating the request is safe before retrying it. Treat supervision as a separate part of the design and use the APIs available in your Kex toolchain.
 
 ## Effects, macros, and ecosystem boundaries
 
@@ -117,6 +123,6 @@ Elixir's ordinary function declaration does not separate pure computation from e
 
 Elixir macros and Kex `compiled` generation are also different APIs. Port the intended generated interface and verify its expansion rather than translating metaprogramming syntax mechanically.
 
-Shared BEAM foundations make interoperability possible, but do not mean Hex packages become Tey dependencies or every Elixir value has the Kex representation a checked API expects. Audit data representation, lifecycle, and module interfaces at each boundary. Compare real applications before making performance or operational claims.
+When connecting Kex and Elixir code, check the data passed across the boundary, who owns each process, and the module interface on each side. A Hex dependency also needs an explicit integration plan; it is not automatically a Tey package.
 
 Continue with [processes](../processes/), [typed servers](../servers/), [effects](../effects/), and [compile-time programming](../compiled/).

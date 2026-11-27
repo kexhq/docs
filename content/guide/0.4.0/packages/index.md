@@ -6,7 +6,7 @@ path: "/guide/0.4.0/packages/"
 draft: false
 template: "page"
 ---
-Use Tey when a program needs multiple source files, dependencies, or repeatable commands. It pairs package operations with the selected Kex toolchain.
+A single `.kex` file is enough for the first programs in this guide. When you add files, dependencies, or tests, Tey gives them a project layout and repeatable commands. It also selects the matching Kex toolchain.
 
 ## Create a project
 
@@ -18,9 +18,11 @@ tey test
 tey run
 ```
 
-For a library, use `tey new my-library --lib`; for an existing directory, use `tey init` or `tey init --lib`. A library has no executable entry point. Follow the generated layout: declarations under `src/`, specifications under `spec/`, and package metadata in `package.kex`.
+`tey new my-app` creates the project, then `build`, `test`, and `run` work inside it. For a library, use `tey new my-library --lib`; an existing directory can use `tey init` or `tey init --lib`. Put source under `src/`, tests under `spec/`, and package metadata in `package.kex`.
 
 ## The manifest
+
+The manifest tells Tey what the project is and which compiler versions it accepts:
 
 This is a **package file**, interpreted by Tey rather than run as an ordinary program:
 
@@ -33,11 +35,13 @@ package "my-library" do
 end
 ```
 
-Set the compiler requirement to a version you actually test. Tey rejects unknown declarations so misspelled manifest fields do not silently disappear.
+The package is named `my-library`, has version `0.1.0`, and asks for Kex 0.4.0 or newer. Set that requirement to a version you have tested. Tey rejects unknown declarations, so a misspelled field does not silently disappear.
 
 Use `tey help` to discover commands supported by your installed version. `tey build` compiles the package and `tey test` runs its specs on BEAM. `tey run --interpret` and `tey test --interpret` select the interpreter when needed.
 
 ## Dependencies and the lockfile
+
+When a project uses another package, declare where Tey should get it:
 
 A Git dependency identifies a repository and version selection. For example:
 
@@ -46,7 +50,7 @@ tey add greet --git https://github.com/kexhq/greet --tag "~> 0.1"
 tey install
 ```
 
-The manifest holds the constraint; `tey.lock` records the resolved commit and integrity information. Commit the lockfile. Installing a checkout should reproduce its locked dependencies; updating dependencies is an intentional operation with a diff to review and tests to rerun.
+`tey add` records the version constraint in the manifest, and `tey install` resolves it. `tey.lock` records the chosen commit and integrity information. Commit that file so another checkout can install the same versions. Review a lockfile diff when intentionally updating dependencies.
 
 A tag constraint selects releases, while a branch or commit selector is useful for deliberate development pins. Before relying on complex dependency graphs, consult the [Tey reference](/tey/) for the resolver behavior of your selected version.
 

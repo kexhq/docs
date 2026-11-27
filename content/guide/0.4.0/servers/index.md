@@ -6,7 +6,7 @@ path: "/guide/0.4.0/servers/"
 draft: false
 template: "page"
 ---
-A `serving` block defines a request protocol for record state. `Process.spawn(state)` starts its owner and returns a typed server handle. Callers use methods on that handle rather than constructing mailbox messages manually.
+The previous chapter sent messages to a worker directly. For state with named operations, a typed server defines those operations in a `serving` block. This counter can report its value, add an amount, and reset:
 
 ```kex
 record CounterState do
@@ -33,13 +33,13 @@ main do
 end
 ```
 
-A `Reply<A>` slot is a synchronous call. The caller receives `Result<A, CallError>`, since a server can stop, fail, or time out. A `Void` slot is an asynchronous cast: returning from the send does not itself confirm completion.
+`Process.spawn(CounterState {})` starts the server with a value of zero. `add(3)` returns `Ok(3)`, and `current()` reads that state. A `Reply<A>` slot is a synchronous call that returns `Result<A, CallError>` because the server may fail or time out. A `Void` slot sends an asynchronous cast; sending it does not itself confirm completion.
 
-Messages from the same sender preserve ordering, so the final `current()` call above observes the preceding reset cast. This is not a global ordering guarantee across independent senders.
+The final `current()` observes the preceding `reset()` because messages from this sender preserve order. Another sender could interleave its own work, so that ordering is not a global guarantee.
 
 ## State transitions
 
-The handler reads the current receiver through `@field`. `New { ... }` creates replacement state; implicit `new` supports several functional updates. The original state remains immutable.
+Each slot handles one operation on the current state. `@value` reads the current field; `New { ... }` builds replacement state. For several updates, the implicit local `new` starts from the current state. The original record is still an immutable value.
 
 | Handler result | Meaning |
 | --- | --- |
@@ -48,7 +48,7 @@ The handler reads the current receiver through `@field`. `New { ... }` creates r
 | `{ new }` | Replace state without an immediate reply |
 | A transition with `stop: reason` | Stop after applying the transition |
 
-A call cannot simply forget its reply. Deferred replies use the typed `from` reference inside a foul call slot, with `from.reply(value)` used later. That reference includes the call identity, so overlapping calls can receive the correct response.
+A call needs a reply. If a slot cannot reply immediately, a foul call slot can keep the typed `from` reference and use `from.reply(value)` later. That reference identifies the call, so overlapping requests can receive their own results.
 
 ## Timeouts and retries
 

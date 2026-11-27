@@ -6,7 +6,7 @@ path: "/guide/0.4.0/compiled/"
 draft: false
 template: "page"
 ---
-`compiled do ... end` runs an expansion phase before semantic analysis. The surviving output is ordinary Kex declarations, which are then checked and compiled like handwritten code. Start with plain functions; use compile-time programming when it removes repetitive declarations or precomputes stable data.
+Usually a Kex expression runs when you run the program. A `compiled do ... end` block runs while the program is being built. Use it to compute a fixed value or generate repeated declarations. Its output is still checked as ordinary Kex code.
 
 ## Constants
 
@@ -15,11 +15,18 @@ compiled do
   let GuidePrefix = "kex".upperCase
 end
 assert(GuidePrefix == "KEX")
+IO.printLine(GuidePrefix)
 ```
 
-A compile-time binding is evaluated while building. Do not confuse it with a runtime function whose result changes on each call.
+```output filename="OUTPUT"
+KEX
+```
+
+`GuidePrefix` becomes `"KEX"` while the program is built. The runtime program uses that value; it does not call `upperCase` again each time the constant is read.
 
 ## Generated names
+
+You can also generate declarations when their names follow a pattern:
 
 ```kex
 compiled do
@@ -31,7 +38,7 @@ assert(guideAlpha(10) == 10)
 assert(guideBeta(10) == 11)
 ```
 
-`%name` splices a computed declaration name. `%{expression}` computes a name from an expression. Generated type names must obey type-name rules. Values captured during generation become part of the generated body, which still passes through type checking.
+The loop creates `guideAlpha` and `guideBeta`. The first adds zero to its argument, and the second adds one. `%name` inserts the computed name into a declaration; `%{expression}` can compute a name from a larger expression. The generated declarations still have to satisfy ordinary naming and type rules.
 
 Name generation is powerful enough to make an API hard to discover. Keep generation input small and explicit, and test generated behavior with names that cannot accidentally resolve to an unrelated standard-library function.
 

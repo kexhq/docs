@@ -1,18 +1,18 @@
 ---
 id: "guide-0-4-0-beta-4"
 title: "Guide"
-description: "This guide introduces you to Kex version 0.4.0 It starts with a small program and builds toward data modeling, IO, packages, and concurrent services."
+description: "This guide introduces Kex 0.4.0, from a first program to data, IO, packages, and concurrent services."
 path: "/guide/0.4.0/"
 draft: false
 template: "landing"
 version: "0.4.0"
 ---
-You need some familiarity with programming, but no experience with [functional languages](https://en.wikipedia.org/wiki/Functional_programming) or [Erlang](https://en.wikipedia.org/wiki/Erlang_(programming_language).
+You need some familiarity with programming, but no experience with functional programming or Erlang. Start with a small program, then use each chapter to try one more part of the language.
 
 > [!IMPORTANT]
-> Keep in mind that the language, including its syntax, semantics and standard library are still under active development and can include major changes version to version.
+> Kex, including its syntax, semantics, and standard library, is still under active development. Expect changes between versions.
 >
-> **Currently no compatibility will be attempted before the first planned stable production version  of Kex 1.0.**
+> **Compatibility is not guaranteed before Kex 1.0.**
 
 ## Start here
 
@@ -24,8 +24,9 @@ You need some familiarity with programming, but no experience with [functional l
 
 ## Coming from another language?
 
-Read our comparisions of:
+Choose the comparison for a language you already know:
 
 - [Kex vs Haskell](kex-vs-haskell/)
 - [Kex vs Ruby](kex-vs-ruby/)
 - [Kex vs Elixir](kex-vs-elixir/)
+- [Kex vs TypeScript](kex-vs-typescript/)

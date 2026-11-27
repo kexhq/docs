@@ -6,9 +6,9 @@ path: "/guide/0.4.0/walkthrough/"
 draft: false
 template: "page"
 ---
-This program reads one integer per nonblank line and prints their count and sum. It connects the guide's main ideas: a pure parser, typed errors, immutable transformations, an effectful input boundary, and explicit failure handling.
+You can now combine values, functions, errors, and IO in one program. This example reads one integer per nonblank line, then prints how many numbers it found and their sum. It keeps parsing pure and puts file access in `main`.
 
-Save the following as `totals.kex`. Its companion tests appear in the second block.
+Save the following as `totals.kex`. Read it in two parts: `parseTotals` turns text into either a report or a named error, and `main` deals with command arguments and file access. The companion tests appear later on this page.
 
 <!-- guide-example: totals.kex -->
 ```kex
@@ -66,9 +66,15 @@ Create `numbers.txt` containing `10`, `20`, a blank line, and `-5`, each on its 
 kex totals.kex numbers.txt
 ```
 
-The output is `count=3, sum=25`. Replacing the second line with `twenty` produces `line 2: invalid integer 'twenty'`. A missing file follows the read-error branch. Running without exactly one argument prints usage.
+```output filename="OUTPUT"
+count=3, sum=25
+```
 
-The parser reports the original line number, including blank lines. It uses a local loop because a validation error should return immediately from the parser. The accumulators do not escape and the function is pure.
+Replacing the second line with `twenty` produces `line 2: invalid integer 'twenty'`. A missing file follows the read-error branch. Running without exactly one argument prints usage.
+
+`parseTotals` starts with zero count and sum, then reads one line at a time. It skips blank lines but still counts them when reporting a later error. A valid integer increases both accumulators; invalid text returns `InvalidNumber` immediately. These local changes do not touch outside state, so the function is pure.
+
+`main` handles the outside world. It expects one path, reads the file, calls the parser, and prints either a report or an error. Keeping that boundary small makes the parser usable without a real file.
 
 This teaching program prints diagnostics and returns normally. A production command used by shell scripts should also define nonzero exit statuses for usage and input failures, and send diagnostics to the appropriate error stream.
 
@@ -95,4 +101,4 @@ end
 kex totals.spec.kex
 ```
 
-The tests require no filesystem mock because parsing receives text directly. The effectful shell around that pure function is small enough to exercise with a real temporary file. For large inputs, evolve the acquisition layer toward a feed while keeping validation and reporting explicit.
+The three cases cover numbers with a blank line, empty input, and an invalid number after a blank line. None needs a filesystem mock because `parseTotals` receives a string. The small file-reading part can be exercised separately with a temporary file. For large inputs, use a feed to acquire lines while keeping validation and reporting explicit.

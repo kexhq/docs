@@ -66,7 +66,7 @@ main do
   IO.printLine(10)
   IO.printLine(0b1010)
   IO.printLine(0o12)
-  IO.printLine(0bA)
+  IO.printLine(0xA)
 end
 ```
 
@@ -165,8 +165,8 @@ Most algorithms doesn't care if the underlying type is an `Integer` or `Float`. 
 # Quadratic equation solver
 let solveQuadratic(a: Number, b: Number, c: Number) -> (Number, Number) do
   let root = Math.sqrt(b^2 - 4*a*c) # b^2 means b is raised to the second power = (b*b)
-  let pos = (-b + root) / 2*a
-  let neg = (-b - root) / 2*a
+  let pos = (-b + root) / (2*a)
+  let neg = (-b - root) / (2*a)
   return (neg, pos)
 end
 
@@ -189,8 +189,8 @@ end
 ```
 
 ```output filename="OUTPUT"
-(4.0, 6.0)
-(-2.141636845692876, -1.9331631543071237)
+(1.0, 1.5)
+(-1.438885276600965, -1.298819641431822)
 ```
 
 In the example above `solveQuadratic`  is a function with number parameters `a`, `b` and `c`, while returning the resulting `Number` tuple.
@@ -232,7 +232,7 @@ end
 ```
 
 ```output filename="OUTPUT"
-Hello world
+Hello, world
 ```
 
 One of the most useful `String` feature is [interpolation](https://en.wikipedia.org/wiki/String_interpolation), which is the substitution of other values into a string:
@@ -409,7 +409,7 @@ end
 hello
 ```
 
-As shown above characters contain Unicode chacters, instead of individual bytes. This makes them suitable to work with languages requiring more letters then [ASCII](https://en.wikipedia.org/wiki/Ascii) could provide.
+As shown above characters contain Unicode chacters, instead of just individual bytes. This makes them suitable to work with languages requiring more letters then [ASCII](https://en.wikipedia.org/wiki/Ascii) could provide.
 
 ```kex
 main do

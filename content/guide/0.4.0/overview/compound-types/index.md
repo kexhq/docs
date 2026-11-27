@@ -5,11 +5,11 @@ path: "/guide/0.4.0/overview/compound-types/"
 draft: false
 template: "page"
 ---
-Compound values turn primitive values into more practical structures, such as lists, tuples, maps, and sets.
+The [Values chapter](../../values/) introduced individual numbers, strings, and booleans. Lists, tuples, maps, and ranges let you group or generate values. Start with a list of values of one type:
 
 ## Lists
 
-Are a collection which can be used to store multiple values of the same type together:
+A list holds several values of the same type:
 
 ```kex
 let nums = [1, 2, 3]         # [Integer]
@@ -18,9 +18,9 @@ let bools = [true, false]    # [Bool]
 let strings = ["ABC", "D"]   # [String]
 ```
 
-As you can see the list iteral is defined within `[]`, individual elements are separated by `,`.
+Write a list between `[` and `]`, with commas between its elements.
 
-The standard library comes with many handy functions already defined. Later chapters will explain in detail how they work and how to use them, but for now, let's look at how they're used in this simple example for lists:
+The standard library provides functions for working with lists. This example keeps even numbers, squares them, and adds the squares:
 
 ```kex
 main do
@@ -48,9 +48,9 @@ end
 5
 ```
 
-`map` transforms each element, `filter` keeps matching elements, and sum adds the items together.
+`filter` keeps the even elements, `map` squares them, and `sum` adds the squares. Indexing with `[4]` finds the fifth element because positions start at zero.
 
-The operator `|` can be used for prepending an element at the start of the list. The spread operator `...` puts a list into another list, element by element: 
+Use `|` to put one element at the start of a list. The spread operator `...` inserts every element of one list into another:
 
 ```kex
 let original = [2, 3]
@@ -58,7 +58,7 @@ let prepended = [1 | original]      # [1, 2, 3]
 let expanded = [0, ...original, 4]  # [0, 1, 2, 3, 4]
 ```
 
-Lists could be decomposed into its elements:
+You can take a list apart with a pattern:
 
 ```kex
 main do
@@ -84,18 +84,18 @@ end
 [40]
 ```
 
-Just as `|` can help creating a list via prepending to its beginning, it can also get the first element of the list while pattern matching. The `,`  does by element decomposition.
+In a pattern, `|` separates the first element from the rest. Commas bind individual elements in order.
 
-List can also contain other lists or other compound types:
+Lists can also contain other lists:
 
 ```kex
 let original = [2, 3]
-let list = [[1], original, [4, 5]]  # [[1], [2, 3], [3, 5]]
+let list = [[1], original, [4, 5]]  # [[1], [2, 3], [4, 5]]
 ```
 
 ## Tuples
 
-While lists only contains elements of the same type, tuples can contain multiple types, decomposition works similarly to lists:
+A tuple can hold values of different types. You can take it apart with a pattern similar to a list pattern:
 
 ```kex
 let location = ("Budapest", 47.5, 19.04)  # (String, Float, Float)
@@ -103,7 +103,7 @@ let location = ("Budapest", 47.5, 19.04)  # (String, Float, Float)
 let (city, lat, lon) = location
 ```
 
-If you don't care about a value, just put `_` into those places:
+Use `_` for a value you do not need:
 
 ```kex
 let location = ("Budapest", 47.5, 19.04)  # (String, Float, Float)
@@ -113,7 +113,7 @@ let (_, lat, lon) = location
 
 ## Maps
 
-Maps in a way also collect different typed elements into a single value. However, they associate values, the following example associates a atoms to integers:
+A map associates keys with values. This one maps atom keys to integer scores:
 
 ```kex
 let scores = {
@@ -126,7 +126,7 @@ let scores = {
 let aliceScore = scores[:alice] # Integer?
 ```
 
-The same function demonstrated for lists also work well for maps:
+You can filter and transform map entries too:
 
 ```kex
 main do
@@ -155,20 +155,20 @@ end
 ```
 
 > [!NOTE]
-> One of the useful properties of maps is that their lookup is relatively quick. While to find a list's 10th element you have to go through all 10, maps work much faster (O(log n) vs O(n)).
+> Maps are useful when you want to look up a value by key. A list is better when its position and order matter.
 
-Maps are a natural fit for storing structured data like `JSON`  objects. The module `JSON` and its functions `parse` and `stringify` could be used to convert between `JSON` and `Map` .
+Maps can represent structured data such as JSON objects. The `JSON` module provides `parse` and `stringify` for converting between JSON text and Kex values.
 
 ## Ranges
 
-Ranges are used to represent a range of primitive values:
+A range describes values between two endpoints:
 
 ```kex
 let first10 = (1..10)
 let alphabet = ('a'..'z')
 ```
 
-Ranges are always inclusive, meaning that their start end end are always included. The `items` function can be used to convert a range to list:
+These ranges include both endpoints. The `items` function converts a range to a list:
 
 ```kex
 main do
@@ -185,7 +185,7 @@ end
 [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z]
 ```
 
-Another usage of ranges is iteration through a fixed set of values:
+You can also iterate through a range without creating a new list:
 
 ```kex
 main do
@@ -196,16 +196,16 @@ end
 ```
 
 ```output filename="OUTPUT"
-1. item
-2. item
-3. item
-4. item
-5. item
-6. item
-7. item
-8. item
-9. item
-10. item
+1. Item
+2. Item
+3. Item
+4. Item
+5. Item
+6. Item
+7. Item
+8. Item
+9. Item
+10. Item
 ```
 
 See the [standard library](/prelude/) for the full List, Map, Range, Foldable, and Enumerable APIs.

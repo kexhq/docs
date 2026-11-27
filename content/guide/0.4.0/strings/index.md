@@ -6,7 +6,7 @@ path: "/guide/0.4.0/strings/"
 draft: false
 template: "page"
 ---
-A `String` is UTF-8 text. A `Char` is one character. A `[Char]` is an ordinary list of characters. These are distinct types, even when their contents look similar when printed.
+The [Values chapter](../values/) introduced strings and characters. Here you will use their operations and see where text becomes binary data. Start by turning a string into characters and back:
 
 ```kex
 let text = "Kex"
@@ -15,11 +15,18 @@ assert(['K', 'e', 'x'].join("") == text)
 assert('K'.string == "K")
 assert("hi".map(&.upperCase) == ['H', 'I'])
 assert("hi".mapChars(&.upperCase) == "HI")
+IO.printLine("hi".mapChars(&.upperCase))
 ```
 
-Use `.chars` when an algorithm needs list semantics and `.mapChars` when transforming text into text. Text length and byte length are different concepts for non-ASCII input; choose byte operations when implementing a wire format or binary file format.
+```output filename="OUTPUT"
+HI
+```
+
+`"Kex".chars` produces `['K', 'e', 'x']`, and `join("")` makes the string again. A `String` is UTF-8 text, a `Char` is one character, and `[Char]` is a list. Use `.chars` when you need list operations and `.mapChars` when the result should remain a string. For non-ASCII input, text length and byte length can differ.
 
 ## Interpolation and escaping
+
+Use `${...}` to put a value into a string. The same example also shows trimming and splitting text:
 
 ```kex
 let person = "Ada"
@@ -28,9 +35,9 @@ assert("  Hello  ".trim.lowerCase == "hello")
 assert("a,b,c".split(",") == ["a", "b", "c"])
 ```
 
-Double-quoted strings understand escapes such as `\n`, `\t`, `\\`, and `\"`. Single quotes represent characters, not another string syntax.
+The first assertion builds `"Hello, Ada!"`. `trim.lowerCase` turns `"  Hello  "` into `"hello"`, while `split(",")` makes a list of three strings. Double-quoted strings understand escapes such as `\n`, `\t`, `\\`, and `\"`. Single quotes make a `Char`, not another kind of string.
 
-Backticks create raw strings: backslashes and `${...}` remain literal. Prefix a backtick string with `$` to enable interpolation while retaining raw backslashes.
+Backticks make raw strings. A backslash and `${...}` stay as written until you add a `$` before the opening backtick:
 
 ```kex
 let raw = `a\b ${person}`
@@ -39,7 +46,7 @@ assert(raw.contains?("person"))
 assert(interpolated == "Hello, Ada!")
 ```
 
-Multiline backtick strings can use a closing-line indentation margin. Check intended trailing newlines when embedding templates or fixtures; whitespace is data.
+The `raw` string still contains the characters in `${person}`, while `interpolated` contains `Ada`. Backtick strings can also span multiple lines. Their closing indentation affects the text, so check whitespace when embedding a template or fixture.
 
 ## Tagged literals and regexes
 

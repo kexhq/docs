@@ -6,7 +6,7 @@ path: "/guide/0.4.0/patterns/"
 draft: false
 template: "page"
 ---
-A match selects the first arm whose pattern and guard succeed. `=>` separates a pattern from its result; `->` belongs to function types and return annotations.
+A `match` chooses an action based on a value's shape. In this example, a download is either waiting, complete, or rejected. The rejection case also checks the error code:
 
 ```kex
 type Download = Waiting | Complete(String) | Rejected(Integer)
@@ -21,11 +21,20 @@ let describeDownload(value: Download) -> String do
 end
 assert(describeDownload(Complete("report.txt")) == "saved to report.txt")
 assert(describeDownload(Rejected(503)) == "server failure")
+IO.printLine(describeDownload(Complete("report.txt")))
+IO.printLine(describeDownload(Rejected(503)))
 ```
 
-A variable pattern binds the matched value. `_` ignores it. A `when` guard adds a condition after a structural match. Handle every alternative; a broad wildcard is convenient but can conceal a new constructor that deserves its own behavior.
+```output filename="OUTPUT"
+saved to report.txt
+server failure
+```
+
+`Complete(path)` binds the saved path, while `Rejected(_)` ignores a code that the final arm does not need. The `when` guard handles server errors before the more general rejection arm. A match selects the first arm whose pattern and guard succeed. Arms use `=>`; function types and return annotations use `->`.
 
 ## Destructuring and list patterns
+
+Patterns can also take a tuple or list apart:
 
 ```kex
 let (name, score) = ("Ada", 10)
@@ -44,9 +53,11 @@ assert(listShape([]) == "empty")
 assert(listShape([4, 5, 6]) == "4 followed by 2")
 ```
 
-A destructuring binding assumes the shape matches. Use a `match` when a value might be empty or have another shape, rather than destructuring unknown input unconditionally.
+The binding `(name, score)` takes two values from the tuple. `[head | tail]` takes the first list element and leaves the rest in `tail`. Those bindings assume the shape is present. `listShape` uses `match` because its input may be empty, contain one element, or contain several.
 
 ## Function clauses
+
+A function can place a pattern directly in its parameter list. Kex tries the clauses in order:
 
 ```kex
 let factorial(0) -> Integer = 1
@@ -54,9 +65,11 @@ let factorial(n: Integer) -> Integer = n * factorial(n - 1)
 assert(factorial(5) == 120)
 ```
 
-Clauses are tried in order. This factorial is defined for nonnegative inputs; a production API should reject negative input before recursing. Matching clauses do not automatically establish a domain invariant for every value of the annotated type.
+The first clause stops recursion at zero; the second multiplies `n` by the result for `n - 1`. `factorial(5)` therefore returns `120`. This version needs a nonnegative input. An `Integer` annotation alone does not exclude negative values, so check that boundary when accepting user input.
 
 ## Conditional extraction
+
+Use `if let` when you only need to continue if a value has one particular form:
 
 ```kex
 let selected: String? = Just("Ada")
@@ -67,6 +80,6 @@ else
 end
 ```
 
-The extracted name belongs to the successful branch. This is useful when only success needs work; use `match` when both branches produce an important result.
+`Just(person)` succeeds for the selected name and binds `person` inside that branch. The `else` branch would run for `None`. Use a full `match` when both cases need substantial work or produce a result.
 
-Within `make`, receiver patterns such as `@[]` and `@[first | rest]` match `this` itself. Record patterns can select named fields and nest inside other patterns. Prefer small, readable patterns to a large destructuring expression that hides the decision being made.
+Within a `make` block, `@[]` matches an empty receiver list and `@[first | rest]` matches a nonempty one. Record patterns can select named fields, including fields inside another pattern. Use a small pattern for each decision so readers can see which form is being handled.

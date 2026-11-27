@@ -1,17 +1,18 @@
 ---
 id: "guide-0-4-0-beta-4-comparisons"
 title: "Kex vs X"
-description: "A practical starting point for Haskell, Ruby, and Elixir programmers."
+description: "A practical starting point for Haskell, Ruby, Elixir, and TypeScript programmers."
 path: "/guide/0.4.0/comparisons/"
 draft: false
 template: "page"
 ---
-Kex combines ideas that will feel familiar to programmers from several languages. Familiar syntax does not always imply familiar behavior: a Ruby-looking bang call rebinds a value, a Haskell-looking function needs an explicit capture when passed around, and an Elixir-like process can have a checked message interface.
+If you already know Haskell, Ruby, or Elixir, start with that comparison. Each page shows a familiar operation in both languages, then explains the Kex spelling and behavior. For example, Kex's `!` rebinds a value, `~` captures a function, and a typed process handle checks the messages you send through it.
 
-These comparisons target **Kex 0.4.0**. Each uses small examples to explain how to translate an idea, where the semantics differ, and what requires a separate design decision. They are language comparisons, not performance benchmarks or claims that existing packages run unchanged.
+Each comparison uses Kex 0.4.0 and starts with an operation you may already know. Read the Kex version next to it, then follow the links to the chapter that teaches the new feature in more detail.
 
 - [Kex vs Haskell](../kex-vs-haskell/): purity, evaluation, functions, algebraic data, and type classes.
 - [Kex vs Ruby](../kex-vs-ruby/): familiar blocks and chains, different mutation, types, and effects.
 - [Kex vs Elixir](../kex-vs-elixir/): immutable data and BEAM processes, with different interfaces for types, effects, and servers.
+- [Kex vs TypeScript](../kex-vs-typescript/): collection chains, optional values, tagged alternatives, and rebinding.
 
-Read the comparison for the language you know, then follow its links into the guide. The Kex blocks on each comparison page form a runnable program in reading order and are covered by the guide's example checker. Foreign-language blocks are labeled separately; they show equivalent computations rather than text that can be pasted into Kex.
+Read the comparison for the language you know, then follow its links into the guide. The foreign-language blocks show equivalent computations; the Kex blocks show code you can use in a Kex program.

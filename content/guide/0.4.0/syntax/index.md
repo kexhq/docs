@@ -55,7 +55,7 @@ main do
 end
 ```
 
-Immutability allows the compiler to optimize code generation and helps the programmer to avoid accidental variable changes. However, lot of algorithms are not easy or 
+Immutability allows the compiler to optimize code generation and helps the programmer avoid accidental changes. Some algorithms are easier to express with mutable bindings.
 
 ### Mutable bindings
 
@@ -91,7 +91,7 @@ end
 ```
 
 > [!TIP]
-> **Always prefer immutable datastructures over mutable ones.** Immutability helps eliminate bugs in the code, since the source of data is more predictable (changes cannot be made from unknown places, only the source).
+> **Prefer immutable datastructures over mutable ones.** Immutability helps eliminate bugs in the code, since the source of data is more predictable (changes cannot be made from unknown places, only the source).
 
 ### Comparisions
 
@@ -364,11 +364,13 @@ main do
     j = j * i
     i += 1
 
-    break if i == n
+    break if i > n
   end
 
   IO.printLine(j)
 end
 ```
+
+<marqraft-code filename="Output" language="output">120</marqraft-code>
 
 Continue with [Values and primitive types.](../values/)

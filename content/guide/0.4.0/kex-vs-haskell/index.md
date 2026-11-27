@@ -6,7 +6,7 @@ path: "/guide/0.4.0/kex-vs-haskell/"
 draft: false
 template: "page"
 ---
-Kex and Haskell both make immutable data, pure functions, pattern matching, and static type checking central to ordinary programming. The largest changes for a Haskell programmer are Kex's eager ordinary calls, explicit function capture, receiver-oriented syntax, and `foul` effect boundary.
+If you know Haskell, Kex's pure functions and pattern matching will look familiar. The examples below show where the translation changes: ordinary Kex calls evaluate eagerly, named functions need an explicit capture when passed as values, and effectful functions use `foul`.
 
 This page targets Kex 0.4.0 and the conventional Haskell language model. GHC extensions can add capabilities beyond the baseline described here. Haskell's defining features include non-strict evaluation and polymorphic static types. [Haskell language report](https://www.haskell.org/onlinereport/intro.html)
 
@@ -22,7 +22,7 @@ This page targets Kex 0.4.0 and the conventional Haskell language model. GHC ext
 | Shared behavior | Type classes and instances | Traits and `make` implementations |
 | Text | Prelude `String` is a character list | `String` and `[Char]` are distinct |
 
-The resemblance between a type class and a trait is useful for orientation, but does not establish identical resolution rules or support for every GHC type-system extension. Haskell classes express constraints and instances; Kex's guide explains its own [trait contracts](../traits/) and receiver dispatch. [Haskell class tutorial](https://www.haskell.org/tutorial/classes.html)
+Haskell type classes and Kex traits both describe shared behavior, but their resolution rules are not identical. Read the [Traits chapter](../traits/) for Kex's contracts and receiver dispatch. [Haskell class tutorial](https://www.haskell.org/tutorial/classes.html)
 
 ## Transforming a collection
 
@@ -47,7 +47,7 @@ end
 assert(squaresOfEvens([1, 2, 3, 4]) == [4, 16])
 ```
 
-This form is more useful when we use pattern matching, with multiple function bodies:
+Separate declarations are also useful when several function clauses share one type. For example:
 
 ```kex
 factorial : Integer -> Integer
@@ -55,14 +55,14 @@ let factorial(1) = 1
 let factorial(n) = n * factorial(n - 1)
 ```
 
-Since the function body is a one-liner, this can be further simplified to:
+The collection function itself can be written on one line:
 
 ```kex
 squaresOfEvens : [Integer] -> [Integer]
 let squaresOfEvens(values) = values.filter { |n| n % 2 == 0 }.map { |n| n * n }
 ```
 
-However, since in this instance we can move declarations into the function:
+Or put its parameter and return types in the definition:
 
 ```kex
 let squaresOfEvens(values: [Integer]) -> [Integer] do
@@ -70,16 +70,14 @@ let squaresOfEvens(values: [Integer]) -> [Integer] do
 end
 ```
 
-
-
-The Kex chain reads in traversal order. UFCS lets the receiver supply the first argument; a dot does not mean an object is being mutated. The list pipeline is eager. For an unbounded sequence, choose a stream and bound consumption:
+Both versions return `[4, 16]`. The Kex chain reads in traversal order: filter first, then map. UFCS lets the value before a dot supply the first argument. The list pipeline is eager. For an unbounded sequence, choose a stream and bound consumption:
 
 ```kex
 let naturals = Stream.Sequence(from: 0) { |n| n + 1 }
 assert(naturals.map { |n| n * n }.take(4) == [0, 1, 4, 9])
 ```
 
-Do not translate a productive Haskell infinite-list expression into an eagerly built Kex list. Conversely, explicit streams do not make all surrounding expressions lazy. Haskell's non-strict semantics are a language-wide distinction, not just a collection API. [Haskell function evaluation](https://www.haskell.org/tutorial/functions.html)
+The first four values of this stream are `[0, 1, 4, 9]`. A stream lets you work with an unbounded sequence as long as you bound what you consume. A normal Kex list is built eagerly, so an infinite Haskell list cannot be translated to an ordinary list. [Haskell function evaluation](https://www.haskell.org/tutorial/functions.html)
 
 ## Capturing and partially applying functions
 
@@ -92,7 +90,7 @@ assert([1, 2].map(addTen) == [11, 12])
 assert([1, 2].map(~add(10)) == [11, 12])
 ```
 
-`~add` captures the function. Supplying arguments after the capture fixes them; `_` leaves an explicit argument position open. Ordinary Kex calls use their declared call shape. Do not assume omitting an argument always creates another function.
+`~add(10)` fixes the first argument and gives back a function that adds ten to its input. Both assertions produce `[11, 12]`. The `~` captures a function; `_` can leave a particular argument position open. Merely omitting an argument from an ordinary Kex call does not create another function.
 
 ## Pure formatting and effectful output
 
@@ -109,19 +107,25 @@ main = putStrLn (greeting "Ada")
 Kex makes the boundary visible on the declaration:
 
 ```kex
-let greeting(name: String) -> String = "Hello, ${name}"
-foul printGreeting(name: String) -> Void = IO.printLine(greeting(name))
-printGreeting("Ada")
+greeting : String -> String
+let greeting(name) = "Hello, ${name}"
+
+printGreeting : String -> Void
+foul printGreeting(name) = IO.printLine(greeting(name))
+
+main do
+  printGreeting("Ada")
+end
 ```
 
-A pure Kex function cannot call `printGreeting`; `main` and top-level executable expressions can. A foul call executes an effectful operation rather than returning an `IO<A>` action merely because it is foul. Kex's block syntax is also not Haskell's monadic `do` notation. [Haskell IO model](https://www.haskell.org/onlinereport/haskell2010/haskellch7.html)
+`greeting` returns a string and remains pure. `printGreeting` prints it, so its declaration uses `foul`. Calling it executes the effect; Kex does not return an `IO<A>` action for a later caller to run. A pure function cannot call it, while `main` and top-level executable expressions can. Kex's block syntax also has a different meaning from Haskell's monadic `do`. [Haskell IO model](https://www.haskell.org/onlinereport/haskell2010/haskellch7.html)
 
 ## Data and migration choices
 
-Kex sum types and `match` make Haskell-style domain modeling a natural starting point. Translate `Maybe` and `Either` deliberately: constructor names and the result type's parameter order differ. `.try` has failure propagation and rescue behavior; it is not an automatic translation of an `Either` computation.
+For domain data, begin with Kex sum types and `match`. Translate a Haskell `Maybe` to `Optional<A>` and an `Either` to a suitable `Result<A, E>`, checking constructor names and parameter order. Use `.try` only when its failure and rescue behavior fits the surrounding function.
 
 Keep pure transformations pure, but revisit evaluation order, strictness, string representation, and resource lifetimes. Kex also permits local `var` reassignment and provides process-owned state; neither requires turning every immutable algorithm into a mutable one.
 
-A migration still needs a dependency and tooling audit. Haskell libraries do not become Kex modules, and a Haskell concurrency abstraction does not automatically become a BEAM process. This comparison makes no throughput, memory-use, or compiler-performance claim.
+When moving a larger program, list the libraries it needs and decide which Kex modules will replace them. Revisit evaluation order, string representation, resource lifetimes, and concurrency at each boundary. The small examples above show language translations, not a performance comparison.
 
 Continue with [functions](../functions/), [types](../types/), [errors](../errors/), and [streams](../streams/).

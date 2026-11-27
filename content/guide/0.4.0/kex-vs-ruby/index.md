@@ -6,7 +6,7 @@ path: "/guide/0.4.0/kex-vs-ruby/"
 draft: false
 template: "page"
 ---
-Kex will look familiar to a Ruby programmer: `do ... end`, trailing blocks, predicate names ending in `?`, and chains of collection operations. The important adjustment is that Kex uses immutable values, checked types, and explicit effectful functions. Read familiar punctuation according to Kex's rules rather than assuming Ruby semantics.
+If you know Ruby, Kex's blocks, `?` names, and chained calls will look familiar. Try reading the examples below as small translations. The syntax may be similar, but a Kex `let` binding, `!` call, and `foul` function have specific rules.
 
 This comparison targets Kex 0.4.0 and ordinary Ruby behavior. External Ruby type-checking tools can add checks, but Ruby itself gives objects types while variable names are not statically restricted to one type. [Ruby language comparison](https://www.ruby-lang.org/en/documentation/ruby-from-other-languages/to-ruby-from-c-and-cpp/)
 
@@ -38,11 +38,11 @@ Kex:
 
 ```kex
 let values = [1, 2, 3, 4]
-let result = values.filter { |n| n % 2 == 0 }.map { |n| n * 10 }
+let result = values.filter { |n| n.even? }.map { |n| n * 10 }
 assert(result == [20, 40])
 ```
 
-The block shape is almost identical. Kex binds an unchanged local with `let`, and uses `filter` for this selection. You can also pass a named function using `~name` or use receiver shorthand such as `&.count`.
+Both examples produce `[20, 40]`. Kex binds an unchanged local with `let` and uses `filter` for this selection. You can also pass a named function with `~name` or use receiver shorthand such as `&.count`.
 
 ## Mutation is the major trap
 
@@ -68,9 +68,9 @@ end
 demonstrateRebinding()
 ```
 
-`push!` here means rebind `items` to the result of `items.push(3)`. It requires `var`. Without the bang, Kex's `push` returns a new list; ignoring that result does not change the old one. Ruby assignment and method arguments can share references to mutable objects, which explains the different alias behavior. [Ruby assignment and references](https://www.ruby-lang.org/en/documentation/faq/4/)
+In Ruby, `earlier` sees `[1, 2, 3]` because both names refer to the same array. In Kex, `earlier` remains `[1, 2]`: `push!` rebinds the mutable `items` variable to a new list. Calling `push` without `!` returns a list but does not rebind `items`. [Ruby assignment and references](https://www.ruby-lang.org/en/documentation/faq/4/)
 
-Ruby's bang suffix does not universally mean mutation: its interpretation belongs to the particular API. Do not transfer that naming convention to Kex's syntactic rebinding rule.
+Ruby's `!` is a naming convention whose meaning depends on the method. In Kex, the suffix on this call requests rebinding of a mutable receiver.
 
 ## From objects to records and methods
 
@@ -92,16 +92,16 @@ assert(returning.visits == 1)
 assert(returning.greeting == "Hello, Ada")
 ```
 
-`@name` resembles a Ruby instance-variable read, but here it abbreviates the record receiver's field. `New` returns an updated record. It does not mutate an object behind a reference. Type-level constructors and constants belong in a module of the record's name; shared contracts belong in traits.
+`customer.visit` returns a new record with one visit, while `customer` still has zero. `@name` reads the receiver's `name` field, and `New` builds the updated value. Constructors and constants can live in a module with the record's name; traits describe behavior shared by several types.
 
-This is a design translation, not a class-to-record text substitution. Revisit inherited behavior, dynamic method generation, callbacks that mutate captured state, and object identity assumptions.
+When translating a class, decide where its data, constructors, and shared behavior belong. Inherited behavior, generated methods, and object identity may need a new design rather than a line-by-line translation.
 
 ## Effects and errors are visible
 
-A Ruby method may print or read a file without changing its declaration. A Kex function doing that work must be `foul`; pure formatting can remain `let`. Put IO in a small outer layer rather than marking every function foul to resemble an existing Ruby object.
+A Ruby method may print or read a file without changing its declaration. In Kex, mark the function that performs IO `foul` and keep formatting as a pure `let` function. That makes it clear which part of the program depends on the outside world.
 
 A missing lookup often produces `None` or a result failure. Handle the wrapper explicitly with a match, transformation, or deliberate default. Ruby's `nil`, safe navigation, exception conventions, and bang methods are not interchangeable with Kex optional values or `.try` recovery.
 
-Kex is also not a Ruby execution environment. Gems, Rails applications, native extensions, and Ruby metaprogramming APIs require separate integration or replacement decisions. Similar-looking syntax does not establish ecosystem compatibility or comparable runtime performance.
+For an existing Ruby application, inventory its gems, Rails components, native extensions, and metaprogramming before planning a port. Similar syntax helps with reading an example; it does not bring those dependencies into Kex.
 
 Continue with [records](../records/), [effects](../effects/), [errors](../errors/), and [blocks](../blocks/).

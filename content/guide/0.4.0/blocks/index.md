@@ -6,7 +6,7 @@ path: "/guide/0.4.0/blocks/"
 draft: false
 template: "page"
 ---
-A trailing block is an argument to a function. This lets a library define a readable domain-specific API without adding syntax to the language. The important question is what the function expects the block to produce.
+You have already passed blocks to functions such as `map` and `filter`. You can write functions that accept blocks too. The function's parameter type determines what the block produces.
 
 ## Last value or collected values
 
@@ -29,11 +29,20 @@ let collected = collectValues do
 end
 assert(single == 2)
 assert(collected == [1, 2])
+IO.printLine(single)
+IO.printLine(collected)
 ```
 
-A library author should document this distinction. Two visually similar `do ... end` blocks may have different result behavior because their receiving functions expect different types.
+```output filename="OUTPUT"
+2
+[1, 2]
+```
+
+`single` is `2`, the last expression in its block. `collected` is `[1, 2]` because `Block<[Integer]>` collects the expressions. A library author should document this distinction: the two blocks look similar, but their parameter types give them different meanings.
 
 ## Conditional entries and spread
+
+A collecting block can decide which entries to include and expand an existing list:
 
 ```kex
 let includeExtra = true
@@ -47,13 +56,13 @@ end
 assert(entries == [1, 2, 3, 4])
 ```
 
-A guard can omit an entry. Spread inserts the elements of an existing list rather than inserting that list as one nested value. An empty collecting block gives an empty list.
+`entries` is `[1, 2, 3, 4]`. `...middle` inserts `2` and `3` separately. The guard after `4` is true, so that value appears; the guard after `5` is false, so that value is omitted. An empty collecting block gives an empty list.
 
 This is useful for builders that collect menu items, validation rules, or document nodes. Keep the builder's operations pure when they only describe data; let a separate effectful boundary render, save, or execute that description.
 
 ## Keep the API ordinary
 
-A DSL still needs types, error handling, and tests. Use records and sum types for its output so later code can inspect and validate the result. Prefer a small vocabulary with explicit arguments to a large collection of implicit context rules.
+A builder made from blocks is still an ordinary API. Give its output a record or sum type so later code can inspect it, and define what happens for invalid input. A small set of operations with clear arguments is easier to understand than a large set of names that depend on hidden context.
 
 Positional calls still require parentheses. A hypothetical `section("Introduction") do ... end` follows ordinary call syntax; Ruby-style bare positional arguments are not implied by Kex's block syntax.
 

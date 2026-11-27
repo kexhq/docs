@@ -6,7 +6,7 @@ path: "/guide/0.4.0/processes/"
 draft: false
 template: "page"
 ---
-A Kex process has its own execution and mailbox. Values are sent as messages; a local `var` is not a shared variable between processes. On BEAM these are lightweight VM processes, not one operating-system process per task.
+A process runs independently and receives messages through its mailbox. The next example starts a worker, sends it a name, and waits for a greeting. Each process has its own local bindings; a `var` is not shared between them.
 
 This chapter’s combined example runs on BEAM. The message round trip also works in the interpreter, but beta.4 interpreter task handles fail at `await` with `Error("not a task")`; use BEAM for the task example.
 
@@ -33,17 +33,19 @@ end
 runProcesses1()
 ```
 
-The process handle's type constrains what can be sent to it. `Process.self` identifies the caller so the worker can reply. After handling one message, this worker reaches the end of its body and exits.
+`Process<GreetingMessage>` accepts a `Greet` message. `Process.self` gives the worker a return address, and the caller checks the reply `"Hello, Ada"`. After handling this message, the worker reaches the end of its body and exits. On BEAM, these are lightweight VM processes rather than one operating-system process per task.
 
-`receive` selects a matching message. A receive without a matching message waits; `after timeout:` supplies a bounded wait in milliseconds. The timeout body has no pattern or arrow and shares the receive's closing `end`.
+The caller's `receive` waits for a matching message. `after timeout: 5000` gives it a five-second limit, so a worker that never replies cannot leave this example waiting forever. The timeout body uses the same closing `end` as the receive.
 
 ## Long-running processes
 
-Wrap repeated receives in `loop do ... end`, or use a recursive effectful function carrying state. Design a stop message so callers can terminate the worker intentionally. Add a request identifier when multiple requests can be outstanding; a reply's payload alone may not identify which request it belongs to.
+The first worker exits after one request. To keep a worker alive, put its receive in `loop do ... end` or call a recursive effectful function that carries state. Give it a stop message so callers can end it deliberately. If several requests may be waiting for replies, add an identifier to each request and reply.
 
 Use links or monitors when failure must be observed. A sent message is not an acknowledgment that work completed. If you need request/reply state management, [typed servers](../servers/) provide a more structured interface.
 
 ## Tasks
+
+A task is useful when you want a result from independent work. Start both tasks before waiting for either one:
 
 ```kex
 foul runProcesses2() do
@@ -55,7 +57,7 @@ end
 runProcesses2()
 ```
 
-Start independent tasks before awaiting either, so their work can overlap. `await` returns a result; handle task failure and timeout rather than assuming a value. A timeout describes the wait, so do not assume that it also cancels underlying work.
+The first task adds the numbers from one to ten and returns `Ok(55)`. The second uppercases `"kex"` and returns `Ok("KEX")`. Because both start before either `await`, their work can overlap. `await` returns a result, which may instead report failure or a timeout. A timed-out wait does not necessarily cancel the work.
 
 ## Distribution and deployment
 

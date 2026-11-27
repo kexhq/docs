@@ -6,7 +6,7 @@ path: "/guide/0.4.0/troubleshooting/"
 draft: false
 template: "page"
 ---
-Start by checking `kex --version` and the first diagnostic. This guide targets 0.4.0; an older installed compiler or a different selected Tey toolchain can make valid examples appear invalid.
+When a guide example fails, first run `kex --version` and read the first diagnostic. This guide targets 0.4.0; an older compiler or a different selected Tey toolchain may reject a valid example. The table below points from common symptoms to the boundary worth checking.
 
 ## Common symptoms
 
@@ -29,11 +29,13 @@ Start by checking `kex --version` and the first diagnostic. This guide targets 0
 
 ## Reduce the problem
 
-Extract the smallest program that preserves the failure. Replace external input with a literal or capability fixture. Add a type annotation at the boundary where the value becomes unclear. Run `kex -C file.kex` to distinguish analysis errors from runtime behavior.
+Suppose a program fails after reading a file, parsing a value, and formatting a report. First replace the file read with a literal string. If the failure remains, the problem is in parsing or formatting; if it disappears, inspect the file boundary. Keep reducing until one small program still shows the issue.
+
+Add a type annotation where a value becomes unclear. Run `kex -C file.kex` to see whether the error occurs during analysis or only at runtime. A capability fixture can replace a file or environment input while preserving the call shape.
 
 For portable language code, compare `kex file.kex` and `kex -R file.kex`. For real networking or distribution, BEAM is the relevant runtime. Do not bypass a type error with `--no-check` and then treat a successful run as proof of a correct interface.
 
-Turn a fixed bug into a small `.spec.kex` case that would fail before the fix. Include the input and expected behavior, especially for malformed input, empty collections, cleanup, and timeout paths.
+After fixing the problem, add a `.spec.kex` case with the input that failed and the result you now expect. A good case would fail with the old behavior. Include boundaries such as malformed input, empty collections, cleanup, and timeouts when they caused the bug.
 
 ## Follow the right documentation
 

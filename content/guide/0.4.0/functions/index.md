@@ -174,7 +174,7 @@ let check(cmd: String, n: Integer) do
 end
 
 main do
-  # Since `==` returns with Bool, the compiler can is infer that Bool will
+  # Since `==` returns with Bool, the compiler can infer that Bool will
   # be the return value of `check`
   IO.printLine(check("double", 10))
   IO.printLine(check("pow", 2))
@@ -293,12 +293,12 @@ The impure `main` is very useful, however not being able to put code doing side-
 
 Most useful programs do print to the console, work over the network, do file management. There are some programming languages which managed to build complex solutions to manage this from pure contexts (like [Haskell](https://en.wikipedia.org/wiki/Haskell)), but Kex chose another route.
 
-Impure function, which are allowed to do operations yielding side-effect are defined via the `foul` keyword. It shows to the user that this function might not just transform values or calculate computations:
+Impure functions, which are allowed to do operations yielding side-effects are defined via the `foul` keyword. It shows to the user that this function might not just transform values or calculate computations:
 
 ```kex
 foul fact(n: Integer) -> Integer do
   let f = (2..n).product
-  IO.printLine("${n}! = ${f}")      # correct, no error
+  IO.printLine("${n}! = ${f}")      # correct, no error, side-effects are allowed here
   return f
 end
 
