@@ -6,7 +6,6 @@ path: "/guide/0.4.0-alpha/overview/"
 draft: false
 template: "page"
 ---
-
 Kex is a functional language with Ruby-like syntax, immutability by default,
 and an Elixir-style process model.
 
@@ -33,6 +32,7 @@ IO.printLine("hello, ${name}")
 | Feature | Status |
 | --- | --- |
 | Type checker | on by default |
+|  |  |
 | BEAM codegen | default backend |
 
 See the [reference](/prelude/) for the standard library.
