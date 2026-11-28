@@ -1,0 +1,759 @@
+<section class="entity" id="module-data">
+<h2><span class="kind kind-module">module</span> <code>Data</code></h2>
+<p>Immutable collections of distinct elements.</p>
+<p>Opt-in: nothing here is in scope until <code>using Data.Set</code>, which brings both flavours below into scope at once.</p>
+<pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Data</span><span class="tok-op">.</span><span class="tok-type">Set</span></code></pre>
+<p>Membership is decided by structural equality: the same equality <code>==</code> and map keys use, so records and tuples are compared by value, not identity. Every method answers with a new set; the <code>!</code> forms (<code>add!</code>, <code>delete!</code>) build a new set and rebind the receiver variable rather than modifying anything in place.</p>
+<pre class="code"><code><span class="tok-keyword">let</span> tags <span class="tok-op">=</span> <span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">kex</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">beam</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">kex</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+tags<span class="tok-op">.</span><span class="tok-method">count</span>                     <span class="tok-comment"># =&gt; 2</span>
+tags<span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">beam</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>         <span class="tok-comment"># =&gt; true</span>
+tags<span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">erlang</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>       <span class="tok-comment"># =&gt; [&quot;beam&quot;, &quot;erlang&quot;, &quot;kex&quot;]</span></code></pre>
+<p>There are two flavours, differing only in how they store their elements:</p>
+<pre class="code"><code><span class="tok-type">Set</span>           sorted<span class="tok-punct">,</span> so iteration <span class="tok-keyword">is</span> <span class="tok-keyword">in</span> ascending element order <span class="tok-keyword">and</span> the
+              elements must be <span class="tok-type">Orderable</span><span class="tok-op">.</span>
+<span class="tok-type">UnorderedSet</span>  hash<span class="tok-op">-</span>backed<span class="tok-punct">,</span> so membership does <span class="tok-keyword">not</span> pay <span class="tok-keyword">for</span> ordering <span class="tok-keyword">and</span>
+              the elements need only be comparable<span class="tok-op">.</span> <span class="tok-type">Iteration</span> order <span class="tok-keyword">is</span>
+              unspecified<span class="tok-op">:</span> never write a test against it<span class="tok-op">.</span></code></pre>
+<p>Reach for <a class="xref" href="#record-data-set"><code>Set</code></a> when you will read the elements back out, and for <a class="xref" href="#record-data-unorderedset"><code>UnorderedSet</code></a> when the set exists to answer <code>contains?</code> quickly.</p>
+<p><code>==</code> between two sets needs no overload of its own: each flavour keeps its backing canonical (sorted and duplicate free, or a map) so comparing the records structurally already IS set equality.</p>
+<p>Both wrap structures the runtime already has (a list and a map), so no set is opaque: <code>.items</code> is always a real list you can hand to anything.</p>
+<p>Those two backings are also the ones the BEAM's own set libraries use: a <a class="xref" href="#record-data-set"><code>Set</code></a> is laid out exactly like an <code>ordsets</code> term and an <a class="xref" href="#record-data-unorderedset"><code>UnorderedSet</code></a> exactly like a <code>sets</code> v2 term, so the operations here can be routed to the native BIFs later without changing what a set IS. What rules out adopting <code>gb_sets</code> instead is the other backend: a tree-walk interpreter cannot produce an opaque BEAM term, and a set that only one backend can build is not a set the prelude can offer.</p>
+</section>
+<section class="entity" id="record-data-set">
+<h2><span class="kind kind-record">record</span> <code>Set&lt;A&gt;</code></h2>
+<p>A set whose elements are kept sorted and duplicate free.</p>
+<p>Build one with <code>Set.from</code> rather than by hand: the record literal does no deduplication and no sorting, and every method here relies on both. Reading <code>items</code> back is the field itself, so handing a set's elements to list code costs nothing.</p>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>   <span class="tok-comment"># =&gt; [1, 2, 3]</span></code></pre>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>items</code></dt><dd><code>[A]</code> <span class="opt">optional</span></dd></div>
+</dl>
+<p class="implements">Implements <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-enumerable"><code>Enumerable</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-foldable"><code>Foldable</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#trait-monoid"><code>Monoid</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#trait-showable"><code>Showable</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/blankable/#trait-blankable"><code>Blankable</code></a>.</p>
+<section class="members" id="make-set">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="set-reduce">
+<h4><a class="self" href="#set-reduce"><code>reduce</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-reduce" title="Implements Enumerable.reduce">Enumerable</a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-reduce" title="Implements Foldable.reduce">Foldable</a></h4>
+<pre class="code sig"><code><span class="tok-fn">reduce</span><span class="tok-punct">(</span>acc<span class="tok-op">:</span> <span class="tok-type">B</span><span class="tok-punct">,</span> f<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">B</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <span class="tok-type">B</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">B</span></code></pre>
+<p>Folds over the elements in ascending order.</p>
+<p>This is <a class="xref" href="#record-data-set"><code>Set</code></a>'s <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-enumerable"><code>Enumerable</code></a> primitive; <code>each</code>, <code>find</code>, <code>any?</code> and the rest are built on it. The collection-returning operations are overridden below, because <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-enumerable"><code>Enumerable</code></a>'s defaults answer with a list.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>acc</code></dt><dd>the initial accumulator</dd></div>
+<div class="param"><dt><code>f</code></dt><dd>combines the accumulator with each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the final accumulator</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reduce</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>sum<span class="tok-punct">,</span> x<span class="tok-op">|</span> sum <span class="tok-op">+</span> x <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; 6</span></code></pre>
+
+</div>
+<div class="fn" id="set-identity">
+<h4><a class="self" href="#set-identity"><code>identity</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/algebra/#monoid-identity" title="Implements Monoid.identity">Monoid</a></h4>
+<pre class="code sig"><code>identity <span class="tok-op">:</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>The empty set: the <a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#trait-monoid"><code>Monoid</code></a> identity, since union with nothing changes nothing.</p>
+<p class="returns"><strong>Returns</strong> the empty set</p>
+
+</div>
+<div class="fn" id="set-combine">
+<h4><a class="self" href="#set-combine"><code>combine</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/algebra/#monoid-combine" title="Implements Monoid.combine">Monoid</a></h4>
+<pre class="code sig"><code><span class="tok-fn">combine</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Combines two sets by union. The <a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#trait-monoid"><code>Monoid</code></a> operation.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the set to combine with</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> every element of either set</p>
+<h5>Examples</h5>
+<p class="caption"><em>Merging many sets into one</em></p>
+<pre class="code"><code><span class="tok-punct">[</span><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">,</span> <span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">]</span>
+  <span class="tok-op">.</span><span class="tok-method">reduce</span><span class="tok-punct">(</span><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>acc<span class="tok-punct">,</span> s<span class="tok-op">|</span> acc<span class="tok-op">.</span><span class="tok-method">combine</span><span class="tok-punct">(</span>s<span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-comment"># =&gt; Set(1, 2, 3)</span></code></pre>
+
+</div>
+<div class="fn" id="set-contains?">
+<h4><a class="self" href="#set-contains?"><code>contains?</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">contains?</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when <code>value</code> is a member.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the element to look for</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when it is present</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-number">9</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+<p class="caption"><em>Filtering a list against an allow-list</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> allowed <span class="tok-op">=</span> <span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">get</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">post</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+methods<span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> allowed<span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span>m<span class="tok-op">.</span><span class="tok-method">lowerCase</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="set-count">
+<h4><a class="self" href="#set-count"><code>count</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-count" title="Implements Foldable.count">Foldable</a></h4>
+<pre class="code sig"><code>count <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Returns the number of distinct elements. Duplicates in the source list were already discarded, so this is the size of the set, not of what it was built from.</p>
+<p class="returns"><strong>Returns</strong> the number of elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span>   <span class="tok-comment"># =&gt; 2</span></code></pre>
+<p class="caption"><em>Counting distinct words</em></p>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span>text<span class="tok-op">.</span><span class="tok-method">split</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string"> </span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span></code></pre>
+
+</div>
+<div class="fn" id="set-empty?">
+<h4><a class="self" href="#set-empty?"><code>empty?</code></a></h4>
+<pre class="code sig"><code>empty? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the set has no elements.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> for the empty set</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">empty?</span>           <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">empty?</span>       <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="set-add">
+<h4><a class="self" href="#set-add"><code>add</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">add</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a new set with <code>value</code> added. Adding an element that is already a member changes nothing: that is what makes a set a set.</p>
+<p>Use <code>add!</code> to rebind the receiver variable.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the element to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> a set including <code>value</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Set(1, 2, 3)</span>
+<span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Set(1, 2)</span></code></pre>
+<p class="caption"><em>Accumulating as you go</em></p>
+<pre class="code"><code><span class="tok-keyword">var</span> seen <span class="tok-op">=</span> <span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-method">empty</span>
+ids<span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>id<span class="tok-op">|</span> seen<span class="tok-op">.</span><span class="tok-method">add!</span><span class="tok-punct">(</span>id<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="set-delete">
+<h4><a class="self" href="#set-delete"><code>delete</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">delete</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a new set without <code>value</code>. Removing something that is not a member changes nothing.</p>
+<p>Use <code>delete!</code> to rebind the receiver variable.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the element to remove</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> a set without <code>value</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Set(1, 3)</span>
+<span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-number">9</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Set(1, 2, 3)</span></code></pre>
+
+</div>
+<div class="fn" id="set-union">
+<h4><a class="self" href="#set-union"><code>union</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">union</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns every element of either set.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the other set</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the union</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">union</span><span class="tok-punct">(</span><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Set(1, 2, 3)</span></code></pre>
+<p class="caption"><em>Collecting every tag used across posts</em></p>
+<pre class="code"><code>posts<span class="tok-op">.</span><span class="tok-method">reduce</span><span class="tok-punct">(</span><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>all<span class="tok-punct">,</span> p<span class="tok-op">|</span> all<span class="tok-op">.</span><span class="tok-method">union</span><span class="tok-punct">(</span><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span>p<span class="tok-op">.</span><span class="tok-method">tags</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="set-intersect">
+<h4><a class="self" href="#set-intersect"><code>intersect</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">intersect</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns the elements both sets have.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the other set</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the intersection</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">intersect</span><span class="tok-punct">(</span><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Set(2, 3)</span>
+<span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">intersect</span><span class="tok-punct">(</span><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span>               <span class="tok-comment"># =&gt; Set()</span></code></pre>
+<p class="caption"><em>Which requested permissions the user actually has</em></p>
+<pre class="code"><code>requested<span class="tok-op">.</span><span class="tok-method">intersect</span><span class="tok-punct">(</span>granted<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="set-difference">
+<h4><a class="self" href="#set-difference"><code>difference</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">difference</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns the elements of this set that <code>other</code> does not have.</p>
+<p>Order matters: <code>a.difference(b)</code> and <code>b.difference(a)</code> are different questions. Use <code>symmetricDifference</code> when you want both answers.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the set to subtract</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the elements only this set has</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">difference</span><span class="tok-punct">(</span><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Set(1, 3)</span></code></pre>
+<p class="caption"><em>Which required fields are still missing</em></p>
+<pre class="code"><code>required<span class="tok-op">.</span><span class="tok-method">difference</span><span class="tok-punct">(</span><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span>form<span class="tok-op">.</span><span class="tok-method">keys</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="set-symmetricdifference">
+<h4><a class="self" href="#set-symmetricdifference"><code>symmetricDifference</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">symmetricDifference</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns the elements in exactly one of the two sets: everything they do not agree on.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the other set</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the symmetric difference</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">symmetricDifference</span><span class="tok-punct">(</span><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Set(1, 3)</span></code></pre>
+<p class="caption"><em>What changed between two snapshots</em></p>
+<pre class="code"><code>before<span class="tok-op">.</span><span class="tok-method">symmetricDifference</span><span class="tok-punct">(</span>after<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="set-subset?">
+<h4><a class="self" href="#set-subset?"><code>subset?</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">subset?</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when every element of this set is also in <code>other</code>. The empty set is a subset of everything.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the candidate superset</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when this set is contained in <code>other</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">subset?</span><span class="tok-punct">(</span><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">9</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">subset?</span><span class="tok-punct">(</span><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+<p class="caption"><em>An authorisation check</em></p>
+<pre class="code"><code>required<span class="tok-op">.</span><span class="tok-method">subset?</span><span class="tok-punct">(</span>granted<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="set-superset?">
+<h4><a class="self" href="#set-superset?"><code>superset?</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">superset?</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when this set has every element of <code>other</code>. The mirror image of <code>subset?</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the candidate subset</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when this set contains all of <code>other</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">superset?</span><span class="tok-punct">(</span><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">superset?</span><span class="tok-punct">(</span><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">9</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="set-disjoint?">
+<h4><a class="self" href="#set-disjoint?"><code>disjoint?</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">disjoint?</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the two sets share no element.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the other set</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the intersection is empty</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">disjoint?</span><span class="tok-punct">(</span><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">disjoint?</span><span class="tok-punct">(</span><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+<p class="caption"><em>Checking that two rulesets cannot both apply</em></p>
+<pre class="code"><code>allowList<span class="tok-op">.</span><span class="tok-method">disjoint?</span><span class="tok-punct">(</span>denyList<span class="tok-punct">)</span></code></pre>
+
+</div>
+<div class="fn" id="set-op-plus">
+<h4><a class="self" href="#set-op-plus"><code>+</code></a></h4>
+<pre class="code sig"><code><span class="tok-op">+</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span>
+<span class="tok-op">+</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Unions with another set, or with a plain list.</p>
+<p>The list form is the everyday way to add one element without naming a method: +s + [x]+.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the elements to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the union</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">+</span> <span class="tok-punct">[</span><span class="tok-number">3</span><span class="tok-punct">]</span>           <span class="tok-comment"># =&gt; Set(1, 2, 3)</span>
+<span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">+</span> <span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; Set(1, 2)</span></code></pre>
+
+</div>
+<div class="fn" id="set-op-minus">
+<h4><a class="self" href="#set-op-minus"><code>-</code></a></h4>
+<pre class="code sig"><code><span class="tok-op">-</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span>
+<span class="tok-op">-</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Removes another set's elements, or a plain list's.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the elements to remove</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the difference</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-</span> <span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">]</span>                <span class="tok-comment"># =&gt; Set(1, 3)</span>
+<span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-</span> <span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Set(1)</span></code></pre>
+
+</div>
+<div class="fn" id="set-map">
+<h4><a class="self" href="#set-map"><code>map</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-map" title="Implements Enumerable.map">Enumerable</a></h4>
+<pre class="code sig"><code><span class="tok-fn">map</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <span class="tok-type">B</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">B</span><span class="tok-op">&gt;</span></code></pre>
+<p>Applies <code>f</code> to every element and returns a set of the results.</p>
+<p>Mapping a set may collapse elements: if <code>f</code> sends two members to the same value, the result has one. That is not a loss of information so much as the point of a set: <code>Set.from([1, -1]).map(~abs)</code> has one member.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>f</code></dt><dd>applied to each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the distinct results</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>x<span class="tok-op">|</span> x <span class="tok-op">*</span> <span class="tok-number">2</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Set(2, 4, 6)</span>
+<span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-op">-</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>x<span class="tok-op">|</span> x<span class="tok-op">.</span><span class="tok-method">abs</span> <span class="tok-punct">}</span>     <span class="tok-comment"># =&gt; Set(1)</span></code></pre>
+<p class="caption"><em>Collecting the distinct extensions in a file list</em></p>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span>paths<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> p<span class="tok-op">.</span><span class="tok-method">split</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">.</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">last</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="set-filter">
+<h4><a class="self" href="#set-filter"><code>filter</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-filter" title="Implements Enumerable.filter">Enumerable</a></h4>
+<pre class="code sig"><code><span class="tok-fn">filter</span><span class="tok-punct">(</span>pred<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a new set with only the elements <code>pred</code> accepts.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>pred</code></dt><dd>the test applied to each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the matching elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>x<span class="tok-op">|</span> x <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Set(2, 3)</span></code></pre>
+
+</div>
+<div class="fn" id="set-reject">
+<h4><a class="self" href="#set-reject"><code>reject</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">reject</span><span class="tok-punct">(</span>pred<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a new set without the elements <code>pred</code> accepts. The complement of <code>filter</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>pred</code></dt><dd>the test applied to each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the elements that failed the predicate</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reject</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>x<span class="tok-op">|</span> x <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Set(1)</span></code></pre>
+
+</div>
+<div class="fn" id="set-showvalue">
+<h4><a class="self" href="#set-showvalue"><code>showValue</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/kex/#showable-showvalue" title="Implements Showable.showValue">Showable</a></h4>
+<pre class="code sig"><code>showValue <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Renders the set as <code>Set(...)</code> in element order, rather than exposing the record layout behind it.</p>
+<p class="returns"><strong>Returns</strong> the rendered set</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">showValue</span>   <span class="tok-comment"># =&gt; &quot;Set(1, 2)&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="set-blank?">
+<h4><a class="self" href="#set-blank?"><code>blank?</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/blankable/#blankable-blank?" title="Implements Blankable.blank?">Blankable</a></h4>
+<pre class="code sig"><code>blank? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the set has no elements. The <a class="xref" href="/prelude/0.4.0-beta.4-dev/blankable/#trait-blankable"><code>Blankable</code></a> view of <code>empty?</code>, so generic code can test a set the same way it tests a string.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> for the empty set</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">blank?</span>         <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">blank?</span>     <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+</div>
+</section><h3>From <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-enumerable"><code>Enumerable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-mapindexed"><code>mapIndexed</code></a></dt><dd>Applies <code>f</code> to each item and its 0-based position, and collects the results into a list.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-flatmap"><code>flatMap</code></a></dt><dd>Applies <code>f</code> to each item, expecting a list back, and concatenates the results into one flat list.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-collect"><code>collect</code></a></dt><dd>Applies <code>f</code> to each item, expecting an <code>Optional</code> back, and returns the values that were present: unwrapped.</dd></div>
+</dl>
+<h3>From <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-foldable"><code>Foldable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-each"><code>each</code></a></dt><dd>Calls <code>f</code> with each item, for its side effects.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-eachindexed"><code>eachIndexed</code></a></dt><dd>Calls <code>f</code> with each item and its 0-based position, for its side effects.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-all?"><code>all?</code></a></dt><dd>Returns <code>true</code> when every item satisfies <code>pred</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-any?"><code>any?</code></a></dt><dd>Returns <code>true</code> when at least one item satisfies <code>pred</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-find"><code>find</code></a></dt><dd>Returns the first item satisfying <code>pred</code>, or <code>None</code> when nothing does.</dd></div>
+</dl>
+<h3>From <a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#trait-monoid"><code>Monoid</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#monoid-repeat"><code>repeat</code></a></dt><dd>Combines this value with itself <code>n</code> times.</dd></div>
+</dl>
+<h3>From <a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#trait-showable"><code>Showable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#showable-to"><code>to</code></a></dt><dd></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-data-unorderedset">
+<h2><span class="kind kind-record">record</span> <code>UnorderedSet&lt;A&gt;</code></h2>
+<p>A set backed by a map from each member to <code>true</code>; its keys ARE the elements.</p>
+<p>Build one with <code>UnorderedSet.from</code>. Iteration order is whatever the map hands back, so use <code>items.sort</code> when you need a stable order.</p>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>slots</code></dt><dd><code>{A: <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool">Bool</a>}</code> <span class="opt">optional</span></dd></div>
+</dl>
+<p class="implements">Implements <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-enumerable"><code>Enumerable</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-foldable"><code>Foldable</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#trait-monoid"><code>Monoid</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#trait-showable"><code>Showable</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/blankable/#trait-blankable"><code>Blankable</code></a>.</p>
+<section class="members" id="make-unorderedset">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="unorderedset-reduce">
+<h4><a class="self" href="#unorderedset-reduce"><code>reduce</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-reduce" title="Implements Enumerable.reduce">Enumerable</a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-reduce" title="Implements Foldable.reduce">Foldable</a></h4>
+<pre class="code sig"><code><span class="tok-fn">reduce</span><span class="tok-punct">(</span>acc<span class="tok-op">:</span> <span class="tok-type">B</span><span class="tok-punct">,</span> f<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">B</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <span class="tok-type">B</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">B</span></code></pre>
+<p>Folds over the elements.</p>
+<p>The order is whatever the underlying map hands back: unspecified, and not to be relied on. Use a <a class="xref" href="#record-data-set"><code>Set</code></a> when the order of the fold matters.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>acc</code></dt><dd>the initial accumulator</dd></div>
+<div class="param"><dt><code>f</code></dt><dd>combines the accumulator with each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the final accumulator</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reduce</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>sum<span class="tok-punct">,</span> x<span class="tok-op">|</span> sum <span class="tok-op">+</span> x <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; 6</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-identity">
+<h4><a class="self" href="#unorderedset-identity"><code>identity</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/algebra/#monoid-identity" title="Implements Monoid.identity">Monoid</a></h4>
+<pre class="code sig"><code>identity <span class="tok-op">:</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>The empty unordered set: the <a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#trait-monoid"><code>Monoid</code></a> identity.</p>
+<p class="returns"><strong>Returns</strong> the empty set</p>
+
+</div>
+<div class="fn" id="unorderedset-combine">
+<h4><a class="self" href="#unorderedset-combine"><code>combine</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/algebra/#monoid-combine" title="Implements Monoid.combine">Monoid</a></h4>
+<pre class="code sig"><code><span class="tok-fn">combine</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Combines two sets by union. The <a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#trait-monoid"><code>Monoid</code></a> operation.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the set to combine with</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> every element of either set</p>
+
+</div>
+<div class="fn" id="unorderedset-contains?">
+<h4><a class="self" href="#unorderedset-contains?"><code>contains?</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">contains?</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when <code>value</code> is a member.</p>
+<p>This is the operation the flavour exists for: a map lookup, with no ordering to maintain.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the element to look for</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when it is present</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-number">9</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; false</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-count">
+<h4><a class="self" href="#unorderedset-count"><code>count</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-count" title="Implements Foldable.count">Foldable</a></h4>
+<pre class="code sig"><code>count <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Returns the number of distinct elements.</p>
+<p class="returns"><strong>Returns</strong> the number of elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span>   <span class="tok-comment"># =&gt; 2</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-empty?">
+<h4><a class="self" href="#unorderedset-empty?"><code>empty?</code></a></h4>
+<pre class="code sig"><code>empty? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the set has no elements.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> for the empty set</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">empty?</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-items">
+<h4><a class="self" href="#unorderedset-items"><code>items</code></a></h4>
+<pre class="code sig"><code>items <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></code></pre>
+<p>Returns the elements as a list, in unspecified order.</p>
+<p>Sort the result when the order has to be stable: a test, a rendering, a comparison.</p>
+<p class="returns"><strong>Returns</strong> the elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">sort</span>   <span class="tok-comment"># =&gt; [1, 2, 3]</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-add">
+<h4><a class="self" href="#unorderedset-add"><code>add</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">add</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a new set with <code>value</code> added. Adding an existing member changes nothing.</p>
+<p>Use <code>add!</code> to rebind the receiver variable.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the element to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> a set including <code>value</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span>   <span class="tok-comment"># =&gt; 2</span>
+<span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span>   <span class="tok-comment"># =&gt; 1</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-delete">
+<h4><a class="self" href="#unorderedset-delete"><code>delete</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">delete</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a new set without <code>value</code>. Removing a non-member changes nothing.</p>
+<p>Use <code>delete!</code> to rebind the receiver variable.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the element to remove</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> a set without <code>value</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span>   <span class="tok-comment"># =&gt; 1</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-union">
+<h4><a class="self" href="#unorderedset-union"><code>union</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">union</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns every element of either set.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the other set</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the union</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">union</span><span class="tok-punct">(</span><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span>   <span class="tok-comment"># =&gt; 3</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-intersect">
+<h4><a class="self" href="#unorderedset-intersect"><code>intersect</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">intersect</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns the elements both sets have.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the other set</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the intersection</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">intersect</span><span class="tok-punct">(</span><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">4</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">sort</span>
+<span class="tok-comment"># =&gt; [2, 3]</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-difference">
+<h4><a class="self" href="#unorderedset-difference"><code>difference</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">difference</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns the elements of this set that <code>other</code> does not have.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the set to subtract</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the elements only this set has</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">difference</span><span class="tok-punct">(</span><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">sort</span>
+<span class="tok-comment"># =&gt; [1, 3]</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-symmetricdifference">
+<h4><a class="self" href="#unorderedset-symmetricdifference"><code>symmetricDifference</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">symmetricDifference</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns the elements in exactly one of the two sets.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the other set</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the symmetric difference</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">symmetricDifference</span><span class="tok-punct">(</span><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">sort</span>
+<span class="tok-comment"># =&gt; [1, 3]</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-subset?">
+<h4><a class="self" href="#unorderedset-subset?"><code>subset?</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">subset?</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when every element of this set is also in <code>other</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the candidate superset</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when this set is contained in <code>other</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">subset?</span><span class="tok-punct">(</span><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-superset?">
+<h4><a class="self" href="#unorderedset-superset?"><code>superset?</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">superset?</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when this set has every element of <code>other</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the candidate subset</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when this set contains all of <code>other</code></p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">superset?</span><span class="tok-punct">(</span><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-disjoint?">
+<h4><a class="self" href="#unorderedset-disjoint?"><code>disjoint?</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">disjoint?</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the two sets share no element.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the other set</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the intersection is empty</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">disjoint?</span><span class="tok-punct">(</span><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-op-plus">
+<h4><a class="self" href="#unorderedset-op-plus"><code>+</code></a></h4>
+<pre class="code sig"><code><span class="tok-op">+</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span>
+<span class="tok-op">+</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Unions with another unordered set, or with a plain list.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the elements to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the union</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">+</span> <span class="tok-punct">[</span><span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span>   <span class="tok-comment"># =&gt; 3</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-op-minus">
+<h4><a class="self" href="#unorderedset-op-minus"><code>-</code></a></h4>
+<pre class="code sig"><code><span class="tok-op">-</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span>
+<span class="tok-op">-</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Removes another unordered set's elements, or a plain list's.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the elements to remove</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the difference</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">(</span><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-</span> <span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span>   <span class="tok-comment"># =&gt; 2</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-map">
+<h4><a class="self" href="#unorderedset-map"><code>map</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-map" title="Implements Enumerable.map">Enumerable</a></h4>
+<pre class="code sig"><code><span class="tok-fn">map</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <span class="tok-type">B</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">B</span><span class="tok-op">&gt;</span></code></pre>
+<p>Applies <code>f</code> to every element and returns an unordered set of the results. Elements that map to the same value collapse into one.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>f</code></dt><dd>applied to each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the distinct results</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>x<span class="tok-op">|</span> x <span class="tok-op">*</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">sort</span>   <span class="tok-comment"># =&gt; [2, 4, 6]</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-filter">
+<h4><a class="self" href="#unorderedset-filter"><code>filter</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-filter" title="Implements Enumerable.filter">Enumerable</a></h4>
+<pre class="code sig"><code><span class="tok-fn">filter</span><span class="tok-punct">(</span>pred<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a new unordered set with only the elements <code>pred</code> accepts.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>pred</code></dt><dd>the test applied to each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the matching elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>x<span class="tok-op">|</span> x <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">sort</span>   <span class="tok-comment"># =&gt; [2, 3]</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-reject">
+<h4><a class="self" href="#unorderedset-reject"><code>reject</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">reject</span><span class="tok-punct">(</span>pred<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a new unordered set without the elements <code>pred</code> accepts.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>pred</code></dt><dd>the test applied to each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the elements that failed the predicate</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reject</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>x<span class="tok-op">|</span> x <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">items</span>   <span class="tok-comment"># =&gt; [1]</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-showvalue">
+<h4><a class="self" href="#unorderedset-showvalue"><code>showValue</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/kex/#showable-showvalue" title="Implements Showable.showValue">Showable</a></h4>
+<pre class="code sig"><code>showValue <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>Renders the set as <code>UnorderedSet(...)</code>.</p>
+<p>The elements are printed in sorted order where they allow it, so the rendering of a value is not at the mercy of map internals.</p>
+<p class="returns"><strong>Returns</strong> the rendered set</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">showValue</span>   <span class="tok-comment"># =&gt; &quot;UnorderedSet(1, 2)&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="unorderedset-blank?">
+<h4><a class="self" href="#unorderedset-blank?"><code>blank?</code></a> <a class="tag-trait" href="/prelude/0.4.0-beta.4-dev/blankable/#blankable-blank?" title="Implements Blankable.blank?">Blankable</a></h4>
+<pre class="code sig"><code>blank? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> when the set has no elements. The <a class="xref" href="/prelude/0.4.0-beta.4-dev/blankable/#trait-blankable"><code>Blankable</code></a> view of <code>empty?</code>.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> for the empty set</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">blank?</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+</div>
+</section><h3>From <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-enumerable"><code>Enumerable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-mapindexed"><code>mapIndexed</code></a></dt><dd>Applies <code>f</code> to each item and its 0-based position, and collects the results into a list.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-flatmap"><code>flatMap</code></a></dt><dd>Applies <code>f</code> to each item, expecting a list back, and concatenates the results into one flat list.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#enumerable-collect"><code>collect</code></a></dt><dd>Applies <code>f</code> to each item, expecting an <code>Optional</code> back, and returns the values that were present: unwrapped.</dd></div>
+</dl>
+<h3>From <a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#trait-foldable"><code>Foldable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-each"><code>each</code></a></dt><dd>Calls <code>f</code> with each item, for its side effects.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-eachindexed"><code>eachIndexed</code></a></dt><dd>Calls <code>f</code> with each item and its 0-based position, for its side effects.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-all?"><code>all?</code></a></dt><dd>Returns <code>true</code> when every item satisfies <code>pred</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-any?"><code>any?</code></a></dt><dd>Returns <code>true</code> when at least one item satisfies <code>pred</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/enumerable/#foldable-find"><code>find</code></a></dt><dd>Returns the first item satisfying <code>pred</code>, or <code>None</code> when nothing does.</dd></div>
+</dl>
+<h3>From <a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#trait-monoid"><code>Monoid</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#monoid-repeat"><code>repeat</code></a></dt><dd>Combines this value with itself <code>n</code> times.</dd></div>
+</dl>
+<h3>From <a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#trait-showable"><code>Showable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-beta.4-dev/kex/#showable-to"><code>to</code></a></dt><dd></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="module-data-set">
+<h2><span class="kind kind-module">module</span> <code>Data.Set</code></h2>
+<p>Constructors for the sorted <a class="xref" href="#record-data-set"><code>Set</code></a>.</p>
+<div class="functions">
+<div class="fn" id="function-data-set-from">
+<h3><a class="self" href="#function-data-set-from"><code>from</code></a></h3>
+<pre class="code sig"><code><span class="tok-keyword">from</span><span class="tok-punct">(</span>items<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Builds a sorted set from a list, discarding duplicates.</p>
+<p>This is the normal way to make a <a class="xref" href="#record-data-set"><code>Set</code></a>. Deduplication goes through a map rather than <a class="xref" href="/prelude/0.4.0-beta.4-dev/list/#list-uniq"><code>List.uniq</code></a>: map keys are unique under exactly the structural equality a set wants, and each element costs one insertion instead of a scan of everything kept so far.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>items</code></dt><dd>the elements, in any order and with any duplicates</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the distinct elements, sorted</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; Set(1, 2, 3)</span>
+<span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hello</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">chars</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Set(e, h, l, o)</span></code></pre>
+<p class="caption"><em>Removing duplicates from a list</em></p>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>   <span class="tok-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;]</span></code></pre>
+
+</div>
+<div class="fn" id="constant-data-set-empty">
+<h3><a class="self" href="#constant-data-set-empty"><code>empty</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code>empty <span class="tok-op">:</span> <a class="xref" href="#record-data-set"><span class="tok-type">Set</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>The set with no elements. Also the <a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#trait-monoid"><code>Monoid</code></a> identity, so <code>s.combine(Set.empty)</code> is <code>s</code>.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">empty?</span>   <span class="tok-comment"># =&gt; true</span>
+<span class="tok-type">Set</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">add</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Set(1)</span></code></pre>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-data-unorderedset">
+<h2><span class="kind kind-module">module</span> <code>Data.UnorderedSet</code></h2>
+<p>Constructors for the hash-backed <a class="xref" href="#record-data-unorderedset"><code>UnorderedSet</code></a>.</p>
+<div class="functions">
+<div class="fn" id="function-data-unorderedset-from">
+<h3><a class="self" href="#function-data-unorderedset-from"><code>from</code></a></h3>
+<pre class="code sig"><code><span class="tok-keyword">from</span><span class="tok-punct">(</span>items<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>Builds an unordered set from a list, discarding duplicates.</p>
+<p>Nothing is sorted, so unlike <code>Set.from</code> this does not require the elements to be <code>Orderable</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>items</code></dt><dd>the elements, in any order and with any duplicates</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the distinct elements</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">3</span><span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span>   <span class="tok-comment"># =&gt; 3</span></code></pre>
+<p class="caption"><em>A fast membership test over a large list</em></p>
+<pre class="code"><code><span class="tok-keyword">let</span> stopWords <span class="tok-op">=</span> <span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">the</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">of</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+words<span class="tok-op">.</span><span class="tok-method">reject</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>w<span class="tok-op">|</span> stopWords<span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span>w<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="constant-data-unorderedset-empty">
+<h3><a class="self" href="#constant-data-unorderedset-empty"><code>empty</code></a> <span class="tag-kind">constant</span></h3>
+<pre class="code sig"><code>empty <span class="tok-op">:</span> <a class="xref" href="#record-data-unorderedset"><span class="tok-type">UnorderedSet</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></code></pre>
+<p>The unordered set with no elements. Also the <a class="xref" href="/prelude/0.4.0-beta.4-dev/algebra/#trait-monoid"><code>Monoid</code></a> identity.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">UnorderedSet</span><span class="tok-op">.</span><span class="tok-method">empty</span><span class="tok-op">.</span><span class="tok-method">empty?</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+</div>
+</section>
+

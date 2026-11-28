@@ -1,0 +1,251 @@
+<section class="entity" id="module-template">
+<h2><span class="kind kind-module">module</span> <code>Template</code> <a class="permalink" href="#module-template" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>ERB-style templates: scanning template text into nodes, and filling simple templates at run time.</p>
+<p>Nothing here is in scope until <code>using Template</code>.</p>
+<p><code>Template.scan</code> turns template text into its frontmatter and a flat list of +Node+s: plain text and the four kinds of <code>&lt;% %&gt;</code> region. It does not run anything or parse Kex; the text inside a tag is kept as written. <code>Template.render</code> fills a template that only substitutes values, from a map. A template with Kex control flow is compiled instead, with <code>Template.html(Kex.embed(path))</code> or <code>Template.text(Kex.embed(path))</code>.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Template</span>
+
+<span class="tok-keyword">let</span> source <span class="tok-op">=</span> <span class="tok-string">&quot;</span><span class="tok-string">---\ntitle: Welcome\nparams: [name, library: Bool]\n---\nHi &lt;%= name %&gt;!</span><span class="tok-string">&quot;</span>
+<span class="tok-keyword">let</span> parsed <span class="tok-op">=</span> <span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">scan</span><span class="tok-punct">(</span>source<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+parsed<span class="tok-op">.</span><span class="tok-method">frontmatter</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">title</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; Just(Scalar(&quot;Welcome&quot;))</span>
+parsed<span class="tok-op">.</span><span class="tok-method">parameters</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> <span class="tok-punct">(</span>p<span class="tok-op">.</span><span class="tok-method">name</span><span class="tok-punct">,</span> p<span class="tok-op">.</span><span class="tok-keyword">type</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-comment"># =&gt; [(&quot;name&quot;, &quot;&quot;), (&quot;library&quot;, &quot;Bool&quot;)]</span>
+parsed<span class="tok-op">.</span><span class="tok-method">nodes</span>                       <span class="tok-comment"># =&gt; [Text(&quot;Hi &quot;), Interpolate(&quot;name&quot;), Text(&quot;!&quot;)]</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>A template file's name puts the extension of what it produces before <code>.ket</code>, such as <code>README.md.ket</code> or <code>profile.html.ket</code>, so an editor can highlight it:</p>
+<div class="code-block"><pre class="code"><code><span class="tok-op">-</span><span class="tok-op">-</span><span class="tok-op">-</span>
+params<span class="tok-op">:</span> <span class="tok-punct">[</span>name<span class="tok-punct">,</span> library<span class="tok-op">:</span> <span class="tok-type">Bool</span><span class="tok-punct">,</span> dependencies<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">Dependency</span><span class="tok-punct">]</span><span class="tok-punct">]</span>
+<span class="tok-op">-</span><span class="tok-op">-</span><span class="tok-op">-</span>
+<span class="tok-comment"># &lt;%= name %&gt;</span>
+
+<span class="tok-op">&lt;</span><span class="tok-op">%</span> <span class="tok-keyword">if</span> library <span class="tok-op">%</span><span class="tok-op">&gt;</span>
+<span class="tok-type">A</span> <span class="tok-type">Kex</span> library<span class="tok-op">.</span>
+<span class="tok-op">&lt;</span><span class="tok-op">%</span> <span class="tok-keyword">else</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span>
+<span class="tok-type">A</span> <span class="tok-type">Kex</span> application<span class="tok-op">.</span>
+<span class="tok-op">&lt;</span><span class="tok-op">%</span> <span class="tok-keyword">end</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span>
+
+<span class="tok-op">&lt;</span><span class="tok-op">%</span> dependencies<span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-keyword">do</span> <span class="tok-op">|</span>dep<span class="tok-op">|</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span>
+<span class="tok-op">-</span> `<span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">=</span> dep<span class="tok-op">.</span><span class="tok-method">name</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span>` <span class="tok-op">~</span><span class="tok-op">&gt;</span> <span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">=</span> dep<span class="tok-op">.</span><span class="tok-method">version</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span>
+<span class="tok-op">&lt;</span><span class="tok-op">%</span> <span class="tok-keyword">end</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>## Syntax</p>
+<div class="code-block"><pre class="code"><code><span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">=</span> expr <span class="tok-op">%</span><span class="tok-op">&gt;</span>     inserts the value<span class="tok-punct">,</span> <span class="tok-type">HTML</span><span class="tok-op">-</span>escaped by <span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">html</span> <span class="tok-keyword">and</span>
+                <span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">render</span>
+<span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">==</span> expr <span class="tok-op">%</span><span class="tok-op">&gt;</span>    inserts the value without escaping
+<span class="tok-op">&lt;</span><span class="tok-op">%</span> <span class="tok-op">...</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span>       <span class="tok-type">Kex</span> control code<span class="tok-op">:</span> <span class="tok-keyword">if</span> <span class="tok-keyword">and</span> <span class="tok-keyword">match</span> arms<span class="tok-punct">,</span> block bodies<span class="tok-punct">,</span> <span class="tok-keyword">let</span>
+<span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-comment"># ... %&gt;      a comment, which produces nothing</span>
+<span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">-</span> <span class="tok-op">...</span> <span class="tok-op">-</span><span class="tok-op">%</span><span class="tok-op">&gt;</span>     trims the indentation before the tag <span class="tok-keyword">and</span> the newline
+                <span class="tok-keyword">after</span> <span class="tok-fn">it</span> <span class="tok-punct">(</span>see <span class="tok-type">Whitespace</span> below<span class="tok-punct">)</span>
+<span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">%</span>             a literal <span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-punct">,</span> <span class="tok-keyword">for</span> a template that writes <span class="tok-type">ERB</span> itself</code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>## Layouts</p>
+<p>A layout is a template that takes the page as a block. The two templates do not refer to each other; the Kex code that calls them puts them together. Insert the block's result with <code>&lt;%== %&gt;</code>, since it is already rendered, and already escaped if it came from <code>Template.html</code>.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-op">-</span><span class="tok-op">-</span><span class="tok-op">-</span>
+params<span class="tok-op">:</span> <span class="tok-punct">[</span>title<span class="tok-op">:</span> <span class="tok-type">String</span><span class="tok-punct">,</span> content<span class="tok-op">:</span> <span class="tok-type">Block</span><span class="tok-op">&lt;</span><span class="tok-type">String</span><span class="tok-op">&gt;</span><span class="tok-punct">]</span>
+<span class="tok-op">-</span><span class="tok-op">-</span><span class="tok-op">-</span>
+<span class="tok-op">&lt;</span>title<span class="tok-op">&gt;</span><span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">=</span> title <span class="tok-op">%</span><span class="tok-op">&gt;</span><span class="tok-op">&lt;</span><span class="tok-op">/</span>title<span class="tok-op">&gt;</span>
+<span class="tok-op">&lt;</span><span class="tok-keyword">main</span><span class="tok-op">&gt;</span><span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">==</span> <span class="tok-fn">content</span><span class="tok-punct">(</span><span class="tok-punct">)</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span><span class="tok-op">&lt;</span><span class="tok-op">/</span><span class="tok-keyword">main</span><span class="tok-op">&gt;</span>
+
+<span class="tok-keyword">let</span> frame <span class="tok-op">=</span> <span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">html</span><span class="tok-punct">(</span><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-method">embed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">views/layouts/auth.html.ket</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+<span class="tok-keyword">let</span> form <span class="tok-op">=</span> <span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">html</span><span class="tok-punct">(</span><span class="tok-type">Kex</span><span class="tok-op">.</span><span class="tok-method">embed</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">views/signin.html.ket</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span>
+
+<span class="tok-keyword">let</span> <span class="tok-fn">signin</span><span class="tok-punct">(</span>email<span class="tok-op">:</span> <span class="tok-type">String</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String</span> <span class="tok-op">=</span> <span class="tok-fn">frame</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Sign in</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-fn">form</span><span class="tok-punct">(</span>email<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>## Whitespace</p>
+<p>A <code>&lt;% %&gt;</code> or <code>&lt;%# %&gt;</code> tag that is alone on its line, with only whitespace around it, removes the whole line from the output, its indentation and newline included. So the template reads the way its output does:</p>
+<div class="code-block"><pre class="code"><code><span class="tok-op">&lt;</span><span class="tok-op">%</span> <span class="tok-keyword">if</span> dependencies<span class="tok-op">.</span><span class="tok-method">count</span> <span class="tok-op">&gt;</span> <span class="tok-number">0</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span>
+<span class="tok-comment">## Dependencies</span>
+<span class="tok-op">&lt;</span><span class="tok-op">%</span> <span class="tok-keyword">end</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span>
+
+<span class="tok-comment"># =&gt; &quot;## Dependencies\n&quot;, with no blank lines where the tags were</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>The <code>&lt;%-</code> and <code>-%&gt;</code> markers are for a tag that shares its line with other content, where only the author knows what should be trimmed:</p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Total</span><span class="tok-op">:</span> <span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">=</span> total <span class="tok-op">%</span><span class="tok-op">&gt;</span> <span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">-</span> <span class="tok-keyword">if</span> pending <span class="tok-op">&gt;</span> <span class="tok-number">0</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span><span class="tok-punct">(</span><span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">=</span> pending <span class="tok-op">%</span><span class="tok-op">&gt;</span> pending<span class="tok-punct">)</span><span class="tok-op">&lt;</span><span class="tok-op">%</span> <span class="tok-keyword">end</span> <span class="tok-op">%</span><span class="tok-op">&gt;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>An interpolation is never trimmed, even alone on its line. It stands for content, so the whitespace around it is content too:</p>
+<div class="code-block"><pre class="code"><code><span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">=</span> greeting <span class="tok-op">%</span><span class="tok-op">&gt;</span>
+<span class="tok-op">&lt;</span><span class="tok-op">%</span><span class="tok-op">=</span> name <span class="tok-op">%</span><span class="tok-op">&gt;</span>
+
+<span class="tok-comment"># =&gt; &quot;Hi\nAda\n&quot;, with both newlines kept</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>## Frontmatter</p>
+<p>A template may start with a <code>---</code> line, then <code>key: value</code> lines, then a closing <code>---</code> line before the body. The keys are for whatever reads the template, such as a title or a list of tags, and the scanner reads every key the same way. A value is a plain string or a <code>[a, b, c]</code> list.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-op">-</span><span class="tok-op">-</span><span class="tok-op">-</span>
+title<span class="tok-op">:</span> <span class="tok-type">Release</span> notes
+tags<span class="tok-op">:</span> <span class="tok-punct">[</span>changelog<span class="tok-punct">,</span> <span class="tok-keyword">public</span><span class="tok-punct">]</span>
+<span class="tok-op">-</span><span class="tok-op">-</span><span class="tok-op">-</span>
+<span class="tok-comment"># &lt;%= title %&gt;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>By convention, a template declares its parameters under <code>params</code>, as a list of names, each with an optional <code>: Type</code>:</p>
+<div class="code-block"><pre class="code"><code><span class="tok-op">-</span><span class="tok-op">-</span><span class="tok-op">-</span>
+params<span class="tok-op">:</span> <span class="tok-punct">[</span>name<span class="tok-punct">,</span> library<span class="tok-op">:</span> <span class="tok-type">Bool</span><span class="tok-punct">,</span> dependencies<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">Dependency</span><span class="tok-punct">]</span><span class="tok-punct">]</span>
+<span class="tok-op">-</span><span class="tok-op">-</span><span class="tok-op">-</span>
+<span class="tok-comment"># &lt;%= name %&gt;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p><a class="xref" href="#parsed-parameters"><code>Parsed.parameters</code></a> reads that list and splits each entry at its first colon into a <a class="xref" href="#record-template-templateparam"><code>TemplateParam</code></a>. The type stays text: <code>[Dependency]</code> is the string <code>&quot;[Dependency]&quot;</code>, not a resolved Kex type.</p>
+<div class="functions">
+<div class="fn" id="function-template-scan">
+<div class="fn-head">
+<h3><a class="self" href="#function-template-scan"><code>scan</code></a> <a class="permalink" href="#function-template-scan" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">scan</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-template-parsed"><span class="tok-type">Parsed</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-template-templateerror"><span class="tok-type">TemplateError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Scans template text into its frontmatter and nodes.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>source</code></dt><dd>the template's full text</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the scanned template, or what is wrong with it</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">scan</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Hi &lt;%= name %&gt;!</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span><span class="tok-punct">(</span><span class="tok-op">~</span>nodes<span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; Ok([Text(&quot;Hi &quot;), Interpolate(&quot;name&quot;), Text(&quot;!&quot;)])</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>A control tag alone on its line leaves no blank line behind</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">scan</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&lt;% if admin %&gt;\nWelcome back.\n&lt;% end %&gt;\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-op">.</span><span class="tok-method">nodes</span>
+<span class="tok-comment"># =&gt; [Control(&quot;if admin&quot;), Text(&quot;Welcome back.\n&quot;), Control(&quot;end&quot;)]</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>An unclosed tag, reported at its position</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">scan</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Hi &lt;%= name</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; Error(UnterminatedTag(6))</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-template-escapehtml">
+<div class="fn-head">
+<h3><a class="self" href="#function-template-escapehtml"><code>escapeHtml</code></a> <a class="permalink" href="#function-template-escapehtml" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">escapeHtml</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Escapes <code>&amp;</code>, <code>&lt;</code>, <code>&gt;</code>, double quotes and single quotes, so the text is safe in HTML content and in quoted attribute values.</p>
+<p><code>Template.html</code> escapes <code>&lt;%= %&gt;</code> tags this way. It does not make text safe inside a URL, a script or a style sheet.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code></dt><dd>the text to escape</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the escaped text</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">escapeHtml</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&lt;b&gt;Tom &amp; Jerry&lt;/b&gt;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; &quot;&amp;lt;b&amp;gt;Tom &amp;amp; Jerry&amp;lt;/b&amp;gt;&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-template-renderparsed">
+<div class="fn-head">
+<h3><a class="self" href="#function-template-renderparsed"><code>renderParsed</code></a> <a class="permalink" href="#function-template-renderparsed" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">renderParsed</span><span class="tok-punct">(</span>parsed<span class="tok-op">:</span> <a class="xref" href="#record-template-parsed"><span class="tok-type">Parsed</span></a><span class="tok-punct">,</span> context<span class="tok-op">:</span> <span class="tok-punct">{</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">}</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-template-templateerror"><span class="tok-type">TemplateError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Fills a scanned template with the values in <code>context</code>.</p>
+<p><code>&lt;%= %&gt;</code> inserts the value HTML-escaped, and <code>&lt;%== %&gt;</code> inserts it as is. Only substitution is supported: a <code>&lt;% ... %&gt;</code> control tag gives an <code>UnsupportedControl</code> error. For templates with control flow, use <code>Template.html</code> or <code>Template.text</code>, which compile the template.</p>
+<p>Each tag's trimmed text is looked up as a key, whole. <code>&lt;%= dep.name %&gt;</code> reads the <code>&quot;dep.name&quot;</code> key; it does not read a field of a value under <code>&quot;dep&quot;</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>parsed</code></dt><dd>a template scanned by <code>Template.scan</code></dd></div>
+<div class="param"><dt><code>context</code></dt><dd>a value for every <code>&lt;%= %&gt;</code> and <code>&lt;%== %&gt;</code> tag, keyed by the tag's trimmed text</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the rendered text, or why it could not be rendered</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> parsed <span class="tok-op">=</span> <span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">scan</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Hi &lt;%= name %&gt;!</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+<span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">renderParsed</span><span class="tok-punct">(</span>parsed<span class="tok-punct">,</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">name</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">&lt;Ada&gt;</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; Ok(&quot;Hi &amp;lt;Ada&amp;gt;!&quot;)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>A tag that +context+ has no value for</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">renderParsed</span><span class="tok-punct">(</span><span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">scan</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&lt;%= missing %&gt;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">,</span> <span class="tok-punct">{</span><span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; Error(UndefinedVariable(&quot;missing&quot;))</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>A control tag</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">renderParsed</span><span class="tok-punct">(</span><span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">scan</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&lt;% if x %&gt;y&lt;% end %&gt;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">,</span> <span class="tok-punct">{</span><span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; Error(UnsupportedControl(&quot;if x&quot;))</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-template-render">
+<div class="fn-head">
+<h3><a class="self" href="#function-template-render"><code>render</code></a> <a class="permalink" href="#function-template-render" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">render</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> context<span class="tok-op">:</span> <span class="tok-punct">{</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">}</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="#type-template-templateerror"><span class="tok-type">TemplateError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Scans <code>source</code> and fills it with the values in <code>context</code>, as <code>Template.renderParsed</code> does.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>source</code></dt><dd>the template's full text</dd></div>
+<div class="param"><dt><code>context</code></dt><dd>a value for every <code>&lt;%= %&gt;</code> and <code>&lt;%== %&gt;</code> tag, keyed by the tag's trimmed text</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the rendered text, or why it could not be scanned or rendered</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">render</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">Hi &lt;%= name %&gt;!</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">name</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">Ada</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; Ok(&quot;Hi Ada!&quot;)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+<section class="entity" id="type-template-node">
+<h2><span class="kind kind-type">type</span> <code>Node</code> <a class="permalink" href="#type-template-node" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>One piece of a scanned template: plain text, or one kind of tag with the text inside it.</p>
+<p>The text inside a tag is the Kex source between the delimiters, with the surrounding whitespace trimmed. It is not parsed.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>Text(String)</code></li>
+<li><code>Interpolate(String)</code></li>
+<li><code>InterpolateRaw(String)</code></li>
+<li><code>Control(String)</code></li>
+<li><code>Comment(String)</code></li>
+</ul>
+
+</section>
+<section class="entity" id="type-template-tag">
+<h2><span class="kind kind-type">type</span> <code>Tag</code> <a class="permalink" href="#type-template-tag" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A frontmatter value: a plain string, or a <code>[a, b, c]</code> list.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>Scalar(String)</code></li>
+<li><code>Tags([String])</code></li>
+</ul>
+
+</section>
+<section class="entity" id="type-template-templateerror">
+<h2><span class="kind kind-type">type</span> <code>TemplateError</code> <a class="permalink" href="#type-template-templateerror" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>The reason a template could not be scanned or rendered.</p>
+<p><code>UnterminatedTag</code> carries the character position of the tag that is not closed. <code>MalformedFrontmatterLine</code> carries the offending line. <code>UndefinedVariable</code> and <code>UnsupportedControl</code> come from <code>Template.render</code> and <code>Template.renderParsed</code>, and carry the tag's text.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>UnterminatedTag(Integer)</code></li>
+<li><code>UnterminatedFrontmatter</code></li>
+<li><code>MalformedFrontmatterLine(String)</code></li>
+<li><code>UndefinedVariable(String)</code></li>
+<li><code>UnsupportedControl(String)</code></li>
+</ul>
+
+</section>
+<section class="entity" id="record-template-templateparam">
+<h2><span class="kind kind-record">record</span> <code>TemplateParam</code> <a class="permalink" href="#record-template-templateparam" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>One entry of a <code>params: [...]</code> frontmatter list: a name and its type.</p>
+<p><code>type</code> is the text after the colon, or <code>&quot;&quot;</code> for a bare name. It is not resolved to a Kex type.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>type</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-template-tagscan">
+<h2><span class="kind kind-record">record</span> <code>TagScan</code> <a class="permalink" href="#record-template-tagscan" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>One scanned <code>&lt;% ... %&gt;</code> tag and the whitespace trims its delimiters ask for. Used inside the scanner only.</p>
+<p>It is declared outside <code>private do</code> because a record nested there loses its field names on BEAM.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>node</code></dt><dd><code>Node</code></dd></div>
+<div class="field"><dt><code>leftTrim?</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool">Bool</a></code></dd></div>
+<div class="field"><dt><code>rightTrim?</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool">Bool</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-template-parsed">
+<h2><span class="kind kind-record">record</span> <code>Parsed</code> <a class="permalink" href="#record-template-parsed" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A scanned template: its frontmatter, and its body as a list of nodes.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>frontmatter</code></dt><dd><code>{<a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a>: <a class="xref" href="#type-template-tag">Tag</a>}</code></dd></div>
+<div class="field"><dt><code>nodes</code></dt><dd><code>[Node]</code></dd></div>
+</dl>
+<section class="members" id="make-parsed">
+<h3>Functions</h3>
+
+<div class="functions">
+<div class="fn" id="parsed-parameters">
+<div class="fn-head">
+<h4><a class="self" href="#parsed-parameters"><code>parameters</code></a> <a class="permalink" href="#parsed-parameters" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parameters</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="#record-template-templateparam"><span class="tok-type">TemplateParam</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns the parameters declared under the template's <code>params</code> key, in the order written.</p>
+<p>Returns <code>[]</code> when there is no <code>params</code> key, or when its value is not a list.</p>
+<p class="returns"><strong>Returns</strong> the declared parameters</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Template</span><span class="tok-op">.</span><span class="tok-method">scan</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">---\nparams: [name, library: Bool]\n---\n</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+  <span class="tok-op">.</span><span class="tok-method">parameters</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>p<span class="tok-op">|</span> <span class="tok-punct">(</span>p<span class="tok-op">.</span><span class="tok-method">name</span><span class="tok-punct">,</span> p<span class="tok-op">.</span><span class="tok-keyword">type</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-comment"># =&gt; [(&quot;name&quot;, &quot;&quot;), (&quot;library&quot;, &quot;Bool&quot;)]</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+</section>

@@ -1,0 +1,213 @@
+<div class="intro">
+<p>Maps are immutable key-value stores. Mutation methods (suffixed <code>!</code>) return a new map and rebind the receiver variable — they do not modify in place. Keys are compared by structural equality.</p>
+</div>
+<section class="entity" id="type-map">
+<h2><span class="kind kind-type">type</span> <code>Map&lt;K, V&gt;</code></h2>
+<p>Declared for the same reason list.kex declares <code>type List&lt;X&gt; = [X]</code>: it gives the name <a class="xref" href="#type-map"><code>Map</code></a> a source declaration, so it resolves as a type through the collected interfaces rather than needing to be known to the compiler.</p>
+<p class="implements">Implements <a class="xref" href="/prelude/0.4.0-alpha/enumerable/#trait-enumerable"><code>Enumerable</code></a>, <a class="xref" href="/prelude/0.4.0-alpha/enumerable/#trait-foldable"><code>Foldable</code></a>, <a class="xref" href="/prelude/0.4.0-alpha/algebra/#trait-monoid"><code>Monoid</code></a>, <a class="xref" href="/prelude/0.4.0-alpha/blankable/#trait-blankable"><code>Blankable</code></a>, <a class="xref" href="/prelude/0.4.0-alpha/truthyable/#trait-truthyable"><code>Truthyable</code></a>.</p>
+<section class="members" id="make-map">
+<h3>Methods</h3>
+
+<div class="functions">
+<div class="fn" id="map-reduce">
+<h4><a class="self" href="#map-reduce"><code>reduce</code></a> <a class="tag-trait" href="/prelude/0.4.0-alpha/enumerable/#enumerable-reduce" title="Implements Enumerable.reduce">Enumerable</a> <a class="tag-trait" href="/prelude/0.4.0-alpha/enumerable/#foldable-reduce" title="Implements Foldable.reduce">Foldable</a></h4>
+<pre class="code sig"><code><span class="tok-fn">reduce</span><span class="tok-punct">(</span>acc<span class="tok-punct">,</span> g<span class="tok-punct">)</span></code></pre>
+<p>Enumerable primitive: fold over (key, value) pairs in canonical (sorted) order. Collection-producing operations come from Enumerable and traversal queries come from Foldable; their two-arg blocks auto-splat each pair.</p>
+
+</div>
+<div class="fn" id="map-identity">
+<h4><a class="self" href="#map-identity"><code>identity</code></a> <a class="tag-trait" href="/prelude/0.4.0-alpha/algebra/#monoid-identity" title="Implements Monoid.identity">Monoid</a></h4>
+<p>Maps form a right-biased Monoid under merge.</p>
+
+</div>
+<div class="fn" id="map-combine">
+<h4><a class="self" href="#map-combine"><code>combine</code></a> <a class="tag-trait" href="/prelude/0.4.0-alpha/algebra/#monoid-combine" title="Implements Monoid.combine">Monoid</a></h4>
+<pre class="code sig"><code><span class="tok-fn">combine</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <span class="tok-bool">This</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-bool">This</span></code></pre>
+
+</div>
+<div class="fn" id="map-get">
+<h4><a class="self" href="#map-get"><code>get</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">get</span><span class="tok-punct">(</span>key<span class="tok-op">:</span> <span class="tok-type">K</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">V?</span>
+<span class="tok-fn">get</span><span class="tok-punct">(</span>key<span class="tok-op">:</span> <span class="tok-type">K</span><span class="tok-punct">,</span> default<span class="tok-op">:</span> <span class="tok-type">V</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">V</span></code></pre>
+<p>Returns the value for <code>key</code> wrapped in <code>Just</code>, or <code>None</code> if absent. When a <code>default</code> is supplied, returns the raw unwrapped value instead.</p>
+<h5>Examples</h5>
+<pre class="code"><code>m <span class="tok-op">=</span> <span class="tok-punct">{</span> name<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">Alice</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> age<span class="tok-op">:</span> <span class="tok-number">32</span> <span class="tok-punct">}</span>
+m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-op">:</span>name<span class="tok-punct">)</span>         <span class="tok-comment"># =&gt; Just(&quot;Alice&quot;)</span>
+m<span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-op">:</span>missing<span class="tok-punct">,</span> <span class="tok-number">0</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 0</span></code></pre>
+
+</div>
+<div class="fn" id="map-put">
+<h4><a class="self" href="#map-put"><code>put</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">put</span><span class="tok-punct">(</span>k<span class="tok-op">:</span> <span class="tok-type">K</span><span class="tok-punct">,</span> v<span class="tok-op">:</span> <span class="tok-type">V</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><span class="tok-type">K</span><span class="tok-punct">,</span> <span class="tok-type">V</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a new map with <code>key</code> mapped to <code>value</code>. Use <code>put!</code> to rebind the receiver variable.</p>
+<h5>Examples</h5>
+<pre class="code"><code>m <span class="tok-op">=</span> <span class="tok-punct">{</span><span class="tok-punct">}</span>
+m<span class="tok-op">.</span><span class="tok-method">put!</span><span class="tok-punct">(</span><span class="tok-op">:</span>x<span class="tok-punct">,</span> <span class="tok-number">1</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; { x: 1 }</span></code></pre>
+
+</div>
+<div class="fn" id="map-delete">
+<h4><a class="self" href="#map-delete"><code>delete</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">delete</span><span class="tok-punct">(</span>key<span class="tok-op">:</span> <span class="tok-type">K</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><span class="tok-type">K</span><span class="tok-punct">,</span> <span class="tok-type">V</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a new map without <code>key</code>. No-op if the key is absent. Use <code>delete!</code> to rebind the receiver variable.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">delete</span><span class="tok-punct">(</span><span class="tok-op">:</span>a<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; { b: 2 }</span></code></pre>
+
+</div>
+<div class="fn" id="map-has?">
+<h4><a class="self" href="#map-has?"><code>has?</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">has?</span><span class="tok-punct">(</span>key<span class="tok-op">:</span> <span class="tok-type">K</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> if <code>key</code> exists in the map.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">has?</span><span class="tok-punct">(</span><span class="tok-op">:</span>a<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+<div class="fn" id="map-empty?">
+<h4><a class="self" href="#map-empty?"><code>empty?</code></a></h4>
+<pre class="code sig"><code>empty? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> if the map has no entries.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">{</span><span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">empty?</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+<div class="fn" id="map-count">
+<h4><a class="self" href="#map-count"><code>count</code></a> <a class="tag-trait" href="/prelude/0.4.0-alpha/enumerable/#foldable-count" title="Implements Foldable.count">Foldable</a></h4>
+<pre class="code sig"><code>count <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+<p>Returns the number of key-value pairs. When given a predicate, counts only matching entries.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">count</span>                        <span class="tok-comment"># =&gt; 2</span>
+<span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">count</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>       <span class="tok-comment"># =&gt; 1</span></code></pre>
+
+<pre class="code sig"><code>count <span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">K</span> <span class="tok-op">-&gt;</span> <span class="tok-type">V</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-alpha/number/#make-integer"><span class="tok-type">Integer</span></a></code></pre>
+
+</div>
+<div class="fn" id="map-keys">
+<h4><a class="self" href="#map-keys"><code>keys</code></a></h4>
+<pre class="code sig"><code>keys <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">K</span><span class="tok-punct">]</span></code></pre>
+<p>Returns all keys as a list, in insertion order.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">keys</span>   <span class="tok-comment"># =&gt; [:a, :b]</span></code></pre>
+
+</div>
+<div class="fn" id="map-values">
+<h4><a class="self" href="#map-values"><code>values</code></a></h4>
+<pre class="code sig"><code>values <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">V</span><span class="tok-punct">]</span></code></pre>
+<p>Returns all values as a list, in insertion order.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">values</span>   <span class="tok-comment"># =&gt; [1, 2]</span></code></pre>
+
+</div>
+<div class="fn" id="map-entries">
+<h4><a class="self" href="#map-entries"><code>entries</code></a></h4>
+<pre class="code sig"><code>entries <span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-type">K</span><span class="tok-punct">,</span> <span class="tok-type">V</span><span class="tok-punct">)</span><span class="tok-punct">]</span></code></pre>
+<p>Returns all key-value pairs as a list of tuples, in insertion order.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">entries</span>   <span class="tok-comment"># =&gt; [(:a, 1), (:b, 2)]</span></code></pre>
+
+</div>
+<div class="fn" id="map-each">
+<h4><a class="self" href="#map-each"><code>each</code></a> <a class="tag-trait" href="/prelude/0.4.0-alpha/enumerable/#foldable-each" title="Implements Foldable.each">Foldable</a></h4>
+<pre class="code sig"><code>each <span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">K</span> <span class="tok-op">-&gt;</span> <span class="tok-type">V</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></code></pre>
+<p>Calls <code>f</code> with each key-value pair for its side effects.</p>
+<h5>Examples</h5>
+<pre class="code"><code>scores<span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">${</span>k<span class="tok-string">}</span><span class="tok-string">: </span><span class="tok-string">${</span>v<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+<div class="fn" id="map-map">
+<h4><a class="self" href="#map-map"><code>map</code></a> <a class="tag-trait" href="/prelude/0.4.0-alpha/enumerable/#enumerable-map" title="Implements Enumerable.map">Enumerable</a></h4>
+<pre class="code sig"><code>map <span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">K</span> <span class="tok-op">-&gt;</span> <span class="tok-type">V</span> <span class="tok-op">-&gt;</span> <span class="tok-type">R</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">R</span><span class="tok-punct">]</span></code></pre>
+<p>Transforms each entry by calling <code>f(k, v)</code>. Returns a list of results.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> <span class="tok-string">&quot;</span><span class="tok-string">${</span>k<span class="tok-string">}</span><span class="tok-string">=</span><span class="tok-string">${</span>v<span class="tok-string">}</span><span class="tok-string">&quot;</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; [&quot;a=1&quot;, &quot;b=2&quot;]</span></code></pre>
+
+</div>
+<div class="fn" id="map-mapvalues">
+<h4><a class="self" href="#map-mapvalues"><code>mapValues</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">mapValues</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">V</span> <span class="tok-op">-&gt;</span> <span class="tok-type">W</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><span class="tok-type">K</span><span class="tok-punct">,</span> <span class="tok-type">W</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a new map with all values transformed by <code>f</code>.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">mapValues</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>v<span class="tok-op">|</span> v <span class="tok-op">*</span> <span class="tok-number">10</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; { a: 10, b: 20 }</span></code></pre>
+
+</div>
+<div class="fn" id="map-mapkeys">
+<h4><a class="self" href="#map-mapkeys"><code>mapKeys</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">mapKeys</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">K</span> <span class="tok-op">-&gt;</span> <span class="tok-type">J</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><span class="tok-type">J</span><span class="tok-punct">,</span> <span class="tok-type">V</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a new map with all keys transformed by <code>f</code>.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">mapKeys</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-op">|</span> k<span class="tok-op">.</span><span class="tok-method">upperCase</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; { A: 1, B: 2 }</span></code></pre>
+
+</div>
+<div class="fn" id="map-filter">
+<h4><a class="self" href="#map-filter"><code>filter</code></a> <a class="tag-trait" href="/prelude/0.4.0-alpha/enumerable/#enumerable-filter" title="Implements Enumerable.filter">Enumerable</a></h4>
+<pre class="code sig"><code><span class="tok-fn">filter</span><span class="tok-punct">(</span>pred<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">K</span> <span class="tok-op">-&gt;</span> <span class="tok-type">V</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><span class="tok-type">K</span><span class="tok-punct">,</span> <span class="tok-type">V</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a new map keeping only entries for which <code>pred</code> returns <code>true</code>.</p>
+<p>Map overrides the map-returning HOFs (Enumerable's default returns a list).</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span><span class="tok-punct">,</span> c<span class="tok-op">:</span> <span class="tok-number">3</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">filter</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; { b: 2, c: 3 }</span></code></pre>
+
+</div>
+<div class="fn" id="map-reject">
+<h4><a class="self" href="#map-reject"><code>reject</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">reject</span><span class="tok-punct">(</span>pred<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">K</span> <span class="tok-op">-&gt;</span> <span class="tok-type">V</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><span class="tok-type">K</span><span class="tok-punct">,</span> <span class="tok-type">V</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a new map with all entries for which <code>pred</code> returns <code>true</code> removed.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span><span class="tok-punct">,</span> c<span class="tok-op">:</span> <span class="tok-number">3</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">reject</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; { a: 1 }</span></code></pre>
+
+</div>
+<div class="fn" id="map-merge">
+<h4><a class="self" href="#map-merge"><code>merge</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">merge</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <a class="xref" href="#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><span class="tok-type">K</span><span class="tok-punct">,</span> <span class="tok-type">V</span><span class="tok-op">&gt;</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-map"><span class="tok-type">Map</span></a><span class="tok-op">&lt;</span><span class="tok-type">K</span><span class="tok-punct">,</span> <span class="tok-type">V</span><span class="tok-op">&gt;</span></code></pre>
+<p>Returns a new map combining <code>this</code> and <code>other</code>. On key conflict, <code>other</code>'s value wins.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">merge</span><span class="tok-punct">(</span><span class="tok-punct">{</span> b<span class="tok-op">:</span> <span class="tok-number">99</span><span class="tok-punct">,</span> c<span class="tok-op">:</span> <span class="tok-number">3</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; { a: 1, b: 99, c: 3 }</span></code></pre>
+
+</div>
+<div class="fn" id="map-any?">
+<h4><a class="self" href="#map-any?"><code>any?</code></a> <a class="tag-trait" href="/prelude/0.4.0-alpha/enumerable/#foldable-any?" title="Implements Foldable.any?">Foldable</a></h4>
+<pre class="code sig"><code>any? <span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">K</span> <span class="tok-op">-&gt;</span> <span class="tok-type">V</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> if at least one entry satisfies <code>pred</code>.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">any?</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+<div class="fn" id="map-all?">
+<h4><a class="self" href="#map-all?"><code>all?</code></a> <a class="tag-trait" href="/prelude/0.4.0-alpha/enumerable/#foldable-all?" title="Implements Foldable.all?">Foldable</a></h4>
+<pre class="code sig"><code>all? <span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">K</span> <span class="tok-op">-&gt;</span> <span class="tok-type">V</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Returns <code>true</code> if every entry satisfies <code>pred</code>.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">all?</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">0</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; true</span></code></pre>
+
+</div>
+<div class="fn" id="map-find">
+<h4><a class="self" href="#map-find"><code>find</code></a> <a class="tag-trait" href="/prelude/0.4.0-alpha/enumerable/#foldable-find" title="Implements Foldable.find">Foldable</a></h4>
+<pre class="code sig"><code>find <span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">K</span> <span class="tok-op">-&gt;</span> <span class="tok-type">V</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-type">K</span><span class="tok-punct">,</span> <span class="tok-type">V</span><span class="tok-punct">)</span><span class="tok-op">?</span></code></pre>
+<p>Returns the first entry satisfying <code>pred</code> as a tuple wrapped in <code>Just</code>, or <code>None</code> if no entry matches.</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">{</span> a<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> b<span class="tok-op">:</span> <span class="tok-number">2</span> <span class="tok-punct">}</span><span class="tok-op">.</span><span class="tok-method">find</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>k<span class="tok-punct">,</span> v<span class="tok-op">|</span> v <span class="tok-op">&gt;</span> <span class="tok-number">1</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Just((:b, 2))</span></code></pre>
+
+</div>
+<div class="fn" id="map-blank?">
+<h4><a class="self" href="#map-blank?"><code>blank?</code></a> <a class="tag-trait" href="/prelude/0.4.0-alpha/blankable/#blankable-blank?" title="Implements Blankable.blank?">Blankable</a></h4>
+<pre class="code sig"><code>blank? <span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-alpha/blankable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+
+</div>
+</div>
+</section><h3>From <a class="xref" href="/prelude/0.4.0-alpha/enumerable/#trait-enumerable"><code>Enumerable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-alpha/enumerable/#enumerable-mapindexed"><code>mapIndexed</code></a></dt><dd>Transforms each item together with its 0-based position, collecting the results into a list.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-alpha/enumerable/#enumerable-flatmap"><code>flatMap</code></a></dt><dd>Maps each item to a list and concatenates the results.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-alpha/enumerable/#enumerable-collect"><code>collect</code></a></dt><dd>Maps each item through <code>f</code> (returning an <code>Optional</code>), keeping and unwrapping the <code>Just(y)</code> results and dropping <code>None</code>.</dd></div>
+</dl>
+<h3>From <a class="xref" href="/prelude/0.4.0-alpha/enumerable/#trait-foldable"><code>Foldable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-alpha/enumerable/#foldable-eachindexed"><code>eachIndexed</code></a></dt><dd>Applies <code>f</code> to each item together with its 0-based position, for side effects.</dd></div>
+</dl>
+<h3>From <a class="xref" href="/prelude/0.4.0-alpha/algebra/#trait-monoid"><code>Monoid</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-alpha/algebra/#monoid-repeat"><code>repeat</code></a></dt><dd>Combines this value with itself <code>n</code> times.</dd></div>
+</dl>
+<h3>Defined in other modules</h3>
+<dl class="params elsewhere">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-alpha/truthyable/#make-map">Truthyable</a></dt><dd><a class="xref" href="/prelude/0.4.0-alpha/truthyable/#map-truthy?"><code>truthy?</code></a></dd></div>
+</dl>
+
+</section>

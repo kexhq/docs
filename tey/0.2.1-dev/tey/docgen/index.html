@@ -1,0 +1,333 @@
+<div class="intro">
+<p>The <code>tey docs build</code> driver. It scans and extracts the sources into a <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><code>PackageModel</code></a>, then writes everything derived from it: model.json, search.json, the Markdown pages, and either the HTML site (with its manifests, versions.json, llms.txt, llms-full.txt, robots.txt and sitemap.xml) or, with <code>--format fragments</code>, HTML fragments for a host site.</p>
+</div>
+<section class="entity" id="module-tey-docgen-index">
+<h2><span class="kind kind-module">module</span> <code>Tey.Docgen.Index</code> <a class="permalink" href="#module-tey-docgen-index" title="Copy link" aria-label="Copy link">#</a></h2>
+<section class="summary">
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-buildcommand"><code>buildCommand</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-externallinks"><code>externalLinks</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Returns the names documented by other units, read from the comma-separated model.json files in <code>paths</code>, so this unit's signatures and prose can link to them.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-writeunitindexfiles"><code>writeUnitIndexFiles</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Writes this unit's version manifest and the shared versions.json, but none of the site-wide files (landing pages, llms.txt, sitemap), which belong to the host site that embeds the fragments.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-reportdocdrift"><code>reportDocDrift</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Prints a note for each <code>@return</code> tag whose type differs from the signature's, such as <code>min : X?</code> documented as returning <code>Number?</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-normalizetype"><code>normalizeType</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-optstring"><code>optString</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-preludeinfo"><code>preludeInfo</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Returns the prelude of the source tree at <code>source</code>: the file name, the modules it makes visible, and its opening comment.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-leadingcomment"><code>leadingComment</code></a></dt><dd>Returns the comment lines at the top of <code>lines</code> with their <code>#</code> markers removed, ready for the same parse as any other doc comment.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-commentbody"><code>commentBody</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-fileheader"><code>fileHeader</code></a></dt><dd>Returns the file's opening comment when a blank line follows it, and <code>&quot;&quot;</code> otherwise.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-usingname"><code>usingName</code></a></dt><dd>Returns the module a <code>using</code> line names (<code>&quot;using List&quot;</code> gives <code>&quot;List&quot;</code>), or <code>&quot;&quot;</code> for any other line.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-defaultsource"><code>defaultSource</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Returns <code>given</code> when it is not empty, else <code>&quot;src&quot;</code> when the current directory has one, else <code>&quot;&quot;</code>, which the scan reports as having no .kex files.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-defaultpackage"><code>defaultPackage</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Returns <code>given</code> when it is not empty, else the name in the current directory's package.kex, else <code>&quot;&quot;</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-defaultversion"><code>defaultVersion</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Returns <code>given</code> when it is not empty, else the version in the current directory's package.kex, else <code>&quot;&quot;</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-manifestversion"><code>manifestVersion</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Returns the name and version from the current directory's package.kex, or <code>None</code> when there is none or it does not parse.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-buildpages"><code>buildPages</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-buildpagesloop"><code>buildPagesLoop</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-writepages"><code>writePages</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-writehtml"><code>writeHtml</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Writes the HTML site for one version: a page per source file, the version's index.html and search.html, and the shared assets/style.css and assets/site.js.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-dirnameof"><code>dirNameOf</code></a></dt><dd>Returns the directory part of a page's URL path: <code>&quot;kex/ast&quot;</code> gives <code>&quot;kex&quot;</code>, and <code>&quot;fs&quot;</code> gives <code>&quot;&quot;</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-ensuredirectory"><code>ensureDirectory</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-writeindexfiles"><code>writeIndexFiles</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-versionmanifestjson"><code>versionManifestJson</code></a></dt><dd>Returns the manifest.json for one version: its package, version, label, build time and pages.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-manifestjson"><code>manifestJson</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-accumulateversions"><code>accumulateVersions</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Returns the versions.json entries with this build's added.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-upsertversion"><code>upsertVersion</code></a></dt><dd>Returns <code>existing</code> with any entry for the same package and version removed and <code>current</code> put first.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-readversionentries"><code>readVersionEntries</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-parseversionentry"><code>parseVersionEntry</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-jsontext"><code>jsonText</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-labelorpackage"><code>labelOrPackage</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-versionsjson"><code>versionsJson</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-versionentryvalue"><code>versionEntryValue</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-llmstxt"><code>llmsTxt</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-llmsfulltxt"><code>llmsFullTxt</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-robotstxt"><code>robotsTxt</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-sitemapxml"><code>sitemapXml</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-index-normalizebaseurl"><code>normalizeBaseUrl</code></a></dt><dd></dd></div>
+</dl>
+</section>
+<div class="functions">
+<div class="fn" id="function-tey-docgen-index-buildcommand">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-buildcommand"><code>buildCommand</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-index-buildcommand" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">buildCommand</span><span class="tok-punct">(</span>parsed<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/option_parser/#record-parsedoptions"><span class="tok-type">ParsedOptions</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-externallinks">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-externallinks"><code>externalLinks</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-index-externallinks" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">externalLinks</span><span class="tok-punct">(</span>paths<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-linkentry"><span class="tok-type">LinkEntry</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns the names documented by other units, read from the comma-separated model.json files in <code>paths</code>, so this unit's signatures and prose can link to them.</p>
+<p>The Tey reference uses this to link <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><code>String</code></a> and <a class="xref" href="/prelude/0.4.0-rc.5-dev/fs/#module-fs-path"><code>FS.Path</code></a> to the standard library. Each model.json names its package and version, and its pages are linked at ../../&lt;package&gt;/&lt;version&gt;/ from this unit's version directory. A file that cannot be read or is not JSON is reported as a warning and skipped.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-writeunitindexfiles">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-writeunitindexfiles"><code>writeUnitIndexFiles</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-index-writeunitindexfiles" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">writeUnitIndexFiles</span><span class="tok-punct">(</span>pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">,</span> out<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">)</span></span></code></pre>
+</div>
+<p>Writes this unit's version manifest and the shared versions.json, but none of the site-wide files (landing pages, llms.txt, sitemap), which belong to the host site that embeds the fragments.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-reportdocdrift">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-reportdocdrift"><code>reportDocDrift</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-index-reportdocdrift" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">reportDocDrift</span><span class="tok-punct">(</span>pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">)</span></span></code></pre>
+</div>
+<p>Prints a note for each <code>@return</code> tag whose type differs from the signature's, such as <code>min : X?</code> documented as returning <code>Number?</code>.</p>
+<p>The page shows the signature's type either way; the note says which comment has fallen behind its code.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-normalizetype">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-normalizetype"><code>normalizeType</code></a> <a class="permalink" href="#function-tey-docgen-index-normalizetype" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">normalizeType</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-optstring">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-optstring"><code>optString</code></a> <a class="permalink" href="#function-tey-docgen-index-optstring" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">optString</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">String?</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-preludeinfo">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-preludeinfo"><code>preludeInfo</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-index-preludeinfo" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">preludeInfo</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span></span></code></pre>
+</div>
+<p>Returns the prelude of the source tree at <code>source</code>: the file name, the modules it makes visible, and its opening comment.</p>
+<p>A <code>prelude.kex</code> is an opening comment followed by one bare <code>using &lt;Module&gt;</code> per line, so reading the lines is enough. Without one the result is <code>(&quot;&quot;, [], &quot;&quot;)</code> and the output never mentions a prelude.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-leadingcomment">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-leadingcomment"><code>leadingComment</code></a> <a class="permalink" href="#function-tey-docgen-index-leadingcomment" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">leadingComment</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Returns the comment lines at the top of <code>lines</code> with their <code>#</code> markers removed, ready for the same parse as any other doc comment.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-commentbody">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-commentbody"><code>commentBody</code></a> <a class="permalink" href="#function-tey-docgen-index-commentbody" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">commentBody</span><span class="tok-punct">(</span>line<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-fileheader">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-fileheader"><code>fileHeader</code></a> <a class="permalink" href="#function-tey-docgen-index-fileheader" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">fileHeader</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Returns the file's opening comment when a blank line follows it, and <code>&quot;&quot;</code> otherwise.</p>
+<p>A comment that runs straight into a declaration is that declaration's doc, and the page gets no introduction. A <code>#!</code> line does not count as a comment.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-usingname">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-usingname"><code>usingName</code></a> <a class="permalink" href="#function-tey-docgen-index-usingname" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">usingName</span><span class="tok-punct">(</span>line<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Returns the module a <code>using</code> line names (<code>&quot;using List&quot;</code> gives <code>&quot;List&quot;</code>), or <code>&quot;&quot;</code> for any other line.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-defaultsource">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-defaultsource"><code>defaultSource</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-index-defaultsource" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">defaultSource</span><span class="tok-punct">(</span>given<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Returns <code>given</code> when it is not empty, else <code>&quot;src&quot;</code> when the current directory has one, else <code>&quot;&quot;</code>, which the scan reports as having no .kex files.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-defaultpackage">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-defaultpackage"><code>defaultPackage</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-index-defaultpackage" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">defaultPackage</span><span class="tok-punct">(</span>given<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Returns <code>given</code> when it is not empty, else the name in the current directory's package.kex, else <code>&quot;&quot;</code>.</p>
+<p>With <code>&quot;&quot;</code>, <code>buildCommand</code> stops with an error and asks for <code>--package</code>; it does not invent a name (kexhq/kex#287).</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-defaultversion">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-defaultversion"><code>defaultVersion</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-index-defaultversion" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">defaultVersion</span><span class="tok-punct">(</span>given<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Returns <code>given</code> when it is not empty, else the version in the current directory's package.kex, else <code>&quot;&quot;</code>.</p>
+<p>Outside a package the caller must pass <code>--release</code>: what a version means differs between units, such as a library's releases and the standard library's Kex releases.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-manifestversion">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-manifestversion"><code>manifestVersion</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-index-manifestversion" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">manifestVersion</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span><span class="tok-op">?</span></span></code></pre>
+</div>
+<p>Returns the name and version from the current directory's package.kex, or <code>None</code> when there is none or it does not parse.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-buildpages">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-buildpages"><code>buildPages</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-index-buildpages" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">buildPages</span><span class="tok-punct">(</span>files<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> sourceDir<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-buildpagesloop">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-buildpagesloop"><code>buildPagesLoop</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-index-buildpagesloop" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">buildPagesLoop</span><span class="tok-punct">(</span>files<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> sourceDir<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-writepages">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-writepages"><code>writePages</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-index-writepages" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">writePages</span><span class="tok-punct">(</span>pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> versionDir<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-writehtml">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-writehtml"><code>writeHtml</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-index-writehtml" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">writeHtml</span><span class="tok-punct">(</span>pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> versionDir<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> out<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">)</span></span></code></pre>
+</div>
+<p>Writes the HTML site for one version: a page per source file, the version's index.html and search.html, and the shared assets/style.css and assets/site.js.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-dirnameof">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-dirnameof"><code>dirNameOf</code></a> <a class="permalink" href="#function-tey-docgen-index-dirnameof" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">dirNameOf</span><span class="tok-punct">(</span>urlPath<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Returns the directory part of a page's URL path: <code>&quot;kex/ast&quot;</code> gives <code>&quot;kex&quot;</code>, and <code>&quot;fs&quot;</code> gives <code>&quot;&quot;</code>.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-ensuredirectory">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-ensuredirectory"><code>ensureDirectory</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-index-ensuredirectory" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">ensureDirectory</span><span class="tok-punct">(</span>path<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-writeindexfiles">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-writeindexfiles"><code>writeIndexFiles</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-index-writeindexfiles" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">writeIndexFiles</span><span class="tok-punct">(</span>pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">,</span> out<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-versionmanifestjson">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-versionmanifestjson"><code>versionManifestJson</code></a> <a class="permalink" href="#function-tey-docgen-index-versionmanifestjson" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">versionManifestJson</span><span class="tok-punct">(</span>pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Returns the manifest.json for one version: its package, version, label, build time and pages.</p>
+<p>Page paths are relative to the version directory, <code>&lt;package&gt;/&lt;version&gt;/</code>; whoever assembles the site adds the site root.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-manifestjson">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-manifestjson"><code>manifestJson</code></a> <a class="permalink" href="#function-tey-docgen-index-manifestjson" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">manifestJson</span><span class="tok-punct">(</span>pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-accumulateversions">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-accumulateversions"><code>accumulateVersions</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-index-accumulateversions" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">accumulateVersions</span><span class="tok-punct">(</span>out<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-versionentry"><span class="tok-type">VersionEntry</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns the versions.json entries with this build's added.</p>
+<p>The output directory is the published site, so other builds' versions are kept: the existing entries are read, this package and version replaces any earlier entry for it, and this build comes first.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-upsertversion">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-upsertversion"><code>upsertVersion</code></a> <a class="permalink" href="#function-tey-docgen-index-upsertversion" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">upsertVersion</span><span class="tok-punct">(</span>current<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-versionentry"><span class="tok-type">VersionEntry</span></a><span class="tok-punct">,</span> existing<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-versionentry"><span class="tok-type">VersionEntry</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-versionentry"><span class="tok-type">VersionEntry</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns <code>existing</code> with any entry for the same package and version removed and <a class="xref" href="/prelude/0.4.0-rc.5-dev/net/#constant-net-support-current"><code>current</code></a> put first.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-readversionentries">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-readversionentries"><code>readVersionEntries</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-docgen-index-readversionentries" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">readVersionEntries</span><span class="tok-punct">(</span>out<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-versionentry"><span class="tok-type">VersionEntry</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-parseversionentry">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-parseversionentry"><code>parseVersionEntry</code></a> <a class="permalink" href="#function-tey-docgen-index-parseversionentry" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parseVersionEntry</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">Any</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-versionentry"><span class="tok-type">VersionEntry</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-jsontext">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-jsontext"><code>jsonText</code></a> <a class="permalink" href="#function-tey-docgen-index-jsontext" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">jsonText</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">Any?</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-labelorpackage">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-labelorpackage"><code>labelOrPackage</code></a> <a class="permalink" href="#function-tey-docgen-index-labelorpackage" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">labelOrPackage</span><span class="tok-punct">(</span>model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-versionsjson">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-versionsjson"><code>versionsJson</code></a> <a class="permalink" href="#function-tey-docgen-index-versionsjson" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">versionsJson</span><span class="tok-punct">(</span>entries<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-versionentry"><span class="tok-type">VersionEntry</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-versionentryvalue">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-versionentryvalue"><code>versionEntryValue</code></a> <a class="permalink" href="#function-tey-docgen-index-versionentryvalue" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">versionEntryValue</span><span class="tok-punct">(</span>e<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-versionentry"><span class="tok-type">VersionEntry</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Any</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-llmstxt">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-llmstxt"><code>llmsTxt</code></a> <a class="permalink" href="#function-tey-docgen-index-llmstxt" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">llmsTxt</span><span class="tok-punct">(</span>pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-llmsfulltxt">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-llmsfulltxt"><code>llmsFullTxt</code></a> <a class="permalink" href="#function-tey-docgen-index-llmsfulltxt" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">llmsFullTxt</span><span class="tok-punct">(</span>pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-robotstxt">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-robotstxt"><code>robotsTxt</code></a> <a class="permalink" href="#function-tey-docgen-index-robotstxt" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">robotsTxt</span><span class="tok-punct">(</span>baseUrl<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-sitemapxml">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-sitemapxml"><code>sitemapXml</code></a> <a class="permalink" href="#function-tey-docgen-index-sitemapxml" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">sitemapXml</span><span class="tok-punct">(</span>pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> model<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-packagemodel"><span class="tok-type">PackageModel</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-index-normalizebaseurl">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-index-normalizebaseurl"><code>normalizeBaseUrl</code></a> <a class="permalink" href="#function-tey-docgen-index-normalizebaseurl" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">normalizeBaseUrl</span><span class="tok-punct">(</span>url<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+</div>
+</section>
+

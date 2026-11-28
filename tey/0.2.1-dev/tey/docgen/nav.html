@@ -1,0 +1,248 @@
+<div class="intro">
+<p>Navigation and cross-linking: the two indexes every renderer uses, built once from the extracted pages.</p>
+<div class="code-block"><pre class="code"><code>modules<span class="tok-op">:</span> one <span class="tok-type">ModuleIndexEntry</span> per <span class="tok-keyword">module</span><span class="tok-punct">,</span> <span class="tok-keyword">for</span> the sidebar
+links<span class="tok-op">:</span>   one <span class="tok-type">LinkEntry</span> per linkable name</code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>Building them in one place means the HTML, the Markdown and model.json always agree on where a name links to.</p>
+</div>
+<section class="entity" id="module-tey-docgen-nav">
+<h2><span class="kind kind-module">module</span> <code>Tey.Docgen.Nav</code> <a class="permalink" href="#module-tey-docgen-nav" title="Copy link" aria-label="Copy link">#</a></h2>
+<section class="summary">
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-buildmodules"><code>buildModules</code></a></dt><dd>Returns an entry for every module in the package, in declaration order, with the page it is on.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-modulesonpage"><code>modulesOnPage</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-moduleentry"><code>moduleEntry</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-firstline"><code>firstLine</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-parenttitleof"><code>parentTitleOf</code></a></dt><dd>Returns the title of the page that <code>page</code> nests under, or <code>None</code> for a top-level page.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-parentloop"><code>parentLoop</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-claimedbyanother?"><code>claimedByAnother?</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-toplevelpages"><code>topLevelPages</code></a></dt><dd>Returns the pages with no parent, sorted by title, for the sidebar's top level.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-childpages"><code>childPages</code></a></dt><dd>Returns the pages nested directly under <code>title</code>, sorted by title.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-descendantpages"><code>descendantPages</code></a></dt><dd>Returns every page nested under <code>page</code> at any depth, sorted by title.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-sortedbytitle"><code>sortedByTitle</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-buildlinks"><code>buildLinks</code></a></dt><dd>Returns the names that can be linked, each with its page and anchor.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-withtypehomes"><code>withTypeHomes</code></a></dt><dd>Returns <code>links</code> plus a link to the home page of each type that make blocks extend and that does not link yet.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-linkentriesonpage"><code>linkEntriesOnPage</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-memberlinks"><code>memberLinks</code></a></dt><dd>Returns links for the functions of a trait or make block under their owner's name, so prose that writes <code>List.map</code> links to that function.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-linkablenames"><code>linkableNames</code></a></dt><dd>Returns the names an entity can be linked under: its qualified name and its simple name.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-uniquetarget?"><code>uniqueTarget?</code></a></dt><dd>Returns <code>true</code> when every entry with <code>candidate</code>'s name points at the same page and anchor.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-differenttarget?"><code>differentTarget?</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-resolve"><code>resolve</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-segmentsof"><code>segmentsOf</code></a></dt><dd>Splits a type reference into identifiers and the separators between them, so a renderer can link the identifiers: &quot;Map&lt;String, FS.Path&gt;&quot; gives [&quot;Map&quot;, &quot;&lt;&quot;, &quot;String&quot;, &quot;, &quot;, &quot;FS.Path&quot;, &quot;&gt;&quot;].</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-splitloop"><code>splitLoop</code></a></dt><dd><code>ident</code> is the identifier being read, <code>sep</code> the separator run since it; only one is non-empty at a time, and whichever it is goes out in order.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-flushident"><code>flushIdent</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-flushsep"><code>flushSep</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-isidentchar?"><code>isIdentChar?</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-hreffrom"><code>hrefFrom</code></a></dt><dd>Returns the relative href from one page of the package to an anchor on another: &quot;#anchor&quot; on the same page, otherwise a path up to the version directory and down to the target.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-upstoversiondir"><code>upsToVersionDir</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-nav-ups"><code>ups</code></a></dt><dd></dd></div>
+</dl>
+</section>
+<div class="functions">
+<div class="fn" id="function-tey-docgen-nav-buildmodules">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-buildmodules"><code>buildModules</code></a> <a class="permalink" href="#function-tey-docgen-nav-buildmodules" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">buildModules</span><span class="tok-punct">(</span>pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-moduleindexentry"><span class="tok-type">ModuleIndexEntry</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns an entry for every module in the package, in declaration order, with the page it is on. Nested modules get entries of their own.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-modulesonpage">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-modulesonpage"><code>modulesOnPage</code></a> <a class="permalink" href="#function-tey-docgen-nav-modulesonpage" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">modulesOnPage</span><span class="tok-punct">(</span>entities<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> urlPath<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-moduleindexentry"><span class="tok-type">ModuleIndexEntry</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-moduleentry">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-moduleentry"><code>moduleEntry</code></a> <a class="permalink" href="#function-tey-docgen-nav-moduleentry" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">moduleEntry</span><span class="tok-punct">(</span>entry<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-moduleentry"><span class="tok-type">ModuleEntry</span></a><span class="tok-punct">,</span> urlPath<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-moduleindexentry"><span class="tok-type">ModuleIndexEntry</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-firstline">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-firstline"><code>firstLine</code></a> <a class="permalink" href="#function-tey-docgen-nav-firstline" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">firstLine</span><span class="tok-punct">(</span>summary<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-parenttitleof">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-parenttitleof"><code>parentTitleOf</code></a> <a class="permalink" href="#function-tey-docgen-nav-parenttitleof" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parentTitleOf</span><span class="tok-punct">(</span>pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></span></code></pre>
+</div>
+<p>Returns the title of the page that <code>page</code> nests under, or <code>None</code> for a top-level page.</p>
+<p>The parent is found from titles, not paths: &quot;Net.DNS&quot; nests under &quot;Net&quot;, and &quot;Net.HTTP.WebSocket&quot; under &quot;Net.HTTP&quot;. The longest prefix that has a page wins. When no prefix has a page (&quot;Control&quot; for &quot;Control.Retry&quot;), the page is top-level.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-parentloop">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-parentloop"><code>parentLoop</code></a> <a class="permalink" href="#function-tey-docgen-nav-parentloop" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parentLoop</span><span class="tok-punct">(</span>parts<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-claimedbyanother?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-claimedbyanother?"><code>claimedByAnother?</code></a> <a class="permalink" href="#function-tey-docgen-nav-claimedbyanother?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">claimedByAnother?</span><span class="tok-punct">(</span>pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">,</span> title<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-toplevelpages">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-toplevelpages"><code>topLevelPages</code></a> <a class="permalink" href="#function-tey-docgen-nav-toplevelpages" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">topLevelPages</span><span class="tok-punct">(</span>pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns the pages with no parent, sorted by title, for the sidebar's top level.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-childpages">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-childpages"><code>childPages</code></a> <a class="permalink" href="#function-tey-docgen-nav-childpages" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">childPages</span><span class="tok-punct">(</span>pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> title<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns the pages nested directly under <code>title</code>, sorted by title.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-descendantpages">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-descendantpages"><code>descendantPages</code></a> <a class="permalink" href="#function-tey-docgen-nav-descendantpages" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">descendantPages</span><span class="tok-punct">(</span>pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> page<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns every page nested under <code>page</code> at any depth, sorted by title. A module page lists these as its submodules.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-sortedbytitle">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-sortedbytitle"><code>sortedByTitle</code></a> <a class="permalink" href="#function-tey-docgen-nav-sortedbytitle" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">sortedByTitle</span><span class="tok-punct">(</span>pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-buildlinks">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-buildlinks"><code>buildLinks</code></a> <a class="permalink" href="#function-tey-docgen-nav-buildlinks" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">buildLinks</span><span class="tok-punct">(</span>pages<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-sourcepage"><span class="tok-type">SourcePage</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-linkentry"><span class="tok-type">LinkEntry</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns the names that can be linked, each with its page and anchor.</p>
+<p>A name links only while exactly one place answers to it. A qualified name (&quot;FS.Path&quot;) is usually unique; a simple one (&quot;Path&quot;) stops linking as soon as two different entities share it, and then only the qualified names link.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-withtypehomes">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-withtypehomes"><code>withTypeHomes</code></a> <a class="permalink" href="#function-tey-docgen-nav-withtypehomes" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">withTypeHomes</span><span class="tok-punct">(</span>links<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-linkentry"><span class="tok-type">LinkEntry</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> types<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">Tey</span><span class="tok-op">.</span><span class="tok-type">Docgen</span><span class="tok-op">.</span><span class="tok-type">Model</span><span class="tok-op">.</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-typefacts"><span class="tok-type">TypeFacts</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-linkentry"><span class="tok-type">LinkEntry</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns <code>links</code> plus a link to the home page of each type that make blocks extend and that does not link yet.</p>
+<p>A name such as <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><code>Integer</code></a> is claimed by a module and by several make blocks, so <code>buildLinks</code> drops it. In a signature it means the type, which has a home page (<code>Relations.homePathOf</code>), so this adds that link. A name that already links keeps its link.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-linkentriesonpage">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-linkentriesonpage"><code>linkEntriesOnPage</code></a> <a class="permalink" href="#function-tey-docgen-nav-linkentriesonpage" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">linkEntriesOnPage</span><span class="tok-punct">(</span>entities<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> urlPath<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-linkentry"><span class="tok-type">LinkEntry</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-memberlinks">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-memberlinks"><code>memberLinks</code></a> <a class="permalink" href="#function-tey-docgen-nav-memberlinks" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">memberLinks</span><span class="tok-punct">(</span>ownerName<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> owner<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> functions<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">Tey</span><span class="tok-op">.</span><span class="tok-type">Docgen</span><span class="tok-op">.</span><span class="tok-type">Model</span><span class="tok-op">.</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-functionentry"><span class="tok-type">FunctionEntry</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> urlPath<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-linkentry"><span class="tok-type">LinkEntry</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns links for the functions of a trait or make block under their owner's name, so prose that writes <a class="xref" href="/prelude/0.4.0-rc.5-dev/list/#list-map"><code>List.map</code></a> links to that function.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-linkablenames">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-linkablenames"><code>linkableNames</code></a> <a class="permalink" href="#function-tey-docgen-nav-linkablenames" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">linkableNames</span><span class="tok-punct">(</span>e<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#type-tey-docgen-model-entity"><span class="tok-type">Entity</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns the names an entity can be linked under: its qualified name and its simple name. Functions have none of their own. A make block links under its target's base name, so &quot;Map&lt;K, V&gt;&quot; links as &quot;Map&quot;; a list target such as &quot;[X]&quot; does not link.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-uniquetarget?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-uniquetarget?"><code>uniqueTarget?</code></a> <a class="permalink" href="#function-tey-docgen-nav-uniquetarget?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">uniqueTarget?</span><span class="tok-punct">(</span>entries<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-linkentry"><span class="tok-type">LinkEntry</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> candidate<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-linkentry"><span class="tok-type">LinkEntry</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> when every entry with <code>candidate</code>'s name points at the same page and anchor.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-differenttarget?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-differenttarget?"><code>differentTarget?</code></a> <a class="permalink" href="#function-tey-docgen-nav-differenttarget?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">differentTarget?</span><span class="tok-punct">(</span>a<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-linkentry"><span class="tok-type">LinkEntry</span></a><span class="tok-punct">,</span> b<span class="tok-op">:</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-linkentry"><span class="tok-type">LinkEntry</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-resolve">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-resolve"><code>resolve</code></a> <a class="permalink" href="#function-tey-docgen-nav-resolve" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">resolve</span><span class="tok-punct">(</span>links<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-linkentry"><span class="tok-type">LinkEntry</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> name<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">LinkEntry?</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-segmentsof">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-segmentsof"><code>segmentsOf</code></a> <a class="permalink" href="#function-tey-docgen-nav-segmentsof" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">segmentsOf</span><span class="tok-punct">(</span>typeText<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Splits a type reference into identifiers and the separators between them, so a renderer can link the identifiers: &quot;Map&lt;String, FS.Path&gt;&quot; gives [&quot;Map&quot;, &quot;&lt;&quot;, &quot;String&quot;, &quot;, &quot;, &quot;FS.Path&quot;, &quot;&gt;&quot;].</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-splitloop">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-splitloop"><code>splitLoop</code></a> <a class="permalink" href="#function-tey-docgen-nav-splitloop" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">splitLoop</span><span class="tok-punct">(</span>rest<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> ident<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> sep<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> out<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p><code>ident</code> is the identifier being read, <code>sep</code> the separator run since it; only one is non-empty at a time, and whichever it is goes out in order.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-flushident">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-flushident"><code>flushIdent</code></a> <a class="permalink" href="#function-tey-docgen-nav-flushident" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">flushIdent</span><span class="tok-punct">(</span>ident<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> out<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-flushsep">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-flushsep"><code>flushSep</code></a> <a class="permalink" href="#function-tey-docgen-nav-flushsep" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">flushSep</span><span class="tok-punct">(</span>sep<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> out<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-isidentchar?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-isidentchar?"><code>isIdentChar?</code></a> <a class="permalink" href="#function-tey-docgen-nav-isidentchar?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">isIdentChar?</span><span class="tok-punct">(</span>ch<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-hreffrom">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-hreffrom"><code>hrefFrom</code></a> <a class="permalink" href="#function-tey-docgen-nav-hreffrom" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">hrefFrom</span><span class="tok-punct">(</span>fromPath<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> toPath<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> anchor<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Returns the relative href from one page of the package to an anchor on another: &quot;#anchor&quot; on the same page, otherwise a path up to the version directory and down to the target.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-upstoversiondir">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-upstoversiondir"><code>upsToVersionDir</code></a> <a class="permalink" href="#function-tey-docgen-nav-upstoversiondir" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">upsToVersionDir</span><span class="tok-punct">(</span>urlPath<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-nav-ups">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-nav-ups"><code>ups</code></a> <a class="permalink" href="#function-tey-docgen-nav-ups" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">ups</span><span class="tok-punct">(</span>n<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+</div>
+</section>
+

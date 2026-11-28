@@ -1,0 +1,577 @@
+<div class="intro">
+<p>A Markdown reader: parses a document into blocks and renders them as HTML, so hand-written pages get the same layout as the generated reference.</p>
+<p>(<a class="xref" href="/tey/0.2.1-dev/tey/docgen/markdown/#module-tey-docgen-markdown"><code>Tey.Docgen.Markdown</code></a> goes the other way, writing Markdown from the model.)</p>
+<p>It reads the subset the kex.run guide pages use: simple <code>key: value</code> frontmatter, <code>#</code> headings, paragraphs, fenced code (<code>kex</code> code is highlighted), blockquotes, nested ordered and unordered lists, GFM tables, horizontal rules, and inline code, bold, italics and links. It is not CommonMark: there is no inline HTML, no reference links and no underlined headings. Anything it does not recognise is a paragraph, never an error.</p>
+</div>
+<section class="entity" id="module-tey-docgen-md">
+<h2><span class="kind kind-module">module</span> <code>Tey.Docgen.Md</code> <a class="permalink" href="#module-tey-docgen-md" title="Copy link" aria-label="Copy link">#</a></h2>
+<section class="summary">
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-parsedocument"><code>parseDocument</code></a></dt><dd>Parses a Markdown document.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-tohtml"><code>toHtml</code></a></dt><dd>Returns the HTML for a document's body, ignoring its frontmatter.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-splitfrontmatter"><code>splitFrontmatter</code></a></dt><dd>--- frontmatter -------------------------------------------------------</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-closingfence"><code>closingFence</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-frontmatterof"><code>frontmatterOf</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-assign"><code>assign</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-unquote"><code>unquote</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-trimends"><code>trimEnds</code></a></dt><dd>Drops the first and last character, the quotes <code>quoted?</code> matched.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-quoted?"><code>quoted?</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-parseblocks"><code>parseBlocks</code></a></dt><dd>--- block structure ---------------------------------------------------</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-blockloop"><code>blockLoop</code></a></dt><dd>One pass over the lines, each branch consuming the whole construct it recognises and returning the lines it did not take.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-fence?"><code>fence?</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-rule?"><code>rule?</code></a></dt><dd>Returns <code>true</code> for a horizontal rule: three or more of <code>-</code>, <code>*</code> or <code>_</code> and nothing else on the line.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-ruleof?"><code>ruleOf?</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-headinglevel"><code>headingLevel</code></a></dt><dd>Returns a heading's level, so <code>##</code> gives 2, or 0 when the line is not a heading.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-counthashes"><code>countHashes</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-takecode"><code>takeCode</code></a></dt><dd>--- fenced code -------------------------------------------------------</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-closingcodefence"><code>closingCodeFence</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-takequote"><code>takeQuote</code></a></dt><dd>--- blockquotes -------------------------------------------------------</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-quoteline?"><code>quoteLine?</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-stripquote"><code>stripQuote</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-takelist"><code>takeList</code></a></dt><dd>--- lists -------------------------------------------------------------</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-listline?"><code>listLine?</code></a></dt><dd>Returns <code>true</code> for a line that can continue a list: an item, an indented line or a blank line.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-listitems"><code>listItems</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-flushitem"><code>flushItem</code></a></dt><dd>Adds the collected item to <code>accum</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-droptrailingblanks"><code>dropTrailingBlanks</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-dedent"><code>dedent</code></a></dt><dd>Removes the common indent, so nested content is parsed at column zero.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-indentof"><code>indentOf</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-itemmarker"><code>itemMarker</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-bulletmarker"><code>bulletMarker</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-numbermarker"><code>numberMarker</code></a></dt><dd>Returns a numbered-list marker, so `&quot;12.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-tablestart?"><code>tableStart?</code></a></dt><dd>--- tables ------------------------------------------------------------</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-delimiterrow?"><code>delimiterRow?</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-delimiterchar?"><code>delimiterChar?</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-taketable"><code>takeTable</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-cellsof"><code>cellsOf</code></a></dt><dd>Returns the cells of a table row.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-takeparagraph"><code>takeParagraph</code></a></dt><dd>--- paragraphs --------------------------------------------------------</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-paragraphline?"><code>paragraphLine?</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-render"><code>render</code></a></dt><dd>--- rendering ---------------------------------------------------------</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-renderblock"><code>renderBlock</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-rendercode"><code>renderCode</code></a></dt><dd>Renders a code block.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-renderitems"><code>renderItems</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-renderitem"><code>renderItem</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-rendertable"><code>renderTable</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-renderrow"><code>renderRow</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-anchor"><code>anchor</code></a></dt><dd>Returns a heading's id: lower case, with each run of characters other than letters and digits turned into one dash.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-trimdashes"><code>trimDashes</code></a></dt><dd>Removes dashes from both ends, which <code>anchor</code> can leave: <code>(try)</code> becomes <code>-try-</code> before this.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-anchorchar"><code>anchorChar</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-squeezedashes"><code>squeezeDashes</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-stripinline"><code>stripInline</code></a></dt><dd>Returns the text with the inline markers (backticks, <code>*</code> and <code>_</code>) removed.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-inline"><code>inline</code></a></dt><dd>--- inline ------------------------------------------------------------</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-inlineloop"><code>inlineLoop</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-emphasis"><code>emphasis</code></a></dt><dd>Renders links, then bold and italics, so a <code>*</code> inside a URL is not read as a marker.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-links"><code>links</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-linkparts"><code>linkParts</code></a></dt><dd>Splits <code>label](href)</code> and what follows it into <code>(label, href, rest)</code>, or returns <code>None</code> when it is not a link, and the <code>[</code> is plain text.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-marks"><code>marks</code></a></dt><dd>Renders bold before italics, or the opening <code>**</code> would be read as empty italics.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-wrap"><code>wrap</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-pairs"><code>pairs</code></a></dt><dd>Replaces each pair of markers with a tag.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-indexoftext"><code>indexOfText</code></a></dt><dd>Returns where <code>needle</code> first occurs in <code>haystack</code> from <code>at</code> on, or <code>None</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-md-esc"><code>esc</code></a></dt><dd></dd></div>
+</dl>
+</section>
+<div class="functions">
+<div class="fn" id="function-tey-docgen-md-parsedocument">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-parsedocument"><code>parseDocument</code></a> <a class="permalink" href="#function-tey-docgen-md-parsedocument" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parseDocument</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-tey-docgen-md-document"><span class="tok-type">Document</span></a></span></code></pre>
+</div>
+<p>Parses a Markdown document. Windows line endings are accepted.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-tohtml">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-tohtml"><code>toHtml</code></a> <a class="permalink" href="#function-tey-docgen-md-tohtml" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">toHtml</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Returns the HTML for a document's body, ignoring its frontmatter.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-splitfrontmatter">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-splitfrontmatter"><code>splitFrontmatter</code></a> <a class="permalink" href="#function-tey-docgen-md-splitfrontmatter" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">splitFrontmatter</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="#record-tey-docgen-md-frontmatter"><span class="tok-type">Frontmatter</span></a><span class="tok-punct">,</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span></span></code></pre>
+</div>
+<p>--- frontmatter -------------------------------------------------------</p>
+<p>A leading <code>---</code> fence delimits frontmatter. Without one the document is all body, and every field takes its default.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-closingfence">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-closingfence"><code>closingFence</code></a> <a class="permalink" href="#function-tey-docgen-md-closingfence" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">closingFence</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> index<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer?</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-frontmatterof">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-frontmatterof"><code>frontmatterOf</code></a> <a class="permalink" href="#function-tey-docgen-md-frontmatterof" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">frontmatterOf</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> accum<span class="tok-op">:</span> <a class="xref" href="#record-tey-docgen-md-frontmatter"><span class="tok-type">Frontmatter</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-tey-docgen-md-frontmatter"><span class="tok-type">Frontmatter</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-assign">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-assign"><code>assign</code></a> <a class="permalink" href="#function-tey-docgen-md-assign" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">assign</span><span class="tok-punct">(</span>front<span class="tok-op">:</span> <a class="xref" href="#record-tey-docgen-md-frontmatter"><span class="tok-type">Frontmatter</span></a><span class="tok-punct">,</span> key<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-tey-docgen-md-frontmatter"><span class="tok-type">Frontmatter</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-unquote">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-unquote"><code>unquote</code></a> <a class="permalink" href="#function-tey-docgen-md-unquote" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">unquote</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-trimends">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-trimends"><code>trimEnds</code></a> <a class="permalink" href="#function-tey-docgen-md-trimends" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">trimEnds</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Drops the first and last character, the quotes <code>quoted?</code> matched.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-quoted?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-quoted?"><code>quoted?</code></a> <a class="permalink" href="#function-tey-docgen-md-quoted?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">quoted?</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> mark<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-parseblocks">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-parseblocks"><code>parseBlocks</code></a> <a class="permalink" href="#function-tey-docgen-md-parseblocks" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parseBlocks</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="#type-tey-docgen-md-mdblock"><span class="tok-type">MdBlock</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>--- block structure ---------------------------------------------------</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-blockloop">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-blockloop"><code>blockLoop</code></a> <a class="permalink" href="#function-tey-docgen-md-blockloop" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">blockLoop</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> accum<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#type-tey-docgen-md-mdblock"><span class="tok-type">MdBlock</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="#type-tey-docgen-md-mdblock"><span class="tok-type">MdBlock</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>One pass over the lines, each branch consuming the whole construct it recognises and returning the lines it did not take.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-fence?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-fence?"><code>fence?</code></a> <a class="permalink" href="#function-tey-docgen-md-fence?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">fence?</span><span class="tok-punct">(</span>line<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-rule?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-rule?"><code>rule?</code></a> <a class="permalink" href="#function-tey-docgen-md-rule?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">rule?</span><span class="tok-punct">(</span>line<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> for a horizontal rule: three or more of <code>-</code>, <code>*</code> or <code>_</code> and nothing else on the line. Frontmatter is removed before this runs.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-ruleof?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-ruleof?"><code>ruleOf?</code></a> <a class="permalink" href="#function-tey-docgen-md-ruleof?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">ruleOf?</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> mark<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-headinglevel">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-headinglevel"><code>headingLevel</code></a> <a class="permalink" href="#function-tey-docgen-md-headinglevel" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">headingLevel</span><span class="tok-punct">(</span>line<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+<p>Returns a heading's level, so <code>##</code> gives 2, or 0 when the line is not a heading. <code>#hashtag</code> is not one.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-counthashes">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-counthashes"><code>countHashes</code></a> <a class="permalink" href="#function-tey-docgen-md-counthashes" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">countHashes</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> seen<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-takecode">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-takecode"><code>takeCode</code></a> <a class="permalink" href="#function-tey-docgen-md-takecode" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">takeCode</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="#type-tey-docgen-md-mdblock"><span class="tok-type">MdBlock</span></a><span class="tok-punct">,</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span></span></code></pre>
+</div>
+<p>--- fenced code -------------------------------------------------------</p>
+<p>Takes a fenced code block. The word after the fence is the language. A fence that is never closed runs to the end of the document.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-closingcodefence">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-closingcodefence"><code>closingCodeFence</code></a> <a class="permalink" href="#function-tey-docgen-md-closingcodefence" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">closingCodeFence</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> index<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-takequote">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-takequote"><code>takeQuote</code></a> <a class="permalink" href="#function-tey-docgen-md-takequote" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">takeQuote</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="#type-tey-docgen-md-mdblock"><span class="tok-type">MdBlock</span></a><span class="tok-punct">,</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span></span></code></pre>
+</div>
+<p>--- blockquotes -------------------------------------------------------</p>
+<p>Takes a blockquote. The <code>&gt;</code> is stripped from each line and the rest is parsed as blocks, so a quote can hold anything a document can.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-quoteline?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-quoteline?"><code>quoteLine?</code></a> <a class="permalink" href="#function-tey-docgen-md-quoteline?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">quoteLine?</span><span class="tok-punct">(</span>line<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-stripquote">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-stripquote"><code>stripQuote</code></a> <a class="permalink" href="#function-tey-docgen-md-stripquote" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">stripQuote</span><span class="tok-punct">(</span>line<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-takelist">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-takelist"><code>takeList</code></a> <a class="permalink" href="#function-tey-docgen-md-takelist" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">takeList</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="#type-tey-docgen-md-mdblock"><span class="tok-type">MdBlock</span></a><span class="tok-punct">,</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span></span></code></pre>
+</div>
+<p>--- lists -------------------------------------------------------------</p>
+<p>Takes a list. A line indented past the first item's marker belongs to the item above it and is parsed as blocks, so an item can hold paragraphs, code and nested lists.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-listline?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-listline?"><code>listLine?</code></a> <a class="permalink" href="#function-tey-docgen-md-listline?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">listLine?</span><span class="tok-punct">(</span>line<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> for a line that can continue a list: an item, an indented line or a blank line. The first other line ends the list.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-listitems">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-listitems"><code>listItems</code></a> <a class="permalink" href="#function-tey-docgen-md-listitems" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">listItems</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> indent<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> current<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> accum<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-md-listitem"><span class="tok-type">ListItem</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-md-listitem"><span class="tok-type">ListItem</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-flushitem">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-flushitem"><code>flushItem</code></a> <a class="permalink" href="#function-tey-docgen-md-flushitem" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">flushItem</span><span class="tok-punct">(</span>current<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> accum<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-md-listitem"><span class="tok-type">ListItem</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-md-listitem"><span class="tok-type">ListItem</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Adds the collected item to <code>accum</code>. The first line is the item's text; the lines below it are dedented and parsed as nested blocks.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-droptrailingblanks">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-droptrailingblanks"><code>dropTrailingBlanks</code></a> <a class="permalink" href="#function-tey-docgen-md-droptrailingblanks" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">dropTrailingBlanks</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-dedent">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-dedent"><code>dedent</code></a> <a class="permalink" href="#function-tey-docgen-md-dedent" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">dedent</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Removes the common indent, so nested content is parsed at column zero.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-indentof">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-indentof"><code>indentOf</code></a> <a class="permalink" href="#function-tey-docgen-md-indentof" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">indentOf</span><span class="tok-punct">(</span>line<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-itemmarker">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-itemmarker"><code>itemMarker</code></a> <a class="permalink" href="#function-tey-docgen-md-itemmarker" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">itemMarker</span><span class="tok-punct">(</span>line<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-bulletmarker">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-bulletmarker"><code>bulletMarker</code></a> <a class="permalink" href="#function-tey-docgen-md-bulletmarker" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">bulletMarker</span><span class="tok-punct">(</span>line<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-numbermarker">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-numbermarker"><code>numberMarker</code></a> <a class="permalink" href="#function-tey-docgen-md-numbermarker" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">numberMarker</span><span class="tok-punct">(</span>line<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Returns a numbered-list marker, so <code>&quot;12. &quot;</code> gives <code>&quot;12.&quot;</code>, or <code>&quot;&quot;</code> when the line has none.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-tablestart?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-tablestart?"><code>tableStart?</code></a> <a class="permalink" href="#function-tey-docgen-md-tablestart?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">tableStart?</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>--- tables ------------------------------------------------------------</p>
+<p>Returns <code>true</code> when the lines start a GFM table: a header row followed by a row of dashes. Without that row the lines are a paragraph.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-delimiterrow?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-delimiterrow?"><code>delimiterRow?</code></a> <a class="permalink" href="#function-tey-docgen-md-delimiterrow?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">delimiterRow?</span><span class="tok-punct">(</span>line<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-delimiterchar?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-delimiterchar?"><code>delimiterChar?</code></a> <a class="permalink" href="#function-tey-docgen-md-delimiterchar?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">delimiterChar?</span><span class="tok-punct">(</span>c<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-taketable">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-taketable"><code>takeTable</code></a> <a class="permalink" href="#function-tey-docgen-md-taketable" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">takeTable</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="#type-tey-docgen-md-mdblock"><span class="tok-type">MdBlock</span></a><span class="tok-punct">,</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-cellsof">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-cellsof"><code>cellsOf</code></a> <a class="permalink" href="#function-tey-docgen-md-cellsof" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">cellsOf</span><span class="tok-punct">(</span>line<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns the cells of a table row. Leading and trailing pipes are optional.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-takeparagraph">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-takeparagraph"><code>takeParagraph</code></a> <a class="permalink" href="#function-tey-docgen-md-takeparagraph" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">takeParagraph</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="#type-tey-docgen-md-mdblock"><span class="tok-type">MdBlock</span></a><span class="tok-punct">,</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span></span></code></pre>
+</div>
+<p>--- paragraphs --------------------------------------------------------</p>
+<p>Takes a paragraph, which ends at a blank line or where another block starts, so a list or code fence right under prose is not swallowed.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-paragraphline?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-paragraphline?"><code>paragraphLine?</code></a> <a class="permalink" href="#function-tey-docgen-md-paragraphline?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">paragraphLine?</span><span class="tok-punct">(</span>line<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-render">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-render"><code>render</code></a> <a class="permalink" href="#function-tey-docgen-md-render" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">render</span><span class="tok-punct">(</span>items<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#type-tey-docgen-md-mdblock"><span class="tok-type">MdBlock</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>--- rendering ---------------------------------------------------------</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-renderblock">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-renderblock"><code>renderBlock</code></a> <a class="permalink" href="#function-tey-docgen-md-renderblock" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">renderBlock</span><span class="tok-punct">(</span>block<span class="tok-op">:</span> <a class="xref" href="#type-tey-docgen-md-mdblock"><span class="tok-type">MdBlock</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-rendercode">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-rendercode"><code>renderCode</code></a> <a class="permalink" href="#function-tey-docgen-md-rendercode" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">renderCode</span><span class="tok-punct">(</span>language<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> body<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Renders a code block. Kex code goes through the reference pages' highlighter; other languages are escaped and left plain.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-renderitems">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-renderitems"><code>renderItems</code></a> <a class="permalink" href="#function-tey-docgen-md-renderitems" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">renderItems</span><span class="tok-punct">(</span>items<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="#record-tey-docgen-md-listitem"><span class="tok-type">ListItem</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-renderitem">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-renderitem"><code>renderItem</code></a> <a class="permalink" href="#function-tey-docgen-md-renderitem" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">renderItem</span><span class="tok-punct">(</span>item<span class="tok-op">:</span> <a class="xref" href="#record-tey-docgen-md-listitem"><span class="tok-type">ListItem</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-rendertable">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-rendertable"><code>renderTable</code></a> <a class="permalink" href="#function-tey-docgen-md-rendertable" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">renderTable</span><span class="tok-punct">(</span>header<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> rows<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-renderrow">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-renderrow"><code>renderRow</code></a> <a class="permalink" href="#function-tey-docgen-md-renderrow" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">renderRow</span><span class="tok-punct">(</span>row<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-anchor">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-anchor"><code>anchor</code></a> <a class="permalink" href="#function-tey-docgen-md-anchor" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">anchor</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Returns a heading's id: lower case, with each run of characters other than letters and digits turned into one dash.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-trimdashes">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-trimdashes"><code>trimDashes</code></a> <a class="permalink" href="#function-tey-docgen-md-trimdashes" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">trimDashes</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Removes dashes from both ends, which <code>anchor</code> can leave: <code>(try)</code> becomes <code>-try-</code> before this.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-anchorchar">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-anchorchar"><code>anchorChar</code></a> <a class="permalink" href="#function-tey-docgen-md-anchorchar" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">anchorChar</span><span class="tok-punct">(</span>c<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-char"><span class="tok-type">Char</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-squeezedashes">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-squeezedashes"><code>squeezeDashes</code></a> <a class="permalink" href="#function-tey-docgen-md-squeezedashes" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">squeezeDashes</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> accum<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-stripinline">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-stripinline"><code>stripInline</code></a> <a class="permalink" href="#function-tey-docgen-md-stripinline" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">stripInline</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Returns the text with the inline markers (backticks, <code>*</code> and <code>_</code>) removed.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-inline">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-inline"><code>inline</code></a> <a class="permalink" href="#function-tey-docgen-md-inline" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">inline</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>--- inline ------------------------------------------------------------</p>
+<p>Renders inline Markdown. Code spans are handled first: their content is escaped but not scanned for emphasis, so <code>a*b*c</code> in backticks stays as written.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-inlineloop">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-inlineloop"><code>inlineLoop</code></a> <a class="permalink" href="#function-tey-docgen-md-inlineloop" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">inlineLoop</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> accum<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-emphasis">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-emphasis"><code>emphasis</code></a> <a class="permalink" href="#function-tey-docgen-md-emphasis" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">emphasis</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Renders links, then bold and italics, so a <code>*</code> inside a URL is not read as a marker.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-links">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-links"><code>links</code></a> <a class="permalink" href="#function-tey-docgen-md-links" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">links</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> accum<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-linkparts">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-linkparts"><code>linkParts</code></a> <a class="permalink" href="#function-tey-docgen-md-linkparts" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">linkParts</span><span class="tok-punct">(</span>rest<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span><span class="tok-op">?</span></span></code></pre>
+</div>
+<p>Splits <code>label](href)</code> and what follows it into <code>(label, href, rest)</code>, or returns <code>None</code> when it is not a link, and the <code>[</code> is plain text.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-marks">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-marks"><code>marks</code></a> <a class="permalink" href="#function-tey-docgen-md-marks" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">marks</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Renders bold before italics, or the opening <code>**</code> would be read as empty italics. The remaining text is escaped here.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-wrap">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-wrap"><code>wrap</code></a> <a class="permalink" href="#function-tey-docgen-md-wrap" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">wrap</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> strongMark<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> strongTag<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> emMark<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> emTag<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-pairs">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-pairs"><code>pairs</code></a> <a class="permalink" href="#function-tey-docgen-md-pairs" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">pairs</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> mark<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> tag<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> accum<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Replaces each pair of markers with a tag. A marker without a partner is left as written.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-indexoftext">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-indexoftext"><code>indexOfText</code></a> <a class="permalink" href="#function-tey-docgen-md-indexoftext" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">indexOfText</span><span class="tok-punct">(</span>haystack<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> needle<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> at<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer?</span></span></code></pre>
+</div>
+<p>Returns where <code>needle</code> first occurs in <code>haystack</code> from <code>at</code> on, or <code>None</code>. <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#string-indexof"><code>String.indexOf</code></a> only finds a <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-char"><code>Char</code></a>, and <code>**</code> is two characters.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-md-esc">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-md-esc"><code>esc</code></a> <a class="permalink" href="#function-tey-docgen-md-esc" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">esc</span><span class="tok-punct">(</span>s<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+</div>
+</section>
+<section class="entity" id="record-tey-docgen-md-frontmatter">
+<h2><span class="kind kind-record">record</span> <code>Frontmatter</code> <a class="permalink" href="#record-tey-docgen-md-frontmatter" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>The frontmatter keys this reader uses. Other keys are ignored, so a page may carry metadata for something else.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>title</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>description</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>order</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-tey-docgen-md-listitem">
+<h2><span class="kind kind-record">record</span> <code>ListItem</code> <a class="permalink" href="#record-tey-docgen-md-listitem" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>One item of a list: its own inline text, plus any blocks nested under it.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>text</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>children</code></dt><dd><code>[<a class="xref" href="#type-tey-docgen-md-mdblock">MdBlock</a>]</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="type-tey-docgen-md-mdblock">
+<h2><span class="kind kind-type">type</span> <code>MdBlock</code> <a class="permalink" href="#type-tey-docgen-md-mdblock" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A block of a Markdown document.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>Heading(Integer, String)</code></li>
+<li><code>Paragraph(String)</code></li>
+<li><code>Code(String, String)</code></li>
+<li><code>Quote([MdBlock])</code></li>
+<li><code>Bullets([ListItem])</code></li>
+<li><code>Numbers([ListItem])</code></li>
+<li><code>Table([String], [[String]])</code></li>
+<li><code>Rule</code></li>
+</ul>
+
+</section>
+<section class="entity" id="record-tey-docgen-md-document">
+<h2><span class="kind kind-record">record</span> <code>Document</code> <a class="permalink" href="#record-tey-docgen-md-document" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A parsed document: its frontmatter and its blocks.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>frontmatter</code></dt><dd><code><a class="xref" href="#record-tey-docgen-md-frontmatter">Frontmatter</a></code></dd></div>
+<div class="field"><dt><code>blocks</code></dt><dd><code>[<a class="xref" href="#type-tey-docgen-md-mdblock">MdBlock</a>]</code></dd></div>
+</dl>
+
+</section>

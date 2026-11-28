@@ -1,0 +1,22 @@
+---
+package: tey
+version: "0.2.1-dev"
+source: tey/docgen/css.kex
+title: Tey.Docgen.Css
+entities:
+  - { kind: module, name: "Tey.Docgen.Css" }
+---
+
+# Tey.Docgen.Css
+
+The docs site stylesheet, ported by hand from the design tokens in kex-run-site's src/styles/global.css: the honey and cream palette of the kex logo, Plus Jakarta Sans, Fraunces and JetBrains Mono, and a dark code surface coloured through the tok-* syntax classes. It is plain CSS with custom properties and needs no build step, so the generated site is static files that any host can serve.
+
+The stylesheet lives in assets/style.css and is embedded at compile time. `Tey.Docgen.Index` and `Tey.Docgen.Prose` write it to <out>/assets/style.css.
+
+## module `Tey.Docgen.Css`
+
+### `siteCss`
+
+```kex
+siteCss -> String
+```

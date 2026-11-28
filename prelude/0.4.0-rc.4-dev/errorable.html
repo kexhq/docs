@@ -1,0 +1,74 @@
+<section class="entity" id="trait-errorable">
+<h2><span class="kind kind-trait">trait</span> <code>Errorable</code> <a class="permalink" href="#trait-errorable" title="Copy link" aria-label="Copy link">#</a></h2>
+<p><a class="xref" href="#trait-errorable"><code>Errorable</code></a>: the trait for error values that carry a message.</p>
+<p>An error type implements it by supplying <code>message</code>. A handler that only needs to show or log the error can then take any <a class="xref" href="#trait-errorable"><code>Errorable</code></a>.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">foul</span> <span class="tok-fn">report</span><span class="tok-punct">(</span>e<span class="tok-op">:</span> <span class="tok-type">Errorable</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span> <span class="tok-keyword">do</span>
+  <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">error: </span><span class="tok-string">${</span>e<span class="tok-op">.</span><span class="tok-method">message</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="implements">Implemented by <a class="xref" href="#make-parseerror"><code>ParseError&lt;T&gt;</code></a>.</p>
+<h3>Required functions</h3>
+<p class="group-note">An implementor writes these.</p>
+
+<div class="functions">
+<div class="fn" id="errorable-message">
+<div class="fn-head">
+<h4><a class="self" href="#errorable-message"><code>message</code></a> <a class="permalink" href="#errorable-message" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">message</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Returns a description of what went wrong, written for a person to read.</p>
+<p>To decide what to do about an error, match on its type or fields; the wording of the message may change.</p>
+<p class="returns"><strong>Returns</strong> the failure message</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">error: </span><span class="tok-string">${</span>e<span class="tok-op">.</span><span class="tok-method">message</span><span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+
+</section>
+<section class="entity" id="type-parseerror">
+<h2><span class="kind kind-type">type</span> <code>ParseError&lt;T&gt;</code> <a class="permalink" href="#type-parseerror" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>The reason <code>Integer.parse</code>, <code>Float.parse</code> or <code>Number.parse</code> could not read a number, with one case per reason. Positions count characters from the start of the text.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">Integer</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span>text<span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>n<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">Money</span><span class="tok-punct">(</span>n<span class="tok-punct">,</span> <span class="tok-type">Currency</span><span class="tok-op">.</span><span class="tok-type">DEFAULT</span><span class="tok-punct">)</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span><span class="tok-type">Trailing</span><span class="tok-punct">(</span>n<span class="tok-punct">,</span> unit<span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">Money</span><span class="tok-punct">(</span>n<span class="tok-punct">,</span> unit<span class="tok-op">.</span><span class="tok-method">trim</span><span class="tok-punct">)</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span><span class="tok-type">NoDigits</span><span class="tok-punct">(</span>_<span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-fn">die</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">no amount in </span><span class="tok-string">${</span>text<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-fn">die</span><span class="tok-punct">(</span>e<span class="tok-op">.</span><span class="tok-method">message</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>Use <code>parse</code> when the reason matters. <code>to(Integer)</code> only returns <code>None</code>.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>NoDigits(Integer)</code></li>
+<li><code>Trailing(T, String)</code></li>
+<li><code>BadGrouping(Integer)</code></li>
+<li><code>OutOfRange</code></li>
+<li><code>BadRadix(Integer)</code></li>
+<li><code>BadCulture</code></li>
+</ul>
+<p class="implements">Implements <a class="xref" href="#trait-errorable"><code>Errorable</code></a>.</p>
+<section class="members" id="make-parseerror">
+<h3>Functions</h3>
+
+<div class="functions">
+<div class="fn" id="parseerror-message">
+<div class="fn-head">
+<h4><a class="self" href="#parseerror-message"><code>message</code></a> <a class="tag-trait" href="#errorable-message" title="Implements Errorable.message">Errorable</a> <a class="permalink" href="#parseerror-message" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">message</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Returns the failure as a sentence for a person to read.</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Integer</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">abc</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">mapError</span><span class="tok-punct">(</span><span class="tok-op">~</span>message<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Error(&quot;expected a digit at 0&quot;)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="record-patternerror">
+<h2><span class="kind kind-record">record</span> <code>PatternError</code> <a class="permalink" href="#record-patternerror" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>The error <code>NumberFormat.parse</code> and <code>DateFormat.parse</code> return for a pattern they cannot read. It says where the pattern goes wrong and why, for the pattern's author to fix.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>position</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>message</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string">String</a></code></dd></div>
+</dl>
+
+</section>

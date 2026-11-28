@@ -1,0 +1,618 @@
+<section class="entity" id="type-range">
+<h2><span class="kind kind-type">type</span> <code>Range&lt;A&gt;</code> <a class="permalink" href="#type-range" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A span between two bounds, written <code>(1..10)</code> or <code>('a'..'z')</code>.</p>
+<p>Both ends are included. A range holds only its endpoints (and a step), so a large one costs nothing until you enumerate it. Integer and character ranges can be enumerated. A Float range such as <code>(-1.0..1.0)</code> is a pair of bounds, useful for <code>contains?</code> or random sampling, and cannot be enumerated. A range whose lower end is above its upper end is empty, so <code>(1..count).each</code> does nothing when <code>count</code> is 0.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>          <span class="tok-comment"># =&gt; [1, 2, 3, 4, 5]</span>
+<span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">sum</span>            <span class="tok-comment"># =&gt; 15</span>
+<span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">in?</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span>          <span class="tok-comment"># =&gt; true</span>
+<span class="tok-punct">(</span>'a'<span class="tok-op">.</span><span class="tok-op">.</span>'e'<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>      <span class="tok-comment"># =&gt; ['a', 'b', 'c', 'd', 'e']</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>To count down or by another step, use <code>by</code> or <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#integer-downto"><code>Integer.downTo</code></a>:</p>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">by</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>   <span class="tok-comment"># =&gt; [1, 3, 5, 7, 9]</span>
+<span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">by</span><span class="tok-punct">(</span><span class="tok-op">-</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>  <span class="tok-comment"># =&gt; [10, 7, 4, 1]</span>
+<span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-method">downTo</span><span class="tok-punct">(</span><span class="tok-number">8</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>    <span class="tok-comment"># =&gt; [10, 9, 8]</span>
+<span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reverse</span><span class="tok-op">.</span><span class="tok-method">items</span>  <span class="tok-comment"># =&gt; [4, 3, 2, 1]</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>A range of Integers or Chars (a <a class="xref" href="#trait-discrete"><code>Discrete</code></a> type) is <a class="xref" href="/prelude/0.4.0-rc.5-dev/enumerable/#trait-enumerable"><code>Enumerable</code></a> and <a class="xref" href="/prelude/0.4.0-rc.5-dev/enumerable/#trait-foldable"><code>Foldable</code></a>, and the list functions below return lists. A Float range has only <code>contains?</code>. Use <code>items</code> to get the elements as a list.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">filter</span><span class="tok-punct">(</span><span class="tok-op">~</span>even?<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [2, 4, 6, 8, 10]</span>
+<span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>n<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="implements">Implements <a class="xref" href="/prelude/0.4.0-rc.5-dev/enumerable/#trait-enumerable"><code>Enumerable&lt;A&gt;</code></a>, <a class="xref" href="/prelude/0.4.0-rc.5-dev/enumerable/#trait-foldable"><code>Foldable&lt;A&gt;</code></a>.</p>
+<section class="summary">
+<h3><a href="#make-range">Functions</a></h3>
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#range-contains?"><code>contains?</code></a></dt><dd>Returns <code>true</code> when <code>value</code> lies between the endpoints, both included.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-reduce"><code>reduce</code></a></dt><dd>Folds over the range's elements in order.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-each"><code>each</code></a></dt><dd>Calls <code>f</code> with each element in order, for its side effects.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-map"><code>map</code></a></dt><dd>Returns a list of <code>f</code> applied to each element, in order.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-sum"><code>sum</code></a></dt><dd>Returns the sum of the range's elements.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-product"><code>product</code></a></dt><dd>Returns the product of the range's elements.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-by"><code>by</code></a></dt><dd>Returns the range counted by <code>step</code> from its first endpoint towards its last.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-items"><code>items</code></a></dt><dd>Returns the range's elements as a list.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-first"><code>first</code></a></dt><dd>Returns the first element, or <code>None</code> for an empty range.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-second"><code>second</code></a></dt><dd>Returns the second element, or <code>None</code> when the range is shorter than two.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-third"><code>third</code></a></dt><dd>Returns the third element, or <code>None</code> when the range is shorter than three.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-last"><code>last</code></a></dt><dd>Returns the last element, or <code>None</code> for an empty range.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-rest"><code>rest</code></a></dt><dd>Returns every element after the first, as a list.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-length"><code>length</code></a></dt><dd>Returns how many elements the range has.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-count"><code>count</code></a></dt><dd>Returns how many elements the range has, as <code>length</code> does.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-empty?"><code>empty?</code></a></dt><dd>Returns <code>true</code> when the range has no elements.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-max"><code>max</code></a></dt><dd>Returns the largest element, or <code>None</code> for an empty range.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-min"><code>min</code></a></dt><dd>Returns the smallest element, or <code>None</code> for an empty range.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-minby"><code>minBy</code></a></dt><dd>Returns the element with the smallest <code>f</code> key wrapped in <code>Just</code>, or <code>None</code> for an empty range.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-maxby"><code>maxBy</code></a></dt><dd>Returns the element with the largest <code>f</code> key wrapped in <code>Just</code>, or <code>None</code> for an empty range.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-sortby"><code>sortBy</code></a></dt><dd>Returns the elements as a list sorted by the key <code>f</code> gives each one, smallest key first.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-groupby"><code>groupBy</code></a></dt><dd>Groups the elements by the key <code>f</code> gives each one.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-reverse"><code>reverse</code></a></dt><dd>Returns a range of the same elements in the opposite order.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-sort"><code>sort</code></a></dt><dd>Returns the elements as a list in ascending order, whatever the step.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-uniq"><code>uniq</code></a></dt><dd>Returns the elements as a list with duplicates removed.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-join"><code>join</code></a></dt><dd>Renders the elements as text, with <code>separator</code> between them.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-at"><code>at</code></a></dt><dd>Returns the element at index <code>index</code>, counting from 0, or <code>None</code> when out of range.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-get"><code>get</code></a></dt><dd>Returns the element at index <code>index</code>, counting from 0, or <code>None</code> when out of range.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-take"><code>take</code></a></dt><dd>Returns the first <code>n</code> elements as a list.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-drop"><code>drop</code></a></dt><dd>Returns everything after the first <code>n</code> elements, as a list.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-indexof"><code>indexOf</code></a></dt><dd>Returns the position of <code>value</code> in the range, or <code>None</code> when it is not in it.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-zip"><code>zip</code></a></dt><dd>Pairs each element with the element at the same position in <code>other</code>, stopping at the shorter of the two.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-partition"><code>partition</code></a></dt><dd>Splits the elements into those satisfying <code>pred</code> and those that do not.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-push"><code>push</code></a></dt><dd>Returns the elements as a list with <code>value</code> added at the end.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-reject"><code>reject</code></a></dt><dd>Returns the elements that fail <code>pred</code>, as a list.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-countthrough"><code>countThrough</code></a></dt><dd><code>f</code> applied to each integer from <code>at</code> through <code>last</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="#range-countby"><code>countBy</code></a></dt><dd><code>f</code> applied to each integer from <code>at</code> towards <code>last</code> by <code>step</code>.</dd></div>
+</dl>
+<h3>From <a class="xref" href="/prelude/0.4.0-rc.5-dev/enumerable/#trait-enumerable"><code>Enumerable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-rc.5-dev/enumerable/#enumerable-mapindexed"><code>mapIndexed</code></a></dt><dd>Applies <code>f</code> to each item and its 0-based position, and returns the results as a list.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-rc.5-dev/enumerable/#enumerable-filter"><code>filter</code></a></dt><dd>Returns the items for which <code>pred</code> returns <code>true</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-rc.5-dev/enumerable/#enumerable-into"><code>into</code></a></dt><dd>Applies <code>f</code>, which returns a list, to each item and concatenates the results.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-rc.5-dev/enumerable/#enumerable-collect"><code>collect</code></a></dt><dd>Applies <code>f</code>, which returns an <code>Optional</code>, to each item and returns the present values, unwrapped.</dd></div>
+</dl>
+<h3>From <a class="xref" href="/prelude/0.4.0-rc.5-dev/enumerable/#trait-foldable"><code>Foldable</code></a></h3>
+<dl class="params inherited">
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-rc.5-dev/enumerable/#foldable-eachindexed"><code>eachIndexed</code></a></dt><dd>Calls <code>f</code> with each item and its 0-based position, for its side effects.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-rc.5-dev/enumerable/#foldable-all?"><code>all?</code></a></dt><dd>Returns <code>true</code> when every item satisfies <code>pred</code>, and <code>true</code> for an empty collection.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-rc.5-dev/enumerable/#foldable-any?"><code>any?</code></a></dt><dd>Returns <code>true</code> when at least one item satisfies <code>pred</code>, and <code>false</code> for an empty collection.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-rc.5-dev/enumerable/#foldable-none?"><code>none?</code></a></dt><dd>Returns <code>true</code> when no item satisfies <code>pred</code>, the opposite of <code>any?</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-rc.5-dev/enumerable/#foldable-one?"><code>one?</code></a></dt><dd>Returns <code>true</code> when exactly one item satisfies <code>pred</code>.</dd></div>
+<div class="param"><dt><a class="xref" href="/prelude/0.4.0-rc.5-dev/enumerable/#foldable-find"><code>find</code></a></dt><dd>Returns the first item satisfying <code>pred</code>, or <code>None</code> when nothing does.</dd></div>
+</dl>
+</section>
+<section class="members" id="make-range">
+<h3>Functions</h3>
+<p>Functions every range has, Float ranges included.</p>
+
+<div class="functions">
+<div class="fn" id="range-contains?">
+<div class="fn-head">
+<h4><a class="self" href="#range-contains?"><code>contains?</code></a> <a class="permalink" href="#range-contains?" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">contains?</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> when <code>value</code> lies between the endpoints, both included.</p>
+<p>A range with the default step only compares <code>value</code> with the endpoints, so this is cheap for any size of range and works for a <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-float"><code>Float</code></a> range. A range whose lower end is above its upper end contains nothing. A stepped range contains only the values its step reaches.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the value to test</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the value is in range</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-punct">)</span>          <span class="tok-comment"># =&gt; true</span>
+<span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-number">11</span><span class="tok-punct">)</span>         <span class="tok-comment"># =&gt; false</span>
+<span class="tok-punct">(</span><span class="tok-number">0.0</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">1.0</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-number">0.25</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; true</span>
+<span class="tok-punct">(</span>'a'<span class="tok-op">.</span><span class="tok-op">.</span>'f'<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span>'c'<span class="tok-punct">)</span>     <span class="tok-comment"># =&gt; true</span>
+<span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">by</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-number">7</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; true</span>
+<span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">by</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">contains?</span><span class="tok-punct">(</span><span class="tok-number">8</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; false</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-reduce">
+<div class="fn-head">
+<h4><a class="self" href="#range-reduce"><code>reduce</code></a> <a class="tag-trait" href="/prelude/0.4.0-rc.5-dev/enumerable/#enumerable-reduce" title="Implements Enumerable.reduce">Enumerable</a> <a class="tag-trait" href="/prelude/0.4.0-rc.5-dev/enumerable/#foldable-reduce" title="Implements Foldable.reduce">Foldable</a> <a class="permalink" href="#range-reduce" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">reduce</span><span class="tok-punct">(</span>acc<span class="tok-op">:</span> <span class="tok-type">B</span><span class="tok-punct">,</span> f<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">B</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <span class="tok-type">B</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">B</span></span></code></pre>
+</div>
+<p>Folds over the range's elements in order.</p>
+<p>The <a class="xref" href="/prelude/0.4.0-rc.5-dev/enumerable/#trait-enumerable"><code>Enumerable</code></a> functions are built on it. It builds the list of elements first.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>acc</code></dt><dd>the initial accumulator</dd></div>
+<div class="param"><dt><code>f</code></dt><dd>combines the accumulator with each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the final accumulator</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reduce</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>sum<span class="tok-punct">,</span> n<span class="tok-op">|</span> sum <span class="tok-op">+</span> n <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; 10</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-each">
+<div class="fn-head">
+<h4><a class="self" href="#range-each"><code>each</code></a> <a class="tag-trait" href="/prelude/0.4.0-rc.5-dev/enumerable/#foldable-each" title="Implements Foldable.each">Foldable</a> <a class="permalink" href="#range-each" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">each</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></span></code></pre>
+</div>
+<p>Calls <code>f</code> with each element in order, for its side effects.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>f</code></dt><dd>called with each element</dd></div>
+</dl>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>n<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-map">
+<div class="fn-head">
+<h4><a class="self" href="#range-map"><code>map</code></a> <a class="tag-trait" href="/prelude/0.4.0-rc.5-dev/enumerable/#enumerable-map" title="Implements Enumerable.map">Enumerable</a> <a class="permalink" href="#range-map" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">map</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <span class="tok-type">B</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">B</span><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns a list of <code>f</code> applied to each element, in order.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>f</code></dt><dd>the transformation</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the results, as a list</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n <span class="tok-op">*</span> n <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; [1, 4, 9]</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-sum">
+<div class="fn-head">
+<h4><a class="self" href="#range-sum"><code>sum</code></a> <a class="permalink" href="#range-sum" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">sum</span></span></code></pre>
+</div>
+<p>Returns the sum of the range's elements.</p>
+<p class="returns"><strong>Returns</strong> <code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-number">Number</a></code> — the sum</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">sum</span>   <span class="tok-comment"># =&gt; 55</span>
+<span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">sum</span>    <span class="tok-comment"># =&gt; 1</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-product">
+<div class="fn-head">
+<h4><a class="self" href="#range-product"><code>product</code></a> <a class="permalink" href="#range-product" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">product</span></span></code></pre>
+</div>
+<p>Returns the product of the range's elements.</p>
+<p class="returns"><strong>Returns</strong> <code><a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-number">Number</a></code> — the product</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">product</span>   <span class="tok-comment"># =&gt; 120   (five factorial)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-by">
+<div class="fn-head">
+<h4><a class="self" href="#range-by"><code>by</code></a> <a class="permalink" href="#range-by" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">by</span><span class="tok-punct">(</span>step<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-range"><span class="tok-type">Range</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Returns the range counted by <code>step</code> from its first endpoint towards its last.</p>
+<p>A negative step counts down, and a range whose end lies the other way from its start is empty. The last endpoint is included only when the step lands on it.</p>
+<p>A step of 0 is a run-time error. <code>by</code> on a <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-float"><code>Float</code></a> range is a type error.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>step</code></dt><dd>the distance between consecutive elements</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the stepped range</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">by</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>      <span class="tok-comment"># =&gt; [1, 3, 5, 7, 9]</span>
+<span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">by</span><span class="tok-punct">(</span><span class="tok-op">-</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>     <span class="tok-comment"># =&gt; [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]</span>
+<span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">by</span><span class="tok-punct">(</span><span class="tok-op">-</span><span class="tok-number">1</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>     <span class="tok-comment"># =&gt; []</span>
+<span class="tok-punct">(</span>'a'<span class="tok-op">.</span><span class="tok-op">.</span>'g'<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">by</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>   <span class="tok-comment"># =&gt; ['a', 'd', 'g']</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-items">
+<div class="fn-head">
+<h4><a class="self" href="#range-items"><code>items</code></a> <a class="permalink" href="#range-items" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">items</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns the range's elements as a list.</p>
+<p>This builds the whole list, so it costs memory for a very large range.</p>
+<p class="returns"><strong>Returns</strong> the elements, in the range's order</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>      <span class="tok-comment"># =&gt; [1, 2, 3]</span>
+<span class="tok-punct">(</span>'a'<span class="tok-op">.</span><span class="tok-op">.</span>'c'<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span>  <span class="tok-comment"># =&gt; ['a', 'b', 'c']</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>Building a lookup table</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">12</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">items</span><span class="tok-op">.</span><span class="tok-method">map</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>m<span class="tok-op">|</span> <span class="tok-punct">(</span>m<span class="tok-punct">,</span> <span class="tok-fn">monthName</span><span class="tok-punct">(</span>m<span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-first">
+<div class="fn-head">
+<h4><a class="self" href="#range-first"><code>first</code></a> <a class="permalink" href="#range-first" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">first</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A?</span></span></code></pre>
+</div>
+<p>Returns the first element, or <code>None</code> for an empty range.</p>
+<p class="returns"><strong>Returns</strong> the first element, or <code>None</code></p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">first</span>   <span class="tok-comment"># =&gt; Just(3)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-second">
+<div class="fn-head">
+<h4><a class="self" href="#range-second"><code>second</code></a> <a class="permalink" href="#range-second" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">second</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A?</span></span></code></pre>
+</div>
+<p>Returns the second element, or <code>None</code> when the range is shorter than two.</p>
+<p class="returns"><strong>Returns</strong> the second element, or <code>None</code></p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">second</span>   <span class="tok-comment"># =&gt; Just(4)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-third">
+<div class="fn-head">
+<h4><a class="self" href="#range-third"><code>third</code></a> <a class="permalink" href="#range-third" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">third</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A?</span></span></code></pre>
+</div>
+<p>Returns the third element, or <code>None</code> when the range is shorter than three.</p>
+<p class="returns"><strong>Returns</strong> the third element, or <code>None</code></p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">third</span>   <span class="tok-comment"># =&gt; Just(5)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-last">
+<div class="fn-head">
+<h4><a class="self" href="#range-last"><code>last</code></a> <a class="permalink" href="#range-last" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">last</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A?</span></span></code></pre>
+</div>
+<p>Returns the last element, or <code>None</code> for an empty range.</p>
+<p class="returns"><strong>Returns</strong> the last element, or <code>None</code></p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">7</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">last</span>   <span class="tok-comment"># =&gt; Just(7)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-rest">
+<div class="fn-head">
+<h4><a class="self" href="#range-rest"><code>rest</code></a> <a class="permalink" href="#range-rest" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">rest</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns every element after the first, as a list.</p>
+<p class="returns"><strong>Returns</strong> the remaining elements</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">rest</span>   <span class="tok-comment"># =&gt; [2, 3, 4]</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-length">
+<div class="fn-head">
+<h4><a class="self" href="#range-length"><code>length</code></a> <a class="permalink" href="#range-length" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">length</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+<p>Returns how many elements the range has.</p>
+<p class="returns"><strong>Returns</strong> the number of elements</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">length</span>   <span class="tok-comment"># =&gt; 10</span>
+<span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">length</span>    <span class="tok-comment"># =&gt; 1</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-count">
+<div class="fn-head">
+<h4><a class="self" href="#range-count"><code>count</code></a> <a class="tag-trait" href="/prelude/0.4.0-rc.5-dev/enumerable/#foldable-count" title="Implements Foldable.count">Foldable</a> <a class="permalink" href="#range-count" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">count</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+<p>Returns how many elements the range has, as <code>length</code> does.</p>
+<p class="returns"><strong>Returns</strong> the number of elements</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">count</span>   <span class="tok-comment"># =&gt; 10</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-empty?">
+<div class="fn-head">
+<h4><a class="self" href="#range-empty?"><code>empty?</code></a> <a class="permalink" href="#range-empty?" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">empty?</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> when the range has no elements.</p>
+<p class="returns"><strong>Returns</strong> <code>true</code> for an empty range</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">empty?</span>   <span class="tok-comment"># =&gt; false</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-max">
+<div class="fn-head">
+<h4><a class="self" href="#range-max"><code>max</code></a> <a class="permalink" href="#range-max" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">max</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A?</span></span></code></pre>
+</div>
+<p>Returns the largest element, or <code>None</code> for an empty range.</p>
+<p class="returns"><strong>Returns</strong> the largest element, or <code>None</code></p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">max</span>   <span class="tok-comment"># =&gt; Just(10)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-min">
+<div class="fn-head">
+<h4><a class="self" href="#range-min"><code>min</code></a> <a class="permalink" href="#range-min" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">min</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A?</span></span></code></pre>
+</div>
+<p>Returns the smallest element, or <code>None</code> for an empty range.</p>
+<p class="returns"><strong>Returns</strong> the smallest element, or <code>None</code></p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">min</span>   <span class="tok-comment"># =&gt; Just(1)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-minby">
+<div class="fn-head">
+<h4><a class="self" href="#range-minby"><code>minBy</code></a> <a class="permalink" href="#range-minby" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">minBy</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <span class="tok-type">B</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A?</span></span></code></pre>
+</div>
+<p>Returns the element with the smallest <code>f</code> key wrapped in <code>Just</code>, or <code>None</code> for an empty range. The first of several tying elements wins.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>f</code></dt><dd>the key each element is compared by</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the element with the smallest key, or <code>None</code></p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">minBy</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> <span class="tok-punct">(</span>n <span class="tok-op">-</span> <span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">abs</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Just(4)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-maxby">
+<div class="fn-head">
+<h4><a class="self" href="#range-maxby"><code>maxBy</code></a> <a class="permalink" href="#range-maxby" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">maxBy</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <span class="tok-type">B</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A?</span></span></code></pre>
+</div>
+<p>Returns the element with the largest <code>f</code> key wrapped in <code>Just</code>, or <code>None</code> for an empty range. The first of several tying elements wins.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>f</code></dt><dd>the key each element is compared by</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the element with the largest key, or <code>None</code></p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">maxBy</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n <span class="tok-op">%</span> <span class="tok-number">7</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; Just(6)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-sortby">
+<div class="fn-head">
+<h4><a class="self" href="#range-sortby"><code>sortBy</code></a> <a class="permalink" href="#range-sortby" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">sortBy</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <span class="tok-type">B</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns the elements as a list sorted by the key <code>f</code> gives each one, smallest key first. The sort is stable: elements with equal keys keep their order.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>f</code></dt><dd>the key each element is sorted by</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the sorted elements</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">6</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">sortBy</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n <span class="tok-op">%</span> <span class="tok-number">3</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; [3, 6, 1, 4, 2, 5]</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-groupby">
+<div class="fn-head">
+<h4><a class="self" href="#range-groupby"><code>groupBy</code></a> <a class="permalink" href="#range-groupby" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">groupBy</span><span class="tok-punct">(</span>f<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <span class="tok-type">K</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">{</span><span class="tok-type">K</span><span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span><span class="tok-punct">}</span></span></code></pre>
+</div>
+<p>Groups the elements by the key <code>f</code> gives each one. Each group keeps its elements in ascending order.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>f</code></dt><dd>the key each element is grouped under</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> each key with the elements that produced it</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">6</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">groupBy</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n<span class="tok-op">.</span><span class="tok-method">even?</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; { false: [1, 3, 5], true: [2, 4, 6] }</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-reverse">
+<div class="fn-head">
+<h4><a class="self" href="#range-reverse"><code>reverse</code></a> <a class="permalink" href="#range-reverse" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">reverse</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#type-range"><span class="tok-type">Range</span></a><span class="tok-op">&lt;</span><span class="tok-type">A</span><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Returns a range of the same elements in the opposite order.</p>
+<p>It starts at the last element the step reaches, so <code>(1..10).by(3).reverse</code> is <code>(10..1).by(-3)</code> and <code>(1..9).by(3).reverse</code> is <code>(7..1).by(-3)</code>. An empty range stays empty.</p>
+<p class="returns"><strong>Returns</strong> the range, reversed</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reverse</span><span class="tok-op">.</span><span class="tok-method">items</span>   <span class="tok-comment"># =&gt; [4, 3, 2, 1]</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>Counting down</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reverse</span><span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>n<span class="tok-punct">)</span> <span class="tok-punct">}</span>   <span class="tok-comment"># prints 3, 2, 1</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-sort">
+<div class="fn-head">
+<h4><a class="self" href="#range-sort"><code>sort</code></a> <a class="permalink" href="#range-sort" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">sort</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns the elements as a list in ascending order, whatever the step.</p>
+<p class="returns"><strong>Returns</strong> the elements, sorted</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">sort</span>   <span class="tok-comment"># =&gt; [1, 2, 3, 4]</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">sort</span><span class="tok-punct">(</span>comparator<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></span></code></pre>
+<p>Returns the elements as a list, ordered by <code>comparator</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>comparator</code></dt><dd><code>true</code> when the first should come first</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the sorted elements</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">sort</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>a<span class="tok-punct">,</span> b<span class="tok-op">|</span> a <span class="tok-op">&gt;</span> b <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; [4, 3, 2, 1]</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-uniq">
+<div class="fn-head">
+<h4><a class="self" href="#range-uniq"><code>uniq</code></a> <a class="permalink" href="#range-uniq" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">uniq</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns the elements as a list with duplicates removed. A range has no duplicates, so this is the same as <code>items</code>.</p>
+<p class="returns"><strong>Returns</strong> the distinct elements</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">uniq</span>   <span class="tok-comment"># =&gt; [1, 2, 3]</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-join">
+<div class="fn-head">
+<h4><a class="self" href="#range-join"><code>join</code></a> <a class="permalink" href="#range-join" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">join</span><span class="tok-punct">(</span>separator<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Renders the elements as text, with <a class="xref" href="/prelude/0.4.0-rc.5-dev/fs/#constant-fs-path-separator"><code>separator</code></a> between them.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>separator</code></dt><dd>placed between elements</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the joined text</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">, </span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;1, 2, 3, 4&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>A comma-separated header</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">columns: </span><span class="tok-string">${</span><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">join</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">,</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-string">}</span><span class="tok-string">&quot;</span>   <span class="tok-comment"># =&gt; &quot;columns: 1,2,3&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-at">
+<div class="fn-head">
+<h4><a class="self" href="#range-at"><code>at</code></a> <a class="permalink" href="#range-at" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">at</span><span class="tok-punct">(</span>index<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A?</span></span></code></pre>
+</div>
+<p>Returns the element at index <code>index</code>, counting from 0, or <code>None</code> when out of range.</p>
+<p>The index counts positions, not values: <code>(10..20).at(0)</code> is <code>Just(10)</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>index</code></dt><dd>the 0-based position</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the element, or <code>None</code></p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">20</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">at</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(10)</span>
+<span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">20</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">at</span><span class="tok-punct">(</span><span class="tok-number">99</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; None</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-get">
+<div class="fn-head">
+<h4><a class="self" href="#range-get"><code>get</code></a> <a class="permalink" href="#range-get" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">get</span><span class="tok-punct">(</span>index<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A?</span></span><span class="sig-line"><span class="tok-fn">get</span><span class="tok-punct">(</span>index<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> fallback<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">A</span></span></code></pre>
+</div>
+<p>Returns the element at index <code>index</code>, counting from 0, or <code>None</code> when out of range. The same as <code>at</code>, named to match <a class="xref" href="/prelude/0.4.0-rc.5-dev/list/#type-list"><code>List</code></a> and <a class="xref" href="/prelude/0.4.0-rc.5-dev/map/#type-map"><code>Map</code></a>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>index</code></dt><dd>the 0-based position</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the element, or <code>None</code></p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">20</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(10)</span>
+<span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">20</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">get</span><span class="tok-punct">(</span><span class="tok-number">99</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; None</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-take">
+<div class="fn-head">
+<h4><a class="self" href="#range-take"><code>take</code></a> <a class="permalink" href="#range-take" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">take</span><span class="tok-punct">(</span>n<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns the first <code>n</code> elements as a list.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>n</code></dt><dd>how many elements to keep</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the leading elements</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">10</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">take</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [1, 2, 3]</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-drop">
+<div class="fn-head">
+<h4><a class="self" href="#range-drop"><code>drop</code></a> <a class="permalink" href="#range-drop" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">drop</span><span class="tok-punct">(</span>n<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns everything after the first <code>n</code> elements, as a list.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>n</code></dt><dd>how many elements to skip</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the remaining elements</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">drop</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [4, 5]</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-indexof">
+<div class="fn-head">
+<h4><a class="self" href="#range-indexof"><code>indexOf</code></a> <a class="permalink" href="#range-indexof" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">indexOf</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer?</span></span></code></pre>
+</div>
+<p>Returns the position of <code>value</code> in the range, or <code>None</code> when it is not in it.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the element to look for</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the 0-based position, or <code>None</code></p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span>'a'<span class="tok-op">.</span><span class="tok-op">.</span>'e'<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">indexOf</span><span class="tok-punct">(</span>'c'<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Just(2)</span>
+<span class="tok-punct">(</span><span class="tok-number">10</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">20</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">indexOf</span><span class="tok-punct">(</span><span class="tok-number">12</span><span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; Just(2)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-zip">
+<div class="fn-head">
+<h4><a class="self" href="#range-zip"><code>zip</code></a> <a class="permalink" href="#range-zip" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">zip</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-type">B</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-punct">(</span><span class="tok-type">A</span><span class="tok-punct">,</span> <span class="tok-type">B</span><span class="tok-punct">)</span><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Pairs each element with the element at the same position in <code>other</code>, stopping at the shorter of the two.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the list to pair with</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the pairs, in order</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">zip</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">b</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-string">&quot;</span><span class="tok-string">c</span><span class="tok-string">&quot;</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [(1, &quot;a&quot;), (2, &quot;b&quot;), (3, &quot;c&quot;)]</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>Numbering a list</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-method">names</span><span class="tok-op">.</span><span class="tok-method">count</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">zip</span><span class="tok-punct">(</span>names<span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-partition">
+<div class="fn-head">
+<h4><a class="self" href="#range-partition"><code>partition</code></a> <a class="permalink" href="#range-partition" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">partition</span><span class="tok-punct">(</span>pred<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span><span class="tok-punct">,</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span><span class="tok-punct">)</span></span></code></pre>
+</div>
+<p>Splits the elements into those satisfying <code>pred</code> and those that do not.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>pred</code></dt><dd>the test applied to each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the matching and non-matching elements</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">4</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">partition</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n<span class="tok-op">.</span><span class="tok-method">even?</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; ([2, 4], [1, 3])</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-push">
+<div class="fn-head">
+<h4><a class="self" href="#range-push"><code>push</code></a> <a class="permalink" href="#range-push" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">push</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">A</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns the elements as a list with <code>value</code> added at the end.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the element to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the elements plus <code>value</code></p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">3</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">push</span><span class="tok-punct">(</span><span class="tok-number">4</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [1, 2, 3, 4]</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-reject">
+<div class="fn-head">
+<h4><a class="self" href="#range-reject"><code>reject</code></a> <a class="permalink" href="#range-reject" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">reject</span><span class="tok-punct">(</span>pred<span class="tok-op">:</span> <span class="tok-punct">(</span><span class="tok-type">A</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-type">A</span><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns the elements that fail <code>pred</code>, as a list.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>pred</code></dt><dd>the test applied to each element</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the elements that failed the predicate</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-punct">(</span><span class="tok-number">1</span><span class="tok-op">.</span><span class="tok-op">.</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">reject</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>n<span class="tok-op">|</span> n<span class="tok-op">.</span><span class="tok-method">even?</span> <span class="tok-punct">}</span>   <span class="tok-comment"># =&gt; [1, 3, 5]</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="range-countthrough">
+<div class="fn-head">
+<h4><a class="self" href="#range-countthrough"><code>countThrough</code></a> <a class="permalink" href="#range-countthrough" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">countThrough</span><span class="tok-punct">(</span>at<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> last<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> f<span class="tok-punct">)</span></span></code></pre>
+</div>
+<p><code>f</code> applied to each integer from <code>at</code> through <code>last</code>.</p>
+
+</div>
+<div class="fn" id="range-countby">
+<div class="fn-head">
+<h4><a class="self" href="#range-countby"><code>countBy</code></a> <a class="permalink" href="#range-countby" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">countBy</span><span class="tok-punct">(</span>at<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> last<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> step<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> f<span class="tok-punct">)</span></span></code></pre>
+</div>
+<p><code>f</code> applied to each integer from <code>at</code> towards <code>last</code> by <code>step</code>.</p>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="trait-discrete">
+<h2><span class="kind kind-trait">trait</span> <code>Discrete</code> <a class="permalink" href="#trait-discrete" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>The element types with a next value, whose ranges can be enumerated: Integer and Char.</p>
+<p>A Float range has no next value, so it has <code>contains?</code> and none of the traversal functions; <code>(0.0..1.0).sum</code> is a type error.</p>
+<p class="implements">Implemented by <a class="xref" href="#make-integer"><code>Integer</code></a>, <a class="xref" href="#make-char"><code>Char</code></a>.</p>
+
+</section>
+<section class="entity" id="make-integer">
+<h2><span class="kind kind-make">extends</span> <code>Integer</code> <a class="permalink" href="#make-integer" title="Copy link" aria-label="Copy link">#</a></h2>
+<p class="home-note">More functions for <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><code>Integer</code></a>, added by this module.</p>
+<p class="implements">Implements <a class="xref" href="#trait-discrete"><code>Discrete</code></a>.</p>
+
+</section>
+<section class="entity" id="make-char">
+<h2><span class="kind kind-make">extends</span> <code>Char</code> <a class="permalink" href="#make-char" title="Copy link" aria-label="Copy link">#</a></h2>
+<p class="home-note">More functions for <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-char"><code>Char</code></a>, added by this module.</p>
+<p class="implements">Implements <a class="xref" href="#trait-discrete"><code>Discrete</code></a>.</p>
+
+</section>

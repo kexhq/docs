@@ -1,0 +1,63 @@
+<section class="entity" id="module-tey-sandbox">
+<h2><span class="kind kind-module">module</span> <code>Tey.Sandbox</code> <a class="permalink" href="#module-tey-sandbox" title="Copy link" aria-label="Copy link">#</a></h2>
+<div class="functions">
+<div class="fn" id="constant-tey-sandbox-tool">
+<div class="fn-head">
+<h3><a class="self" href="#constant-tey-sandbox-tool"><code>TOOL</code></a> <span class="tag-kind">constant</span> <a class="permalink" href="#constant-tey-sandbox-tool" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">TOOL</span></span></code></pre>
+</div>
+<p>The path of macOS's <code>sandbox-exec</code>, the only sandbox supported so far. On other systems <code>available?</code> is false, and a plugin runs only with <code>--unconfined</code>.</p>
+
+</div>
+<div class="fn" id="function-tey-sandbox-available?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-sandbox-available?"><code>available?</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-sandbox-available?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">available?</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> when this system has the sandbox Tey uses.</p>
+
+</div>
+<div class="fn" id="function-tey-sandbox-scratch">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-sandbox-scratch"><code>scratch</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-sandbox-scratch" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">scratch</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Returns the directories a Kex child process always needs to write to: the temporary directories and the Kex cache.</p>
+
+</div>
+<div class="fn" id="function-tey-sandbox-profile">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-sandbox-profile"><code>profile</code></a> <a class="permalink" href="#function-tey-sandbox-profile" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">profile</span><span class="tok-punct">(</span>limits<span class="tok-op">:</span> <a class="xref" href="#record-tey-sandbox-limits"><span class="tok-type">Limits</span></a><span class="tok-punct">,</span> home<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Returns the sandbox profile for <code>limits</code>. Later rules win, so the profile allows everything, denies network access and file writes, allows writes back under the writable paths, then denies reading credentials.</p>
+
+</div>
+<div class="fn" id="function-tey-sandbox-prefix">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-sandbox-prefix"><code>prefix</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-tey-sandbox-prefix" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">prefix</span><span class="tok-punct">(</span>limits<span class="tok-op">:</span> <a class="xref" href="#record-tey-sandbox-limits"><span class="tok-type">Limits</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-punct">(</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Returns the words to put in front of a command line to run it under <code>limits</code>, <code>sandbox-exec -f &lt;profile&gt;</code>, and the profile's path. The caller deletes the profile once the child has exited. Fails when no sandbox is available or the profile cannot be written.</p>
+
+</div>
+</div>
+</section>
+<section class="entity" id="record-tey-sandbox-limits">
+<h2><span class="kind kind-record">record</span> <code>Limits</code> <a class="permalink" href="#record-tey-sandbox-limits" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>What a plugin process may do besides reading files and computing.</p>
+<p>A plugin is code from a dependency, run on the user's machine. When the user approves what a plugin asks for, Tey runs it inside the operating system's sandbox so it can do no more:</p>
+<ul>
+<li>it can write only under <code>writable</code>, plus the temporary directories and the Kex cache that compiling and running it need;</li>
+<li>it can use the network only when <code>network?</code> is true;</li>
+<li>it cannot read the usual places credentials are kept, such as <code>~/.ssh</code>.</li>
+</ul>
+<p>Every process the plugin starts has the same limits.</p>
+<p>Two permissions are coarser than they look. <code>Process.Run([...])</code> is not enforced: the plugin can start any program, though that program has the same limits. <code>Net.Connect([...])</code> opens the whole network, not just the listed hosts, because the sandbox filters by address and not by name.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>writable</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a>]</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>network?</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool">Bool</a></code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>

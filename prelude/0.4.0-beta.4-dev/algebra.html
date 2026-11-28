@@ -1,0 +1,212 @@
+<div class="intro">
+<p>Algebraic structures: combining values associatively.</p>
+<p>Kex traits do not inherit from one another, so concrete types explicitly implement every structure whose laws they satisfy.</p>
+<p><a class="xref" href="#trait-monoid"><code>Monoid</code></a> is &quot;these two values combine, and there is a neutral one&quot;. Numbers, strings and lists all satisfy it, which is what lets <code>repeat</code> be written once:</p>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">ab</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">repeat</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;ababab&quot;</span>
+<span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">repeat</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; [1, 1]</span>
+<span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">repeat</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; 15</span></code></pre>
+<p>Ordering and comparison (<a class="xref" href="/prelude/0.4.0-beta.4-dev/comparable/#type-ordering"><code>Ordering</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/comparable/#trait-comparable"><code>Comparable</code></a>) live in <code>comparable.kex</code>.</p>
+</div>
+<section class="entity" id="trait-monoid">
+<h2><span class="kind kind-trait">trait</span> <code>Monoid</code></h2>
+<p>Types whose values combine associatively and have a neutral element.</p>
+<p>Implemented by <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><code>Integer</code></a> (addition), <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><code>String</code></a> and <a class="xref" href="/prelude/0.4.0-beta.4-dev/list/#type-list"><code>List</code></a> (concatenation), <a class="xref" href="/prelude/0.4.0-beta.4-dev/map/#type-map"><code>Map</code></a> and both <a class="xref" href="/prelude/0.4.0-beta.4-dev/data/set/#record-data-set"><code>Set</code></a> flavours (union), and <a class="xref" href="/prelude/0.4.0-beta.4-dev/comparable/#type-ordering"><code>Ordering</code></a> (&quot;first decision wins&quot; — declared beside <a class="xref" href="/prelude/0.4.0-beta.4-dev/comparable/#type-ordering"><code>Ordering</code></a> in <code>comparable.kex</code>).</p>
+<p class="implements">Implemented by <a class="xref" href="#make-integer"><code>Integer</code></a>, <a class="xref" href="#make-string"><code>String</code></a>, <a class="xref" href="#make-list"><code>[A]</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/comparable/#make-ordering"><code>Ordering</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/map/#make-map"><code>Map&lt;K, V&gt;</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/data/queue/#make-queue"><code>Queue&lt;A&gt;</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/data/set/#make-set"><code>Set&lt;A&gt;</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/data/set/#make-unorderedset"><code>UnorderedSet&lt;A&gt;</code></a>, <a class="xref" href="/prelude/0.4.0-beta.4-dev/data/stack/#make-stack"><code>Stack&lt;A&gt;</code></a>.</p>
+<h3>Required methods</h3>
+<p class="group-note">An implementor writes these.</p>
+
+<div class="functions">
+<div class="fn" id="monoid-identity">
+<h4><a class="self" href="#monoid-identity"><code>identity</code></a></h4>
+<pre class="code sig"><code>identity <span class="tok-op">:</span> <span class="tok-bool">This</span></code></pre>
+<p>The neutral element: combining it with any value gives that value back.</p>
+<p><code>combine</code> must be associative and <code>identity</code> neutral on both sides.</p>
+<p class="returns"><strong>Returns</strong> the identity</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Integer</span><span class="tok-op">.</span><span class="tok-method">identity</span>   <span class="tok-comment"># =&gt; 0</span>
+<span class="tok-type">String</span><span class="tok-op">.</span><span class="tok-method">identity</span>    <span class="tok-comment"># =&gt; &quot;&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="monoid-combine">
+<h4><a class="self" href="#monoid-combine"><code>combine</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">combine</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <span class="tok-bool">This</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-bool">This</span></code></pre>
+<p>Combines this value with <code>other</code>.</p>
+<p>Must be associative: <code>a.combine(b).combine(c)</code> and <code>a.combine(b.combine(c))</code> have to agree.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the value to combine with</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the combined value</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">combine</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span>          <span class="tok-comment"># =&gt; 8</span>
+<span class="tok-string">&quot;</span><span class="tok-string">ab</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">combine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cd</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; &quot;abcd&quot;</span>
+<span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">combine</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">]</span><span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; [1, 2]</span></code></pre>
+<p class="caption"><em>Folding a list of values into one</em></p>
+<pre class="code"><code>parts<span class="tok-op">.</span><span class="tok-method">reduce</span><span class="tok-punct">(</span><span class="tok-type">String</span><span class="tok-op">.</span><span class="tok-method">identity</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>acc<span class="tok-punct">,</span> s<span class="tok-op">|</span> acc<span class="tok-op">.</span><span class="tok-method">combine</span><span class="tok-punct">(</span>s<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+</div>
+<h3>Provided methods</h3>
+<p class="group-note">Every implementor gets these, written in terms of the required methods.</p>
+
+<div class="functions">
+<div class="fn" id="monoid-repeat">
+<h4><a class="self" href="#monoid-repeat"><code>repeat</code></a></h4>
+<pre class="code sig"><code><span class="tok-fn">repeat</span><span class="tok-punct">(</span>n<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-bool">This</span></code></pre>
+<p>Combines this value with itself <code>n</code> times.</p>
+<p>Repeating zero times gives the identity: <code>&quot;&quot;</code> for a string, <code>0</code> for an integer, <code>[]</code> for a list. A negative count is invalid and ends the program.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>n</code></dt><dd>how many copies to combine; must not be negative</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the repeated value</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">ab</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">repeat</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;ababab&quot;</span>
+<span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">repeat</span><span class="tok-punct">(</span><span class="tok-number">2</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; [1, 1]</span>
+<span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">repeat</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span>      <span class="tok-comment"># =&gt; 15</span>
+<span class="tok-string">&quot;</span><span class="tok-string">x</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">repeat</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; &quot;&quot;</span></code></pre>
+<p class="caption"><em>Drawing a separator line</em></p>
+<pre class="code"><code><span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">-</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">repeat</span><span class="tok-punct">(</span><span class="tok-number">40</span><span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre>
+
+</div>
+</div>
+
+</section>
+<section class="entity" id="trait-group">
+<h2><span class="kind kind-trait">trait</span> <code>Group</code></h2>
+<p>A <a class="xref" href="#trait-monoid"><code>Monoid</code></a> in which every value has an inverse that combines with it to give the identity.</p>
+<p>Implemented by <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><code>Integer</code></a>, where the inverse is negation.</p>
+<p class="implements">Implemented by <a class="xref" href="#make-integer"><code>Integer</code></a>.</p>
+<h3>Required methods</h3>
+<p class="group-note">An implementor writes these.</p>
+
+<div class="functions">
+<div class="fn" id="group-identity">
+<h4><a class="self" href="#group-identity"><code>identity</code></a></h4>
+<pre class="code sig"><code>identity <span class="tok-op">:</span> <span class="tok-bool">This</span></code></pre>
+<p>The neutral element.</p>
+<p class="returns"><strong>Returns</strong> the identity</p>
+
+</div>
+<div class="fn" id="group-combine">
+<h4><a class="self" href="#group-combine"><code>combine</code></a></h4>
+<pre class="code sig"><code>combine <span class="tok-op">:</span> <span class="tok-bool">This</span> <span class="tok-op">-&gt;</span> <span class="tok-bool">This</span></code></pre>
+<p>Combines this value with <code>other</code>.</p>
+<p class="returns"><strong>Returns</strong> the combined value</p>
+
+</div>
+<div class="fn" id="group-inverse">
+<h4><a class="self" href="#group-inverse"><code>inverse</code></a></h4>
+<pre class="code sig"><code>inverse <span class="tok-op">:</span> <span class="tok-bool">This</span></code></pre>
+<p>The value that combines with this one to give the identity.</p>
+<p class="returns"><strong>Returns</strong> the inverse</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">inverse</span>             <span class="tok-comment"># =&gt; -5</span>
+<span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">combine</span><span class="tok-punct">(</span><span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">inverse</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; 0</span></code></pre>
+
+</div>
+</div>
+
+</section>
+<section class="entity" id="make-integer">
+<h2><span class="kind kind-make">extends</span> <code>Integer</code></h2>
+<p class="home-note">More methods of <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><code>Integer</code></a>, added by this module.</p>
+<p class="implements">Implements <a class="xref" href="#trait-monoid"><code>Monoid</code></a>, <a class="xref" href="#trait-group"><code>Group</code></a>.</p>
+<p>Implements <a class="xref" href="#trait-monoid"><code>Monoid</code></a>, <a class="xref" href="#trait-group"><code>Group</code></a> over <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><code>Integer</code></a> for addition.</p>
+
+<div class="functions">
+<div class="fn" id="integer-identity">
+<h3><a class="self" href="#integer-identity"><code>identity</code></a> <a class="tag-trait" href="#monoid-identity" title="Implements Monoid.identity">Monoid</a> <a class="tag-trait" href="#group-identity" title="Implements Group.identity">Group</a></h3>
+<p><code>0</code>: the neutral element for addition.</p>
+<p class="returns"><strong>Returns</strong> <code><a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer">Integer</a></code> — zero</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">Integer</span><span class="tok-op">.</span><span class="tok-method">identity</span>   <span class="tok-comment"># =&gt; 0</span></code></pre>
+
+</div>
+<div class="fn" id="integer-combine">
+<h3><a class="self" href="#integer-combine"><code>combine</code></a> <a class="tag-trait" href="#monoid-combine" title="Implements Monoid.combine">Monoid</a> <a class="tag-trait" href="#group-combine" title="Implements Group.combine">Group</a></h3>
+<pre class="code sig"><code><span class="tok-fn">combine</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <span class="tok-bool">This</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-bool">This</span></code></pre>
+<p>Adds <code>other</code> to this integer. Addition is the monoid operation for <a class="xref" href="/prelude/0.4.0-beta.4-dev/number/#make-integer"><code>Integer</code></a>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the integer to add</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the sum</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">combine</span><span class="tok-punct">(</span><span class="tok-number">3</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; 8</span></code></pre>
+
+</div>
+<div class="fn" id="integer-inverse">
+<h3><a class="self" href="#integer-inverse"><code>inverse</code></a> <a class="tag-trait" href="#group-inverse" title="Implements Group.inverse">Group</a></h3>
+<pre class="code sig"><code>inverse <span class="tok-op">:</span> <span class="tok-bool">This</span></code></pre>
+<p>The additive inverse: this integer negated.</p>
+<p class="returns"><strong>Returns</strong> the negation</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-number">5</span><span class="tok-op">.</span><span class="tok-method">inverse</span>    <span class="tok-comment"># =&gt; -5</span>
+<span class="tok-punct">(</span><span class="tok-op">-</span><span class="tok-number">5</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">inverse</span> <span class="tok-comment"># =&gt; 5</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="make-string">
+<h2><span class="kind kind-make">extends</span> <code>String</code></h2>
+<p class="home-note">More methods of <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><code>String</code></a>, added by this module.</p>
+<p class="implements">Implements <a class="xref" href="#trait-monoid"><code>Monoid</code></a>.</p>
+<p>Implements <a class="xref" href="#trait-monoid"><code>Monoid</code></a> over <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><code>String</code></a> for concatenation.</p>
+
+<div class="functions">
+<div class="fn" id="string-identity">
+<h3><a class="self" href="#string-identity"><code>identity</code></a> <a class="tag-trait" href="#monoid-identity" title="Implements Monoid.identity">Monoid</a></h3>
+<p><code>&quot;&quot;</code>: the neutral element for concatenation.</p>
+<p class="returns"><strong>Returns</strong> <code><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string">String</a></code> — the empty string</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-type">String</span><span class="tok-op">.</span><span class="tok-method">identity</span>   <span class="tok-comment"># =&gt; &quot;&quot;</span></code></pre>
+
+</div>
+<div class="fn" id="string-combine">
+<h3><a class="self" href="#string-combine"><code>combine</code></a> <a class="tag-trait" href="#monoid-combine" title="Implements Monoid.combine">Monoid</a></h3>
+<pre class="code sig"><code><span class="tok-fn">combine</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <span class="tok-bool">This</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-bool">This</span></code></pre>
+<p>Concatenates <code>other</code> onto this string. Concatenation is the monoid operation for <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><code>String</code></a>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the string to append</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the concatenation</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-string">&quot;</span><span class="tok-string">ab</span><span class="tok-string">&quot;</span><span class="tok-op">.</span><span class="tok-method">combine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">cd</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; &quot;abcd&quot;</span></code></pre>
+
+</div>
+</div>
+</section>
+<section class="entity" id="make-list">
+<h2><span class="kind kind-make">extends</span> <code>[A]</code></h2>
+<p class="home-note">More methods of <a class="xref" href="/prelude/0.4.0-beta.4-dev/list/#type-list"><code>List</code></a>, added by this module.</p>
+<p class="implements">Implements <a class="xref" href="#trait-monoid"><code>Monoid</code></a>.</p>
+<p>Implements <a class="xref" href="#trait-monoid"><code>Monoid</code></a> over <code>List&lt;A&gt;</code> for concatenation.</p>
+
+<div class="functions">
+<div class="fn" id="list-identity">
+<h3><a class="self" href="#list-identity"><code>identity</code></a> <a class="tag-trait" href="#monoid-identity" title="Implements Monoid.identity">Monoid</a></h3>
+<p><code>[]</code>: the neutral element for concatenation.</p>
+<p class="returns"><strong>Returns</strong> <code>[A]</code> — the empty list</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">combine</span><span class="tok-punct">(</span><span class="tok-type">List</span><span class="tok-op">.</span><span class="tok-method">identity</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [1]</span></code></pre>
+
+</div>
+<div class="fn" id="list-combine">
+<h3><a class="self" href="#list-combine"><code>combine</code></a> <a class="tag-trait" href="#monoid-combine" title="Implements Monoid.combine">Monoid</a></h3>
+<pre class="code sig"><code><span class="tok-fn">combine</span><span class="tok-punct">(</span>other<span class="tok-op">:</span> <span class="tok-bool">This</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-bool">This</span></code></pre>
+<p>Concatenates <code>other</code> onto this list. Concatenation is the monoid operation for <a class="xref" href="/prelude/0.4.0-beta.4-dev/list/#type-list"><code>List</code></a>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>other</code></dt><dd>the list to append</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the concatenation</p>
+<h5>Examples</h5>
+<pre class="code"><code><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">]</span><span class="tok-op">.</span><span class="tok-method">combine</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; [1, 2, 3]</span></code></pre>
+<p class="caption"><em>Flattening a list of lists</em></p>
+<pre class="code"><code>groups<span class="tok-op">.</span><span class="tok-method">reduce</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>acc<span class="tok-punct">,</span> g<span class="tok-op">|</span> acc<span class="tok-op">.</span><span class="tok-method">combine</span><span class="tok-punct">(</span>g<span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre>
+
+</div>
+</div>
+</section>

@@ -1,0 +1,297 @@
+<section class="entity" id="module-net-dns">
+<h2><span class="kind kind-module">module</span> <code>Net.DNS</code> <a class="permalink" href="#module-net-dns" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>DNS lookups, with resolvers that own a bounded cache.</p>
+<p>Use <code>DNS.addresses</code> for an occasional lookup. Open a <a class="xref" href="#type-net-dns-resolver"><code>Resolver</code></a> when a service looks names up repeatedly, wants cache statistics or must query a particular nameserver; the cache lives in the resolver and is freed when you close it. On the interpreter (<code>kex -R</code>), lookups work only through a mock.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Net</span><span class="tok-op">.</span><span class="tok-type">DNS</span>
+
+<span class="tok-keyword">let</span> resolver <span class="tok-op">=</span> <span class="tok-type">Resolver</span><span class="tok-op">.</span><span class="tok-method">system</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+<span class="tok-keyword">let</span> name <span class="tok-op">=</span> <span class="tok-type">Name</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">example.test</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+<span class="tok-keyword">let</span> addresses <span class="tok-op">=</span> resolver<span class="tok-op">.</span><span class="tok-method">addresses</span><span class="tok-punct">(</span>name<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+resolver<span class="tok-op">.</span><span class="tok-method">close</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+</section>
+<section class="entity" id="record-net-dns-name">
+<h2><span class="kind kind-record">record</span> <code>Name</code> <a class="permalink" href="#record-net-dns-name" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A validated DNS name, in the caller's spelling and in IDNA ASCII.</p>
+<p><code>display</code> is the name as the caller wrote it, for messages. <code>ascii</code> is the IDNA form sent in queries.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>display</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>ascii</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string">String</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="type-net-dns-recordtype">
+<h2><span class="kind kind-type">type</span> <code>RecordType</code> <a class="permalink" href="#type-net-dns-recordtype" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>The record types <a class="xref" href="#resolver-lookup"><code>Resolver.lookup</code></a> can ask for.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>A</code></li>
+<li><code>AAAA</code></li>
+<li><code>CNAME</code></li>
+<li><code>MX</code></li>
+<li><code>TXT</code></li>
+<li><code>SRV</code></li>
+<li><code>PTR</code></li>
+</ul>
+
+</section>
+<section class="entity" id="type-net-dns-dnssecstatus">
+<h2><span class="kind kind-type">type</span> <code>DNSSECStatus</code> <a class="permalink" href="#type-net-dns-dnssecstatus" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>The DNSSEC state the system resolver reported. Kex does not validate DNSSEC itself, so this is often <code>Indeterminate</code>.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>Secure</code></li>
+<li><code>Insecure</code></li>
+<li><code>Bogus</code></li>
+<li><code>Indeterminate</code></li>
+</ul>
+
+</section>
+<section class="entity" id="type-net-dns-dnsrecord">
+<h2><span class="kind kind-type">type</span> <code>DNSRecord</code> <a class="permalink" href="#type-net-dns-dnsrecord" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A DNS resource record. MX and SRV records keep their priorities (and SRV its weight and port), and a TXT record keeps its separate strings.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>AddressRecord(Net.IP.Address)</code></li>
+<li><code>CanonicalName(Name)</code></li>
+<li><code>MailExchange(Integer, Name)</code></li>
+<li><code>TextRecord([String])</code></li>
+<li><code>ServiceRecord(Integer, Integer, Net.Port, Name)</code></li>
+<li><code>PointerRecord(Name)</code></li>
+</ul>
+
+</section>
+<section class="entity" id="record-net-dns-lookupresponse">
+<h2><span class="kind kind-record">record</span> <code>LookupResponse</code> <a class="permalink" href="#record-net-dns-lookupresponse" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>The records from one lookup and their DNSSEC state.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>records</code></dt><dd><code>[<a class="xref" href="#type-net-dns-dnsrecord">DNSRecord</a>]</code></dd></div>
+<div class="field"><dt><code>dnssec</code></dt><dd><code><a class="xref" href="#type-net-dns-dnssecstatus">DNSSECStatus</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-dns-cacheoptions">
+<h2><span class="kind kind-record">record</span> <code>CacheOptions</code> <a class="permalink" href="#record-net-dns-cacheoptions" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Limits for a resolver's cache.</p>
+<p><code>entries</code> caps the number of cached names. An answer is kept for its DNS TTL, but no longer than <code>maximumTtl</code>. A failed lookup is kept for <code>negativeTtl</code>, so a missing hostname is not sent to the nameserver on every request.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>entries</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>maximumTtl</code></dt><dd><code>Duration</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>negativeTtl</code></dt><dd><code>Duration</code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-dns-nameserver">
+<h2><span class="kind kind-record">record</span> <code>Nameserver</code> <a class="permalink" href="#record-net-dns-nameserver" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A DNS server for <code>Resolver.custom</code> to query.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>address</code></dt><dd><code>Net.IP.Address</code></dd></div>
+<div class="field"><dt><code>port</code></dt><dd><code>Net.Port</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-dns-resolveroptions">
+<h2><span class="kind kind-record">record</span> <code>ResolverOptions</code> <a class="permalink" href="#record-net-dns-resolveroptions" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Settings for <code>Resolver.custom</code>.</p>
+<p>With an empty <code>search</code> list only the name as written is queried. Otherwise the search domains are tried in order for a name with a single label. <code>retries</code> and <code>timeout</code> apply to each query.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>cache</code></dt><dd><code><a class="xref" href="#record-net-dns-cacheoptions">CacheOptions</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>nameservers</code></dt><dd><code>[<a class="xref" href="#record-net-dns-nameserver">Nameserver</a>]</code></dd></div>
+<div class="field"><dt><code>search</code></dt><dd><code>[<a class="xref" href="#record-net-dns-name">Name</a>]</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>retries</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer">Integer</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>timeout</code></dt><dd><code>Duration</code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-net-dns-cachestatistics">
+<h2><span class="kind kind-record">record</span> <code>CacheStatistics</code> <a class="permalink" href="#record-net-dns-cachestatistics" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A resolver's cache counters, counted since it was opened. <code>entries</code> is the current number of cached names; <code>clear</code> resets it but not the counters.</p>
+<p>Compare <code>hits</code> with <code>misses</code> when tuning <a class="xref" href="#record-net-dns-cacheoptions"><code>CacheOptions</code></a>. A rising <code>evictions</code> count means the resolver sees more distinct names than its cache holds.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>entries</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>hits</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>misses</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>negativeHits</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer">Integer</a></code></dd></div>
+<div class="field"><dt><code>evictions</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer">Integer</a></code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="type-net-dns-resolver">
+<h2><span class="kind kind-type">type</span> <code>Resolver</code> <a class="permalink" href="#type-net-dns-resolver" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A resolver and its cache. Any process may use it.</p>
+<section class="members" id="make-resolver">
+<h3>Functions</h3>
+
+<div class="functions">
+<div class="fn" id="resolver-addresses">
+<div class="fn-head">
+<h4><a class="self" href="#resolver-addresses"><code>addresses</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#resolver-addresses" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">addresses</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="#record-net-dns-name"><span class="tok-type">Name</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.4-dev/net/#module-net"><span class="tok-type">Net</span></a><span class="tok-op">.</span><span class="tok-type">IP</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.4-dev/net/ip/#record-net-ip-address"><span class="tok-type">Address</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Resolves AAAA and A records, returning IPv6 addresses first.</p>
+<p>Use it to find a host to connect to. Use <code>lookup</code> for other record types or the DNSSEC state.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code></dt><dd>the validated hostname</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the addresses, or a <code>Resolve</code> error</p>
+<h5>Examples</h5>
+<p class="caption"><em>Resolving an application upstream</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> host <span class="tok-op">=</span> <span class="tok-type">Name</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">api.example.com</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+<span class="tok-keyword">let</span> addresses <span class="tok-op">=</span> resolver<span class="tok-op">.</span><span class="tok-method">addresses</span><span class="tok-punct">(</span>host<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="resolver-lookup">
+<div class="fn-head">
+<h4><a class="self" href="#resolver-lookup"><code>lookup</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#resolver-lookup" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">lookup</span><span class="tok-punct">(</span>kind<span class="tok-op">:</span> <a class="xref" href="#type-net-dns-recordtype"><span class="tok-type">RecordType</span></a><span class="tok-punct">,</span> name<span class="tok-op">:</span> <a class="xref" href="#record-net-dns-name"><span class="tok-type">Name</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-dns-lookupresponse"><span class="tok-type">LookupResponse</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Looks up the records of one type for <code>name</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>kind</code></dt><dd>the record type to ask for</dd></div>
+<div class="param"><dt><code>name</code></dt><dd>the validated name</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the records, or a <code>Resolve</code> error</p>
+<h5>Examples</h5>
+<p class="caption"><em>Discovering a domain's mail exchangers</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> response <span class="tok-op">=</span> resolver<span class="tok-op">.</span><span class="tok-method">lookup</span><span class="tok-punct">(</span><span class="tok-type">MX</span><span class="tok-punct">,</span> <span class="tok-type">Name</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">example.com</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+response<span class="tok-op">.</span><span class="tok-method">records</span><span class="tok-op">.</span><span class="tok-method">each</span> <span class="tok-punct">{</span> <span class="tok-op">|</span><span class="tok-keyword">record</span><span class="tok-op">|</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">inspect</span><span class="tok-punct">(</span><span class="tok-keyword">record</span><span class="tok-punct">)</span> <span class="tok-punct">}</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="resolver-clear">
+<div class="fn-head">
+<h4><a class="self" href="#resolver-clear"><code>clear</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#resolver-clear" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">clear</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></span></code></pre>
+</div>
+<p>Empties the cache, so the next lookup of each name goes to DNS. The <code>statistics</code> counters are kept.</p>
+<h5>Examples</h5>
+<p class="caption"><em>Refreshing service discovery after configuration changes</em></p>
+<div class="code-block"><pre class="code"><code>resolver<span class="tok-op">.</span><span class="tok-method">clear</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="resolver-statistics">
+<div class="fn-head">
+<h4><a class="self" href="#resolver-statistics"><code>statistics</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#resolver-statistics" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">statistics</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-net-dns-cachestatistics"><span class="tok-type">CacheStatistics</span></a></span></code></pre>
+</div>
+<p>Returns the number of cached names and the cache counters.</p>
+<p class="returns"><strong>Returns</strong> the cache's size and counters</p>
+<h5>Examples</h5>
+<p class="caption"><em>Reporting whether the cache is doing useful work</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> stats <span class="tok-op">=</span> resolver<span class="tok-op">.</span><span class="tok-method">statistics</span>
+<span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">DNS cache: </span><span class="tok-string">${</span>stats<span class="tok-op">.</span><span class="tok-method">hits</span><span class="tok-string">}</span><span class="tok-string"> hits, </span><span class="tok-string">${</span>stats<span class="tok-op">.</span><span class="tok-method">misses</span><span class="tok-string">}</span><span class="tok-string"> misses</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="resolver-close">
+<div class="fn-head">
+<h4><a class="self" href="#resolver-close"><code>close</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#resolver-close" title="Copy link" aria-label="Copy link">#</a></h4>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">close</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Void</span></span></code></pre>
+</div>
+<p>Closes the resolver and frees its cache.</p>
+<p>Lookups after closing fail with a <code>Closed</code> error. Closing twice is harmless.</p>
+
+</div>
+</div>
+</section>
+</section>
+<section class="entity" id="module-net-dns-name">
+<h2><span class="kind kind-module">module</span> <code>Net.DNS.Name</code> <a class="permalink" href="#module-net-dns-name" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Parsing DNS names.</p>
+<div class="functions">
+<div class="fn" id="function-net-dns-name-parse">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-dns-name-parse"><code>parse</code></a> <a class="permalink" href="#function-net-dns-name-parse" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#record-net-dns-name"><span class="tok-type">Name</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Parses a hostname, converting Unicode labels to IDNA ASCII.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code></dt><dd>a dotted hostname, optionally with a trailing dot</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the name, or a <code>Parse</code> error</p>
+<h5>Examples</h5>
+<p class="caption"><em>Preparing a user-supplied hostname for lookup</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> name <span class="tok-op">=</span> <span class="tok-type">Name</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">münich.example</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+<span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>name<span class="tok-op">.</span><span class="tok-method">display</span><span class="tok-punct">)</span>
+resolver<span class="tok-op">.</span><span class="tok-method">addresses</span><span class="tok-punct">(</span>name<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-net-dns-resolver">
+<h2><span class="kind kind-module">module</span> <code>Net.DNS.Resolver</code> <a class="permalink" href="#module-net-dns-resolver" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Opening resolvers.</p>
+<div class="functions">
+<div class="fn" id="function-net-dns-resolver-system">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-dns-resolver-system"><code>system</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-net-dns-resolver-system" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">system</span><span class="tok-punct">(</span>cache<span class="tok-op">:</span> <a class="xref" href="#record-net-dns-cacheoptions"><span class="tok-type">CacheOptions</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-dns-resolver"><span class="tok-type">Resolver</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Opens a resolver that uses the system's DNS configuration and the default <a class="xref" href="#record-net-dns-cacheoptions"><code>CacheOptions</code></a>.</p>
+<p>Keep it for the life of a service so repeated names are answered from its cache, and close it at shutdown.</p>
+<p class="returns"><strong>Returns</strong> a resolver handle</p>
+<h5>Examples</h5>
+<p class="caption"><em>A service-owned resolver</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> resolver <span class="tok-op">=</span> <span class="tok-type">Resolver</span><span class="tok-op">.</span><span class="tok-method">system</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+<span class="tok-keyword">let</span> upstream <span class="tok-op">=</span> resolver<span class="tok-op">.</span><span class="tok-method">addresses</span><span class="tok-punct">(</span><span class="tok-type">Name</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">api.example.com</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+resolver<span class="tok-op">.</span><span class="tok-method">close</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-net-dns-resolver-custom">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-dns-resolver-custom"><code>custom</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-net-dns-resolver-custom" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">custom</span><span class="tok-punct">(</span>options<span class="tok-op">:</span> <a class="xref" href="#record-net-dns-resolveroptions"><span class="tok-type">ResolverOptions</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-net-dns-resolver"><span class="tok-type">Resolver</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Opens a resolver that queries the given nameservers.</p>
+<p>It ignores the machine's nameservers and search domains. Use it for tests, service discovery, or an application with its own DNS settings.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>options</code></dt><dd>nameservers, search domains, retry count, per-query timeout, and cache bounds</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> a resolver, or a <code>Parse</code> error</p>
+<h5>Examples</h5>
+<p class="caption"><em>Querying a DNS server used by a local integration test</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> nameserver <span class="tok-op">=</span> <span class="tok-type">Nameserver</span> <span class="tok-punct">{</span>
+  address<span class="tok-op">:</span> <span class="tok-type">Net</span><span class="tok-op">.</span><span class="tok-type">IP</span><span class="tok-op">.</span><span class="tok-type">Address</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">127.0.0.1</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">,</span>
+  port<span class="tok-op">:</span> <span class="tok-type">Net</span><span class="tok-op">.</span><span class="tok-type">Port</span><span class="tok-op">.</span><span class="tok-keyword">from</span><span class="tok-punct">(</span><span class="tok-number">5353</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span>
+<span class="tok-punct">}</span>
+<span class="tok-type">Resolver</span><span class="tok-op">.</span><span class="tok-method">custom</span><span class="tok-punct">(</span><span class="tok-type">ResolverOptions</span> <span class="tok-punct">{</span>
+  nameservers<span class="tok-op">:</span> <span class="tok-punct">[</span>nameserver<span class="tok-punct">]</span><span class="tok-punct">,</span>
+  <span class="tok-keyword">timeout</span><span class="tok-op">:</span> <span class="tok-number">100</span><span class="tok-op">.</span><span class="tok-method">millisecond</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+
+<section class="entity" id="module-net-dns-dns">
+<h2><span class="kind kind-module">module</span> <code>Net.DNS.DNS</code> <a class="permalink" href="#module-net-dns-dns" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>One-off lookups, for callers that do not need a <a class="xref" href="#type-net-dns-resolver"><code>Resolver</code></a> of their own.</p>
+<div class="functions">
+<div class="fn" id="function-net-dns-dns-addresses">
+<div class="fn-head">
+<h3><a class="self" href="#function-net-dns-dns-addresses"><code>addresses</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-net-dns-dns-addresses" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">addresses</span><span class="tok-punct">(</span>name<span class="tok-op">:</span> <a class="xref" href="#record-net-dns-name"><span class="tok-type">Name</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.4-dev/net/#module-net"><span class="tok-type">Net</span></a><span class="tok-op">.</span><span class="tok-type">IP</span><span class="tok-op">.</span><a class="xref" href="/prelude/0.4.0-rc.4-dev/net/ip/#record-net-ip-address"><span class="tok-type">Address</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/net/#record-net-neterror"><span class="tok-type">NetError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Resolves a name to its addresses with a resolver opened for this one lookup.</p>
+<p>Use it in command-line tools and one-off checks. A server that looks up names repeatedly should open a <a class="xref" href="#type-net-dns-resolver"><code>Resolver</code></a>, which caches answers.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>name</code></dt><dd>the validated hostname</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the addresses, or a <code>Resolve</code> error</p>
+<h5>Examples</h5>
+<p class="caption"><em>Resolving one host in a short-lived command</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> addresses <span class="tok-op">=</span> <span class="tok-type">DNS</span><span class="tok-op">.</span><span class="tok-method">addresses</span><span class="tok-punct">(</span><span class="tok-type">Name</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">example.com</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">try</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+

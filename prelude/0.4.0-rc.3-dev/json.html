@@ -1,0 +1,71 @@
+<section class="entity" id="module-json">
+<h2><span class="kind kind-module">module</span> <code>JSON</code> <a class="permalink" href="#module-json" title="Copy link" aria-label="Copy link">#</a></h2>
+<div class="functions">
+<div class="fn" id="function-json-parse">
+<div class="fn-head">
+<h3><a class="self" href="#function-json-parse"><code>parse</code></a> <a class="permalink" href="#function-json-parse" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Any</span><span class="tok-punct">,</span> <a class="xref" href="#type-json-jsonerror"><span class="tok-type">JSONError</span></a><span class="tok-op">&gt;</span></span><span class="sig-line"><span class="tok-fn">parse</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> options<span class="tok-op">:</span> <span class="tok-punct">{</span><a class="xref" href="/prelude/0.4.0-rc.3-dev/atom/#make-atom"><span class="tok-type">Atom</span></a><span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">}</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Any</span><span class="tok-punct">,</span> <a class="xref" href="#type-json-jsonerror"><span class="tok-type">JSONError</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Parses a JSON document, strictly.</p>
+<p>The whole text must be one JSON value with nothing after it: trailing input is <code>TrailingInput</code>, not a silently ignored tail. Objects come back as maps with string keys, arrays as lists, <code>null</code> as <code>None</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code></dt><dd>the JSON document</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the parsed value, or why it failed</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">{\&quot;a\&quot;: 1, \&quot;b\&quot;: [true, null, 2.5]}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; Ok({ &quot;a&quot;: 1, &quot;b&quot;: [true, None, 2.5] })</span>
+<span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">[1, 2</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Error(UnexpectedEnd(5))</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>Reading a config file</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">match</span> <span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">read</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">config.json</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-keyword">do</span>
+  <span class="tok-bool">Ok</span><span class="tok-punct">(</span>config<span class="tok-punct">)</span> <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printLine</span><span class="tok-punct">(</span>config<span class="tok-punct">)</span>
+  <span class="tok-bool">Error</span><span class="tok-punct">(</span>e<span class="tok-punct">)</span>   <span class="tok-op">=&gt;</span> <span class="tok-type">IO</span><span class="tok-op">.</span><span class="tok-method">printError</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">config.json is not valid JSON: </span><span class="tok-string">${</span>e<span class="tok-string">}</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-keyword">end</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-json-stringify">
+<div class="fn-head">
+<h3><a class="self" href="#function-json-stringify"><code>stringify</code></a> <a class="permalink" href="#function-json-stringify" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">stringify</span><span class="tok-punct">(</span>value<span class="tok-op">:</span> <span class="tok-type">Any</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.3-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+<p>Renders a Kex value as strict JSON text.</p>
+<p>Maps become objects, lists become arrays, <code>None</code> becomes <code>null</code>, and strings are escaped. A map written with atom keys (the usual Kex spelling) renders with those names as strings, so <code>{ name: &quot;Ada&quot; }</code> becomes <code>{&quot;name&quot;:&quot;Ada&quot;}</code>. Object keys come out in canonical key order.</p>
+<p>Records become objects of their fields, in declaration order; tuples become arrays; atoms, characters and constructors without a payload (<code>Monday</code>) become strings. A constructor that carries a payload, such as <code>Ok(1)</code>, has no JSON shape of its own and renders as <code>null</code> (<code>Just(x)</code> is the exception: it is <code>x</code>), as does anything else the encoder does not recognise, so this never raises.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>value</code></dt><dd>the value to render</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the JSON text</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span><span class="tok-punct">{</span> name<span class="tok-op">:</span> <span class="tok-string">&quot;</span><span class="tok-string">Ada</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> n<span class="tok-op">:</span> <span class="tok-number">1</span><span class="tok-punct">,</span> ok<span class="tok-op">:</span> <span class="tok-bool">true</span> <span class="tok-punct">}</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; '{&quot;n&quot;:1,&quot;name&quot;:&quot;Ada&quot;,&quot;ok&quot;:true}'</span>
+<span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span><span class="tok-punct">[</span><span class="tok-number">1</span><span class="tok-punct">,</span> <span class="tok-number">2</span><span class="tok-punct">,</span> <span class="tok-number">3</span><span class="tok-punct">]</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; &quot;[1,2,3]&quot;</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>Writing a JSON file</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">FS</span><span class="tok-op">.</span><span class="tok-type">File</span><span class="tok-op">.</span><span class="tok-method">write</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">out.json</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> <span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span>report<span class="tok-punct">)</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>A round trip</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">stringify</span><span class="tok-punct">(</span><span class="tok-punct">{</span> <span class="tok-string">&quot;</span><span class="tok-string">a</span><span class="tok-string">&quot;</span><span class="tok-op">:</span> <span class="tok-number">1</span> <span class="tok-punct">}</span><span class="tok-punct">)</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok({ &quot;a&quot;: 1 })</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+<section class="entity" id="type-json-jsonerror">
+<h2><span class="kind kind-type">type</span> <code>JSONError</code> <a class="permalink" href="#type-json-jsonerror" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Why a document could not be parsed. Every variant carries the position in the input where the parser stopped, so a caller can point at the problem.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">[1, 2</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; Error(UnexpectedEnd(5))</span>
+<span class="tok-type">JSON</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">// c\n1</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>  <span class="tok-comment"># =&gt; Error(UnexpectedCharacter(&quot;/&quot;, 0))</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>UnexpectedCharacter(String, Integer)</code></li>
+<li><code>UnexpectedEnd(Integer)</code></li>
+<li><code>InvalidLiteral(String, Integer)</code></li>
+<li><code>InvalidNumber(String, Integer)</code></li>
+<li><code>InvalidEscape(String, Integer)</code></li>
+<li><code>InvalidUnicodeEscape(String, Integer)</code></li>
+<li><code>UnterminatedComment(Integer)</code></li>
+<li><code>TrailingInput(Integer)</code></li>
+<li><code>UnknownOption(Atom)</code></li>
+</ul>
+
+</section>

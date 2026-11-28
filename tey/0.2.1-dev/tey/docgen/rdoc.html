@@ -1,0 +1,226 @@
+<div class="intro">
+<p>Parses the text of an RDoc-style doc comment into a <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-doc"><code>Tey.Docgen.Model.Doc</code></a> record.</p>
+<p>A doc comment is prose followed by directive lines:</p>
+<div class="code-block"><pre class="code"><code><span class="tok-comment"># Sums all elements. Returns +0+ for an empty list.</span>
+<span class="tok-comment">#</span>
+<span class="tok-comment"># @param f [X -&gt; Number] maps each element</span>
+<span class="tok-comment"># @return [Number]</span>
+<span class="tok-comment"># @example</span>
+<span class="tok-comment">#   [1, 2].sum   # =&gt; 3</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>In prose, a word or phrase between two plus signs becomes Markdown inline code.</p>
+</div>
+<section class="entity" id="module-tey-docgen-rdoc">
+<h2><span class="kind kind-module">module</span> <code>Tey.Docgen.Rdoc</code> <a class="permalink" href="#module-tey-docgen-rdoc" title="Copy link" aria-label="Copy link">#</a></h2>
+<section class="summary">
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-parsedoc"><code>parseDoc</code></a></dt><dd>Parses a doc comment's text, or returns <code>None</code> for empty text.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-parseorempty"><code>parseOrEmpty</code></a></dt><dd>Parses a doc comment's text, giving an empty <code>Doc</code> for empty text.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-rewriteproseblocks"><code>rewriteProseBlocks</code></a></dt><dd>Rewrites plus-sign code markup in each prose block separately, leaving verbatim blocks and <code>@example</code> code alone.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-rewriteproseblock"><code>rewriteProseBlock</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-rewritepluspairs"><code>rewritePlusPairs</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-pluspair?"><code>plusPair?</code></a></dt><dd>Returns <code>true</code> when a pair of plus signs around <code>inner</code> is markup.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-boundarybefore?"><code>boundaryBefore?</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-boundaryafter?"><code>boundaryAfter?</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-splitparagraphs"><code>splitParagraphs</code></a></dt><dd>Splits lines into blocks.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-directiveblock?"><code>directiveBlock?</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-indented?"><code>indented?</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-indentwidth"><code>indentWidth</code></a></dt><dd>Returns the number of leading spaces in a line.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-verbatim?"><code>verbatim?</code></a></dt><dd>Returns <code>true</code> for a verbatim block: one whose every non-blank line is indented by at least two spaces, as RDoc marks code or a hand-laid-out table.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-dedent"><code>dedent</code></a></dt><dd>Removes the indentation shared by every non-blank line, so a block renders flush left.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-fenceverbatim"><code>fenceVerbatim</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-mergeverbatim"><code>mergeVerbatim</code></a></dt><dd>Joins adjacent verbatim blocks back together with a blank line between them, since a blank line inside a code sample does not end it.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-classifyblocks"><code>classifyBlocks</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-directivebody"><code>directiveBody</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-parseparam"><code>parseParam</code></a></dt><dd>Reads a <code>@param name [Type] description</code> directive.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-parsereturn"><code>parseReturn</code></a></dt><dd>Reads a <code>@return [Type] description</code> directive.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-parseexample"><code>parseExample</code></a></dt><dd></dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-parsebracketed"><code>parseBracketed</code></a></dt><dd>Splits text that opens with a bracketed group, such as <code>[Integer] the count</code>, into the group's content and the rest.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-tey-docgen-rdoc-findclosingbracket"><code>findClosingBracket</code></a></dt><dd></dd></div>
+</dl>
+</section>
+<div class="functions">
+<div class="fn" id="function-tey-docgen-rdoc-parsedoc">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-parsedoc"><code>parseDoc</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-parsedoc" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parseDoc</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Doc?</span></span></code></pre>
+</div>
+<p>Parses a doc comment's text, or returns <code>None</code> for empty text.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-parseorempty">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-parseorempty"><code>parseOrEmpty</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-parseorempty" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parseOrEmpty</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-doc"><span class="tok-type">Doc</span></a></span></code></pre>
+</div>
+<p>Parses a doc comment's text, giving an empty <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-doc"><code>Doc</code></a> for empty text.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-rewriteproseblocks">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-rewriteproseblocks"><code>rewriteProseBlocks</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-rewriteproseblocks" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">rewriteProseBlocks</span><span class="tok-punct">(</span>blocks<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Rewrites plus-sign code markup in each prose block separately, leaving verbatim blocks and <code>@example</code> code alone. <code>@param</code> and <code>@return</code> descriptions are prose and are rewritten.</p>
+<p>A pair never spans two blocks. Rewriting the whole comment at once would pair the plus sign of an addition in a code sample with the next markup in the prose.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-rewriteproseblock">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-rewriteproseblock"><code>rewriteProseBlock</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-rewriteproseblock" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">rewriteProseBlock</span><span class="tok-punct">(</span>block<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-rewritepluspairs">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-rewritepluspairs"><code>rewritePlusPairs</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-rewritepluspairs" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">rewritePlusPairs</span><span class="tok-punct">(</span>s<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> accum<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-pluspair?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-pluspair?"><code>plusPair?</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-pluspair?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">plusPair?</span><span class="tok-punct">(</span>head<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> inner<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> tail<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> when a pair of plus signs around <code>inner</code> is markup. There must be no space just inside either sign, so an addition with spaces stays as written; no backtick inside, so spans never nest; and no letter or digit just outside, so an addition without spaces stays too.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-boundarybefore?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-boundarybefore?"><code>boundaryBefore?</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-boundarybefore?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">boundaryBefore?</span><span class="tok-punct">(</span>head<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-boundaryafter?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-boundaryafter?"><code>boundaryAfter?</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-boundaryafter?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">boundaryAfter?</span><span class="tok-punct">(</span>tail<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-splitparagraphs">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-splitparagraphs"><code>splitParagraphs</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-splitparagraphs" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">splitParagraphs</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> current<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> accum<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Splits lines into blocks. Prose runs until a blank line. Every line that starts with <code>@</code> opens a block of its own, so consecutive <code>@param</code> lines stay separate, and the indented lines after a directive (an example's code) belong to it.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-directiveblock?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-directiveblock?"><code>directiveBlock?</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-directiveblock?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">directiveBlock?</span><span class="tok-punct">(</span>current<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-indented?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-indented?"><code>indented?</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-indented?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">indented?</span><span class="tok-punct">(</span>line<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-indentwidth">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-indentwidth"><code>indentWidth</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-indentwidth" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">indentWidth</span><span class="tok-punct">(</span>s<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a></span></code></pre>
+</div>
+<p>Returns the number of leading spaces in a line.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-verbatim?">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-verbatim?"><code>verbatim?</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-verbatim?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">verbatim?</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> for a verbatim block: one whose every non-blank line is indented by at least two spaces, as RDoc marks code or a hand-laid-out table. Such a block keeps its line breaks and is carried into the summary as a fenced code block.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-dedent">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-dedent"><code>dedent</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-dedent" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">dedent</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Removes the indentation shared by every non-blank line, so a block renders flush left.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-fenceverbatim">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-fenceverbatim"><code>fenceVerbatim</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-fenceverbatim" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">fenceVerbatim</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-mergeverbatim">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-mergeverbatim"><code>mergeVerbatim</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-mergeverbatim" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">mergeVerbatim</span><span class="tok-punct">(</span>blocks<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">]</span><span class="tok-punct">,</span> accum<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">]</span></span></code></pre>
+</div>
+<p>Joins adjacent verbatim blocks back together with a blank line between them, since a blank line inside a code sample does not end it.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-classifyblocks">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-classifyblocks"><code>classifyBlocks</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-classifyblocks" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">classifyBlocks</span><span class="tok-punct">(</span>blocks<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">]</span><span class="tok-punct">,</span> summary<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> params<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-param"><span class="tok-type">Param</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> returns<span class="tok-op">:</span> <span class="tok-type">Return?</span><span class="tok-punct">,</span> examples<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-example"><span class="tok-type">Example</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> deprecated<span class="tok-op">:</span> <span class="tok-type">String?</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Doc?</span></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-directivebody">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-directivebody"><code>directiveBody</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-directivebody" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">directiveBody</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> prefixLength<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-parseparam">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-parseparam"><code>parseParam</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-parseparam" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parseParam</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-param"><span class="tok-type">Param</span></a></span></code></pre>
+</div>
+<p>Reads a <code>@param name [Type] description</code> directive.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-parsereturn">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-parsereturn"><code>parseReturn</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-parsereturn" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parseReturn</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-return"><span class="tok-type">Return</span></a></span></code></pre>
+</div>
+<p>Reads a <code>@return [Type] description</code> directive.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-parseexample">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-parseexample"><code>parseExample</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-parseexample" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parseExample</span><span class="tok-punct">(</span>lines<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/tey/0.2.1-dev/tey/docgen/model/#record-tey-docgen-model-example"><span class="tok-type">Example</span></a></span></code></pre>
+</div>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-parsebracketed">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-parsebracketed"><code>parseBracketed</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-parsebracketed" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">parseBracketed</span><span class="tok-punct">(</span>s<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Bracketed?</span></span></code></pre>
+</div>
+<p>Splits text that opens with a bracketed group, such as <code>[Integer] the count</code>, into the group's content and the rest. Returns <code>None</code> when the text does not open with one.</p>
+
+</div>
+<div class="fn" id="function-tey-docgen-rdoc-findclosingbracket">
+<div class="fn-head">
+<h3><a class="self" href="#function-tey-docgen-rdoc-findclosingbracket"><code>findClosingBracket</code></a> <a class="permalink" href="#function-tey-docgen-rdoc-findclosingbracket" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">findClosingBracket</span><span class="tok-punct">(</span>s<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> index<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> depth<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Integer?</span></span></code></pre>
+</div>
+
+</div>
+</div>
+</section>
+<section class="entity" id="record-tey-docgen-rdoc-bracketed">
+<h2><span class="kind kind-record">record</span> <code>Bracketed</code> <a class="permalink" href="#record-tey-docgen-rdoc-bracketed" title="Copy link" aria-label="Copy link">#</a></h2>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>content</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a></code></dd></div>
+<div class="field"><dt><code>rest</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a></code></dd></div>
+</dl>
+
+</section>

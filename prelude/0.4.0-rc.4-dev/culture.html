@@ -1,0 +1,191 @@
+<section class="entity" id="module-culture">
+<h2><span class="kind kind-module">module</span> <code>Culture</code> <a class="permalink" href="#module-culture" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Cultures for parsing and printing numbers and dates: decimal separators, digit grouping, date layout and month and weekday names.</p>
+<p>A culture is always passed as an argument. Parsing and printing never read the machine's locale on their own, so a call gives the same result everywhere. Without a culture, numbers use a <code>.</code> decimal point and no grouping; pass one for text written for people in a particular place.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Culture</span>
+<span class="tok-keyword">let</span> hu <span class="tok-op">=</span> <span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">HU_HU</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-type">DEFAULT</span><span class="tok-punct">)</span>
+<span class="tok-type">Float</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">1,44</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> culture<span class="tok-op">:</span> hu<span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(1.44)</span>
+<span class="tok-type">Float</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">1,44</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>                <span class="tok-comment"># =&gt; Error(Trailing(1.0, &quot;,44&quot;))</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<section class="summary">
+<dl class="params index">
+<div class="param"><dt><a class="xref" href="#constant-culture-english_time_names"><code>ENGLISH_TIME_NAMES</code></a></dt><dd>The English month, weekday and day-period names, also used for any culture that has none of its own.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-culture-timenames"><code>timeNames</code></a></dt><dd>Returns the names <code>culture</code> writes dates with: its own if it has them, English otherwise.</dd></div>
+<div class="param"><dt><a class="xref" href="#constant-culture-default"><code>DEFAULT</code></a></dt><dd>The culture used when none is given: a <code>.</code> decimal point, no grouping and no time settings.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-culture-of"><code>of</code></a></dt><dd>Returns the preset culture for <code>code</code>, or <code>None</code> for an unknown tag.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-culture-valid?"><code>valid?</code></a></dt><dd>Returns <code>true</code> when the culture's number settings are usable.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-culture-readnumber"><code>readNumber</code></a></dt><dd>Reads the number in <code>text</code> with the grammar <code>Integer.parse</code>, <code>Float.parse</code> and <code>Number.parse</code> share.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-culture-rendernumber"><code>renderNumber</code></a></dt><dd>Rewrites a number written with a <code>.</code> decimal point, such as <code>&quot;1500.5&quot;</code>, with the culture's decimal separator and digit grouping.</dd></div>
+<div class="param"><dt><a class="xref" href="#function-culture-local"><code>local</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span></dt><dd>Returns the machine's culture, named by the first of <code>LC_ALL</code>, <code>LC_NUMERIC</code> and <code>LANG</code> that is set.</dd></div>
+</dl>
+</section>
+<div class="functions">
+<div class="fn" id="constant-culture-english_time_names">
+<div class="fn-head">
+<h3><a class="self" href="#constant-culture-english_time_names"><code>ENGLISH_TIME_NAMES</code></a> <span class="tag-kind">constant</span> <a class="permalink" href="#constant-culture-english_time_names" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><a class="xref" href="#constant-culture-english_time_names"><span class="tok-type">ENGLISH_TIME_NAMES</span></a> <span class="tok-op">:</span> <a class="xref" href="#record-culture-timenames"><span class="tok-type">TimeNames</span></a></span></code></pre>
+</div>
+<p>The English month, weekday and day-period names, also used for any culture that has none of its own.</p>
+
+</div>
+<div class="fn" id="function-culture-timenames">
+<div class="fn-head">
+<h3><a class="self" href="#function-culture-timenames"><code>timeNames</code></a> <a class="permalink" href="#function-culture-timenames" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">timeNames</span><span class="tok-punct">(</span>culture<span class="tok-op">:</span> <span class="tok-type">Culture</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="#record-culture-timenames"><span class="tok-type">TimeNames</span></a></span></code></pre>
+</div>
+<p>Returns the names <code>culture</code> writes dates with: its own if it has them, English otherwise. The presets have names for English, Hungarian, German, French, Spanish, Italian, Portuguese and Dutch.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>culture</code></dt><dd>the culture</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the names to write with</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-method">timeNames</span><span class="tok-punct">(</span><span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">HU_HU</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-type">DEFAULT</span><span class="tok-punct">)</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">months</span><span class="tok-op">.</span><span class="tok-method">first</span>   <span class="tok-comment"># =&gt; Just(&quot;január&quot;)</span>
+<span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-method">timeNames</span><span class="tok-punct">(</span><span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-type">DEFAULT</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">months</span><span class="tok-op">.</span><span class="tok-method">first</span>                          <span class="tok-comment"># =&gt; Just(&quot;January&quot;)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="constant-culture-default">
+<div class="fn-head">
+<h3><a class="self" href="#constant-culture-default"><code>DEFAULT</code></a> <span class="tag-kind">constant</span> <a class="permalink" href="#constant-culture-default" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><a class="xref" href="#constant-culture-default"><span class="tok-type">DEFAULT</span></a> <span class="tok-op">:</span> <span class="tok-type">Culture</span></span></code></pre>
+</div>
+<p>The culture used when none is given: a <code>.</code> decimal point, no grouping and no time settings. <code>parse(s)</code> and <code>parse(s, culture: Culture.DEFAULT)</code> give the same result. It suits text written by programs, such as protocols, data files and logs.</p>
+
+</div>
+<div class="fn" id="function-culture-of">
+<div class="fn-head">
+<h3><a class="self" href="#function-culture-of"><code>of</code></a> <a class="permalink" href="#function-culture-of" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">of</span><span class="tok-punct">(</span>code<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Culture?</span></span></code></pre>
+</div>
+<p>Returns the preset culture for <code>code</code>, or <code>None</code> for an unknown tag.</p>
+<p>Case does not matter and <code>-</code> reads as <code>_</code>, so <code>&quot;hu-HU&quot;</code> and <code>&quot;HU_HU&quot;</code> find the same culture.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>code</code></dt><dd>the ISO tag, such as <code>&quot;HU_HU&quot;</code></dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the culture, or <code>None</code></p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">HU_HU</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-type">DEFAULT</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">name</span>   <span class="tok-comment"># =&gt; &quot;HU_HU&quot;</span>
+<span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">hu-HU</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-type">DEFAULT</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-method">name</span>   <span class="tok-comment"># =&gt; &quot;HU_HU&quot;</span>
+<span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">XX_YY</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>                            <span class="tok-comment"># =&gt; None</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-culture-valid?">
+<div class="fn-head">
+<h3><a class="self" href="#function-culture-valid?"><code>valid?</code></a> <a class="permalink" href="#function-culture-valid?" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">valid?</span><span class="tok-punct">(</span>culture<span class="tok-op">:</span> <span class="tok-type">Culture</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></span></code></pre>
+</div>
+<p>Returns <code>true</code> when the culture's number settings are usable. With grouping, the group separator must differ from the decimal separator and the group sizes must be a non-empty list of positive integers.</p>
+<p>Parsing and printing check this themselves: parsing with an invalid culture returns <code>Error(BadCulture)</code> and printing returns <code>None</code>. Call <code>valid?</code> to report the problem earlier.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>culture</code></dt><dd>the culture to check</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> <code>true</code> when the number settings are usable</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> hu <span class="tok-op">=</span> <span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">HU_HU</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-type">DEFAULT</span><span class="tok-punct">)</span>
+<span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-method">valid?</span><span class="tok-punct">(</span>hu<span class="tok-punct">)</span>              <span class="tok-comment"># =&gt; true</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-culture-readnumber">
+<div class="fn-head">
+<h3><a class="self" href="#function-culture-readnumber"><code>readNumber</code></a> <a class="permalink" href="#function-culture-readnumber" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">readNumber</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> culture<span class="tok-op">:</span> <span class="tok-type">Culture</span><span class="tok-punct">,</span> radix<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer"><span class="tok-type">Integer</span></a><span class="tok-punct">,</span> fractional<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">,</span> convert<span class="tok-op">:</span> <span class="tok-punct">(</span><a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a> <span class="tok-op">-&gt;</span> <span class="tok-type">T?</span><span class="tok-punct">)</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">T</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/errorable/#type-parseerror"><span class="tok-type">ParseError</span></a><span class="tok-op">&lt;</span><span class="tok-type">T</span><span class="tok-op">&gt;</span><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Reads the number in <code>text</code> with the grammar <code>Integer.parse</code>, <code>Float.parse</code> and <code>Number.parse</code> share. Most callers want one of those.</p>
+<p>The grammar is an optional sign, then digits in <code>radix</code> (letters above 9 in either case). Group separators must follow <code>culture</code>'s grouping; digits with no separator read in every culture. When <code>fractional</code> is true, a decimal part after the culture's decimal separator and an exponent (<code>e3</code>, <code>E-2</code>) may follow.</p>
+<p><code>convert</code> gets the sign and digits without separators (<code>&quot;-1500&quot;</code>), and the fraction and exponent in canonical form (<code>&quot;.5e3&quot;</code>, <code>&quot;.0e3&quot;</code> for an exponent alone, <code>&quot;&quot;</code> for neither). When it returns <code>None</code> the result is <code>OutOfRange</code>. A number followed by more text is <code>Trailing</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code></dt><dd>the text to read</dd></div>
+<div class="param"><dt><code>culture</code></dt><dd>whose separators to accept</dd></div>
+<div class="param"><dt><code>radix</code></dt><dd>the base of the digits, 2 to 36</dd></div>
+<div class="param"><dt><code>fractional</code></dt><dd>whether a fraction and an exponent may follow</dd></div>
+<div class="param"><dt><code>convert</code></dt><dd>the value of the digits read</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the value, or why not</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> hu <span class="tok-op">=</span> <span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">HU_HU</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-type">DEFAULT</span><span class="tok-punct">)</span>
+<span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-method">readNumber</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">1 500 Ft</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> hu<span class="tok-punct">,</span> <span class="tok-number">10</span><span class="tok-punct">,</span> <span class="tok-bool">false</span><span class="tok-punct">)</span> <span class="tok-punct">{</span> <span class="tok-op">|</span>digits<span class="tok-punct">,</span> _<span class="tok-op">|</span> digits<span class="tok-op">.</span><span class="tok-method">to</span><span class="tok-punct">(</span><span class="tok-type">Integer</span><span class="tok-punct">)</span> <span class="tok-punct">}</span>
+<span class="tok-comment"># =&gt; Error(Trailing(1500, &quot; Ft&quot;))</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-culture-rendernumber">
+<div class="fn-head">
+<h3><a class="self" href="#function-culture-rendernumber"><code>renderNumber</code></a> <a class="permalink" href="#function-culture-rendernumber" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">renderNumber</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> culture<span class="tok-op">:</span> <span class="tok-type">Culture</span><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></span></code></pre>
+</div>
+<p>Rewrites a number written with a <code>.</code> decimal point, such as <code>&quot;1500.5&quot;</code>, with the culture's decimal separator and digit grouping. An exponent passes through unchanged. Returns <code>None</code> for an invalid culture (see <code>valid?</code>).</p>
+<p>Most callers want <code>(1500.5).to(String, culture: culture)</code>, which uses it.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>text</code></dt><dd>the dot-form text to render</dd></div>
+<div class="param"><dt><code>culture</code></dt><dd>the culture to render with</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the rendered text, or <code>None</code> for an invalid culture</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> hu <span class="tok-op">=</span> <span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-method">of</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">HU_HU</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-type">DEFAULT</span><span class="tok-punct">)</span>
+<span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-method">renderNumber</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">1500.5</span><span class="tok-string">&quot;</span><span class="tok-punct">,</span> hu<span class="tok-punct">)</span>              <span class="tok-comment"># =&gt; Just(&quot;1\u{A0}500,5&quot;)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-culture-local">
+<div class="fn-head">
+<h3><a class="self" href="#function-culture-local"><code>local</code></a> <span class="tag-foul" title="May have side effects; callable only from foul code">foul</span> <a class="permalink" href="#function-culture-local" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">local</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Culture</span></span></code></pre>
+</div>
+<p>Returns the machine's culture, named by the first of <code>LC_ALL</code>, <code>LC_NUMERIC</code> and <code>LANG</code> that is set. Falls back to <a class="xref" href="#constant-culture-default"><code>DEFAULT</code></a> when none is set or the first one set names no known culture.</p>
+<p>Parsing and printing never read the locale themselves, so read it once and pass it on:</p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">let</span> culture <span class="tok-op">=</span> <span class="tok-type">Culture</span><span class="tok-op">.</span><span class="tok-method">local</span>
+<span class="tok-type">Float</span><span class="tok-op">.</span><span class="tok-method">parse</span><span class="tok-punct">(</span>input<span class="tok-punct">,</span> culture<span class="tok-op">:</span> culture<span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="returns"><strong>Returns</strong> the machine's culture, or <a class="xref" href="#constant-culture-default"><code>DEFAULT</code></a></p>
+
+</div>
+</div>
+</section>
+<section class="entity" id="record-culture-numbersettings">
+<h2><span class="kind kind-record">record</span> <code>NumberSettings</code> <a class="permalink" href="#record-culture-numbersettings" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>How a culture writes numbers: its decimal separator and its digit grouping.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>decimalSeparator</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-char">Char</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>groups</code></dt><dd><code>(<a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-char">Char</a>, [<a class="xref" href="/prelude/0.4.0-rc.4-dev/number/#make-integer">Integer</a>])?</code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-culture-timesettings">
+<h2><span class="kind kind-record">record</span> <code>TimeSettings</code> <a class="permalink" href="#record-culture-timesettings" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>How a culture writes dates and times: the layout <code>to(String, culture:)</code> uses on a <a class="xref" href="/prelude/0.4.0-rc.4-dev/date/#record-date"><code>Date</code></a>, <a class="xref" href="/prelude/0.4.0-rc.4-dev/time/#record-time"><code>Time</code></a> or <a class="xref" href="/prelude/0.4.0-rc.4-dev/date_time/#record-datetime"><code>DateTime</code></a>, and the names a <code>Date.format</code> pattern uses.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>dateOrder</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-rc.4-dev/atom/#make-atom">Atom</a>]</code></dd></div>
+<div class="field"><dt><code>dateSeparator</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-char">Char</a></code></dd></div>
+<div class="field"><dt><code>timeSeparator</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-char">Char</a></code></dd></div>
+<div class="field"><dt><code>twelveHour?</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/truthyable/#make-bool">Bool</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>names</code></dt><dd><code><a class="xref" href="#record-culture-timenames">TimeNames</a>?</code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-culture-timenames">
+<h2><span class="kind kind-record">record</span> <code>TimeNames</code> <a class="permalink" href="#record-culture-timenames" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>The words a culture writes dates and times with, which <code>MMMM</code>, <code>MMM</code>, <code>EEEE</code>, <code>EEE</code> and <code>a</code> in a <code>Date.format</code> pattern produce.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>months</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string">String</a>]</code></dd></div>
+<div class="field"><dt><code>shortMonths</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string">String</a>]</code></dd></div>
+<div class="field"><dt><code>weekdays</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string">String</a>]</code></dd></div>
+<div class="field"><dt><code>shortWeekdays</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string">String</a>]</code></dd></div>
+<div class="field"><dt><code>dayPeriods</code></dt><dd><code>(<a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string">String</a>, <a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string">String</a>)</code></dd></div>
+</dl>
+
+</section>
+<section class="entity" id="record-culture-culture">
+<h2><span class="kind kind-record">record</span> <code>Culture</code> <a class="permalink" href="#record-culture-culture" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>A named set of settings for parsing and printing numbers and dates.</p>
+<p>Get a preset with <code>of</code>, the machine's culture with <code>local</code>, or write the record yourself. A custom culture only needs <code>numbers</code>; <code>time</code> defaults to <code>None</code>.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>name</code></dt><dd><code><a class="xref" href="/prelude/0.4.0-rc.4-dev/string/#make-string">String</a></code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>numbers</code></dt><dd><code><a class="xref" href="#record-culture-numbersettings">NumberSettings</a></code></dd></div>
+<div class="field"><dt><code>time</code></dt><dd><code><a class="xref" href="#record-culture-timesettings">TimeSettings</a>?</code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>

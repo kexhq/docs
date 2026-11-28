@@ -1,0 +1,86 @@
+<section class="entity" id="module-tey-selfupdate">
+<h2><span class="kind kind-module">module</span> <code>Tey.SelfUpdate</code></h2>
+<div class="functions">
+<div class="fn" id="function-tey-selfupdate-currentprefix">
+<h3><a class="self" href="#function-tey-selfupdate-currentprefix"><code>currentPrefix</code></a></h3>
+<pre class="code sig"><code>currentPrefix <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
+<p>Where this Tey is installed, or None when it cannot be told — outside an installed launcher (a source checkout, <code>erl</code> by hand) there is nothing safe to overwrite. <code>tey/bin/tey</code> exports TEY_EBIN before invoking the BEAM, so a released install always knows.</p>
+
+</div>
+<div class="fn" id="function-tey-selfupdate-installebin">
+<h3><a class="self" href="#function-tey-selfupdate-installebin"><code>installEbin</code></a></h3>
+<pre class="code sig"><code>installEbin <span class="tok-op">:</span> <span class="tok-type">String?</span></code></pre>
+<p>The launcher's own runtime directory. TEY_EBIN can instead name the Tey paired with the selected Kex (see <code>installPaired</code>), which is not an install to upgrade — TEY_INSTALL_EBIN always names the launcher's.</p>
+
+</div>
+<div class="fn" id="function-tey-selfupdate-prefixof">
+<h3><a class="self" href="#function-tey-selfupdate-prefixof"><code>prefixOf</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">prefixOf</span><span class="tok-punct">(</span>ebin<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></code></pre>
+<p>TEY_EBIN with the trailing <code>/lib/kex/tey/ebin</code> stripped. Anything else — unset, empty, a checkout's <code>tey/ebin</code> — is None: there is no install prefix to upgrade in place.</p>
+
+</div>
+<div class="fn" id="function-tey-selfupdate-homebrewmanaged?">
+<h3><a class="self" href="#function-tey-selfupdate-homebrewmanaged?"><code>homebrewManaged?</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">homebrewManaged?</span><span class="tok-punct">(</span>prefix<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a></code></pre>
+<p>Whether this install belongs to Homebrew, whose keg bookkeeping Tey must not fight: that Tey upgrades with <code>brew upgrade tey</code>.</p>
+
+</div>
+<div class="fn" id="function-tey-selfupdate-manifestversion">
+<h3><a class="self" href="#function-tey-selfupdate-manifestversion"><code>manifestVersion</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">manifestVersion</span><span class="tok-punct">(</span>text<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></code></pre>
+<p>The <code>version(&quot;...&quot;)</code> line of a <code>package.kex</code> manifest, read as plain text. The manifest reader cannot be used here: it parses a LOCAL package through the selected compiler, and this text was just downloaded, not installed.</p>
+
+</div>
+<div class="fn" id="function-tey-selfupdate-compareversions">
+<h3><a class="self" href="#function-tey-selfupdate-compareversions"><code>compareVersions</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">compareVersions</span><span class="tok-punct">(</span>a<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> b<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/comparable/#type-ordering"><span class="tok-type">Ordering</span></a></code></pre>
+<p>Ordering for two version strings, for the already-newest guard. Something unparsable compares as older: a hand-edited development version must never read as &quot;newer than every release&quot; and refuse its own upgrade.</p>
+<p>Written over <code>newer?</code> rather than <code>compare</code> on purpose: a trait method from another module's <code>make ..., implement: Comparable</code> does not dispatch to a custom record from outside that module on the BEAM backend, while a plain <code>let</code> like <code>newer?</code> calls anywhere.</p>
+
+</div>
+<div class="fn" id="function-tey-selfupdate-carrybakederltext">
+<h3><a class="self" href="#function-tey-selfupdate-carrybakederltext"><code>carryBakedErlText</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">carryBakedErlText</span><span class="tok-punct">(</span>oldLauncher<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> newLauncher<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a></code></pre>
+<p>A source install (<code>make -C tey install</code>) bakes an absolute <code>erl</code> into <code>bin/tey</code>; release archives bake a bare <code>erl</code> resolved from PATH. Upgrading must not silently move the former onto the latter, so the old absolute path is carried into the new launcher. Anything else (no line, a relative <code>erl</code>, the dev placeholder) leaves the new launcher exactly as published.</p>
+
+</div>
+<div class="fn" id="function-tey-selfupdate-tagfor">
+<h3><a class="self" href="#function-tey-selfupdate-tagfor"><code>tagFor</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">tagFor</span><span class="tok-punct">(</span>tags<span class="tok-op">:</span> <span class="tok-punct">[</span><a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">]</span><span class="tok-punct">,</span> version<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <span class="tok-type">String?</span></code></pre>
+<p>The tag naming a Kex version, resolved against a tag list read once — <code>Tey.Toolchain.releaseTag</code> answers the same question but re-lists the tags on every call, which a pinned-version scan cannot afford.</p>
+
+</div>
+<div class="fn" id="function-tey-selfupdate-upgradelatest">
+<h3><a class="self" href="#function-tey-selfupdate-upgradelatest"><code>upgradeLatest</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">upgradeLatest</span><span class="tok-punct">(</span>includePre<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/truthyable/#make-bool"><span class="tok-type">Bool</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-tey-selfupdate-upgradeoutcome"><span class="tok-type">UpgradeOutcome</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></code></pre>
+<p><code>tey upgrade</code> — the newest released Tey: the one the newest Kex release's manifest declares. Stable Kex releases unless <code>includePre</code> (<code>--pre</code>), which is how a pre-release Tey is reached without knowing its number.</p>
+
+</div>
+<div class="fn" id="function-tey-selfupdate-upgradepinned">
+<h3><a class="self" href="#function-tey-selfupdate-upgradepinned"><code>upgradePinned</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">upgradePinned</span><span class="tok-punct">(</span>version<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><a class="xref" href="#type-tey-selfupdate-upgradeoutcome"><span class="tok-type">UpgradeOutcome</span></a><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></code></pre>
+<p><code>tey upgrade &lt;version&gt;</code> — exactly that Tey, from the newest release (stable first, then pre-releases) whose manifest declares it. An older version is allowed: pinning is explicit, and it is the way back from a bad release.</p>
+
+</div>
+<div class="fn" id="function-tey-selfupdate-installpaired">
+<h3><a class="self" href="#function-tey-selfupdate-installpaired"><code>installPaired</code></a></h3>
+<pre class="code sig"><code><span class="tok-fn">installPaired</span><span class="tok-punct">(</span>kexVersion<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">String?</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-beta.4-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></code></pre>
+<p>The Tey a Kex release ships, unpacked beside that toolchain so <code>bin/tey</code> runs it whenever that Kex is selected: Kex and Tey are developed and released as a pair, and a pre-release is only tested properly as that pair. Nothing installed is replaced — not even a Homebrew keg — which is what makes this safe to do on every <code>tey kex install</code>.</p>
+<p>The answer is the Tey version unpacked, or None when it was already there: tags do not move, so neither does what they carry.</p>
+
+</div>
+</div>
+</section>
+<section class="entity" id="type-tey-selfupdate-upgradeoutcome">
+<h2><span class="kind kind-type">type</span> <code>UpgradeOutcome</code></h2>
+<p>Upgrading Tey itself (<code>tey upgrade</code>), for installs that came from a release archive rather than a package manager — see <code>install.sh</code> at the repository root. A Homebrew-managed Tey is brew's to upgrade and is refused here.</p>
+<p>Tey has its own version and its own cadence (<code>tey/package.kex</code>), so it cannot reuse the Kex tag list directly: the newest Tey is the one the newest Kex release's manifest declares. That manifest is read over plain HTTPS (raw.githubusercontent.com) with the same curl-then-wget idiom <code>Tey.Toolchain.download</code> already uses — no GitHub API, no rate limits, no clone. The archive itself is the <code>tey-&lt;version&gt;.tar.gz</code> the release workflow publishes beside the Kex archives, under the same tag.</p>
+<p>What <code>tey upgrade</code> found: either the version it installed and where, or why there was nothing to install.</p>
+<h3>Variants</h3>
+<ul class="variants">
+<li><code>Upgraded(String, String)</code></li>
+<li><code>AlreadyNewest(String)</code></li>
+<li><code>NewerThanRelease(String)</code></li>
+</ul>
+
+</section>

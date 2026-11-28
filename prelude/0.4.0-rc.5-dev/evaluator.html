@@ -1,0 +1,69 @@
+<section class="entity" id="module-evaluator">
+<h2><span class="kind kind-module">module</span> <code>Evaluator</code> <a class="permalink" href="#module-evaluator" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>Runs Kex source code at run time, in a sandbox.</p>
+<p>Use it for code your program is given, such as a formula in a config file or a filter a user typed. Each call gets a fresh evaluator that cannot see the caller's variables, and the code can reach only what <a class="xref" href="#record-evaluator-evaluatoroptions"><code>EvaluatorOptions</code></a> allows. Step and depth limits stop a runaway program.</p>
+<div class="code-block"><pre class="code"><code><span class="tok-keyword">using</span> <span class="tok-type">Evaluator</span>
+
+<span class="tok-type">Evaluator</span><span class="tok-op">.</span><span class="tok-method">runExpression</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">1 + 2</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>           <span class="tok-comment"># =&gt; Ok(3)</span>
+<span class="tok-type">Evaluator</span><span class="tok-op">.</span><span class="tok-method">runExpression</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">[3,1,2].sort</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>    <span class="tok-comment"># =&gt; Ok([1, 2, 3])</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p>Nothing here is in scope until <code>using Evaluator</code>. It works only under the tree-walk interpreter (<code>kex -R</code>).</p>
+<div class="functions">
+<div class="fn" id="function-evaluator-run">
+<div class="fn-head">
+<h3><a class="self" href="#function-evaluator-run"><code>run</code></a> <a class="permalink" href="#function-evaluator-run" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">run</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Any</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></span><span class="sig-line"><span class="tok-fn">run</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> opts<span class="tok-op">:</span> <a class="xref" href="#record-evaluator-evaluatoroptions"><span class="tok-type">EvaluatorOptions</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Any</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Evaluates a whole Kex program and returns its result.</p>
+<p>The source may declare functions, records and a <code>main</code>, as a file would, and the result is what <code>main</code> returns. A runtime error, a call the sandbox does not allow, or running past a limit comes back as an <code>Error</code> with a message. Source that does not parse currently returns <code>Ok(None)</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>source</code></dt><dd>the Kex program to run</dd></div>
+<div class="param"><dt><code>opts</code></dt><dd>what the sandbox allows; omitted for the defaults</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the program's result, or why it failed</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Evaluator</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">main do 1 + 1 end</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok(2)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>Running a user-supplied script with a tighter budget</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Evaluator</span><span class="tok-op">.</span><span class="tok-method">run</span><span class="tok-punct">(</span>script<span class="tok-punct">,</span> <span class="tok-type">EvaluatorOptions</span> <span class="tok-punct">{</span>
+  allow<span class="tok-op">:</span> <span class="tok-punct">[</span><span class="tok-op">:</span><span class="tok-type">Math</span><span class="tok-punct">,</span> <span class="tok-op">:</span><span class="tok-type">List</span><span class="tok-punct">]</span><span class="tok-punct">,</span>
+  maxSteps<span class="tok-op">:</span> <span class="tok-number">10_000</span>
+<span class="tok-punct">}</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+<div class="fn" id="function-evaluator-runexpression">
+<div class="fn-head">
+<h3><a class="self" href="#function-evaluator-runexpression"><code>runExpression</code></a> <a class="permalink" href="#function-evaluator-runexpression" title="Copy link" aria-label="Copy link">#</a></h3>
+<pre class="code sig"><code><span class="sig-line"><span class="tok-fn">runExpression</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Any</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></span><span class="sig-line"><span class="tok-fn">runExpression</span><span class="tok-punct">(</span>source<span class="tok-op">:</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-punct">,</span> opts<span class="tok-op">:</span> <a class="xref" href="#record-evaluator-evaluatoroptions"><span class="tok-type">EvaluatorOptions</span></a><span class="tok-punct">)</span> <span class="tok-op">-&gt;</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/optional/#type-result"><span class="tok-type">Result</span></a><span class="tok-op">&lt;</span><span class="tok-type">Any</span><span class="tok-punct">,</span> <a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string"><span class="tok-type">String</span></a><span class="tok-op">&gt;</span></span></code></pre>
+</div>
+<p>Evaluates a single Kex expression and returns its value.</p>
+<p>Use it when the input is a formula: there is no <code>main</code> to write. Source that does not parse currently returns <code>Ok(None)</code>.</p>
+<h5>Parameters</h5>
+<dl class="params">
+<div class="param"><dt><code>source</code></dt><dd>the Kex expression to evaluate</dd></div>
+<div class="param"><dt><code>opts</code></dt><dd>what the sandbox allows; omitted for the defaults</dd></div>
+</dl>
+<p class="returns"><strong>Returns</strong> the value, or why it failed</p>
+<h5>Examples</h5>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Evaluator</span><span class="tok-op">.</span><span class="tok-method">runExpression</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">1 + 2</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>          <span class="tok-comment"># =&gt; Ok(3)</span>
+<span class="tok-type">Evaluator</span><span class="tok-op">.</span><span class="tok-method">runExpression</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">[3,1,2].sort</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>   <span class="tok-comment"># =&gt; Ok([1, 2, 3])</span>
+<span class="tok-type">Evaluator</span><span class="tok-op">.</span><span class="tok-method">runExpression</span><span class="tok-punct">(</span><span class="tok-string">&quot;</span><span class="tok-string">nope()</span><span class="tok-string">&quot;</span><span class="tok-punct">)</span>
+<span class="tok-comment"># =&gt; Error(&quot;Runtime error: &lt;eval&gt;:2:1: runtime error: undefined function: nope&quot;)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+<p class="caption"><em>Evaluating a formula from a config file</em></p>
+<div class="code-block"><pre class="code"><code><span class="tok-type">Evaluator</span><span class="tok-op">.</span><span class="tok-method">runExpression</span><span class="tok-punct">(</span>formula<span class="tok-punct">)</span><span class="tok-op">.</span><span class="tok-keyword">or</span><span class="tok-punct">(</span><span class="tok-number">0</span><span class="tok-punct">)</span></code></pre><button class="copy-code" type="button" title="Copy code" hidden>Copy</button></div>
+
+</div>
+</div>
+</section>
+<section class="entity" id="record-evaluator-evaluatoroptions">
+<h2><span class="kind kind-record">record</span> <code>EvaluatorOptions</code> <a class="permalink" href="#record-evaluator-evaluatoroptions" title="Copy link" aria-label="Copy link">#</a></h2>
+<p>What evaluated code may call, and how long it may run.</p>
+<p>By default it gets pure computation over the common data types, with no filesystem, network or processes. Narrow <code>allow</code> or lower the limits for less trusted source.</p>
+<h3>Fields</h3>
+<dl class="fields">
+<div class="field"><dt><code>allow</code></dt><dd><code>[<a class="xref" href="/prelude/0.4.0-rc.5-dev/atom/#make-atom">Atom</a>]</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>modules</code></dt><dd><code>{<a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a>: {<a class="xref" href="/prelude/0.4.0-rc.5-dev/string/#make-string">String</a>: (Any) -&gt; Any}}</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>maxSteps</code></dt><dd><code>Int</code> <span class="opt">optional</span></dd></div>
+<div class="field"><dt><code>maxDepth</code></dt><dd><code>Int</code> <span class="opt">optional</span></dd></div>
+</dl>
+
+</section>
